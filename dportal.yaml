@@ -1,0 +1,11 @@
+# will be used in the form "{site_base_url}:{site_port}/"; http(s) is neeeded.
+site_base_url: "http://localhost"
+site_port: 8888
+cookie_secret: "0123456789ABCDEF"
+# will be used in the form "{couch_url}:{couch_port}"; http(s) is neeeded.
+couch_url: "http://db"
+couch_port: 5984
+couch_username: "delport"
+couch_password: "delport"
+# Activate autoreload etc
+development_mode: true

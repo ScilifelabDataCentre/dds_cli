@@ -1,1 +1,1 @@
-click==7.0
+CouchDB==1.2

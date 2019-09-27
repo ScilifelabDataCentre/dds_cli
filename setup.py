@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='cli_api',
+    name='code_api',
     version='0.1.0',
     packages=find_packages(),
     include_package_data=True,
@@ -10,7 +10,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'dp_cli = cli_api.dp_cli:cli',
+            'dp_cli = code_api.dp_cli:upload_files',
         ],
     },
 )

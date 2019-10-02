@@ -112,12 +112,17 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
         if not project_access: 
             sys.exit("Project access denied. Cancelling upload.") 
         else: 
-                    
             # If not all sensitive/non-sensitive ask per file 
             # Save all sensitive in one dict and all non-sensitive in one
             sensi, non_sensi = create_file_dict(file, sensitive)
             
-            # TODO: Create file checksum 
+            # TODO: Create file checksums
+            for s_ in sensi: 
+                click.echo(s_)
+
+            for ns_ in non_sensi:
+                click.echo(ns_)
+                 
             # TODO: Save checksum in db
             # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
             # TODO: Compress files

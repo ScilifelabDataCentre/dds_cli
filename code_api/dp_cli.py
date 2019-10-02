@@ -100,22 +100,28 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
 
     # Checks user access to DP
     access_granted = check_dp_access(username, password)
-    
-    # If project not chosen, ask for project to upload to
-    # Check project access
-    if not project: 
-        project = click.prompt("Project to upload files to")
-    project_access = check_project_access(username, project)            
-                
-    # If not all sensitive/non-sensitive ask per file 
-    # Save all sensitive in one dict and all non-sensitive in one
-    sensi, non_sensi = create_file_dict(file, sensitive)
-    
-    # TODO: Create file checksum 
-    # TODO: Save checksum in db
-    # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
-    # TODO: Compress files
-    # TODO: Show success message
-    # TODO: Save metadata to db
-    # TODO: Show success message
-    # TODO: Generate email to user of interest
+    if not access_granted: 
+        sys.exit("You are not authorized to access the Delivery Portal. Aborting.")
+    else: 
+        # If project not chosen, ask for project to upload to
+        # Check project access
+        if not project: 
+            project = click.prompt("Project to upload files to")
+        
+        project_access = check_project_access(username, project)    
+        if not project_access: 
+            sys.exit("Project access denied. Cancelling upload.") 
+        else: 
+                    
+            # If not all sensitive/non-sensitive ask per file 
+            # Save all sensitive in one dict and all non-sensitive in one
+            sensi, non_sensi = create_file_dict(file, sensitive)
+            
+            # TODO: Create file checksum 
+            # TODO: Save checksum in db
+            # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
+            # TODO: Compress files
+            # TODO: Show success message
+            # TODO: Save metadata to db
+            # TODO: Show success message
+            # TODO: Generate email to user of interest

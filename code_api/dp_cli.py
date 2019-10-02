@@ -2,12 +2,58 @@
 
 """
 
+# IMPORTS ############################################################ IMPORTS #
+
 import click
+import couchdb
 
-class S3key(click.ParamType):
 
-    def convert(self, value, param, ctx):
-        return value
+# GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
+
+
+# CLASSES ############################################################ CLASSES #
+
+
+# FUNCTIONS ######################################################## FUNCTIONS #
+
+def check_dp_access(username: str, password: str) -> bool:
+    """Check existance of user in database."""
+
+    couch = couch_connect()
+    user_db = couch['dp_users']
+    if not username in user_db:
+        click.echo("This user does not have a Delivery Portal account. Contact xxx for more information.")
+        return False
+    elif user_db[username]['user']['password'] != password: 
+        click.echo("The password is incorrect. Upload cancelled.")
+        return False
+    return True
+
+
+def couch_connect():
+    """Connect to a couchdb interface."""
+    
+    couch = couchdb.Server(f'http://localhost:5984')
+    couch.login('delport', 'delport')
+    return couch
+
+
+def create_file_dict(files: tuple, sensitive: str) -> dict:
+    """Creates dictionary containing information about file sensitivity"""
+
+    file_dict = dict()
+    if sensitive=="ALL":
+        file_dict = dict.fromkeys(files, True)
+    elif sensitive=="NONE":
+        file_dict = dict.fromkeys(files, False)
+    else: 
+        for f_ in files: 
+            file_dict[f_] = click.confirm(f"File: {f_} \t Sensitive?")
+
+    return file_dict
+
+
+# MAIN ################################################################## MAIN #
 
 @click.command()
 @click.option('--file', '-f', multiple=True, type=click.Path(exists=True), help='File to upload.')
@@ -31,18 +77,16 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
         click.echo("No files were entered. Aborting...")
         click.Abort
 
-    # Print tuple with entered files and each separate file in tuple
-    click.echo(file)
-    for f_ in file: 
-        click.echo(click.format_filename(f_))
-
     # Ask for DP username if not entered 
     # and associated password 
     if not username:  
         username = click.prompt("Enter username\t", type=str)
     password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
 
-    # TODO: Check user access to DP
+    # Checks user access to DP
+    access_granted = check_dp_access(username, password)
+    if not access_granted:
+        click.Abort 
     
     # TODO: Ask for project to upload to (if not entered)
 
@@ -50,21 +94,13 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
 
     # TODO: If not all sensitive/non-sensitive ask per file 
     click.echo(sensitive)
-    files_sensitive = dict()
-    if sensitive=="ALL":
-        for f_ in file: 
-            files_sensitive[f_] = True
-    elif sensitive=="NONE":
-        for f_ in file: 
-            files_sensitive[f_] = False
-    else: 
-        for f_ in file: 
-            files_sensitive[f_] = click.confirm(f"File: {f_} \t Sensitive?")
-
-# TODO: 7. Create checksum + save in db
-# TODO: 8. Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
-# TODO: (8b. Compress files) 
-# TODO: 9. Show success message
-# TODO: 10. Save metadata to db
-# TODO: 11. Show success message
-# TODO: 12. Generate email to user of interest
+    files_sensitive = create_file_dict(file, sensitive)
+    
+    # TODO: Create file checksum 
+    # TODO: Save checksum in db
+    # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
+    # TODO: Compress files
+    # TODO: Show success message
+    # TODO: Save metadata to db
+    # TODO: Show success message
+    # TODO: Generate email to user of interest

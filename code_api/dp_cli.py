@@ -145,10 +145,9 @@ def file_type(filename: str) -> str:
     return type_
 
 
-def split_files():
+#def split_files():
 
     # MAIN ################################################################## MAIN #
-
 
 @click.command()
 @click.option('--file', '-f', required=True, multiple=True,
@@ -171,7 +170,7 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
         "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
     """
 
-    file = ("testfile.fna",)  # TODO: Change back after development
+    file = ("testfile1.fna","testfile2.fna","testfile3.fna","testfile4.fna",)  # TODO: Change back after development
 
     # Ask for DP username if not entered
     # and associated password
@@ -227,6 +226,8 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
                 except CouchDBException:
                     print(
                         f"Updating project {project} failed. Cancelling upload.")
+
+            click.echo(file_dict)
 
             # TODO: Split files into sensitive and not sensitive
             # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)

@@ -10,12 +10,21 @@ import sys
 import hashlib
 import os
 import filetype
+import datetime
 
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
 
 # CLASSES ############################################################ CLASSES #
+
+class CouchDBException(Exception):
+    """Custom exception class. Handles errors in database operations."""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to the base class __init__."""
+
+        super().__init__(msg)
 
 
 # FUNCTIONS ######################################################## FUNCTIONS #
@@ -26,8 +35,9 @@ def check_dp_access(username: str, password: str) -> bool:
     couch = couch_connect()
     user_db = couch['dp_users']
     if not username in user_db:
-        sys.exit("This user does not have a Delivery Portal account. Contact xxx for more information.")
-    elif user_db[username]['user']['password'] != password: 
+        sys.exit("This user does not have a Delivery Portal account. "
+                 "Contact xxx for more information.")
+    elif user_db[username]['user']['password'] != password:
         sys.exit("The password is incorrect. Upload cancelled.")
     return True
 
@@ -39,44 +49,41 @@ def check_project_access(username: str, project: str) -> bool:
     user_db = couch['dp_users']
 
     if project not in user_db[username]['projects']:
-        if click.confirm(f"You do not have access to the specified project '{project}'.\n \
-            Change project?"):
+        if click.confirm("You do not have access to the specified project" +
+                         f"'{project}'.\n Change project?"):
             project = click.prompt("Project to upload files to")
-            check_project_access(username, project) 
-        else: 
+            check_project_access(username, project)
+        else:
             sys.exit("Project access denied. Aborting upload.")
-    else: 
+    else:
         return True
 
 
 def couch_connect():
     """Connect to a couchdb interface."""
-    
+
     couch = couchdb.Server('http://localhost:5984')
     couch.login('delport', 'delport')
     return couch
 
 
 def create_file_dict(files: tuple, sensitive: str) -> dict:
-    """Creates separate dictionaries for sensitive and non-sensitive files"""
+    """Creates a dictionary with info on sensitive or non-sensitive files"""
 
-    sens_dict = dict()      # Dictionary for sensitive files
-    nonsens_dict = dict()   # Dictionary for non-sensitive files
+    sens_nonsens_dict = dict()
 
-    # If all files are sensitive or non-sensitive, save all filenames in same dict
-    # Otherwise user input to determine
-    if sensitive=="ALL": 
-        sens_dict = dict.fromkeys(files, dict())
-    elif sensitive=="NONE":
-        nonsens_dict = dict.fromkeys(files, dict())
-    else: 
-        for f_ in files: 
+    if sensitive == "ALL":
+        sens_nonsens_dict = dict.fromkeys(files, {"sensitive": True})
+    elif sensitive == "NONE":
+        sens_nonsens_dict = dict.fromkeys(files, {"sensitive": False})
+    else:
+        for f_ in files:
             if click.confirm(f"File: {f_} \t Sensitive?"):
-                sens_dict[f_] = dict()
-            else: 
-                nonsens_dict[f_] = dict()
+                sens_nonsens_dict[f_] = {"sensitive": True}
+            else:
+                sens_nonsens_dict[f_] = {"sensitive": False}
 
-    return sens_dict, nonsens_dict
+    return sens_nonsens_dict
 
 
 def gen_sha512(filename: str, chunk_size: int = 4094) -> str:
@@ -86,7 +93,7 @@ def gen_sha512(filename: str, chunk_size: int = 4094) -> str:
     with open(filename, "rb") as f:
         for byte_block in iter(lambda: f.read(chunk_size), b""):
             hasher.update(byte_block)
-    
+
     return hasher.hexdigest()
 
 
@@ -96,14 +103,22 @@ def get_filesize(filename: str) -> int:
     return os.stat(filename).st_size
 
 
-def file_type(filename: str):
+def get_current_time() -> str:
+    """Gets the current time and formats for database."""
+
+    now = datetime.datetime.now()
+
+    return f"{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}"
+
+
+def file_type(filename: str) -> str:
     """Guesses file type based on extension"""
 
     type_ = filetype.guess(filename)
-    if type_ is None: 
-        try: 
+    if type_ is None:
+        try:
             extension = os.path.splitext(filename)[1]
-        except: 
+        except:
             sys.stderr.write("Your file doesn't have an extension.")
 
         if extension in (".txt"):
@@ -126,98 +141,98 @@ def file_type(filename: str):
             type_ = "nexus"
         else:
             click.echo("Could not determine file format.")
-    
+
     return type_
 
 
-# MAIN ################################################################## MAIN #
+def split_files():
+
+    # MAIN ################################################################## MAIN #
+
 
 @click.command()
-@click.option('--file', '-f', required=True, multiple=True, type=click.Path(exists=True), help='File to upload.')
+@click.option('--file', '-f', required=True, multiple=True,
+              type=click.Path(exists=True), help='File to upload.')
 @click.option('--username', '-u', type=str, help="Delivery Portal username.")
 @click.option('--project', '-p', type=str, help="Project to upload files to.")
-@click.option('--sensitive', type=click.Choice(['ALL', 'NONE', 'MIXED'], case_sensitive=False), help="Sensitive or non-sensitive information.")
+@click.option('--sensitive',
+              type=click.Choice(['ALL', 'NONE', 'MIXED'],
+                                case_sensitive=False),
+              help="Sensitive or non-sensitive information.")
 def upload_files(file: str, username: str, project: str, sensitive: str):
-    """Main function. Handles file upload. 
-    
-    * If multiple files, use option multiple times.
-    * File name cannot start with "-". 
+    """Main function. Handles file upload.
 
-    Example one file: 
-        "--file /path/to/file.xxx" 
-    Example multiple files: 
+    * If multiple files, use option multiple times.
+    * File name cannot start with "-".
+
+    Example one file:
+        "--file /path/to/file.xxx"
+    Example multiple files:
         "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
     """
 
-    # Ask for DP username if not entered 
-    # and associated password 
-    if not username:  
+    file = ("testfile.fna",)  # TODO: Change back after development
+
+    # Ask for DP username if not entered
+    # and associated password
+    if not username:
         username = click.prompt("Enter username\t", type=str)
     # password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
-    password = "facility1"  # development
+    password = "facility1"  # TODO: Change back after development
 
     # Checks user access to DP
     access_granted = check_dp_access(username, password)
-    if not access_granted: 
+    if not access_granted:
         sys.exit("You are not authorized to access the Delivery Portal. Aborting.")
-    else: 
+    else:
         # If project not chosen, ask for project to upload to
         # Check project access
-        if not project: 
+        if not project:
             # project = click.prompt("Project to upload files to")
-            project = "0549ccc37f19cf10f62ae436f30038e4"    # development
+            # TODO: Change back after development
+            project = "0549ccc37f19cf10f62ae436f30038e4"
 
-        project_access = check_project_access(username, project)    
-        if not project_access: 
-            sys.exit("Project access denied. Cancelling upload.") 
-        else: 
-            # If not all sensitive/non-sensitive ask per file 
+        project_access = check_project_access(username, project)
+        if not project_access:
+            sys.exit("Project access denied. Cancelling upload.")
+        else:
+            # If not all sensitive/non-sensitive ask per file
             # Save all sensitive in one dict and all non-sensitive in one
-            sensi, non_sensi = create_file_dict(file, sensitive)
-            
-            # Create file checksums
-            for s_ in sensi: 
-                sensi[s_]['checksum'] = gen_sha512(s_)  # Save checksum
-                sensi[s_]['size'] = get_filesize(s_)    # Save file size
-                sensi[s_]['format'] = file_type(s_)
-                click.echo(sensi)
+            file_dict = create_file_dict(file, sensitive)
 
-            for ns_ in non_sensi:
-                non_sensi[ns_]['checksum'] = gen_sha512(ns_)    # Save checksum
-                non_sensi[ns_]['size'] = get_filesize(ns_)      # Save file size
-                non_sensi[ns_]['format'] = file_type(ns_)
-
+            # Create file checksums and save in database
             # Save checksum and metadata in db
-            # TODO: Put this part together with the generation of metadata --> less loops 
-            couch = couch_connect()
-            project_db = couch['projects']
-            if project not in project_db: 
-                sys.exit("The specified project is not recorded in the database. Aborting upload.")
-            else: 
-                project_doc = project_db[project]
-                project_files = project_doc['files']
+            couch = couch_connect()             # Connect to database
+            project_db = couch['projects']      # Get project database
+            if project not in project_db:       # Check if project exists in database
+                sys.exit(
+                    "The specified project is not recorded in the database. Aborting upload.")
+            else:                                       # If project exists
+                project_doc = project_db[project]       # Get project document
+                project_files = project_doc['files']    # Get files
 
-                for s_ in sensi: 
-                    try: 
-                        project_files[s_] = sensi[s_]   # Save metadata
-                    except: 
-                        # TODO: Fix couchdb error 
-                        sys.exit(f"Could not save file {s_} metadata to database.")
-                for ns_ in non_sensi:
+                for f_ in file_dict:    # Generate and save checksums
                     try:
-                        project_files[ns_] = non_sensi[ns_]     # Save metadata
-                    except:
-                        # TODO: Fix couchdb error 
-                        sys.exit(f"Could not save file {ns_} metadata to database.")
+                        project_files[f_] = file_dict[f_]
+                        project_files[f_].update({"checksum": gen_sha512(f_),
+                                                  "format": file_type(f_),
+                                                  "size": get_filesize(f_),
+                                                  "date_uploaded": get_current_time()})   # Save checksum in db
+                    except CouchDBException:
+                        print(
+                            f"Could not save file {f_} metadata to database.")
 
-                try: 
+                try:
                     project_db.save(project_doc)
-                except:
-                    sys.exit(f"Updating project {project} failed. Cancelling upload.")
+                except CouchDBException:
+                    print(
+                        f"Updating project {project} failed. Cancelling upload.")
 
+            # TODO: Split files into sensitive and not sensitive
             # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
             # TODO: Compress files
             # TODO: Show success message
+            # TODO: Delete from database if failed upload
             # TODO: Save metadata to db
             # TODO: Show success message
             # TODO: Generate email to user of interest

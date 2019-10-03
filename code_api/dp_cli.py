@@ -9,6 +9,7 @@ import couchdb
 import sys
 import hashlib
 import os
+import filetype
 
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
@@ -94,6 +95,41 @@ def get_filesize(filename: str) -> int:
 
     return os.stat(filename).st_size
 
+
+def file_type(filename: str):
+    """Guesses file type based on extension"""
+
+    type_ = filetype.guess(filename)
+    if type_ is None: 
+        try: 
+            extension = os.path.splitext(filename)[1]
+        except: 
+            sys.stderr.write("Your file doesn't have an extension.")
+
+        if extension in (".txt"):
+            type_ = "text"
+        elif extension in (".csv"):
+            type_ = "csv"
+        elif extension in (".abi", ".ab1"):
+            type_ = "abi"
+        elif extension in (".embl"):
+            type_ = "embl"
+        elif extension in (".clust", ".cw", ".clustal"):
+            type_ = "clustal"
+        elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
+            type_ = "fasta"
+        elif extension in (".fastq", ".fq"):
+            type_ = "fastq"
+        elif extension in (".gbk", ".genbank", ".gb"):
+            type_ = "genbank"
+        elif extension in (".paup", ".nexus"):
+            type_ = "nexus"
+        else:
+            click.echo("Could not determine file format.")
+    
+    return type_
+
+
 # MAIN ################################################################## MAIN #
 
 @click.command()
@@ -143,12 +179,13 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
             for s_ in sensi: 
                 sensi[s_]['checksum'] = gen_sha512(s_)  # Save checksum
                 sensi[s_]['size'] = get_filesize(s_)    # Save file size
+                sensi[s_]['format'] = file_type(s_)
                 click.echo(sensi)
 
             for ns_ in non_sensi:
                 non_sensi[ns_]['checksum'] = gen_sha512(ns_)    # Save checksum
                 non_sensi[ns_]['size'] = get_filesize(ns_)      # Save file size
-
+                non_sensi[ns_]['format'] = file_type(ns_)
             # TODO: Save checksum in db
 
 

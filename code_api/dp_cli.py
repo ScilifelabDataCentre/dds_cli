@@ -186,8 +186,34 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
                 non_sensi[ns_]['checksum'] = gen_sha512(ns_)    # Save checksum
                 non_sensi[ns_]['size'] = get_filesize(ns_)      # Save file size
                 non_sensi[ns_]['format'] = file_type(ns_)
-            # TODO: Save checksum in db
 
+            # Save checksum and metadata in db
+            # TODO: Put this part together with the generation of metadata --> less loops 
+            couch = couch_connect()
+            project_db = couch['projects']
+            if project not in project_db: 
+                sys.exit("The specified project is not recorded in the database. Aborting upload.")
+            else: 
+                project_doc = project_db[project]
+                project_files = project_doc['files']
+
+                for s_ in sensi: 
+                    try: 
+                        project_files[s_] = sensi[s_]   # Save metadata
+                    except: 
+                        # TODO: Fix couchdb error 
+                        sys.exit(f"Could not save file {s_} metadata to database.")
+                for ns_ in non_sensi:
+                    try:
+                        project_files[ns_] = non_sensi[ns_]     # Save metadata
+                    except:
+                        # TODO: Fix couchdb error 
+                        sys.exit(f"Could not save file {ns_} metadata to database.")
+
+                try: 
+                    project_db.save(project_doc)
+                except:
+                    sys.exit(f"Updating project {project} failed. Cancelling upload.")
 
             # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
             # TODO: Compress files

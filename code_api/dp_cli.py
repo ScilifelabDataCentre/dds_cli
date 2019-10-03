@@ -7,6 +7,9 @@
 import click
 import couchdb
 import sys
+import hashlib
+import os
+
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
@@ -48,30 +51,48 @@ def check_project_access(username: str, project: str) -> bool:
 def couch_connect():
     """Connect to a couchdb interface."""
     
-    couch = couchdb.Server(f'http://localhost:5984')
+    couch = couchdb.Server('http://localhost:5984')
     couch.login('delport', 'delport')
     return couch
 
 
 def create_file_dict(files: tuple, sensitive: str) -> dict:
-    """Creates dictionary containing information about file sensitivity"""
+    """Creates separate dictionaries for sensitive and non-sensitive files"""
 
     sens_dict = dict()      # Dictionary for sensitive files
     nonsens_dict = dict()   # Dictionary for non-sensitive files
 
-    if sensitive=="ALL":
-        sens_dict = dict.fromkeys(files, True)
+    # If all files are sensitive or non-sensitive, save all filenames in same dict
+    # Otherwise user input to determine
+    if sensitive=="ALL": 
+        sens_dict = dict.fromkeys(files, dict())
     elif sensitive=="NONE":
-        nonsens_dict = dict.fromkeys(files, False)
+        nonsens_dict = dict.fromkeys(files, dict())
     else: 
         for f_ in files: 
             if click.confirm(f"File: {f_} \t Sensitive?"):
-                sens_dict[f_] = True
+                sens_dict[f_] = dict()
             else: 
-                nonsens_dict[f_] = False
+                nonsens_dict[f_] = dict()
 
     return sens_dict, nonsens_dict
 
+
+def gen_sha512(filename: str, chunk_size: int = 4094) -> str:
+    """Generates unique hash."""
+
+    hasher = hashlib.sha3_512()
+    with open(filename, "rb") as f:
+        for byte_block in iter(lambda: f.read(chunk_size), b""):
+            hasher.update(byte_block)
+    
+    return hasher.hexdigest()
+
+
+def get_filesize(filename: str) -> int:
+    """Returns file size"""
+
+    return os.stat(filename).st_size
 
 # MAIN ################################################################## MAIN #
 
@@ -96,7 +117,8 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
     # and associated password 
     if not username:  
         username = click.prompt("Enter username\t", type=str)
-    password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
+    # password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
+    password = "facility1"  # development
 
     # Checks user access to DP
     access_granted = check_dp_access(username, password)
@@ -106,8 +128,9 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
         # If project not chosen, ask for project to upload to
         # Check project access
         if not project: 
-            project = click.prompt("Project to upload files to")
-        
+            # project = click.prompt("Project to upload files to")
+            project = "0549ccc37f19cf10f62ae436f30038e4"    # development
+
         project_access = check_project_access(username, project)    
         if not project_access: 
             sys.exit("Project access denied. Cancelling upload.") 
@@ -116,14 +139,19 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
             # Save all sensitive in one dict and all non-sensitive in one
             sensi, non_sensi = create_file_dict(file, sensitive)
             
-            # TODO: Create file checksums
+            # Create file checksums
             for s_ in sensi: 
-                click.echo(s_)
+                sensi[s_]['checksum'] = gen_sha512(s_)  # Save checksum
+                sensi[s_]['size'] = get_filesize(s_)    # Save file size
+                click.echo(sensi)
 
             for ns_ in non_sensi:
-                click.echo(ns_)
-                 
+                non_sensi[ns_]['checksum'] = gen_sha512(ns_)    # Save checksum
+                non_sensi[ns_]['size'] = get_filesize(ns_)      # Save file size
+
             # TODO: Save checksum in db
+
+
             # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
             # TODO: Compress files
             # TODO: Show success message

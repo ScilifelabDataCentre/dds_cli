@@ -32,21 +32,23 @@ class CouchDBException(Exception):
 def check_dp_access(username: str, password: str) -> bool:
     """Check existance of user in database and the password validity."""
 
-    couch = couch_connect()
-    user_db = couch['dp_users']
+    dp_couch, dp_token = couch_connect()
+    user_db = dp_couch['dp_users']
     if not username in user_db:
         sys.exit("This user does not have a Delivery Portal account. "
                  "Contact xxx for more information.")
     elif user_db[username]['user']['password'] != password:
         sys.exit("The password is incorrect. Upload cancelled.")
+    
+    couch_disconnect(dp_couch, dp_token)
     return True
 
 
 def check_project_access(username: str, project: str) -> bool:
     """Checks the users access to a specific project."""
 
-    couch = couch_connect()
-    user_db = couch['dp_users']
+    proj_couch, proj_token = couch_connect()
+    user_db = proj_couch['dp_users']
 
     if project not in user_db[username]['projects']:
         if click.confirm("You do not have access to the specified project" +
@@ -55,16 +57,30 @@ def check_project_access(username: str, project: str) -> bool:
             check_project_access(username, project)
         else:
             sys.exit("Project access denied. Aborting upload.")
-    else:
-        return True
+    
+    couch_disconnect(proj_couch, proj_token)
+    return True
 
 
 def couch_connect():
     """Connect to a couchdb interface."""
 
-    couch = couchdb.Server('http://localhost:5984')
-    couch.login('delport', 'delport')
-    return couch
+    try: 
+        couch = couchdb.Server('http://localhost:5984')
+        token = couch.login('delport', 'delport')
+    except CouchDBException:
+        print("Database login failed.")
+
+    return couch, token
+
+
+def couch_disconnect(couch, token):
+    """Disconnect from couchdb interface."""
+
+    try: 
+        couch.logout(token)
+    except CouchDBException:
+        print("Could not logout from database.")
 
 
 def create_file_dict(files: tuple, sensitive: str) -> dict:
@@ -145,20 +161,18 @@ def file_type(filename: str) -> str:
     return type_
 
 
-#def split_files():
+# def split_files():
 
     # MAIN ################################################################## MAIN #
 
 @click.command()
+@click.option('--upload/--download', default=True, required=True,
+              help="Facility upload or user download.")
 @click.option('--file', '-f', required=True, multiple=True,
               type=click.Path(exists=True), help='File to upload.')
 @click.option('--username', '-u', type=str, help="Delivery Portal username.")
 @click.option('--project', '-p', type=str, help="Project to upload files to.")
-@click.option('--sensitive',
-              type=click.Choice(['ALL', 'NONE', 'MIXED'],
-                                case_sensitive=False),
-              help="Sensitive or non-sensitive information.")
-def upload_files(file: str, username: str, project: str, sensitive: str):
+def upload_files(upload, file: str, username: str, project: str):
     """Main function. Handles file upload.
 
     * If multiple files, use option multiple times.
@@ -170,14 +184,17 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
         "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
     """
 
-    file = ("testfile1.fna","testfile2.fna","testfile3.fna","testfile4.fna",)  # TODO: Change back after development
+    file = ("testfile1.fna", "testfile2.fna", "testfile3.fna",
+            "testfile4.fna",)  # TODO: remove after dev
+
+    sensitive = True
 
     # Ask for DP username if not entered
     # and associated password
     if not username:
         username = click.prompt("Enter username\t", type=str)
     # password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
-    password = "facility1"  # TODO: Change back after development
+    password = "facility1"  # TODO: Change after development
 
     # Checks user access to DP
     access_granted = check_dp_access(username, password)
@@ -188,21 +205,18 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
         # Check project access
         if not project:
             # project = click.prompt("Project to upload files to")
-            # TODO: Change back after development
+            # TODO: Change after development
             project = "0549ccc37f19cf10f62ae436f30038e4"
 
         project_access = check_project_access(username, project)
         if not project_access:
             sys.exit("Project access denied. Cancelling upload.")
         else:
-            # If not all sensitive/non-sensitive ask per file
-            # Save all sensitive in one dict and all non-sensitive in one
-            file_dict = create_file_dict(file, sensitive)
-
             # Create file checksums and save in database
             # Save checksum and metadata in db
-            couch = couch_connect()             # Connect to database
+            couch, token = couch_connect()             # Connect to database
             project_db = couch['projects']      # Get project database
+
             if project not in project_db:       # Check if project exists in database
                 sys.exit(
                     "The specified project is not recorded in the database. Aborting upload.")
@@ -210,16 +224,19 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
                 project_doc = project_db[project]       # Get project document
                 project_files = project_doc['files']    # Get files
 
-                for f_ in file_dict:    # Generate and save checksums
+                # Get project sensitive information from database
+                if 'project_info' in project_doc and 'sensitive' in project_doc['project_info']:
+                    sensitive = project_db[project]['project_info']['sensitive']
+
+                for f_ in file:    # Generate and save checksums
                     try:
-                        project_files[f_] = file_dict[f_]
-                        project_files[f_].update({"checksum": gen_sha512(f_),
-                                                  "format": file_type(f_),
-                                                  "size": get_filesize(f_),
-                                                  "date_uploaded": get_current_time()})   # Save checksum in db
+                        project_files[f_] = {"checksum": gen_sha512(f_),
+                                             "format": file_type(f_),
+                                             "size": get_filesize(f_),
+                                             "date_uploaded": get_current_time()}   # Save checksum in db
                     except CouchDBException:
                         print(
-                            f"Could not save file {f_} metadata to database.")
+                            f"Could not update file {f_} metadata.")
 
                 try:
                     project_db.save(project_doc)
@@ -227,9 +244,12 @@ def upload_files(file: str, username: str, project: str, sensitive: str):
                     print(
                         f"Updating project {project} failed. Cancelling upload.")
 
-            click.echo(file_dict)
-
-            # TODO: Split files into sensitive and not sensitive
+                couch_disconnect(couch, token)     # Logout from couchdb
+            
+                if sensitive: 
+                    click.echo("start encryption...")
+                    
+                    
             # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
             # TODO: Compress files
             # TODO: Show success message

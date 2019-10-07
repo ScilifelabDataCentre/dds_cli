@@ -11,12 +11,17 @@ import hashlib
 import os
 import filetype
 import datetime
+from itertools import chain
+
+import requests
+
+# import random
+from Crypto.Random import get_random_bytes
 
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
-
-# CLASSES ############################################################ CLASSES #
+# EXCEPTION CLASSES ######################################## EXCEPTION CLASSES #
 
 class CouchDBException(Exception):
     """Custom exception class. Handles errors in database operations."""
@@ -27,57 +32,79 @@ class CouchDBException(Exception):
         super().__init__(msg)
 
 
+class DeliveryPortalException(Exception):
+    """Custom exception class. Handles errors regarding Delivery Portal 
+    access etc"""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+
+
+# CLASSES ############################################################ CLASSES #
+
+class EncryptionKey:
+    """Class responsible for encryption key generation
+    and other cryptographic processes"""
+
+    def __init__(self, bytes: int = 32):
+        """Generates encryption key."""
+
+        # os.urandom is about as random as it gets.
+        # To generate >more< truly random >number< from urandom:
+        #       random.SystemRandom().random()
+        self.key = os.urandom(bytes)
+
+
 # FUNCTIONS ######################################################## FUNCTIONS #
 
 def check_dp_access(username: str, password: str) -> bool:
     """Check existance of user in database and the password validity."""
 
-    dp_couch, dp_token = couch_connect()
-    user_db = dp_couch['dp_users']
+    dp_couch = couch_connect()
+    user_db = dp_couch['user_db']
     if not username in user_db:
-        sys.exit("This user does not have a Delivery Portal account. "
-                 "Contact xxx for more information.")
-    elif user_db[username]['user']['password'] != password:
-        sys.exit("The password is incorrect. Upload cancelled.")
-    
-    couch_disconnect(dp_couch, dp_token)
+        raise CouchDBException("This user does not have a Delivery Portal account. "
+                               "Contact xxx for more information.")
+    elif user_db[username]['password_hash'] != hashlib.sha3_256(password.encode('utf-8')).hexdigest():
+        raise CouchDBException("The password is incorrect. Upload cancelled.")
+
     return True
 
 
 def check_project_access(username: str, project: str) -> bool:
     """Checks the users access to a specific project."""
 
-    proj_couch, proj_token = couch_connect()
-    user_db = proj_couch['dp_users']
+    proj_couch = couch_connect()
+    user_db = proj_couch['user_db']
 
-    if project not in user_db[username]['projects']:
+    if project not in set(chain(user_db[username]['projects']['ongoing'], user_db[username]['projects']['finished'])):
         if click.confirm("You do not have access to the specified project" +
                          f"'{project}'.\n Change project?"):
             project = click.prompt("Project to upload files to")
             check_project_access(username, project)
         else:
-            sys.exit("Project access denied. Aborting upload.")
-    
-    couch_disconnect(proj_couch, proj_token)
+            raise DeliveryPortalException(
+                "Project access denied. Aborting upload.")
+
     return True
 
 
 def couch_connect():
     """Connect to a couchdb interface."""
 
-    try: 
-        couch = couchdb.Server('http://localhost:5984')
-        token = couch.login('delport', 'delport')
+    try:
+        couch = couchdb.Server('http://delport:delport@localhost:5984/')
     except CouchDBException:
         print("Database login failed.")
 
-    return couch, token
+    return couch
 
 
 def couch_disconnect(couch, token):
     """Disconnect from couchdb interface."""
 
-    try: 
+    try:
         couch.logout(token)
     except CouchDBException:
         print("Could not logout from database.")
@@ -180,26 +207,28 @@ def upload_files(upload, file: str, username: str, project: str):
     # Checks user access to DP
     access_granted = check_dp_access(username, password)
     if not access_granted:
-        sys.exit("You are not authorized to access the Delivery Portal. Aborting.")
+        raise DeliveryPortalException(
+            "You are not authorized to access the Delivery Portal. Aborting.")
     else:
         # If project not chosen, ask for project to upload to
         # Check project access
         if not project:
             # project = click.prompt("Project to upload files to")
             # TODO: Change after development
-            project = "0549ccc37f19cf10f62ae436f30038e4"
+            project = "0372838e2cf1f4a2b869974723002bb7"
 
         project_access = check_project_access(username, project)
         if not project_access:
-            sys.exit("Project access denied. Cancelling upload.")
+            raise DeliveryPortalException(
+                "Project access denied. Cancelling upload.")
         else:
             # Create file checksums and save in database
             # Save checksum and metadata in db
-            couch, token = couch_connect()             # Connect to database
-            project_db = couch['projects']      # Get project database
+            couch = couch_connect()             # Connect to database
+            project_db = couch['project_db']      # Get project database
 
             if project not in project_db:       # Check if project exists in database
-                sys.exit(
+                raise CouchDBException(
                     "The specified project is not recorded in the database. Aborting upload.")
             else:                                       # If project exists
                 project_doc = project_db[project]       # Get project document
@@ -211,10 +240,10 @@ def upload_files(upload, file: str, username: str, project: str):
 
                 for f_ in file:    # Generate and save checksums
                     try:
-                        project_files[f_] = {"checksum": gen_sha512(f_),
-                                             "format": file_type(f_),
-                                             "size": get_filesize(f_),
-                                             "date_uploaded": get_current_time()}   # Save checksum in db
+                        project_files[f_] = {"size": get_filesize(f_),
+                                            "format": file_type(f_), 
+                                             "date_uploaded": get_current_time(),
+                                             "checksum": gen_sha512(f_)}   # Save checksum in db
                     except CouchDBException:
                         print(
                             f"Could not update file {f_} metadata.")
@@ -225,12 +254,9 @@ def upload_files(upload, file: str, username: str, project: str):
                     print(
                         f"Updating project {project} failed. Cancelling upload.")
 
-                couch_disconnect(couch, token)     # Logout from couchdb
-            
-                if sensitive: 
+                if sensitive:
                     click.echo("start encryption...")
-                    
-                    
+
             # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
             # TODO: Compress files
             # TODO: Show success message

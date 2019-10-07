@@ -8,7 +8,8 @@ setup(
     install_requires=[
         'Click',
         'CouchDB',
-        'filetype', 
+        'filetype' 
+        'pycryptodome', 
     ],
     entry_points={
         'console_scripts': [

@@ -17,6 +17,7 @@ import requests
 
 # import random
 from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES
 
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
@@ -108,6 +109,40 @@ def couch_disconnect(couch, token):
         couch.logout(token)
     except CouchDBException:
         print("Could not logout from database.")
+
+
+def decrypt_file(file, key, chunk, nonce_length: int = 16, mac_length: int = 16):
+    """dfdfgdfg"""
+    
+    with open(file, 'rb') as enc_file:
+        while True:
+            nonce = enc_file.read(nonce_length)
+            mac = enc_file.read(mac_length)
+            if not nonce or not mac:
+                break
+            cipher = AES.new(key, AES.MODE_GCM, nonce)
+            ciphertext = enc_file.read(chunk)
+            plaintext = cipher.decrypt_and_verify(ciphertext, mac)
+            if not plaintext: 
+                break
+            with open(f"decrypted_{file}", 'ab') as dec_file:
+                dec_file.write(plaintext)
+
+
+def encrypt_file(file, key, chunk): 
+    """fdgdfgd"""
+
+    with open(file, 'rb') as plaintext_file: 
+        while True: 
+            cipher = AES.new(key, AES.MODE_GCM)
+            plaintext = plaintext_file.read(chunk)
+            if not plaintext:
+                break
+
+            ciphertext, tag = cipher.encrypt_and_digest(plaintext)
+        
+            with open(f"encrypted_{file}", 'ab') as enc_file: 
+                enc_file.write(cipher.nonce + tag + ciphertext)
 
 
 def gen_sha512(filename: str, chunk_size: int = 4094) -> str:

@@ -2,45 +2,80 @@
 
 import os
 import code_api.dp_cli as dp_cli
-import time 
+import time
 import csv
+import pandas as pd
 
 
 def main():
-	"""Main function, executes timing operations."""
+    """Main function, executes timing operations."""
 
-	if not os.path.exists("chunk_timings.csv"):
-		with open("chunk_timings.csv", mode="w") as csvfile: 
-			writer = csv.writer(csvfile)
-			headers = ["Chunk_kibibytes", "File_size_MB", "Checksum", "Checksum_MB/s", "Encryption", "Encryption_MB/s"]
-			writer.writerow(headers)
+    # File to use
+    filename = "testfile1.fna"							# Filename
+    filesize_mb = dp_cli.get_filesize(filename)/1e6		# Filesize in MB
 
-	# TODO: Time different chunk sizes used in hash generation
-	filename = "testfile1.fna"
-	filesize_mb = dp_cli.get_filesize(filename)/1e6
-	chunk_size = [1]
-	while chunk_size[-1] <= 1e3:
-		if chunk_size[-1] < 16: 
-			chunk_size.append(chunk_size[-1]*2)
-		elif 16 <= chunk_size[-1] < 1e2:
-			chunk_size.append(chunk_size[-1]+16)
-		else: 
-			chunk_size.append(chunk_size[-1]+96)
-	
-	print(chunk_size)
+    # Variables
+    kibibytes = 1024
 
-	kibibytes = 1024
+    # Create timings file if doesn't exist
+    if not os.path.exists("chunk_timings.csv"):
+        with open("chunk_timings.csv", mode="w") as csvfile:
+            writer = csv.writer(csvfile)
+            headers = ["Chunk_kibibytes", "File_size_MB", "Checksum",
+                       "Checksum_MB/s", "Encryption", "Encryption_MB/s", "Decryption", "Decryption_MB/s"]
+            writer.writerow(headers)
 
-	for kb_ in chunk_size: 
-		hash_t = time.process_time_ns()
-		hash = dp_cli.gen_sha512(filename=filename, chunk_size=kb_*kibibytes)
-		hash_elapsed_time_ns = time.process_time_ns() - hash_t
+    # Time operations and save to csv file
+    chunk_size = 1				# Number of kibibytes in chunk
+    while chunk_size <= 1e3:
+        # Time hash generation
+        hash_t = time.process_time_ns()
+        checksum = dp_cli.gen_sha512(
+            filename=filename, chunk_size=chunk_size*kibibytes)
+        hash_elapsed_time_ns = time.process_time_ns() - hash_t
 
-		with open("chunk_timings.csv", mode="a") as csvfile:
-			writer = csv.writer(csvfile)
-			hash_elapsed_time_s = hash_elapsed_time_ns/1e9
-			row = [kb_, filesize_mb, hash_elapsed_time_s, filesize_mb/hash_elapsed_time_s]
-			writer.writerow(row)
+        if os.path.exists(f"encrypted_{filename}"):
+                os.remove(f"encrypted_{filename}")
+
+        if os.path.exists(f"decrypted_encrypted_{filename}"):
+                os.remove(f"decrypted_encrypted_{filename}")
+
+        # Time encryption
+        aeskey = dp_cli.EncryptionKey()
+        encryption_t = time.process_time_ns()
+        dp_cli.encrypt_file(file=filename, key=aeskey.key,
+                            chunk=chunk_size*kibibytes)
+        encryption_elapsed_time_ns = time.process_time_ns() - encryption_t
+
+        # Time decryption
+        decryption_t = time.process_time_ns()
+        dp_cli.decrypt_file(
+            file=f"encrypted_{filename}", key=aeskey.key, chunk=chunk_size*kibibytes)
+        decryption_elapsed_time_ns = time.process_time_ns() - decryption_t
+
+        # Save measurements to file
+        with open("chunk_timings.csv", mode="a") as csvfile:
+            writer = csv.writer(csvfile)
+            hash_elapsed_time_s = hash_elapsed_time_ns/1e9
+            encryption_elapsed_time_s = encryption_elapsed_time_ns/1e9
+            decryption_elapsed_time_s = decryption_elapsed_time_ns/1e9
+            row = [chunk_size,
+                   filesize_mb,
+                   hash_elapsed_time_s,
+                   filesize_mb/hash_elapsed_time_s,
+                   encryption_elapsed_time_s,
+                   filesize_mb/encryption_elapsed_time_s,
+                   decryption_elapsed_time_s,
+                   filesize_mb/decryption_elapsed_time_s]
+            writer.writerow(row)
+
+        if chunk_size < 16:
+            chunk_size *= 2
+        elif 16 <= chunk_size < 1e2:
+            chunk_size += 16
+        else:
+            chunk_size += 96
+
 
 if __name__ == "__main__":
-	main()
+    main()

@@ -83,25 +83,6 @@ def couch_disconnect(couch, token):
         print("Could not logout from database.")
 
 
-def create_file_dict(files: tuple, sensitive: str) -> dict:
-    """Creates a dictionary with info on sensitive or non-sensitive files"""
-
-    sens_nonsens_dict = dict()
-
-    if sensitive == "ALL":
-        sens_nonsens_dict = dict.fromkeys(files, {"sensitive": True})
-    elif sensitive == "NONE":
-        sens_nonsens_dict = dict.fromkeys(files, {"sensitive": False})
-    else:
-        for f_ in files:
-            if click.confirm(f"File: {f_} \t Sensitive?"):
-                sens_nonsens_dict[f_] = {"sensitive": True}
-            else:
-                sens_nonsens_dict[f_] = {"sensitive": False}
-
-    return sens_nonsens_dict
-
-
 def gen_sha512(filename: str, chunk_size: int = 4094) -> str:
     """Generates unique hash."""
 

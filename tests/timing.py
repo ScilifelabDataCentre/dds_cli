@@ -13,7 +13,7 @@ def main():
     """Main function, executes timing operations."""
 
     # File to use
-    filename = "testfile_1200.fna"							# Filename
+    filename = "testfile_109.fna"							# Filename
     filesize_mb = dp_cli.get_filesize(filename)/1e6		# Filesize in MB
 
     # Variables

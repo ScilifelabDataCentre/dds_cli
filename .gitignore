@@ -8,7 +8,7 @@ venv
 *.egg*
 .vscode
 .Rproj.user
-testfile*.fna
+*testfile*
 *.json
 *.png
 *.fna

@@ -10,3 +10,5 @@ venv
 .Rproj.user
 testfile*.fna
 *.json
+*.png
+*.fna

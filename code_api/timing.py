@@ -5,13 +5,15 @@ import code_api.dp_cli as dp_cli
 import time
 import csv
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def main():
     """Main function, executes timing operations."""
 
     # File to use
-    filename = "testfile1.fna"							# Filename
+    filename = "testfile_1200.fna"							# Filename
     filesize_mb = dp_cli.get_filesize(filename)/1e6		# Filesize in MB
 
     # Variables
@@ -40,12 +42,16 @@ def main():
         if os.path.exists(f"decrypted_encrypted_{filename}"):
                 os.remove(f"decrypted_encrypted_{filename}")
 
+        time.sleep(60)
+        
         # Time encryption
         aeskey = dp_cli.EncryptionKey()
         encryption_t = time.process_time_ns()
         dp_cli.encrypt_file(file=filename, key=aeskey.key,
                             chunk=chunk_size*kibibytes)
         encryption_elapsed_time_ns = time.process_time_ns() - encryption_t
+        
+        time.sleep(60)
 
         # Time decryption
         decryption_t = time.process_time_ns()
@@ -76,6 +82,13 @@ def main():
         else:
             chunk_size += 96
 
+    speed = pd.read_csv("chunk_timings.csv", usecols=['Chunk_kibibytes', 'Checksum_MB/s', 'Encryption_MB/s', 'Decryption_MB/s'], index_col=0)
+    print(speed)
+
+    plot = speed.plot(title="Cryptographic speed", lw=2, colormap='jet', marker='.', markersize=10)
+    plot.set_xlabel("Chunk size (kibibytes)")
+    plot.set_ylabel("Speed (MB/s)")
+    plt.savefig(f'cryptspeed_{filename}.png')
 
 if __name__ == "__main__":
     main()

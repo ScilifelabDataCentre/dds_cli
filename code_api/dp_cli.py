@@ -15,6 +15,8 @@ from itertools import chain
 
 import requests
 
+from smart_open import open as stream_open
+
 # import random
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
@@ -64,26 +66,25 @@ def check_dp_access(username: str, password: str) -> bool:
 
     dp_couch = couch_connect()
     user_db = dp_couch['user_db']
-    if not username in user_db:
-        raise CouchDBException("This user does not have a Delivery Portal account. "
-                               "Contact xxx for more information.")
-    elif user_db[username]['password_hash'] != hashlib.sha3_256(password.encode('utf-8')).hexdigest():
-        raise CouchDBException("The password is incorrect. Upload cancelled.")
+    for id_ in user_db:
+        if username in user_db[id_]['username']:
+            if user_db[id_]['password_hash'] == password:
+                return True, id_
 
-    return True
+    return False, ""
 
 
-def check_project_access(username: str, project: str) -> bool:
+def check_project_access(user: str, project: str) -> bool:
     """Checks the users access to a specific project."""
 
     proj_couch = couch_connect()
     user_db = proj_couch['user_db']
 
-    if project not in set(chain(user_db[username]['projects']['ongoing'], user_db[username]['projects']['finished'])):
+    if project not in set(chain(user_db[user]['projects']['ongoing'], user_db[user]['projects']['finished'])):
         if click.confirm("You do not have access to the specified project" +
                          f"'{project}'.\n Change project?"):
             project = click.prompt("Project to upload files to")
-            check_project_access(username, project)
+            check_project_access(user, project)
         else:
             raise DeliveryPortalException(
                 "Project access denied. Aborting upload.")
@@ -111,9 +112,9 @@ def couch_disconnect(couch, token):
         print("Could not logout from database.")
 
 
-def decrypt_file(file, key, chunk, nonce_length: int = 16, mac_length: int = 16):
+def decrypt_file(file, newfile, key, chunk, nonce_length: int = 16, mac_length: int = 16):
     """dfdfgdfg"""
-    
+
     with open(file, 'rb') as enc_file:
         while True:
             nonce = enc_file.read(nonce_length)
@@ -123,25 +124,25 @@ def decrypt_file(file, key, chunk, nonce_length: int = 16, mac_length: int = 16)
             cipher = AES.new(key, AES.MODE_GCM, nonce)
             ciphertext = enc_file.read(chunk)
             plaintext = cipher.decrypt_and_verify(ciphertext, mac)
-            if not plaintext: 
+            if not plaintext:
                 break
-            with open(f"decrypted_{file}", 'ab') as dec_file:
+            with open(newfile, 'ab') as dec_file:
                 dec_file.write(plaintext)
 
 
-def encrypt_file(file, key, chunk): 
+def encrypt_file(file, newfile, key, chunk):
     """fdgdfgd"""
 
-    with open(file, 'rb') as plaintext_file: 
-        while True: 
+    with open(file, 'rb') as plaintext_file:
+        while True:
             cipher = AES.new(key, AES.MODE_GCM)
             plaintext = plaintext_file.read(chunk)
             if not plaintext:
                 break
 
             ciphertext, tag = cipher.encrypt_and_digest(plaintext)
-        
-            with open(f"encrypted_{file}", 'ab') as enc_file: 
+
+            with open(newfile, 'ab') as enc_file:
                 enc_file.write(cipher.nonce + tag + ciphertext)
 
 
@@ -227,20 +228,23 @@ def upload_files(upload, file: str, username: str, project: str):
         "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
     """
 
-    file = ("testfile1.fna", "testfile2.fna", "testfile3.fna",
-            "testfile4.fna",)  # TODO: remove after dev
+    FILESDIR = "/Volumes/Seagate_Backup_Plus_Drive/Delivery_Portal/api/Files/"
+    file = (FILESDIR + "testfile_05.fna", FILESDIR + "testfile2.fna",
+            FILESDIR + "testfile3.fna", FILESDIR + "testfile4.fna",)  # TODO: remove after dev
 
     sensitive = True
 
     # Ask for DP username if not entered
     # and associated password
     if not username:
-        username = click.prompt("Enter username\t", type=str)
+        # username = click.prompt("Enter username\t", type=str)
+        username = "facility1"
     # password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
-    password = "facility1"  # TODO: Change after development
-
+    # TODO: Change after development
+    password = hashlib.sha256(b"facility1").hexdigest()
+    click.echo(password)
     # Checks user access to DP
-    access_granted = check_dp_access(username, password)
+    access_granted, user_id = check_dp_access(username, password)
     if not access_granted:
         raise DeliveryPortalException(
             "You are not authorized to access the Delivery Portal. Aborting.")
@@ -252,7 +256,7 @@ def upload_files(upload, file: str, username: str, project: str):
             # TODO: Change after development
             project = "0372838e2cf1f4a2b869974723002bb7"
 
-        project_access = check_project_access(username, project)
+        project_access = check_project_access(user_id, project)
         if not project_access:
             raise DeliveryPortalException(
                 "Project access denied. Cancelling upload.")
@@ -276,12 +280,11 @@ def upload_files(upload, file: str, username: str, project: str):
                 for f_ in file:    # Generate and save checksums
                     try:
                         project_files[f_] = {"size": get_filesize(f_),
-                                            "format": file_type(f_), 
+                                             "format": file_type(f_),
                                              "date_uploaded": get_current_time(),
                                              "checksum": gen_sha512(f_)}   # Save checksum in db
                     except CouchDBException:
-                        print(
-                            f"Could not update file {f_} metadata.")
+                        print(f"Could not update file {f_} metadata.")
 
                 try:
                     project_db.save(project_doc)
@@ -292,7 +295,12 @@ def upload_files(upload, file: str, username: str, project: str):
                 if sensitive:
                     click.echo("start encryption...")
 
-            # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
+                # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
+                with open(file[0], 'rb') as of: 
+                    with stream_open('s3://kMTZXkjLvM47TFn11zjhHJ8UlkT8PxrS/test.fna', 'wb') as sf:
+                        for byte_block in iter(lambda: of.read(4096), b""):
+                            sf.write(byte_block)
+
             # TODO: Compress files
             # TODO: Show success message
             # TODO: Delete from database if failed upload

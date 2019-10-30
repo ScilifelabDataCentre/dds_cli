@@ -4,13 +4,17 @@
 
 import os
 import sys
-import code_api.dp_cli as dp_cli
+import dp_cli as dp_cli
 import time
 import datetime
 import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import queue
+import threading
+
+import paramiko
 
 
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
@@ -20,7 +24,13 @@ TESTDIR = "/Users/inaod568/repos/dp_api/tests/"
 FIGDIR = "/Volumes/Seagate_Backup_Plus_Drive/Delivery_Portal/api/Figures/"
 kibibytes = 1024
 
+hostname = ""
+port = 22
+username = ""
+password = ""
+
 # CLASSES ########################################################### CLASSES #
+
 
 class FileException(Exception):
     """Custom exception class for handling file-related errors such as 
@@ -65,7 +75,9 @@ def create_csv_file(filename: str, *args, **kwargs):
                 headers = ["Chunk_kibibytes", "File_size_MB",
                            "Checksum", "Checksum_MB/s",
                            "Encryption", "Encryption_MB/s",
-                           "Decryption", "Decryption_MB/s"]
+                           "Decryption", "Decryption_MB/s",
+                           "Upload", "Upload_MB/s",
+                           "Download", "Download_MB/s"]
                 writer.writerow(headers)
         except FileException:
             print("The csv file could not be created.")
@@ -74,6 +86,8 @@ def create_csv_file(filename: str, *args, **kwargs):
             hash_elapsed_time_ns = kwargs.get('hashtime', None)
             encryption_elapsed_time_ns = kwargs.get('enctime', None)
             decryption_elapsed_time_ns = kwargs.get('dectime', None)
+            upload_elapsed_time_ns = kwargs.get('uptime', None)
+            download_elapsed_time_ns = kwargs.get('downtime', None)
             chunk_size = kwargs.get('chunk', None)
             filesize_mb = kwargs.get('size', None)
         except TimingException:
@@ -85,6 +99,8 @@ def create_csv_file(filename: str, *args, **kwargs):
             hash_elapsed_time_s = hash_elapsed_time_ns/1e9
             encryption_elapsed_time_s = encryption_elapsed_time_ns/1e9
             decryption_elapsed_time_s = decryption_elapsed_time_ns/1e9
+            upload_elapsed_time_s = upload_elapsed_time_ns/1e9
+            download_elapsed_time_s = download_elapsed_time_ns/1e9
             row = [chunk_size,
                    filesize_mb,
                    hash_elapsed_time_s,
@@ -92,8 +108,35 @@ def create_csv_file(filename: str, *args, **kwargs):
                    encryption_elapsed_time_s,
                    filesize_mb/encryption_elapsed_time_s,
                    decryption_elapsed_time_s,
-                   filesize_mb/decryption_elapsed_time_s]
+                   filesize_mb/decryption_elapsed_time_s,
+                   upload_elapsed_time_s,
+                   filesize_mb/upload_elapsed_time_s,
+                   download_elapsed_time_s,
+                   filesize_mb/download_elapsed_time_s]
             writer.writerow(row)
+
+
+def time_transfer(filename: str, chunk: int) -> int:
+    """Time transfer to server"""
+
+    client = paramiko.SSHClient()
+    client.load_system_host_keys()
+    client.connect(hostname=hostname,
+                   port=port, username=username,
+                   password=password)
+
+    transfer_t = time.process_time_ns()
+
+    sftp_sess = client.open_sftp()
+    with sftp_sess.file("testing.txt", "ab") as nf:
+        with open(filename, "rb") as f:
+            while True:
+                plaintext = f.read(chunk*kibibytes)
+                if not plaintext:
+                    return
+                nf.write(plaintext)
+
+    return time.process_time_ns() - transfer_t, client
 
 
 def time_hashing(filename: str, chunk: int) -> int:
@@ -103,7 +146,7 @@ def time_hashing(filename: str, chunk: int) -> int:
     checksum = dp_cli.gen_sha512(filename=filename,
                                  chunk_size=chunk*kibibytes)
 
-    return time.process_time_ns() - hash_t
+    return time.process_time_ns() - hash_t, checksum
 
 
 def time_encryption(filename: str, enc_name: str, chunk: int, key) -> int:
@@ -160,25 +203,90 @@ def main(files: list):
         create_csv_file(csv_file)
 
         # Time operations and save to csv file
-        chunk_size = 1000				    # Number of kibibytes in chunk
+        chunk_size = 1				    # Number of kibibytes in chunk
         while chunk_size <= 1000:
+            print("Chunk: ", chunk_size)
+
+            # Time transfer
+            print("Uploading...")
+            client = paramiko.SSHClient()
+            client.load_system_host_keys()
+            client.connect(hostname=hostname,
+                           port=port, username=username,
+                           password=password)
+
+            upload_t = time.process_time_ns()
+
+            # lägg till buffer?
+            with open(f_, "rb") as f:
+                with client.open_sftp().file("testing.txt", "ab") as nf:
+                    for chunk in iter(lambda: f.read(chunk_size*kibibytes), b''):
+                        nf.write(chunk)
+                        nf.flush()
+
+            upload_elapsed_time_ns = time.process_time_ns() - upload_t
+
+            print("Resting...")
+            time.sleep(60)
+
+            print("Downloading...")
+            download_t = time.process_time_ns()
+
+            with open(f"downloaded.txt", "ab") as f:
+                with client.open_sftp().file("testing.txt", "rb") as nf:
+                    for chunk in iter(lambda: nf.read(chunk_size*kibibytes), b''):
+                        f.write(chunk)
+                        f.flush()
+
+            download_elapsed_time_ns = time.process_time_ns() - download_t
+
+            print("Deleting file...")
+            try:
+                stdin, stdout, stderr = client.exec_command('ls -lh')
+                print(stdout.read())
+                client.exec_command('rm testing.txt')
+                client.close()
+            except:
+                sys.exit("could not delete file on server")
+
+            print("Resting...")
+            time.sleep(60)                      # Rest
+
             # Time hash generation
-            hash_elapsed_time_ns = time_hashing(filename=f_,
-                                                chunk=chunk_size)
+            print("Hashing original file...")
+            hash_elapsed_time_ns, origin_hash = time_hashing(filename=f_,
+                                                             chunk=chunk_size)
 
             remove_files(enc_file, dec_file)    # Remove files if the exist
+
+            print("Hashing downloaded file...")
+            down_hash = dp_cli.gen_sha512(filename=f_,
+                                          chunk_size=chunk_size*kibibytes)
+            if os.path.exists(f"downloaded.txt"):
+                os.remove(f"downloaded.txt")
+
+            print("Checking hashes...")
+            if origin_hash != down_hash:
+                sys.exit("Uploaded and downloaded file not identical!")
+            else:
+                print("Files identical!")
+
+            print("Resting...")
             time.sleep(60)                      # Rest
 
             # Time encryption
+            print("Encrypting...")
             aeskey = dp_cli.EncryptionKey()
             encryption_elapsed_time_ns = time_encryption(filename=f_,
                                                          enc_name=enc_file,
                                                          chunk=chunk_size,
                                                          key=aeskey.key)
 
+            print("Resting...")
             time.sleep(60)      # Rest
 
             # Time decryption
+            print("Decrypting...")
             decryption_elapsed_time_ns = time_decryption(filename=enc_file,
                                                          dec_name=dec_file,
                                                          key=aeskey.key,
@@ -187,12 +295,17 @@ def main(files: list):
             remove_files(enc_file, dec_file)    # Remove files
 
             # Save measurements to file
-            create_csv_file(filename=f_,
-                            hashtime=hash_elapsed_time_ns,
-                            enctime=encryption_elapsed_time_ns,
-                            dectime=decryption_elapsed_time_ns,
-                            chunk=chunk_size,
-                            size=filesize_mb)
+            try:
+                create_csv_file(filename=csv_file,
+                                hashtime=hash_elapsed_time_ns,
+                                enctime=encryption_elapsed_time_ns,
+                                dectime=decryption_elapsed_time_ns,
+                                uptime=upload_elapsed_time_ns,
+                                downtime=download_elapsed_time_ns,
+                                chunk=chunk_size,
+                                size=filesize_mb)
+            except:
+                sys.exit("Could not save elapsed time to file.")
 
             if chunk_size < 16:
                 chunk_size *= 2
@@ -201,10 +314,13 @@ def main(files: list):
             else:
                 chunk_size += 96
 
+        print("Plotting...")
         speed_table = pd.read_csv(csv_file, usecols=['Chunk_kibibytes',
                                                      'Checksum_MB/s',
                                                      'Encryption_MB/s',
-                                                     'Decryption_MB/s'],
+                                                     'Decryption_MB/s',
+                                                     'Upload_MB/s',
+                                                     'Download_MB/s'],
                                   index_col=0)
 
         create_plot(speed=speed_table, filename=f_, timestamp=TIMESTAMP)
@@ -212,5 +328,9 @@ def main(files: list):
 
 if __name__ == "__main__":
     files = [f"{FILESDIR}testfile_109.fna"]
+
+    hostname = sys.argv[1]
+    username = sys.argv[2]
+    password = sys.argv[3]
 
     main(files)

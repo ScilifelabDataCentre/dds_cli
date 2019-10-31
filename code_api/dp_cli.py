@@ -16,6 +16,9 @@ from itertools import chain
 import requests
 
 import paramiko
+import crypt4gh
+
+import subprocess
 
 # import random
 from Crypto.Random import get_random_bytes
@@ -227,7 +230,7 @@ def upload_files(upload, file: str, username: str, project: str):
     Example multiple files:
         "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
     """
-
+    
     FILESDIR = "/Volumes/Seagate_Backup_Plus_Drive/Delivery_Portal/api/Files/"
     file = (FILESDIR + "testfile_109.fna", )
     # file = (FILESDIR + "testfile_05.fna", FILESDIR + "testfile2.fna",
@@ -264,7 +267,7 @@ def upload_files(upload, file: str, username: str, project: str):
         else:
             # Create file checksums and save in database
             # Save checksum and metadata in db
-            couch = couch_connect()             # Connect to database
+            couch = couch_connect()               # Connect to database
             project_db = couch['project_db']      # Get project database
 
             if project not in project_db:       # Check if project exists in database
@@ -296,6 +299,8 @@ def upload_files(upload, file: str, username: str, project: str):
 
                 if sensitive:
                     click.echo("start encryption...")
+                    crypt4gh.keys.generate()
+
                     
                     
 

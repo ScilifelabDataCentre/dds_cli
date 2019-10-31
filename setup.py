@@ -8,9 +8,10 @@ setup(
     install_requires=[
         'Click',
         'CouchDB',
-        'filetype' 
+        'filetype', 
         'pycryptodome', 
     ],
+    dependency_links=['https://github.com/EGA-archive/crypt4gh.git'],
     entry_points={
         'console_scripts': [
             'dp_cli = code_api.dp_cli:upload_files',

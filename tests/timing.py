@@ -127,17 +127,18 @@ def time_upload(filename: str, chunk: int) -> int:
 
     upload_t = time.process_time_ns()
 
+    sftp = client.open_sftp()
     # lägg till buffer?
     # TRY "SETTIMEOUT?"
-    # with open(filename, "rb") as f:
-    #     with client.open_sftp().file("testing.txt", "ab") as nf:
-    #         for chunk in iter(lambda: f.read(chunk*kibibytes), b''):
-    #             nf.write(chunk)
-    #             nf.flush()
+    with open(filename, "rb") as f:
+        with sftp.file("testing.txt", "ab") as nf:
+            for chunk in iter(lambda: f.read(chunk*kibibytes), b''):
+                nf.write(chunk)
+                nf.flush()
 
-    sftp = client.open_sftp()
-    result = sftp.put(localpath=filename,remotepath="testing.txt") # Reads 32768 bytes at a time 
-    print(result)
+    # sftp = client.open_sftp()
+    # result = sftp.put(localpath=filename,remotepath="testing.txt") # Reads 32768 bytes at a time 
+    # print(result)
 
     return (time.process_time_ns() - upload_t), client
 
@@ -330,7 +331,7 @@ def main(files: list):
 
 
 if __name__ == "__main__":
-    files = [f"{FILESDIR}testfile_33000.fna"]
+    files = [f"{FILESDIR}testfile_109.fna"]
 
     hostname = sys.argv[1]
     username = sys.argv[2]

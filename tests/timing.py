@@ -33,7 +33,7 @@ password = ""
 
 
 class FileException(Exception):
-    """Custom exception class for handling file-related errors such as 
+    """Custom exception class for handling file-related errors such as
     deleting files, creating files, etc."""
 
     def __init__(self, msg: str):
@@ -116,7 +116,7 @@ def create_csv_file(filename: str, *args, **kwargs):
             writer.writerow(row)
 
 
-def time_transfer(filename: str, chunk: int) -> int:
+def time_upload(filename: str, chunk: int) -> int:
     """Time transfer to server"""
 
     client = paramiko.SSHClient()
@@ -125,18 +125,42 @@ def time_transfer(filename: str, chunk: int) -> int:
                    port=port, username=username,
                    password=password)
 
-    transfer_t = time.process_time_ns()
+    upload_t = time.process_time_ns()
 
-    sftp_sess = client.open_sftp()
-    with sftp_sess.file("testing.txt", "ab") as nf:
-        with open(filename, "rb") as f:
-            while True:
-                plaintext = f.read(chunk*kibibytes)
-                if not plaintext:
-                    return
-                nf.write(plaintext)
+    # lägg till buffer?
+    # TRY "SETTIMEOUT?"
+    # with open(filename, "rb") as f:
+    #     with client.open_sftp().file("testing.txt", "ab") as nf:
+    #         for chunk in iter(lambda: f.read(chunk*kibibytes), b''):
+    #             nf.write(chunk)
+    #             nf.flush()
 
-    return time.process_time_ns() - transfer_t, client
+    sftp = client.open_sftp()
+    result = sftp.put(localpath=filename,remotepath="testing.txt") # Reads 32768 bytes at a time 
+    print(result)
+
+    return (time.process_time_ns() - upload_t), client
+
+
+def time_download(chunk: int) -> int:
+    """Time transfer from server"""
+
+    client = paramiko.SSHClient()
+    client.load_system_host_keys()
+    client.connect(hostname=hostname,
+                   port=port, username=username,
+                   password=password)
+
+    download_t = time.process_time_ns()
+
+    # lägg till buffer?
+    with open("downloaded.txt", "ab") as f:
+        with client.open_sftp().file("testing.txt", "rb") as nf:
+            for chunk in iter(lambda: nf.read(chunk*kibibytes), b''):
+                f.write(chunk)
+                f.flush()
+
+    return (time.process_time_ns() - download_t), client
 
 
 def time_hashing(filename: str, chunk: int) -> int:
@@ -209,36 +233,15 @@ def main(files: list):
 
             # Time transfer
             print("Uploading...")
-            client = paramiko.SSHClient()
-            client.load_system_host_keys()
-            client.connect(hostname=hostname,
-                           port=port, username=username,
-                           password=password)
-
-            upload_t = time.process_time_ns()
-
-            # lägg till buffer?
-            with open(f_, "rb") as f:
-                with client.open_sftp().file("testing.txt", "ab") as nf:
-                    for chunk in iter(lambda: f.read(chunk_size*kibibytes), b''):
-                        nf.write(chunk)
-                        nf.flush()
-
-            upload_elapsed_time_ns = time.process_time_ns() - upload_t
+            upload_elapsed_time_ns, client = time_upload(filename=f_,
+                                                         chunk=chunk_size)
+            print(upload_elapsed_time_ns/1e9)
 
             print("Resting...")
             time.sleep(60)
 
             print("Downloading...")
-            download_t = time.process_time_ns()
-
-            with open(f"downloaded.txt", "ab") as f:
-                with client.open_sftp().file("testing.txt", "rb") as nf:
-                    for chunk in iter(lambda: nf.read(chunk_size*kibibytes), b''):
-                        f.write(chunk)
-                        f.flush()
-
-            download_elapsed_time_ns = time.process_time_ns() - download_t
+            download_elapsed_time_ns, client = time_download(chunk=chunk_size)
 
             print("Deleting file...")
             try:
@@ -327,7 +330,7 @@ def main(files: list):
 
 
 if __name__ == "__main__":
-    files = [f"{FILESDIR}testfile_109.fna"]
+    files = [f"{FILESDIR}testfile_33000.fna"]
 
     hostname = sys.argv[1]
     username = sys.argv[2]

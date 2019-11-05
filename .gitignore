@@ -12,3 +12,6 @@ venv
 *.json
 *.png
 *.fna
+*.sec
+*.pub
+crypt4gh

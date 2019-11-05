@@ -15,7 +15,6 @@ from itertools import chain
 
 import requests
 
-import paramiko
 import crypt4gh
 
 import subprocess
@@ -64,7 +63,7 @@ class EncryptionKey:
 
 # FUNCTIONS ######################################################## FUNCTIONS #
 
-def check_dp_access(username: str, password: str) -> bool:
+def check_dp_access(username: str, password: str) -> (bool, str):
     """Check existance of user in database and the password validity."""
 
     dp_couch = couch_connect()
@@ -81,13 +80,12 @@ def check_project_access(user: str, project: str) -> bool:
     """Checks the users access to a specific project."""
 
     proj_couch = couch_connect()
-    user_db = proj_couch['user_db']
+    user_projects = proj_couch['user_db'][user]['projects']
 
-    if project not in set(chain(user_db[user]['projects']['ongoing'], user_db[user]['projects']['finished'])):
+    if project not in set(chain(user_projects['ongoing'], user_projects['finished'])):
         if click.confirm("You do not have access to the specified project" +
                          f"'{project}'.\n Change project?"):
-            project = click.prompt("Project to upload files to")
-            check_project_access(user, project)
+            check_project_access(user, click.prompt("Project ID"))
         else:
             raise DeliveryPortalException(
                 "Project access denied. Aborting upload.")
@@ -231,23 +229,24 @@ def upload_files(upload, file: str, username: str, project: str):
         "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
     """
     
-    FILESDIR = "/Volumes/Seagate_Backup_Plus_Drive/Delivery_Portal/api/Files/"
-    file = (FILESDIR + "testfile_109.fna", )
+    # FILESDIR = "/Volumes/Seagate_Backup_Plus_Drive/Delivery_Portal/api/Files/"
+    FILESDIR = "/Users/inaod568/Documents/"
+
+    file = (FILESDIR + "microbe.fna", )
     # file = (FILESDIR + "testfile_05.fna", FILESDIR + "testfile2.fna",
     #         FILESDIR + "testfile3.fna", FILESDIR + "testfile4.fna",)  # TODO: remove after dev
 
     sensitive = True
 
-    # Ask for DP username if not entered
-    # and associated password
+    # Ask for DP username if not entered and associated password
     if not username:
         # username = click.prompt("Enter username\t", type=str)
         username = "facility1"
     # password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
     # TODO: Change after development
     password = hashlib.sha256(b"facility1").hexdigest()
-    click.echo(password)
-    # Checks user access to DP
+
+    # Check user access to DP
     access_granted, user_id = check_dp_access(username, password)
     if not access_granted:
         raise DeliveryPortalException(
@@ -267,6 +266,7 @@ def upload_files(upload, file: str, username: str, project: str):
         else:
             # Create file checksums and save in database
             # Save checksum and metadata in db
+            # TODO: move this to after upload
             couch = couch_connect()               # Connect to database
             project_db = couch['project_db']      # Get project database
 
@@ -299,7 +299,7 @@ def upload_files(upload, file: str, username: str, project: str):
 
                 if sensitive:
                     click.echo("start encryption...")
-                    crypt4gh.keys.generate()
+                    # crypt4gh.keys.generate()
 
                     
                     

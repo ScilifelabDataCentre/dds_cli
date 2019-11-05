@@ -13,7 +13,7 @@ setup(
         'requests',
     ],
     dependency_links=[
-        'git+https://github.com/EGA-archive/crypt4gh.git#egg=crypt4gh', 
+        'git+https://github.com/EGA-archive/crypt4gh.git', 
     ],
     entry_points={
         'console_scripts': [

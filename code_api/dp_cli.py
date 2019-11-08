@@ -13,13 +13,13 @@ import filetype
 import datetime
 from itertools import chain
 
-import requests
+import gzip
+import zlib
+import zipfile
+import shutil
 
-import crypt4gh
-
-import subprocess
-
-# import random
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, hmac
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
 
@@ -46,7 +46,16 @@ class DeliveryPortalException(Exception):
         super().__init__(msg)
 
 
+class DeliveryOptionException(Exception):
+    """Custom exception class. Handles errors regarding data delivery 
+    options (s3 delivery) etc."""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+
 # CLASSES ############################################################ CLASSES #
+
 
 class EncryptionKey:
     """Class responsible for encryption key generation
@@ -89,8 +98,22 @@ def check_project_access(user: str, project: str) -> bool:
         else:
             raise DeliveryPortalException(
                 "Project access denied. Aborting upload.")
+    else:
+        '''3. Project has S3 access?'''
+        project_info = proj_couch['project_db'][project]['project_info']
+        if not project_info['delivery_option'] == "S3":
+            raise DeliveryOptionException(
+                "The specified project does not have access to S3.")
+        else:
+            return True, project_info['sensitive']
 
-    return True
+
+def compression_list():
+    """Returns a list of compressed-format mime types"""
+
+    extlist = ['epub+zip', 'zip', 'x-tar', 'x-rar-compressed', 'gzip', 'x-bzip2', 'x-7z-compressed', 'x-xz', 'vnd.ms-cab-compressed', 'x-unix-archive', 'x-compress', 'x-lzip']
+    
+    return [f'application/{ext}' for ext in extlist]
 
 
 def couch_connect():
@@ -147,6 +170,18 @@ def encrypt_file(file, newfile, key, chunk):
                 enc_file.write(cipher.nonce + tag + ciphertext)
 
 
+def gen_hmac(filepath: str) -> str:
+    """Generates HMAC"""
+
+    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
+    h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+    
+    with open(filepath, 'rb') as f:
+        for compressed_chunk in iter(lambda: f.read(16384), b''):
+            h.update(compressed_chunk)
+        return h.finalize().hex()
+
+
 def gen_sha512(filename: str, chunk_size: int = 4094) -> str:
     """Generates unique hash."""
 
@@ -173,42 +208,38 @@ def get_current_time() -> str:
 
 
 def file_type(filename: str) -> str:
-    """Guesses file type based on extension"""
+    """Guesses file mime based on extension"""
 
-    type_ = filetype.guess(filename)
-    if type_ is None:
-        try:
-            extension = os.path.splitext(filename)[1]
-        except:
-            sys.stderr.write("Your file doesn't have an extension.")
+    kind = filetype.guess(filename)
+    if kind is not None:
+        return kind.mime
+    else: 
+        extension = os.path.splitext(filename)[1]
 
         if extension in (".txt"):
-            type_ = "text"
+            return "file/text"
         elif extension in (".csv"):
-            type_ = "csv"
+            return "file/csv"
         elif extension in (".abi", ".ab1"):
-            type_ = "abi"
+            return "ngs-data/abi"
         elif extension in (".embl"):
-            type_ = "embl"
+            return "ngs-data/embl"
         elif extension in (".clust", ".cw", ".clustal"):
-            type_ = "clustal"
+            return "ngs-data/clustal"
         elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
-            type_ = "fasta"
+            return "ngs-data/fasta"
         elif extension in (".fastq", ".fq"):
-            type_ = "fastq"
+            return "ngs-data/fastq"
         elif extension in (".gbk", ".genbank", ".gb"):
-            type_ = "genbank"
+            return "ngs-data/genbank"
         elif extension in (".paup", ".nexus"):
-            type_ = "nexus"
+            return "ngs-data/nexus"
         else:
             click.echo("Could not determine file format.")
+            return None 
 
-    return type_
 
-
-# def split_files():
-
-    # MAIN ################################################################## MAIN #
+# MAIN ################################################################## MAIN #
 
 @click.command()
 @click.option('--upload/--download', default=True, required=True,
@@ -229,21 +260,15 @@ def upload_files(upload, file: str, username: str, project: str):
         "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
     """
     
-    # FILESDIR = "/Volumes/Seagate_Backup_Plus_Drive/Delivery_Portal/api/Files/"
-    FILESDIR = "/Users/inaod568/Documents/"
+    upload_path = {}
+    hash_dict = {}
 
-    file = (FILESDIR + "microbe.fna", )
-    # file = (FILESDIR + "testfile_05.fna", FILESDIR + "testfile2.fna",
-    #         FILESDIR + "testfile3.fna", FILESDIR + "testfile4.fna",)  # TODO: remove after dev
-
-    sensitive = True
-
+    '''1. Facility has DP access?'''
     # Ask for DP username if not entered and associated password
     if not username:
         # username = click.prompt("Enter username\t", type=str)
         username = "facility1"
     # password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
-    # TODO: Change after development
     password = hashlib.sha256(b"facility1").hexdigest()
 
     # Check user access to DP
@@ -252,24 +277,89 @@ def upload_files(upload, file: str, username: str, project: str):
         raise DeliveryPortalException(
             "You are not authorized to access the Delivery Portal. Aborting.")
     else:
+        '''2. Facility has project access?'''
+        '''3. Project has S3 access?'''
         # If project not chosen, ask for project to upload to
-        # Check project access
         if not project:
             # project = click.prompt("Project to upload files to")
-            # TODO: Change after development
             project = "0372838e2cf1f4a2b869974723002bb7"
 
-        project_access = check_project_access(user_id, project)
+        # Check project access
+        project_access, sensitive = check_project_access(user_id, project)
         if not project_access:
             raise DeliveryPortalException(
                 "Project access denied. Cancelling upload.")
         else:
+            '''4. Compressed?'''
+            for f_ in file:
+                if os.path.isfile(f_): 
+                    # If the entered path is a file, perform compression on individual file
+                    mime = file_type(f_)  
+
+                    # If mime is a compressed format: update path
+                    # If mime not a compressed format:
+                    # -- perform compression on file
+                    if mime in compression_list():
+                        upload_path[f_] = f_
+                    else:
+                        '''5. Perform compression'''
+                        upload_path[f_] = f"{f_}.gzip"
+                        with open(f_, 'rb') as f_in:
+                            with gzip.open(upload_path[f_], 'wb') as f_out:
+                                shutil.copyfileobj(f_in, f_out)
+                    
+                    '''6. Generate checksum.'''
+                    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
+                    h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+                    with open(upload_path[f_], 'rb') as cf:
+                        for compressed_chunk in iter(lambda: cf.read(16384), b''):
+                            h.update(compressed_chunk)
+                    hash_dict[f_] = h.finalize().hex()
+                    print("Upload path: ", upload_path)
+                    print("Hash dict: ", hash_dict)
+
+                elif os.path.isdir(f_):
+                    # If the entered path is a directory, a zip archive is generated
+                    upload_path[f_] = f"{f_}.zip"
+                    shutil.make_archive(f_, 'zip', f_)
+
+                    '''6. Generate checksum.'''
+                    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
+
+                    def hash_dir(dir_path):
+                        hash_list = list()
+                        h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+                        for path, dirs, files in os.walk(f_):
+                            for file in sorted(files):
+                                hash_list.append(gen_hmac(os.path.join(path, file)))
+                            for dir_ in sorted(dirs):
+                                hash_list.append(hash_dir(os.path.join(path, dir_)))
+                            break
+                        return h.update(''.join(hash_list)).finalize().hex()
+                    
+                    hash_dict[f_] = hash_dir(f_)
+                    
+                    print("Upload path: ", upload_path)
+                    print("Hash dict: ", hash_dict)
+                else: 
+                    raise OSError("Path type not identified.")
+
+                '''7. Sensitive?'''
+                if not sensitive: 
+                    '''12. Upload to non sensitive bucket'''
+                else: 
+                    '''8. Get user public key'''
+                    '''9. Generate facility keys'''
+                    '''10. Encrypt data'''
+                    '''11. Generate checksum'''
+                    '''12. Upload to sensitive bucket'''
+                
+
             # Create file checksums and save in database
             # Save checksum and metadata in db
             # TODO: move this to after upload
             couch = couch_connect()               # Connect to database
             project_db = couch['project_db']      # Get project database
-
             if project not in project_db:       # Check if project exists in database
                 raise CouchDBException(
                     "The specified project is not recorded in the database. Aborting upload.")
@@ -284,10 +374,9 @@ def upload_files(upload, file: str, username: str, project: str):
                 for f_ in file:    # Generate and save checksums
                     try:
                         project_files[f_] = {"size": get_filesize(f_),
-                                             "format": file_type(f_),
+                                             "mime": file_type(f_),
                                              "date_uploaded": get_current_time(),
                                              "checksum": gen_sha512(f_)}   # Save checksum in db
-                        click.echo(get_filesize(f_))
                     except CouchDBException:
                         print(f"Could not update file {f_} metadata.")
 
@@ -296,13 +385,6 @@ def upload_files(upload, file: str, username: str, project: str):
                 except CouchDBException:
                     print(
                         f"Updating project {project} failed. Cancelling upload.")
-
-                if sensitive:
-                    click.echo("start encryption...")
-                    # crypt4gh.keys.generate()
-
-                    
-                    
 
             # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
             # TODO: Compress files

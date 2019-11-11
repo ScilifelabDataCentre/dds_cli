@@ -108,11 +108,20 @@ def check_project_access(user: str, project: str) -> bool:
             return True, project_info['sensitive']
 
 
+def compress_file(original: str, compressed: str) -> None:
+    """Compresses file using gzip"""
+
+    with open(original, 'rb') as f_in:
+        with gzip.open(compressed, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+
 def compression_list():
     """Returns a list of compressed-format mime types"""
 
-    extlist = ['epub+zip', 'zip', 'x-tar', 'x-rar-compressed', 'gzip', 'x-bzip2', 'x-7z-compressed', 'x-xz', 'vnd.ms-cab-compressed', 'x-unix-archive', 'x-compress', 'x-lzip']
-    
+    extlist = ['epub+zip', 'zip', 'x-tar', 'x-rar-compressed', 'gzip', 'x-bzip2',
+               'x-7z-compressed', 'x-xz', 'vnd.ms-cab-compressed', 'x-unix-archive', 'x-compress', 'x-lzip']
+
     return [f'application/{ext}' for ext in extlist]
 
 
@@ -175,11 +184,11 @@ def gen_hmac(filepath: str) -> str:
 
     key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
     h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
-    
+
     with open(filepath, 'rb') as f:
         for compressed_chunk in iter(lambda: f.read(16384), b''):
             h.update(compressed_chunk)
-        return h.finalize().hex()
+        return h.finalize()
 
 
 def gen_sha512(filename: str, chunk_size: int = 4094) -> str:
@@ -207,13 +216,32 @@ def get_current_time() -> str:
     return f"{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}"
 
 
+def hash_dir(dir_path: str, key) -> str:
+    """Generates a hash for all contents within a folder"""
+
+    # Initialize HMAC
+    dir_hmac = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+
+    # Recursively walk through the folder
+    for path, dirs, files in os.walk(dir_path):
+        for file in sorted(files):  # For all files in folder root
+            # Generate file hash and update directory hash
+            dir_hmac.update(gen_hmac(os.path.join(path, file)))
+        for dir_ in sorted(dirs):   # For all folders in folder root
+            # Walk through child folder
+            hash_dir(os.path.join(path, dir_), key)
+        break
+
+    return dir_hmac.finalize().hex()
+
+
 def file_type(filename: str) -> str:
     """Guesses file mime based on extension"""
 
     kind = filetype.guess(filename)
     if kind is not None:
         return kind.mime
-    else: 
+    else:
         extension = os.path.splitext(filename)[1]
 
         if extension in (".txt"):
@@ -236,7 +264,7 @@ def file_type(filename: str) -> str:
             return "ngs-data/nexus"
         else:
             click.echo("Could not determine file format.")
-            return None 
+            return None
 
 
 # MAIN ################################################################## MAIN #
@@ -259,7 +287,7 @@ def upload_files(upload, file: str, username: str, project: str):
     Example multiple files:
         "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
     """
-    
+
     upload_path = {}
     hash_dict = {}
 
@@ -272,11 +300,14 @@ def upload_files(upload, file: str, username: str, project: str):
     password = hashlib.sha256(b"facility1").hexdigest()
 
     # Check user access to DP
+    click.echo("[*] Verifying Delivery Portal access...")
     access_granted, user_id = check_dp_access(username, password)
     if not access_granted:
         raise DeliveryPortalException(
             "You are not authorized to access the Delivery Portal. Aborting.")
     else:
+        click.echo("[**] Access granted!\n")
+
         '''2. Facility has project access?'''
         '''3. Project has S3 access?'''
         # If project not chosen, ask for project to upload to
@@ -285,16 +316,21 @@ def upload_files(upload, file: str, username: str, project: str):
             project = "0372838e2cf1f4a2b869974723002bb7"
 
         # Check project access
+        click.echo("[*] Verifying project access...")
         project_access, sensitive = check_project_access(user_id, project)
         if not project_access:
             raise DeliveryPortalException(
                 "Project access denied. Cancelling upload.")
         else:
+            click.echo("[**] Project access granted!\n")
+
+            key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
+            
             '''4. Compressed?'''
             for f_ in file:
-                if os.path.isfile(f_): 
+                if os.path.isfile(f_):
                     # If the entered path is a file, perform compression on individual file
-                    mime = file_type(f_)  
+                    mime = file_type(f_)
 
                     # If mime is a compressed format: update path
                     # If mime not a compressed format:
@@ -303,57 +339,43 @@ def upload_files(upload, file: str, username: str, project: str):
                         upload_path[f_] = f_
                     else:
                         '''5. Perform compression'''
+                        click.echo(f"~~~~ Compressing file '{f_}'...")
                         upload_path[f_] = f"{f_}.gzip"
-                        with open(f_, 'rb') as f_in:
-                            with gzip.open(upload_path[f_], 'wb') as f_out:
-                                shutil.copyfileobj(f_in, f_out)
-                    
-                    '''6. Generate checksum.'''
-                    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
-                    h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
-                    with open(upload_path[f_], 'rb') as cf:
-                        for compressed_chunk in iter(lambda: cf.read(16384), b''):
-                            h.update(compressed_chunk)
-                    hash_dict[f_] = h.finalize().hex()
-                    print("Upload path: ", upload_path)
-                    print("Hash dict: ", hash_dict)
+                        compress_file(f_, upload_path[f_])
+                        click.echo(f"~~~~ Compression completed! Compressed file: '{upload_path[f_]}")
+
+                    '''6. Generate file checksum.'''
+                    click.echo("~~~~ Generating HMAC...")
+                    hash_dict[f_] = gen_hmac(upload_path[f_]).hex()
+                    click.echo("~~~~ HMAC generated!")
 
                 elif os.path.isdir(f_):
+                    click.echo(f"[*] Directory: {f_}")
+
                     # If the entered path is a directory, a zip archive is generated
+                    '''5. Perform compression'''
+                    click.echo(f"~~~~ Compressing directory '{f_}'...")
                     upload_path[f_] = f"{f_}.zip"
                     shutil.make_archive(f_, 'zip', f_)
+                    click.echo(f"~~~~ Compression completed! Zip archive: '{upload_path[f_]}'")
 
-                    '''6. Generate checksum.'''
-                    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
+                    '''6. Generate directory checksum.'''
+                    click.echo("~~~~ Generating HMAC...")
+                    hash_dict[f_] = hash_dir(os.path.abspath(f_), key)
+                    click.echo("~~~~ HMAC generated!\n")
 
-                    def hash_dir(dir_path):
-                        hash_list = list()
-                        h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
-                        for path, dirs, files in os.walk(f_):
-                            for file in sorted(files):
-                                hash_list.append(gen_hmac(os.path.join(path, file)))
-                            for dir_ in sorted(dirs):
-                                hash_list.append(hash_dir(os.path.join(path, dir_)))
-                            break
-                        return h.update(''.join(hash_list)).finalize().hex()
-                    
-                    hash_dict[f_] = hash_dir(f_)
-                    
-                    print("Upload path: ", upload_path)
-                    print("Hash dict: ", hash_dict)
-                else: 
+                else:
                     raise OSError("Path type not identified.")
 
                 '''7. Sensitive?'''
-                if not sensitive: 
+                if not sensitive:
                     '''12. Upload to non sensitive bucket'''
-                else: 
+                else:
                     '''8. Get user public key'''
                     '''9. Generate facility keys'''
                     '''10. Encrypt data'''
                     '''11. Generate checksum'''
                     '''12. Upload to sensitive bucket'''
-                
 
             # Create file checksums and save in database
             # Save checksum and metadata in db

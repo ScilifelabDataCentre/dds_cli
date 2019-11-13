@@ -4,6 +4,14 @@
 
 # IMPORTS ############################################################ IMPORTS #
 
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.backends import default_backend
+import shutil
+import zipfile
+import zlib
+import gzip
 import click
 import couchdb
 import sys
@@ -13,61 +21,14 @@ import filetype
 import datetime
 from itertools import chain
 
-import gzip
-import zlib
-import zipfile
-import shutil
-
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes, hmac
-from Crypto.Random import get_random_bytes
-from Crypto.Cipher import AES
+from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
+    DeliveryPortalException, DeliveryOptionException, SecurePasswordException
 
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
-# EXCEPTION CLASSES ######################################## EXCEPTION CLASSES #
-
-class CouchDBException(Exception):
-    """Custom exception class. Handles errors in database operations."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to the base class __init__."""
-
-        super().__init__(msg)
-
-
-class DeliveryPortalException(Exception):
-    """Custom exception class. Handles errors regarding Delivery Portal 
-    access etc"""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
-
-
-class DeliveryOptionException(Exception):
-    """Custom exception class. Handles errors regarding data delivery 
-    options (s3 delivery) etc."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
 
 # CLASSES ############################################################ CLASSES #
-
-
-class EncryptionKey:
-    """Class responsible for encryption key generation
-    and other cryptographic processes"""
-
-    def __init__(self, bytes: int = 32):
-        """Generates encryption key."""
-
-        # os.urandom is about as random as it gets.
-        # To generate >more< truly random >number< from urandom:
-        #       random.SystemRandom().random()
-        self.key = os.urandom(bytes)
 
 
 # FUNCTIONS ######################################################## FUNCTIONS #
@@ -111,9 +72,9 @@ def check_project_access(user: str, project: str) -> bool:
 def compress_file(original: str, compressed: str) -> None:
     """Compresses file using gzip"""
 
-    with open(original, 'rb') as f_in:
-        with gzip.open(compressed, 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    with open(original, 'rb') as pathin:
+        with gzip.open(compressed, 'wb') as pathout:
+            shutil.copyfileobj(pathin, pathout)
 
 
 def compression_list():
@@ -145,40 +106,6 @@ def couch_disconnect(couch, token):
         print("Could not logout from database.")
 
 
-def decrypt_file(file, newfile, key, chunk, nonce_length: int = 16, mac_length: int = 16):
-    """dfdfgdfg"""
-
-    with open(file, 'rb') as enc_file:
-        while True:
-            nonce = enc_file.read(nonce_length)
-            mac = enc_file.read(mac_length)
-            if not nonce or not mac:
-                break
-            cipher = AES.new(key, AES.MODE_GCM, nonce)
-            ciphertext = enc_file.read(chunk)
-            plaintext = cipher.decrypt_and_verify(ciphertext, mac)
-            if not plaintext:
-                break
-            with open(newfile, 'ab') as dec_file:
-                dec_file.write(plaintext)
-
-
-def encrypt_file(file, newfile, key, chunk):
-    """fdgdfgd"""
-
-    with open(file, 'rb') as plaintext_file:
-        while True:
-            cipher = AES.new(key, AES.MODE_GCM)
-            plaintext = plaintext_file.read(chunk)
-            if not plaintext:
-                break
-
-            ciphertext, tag = cipher.encrypt_and_digest(plaintext)
-
-            with open(newfile, 'ab') as enc_file:
-                enc_file.write(cipher.nonce + tag + ciphertext)
-
-
 def gen_hmac(filepath: str) -> str:
     """Generates HMAC"""
 
@@ -191,17 +118,6 @@ def gen_hmac(filepath: str) -> str:
         return h.finalize()
 
 
-def gen_sha512(filename: str, chunk_size: int = 4094) -> str:
-    """Generates unique hash."""
-
-    hasher = hashlib.sha3_512()
-    with open(filename, "rb") as f:
-        for byte_block in iter(lambda: f.read(chunk_size), b""):
-            hasher.update(byte_block)
-
-    return hasher.hexdigest()
-
-
 def get_filesize(filename: str) -> int:
     """Returns file size"""
 
@@ -212,8 +128,17 @@ def get_current_time() -> str:
     """Gets the current time and formats for database."""
 
     now = datetime.datetime.now()
+    timestamp = ""
+    sep = ""
 
-    return f"{now.year}-{now.month}-{now.day} {now.hour}:{now.minute}:{now.second}"
+    for t in (now.year, "-", now.month, "-", now.day, " ",
+              now.hour, ":", now.minute, ":", now.second):
+        if len(str(t)) == 1 and isinstance(t, int):
+            timestamp += f"0{t}"
+        else:
+            timestamp += f"{t}"
+
+    return timestamp
 
 
 def hash_dir(dir_path: str, key) -> str:
@@ -272,32 +197,37 @@ def file_type(filename: str) -> str:
 @click.command()
 @click.option('--upload/--download', default=True, required=True,
               help="Facility upload or user download.")
-@click.option('--file', '-f', required=True, multiple=True,
-              type=click.Path(exists=True), help='File to upload.')
+@click.option('--data', '-d', required=True, multiple=True,
+              type=click.Path(exists=True), help="Path to file or folder to upload.")
+@click.option('--pathfile', '-f', required=False, multiple=False,
+              type=click.Path(exists=True),
+              help="Path to file containing all files and folders to be uploaded.")
 @click.option('--username', '-u', type=str, help="Delivery Portal username.")
 @click.option('--project', '-p', type=str, help="Project to upload files to.")
-def upload_files(upload, file: str, username: str, project: str):
+def upload_files(upload, data: str, pathfile: str, username: str, project: str):
     """Main function. Handles file upload.
 
     * If multiple files, use option multiple times.
     * File name cannot start with "-".
 
     Example one file:
-        "--file /path/to/file.xxx"
+        "--data /path/to/file.xxx"
     Example multiple files:
-        "--file /path/to/file1.xxx --file /path/to/file2.xxx ..." etc.
+        "--data /path/to/file1.xxx --data /path/to/file2.xxx ..." etc.
     """
 
-    upload_path = {}
-    hash_dict = {}
+    print("Data: ", data)
+    print("Path file: ", pathfile)
+
+    upload_path = {}    # format: {original-file:file-to-be-uploaded}
+    hash_dict = {}      # format: {original-file:hmac}
 
     '''1. Facility has DP access?'''
     # Ask for DP username if not entered and associated password
     if not username:
-        # username = click.prompt("Enter username\t", type=str)
-        username = "facility1"
+        username = "facility1"  # click.prompt("Enter username\t", type=str)
+    password = hashlib.sha256(b"Facility1").hexdigest()     # TODO: In browser?
     # password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
-    password = hashlib.sha256(b"facility1").hexdigest()
 
     # Check user access to DP
     click.echo("[*] Verifying Delivery Portal access...")
@@ -325,43 +255,47 @@ def upload_files(upload, file: str, username: str, project: str):
             click.echo("[**] Project access granted!\n")
 
             key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
-            
+
             '''4. Compressed?'''
-            for f_ in file:
-                if os.path.isfile(f_):
+            for path in data:
+                filename = path.split('/')[-1]
+                click.echo(f"Filename: {filename}")
+                if os.path.isfile(path):
                     # If the entered path is a file, perform compression on individual file
-                    mime = file_type(f_)
+                    mime = file_type(path)
 
                     # If mime is a compressed format: update path
                     # If mime not a compressed format:
                     # -- perform compression on file
                     if mime in compression_list():
-                        upload_path[f_] = f_
+                        upload_path[path] = filename
                     else:
                         '''5. Perform compression'''
-                        click.echo(f"~~~~ Compressing file '{f_}'...")
-                        upload_path[f_] = f"{f_}.gzip"
-                        compress_file(f_, upload_path[f_])
-                        click.echo(f"~~~~ Compression completed! Compressed file: '{upload_path[f_]}")
+                        click.echo(f"~~~~ Compressing file '{path}'...")
+                        upload_path[path] = f"{filename}.gzip"
+                        compress_file(path, upload_path[path])
+                        click.echo(
+                            f"~~~~ Compression completed! Compressed file: '{upload_path[path]}")
 
                     '''6. Generate file checksum.'''
                     click.echo("~~~~ Generating HMAC...")
-                    hash_dict[f_] = gen_hmac(upload_path[f_]).hex()
+                    hash_dict[path] = gen_hmac(upload_path[path]).hex()
                     click.echo("~~~~ HMAC generated!")
 
-                elif os.path.isdir(f_):
-                    click.echo(f"[*] Directory: {f_}")
+                elif os.path.isdir(path):
+                    click.echo(f"[*] Directory: {path}")
 
                     # If the entered path is a directory, a zip archive is generated
                     '''5. Perform compression'''
-                    click.echo(f"~~~~ Compressing directory '{f_}'...")
-                    upload_path[f_] = f"{f_}.zip"
-                    shutil.make_archive(f_, 'zip', f_)
-                    click.echo(f"~~~~ Compression completed! Zip archive: '{upload_path[f_]}'")
+                    click.echo(f"~~~~ Compressing directory '{path}'...")
+                    upload_path[path] = f"{path}.zip"
+                    shutil.make_archive(path, 'zip', path)
+                    click.echo(
+                        f"~~~~ Compression completed! Zip archive: '{upload_path[path]}'")
 
                     '''6. Generate directory checksum.'''
                     click.echo("~~~~ Generating HMAC...")
-                    hash_dict[f_] = hash_dir(os.path.abspath(f_), key)
+                    hash_dict[path] = hash_dir(os.path.abspath(path), key)
                     click.echo("~~~~ HMAC generated!\n")
 
                 else:
@@ -393,14 +327,14 @@ def upload_files(upload, file: str, username: str, project: str):
                 if 'project_info' in project_doc and 'sensitive' in project_doc['project_info']:
                     sensitive = project_db[project]['project_info']['sensitive']
 
-                for f_ in file:    # Generate and save checksums
+                for path in data:    # Generate and save checksums
                     try:
-                        project_files[f_] = {"size": get_filesize(f_),
-                                             "mime": file_type(f_),
-                                             "date_uploaded": get_current_time(),
-                                             "checksum": gen_sha512(f_)}   # Save checksum in db
+                        project_files[path] = {"size": get_filesize(path),
+                                               "mime": file_type(path),
+                                               "date_uploaded": get_current_time(),
+                                               "checksum": "hashhere"}   # Save checksum in db
                     except CouchDBException:
-                        print(f"Could not update file {f_} metadata.")
+                        print(f"Could not update {path} metadata.")
 
                 try:
                     project_db.save(project_doc)

@@ -197,7 +197,7 @@ def file_type(filename: str) -> str:
 @click.command()
 @click.option('--upload/--download', default=True, required=True,
               help="Facility upload or user download.")
-@click.option('--data', '-d', required=True, multiple=True,
+@click.option('--data', '-d', required=False, multiple=True,
               type=click.Path(exists=True), help="Path to file or folder to upload.")
 @click.option('--pathfile', '-f', required=False, multiple=False,
               type=click.Path(exists=True),
@@ -221,6 +221,7 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
 
     upload_path = {}    # format: {original-file:file-to-be-uploaded}
     hash_dict = {}      # format: {original-file:hmac}
+    failed = []         # failed file/folder uploads
 
     '''1. Facility has DP access?'''
     # Ask for DP username if not entered and associated password
@@ -242,8 +243,8 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
         '''3. Project has S3 access?'''
         # If project not chosen, ask for project to upload to
         if not project:
-            # project = click.prompt("Project to upload files to")
             project = "0372838e2cf1f4a2b869974723002bb7"
+            # project = click.prompt("Project to upload files to")
 
         # Check project access
         click.echo("[*] Verifying project access...")
@@ -255,6 +256,15 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
             click.echo("[**] Project access granted!\n")
 
             key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
+
+            # If both --data and --pathfile option --> all paths in data tuple
+            # If only --pathfile --> reads file and puts paths in data tuple
+            if pathfile:
+                if os.path.exists(pathfile):
+                    with open(pathfile, 'r') as pf:
+                        data += tuple(p for p in pf.read().splitlines())
+
+            print("Data : ", data)
 
             '''4. Compressed?'''
             for path in data:
@@ -280,7 +290,7 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     '''6. Generate file checksum.'''
                     click.echo("~~~~ Generating HMAC...")
                     hash_dict[path] = gen_hmac(upload_path[path]).hex()
-                    click.echo("~~~~ HMAC generated!")
+                    click.echo("~~~~ HMAC generated!\n")
 
                 elif os.path.isdir(path):
                     click.echo(f"[*] Directory: {path}")
@@ -299,7 +309,7 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     click.echo("~~~~ HMAC generated!\n")
 
                 else:
-                    raise OSError("Path type not identified.")
+                    raise OSError("Path type not identified. Have you entered the correct path?")
 
                 '''7. Sensitive?'''
                 if not sensitive:

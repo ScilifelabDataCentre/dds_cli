@@ -330,7 +330,7 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     def cb():
                         passphrase = click.prompt("Passphrase for private key: ")
                         return passphrase
-                        
+
                     keys.generate("fac.sec", "fac.pub", callback=cb)
                     '''10. Encrypt data'''
                     '''11. Generate checksum'''

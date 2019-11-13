@@ -22,6 +22,15 @@ class CouchDBException(Exception):
         super().__init__(msg)
 
 
+class CompressionError(Exception):
+    """Errors related to compression operations."""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to the base class __init__."""
+
+        super().__init__(msg)
+
+
 class DeliveryPortalException(Exception):
     """Custom exception class. Handles errors regarding Delivery Portal 
     access etc"""

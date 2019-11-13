@@ -22,7 +22,8 @@ import datetime
 from itertools import chain
 
 from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
-    DeliveryPortalException, DeliveryOptionException, SecurePasswordException
+    CompressionError, DeliveryPortalException, DeliveryOptionException, \
+    SecurePasswordException
 
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
@@ -216,12 +217,9 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
         "--data /path/to/file1.xxx --data /path/to/file2.xxx ..." etc.
     """
 
-    print("Data: ", data)
-    print("Path file: ", pathfile)
-
     upload_path = {}    # format: {original-file:file-to-be-uploaded}
     hash_dict = {}      # format: {original-file:hmac}
-    failed = []         # failed file/folder uploads
+    failed = {}         # failed file/folder uploads
 
     '''1. Facility has DP access?'''
     # Ask for DP username if not entered and associated password
@@ -284,8 +282,8 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                         click.echo(f"~~~~ Compressing file '{path}'...")
                         upload_path[path] = f"{filename}.gzip"
                         compress_file(path, upload_path[path])
-                        click.echo(
-                            f"~~~~ Compression completed! Compressed file: '{upload_path[path]}")
+                        click.echo(f"~~~~ Compression completed! Compressed file: \
+                            '{upload_path[path]}")
 
                     '''6. Generate file checksum.'''
                     click.echo("~~~~ Generating HMAC...")
@@ -299,9 +297,14 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     '''5. Perform compression'''
                     click.echo(f"~~~~ Compressing directory '{path}'...")
                     upload_path[path] = f"{path}.zip"
-                    shutil.make_archive(path, 'zip', path)
-                    click.echo(
-                        f"~~~~ Compression completed! Zip archive: '{upload_path[path]}'")
+                    try:
+                        shutil.make_archive(path, 'zip', path)
+                    except CompressionError as ce:
+                        failed[path] = [f"Compression of folder {path} failed.", ce]
+                        continue    # Move on to next file/folder
+                    else:
+                        click.echo(f"~~~~ Compression completed! Zip archive: \
+                            '{upload_path[path]}'")
 
                     '''6. Generate directory checksum.'''
                     click.echo("~~~~ Generating HMAC...")
@@ -309,7 +312,8 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     click.echo("~~~~ HMAC generated!\n")
 
                 else:
-                    raise OSError("Path type not identified. Have you entered the correct path?")
+                    raise OSError("Path type not identified. "
+                                  "Have you entered the correct path?")
 
                 '''7. Sensitive?'''
                 if not sensitive:

@@ -20,6 +20,9 @@ import os
 import filetype
 import datetime
 from itertools import chain
+from crypt4gh import keys
+from functools import partial
+from getpass import getpass
 
 from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DeliveryPortalException, DeliveryOptionException, \
@@ -300,7 +303,8 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     try:
                         shutil.make_archive(path, 'zip', path)
                     except CompressionError as ce:
-                        failed[path] = [f"Compression of folder {path} failed.", ce]
+                        failed[path] = [
+                            f"Compression of folder {path} failed.", ce]
                         continue    # Move on to next file/folder
                     else:
                         click.echo(f"~~~~ Compression completed! Zip archive: \
@@ -312,15 +316,22 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     click.echo("~~~~ HMAC generated!\n")
 
                 else:
-                    raise OSError("Path type not identified. "
-                                  "Have you entered the correct path?")
+                    failed[path] = [f"Path type {path} not identified. \
+                                    Have you entered the correct path?",
+                                    "No exception raised."]
 
                 '''7. Sensitive?'''
                 if not sensitive:
                     '''12. Upload to non sensitive bucket'''
                 else:
                     '''8. Get user public key'''
+                    ##
                     '''9. Generate facility keys'''
+                    def cb():
+                        passphrase = click.prompt("Passphrase for private key: ")
+                        return passphrase
+                        
+                    keys.generate("fac.sec", "fac.pub", callback=cb)
                     '''10. Encrypt data'''
                     '''11. Generate checksum'''
                     '''12. Upload to sensitive bucket'''

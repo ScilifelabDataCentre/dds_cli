@@ -37,42 +37,6 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
 
 # FUNCTIONS ######################################################## FUNCTIONS #
 
-def check_dp_access(username: str, password: str) -> (bool, str):
-    """Check existance of user in database and the password validity."""
-
-    dp_couch = couch_connect()
-    user_db = dp_couch['user_db']
-    for id_ in user_db:
-        if username in user_db[id_]['username']:
-            if user_db[id_]['password_hash'] == password:
-                return True, id_
-
-    return False, ""
-
-
-def check_project_access(user: str, project: str) -> bool:
-    """Checks the users access to a specific project."""
-
-    proj_couch = couch_connect()
-    user_projects = proj_couch['user_db'][user]['projects']
-
-    if project not in set(chain(user_projects['ongoing'], user_projects['finished'])):
-        if click.confirm("You do not have access to the specified project" +
-                         f"'{project}'.\n Change project?"):
-            check_project_access(user, click.prompt("Project ID"))
-        else:
-            raise DeliveryPortalException(
-                "Project access denied. Aborting upload.")
-    else:
-        '''3. Project has S3 access?'''
-        project_info = proj_couch['project_db'][project]['project_info']
-        if not project_info['delivery_option'] == "S3":
-            raise DeliveryOptionException(
-                "The specified project does not have access to S3.")
-        else:
-            return True, project_info['sensitive']
-
-
 def compress_file(original: str, compressed: str) -> None:
     """Compresses file using gzip"""
 
@@ -91,7 +55,7 @@ def compress_folder(dir_path: str, prev_path: str = "") -> list:
         comp_path = f"{dir_path}_comp"
     else:
         comp_path = f"{prev_path}/{dir_path.split('/')[-1]}_comp"
-    
+
     result_dict = {comp_path: list()}   # Add path to upload dict
 
     try:
@@ -99,7 +63,7 @@ def compress_folder(dir_path: str, prev_path: str = "") -> list:
     except OSError as ose:
         print(f"Could not create folder '{comp_path}': {ose}")
     else:
-        # Iterate through all folders and files recursively 
+        # Iterate through all folders and files recursively
         for path, dirs, files in os.walk(dir_path):
             for file in sorted(files):  # For all files in folder root
                 original = os.path.join(path, file)
@@ -128,10 +92,10 @@ def couch_connect():
 
     try:
         couch = couchdb.Server('http://delport:delport@localhost:5984/')
-    except CouchDBException:
-        print("Database login failed.")
-
-    return couch
+    except CouchDBException as cdbe:
+        sys.exit(f"Database login failed. {cdbe}")
+    else:
+        return couch
 
 
 def couch_disconnect(couch, token):
@@ -141,6 +105,38 @@ def couch_disconnect(couch, token):
         couch.logout(token)
     except CouchDBException:
         print("Could not logout from database.")
+
+
+def dp_access(username: str, password: str, upload: bool) -> (bool, str):
+    """Check existance of user in database and the password validity."""
+
+    try:
+        user_db = couch_connect()['user_db']
+    except CouchDBException as cdbe:
+        sys.exit(f"Could not collect database 'user_db'. {cdbe}")
+    else:
+        for id_ in user_db:
+            if username != user_db[id_]['username']:
+                raise CouchDBException("Invalid username, "
+                                       "user does not exist in database. ")
+            else:
+                if user_db[id_]['password_hash'] != password:
+                    raise DeliveryPortalException("Wrong password. "
+                                                  "Access to Delivery Portal"
+                                                  "denied.")
+                else:
+                    if (user_db[id_]['role'] == 'facility' and upload) or \
+                            (user_db[id_]['role'] == '' and not upload):
+                        return True, id_
+                    else:
+                        if upload: 
+                            option = "Upload"
+                        else: 
+                            option = "Download"
+                        raise DeliveryOptionException("Chosen upload/download "
+                                                      "option not granted. "
+                                                      f"You chose: '{option}'. "
+                                                      "For help: 'dp_api --help'")
 
 
 def gen_hmac(filepath: str) -> str:
@@ -229,19 +225,98 @@ def file_type(filename: str) -> str:
             return None
 
 
+def project_access(user: str, project: str) -> bool:
+    """Checks the users access to a specific project."""
+
+    proj_couch = couch_connect()
+    user_projects = proj_couch['user_db'][user]['projects']
+
+    if project not in set(chain(user_projects['ongoing'], user_projects['finished'])):
+        raise DeliveryOptionException("You do not have access to the specified project "
+                                      f"{project}. Aborting upload.")
+    else:
+        if 'project_info' not in proj_couch['project_db'][project]:
+            raise CouchDBException("'project_info' not in "
+                                   "database 'project_db'.")
+        else:
+            project_info = proj_couch['project_db'][project]['project_info']
+            if not project_info['delivery_option'] == "S3":
+                raise DeliveryOptionException("The specified project does "
+                                              "not have access to S3.")
+            else:
+                return True, project_info['sensitive']
+
+
+def secure_password_hash(password):
+    """Generates secure password hash"""
+
+    # TODO -- currently not secure. Use scrypt or similar.
+
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+
+def validate_api_options(username, password, config, project):
+    """Checks that the correct options and credentials are entered"""
+
+    credentials = dict()
+
+    if all(x is None for x in [username, password, config]):
+        raise DeliveryPortalException("Delivery Portal login credentials "
+                                      "not specified. Enter --username/-u "
+                                      "AND --password/-pw, or --config/-c. "
+                                      "For help: 'dp_api --help'.")
+    else:
+        if config is not None:
+            if os.path.exists(config):
+                with open(config, 'r') as cf:
+                    for line in cf:
+                        (cred, val) = line.split(':')
+                        credentials[cred] = val.rstrip()
+
+                for c in ['username', 'password', 'project']:
+                    if c not in credentials:
+                        raise DeliveryPortalException("The config file does not "
+                                                      f"contain: '{c}'.")
+                return credentials['username'], \
+                    secure_password_hash(credentials['password']), \
+                    credentials['project']
+        else:
+            if username is None or password is None:
+                raise DeliveryPortalException("Delivery Portal login credentials "
+                                              "not specified. Enter --username/-u "
+                                              "AND --password/-pw, or --config/-c."
+                                              "For help: 'dp_api --help'.")
+            else:
+                if project is None:
+                    raise DeliveryPortalException("Project not specified. Enter "
+                                                  "project ID using --project option "
+                                                  "or add to config file using --config/-c"
+                                                  "option.")
+                return username, \
+                    secure_password_hash(password), \
+                    project
+
+
 # MAIN ################################################################## MAIN #
 
 @click.command()
-@click.option('--upload/--download', default=True, required=True,
+@click.option('--upload/--download', required=True, default=True,
               help="Facility upload or user download.")
 @click.option('--data', '-d', required=False, multiple=True,
               type=click.Path(exists=True), help="Path to file or folder to upload.")
 @click.option('--pathfile', '-f', required=False, multiple=False,
+              type=click.Path(exists=True), help="Path to file containing all files and folders to be uploaded.")
+@click.option('--username', '-u', required=False,
+              type=str, help="Delivery Portal username.")
+@click.option('--password', '-pw', required=False,
+              type=str, help="Delivery Portal password.")
+@click.option('--project', '-p', required=False,
+              type=str, help="Project to upload files to.")
+@click.option('--config', '-c', required=False,
               type=click.Path(exists=True),
-              help="Path to file containing all files and folders to be uploaded.")
-@click.option('--username', '-u', type=str, help="Delivery Portal username.")
-@click.option('--project', '-p', type=str, required=False, help="Project to upload files to.")
-def upload_files(upload, data: str, pathfile: str, username: str, project: str):
+              help="Path to config file containing e.g. username, password, project id, etc.")
+def upload_files(upload: bool, data: str, pathfile: str, username: str, password: str,
+                 project: str, config: str):
     """Main function. Handles file upload.
 
     * If multiple files, use option multiple times.
@@ -253,37 +328,37 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
         "--data /path/to/file1.xxx --data /path/to/file2.xxx ..." etc.
     """
 
-    upload_path = {}    # format: {original-file:file-to-be-uploaded}
-    hash_dict = {}      # format: {original-file:hmac}
-    failed = {}         # failed file/folder uploads
+    upload_path = dict()    # format: {original-file:file-to-be-uploaded}
+    hash_dict = dict()      # format: {original-file:hmac}
+    failed = dict()         # failed file/folder uploads
+    credentials = dict()    # List of login credentials
+
+    # All credentials entered? Exception raised if not.
+    username, password, project = validate_api_options(
+        username, password, config, project)
+
+    if not data and not pathfile:
+        raise DeliveryPortalException("No data to be uploaded. "
+                                      "Specify individual files/folders using "
+                                      "the --data/-d option one or more times, "
+                                      "or the --pathfile/-f. For help: "
+                                      "'dp_api --help'")
 
     '''1. Facility has DP access?'''
-    # Ask for DP username if not entered and associated password
-    if not username:
-        username = "facility1"  # click.prompt("Enter username\t", type=str)
-    password = hashlib.sha256(b"Facility1").hexdigest()     # TODO: In browser?
-    # password = click.prompt("Password\t", hide_input=True, confirmation_prompt=True)
-
-    # Check user access to DP
     click.echo("[*] Verifying Delivery Portal access...")
-    access_granted, user_id = check_dp_access(username, password)
+    access_granted, user_id = dp_access(username, password, upload)
     if not access_granted:
         raise DeliveryPortalException(
             "You are not authorized to access the Delivery Portal. Aborting.")
     else:
         click.echo("[**] Access granted!\n")
+        sys.exit()
 
         '''2. Facility has project access?'''
         '''3. Project has S3 access?'''
-        # If project not chosen, ask for project to upload to
-        if not project:
-            project = "0372838e2cf1f4a2b869974723002bb7"
-            # project = click.prompt("Project to upload files to")
-
-        # Check project access
         click.echo("[*] Verifying project access...")
-        project_access, sensitive = check_project_access(user_id, project)
-        if not project_access:
+        project_access_granted, sensitive = project_access(user_id, project)
+        if not project_access_granted:
             raise DeliveryPortalException(
                 "Project access denied. Cancelling upload.")
         else:
@@ -298,12 +373,11 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     with open(pathfile, 'r') as pf:
                         data += tuple(p for p in pf.read().splitlines())
 
-            print("Data : ", data)
-
             '''4. Compressed?'''
             for path in data:
                 filename = path.split('/')[-1]
                 click.echo(f"Filename: {filename}")
+
                 if os.path.isfile(path):
                     # If the entered path is a file, perform compression on individual file
                     mime = file_type(path)
@@ -322,6 +396,8 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                             '{upload_path[path]}")
 
                     '''6. Generate file checksum.'''
+                    # TODO: add checks for if the compression failed,
+                    # in that case ignore the file
                     click.echo("~~~~ Generating HMAC...")
                     hash_dict[path] = gen_hmac(upload_path[path]).hex()
                     click.echo("~~~~ HMAC generated!\n")
@@ -335,8 +411,6 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     try:
                         upload_path[path] = compress_folder(
                             dir_path=path, prev_path="")
-                        print("\n\nresult : ", upload_path[path])
-                        sys.exit()
                     except CompressionError as ce:
                         failed[path] = [
                             f"Compression of folder {path} failed.", ce]
@@ -346,8 +420,10 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                             '{upload_path[path]}'")
 
                     '''6. Generate directory checksum.'''
+                    # TODO: add checks for if the compression failed,
+                    # in that case ignore the file
                     click.echo("~~~~ Generating HMAC...")
-                    hash_dict[path] = hash_dir(os.path.abspath(path), key)
+                    hash_dict[path] = hash_dir(upload_path[path], key)
                     click.echo("~~~~ HMAC generated!\n")
 
                 else:

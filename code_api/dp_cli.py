@@ -81,6 +81,39 @@ def compress_file(original: str, compressed: str) -> None:
             shutil.copyfileobj(pathin, pathout)
 
 
+def compress_folder(dir_path: str, prev_path: str = "") -> list:
+    """Iterates through a folder and compresses each file"""
+
+    comp_path = ""
+    # If first (root) folder, create name for root "compressed" folder
+    # If subfolder, alter path to be in "compressed" folders
+    if prev_path == "":
+        comp_path = f"{dir_path}_comp"
+    else:
+        comp_path = f"{prev_path}/{dir_path.split('/')[-1]}_comp"
+    
+    result_dict = {comp_path: list()}   # Add path to upload dict
+
+    try:
+        os.mkdir(comp_path)     # Create comp path
+    except OSError as ose:
+        print(f"Could not create folder '{comp_path}': {ose}")
+    else:
+        # Iterate through all folders and files recursively 
+        for path, dirs, files in os.walk(dir_path):
+            for file in sorted(files):  # For all files in folder root
+                original = os.path.join(path, file)
+                compressed = f"{comp_path}/{file}.gzip"
+                compress_file(original=original, compressed=compressed)
+                result_dict[comp_path].append(compressed)
+            for dir_ in sorted(dirs):   # For all folders in folder root
+                result_dict[comp_path].append(compress_folder(
+                    os.path.join(path, dir_), comp_path))
+            break
+
+    return result_dict
+
+
 def compression_list():
     """Returns a list of compressed-format mime types"""
 
@@ -207,7 +240,7 @@ def file_type(filename: str) -> str:
               type=click.Path(exists=True),
               help="Path to file containing all files and folders to be uploaded.")
 @click.option('--username', '-u', type=str, help="Delivery Portal username.")
-@click.option('--project', '-p', type=str, help="Project to upload files to.")
+@click.option('--project', '-p', type=str, required=False, help="Project to upload files to.")
 def upload_files(upload, data: str, pathfile: str, username: str, project: str):
     """Main function. Handles file upload.
 
@@ -296,12 +329,14 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                 elif os.path.isdir(path):
                     click.echo(f"[*] Directory: {path}")
 
-                    # If the entered path is a directory, a zip archive is generated
+                    # If the entered path is a directory, all files in directory are compressed
                     '''5. Perform compression'''
                     click.echo(f"~~~~ Compressing directory '{path}'...")
-                    upload_path[path] = f"{path}.zip"
                     try:
-                        shutil.make_archive(path, 'zip', path)
+                        upload_path[path] = compress_folder(
+                            dir_path=path, prev_path="")
+                        print("\n\nresult : ", upload_path[path])
+                        sys.exit()
                     except CompressionError as ce:
                         failed[path] = [
                             f"Compression of folder {path} failed.", ce]
@@ -327,11 +362,9 @@ def upload_files(upload, data: str, pathfile: str, username: str, project: str):
                     '''8. Get user public key'''
                     ##
                     '''9. Generate facility keys'''
-                    def cb():
-                        passphrase = click.prompt("Passphrase for private key: ")
-                        return passphrase
-
-                    keys.generate("fac.sec", "fac.pub", callback=cb)
+                    cb = partial(getpass, prompt="Passphrase for private key ")
+                    keys.generate(seckey=f"/Users/inaod568/Documents/keys/{filename}_facility.sec",
+                                  pubkey=f"/Users/inaod568/Documents/keys/{filename}facility.pub", callback=cb)
                     '''10. Encrypt data'''
                     '''11. Generate checksum'''
                     '''12. Upload to sensitive bucket'''

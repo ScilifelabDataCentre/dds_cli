@@ -11,6 +11,7 @@ from cryptography.hazmat.backends import default_backend
 import shutil
 import zipfile
 import zlib
+import tarfile
 import gzip
 import click
 import couchdb
@@ -36,6 +37,43 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
 
 
 # FUNCTIONS ######################################################## FUNCTIONS #
+
+def compress_data(fileorfolder: str):
+    """Makes sure that all data is compressed"""
+
+    upload_path = ""
+    name = fileorfolder.split('/')[-1]  # File or folder name
+    print("Name : ", name)
+    mime = file_type(fileorfolder)      # File or folder mime
+    print("Mime : ", mime)
+
+    if mime == 'folder':    # If folder
+        click.echo(f"~~~~ Compressing directory '{fileorfolder}'...")
+        try:
+            upload_path = compress_folder(
+                dir_path=fileorfolder, prev_path="")
+        except CompressionError as ce:
+            pass
+            # continue    # Move on to next file/folder
+        else:
+            click.echo(f"~~~~ Compression completed! Zip archive: \
+                '{next(iter(upload_path))}'")
+            return upload_path
+
+    else:                   # If file 
+        # If compressed file, do not compress, and 
+        # upload path the original path
+        if mime in compression_list():  
+            upload_path = fileorfolder
+        else:
+            # If not compressed file, change file to be uploaded 
+            # and compress
+            click.echo(f"~~~~ Compressing file '{fileorfolder}'...")
+            upload_path = f"{fileorfolder}.gzip"    # Comp file name
+            compress_file(fileorfolder, upload_path)
+            click.echo(f"~~~~ Compression completed! Compressed file: \
+                '{upload_path}")
+            return upload_path
 
 def compress_file(original: str, compressed: str) -> None:
     """Compresses file using gzip"""
@@ -198,36 +236,47 @@ def hash_dir(dir_path: str, key) -> str:
     return dir_hmac.finalize().hex()
 
 
-def file_type(filename: str) -> str:
+def file_type(fpath: str) -> str:
     """Guesses file mime based on extension"""
 
-    kind = filetype.guess(filename)
-    if kind is not None:
-        return kind.mime
-    else:
-        extension = os.path.splitext(filename)[1]
-
-        if extension in (".txt"):
-            return "file/text"
-        elif extension in (".csv"):
-            return "file/csv"
-        elif extension in (".abi", ".ab1"):
-            return "ngs-data/abi"
-        elif extension in (".embl"):
-            return "ngs-data/embl"
-        elif extension in (".clust", ".cw", ".clustal"):
-            return "ngs-data/clustal"
-        elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
-            return "ngs-data/fasta"
-        elif extension in (".fastq", ".fq"):
-            return "ngs-data/fastq"
-        elif extension in (".gbk", ".genbank", ".gb"):
-            return "ngs-data/genbank"
-        elif extension in (".paup", ".nexus"):
-            return "ngs-data/nexus"
+    if os.path.isdir(fpath):
+        return "folder"
+    else: 
+        kind = filetype.guess(fpath)    # Guess file type
+        print("Kind : ", kind)
+        if kind is not None:            # If guess successful
+            return kind.mime            # Return mime type
         else:
-            click.echo("Could not determine file format.")
-            return None
+            # Check if clumped folders (tar or zipped)
+            if tarfile.is_tarfile(fpath):   
+                return "application/tar"
+            elif zipfile.is_zipfile(fpath):
+                return "application/zip"
+            else: 
+                # If no guess and not clumped folders 
+                # check file extensions 
+                extension = os.path.splitext(fpath)[1]
+                if extension in (".txt"):
+                    return "file/text"
+                elif extension in (".csv"):
+                    return "file/csv"
+                elif extension in (".abi", ".ab1"):
+                    return "ngs-data/abi"
+                elif extension in (".embl"):
+                    return "ngs-data/embl"
+                elif extension in (".clust", ".cw", ".clustal"):
+                    return "ngs-data/clustal"
+                elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
+                    return "ngs-data/fasta"
+                elif extension in (".fastq", ".fq"):
+                    return "ngs-data/fastq"
+                elif extension in (".gbk", ".genbank", ".gb"):
+                    return "ngs-data/genbank"
+                elif extension in (".paup", ".nexus"):
+                    return "ngs-data/nexus"
+                else:
+                    click.echo("Could not determine file format.")
+                    return None
 
 
 def project_access(user: str, project: str) -> bool:
@@ -390,78 +439,28 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
                     with open(pathfile, 'r') as pf:
                         data += tuple(p for p in pf.read().splitlines())
 
-            ### 4. Is the data compressed? ### 
+            ### 4. Is the data compressed? ###
             for path in data:
-                filename = path.split('/')[-1]
-                click.echo(f"Filename: {filename}")
+                upload_path[path] = compress_data(fileorfolder=path)
 
-                if os.path.isfile(path):
-                    # If the entered path is a file, perform compression on individual file
-                    mime = file_type(path)
-
-                    # If mime is a compressed format: update path
-                    # If mime not a compressed format:
-                    # -- perform compression on file
-                    if mime in compression_list():
-                        upload_path[path] = filename
-                    else:
-                        '''5. Perform compression'''
-                        click.echo(f"~~~~ Compressing file '{path}'...")
-                        upload_path[path] = f"{filename}.gzip"
-                        compress_file(path, upload_path[path])
-                        click.echo(f"~~~~ Compression completed! Compressed file: \
-                            '{upload_path[path]}")
-
-                    '''6. Generate file checksum.'''
-                    # TODO: add checks for if the compression failed,
-                    # in that case ignore the file
-                    click.echo("~~~~ Generating HMAC...")
-                    hash_dict[path] = gen_hmac(upload_path[path]).hex()
-                    click.echo("~~~~ HMAC generated!\n")
-
-                elif os.path.isdir(path):
-                    click.echo(f"[*] Directory: {path}")
-
-                    # If the entered path is a directory, all files in directory are compressed
-                    '''5. Perform compression'''
-                    click.echo(f"~~~~ Compressing directory '{path}'...")
-                    try:
-                        upload_path[path] = compress_folder(
-                            dir_path=path, prev_path="")
-                    except CompressionError as ce:
-                        failed[path] = [
-                            f"Compression of folder {path} failed.", ce]
-                        continue    # Move on to next file/folder
-                    else:
-                        click.echo(f"~~~~ Compression completed! Zip archive: \
-                            '{upload_path[path]}'")
-
-                    '''6. Generate directory checksum.'''
-                    # TODO: add checks for if the compression failed,
-                    # in that case ignore the file
-                    click.echo("~~~~ Generating HMAC...")
-                    hash_dict[path] = hash_dir(upload_path[path], key)
-                    click.echo("~~~~ HMAC generated!\n")
-
-                else:
-                    failed[path] = [f"Path type {path} not identified. \
-                                    Have you entered the correct path?",
-                                    "No exception raised."]
-
+                sys.exit()
                 '''7. Sensitive?'''
                 if not sensitive:
+                    pass
                     '''12. Upload to non sensitive bucket'''
                 else:
+                    pass
                     '''8. Get user public key'''
                     ##
                     '''9. Generate facility keys'''
-                    cb = partial(getpass, prompt="Passphrase for private key ")
-                    keys.generate(seckey=f"/Users/inaod568/Documents/keys/{filename}_facility.sec",
-                                  pubkey=f"/Users/inaod568/Documents/keys/{filename}facility.pub", callback=cb)
+                    # cb = partial(getpass, prompt="Passphrase for private key ")
+                    # keys.generate(seckey=f"/Users/inaod568/Documents/keys/{filename}_facility.sec",
+                    #               pubkey=f"/Users/inaod568/Documents/keys/{filename}facility.pub", callback=cb)
                     '''10. Encrypt data'''
                     '''11. Generate checksum'''
                     '''12. Upload to sensitive bucket'''
 
+            sys.exit()
             # Create file checksums and save in database
             # Save checksum and metadata in db
             # TODO: move this to after upload

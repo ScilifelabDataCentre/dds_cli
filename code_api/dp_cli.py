@@ -111,27 +111,32 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
     """Check existance of user in database and the password validity."""
 
     try:
-        user_db = couch_connect()['user_db']
+        user_db = couch_connect()['user_db']    # Connect to user database
     except CouchDBException as cdbe:
         sys.exit(f"Could not collect database 'user_db'. {cdbe}")
     else:
+        # Search the database for the user
         for id_ in user_db:
+            # If the username does not exist in the database quit
             if username != user_db[id_]['username']:
                 raise CouchDBException("Invalid username, "
                                        "user does not exist in database. ")
             else:
+                # If the password isn't correct quit
                 if user_db[id_]['password_hash'] != password:
                     raise DeliveryPortalException("Wrong password. "
                                                   "Access to Delivery Portal"
                                                   "denied.")
                 else:
+                    # If facility is uploading or researcher is downloading
+                    # access is granted
                     if (user_db[id_]['role'] == 'facility' and upload) or \
-                            (user_db[id_]['role'] == '' and not upload):
+                            (user_db[id_]['role'] == 'researcher' and not upload):
                         return True, id_
                     else:
-                        if upload: 
+                        if upload:
                             option = "Upload"
-                        else: 
+                        else:
                             option = "Download"
                         raise DeliveryOptionException("Chosen upload/download "
                                                       "option not granted. "
@@ -228,22 +233,30 @@ def file_type(filename: str) -> str:
 def project_access(user: str, project: str) -> bool:
     """Checks the users access to a specific project."""
 
-    proj_couch = couch_connect()
+    proj_couch = couch_connect()    # Connect to database
     user_projects = proj_couch['user_db'][user]['projects']
 
+    # If the specified project is not present in the users project list
+    # raise exception and quit
     if project not in set(chain(user_projects['ongoing'], user_projects['finished'])):
         raise DeliveryOptionException("You do not have access to the specified project "
                                       f"{project}. Aborting upload.")
     else:
+        # If the project exists but does not have any 'project_info'
+        # raise exception and quit
         if 'project_info' not in proj_couch['project_db'][project]:
             raise CouchDBException("'project_info' not in "
                                    "database 'project_db'.")
         else:
+            # If the project exists, there is project information,
+            # but the project delivery option is not S3, raise except and quit
             project_info = proj_couch['project_db'][project]['project_info']
             if not project_info['delivery_option'] == "S3":
                 raise DeliveryOptionException("The specified project does "
                                               "not have access to S3.")
             else:
+                # If the project exists and the chosen delivery option is S3
+                # grant project access and get project information
                 return True, project_info['sensitive']
 
 
@@ -260,19 +273,23 @@ def validate_api_options(username, password, config, project):
 
     credentials = dict()
 
+    # If none of username, password and config options are set
+    # raise exception and quit execution
     if all(x is None for x in [username, password, config]):
         raise DeliveryPortalException("Delivery Portal login credentials "
                                       "not specified. Enter --username/-u "
                                       "AND --password/-pw, or --config/-c. "
                                       "For help: 'dp_api --help'.")
     else:
-        if config is not None:
+        if config is not None:              # If config file entered
             if os.path.exists(config):
                 with open(config, 'r') as cf:
                     for line in cf:
+                        # Get username, password and project ID
                         (cred, val) = line.split(':')
                         credentials[cred] = val.rstrip()
 
+                # Check that all credentials are entered and quit if not
                 for c in ['username', 'password', 'project']:
                     if c not in credentials:
                         raise DeliveryPortalException("The config file does not "
@@ -280,7 +297,7 @@ def validate_api_options(username, password, config, project):
                 return credentials['username'], \
                     secure_password_hash(credentials['password']), \
                     credentials['project']
-        else:
+        else:   # If config file is not entered check other options
             if username is None or password is None:
                 raise DeliveryPortalException("Delivery Portal login credentials "
                                               "not specified. Enter --username/-u "
@@ -337,6 +354,7 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
     username, password, project = validate_api_options(
         username, password, config, project)
 
+    # Data to be uploaded entered? Exception raised if not.
     if not data and not pathfile:
         raise DeliveryPortalException("No data to be uploaded. "
                                       "Specify individual files/folders using "
@@ -344,7 +362,7 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
                                       "or the --pathfile/-f. For help: "
                                       "'dp_api --help'")
 
-    '''1. Facility has DP access?'''
+    ### 1. Does the facility have >DP< access? ###
     click.echo("[*] Verifying Delivery Portal access...")
     access_granted, user_id = dp_access(username, password, upload)
     if not access_granted:
@@ -353,8 +371,8 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
     else:
         click.echo("[**] Access granted!\n")
 
-        '''2. Facility has project access?'''
-        '''3. Project has S3 access?'''
+        ### 2. Does the facility have >project< access? ###
+        ### 3. Does the project have S3 access (S3 delivery as option)? ###
         click.echo("[*] Verifying project access...")
         project_access_granted, sensitive = project_access(user_id, project)
         if not project_access_granted:
@@ -362,7 +380,6 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
                 "Project access denied. Cancelling upload.")
         else:
             click.echo("[**] Project access granted!\n")
-            sys.exit()
 
             key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
 
@@ -373,7 +390,7 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
                     with open(pathfile, 'r') as pf:
                         data += tuple(p for p in pf.read().splitlines())
 
-            '''4. Compressed?'''
+            ### 4. Is the data compressed? ### 
             for path in data:
                 filename = path.split('/')[-1]
                 click.echo(f"Filename: {filename}")

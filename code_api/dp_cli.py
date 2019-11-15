@@ -352,7 +352,6 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
             "You are not authorized to access the Delivery Portal. Aborting.")
     else:
         click.echo("[**] Access granted!\n")
-        sys.exit()
 
         '''2. Facility has project access?'''
         '''3. Project has S3 access?'''
@@ -363,6 +362,7 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
                 "Project access denied. Cancelling upload.")
         else:
             click.echo("[**] Project access granted!\n")
+            sys.exit()
 
             key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
 

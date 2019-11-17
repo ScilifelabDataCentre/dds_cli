@@ -40,9 +40,12 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
 def compress_file(original: str, compressed: str) -> None:
     """Compresses file using gzip"""
 
-    with open(original, 'rb') as pathin:
-        with gzip.open(compressed, 'wb') as pathout:
-            shutil.copyfileobj(pathin, pathout)
+    try:
+        with open(original, 'rb') as pathin:
+            with gzip.open(compressed, 'wb') as pathout:
+                shutil.copyfileobj(pathin, pathout)
+    except CompressionError as ce:
+        sys.exit(f"Could not compress the file {original}: {ce}")
 
 
 def compress_folder(dir_path: str, prev_path: str = "") -> list:
@@ -390,74 +393,61 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
                     with open(pathfile, 'r') as pf:
                         data += tuple(p for p in pf.read().splitlines())
 
-            ### 4. Is the data compressed? ### 
+            ### 4. Is the data compressed? ###
             for path in data:
-                filename = path.split('/')[-1]
-                click.echo(f"Filename: {filename}")
+                fname = path.split('/')[-1]      # Get file or folder name
 
-                if os.path.isfile(path):
-                    # If the entered path is a file, perform compression on individual file
-                    mime = file_type(path)
+                if os.path.isfile(path):    # <---- FILES
+                    mime = file_type(path)  # Check mime type
 
-                    # If mime is a compressed format: update path
-                    # If mime not a compressed format:
-                    # -- perform compression on file
-                    if mime in compression_list():
-                        upload_path[path] = filename
-                    else:
-                        '''5. Perform compression'''
+                    if mime in compression_list():      # If file compressed format
+                        # save current file name
+                        upload_path[path] = path
+                    else:                               # It not compressed format
+                        ### 5. Perform compression ###
                         click.echo(f"~~~~ Compressing file '{path}'...")
-                        upload_path[path] = f"{filename}.gzip"
+                        upload_path[path] = f"{path}.gzip"
                         compress_file(path, upload_path[path])
                         click.echo(f"~~~~ Compression completed! Compressed file: \
                             '{upload_path[path]}")
 
-                    '''6. Generate file checksum.'''
-                    # TODO: add checks for if the compression failed,
-                    # in that case ignore the file
+                    ### 6. Generate file checksum. ###
                     click.echo("~~~~ Generating HMAC...")
                     hash_dict[path] = gen_hmac(upload_path[path]).hex()
                     click.echo("~~~~ HMAC generated!\n")
 
-                elif os.path.isdir(path):
-                    click.echo(f"[*] Directory: {path}")
-
-                    # If the entered path is a directory, all files in directory are compressed
-                    '''5. Perform compression'''
+                elif os.path.isdir(path):   # <---- FOLDERS
+                    ### 5. Perform compression ###
+                    # If zip or tar --> files, not folders
                     click.echo(f"~~~~ Compressing directory '{path}'...")
                     try:
-                        upload_path[path] = compress_folder(
-                            dir_path=path, prev_path="")
+                        upload_path[path] = compress_folder(dir_path=path,
+                                                            prev_path="")
                     except CompressionError as ce:
-                        failed[path] = [
-                            f"Compression of folder {path} failed.", ce]
-                        continue    # Move on to next file/folder
+                        sys.exit(f"Could not compress folder {path}: {ce}")
                     else:
-                        click.echo(f"~~~~ Compression completed! Zip archive: \
-                            '{upload_path[path]}'")
+                        click.echo("~~~~ Compression completed!"
+                                   f"Zip archive: '{upload_path[path]}'")
 
-                    '''6. Generate directory checksum.'''
-                    # TODO: add checks for if the compression failed,
-                    # in that case ignore the file
+                    ### 6. Generate directory checksum. ###
                     click.echo("~~~~ Generating HMAC...")
                     hash_dict[path] = hash_dir(upload_path[path], key)
                     click.echo("~~~~ HMAC generated!\n")
 
-                else:
-                    failed[path] = [f"Path type {path} not identified. \
-                                    Have you entered the correct path?",
-                                    "No exception raised."]
+                else:   # <---- TYPE UNKNOWN
+                    sys.exit(f"Path type {path} not identified."
+                             "Have you entered the correct path?")
 
-                '''7. Sensitive?'''
+                ### 7. Sensitive? ### 
                 if not sensitive:
-                    '''12. Upload to non sensitive bucket'''
+                    ### 12. Upload to non sensitive bucket ###
+                    pass
                 else:
-                    '''8. Get user public key'''
-                    ##
-                    '''9. Generate facility keys'''
+                    ### 8. Get user public key ### 
+                    ### 9. Generate facility keys ###
                     cb = partial(getpass, prompt="Passphrase for private key ")
-                    keys.generate(seckey=f"/Users/inaod568/Documents/keys/{filename}_facility.sec",
-                                  pubkey=f"/Users/inaod568/Documents/keys/{filename}facility.pub", callback=cb)
+                    keys.generate(seckey=f"/Users/inaod568/Documents/keys/{fname}_facility.sec",
+                                  pubkey=f"/Users/inaod568/Documents/keys/{fname}facility.pub", callback=cb)
                     '''10. Encrypt data'''
                     '''11. Generate checksum'''
                     '''12. Upload to sensitive bucket'''

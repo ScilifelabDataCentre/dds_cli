@@ -21,7 +21,7 @@ import os
 import filetype
 import datetime
 from itertools import chain
-from crypt4gh import keys
+from crypt4gh import keys, engine, header
 from functools import partial
 from getpass import getpass
 
@@ -60,13 +60,13 @@ def compress_data(fileorfolder: str):
                 '{next(iter(upload_path))}'")
             return upload_path
 
-    else:                   # If file 
-        # If compressed file, do not compress, and 
+    else:                   # If file
+        # If compressed file, do not compress, and
         # upload path the original path
-        if mime in compression_list():  
+        if mime in compression_list():
             upload_path = fileorfolder
         else:
-            # If not compressed file, change file to be uploaded 
+            # If not compressed file, change file to be uploaded
             # and compress
             click.echo(f"~~~~ Compressing file '{fileorfolder}'...")
             upload_path = f"{fileorfolder}.gzip"    # Comp file name
@@ -74,6 +74,7 @@ def compress_data(fileorfolder: str):
             click.echo(f"~~~~ Compression completed! Compressed file: \
                 '{upload_path}")
             return upload_path
+
 
 def compress_file(original: str, compressed: str) -> None:
     """Compresses file using gzip"""
@@ -244,20 +245,20 @@ def file_type(fpath: str) -> str:
 
     if os.path.isdir(fpath):
         return "folder"
-    else: 
+    else:
         kind = filetype.guess(fpath)    # Guess file type
         print("Kind : ", kind)
         if kind is not None:            # If guess successful
             return kind.mime            # Return mime type
         else:
             # Check if clumped folders (tar or zipped)
-            if tarfile.is_tarfile(fpath):   
+            if tarfile.is_tarfile(fpath):
                 return "application/tar"
             elif zipfile.is_zipfile(fpath):
                 return "application/zip"
-            else: 
-                # If no guess and not clumped folders 
-                # check file extensions 
+            else:
+                # If no guess and not clumped folders
+                # check file extensions
                 extension = os.path.splitext(fpath)[1]
                 if extension in (".txt"):
                     return "file/text"
@@ -487,19 +488,34 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
                     sys.exit(f"Path type {path} not identified."
                              "Have you entered the correct path?")
 
-                ### 7. Sensitive? ### 
-                if not sensitive:
-                    ### 12. Upload to non sensitive bucket ###
-                    pass
-                else:
-                    ### 8. Get user public key ### 
+                ### 7. Sensitive? ###
+                if sensitive:
+                    ### 8. Get user public key ###
+                    cb_res = partial(
+                        getpass, prompt="Passphrase for researcher private key ")
+                    keys.generate(seckey=f"/Users/inaod568/Documents/keys/{fname}_researcher.sec",
+                                  pubkey=f"/Users/inaod568/Documents/keys/{fname}researcher.pub", callback=cb_res)
+                    res_pub = keys.get_public_key(
+                        filepath=f"/Users/inaod568/Documents/keys/{fname}researcher.pub")
+                    print("Researcher public key: ", res_pub)
+
                     ### 9. Generate facility keys ###
-                    cb = partial(getpass, prompt="Passphrase for private key ")
+                    cb_fac = partial(
+                        getpass, prompt="Passphrase for facility private key ")
                     keys.generate(seckey=f"/Users/inaod568/Documents/keys/{fname}_facility.sec",
-                                  pubkey=f"/Users/inaod568/Documents/keys/{fname}facility.pub", callback=cb)
-                    '''10. Encrypt data'''
-                    '''11. Generate checksum'''
-                    '''12. Upload to sensitive bucket'''
+                                  pubkey=f"/Users/inaod568/Documents/keys/{fname}facility.pub", callback=cb_fac)
+
+                    ### 10. Encrypt data ###
+                    # Get facility private key
+                    fac_sec = keys.get_private_key(
+                        filepath=f"/Users/inaod568/Documents/keys/{fname}_facility.sec", callback=cb_fac)
+                    print("Facility private key : ", fac_sec)
+
+                    # Encrypt
+                    engine.encrypt(keys=[(0, fac_sec), (0, res_pub)], infile=upload_path[path], outfile=f"{upload_path[path]}.c4gh")
+
+                    ### 11. Generate checksum ###
+                    ### 12. Upload to sensitive bucket ###
 
             sys.exit()
             # Create file checksums and save in database

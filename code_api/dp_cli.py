@@ -512,8 +512,13 @@ def upload_files(upload: bool, data: str, pathfile: str, username: str, password
                     print("Facility private key : ", fac_sec)
 
                     # Encrypt
-                    engine.encrypt(keys=[(0, fac_sec), (0, res_pub)], infile=upload_path[path], outfile=f"{upload_path[path]}.c4gh")
+                    infile = open(upload_path[path], 'rb')
+                    outfile = open(f"{upload_path[path]}.c4gh", 'wb+')
+                    engine.encrypt(keys=[(0, fac_sec, res_pub)], infile=infile, outfile=outfile)
+                    outfile.close()
 
+                    with open(f"{upload_path[path]}.c4gh", 'rb') as f:
+                        print(f.read())
                     ### 11. Generate checksum ###
                     ### 12. Upload to sensitive bucket ###
 

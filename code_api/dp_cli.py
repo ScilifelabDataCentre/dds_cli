@@ -301,6 +301,7 @@ def project_access(user: str, project: str) -> bool:
             raise CouchDBException("'project_info' not in "
                                    "database 'project_db'.")
         else:
+            ### Does the project have S3 access (S3 delivery as option)? ###
             # If the project exists, there is project information,
             # but the project delivery option is not S3, raise except and quit
             project_info = proj_couch['project_db'][project]['project_info']
@@ -316,12 +317,61 @@ def project_access(user: str, project: str) -> bool:
 def secure_password_hash(password):
     """Generates secure password hash"""
 
-    # TODO -- currently not secure. Use scrypt or similar.
-
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 
-def validate_api_options(username, password, config, project):
+def validate_api_options(config: str, username: str, password: str, project: str,
+                         pathfile: str, data: tuple) -> (str, str, str):
+    """Checks if all required options are entered etc."""
+
+    # All credentials entered? Exception raised if not.
+    username, password, project = verify_user_credentials(config=config,
+                                                          username=username,
+                                                          password=password,
+                                                          project=project)
+
+    # Data to be uploaded entered? Exception raised if not.
+    if not data and not pathfile:
+        raise DeliveryPortalException("No data to be uploaded. "
+                                      "Specify individual files/folders using "
+                                      "the --data/-d option one or more times, "
+                                      "or the --pathfile/-f. For help: "
+                                      "'dp_api --help'")
+
+    ### Check DP access ###
+    click.echo("[*] Verifying Delivery Portal access...")
+    access_granted, user_id = dp_access(username=username,
+                                        password=password,
+                                        upload=True)
+    if not access_granted:
+        raise DeliveryPortalException(
+            "You are not authorized to access the Delivery Portal. Aborting."
+        )
+    else:
+        click.echo("[**] Access granted!\n")
+
+        ### Check project access ###
+        click.echo("[*] Verifying project access...")
+        project_access_granted, sensitive = project_access(user=user_id,
+                                                           project=project)
+        if not project_access_granted:
+            raise DeliveryPortalException(
+                "Project access denied. Cancelling upload."
+            )
+        else:
+            click.echo("[**] Project access granted!\n")
+
+            # If both --data and --pathfile option --> all paths in data tuple
+            # If only --pathfile --> reads file and puts paths in data tuple
+            if pathfile:
+                if os.path.exists(pathfile):
+                    with open(pathfile, 'r') as pf:
+                        data += tuple(p for p in pf.read().splitlines())
+
+            return username, password, project, data, sensitive
+
+
+def verify_user_credentials(config: str, username: str, password: str, project: str) -> (str, str, str):
     """Checks that the correct options and credentials are entered"""
 
     credentials = dict()
@@ -369,195 +419,206 @@ def validate_api_options(username, password, config, project):
 
 # MAIN ################################################################## MAIN #
 
-@click.command()
-@click.option('--upload/--download', required=True, default=True,
-              help="Facility upload or user download.")
-@click.option('--data', '-d', required=False, multiple=True,
-              type=click.Path(exists=True), help="Path to file or folder to upload.")
-@click.option('--pathfile', '-f', required=False, multiple=False,
-              type=click.Path(exists=True), help="Path to file containing all files and folders to be uploaded.")
-@click.option('--username', '-u', required=False,
-              type=str, help="Delivery Portal username.")
-@click.option('--password', '-pw', required=False,
-              type=str, help="Delivery Portal password.")
-@click.option('--project', '-p', required=False,
-              type=str, help="Project to upload files to.")
-@click.option('--config', '-c', required=False,
+@click.group()
+def cli():
+    click.echo("CLI group thing")
+
+
+@cli.command()
+@click.option('--config', '-c',
+              required=False,
               type=click.Path(exists=True),
               help="Path to config file containing e.g. username, password, project id, etc.")
-def upload_files(upload: bool, data: str, pathfile: str, username: str, password: str,
-                 project: str, config: str):
-    """Main function. Handles file upload.
-
-    * If multiple files, use option multiple times.
-    * File name cannot start with "-".
-
-    Example one file:
-        "--data /path/to/file.xxx"
-    Example multiple files:
-        "--data /path/to/file1.xxx --data /path/to/file2.xxx ..." etc.
-    """
+@click.option('--username', '-u',
+              required=False,
+              type=str,
+              help="Delivery Portal username.")
+@click.option('--password', '-pw',
+              required=False,
+              type=str,
+              help="Delivery Portal password.")
+@click.option('--project', '-p',
+              required=False,
+              type=str,
+              help="Project to upload files to.")
+@click.option('--pathfile', '-f',
+              required=False,
+              multiple=False,
+              type=click.Path(exists=True),
+              help="Path to file containing all files and folders to be uploaded.")
+@click.option('--data', '-d',
+              required=False,
+              multiple=True,
+              type=click.Path(exists=True),
+              help="Path to file or folder to upload.")
+def put(config: str, username: str, password: str, project: str,
+        pathfile: str, data: tuple):
+    """Handles file upload. """
 
     upload_path = dict()    # format: {original-file:file-to-be-uploaded}
     hash_dict = dict()      # format: {original-file:hmac}
     failed = dict()         # failed file/folder uploads
-    credentials = dict()    # List of login credentials
 
-    # All credentials entered? Exception raised if not.
-    username, password, project = validate_api_options(
-        username, password, config, project)
+    username, password, project, data, sensitive = validate_api_options(config=config,
+                                                                        username=username,
+                                                                        password=password,
+                                                                        project=project,
+                                                                        pathfile=pathfile,
+                                                                        data=data)
 
-    # Data to be uploaded entered? Exception raised if not.
-    if not data and not pathfile:
-        raise DeliveryPortalException("No data to be uploaded. "
-                                      "Specify individual files/folders using "
-                                      "the --data/-d option one or more times, "
-                                      "or the --pathfile/-f. For help: "
-                                      "'dp_api --help'")
+    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
 
-    ### 1. Does the facility have >DP< access? ###
-    click.echo("[*] Verifying Delivery Portal access...")
-    access_granted, user_id = dp_access(username, password, upload)
-    if not access_granted:
-        raise DeliveryPortalException(
-            "You are not authorized to access the Delivery Portal. Aborting.")
-    else:
-        click.echo("[**] Access granted!\n")
+    ### Check if the data is compressed ###
+    for path in data:
+        fname = path.split('/')[-1]      # Get file or folder name
 
-        ### 2. Does the facility have >project< access? ###
-        ### 3. Does the project have S3 access (S3 delivery as option)? ###
-        click.echo("[*] Verifying project access...")
-        project_access_granted, sensitive = project_access(user_id, project)
-        if not project_access_granted:
-            raise DeliveryPortalException(
-                "Project access denied. Cancelling upload.")
-        else:
-            click.echo("[**] Project access granted!\n")
+        if os.path.isfile(path):    # <---- FILES
+            mime = file_type(path)  # Check mime type
 
-            key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
+            if mime in compression_list():      # If file compressed format
+                # save current file name
+                upload_path[path] = path
+            else:                               # It not compressed format
+                ### Perform compression ###
+                click.echo(f"~~~~ Compressing file '{path}'...")
+                upload_path[path] = f"{path}.gzip"
+                compress_file(path, upload_path[path])
+                click.echo(f"~~~~ Compression completed! Compressed file: \
+                    '{upload_path[path]}")
 
-            # If both --data and --pathfile option --> all paths in data tuple
-            # If only --pathfile --> reads file and puts paths in data tuple
-            if pathfile:
-                if os.path.exists(pathfile):
-                    with open(pathfile, 'r') as pf:
-                        data += tuple(p for p in pf.read().splitlines())
+            ### Generate file checksum. ###
+            click.echo("~~~~ Generating HMAC...")
+            hash_dict[path] = gen_hmac(upload_path[path]).hex()
+            click.echo("~~~~ HMAC generated!\n")
 
-            ### 4. Is the data compressed? ###
-            for path in data:
-                fname = path.split('/')[-1]      # Get file or folder name
+        elif os.path.isdir(path):   # <---- FOLDERS
+            ### Perform compression on all files in folder ###
+            # If zip or tar --> files, not folders
+            click.echo(f"~~~~ Compressing directory '{path}'...")
+            try:
+                upload_path[path] = compress_folder(dir_path=path,
+                                                    prev_path="")
+            except CompressionError as ce:
+                sys.exit(f"Could not compress folder {path}: {ce}")
+            else:
+                click.echo("~~~~ Compression completed!"
+                           f"Zip archive: '{upload_path[path]}'")
 
-                if os.path.isfile(path):    # <---- FILES
-                    mime = file_type(path)  # Check mime type
+            ### Generate directory checksum. ###
+            click.echo("~~~~ Generating HMAC...")
+            hash_dict[path] = hash_dir(upload_path[path], key)
+            click.echo("~~~~ HMAC generated!\n")
 
-                    if mime in compression_list():      # If file compressed format
-                        # save current file name
-                        upload_path[path] = path
-                    else:                               # It not compressed format
-                        ### 5. Perform compression ###
-                        click.echo(f"~~~~ Compressing file '{path}'...")
-                        upload_path[path] = f"{path}.gzip"
-                        compress_file(path, upload_path[path])
-                        click.echo(f"~~~~ Compression completed! Compressed file: \
-                            '{upload_path[path]}")
+        else:   # <---- TYPE UNKNOWN
+            sys.exit(f"Path type {path} not identified."
+                     "Have you entered the correct path?")
 
-                    ### 6. Generate file checksum. ###
-                    click.echo("~~~~ Generating HMAC...")
-                    hash_dict[path] = gen_hmac(upload_path[path]).hex()
-                    click.echo("~~~~ HMAC generated!\n")
+        ### Encrypt sensitive data ###
+        if sensitive:
+            ### Get user public key ###
+            cb_res = partial(
+                getpass, prompt="Passphrase for researcher private key ")
+            keys.generate(seckey=f"{fname}_researcher.sec",
+                          pubkey=f"{fname}researcher.pub", callback=cb_res)
+            res_pub = keys.get_public_key(
+                filepath=f"{fname}researcher.pub")
+            print("Researcher public key: ", res_pub)
 
-                elif os.path.isdir(path):   # <---- FOLDERS
-                    ### 5. Perform compression ###
-                    # If zip or tar --> files, not folders
-                    click.echo(f"~~~~ Compressing directory '{path}'...")
-                    try:
-                        upload_path[path] = compress_folder(dir_path=path,
-                                                            prev_path="")
-                    except CompressionError as ce:
-                        sys.exit(f"Could not compress folder {path}: {ce}")
-                    else:
-                        click.echo("~~~~ Compression completed!"
-                                   f"Zip archive: '{upload_path[path]}'")
+            ### Generate facility keys ###
+            cb_fac = partial(
+                getpass, prompt="Passphrase for facility private key ")
+            keys.generate(seckey=f"{fname}_facility.sec",
+                          pubkey=f"{fname}_facility.pub", callback=cb_fac)
 
-                    ### 6. Generate directory checksum. ###
-                    click.echo("~~~~ Generating HMAC...")
-                    hash_dict[path] = hash_dir(upload_path[path], key)
-                    click.echo("~~~~ HMAC generated!\n")
+            ### Encrypt data ###
+            # Get facility private key
+            fac_sec = keys.get_private_key(
+                filepath=f"{fname}_facility.sec", callback=cb_fac)
+            print("Facility private key : ", fac_sec)
 
-                else:   # <---- TYPE UNKNOWN
-                    sys.exit(f"Path type {path} not identified."
-                             "Have you entered the correct path?")
+            # Encrypt
+            infile = open(upload_path[path], 'rb')
+            outfile = open(f"{upload_path[path]}.c4gh", 'wb+')
+            engine.encrypt(keys=[(0, fac_sec, res_pub)],
+                           infile=infile, outfile=outfile)
+            outfile.close()
 
-                ### 7. Sensitive? ###
-                if sensitive:
-                    ### 8. Get user public key ###
-                    cb_res = partial(
-                        getpass, prompt="Passphrase for researcher private key ")
-                    keys.generate(seckey=f"/Users/inaod568/Documents/keys/{fname}_researcher.sec",
-                                  pubkey=f"/Users/inaod568/Documents/keys/{fname}researcher.pub", callback=cb_res)
-                    res_pub = keys.get_public_key(
-                        filepath=f"/Users/inaod568/Documents/keys/{fname}researcher.pub")
-                    print("Researcher public key: ", res_pub)
+            with open(f"{upload_path[path]}.c4gh", 'rb') as f:
+                print(f.read())
+            ### 11. Generate checksum ###
+            ### 12. Upload to sensitive bucket ###
 
-                    ### 9. Generate facility keys ###
-                    cb_fac = partial(
-                        getpass, prompt="Passphrase for facility private key ")
-                    keys.generate(seckey=f"/Users/inaod568/Documents/keys/{fname}_facility.sec",
-                                  pubkey=f"/Users/inaod568/Documents/keys/{fname}facility.pub", callback=cb_fac)
+    # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
+    # TODO: Compress files
+    # TODO: Show success message
+    # TODO: Delete from database if failed upload
+    # TODO: Save metadata to db
+    # TODO: Show success message
+    # TODO: Generate email to user of interest
 
-                    ### 10. Encrypt data ###
-                    # Get facility private key
-                    fac_sec = keys.get_private_key(
-                        filepath=f"/Users/inaod568/Documents/keys/{fname}_facility.sec", callback=cb_fac)
-                    print("Facility private key : ", fac_sec)
 
-                    # Encrypt
-                    infile = open(upload_path[path], 'rb')
-                    outfile = open(f"{upload_path[path]}.c4gh", 'wb+')
-                    engine.encrypt(keys=[(0, fac_sec, res_pub)], infile=infile, outfile=outfile)
-                    outfile.close()
+@cli.command()
+@click.option('--config', '-c',
+              required=False,
+              type=click.Path(exists=True),
+              help="Path to config file containing e.g. username, password, project id, etc.")
+@click.option('--username', '-u',
+              required=False,
+              type=str,
+              help="Delivery Portal username.")
+@click.option('--password', '-pw',
+              required=False,
+              type=str,
+              help="Delivery Portal password.")
+@click.option('--project', '-p',
+              required=False,
+              type=str,
+              help="Project to upload files to.")
+@click.option('--pathfile', '-f',
+              required=False,
+              multiple=False,
+              type=click.Path(exists=True),
+              help="Path to file containing all files and folders to be uploaded.")
+@click.option('--data', '-d',
+              required=False,
+              multiple=True,
+              type=click.Path(exists=True),
+              help="Path to file or folder to upload.")
+def get(config: str, username: str, password: str, project: str,
+        pathfile: str, data: tuple):
+    """Handles file download. """
 
-                    with open(f"{upload_path[path]}.c4gh", 'rb') as f:
-                        print(f.read())
-                    ### 11. Generate checksum ###
-                    ### 12. Upload to sensitive bucket ###
+    click.echo("download function")
 
-            sys.exit()
-            # Create file checksums and save in database
-            # Save checksum and metadata in db
-            # TODO: move this to after upload
-            couch = couch_connect()               # Connect to database
-            project_db = couch['project_db']      # Get project database
-            if project not in project_db:       # Check if project exists in database
-                raise CouchDBException(
-                    "The specified project is not recorded in the database. Aborting upload.")
-            else:                                       # If project exists
-                project_doc = project_db[project]       # Get project document
-                project_files = project_doc['files']    # Get files
 
-                # Get project sensitive information from database
-                if 'project_info' in project_doc and 'sensitive' in project_doc['project_info']:
-                    sensitive = project_db[project]['project_info']['sensitive']
+# sys.exit()
+#             # Create file checksums and save in database
+#             # Save checksum and metadata in db
+#             # TODO: move this to after upload
+#             couch = couch_connect()               # Connect to database
+#             project_db = couch['project_db']      # Get project database
+#             if project not in project_db:       # Check if project exists in database
+#                 raise CouchDBException(
+#                     "The specified project is not recorded in the database. Aborting upload.")
+#             else:                                       # If project exists
+#                 project_doc = project_db[project]       # Get project document
+#                 project_files = project_doc['files']    # Get files
 
-                for path in data:    # Generate and save checksums
-                    try:
-                        project_files[path] = {"size": get_filesize(path),
-                                               "mime": file_type(path),
-                                               "date_uploaded": get_current_time(),
-                                               "checksum": "hashhere"}   # Save checksum in db
-                    except CouchDBException:
-                        print(f"Could not update {path} metadata.")
+#                 # Get project sensitive information from database
+#                 if 'project_info' in project_doc and 'sensitive' in project_doc['project_info']:
+#                     sensitive = project_db[project]['project_info']['sensitive']
 
-                try:
-                    project_db.save(project_doc)
-                except CouchDBException:
-                    print(
-                        f"Updating project {project} failed. Cancelling upload.")
+#                 for path in data:    # Generate and save checksums
+#                     try:
+#                         project_files[path] = {"size": get_filesize(path),
+#                                                "mime": file_type(path),
+#                                                "date_uploaded": get_current_time(),
+#                                                "checksum": "hashhere"}   # Save checksum in db
+#                     except CouchDBException:
+#                         print(f"Could not update {path} metadata.")
 
-            # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
-            # TODO: Compress files
-            # TODO: Show success message
-            # TODO: Delete from database if failed upload
-            # TODO: Save metadata to db
-            # TODO: Show success message
-            # TODO: Generate email to user of interest
+#                 try:
+#                     project_db.save(project_doc)
+#                 except CouchDBException:
+#                     print(
+#                         f"Updating project {project} failed. Cancelling upload.")

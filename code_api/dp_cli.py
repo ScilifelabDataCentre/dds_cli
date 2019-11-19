@@ -26,7 +26,7 @@ from functools import partial
 from getpass import getpass
 
 from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
-    CompressionError, DeliveryPortalException, DeliveryOptionException, \
+    CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
     SecurePasswordException
 
 
@@ -37,6 +37,52 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
 
 
 # FUNCTIONS ######################################################## FUNCTIONS #
+
+def all_data(data_tuple: tuple, data_file: str):
+    """Puts all data from tuple and file into one tuple"""
+
+    # If both --data and --pathfile option --> all paths in data tuple
+    # If only --pathfile --> reads file and puts paths in data tuple
+    try:
+        if data_file:
+            if os.path.exists(data_file):
+                with open(data_file, 'r') as pf:
+                    data_tuple += tuple(p for p in pf.read().splitlines())
+    except DataException as de:
+        sys.exit(f"Could not create data tuple: {de}")
+    else:
+        return data_tuple
+
+
+def check_access(username: str, password: str, project: str, upload: bool = True) -> (str, bool):
+    """Checks the users access to the delivery portal and the specified project,
+    and the projects S3 access"""
+
+    ### Check DP access ###
+    click.echo("[*] Verifying Delivery Portal access...")
+    access_granted, user_id = dp_access(username=username,
+                                        password=password,
+                                        upload=upload)
+    if not access_granted:
+        raise DeliveryPortalException(
+            "You are not authorized to access the Delivery Portal. Aborting."
+        )
+    else:
+        click.echo("[**] Access granted!\n")
+
+        ### Check project access ###
+        click.echo("[*] Verifying project access...")
+        project_access_granted, sensitive = project_access(user=user_id,
+                                                           project=project)
+        if not project_access_granted:
+            raise DeliveryPortalException(
+                "Project access denied. Cancelling upload."
+            )
+        else:
+            click.echo("[**] Project access granted!\n")
+
+            return user_id, sensitive
+
 
 def compress_data(fileorfolder: str):
     """Makes sure that all data is compressed"""
@@ -167,7 +213,7 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                 # If the password isn't correct quit
                 if user_db[id_]['password_hash'] != password:
                     raise DeliveryPortalException("Wrong password. "
-                                                  "Access to Delivery Portal"
+                                                  "Access to Delivery Portal "
                                                   "denied.")
                 else:
                     # If facility is uploading or researcher is downloading
@@ -283,7 +329,56 @@ def file_type(fpath: str) -> str:
                     return None
 
 
-def project_access(user: str, project: str) -> bool:
+def process_file(file: str):
+    """Handles file specific compression, hashing and encryption"""
+
+    fname = file.split('/')[-1]      # Get file or folder name
+    mime = file_type(file)  # Check mime type
+
+    if mime in compression_list():      # If file compressed format
+            # save current file name
+        upload_path[path] = file
+    else:                               # It not compressed format
+        ### Perform compression ###
+        click.echo(f"~~~~ Compressing file '{file}'...")
+        upload_path = f"{file}.gzip"
+        compress_file(file, upload_path)
+        click.echo(f"~~~~ Compression completed! Compressed file: \
+                '{upload_path}")
+
+    ### Generate file checksum. ###
+    click.echo("~~~~ Generating HMAC...")
+    hash_dict[path] = gen_hmac(upload_path).hex()
+    click.echo("~~~~ HMAC generated!\n")
+
+    # what is returned will be added to upload_path[path]
+
+
+def process_folder(folder: str):
+    """Handles folder specific compression, hashing, and encryption"""
+
+    ### Perform compression on all files in folder ###
+    # If zip or tar --> files, not folders
+    click.echo(f"~~~~ Compressing directory '{folder}'...")
+    try:
+        upload_path = compress_folder(dir_path=folder,
+                                      prev_path="")
+    except CompressionError as ce:
+        sys.exit(f"Could not compress folder {folder}: {ce}")
+    else:
+        click.echo("~~~~ Compression completed!"
+                   f"Zip archive: '{upload_path}'")
+
+    ### Generate directory checksum. ###
+    key = "thisshouldbechanged"
+    click.echo("~~~~ Generating HMAC...")
+    hash_dict[path] = hash_dir(upload_path, key)
+    click.echo("~~~~ HMAC generated!\n")
+
+    # what is returned will be added to upload_path[path]
+
+
+def project_access(user: str, project: str) -> (bool, bool):
     """Checks the users access to a specific project."""
 
     proj_couch = couch_connect()    # Connect to database
@@ -291,27 +386,30 @@ def project_access(user: str, project: str) -> bool:
 
     # If the specified project is not present in the users project list
     # raise exception and quit
-    if project not in set(chain(user_projects['ongoing'], user_projects['finished'])):
-        raise DeliveryOptionException("You do not have access to the specified project "
-                                      f"{project}. Aborting upload.")
+    if project not in proj_couch['project_db']:
+        raise CouchDBException(f"The project {project} does not exist.")
     else:
-        # If the project exists but does not have any 'project_info'
-        # raise exception and quit
-        if 'project_info' not in proj_couch['project_db'][project]:
-            raise CouchDBException("'project_info' not in "
-                                   "database 'project_db'.")
+        if project not in set(chain(user_projects['ongoing'], user_projects['finished'])):
+            raise DeliveryOptionException("You do not have access to the specified project "
+                                          f"{project}. Aborting upload.")
         else:
-            ### Does the project have S3 access (S3 delivery as option)? ###
-            # If the project exists, there is project information,
-            # but the project delivery option is not S3, raise except and quit
-            project_info = proj_couch['project_db'][project]['project_info']
-            if not project_info['delivery_option'] == "S3":
-                raise DeliveryOptionException("The specified project does "
-                                              "not have access to S3.")
+            # If the project exists but does not have any 'project_info'
+            # raise exception and quit
+            if 'project_info' not in proj_couch['project_db'][project]:
+                raise CouchDBException("'project_info' not in "
+                                       "database 'project_db'.")
             else:
-                # If the project exists and the chosen delivery option is S3
-                # grant project access and get project information
-                return True, project_info['sensitive']
+                ### Does the project have S3 access (S3 delivery as option)? ###
+                # If the project exists, there is project information,
+                # but the project delivery option is not S3, raise except and quit
+                project_info = proj_couch['project_db'][project]['project_info']
+                if not project_info['delivery_option'] == "S3":
+                    raise DeliveryOptionException("The specified project does "
+                                                  "not have access to S3.")
+                else:
+                    # If the project exists and the chosen delivery option is S3
+                    # grant project access and get project information
+                    return True, project_info['sensitive']
 
 
 def secure_password_hash(password):
@@ -332,43 +430,13 @@ def validate_api_options(config: str, username: str, password: str, project: str
 
     # Data to be uploaded entered? Exception raised if not.
     if not data and not pathfile:
-        raise DeliveryPortalException("No data to be uploaded. "
-                                      "Specify individual files/folders using "
-                                      "the --data/-d option one or more times, "
-                                      "or the --pathfile/-f. For help: "
-                                      "'dp_api --help'")
-
-    ### Check DP access ###
-    click.echo("[*] Verifying Delivery Portal access...")
-    access_granted, user_id = dp_access(username=username,
-                                        password=password,
-                                        upload=True)
-    if not access_granted:
         raise DeliveryPortalException(
-            "You are not authorized to access the Delivery Portal. Aborting."
+            "No data to be uploaded. Specify individual files/folders using "
+            "the --data/-d option one or more times, or the --pathfile/-f. "
+            "For help: 'dp_api --help'"
         )
-    else:
-        click.echo("[**] Access granted!\n")
 
-        ### Check project access ###
-        click.echo("[*] Verifying project access...")
-        project_access_granted, sensitive = project_access(user=user_id,
-                                                           project=project)
-        if not project_access_granted:
-            raise DeliveryPortalException(
-                "Project access denied. Cancelling upload."
-            )
-        else:
-            click.echo("[**] Project access granted!\n")
-
-            # If both --data and --pathfile option --> all paths in data tuple
-            # If only --pathfile --> reads file and puts paths in data tuple
-            if pathfile:
-                if os.path.exists(pathfile):
-                    with open(pathfile, 'r') as pf:
-                        data += tuple(p for p in pf.read().splitlines())
-
-            return username, password, project, data, sensitive
+    return username, password, project
 
 
 def verify_user_credentials(config: str, username: str, password: str, project: str) -> (str, str, str):
@@ -459,60 +527,39 @@ def put(config: str, username: str, password: str, project: str,
     hash_dict = dict()      # format: {original-file:hmac}
     failed = dict()         # failed file/folder uploads
 
-    username, password, project, data, sensitive = validate_api_options(config=config,
-                                                                        username=username,
-                                                                        password=password,
-                                                                        project=project,
-                                                                        pathfile=pathfile,
-                                                                        data=data)
+    # Check that all CLI options are correctly entered
+    username, password, project = validate_api_options(config=config,
+                                                       username=username,
+                                                       password=password,
+                                                       project=project,
+                                                       pathfile=pathfile,
+                                                       data=data)
+    click.echo(f"Username: {username}"
+               f"\nPassword: {password}"
+               f"\nProject: {project}\n")
+
+    # Check user access to DP and project, and project to S3 delivery option
+    user_id, sensitive = check_access(username=username, password=password,
+                                      project=project, upload=True)
+    click.echo(f"User ID: {user_id}"
+               f"\nSensitive: {sensitive}\n")
+
+    data = all_data(data_tuple=data, data_file=pathfile)
+    click.echo(f"Data: {data}\n")
 
     key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
 
     ### Check if the data is compressed ###
     for path in data:
-        fname = path.split('/')[-1]      # Get file or folder name
-
         if os.path.isfile(path):    # <---- FILES
-            mime = file_type(path)  # Check mime type
-
-            if mime in compression_list():      # If file compressed format
-                # save current file name
-                upload_path[path] = path
-            else:                               # It not compressed format
-                ### Perform compression ###
-                click.echo(f"~~~~ Compressing file '{path}'...")
-                upload_path[path] = f"{path}.gzip"
-                compress_file(path, upload_path[path])
-                click.echo(f"~~~~ Compression completed! Compressed file: \
-                    '{upload_path[path]}")
-
-            ### Generate file checksum. ###
-            click.echo("~~~~ Generating HMAC...")
-            hash_dict[path] = gen_hmac(upload_path[path]).hex()
-            click.echo("~~~~ HMAC generated!\n")
-
+            upload_path[path] = process_file(file=path)
         elif os.path.isdir(path):   # <---- FOLDERS
-            ### Perform compression on all files in folder ###
-            # If zip or tar --> files, not folders
-            click.echo(f"~~~~ Compressing directory '{path}'...")
-            try:
-                upload_path[path] = compress_folder(dir_path=path,
-                                                    prev_path="")
-            except CompressionError as ce:
-                sys.exit(f"Could not compress folder {path}: {ce}")
-            else:
-                click.echo("~~~~ Compression completed!"
-                           f"Zip archive: '{upload_path[path]}'")
-
-            ### Generate directory checksum. ###
-            click.echo("~~~~ Generating HMAC...")
-            hash_dict[path] = hash_dir(upload_path[path], key)
-            click.echo("~~~~ HMAC generated!\n")
-
+            upload_path[path] = process_folder(folder=path)
         else:   # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
                      "Have you entered the correct path?")
 
+        continue
         ### Encrypt sensitive data ###
         if sensitive:
             ### Get user public key ###

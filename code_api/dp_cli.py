@@ -35,6 +35,31 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
 
 # CLASSES ############################################################ CLASSES #
 
+class ECDHKeyPair:
+    """Public key pair. 
+    Algorithm: Eliptic Curve Diffie-Hellman (Curve25519)"""
+
+    def __init__(self, privatekey: str = "key", publickey: str = "key"):
+        """Generates a public key pair"""
+
+        cb = partial(getpass, prompt="Passphrase for private key ")
+        keys.generate(seckey=f"{privatekey}.sec",
+                      pubkey=f"{publickey}.pub", callback=cb)
+        self.pub = keys.get_public_key(filepath=f"{publickey}.pub")
+        self.sec = keys.get_private_key(
+            filepath=f"{privatekey}.sec", callback=cb)
+
+
+    def encrypt(self, file: str, remote_pubkey):
+        """Uses the remote public key and the own private key to encrypt a file"""
+
+        with open(file=file, mode='rb') as infile:
+            with open(file=f"{file}.c4gh", mode='wb+') as outfile:
+                engine.encrypt(keys=[(0, self.sec, remote_pubkey)],
+                               infile=infile, outfile=outfile)
+
+        return f"{file}.c4gh"
+
 
 # FUNCTIONS ######################################################## FUNCTIONS #
 
@@ -233,7 +258,7 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
 
 
 def gen_hmac(filepath: str) -> str:
-    """Generates HMAC"""
+    """Generates HMAC for file"""
 
     key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
     h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
@@ -329,53 +354,84 @@ def file_type(fpath: str) -> str:
                     return None
 
 
-def process_file(file: str):
+def process_file(file: str, prev_path: str = "") -> dict:
     """Handles file specific compression, hashing and encryption"""
 
     fname = file.split('/')[-1]      # Get file or folder name
     mime = file_type(file)  # Check mime type
+    upload_path = ""
 
-    if mime in compression_list():      # If file compressed format
-            # save current file name
-        upload_path[path] = file
-    else:                               # It not compressed format
-        ### Perform compression ###
+    print(file, "\t", mime)
+
+    # Check if compressed format
+    if mime in compression_list():
+        # If compressed save original name as path
+        upload_path = file
+    else:
+        # If not compressed perform compression
+        # If first (root) folder, create name for root "compressed" folder
+        # If subfolder, alter path to be in "compressed" folders
+        if prev_path == "":
+            upload_path = f"{file}.gzip"
+        else:
+            upload_path = f"{prev_path}/{file.split('/')[-1]}.gzip"
+
         click.echo(f"~~~~ Compressing file '{file}'...")
-        upload_path = f"{file}.gzip"
-        compress_file(file, upload_path)
-        click.echo(f"~~~~ Compression completed! Compressed file: \
-                '{upload_path}")
+        compress_file(original=file, compressed=upload_path)
+        click.echo(f"~~~~ Compression completed! "
+                   f"Compressed file: '{upload_path}")
 
     ### Generate file checksum. ###
     click.echo("~~~~ Generating HMAC...")
-    hash_dict[path] = gen_hmac(upload_path).hex()
+    hash_file = gen_hmac(upload_path).hex()
     click.echo("~~~~ HMAC generated!\n")
 
-    # what is returned will be added to upload_path[path]
+    ### Encrypt file ###
+    click.echo("~~~~ Encrypting file...")
+    researcher_kp = ECDHKeyPair(
+        privatekey="researcher", publickey="researcher")
+    facility_kp = ECDHKeyPair(privatekey="facility", publickey="facility")
 
+    encrypt_path = facility_kp.encrypt(
+        file=upload_path, remote_pubkey=researcher_kp.pub)
+    click.echo("~~~~ Encryption completed! "
+               f"Encrypted file: '{upload_path}")
 
-def process_folder(folder: str):
-    """Handles folder specific compression, hashing, and encryption"""
-
-    ### Perform compression on all files in folder ###
-    # If zip or tar --> files, not folders
-    click.echo(f"~~~~ Compressing directory '{folder}'...")
-    try:
-        upload_path = compress_folder(dir_path=folder,
-                                      prev_path="")
-    except CompressionError as ce:
-        sys.exit(f"Could not compress folder {folder}: {ce}")
-    else:
-        click.echo("~~~~ Compression completed!"
-                   f"Zip archive: '{upload_path}'")
-
-    ### Generate directory checksum. ###
-    key = "thisshouldbechanged"
     click.echo("~~~~ Generating HMAC...")
-    hash_dict[path] = hash_dir(upload_path, key)
+    hash_enc = gen_hmac(encrypt_path).hex()
     click.echo("~~~~ HMAC generated!\n")
+        
+    return {upload_path: hash_file}, {encrypt_path: hash_enc}
 
-    # what is returned will be added to upload_path[path]
+
+def process_folder(folder: str, prev_path: str = ""):
+    """Handles folder specific compression, hashing, and encryption"""
+    print("---->", folder, "\t", prev_path)
+    comp_path = ""
+    # If first (root) folder, create name for root "compressed" folder
+    # If subfolder, alter path to be in "compressed" folders
+    if prev_path == "":
+        comp_path = f"{folder}_comp"
+    else:
+        comp_path = f"{prev_path}/{folder.split('/')[-1]}_comp"
+
+    result_dict = {comp_path: list()}
+    try:
+        os.mkdir(comp_path)
+    except OSError as ose:
+        sys.exit(f"Could not create folder '{comp_path}': {ose}")
+    else:
+        # Iterate through all folders and files recursively
+        for path, dirs, files in os.walk(folder):
+            for file in sorted(files):  # For all files in folder root
+                result_dict[comp_path].append(process_file(
+                    file=os.path.join(path, file), prev_path=comp_path))
+            for dir_ in sorted(dirs):   # For all folders in folder root
+                result_dict[comp_path].append(process_folder(folder=os.path.join(path, dir_),
+                                                             prev_path=comp_path))
+            break
+
+    return result_dict
 
 
 def project_access(user: str, project: str) -> (bool, bool):
@@ -553,8 +609,10 @@ def put(config: str, username: str, password: str, project: str,
     for path in data:
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path)
+            print(upload_path)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path)
+            print(upload_path)
         else:   # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
                      "Have you entered the correct path?")
@@ -562,36 +620,38 @@ def put(config: str, username: str, password: str, project: str,
         continue
         ### Encrypt sensitive data ###
         if sensitive:
+
+            pass
             ### Get user public key ###
-            cb_res = partial(
-                getpass, prompt="Passphrase for researcher private key ")
-            keys.generate(seckey=f"{fname}_researcher.sec",
-                          pubkey=f"{fname}researcher.pub", callback=cb_res)
-            res_pub = keys.get_public_key(
-                filepath=f"{fname}researcher.pub")
-            print("Researcher public key: ", res_pub)
+            # cb_res = partial(
+            #     getpass, prompt="Passphrase for researcher private key ")
+            # keys.generate(seckey=f"{fname}_researcher.sec",
+            #               pubkey=f"{fname}_researcher.pub", callback=cb_res)
+            # res_pub = keys.get_public_key(
+            #     filepath=f"{fname}_researcher.pub")
+            # print("Researcher public key: ", res_pub)
 
-            ### Generate facility keys ###
-            cb_fac = partial(
-                getpass, prompt="Passphrase for facility private key ")
-            keys.generate(seckey=f"{fname}_facility.sec",
-                          pubkey=f"{fname}_facility.pub", callback=cb_fac)
+            # ### Generate facility keys ###
+            # cb_fac = partial(
+            #     getpass, prompt="Passphrase for facility private key ")
+            # keys.generate(seckey=f"{fname}_facility.sec",
+            #               pubkey=f"{fname}_facility.pub", callback=cb_fac)
 
-            ### Encrypt data ###
-            # Get facility private key
-            fac_sec = keys.get_private_key(
-                filepath=f"{fname}_facility.sec", callback=cb_fac)
-            print("Facility private key : ", fac_sec)
+            # ### Encrypt data ###
+            # # Get facility private key
+            # fac_sec = keys.get_private_key(
+            #     filepath=f"{fname}_facility.sec", callback=cb_fac)
+            # print("Facility private key : ", fac_sec)
 
-            # Encrypt
-            infile = open(upload_path[path], 'rb')
-            outfile = open(f"{upload_path[path]}.c4gh", 'wb+')
-            engine.encrypt(keys=[(0, fac_sec, res_pub)],
-                           infile=infile, outfile=outfile)
-            outfile.close()
+            # # Encrypt
+            # infile = open(upload_path[path], 'rb')
+            # outfile = open(f"{upload_path[path]}.c4gh", 'wb+')
+            # engine.encrypt(keys=[(0, fac_sec, res_pub)],
+            #                infile=infile, outfile=outfile)
+            # outfile.close()
 
-            with open(f"{upload_path[path]}.c4gh", 'rb') as f:
-                print(f.read())
+            # with open(f"{upload_path[path]}.c4gh", 'rb') as f:
+            #     print(f.read())
             ### 11. Generate checksum ###
             ### 12. Upload to sensitive bucket ###
 

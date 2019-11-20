@@ -84,7 +84,6 @@ def check_access(username: str, password: str, project: str, upload: bool = True
     and the projects S3 access"""
 
     ### Check DP access ###
-    click.echo("[*] Verifying Delivery Portal access...")
     access_granted, user_id = dp_access(username=username,
                                         password=password,
                                         upload=upload)
@@ -93,10 +92,7 @@ def check_access(username: str, password: str, project: str, upload: bool = True
             "You are not authorized to access the Delivery Portal. Aborting."
         )
     else:
-        click.echo("[**] Access granted!\n")
-
         ### Check project access ###
-        click.echo("[*] Verifying project access...")
         project_access_granted, sensitive = project_access(user=user_id,
                                                            project=project)
         if not project_access_granted:
@@ -104,8 +100,6 @@ def check_access(username: str, password: str, project: str, upload: bool = True
                 "Project access denied. Cancelling upload."
             )
         else:
-            click.echo("[**] Project access granted!\n")
-
             return user_id, sensitive
 
 
@@ -139,11 +133,8 @@ def compress_data(fileorfolder: str):
         else:
             # If not compressed file, change file to be uploaded
             # and compress
-            click.echo(f"~~~~ Compressing file '{fileorfolder}'...")
             upload_path = f"{fileorfolder}.gzip"    # Comp file name
             compress_file(fileorfolder, upload_path)
-            click.echo(f"~~~~ Compression completed! Compressed file: \
-                '{upload_path}")
             return upload_path
 
 
@@ -318,7 +309,6 @@ def file_type(fpath: str) -> str:
         return "folder"
     else:
         kind = filetype.guess(fpath)    # Guess file type
-        print("Kind : ", kind)
         if kind is not None:            # If guess successful
             return kind.mime            # Return mime type
         else:
@@ -357,11 +347,9 @@ def file_type(fpath: str) -> str:
 def process_file(file: str, prev_path: str = "") -> dict:
     """Handles file specific compression, hashing and encryption"""
 
-    fname = file.split('/')[-1]      # Get file or folder name
-    mime = file_type(file)  # Check mime type
-    upload_path = ""
-
-    print(file, "\t", mime)
+    fname = file.split('/')[-1]     # Get file or folder name
+    mime = file_type(file)          # Check mime type
+    upload_path = ""                # Latest file generated
 
     # Check if compressed format
     if mime in compression_list():
@@ -376,37 +364,31 @@ def process_file(file: str, prev_path: str = "") -> dict:
         else:
             upload_path = f"{prev_path}/{file.split('/')[-1]}.gzip"
 
-        click.echo(f"~~~~ Compressing file '{file}'...")
+        ### Compress file ### 
         compress_file(original=file, compressed=upload_path)
-        click.echo(f"~~~~ Compression completed! "
-                   f"Compressed file: '{upload_path}")
 
     ### Generate file checksum. ###
-    click.echo("~~~~ Generating HMAC...")
     hash_file = gen_hmac(upload_path).hex()
-    click.echo("~~~~ HMAC generated!\n")
 
     ### Encrypt file ###
-    click.echo("~~~~ Encrypting file...")
+    # Generate keys
     researcher_kp = ECDHKeyPair(
         privatekey="researcher", publickey="researcher")
     facility_kp = ECDHKeyPair(privatekey="facility", publickey="facility")
 
+    # Encrypt
     encrypt_path = facility_kp.encrypt(
         file=upload_path, remote_pubkey=researcher_kp.pub)
-    click.echo("~~~~ Encryption completed! "
-               f"Encrypted file: '{upload_path}")
 
-    click.echo("~~~~ Generating HMAC...")
+    ### Generate encrypted file checksum
     hash_enc = gen_hmac(encrypt_path).hex()
-    click.echo("~~~~ HMAC generated!\n")
         
     return {upload_path: hash_file}, {encrypt_path: hash_enc}
 
 
 def process_folder(folder: str, prev_path: str = ""):
     """Handles folder specific compression, hashing, and encryption"""
-    print("---->", folder, "\t", prev_path)
+
     comp_path = ""
     # If first (root) folder, create name for root "compressed" folder
     # If subfolder, alter path to be in "compressed" folders
@@ -590,78 +572,23 @@ def put(config: str, username: str, password: str, project: str,
                                                        project=project,
                                                        pathfile=pathfile,
                                                        data=data)
-    click.echo(f"Username: {username}"
-               f"\nPassword: {password}"
-               f"\nProject: {project}\n")
 
     # Check user access to DP and project, and project to S3 delivery option
     user_id, sensitive = check_access(username=username, password=password,
                                       project=project, upload=True)
-    click.echo(f"User ID: {user_id}"
-               f"\nSensitive: {sensitive}\n")
 
+    # Put all data in one tuple
     data = all_data(data_tuple=data, data_file=pathfile)
-    click.echo(f"Data: {data}\n")
-
-    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
 
     ### Check if the data is compressed ###
     for path in data:
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path)
-            print(upload_path)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path)
-            print(upload_path)
-        else:   # <---- TYPE UNKNOWN
+        else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
                      "Have you entered the correct path?")
-
-        continue
-        ### Encrypt sensitive data ###
-        if sensitive:
-
-            pass
-            ### Get user public key ###
-            # cb_res = partial(
-            #     getpass, prompt="Passphrase for researcher private key ")
-            # keys.generate(seckey=f"{fname}_researcher.sec",
-            #               pubkey=f"{fname}_researcher.pub", callback=cb_res)
-            # res_pub = keys.get_public_key(
-            #     filepath=f"{fname}_researcher.pub")
-            # print("Researcher public key: ", res_pub)
-
-            # ### Generate facility keys ###
-            # cb_fac = partial(
-            #     getpass, prompt="Passphrase for facility private key ")
-            # keys.generate(seckey=f"{fname}_facility.sec",
-            #               pubkey=f"{fname}_facility.pub", callback=cb_fac)
-
-            # ### Encrypt data ###
-            # # Get facility private key
-            # fac_sec = keys.get_private_key(
-            #     filepath=f"{fname}_facility.sec", callback=cb_fac)
-            # print("Facility private key : ", fac_sec)
-
-            # # Encrypt
-            # infile = open(upload_path[path], 'rb')
-            # outfile = open(f"{upload_path[path]}.c4gh", 'wb+')
-            # engine.encrypt(keys=[(0, fac_sec, res_pub)],
-            #                infile=infile, outfile=outfile)
-            # outfile.close()
-
-            # with open(f"{upload_path[path]}.c4gh", 'rb') as f:
-            #     print(f.read())
-            ### 11. Generate checksum ###
-            ### 12. Upload to sensitive bucket ###
-
-    # TODO: Encrypt files (ignoring the key stuff atm) + stream to s3 (if possible)
-    # TODO: Compress files
-    # TODO: Show success message
-    # TODO: Delete from database if failed upload
-    # TODO: Save metadata to db
-    # TODO: Show success message
-    # TODO: Generate email to user of interest
 
 
 @cli.command()

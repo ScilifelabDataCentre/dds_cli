@@ -36,7 +36,7 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
 # CLASSES ############################################################ CLASSES #
 
 class ECDHKeyPair:
-    """Public key pair. 
+    """Public key pair.
     Algorithm: Eliptic Curve Diffie-Hellman (Curve25519)"""
 
     def __init__(self, privatekey: str = "key", publickey: str = "key"):
@@ -190,7 +190,7 @@ def compress_data(fileorfolder: str):
             return upload_path
 
 
-def compress_file(original: str, compressed: str) -> None:
+def compress_file(original: str, compressed: str) -> (str, str):
     """Compresses file using gzip"""
 
     if os.path.exists(compressed):
@@ -200,12 +200,14 @@ def compress_file(original: str, compressed: str) -> None:
             sys.exit(f"Compressed file {compressed} already "
                      "exists, and could not be removed: ", f"{ose}")
     try:
-        # Compress file 
+        # Compress file
         with open(original, 'rb') as pathin:
             with gzip.open(compressed, 'wb') as pathout:
                 shutil.copyfileobj(pathin, pathout)
     except CompressionError as ce:
         sys.exit(f"Could not compress the file {original}: {ce}")
+    else:
+        return compressed, "gzip"
 
 
 def compress_folder(dir_path: str, prev_path: str = "") -> list:
@@ -407,52 +409,70 @@ def file_type(fpath: str) -> str:
 def process_file(file: str, sensitive: bool = True, prev_path: str = "") -> dict:
     """Handles file specific compression, hashing and encryption"""
 
-    fname = file.split('/')[-1]     # Get file or folder name
-    mime = file_type(file)          # Check mime type
-    upload_path = ""                # Latest file generated
+    fname = file.split('/')[-1]             # Get file or folder name
+    mime = file_type(file)                  # Check mime type
+    file_to_upload = ""                     # Final file to upload
+    latest_path = ""                        # Latest file generated
+    is_compressed = False                   # Saves info about compressed or not
+    compression_algorithm = ""              # Which algorithm
+    is_encrypted = False                    # Saves info about encrypted or not
+    encryption_algorithm = "crypt4gh"       # Which package/algorithm
 
     # Check if compressed format
     if mime in compression_list():
         # If compressed save original name as path
-        upload_path = file
+        latest_path = file
+        is_compressed = True
+        compression_algorithm = mime.split("/")[-1]
     else:
         # If not compressed perform compression
-        # If first (root) folder, create name for root "compressed" folder
-        # If subfolder, alter path to be in "compressed" folders
-        if prev_path == "":
-            upload_path = f"{file}.gzip"
-        else:
-            upload_path = f"{prev_path}/{file.split('/')[-1]}.gzip"
+        if prev_path == "":                 # If root folder
+            latest_path, compression_algorithm = compress_file(original=file,
+                                                               compressed=f"{file}.gzip")
+        else:   # If subfolder alter path to compressed folder
+            latest_path, compression_algorithm = compress_file(original=file,
+                                                               compressed=f"{prev_path}/{fname}.gzip")
+        is_compressed = True
 
-        ### Compress file ###
-        compress_file(original=file, compressed=upload_path)
-
-    ### Generate file checksum. ###
-    hash_file = gen_hmac(upload_path).hex()
+    ### Generate file checksum (original or compressed) ###
+    hash_file = gen_hmac(latest_path).hex()
 
     ### Encrypt file ###
     # Generate keys
-    researcher_kp = ECDHKeyPair(
-        privatekey="researcher", publickey="researcher")
-    facility_kp = ECDHKeyPair(privatekey="facility", publickey="facility")
+    researcher_kp = ECDHKeyPair(privatekey="researcher",
+                                publickey="researcher")
+    facility_kp = ECDHKeyPair(privatekey="facility",
+                              publickey="facility")
 
     # Encrypt
-    encrypt_path = facility_kp.encrypt(
-        file=upload_path, remote_pubkey=researcher_kp.pub)
+    latest_path = facility_kp.encrypt(file=latest_path,
+                                      remote_pubkey=researcher_kp.pub)
+    is_encrypted = True
 
     # Generate encrypted file checksum
-    hash_enc = gen_hmac(encrypt_path).hex()
+    hash_encrypted = gen_hmac(latest_path).hex()
 
-    return {upload_path: hash_file}, {encrypt_path: hash_enc}
+    return {"Final path": latest_path,
+            "Compression": {
+                "Compressed": is_compressed, 
+                "Algorithm": compression_algorithm, 
+                "Checksum": hash_file
+                },
+            "Encryption": {
+                "Encrypted": is_encrypted, 
+                "Algorithm": encryption_algorithm,
+                "Checksum": hash_encrypted
+                }
+            }
 
 
 def process_folder(folder: str, sensitive: bool = True, prev_path: str = ""):
     """Handles folder specific compression, hashing, and encryption"""
 
-    comp_path = ""      # Path to "compressed" folder
+    comp_path = ""                      # Path to "compressed" folder
     if prev_path == "":                 # If root folder
         comp_path = f"{folder}_comp"    # path is the current path + comp
-    else:   # If subfolder alter path to be in new folder
+    else:                   # If subfolder alter path to be in new folder
         comp_path = f"{prev_path}/{folder.split('/')[-1]}_comp"
 
     result_dict = {comp_path: list()}   # Dict for saving paths and hashes
@@ -656,6 +676,8 @@ def put(config: str, username: str, password: str, project: str,
             sys.exit(f"Path type {path} not identified."
                      "Have you entered the correct path?")
 
+    print(upload_path)
+    
         ### Upload process here ###
 
         ### Database update here ###

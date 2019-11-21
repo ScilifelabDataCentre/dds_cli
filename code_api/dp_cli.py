@@ -109,12 +109,6 @@ class ECDHKeyPair:
 
 # FUNCTIONS ######################################################## FUNCTIONS #
 
-def get_passphrase():
-    """Gets passphrase for private key encryption"""
-
-    return "thisisapassphrasethatshouldbegeneratedsomehow"
-
-
 def all_data(data_tuple: tuple, data_file: str):
     """Puts all data from tuple and file into one tuple"""
 
@@ -322,12 +316,6 @@ def gen_hmac(filepath: str) -> str:
         return h.finalize()
 
 
-def get_filesize(filename: str) -> int:
-    """Returns file size"""
-
-    return os.stat(filename).st_size
-
-
 def get_current_time() -> str:
     """Gets the current time and formats for database."""
 
@@ -343,6 +331,18 @@ def get_current_time() -> str:
             timestamp += f"{t}"
 
     return timestamp
+
+
+def get_filesize(filename: str) -> int:
+    """Returns file size"""
+
+    return os.stat(filename).st_size
+
+
+def get_passphrase():
+    """Gets passphrase for private key encryption"""
+
+    return "thisisapassphrasethatshouldbegeneratedsomehow"
 
 
 def hash_dir(dir_path: str, key) -> str:
@@ -454,15 +454,15 @@ def process_file(file: str, sensitive: bool = True, prev_path: str = "") -> dict
 
     return {"Final path": latest_path,
             "Compression": {
-                "Compressed": is_compressed, 
-                "Algorithm": compression_algorithm, 
+                "Compressed": is_compressed,
+                "Algorithm": compression_algorithm,
                 "Checksum": hash_file
-                },
+            },
             "Encryption": {
-                "Encrypted": is_encrypted, 
+                "Encrypted": is_encrypted,
                 "Algorithm": encryption_algorithm,
                 "Checksum": hash_encrypted
-                }
+            }
             }
 
 
@@ -664,6 +664,22 @@ def put(config: str, username: str, password: str, project: str,
     # Put all data in one tuple
     data = all_data(data_tuple=data, data_file=pathfile)
 
+    # Create temporary folder with timestamp and all subfolders
+    timestamp = get_current_time().replace(" ", "_").replace(":", "-")
+    temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
+    dirs = tuple(p for p in [temp_dir,
+                             f"{temp_dir}/files",
+                             f"{temp_dir}/meta",
+                             f"{temp_dir}/logs"]) + \
+        tuple(f"{temp_dir}/files/{p.split('/')[-1].split('.')[0]}"
+              for p in data)
+    for d_ in dirs:
+        try:
+            os.mkdir(d_)
+        except OSError as ose:
+            sys.exit(f"The directory '{d_}' could not be created: {ose}"
+                     "Cancelling delivery.")
+
     ### Check if the data is compressed ###
     for path in data:
         if os.path.isfile(path):    # <---- FILES
@@ -677,10 +693,10 @@ def put(config: str, username: str, password: str, project: str,
                      "Have you entered the correct path?")
 
     print(upload_path)
-    
-        ### Upload process here ###
 
-        ### Database update here ###
+    ### Upload process here ###
+
+    ### Database update here ###
 
 
 @cli.command()

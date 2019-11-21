@@ -27,7 +27,7 @@ from getpass import getpass
 
 from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
-    SecurePasswordException
+    EncryptionError, SecurePasswordException
 
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
@@ -42,26 +42,78 @@ class ECDHKeyPair:
     def __init__(self, privatekey: str = "key", publickey: str = "key"):
         """Generates a public key pair"""
 
-        cb = partial(getpass, prompt="Passphrase for private key ")
-        keys.generate(seckey=f"{privatekey}.sec",
-                      pubkey=f"{publickey}.pub", callback=cb)
-        self.pub = keys.get_public_key(filepath=f"{publickey}.pub")
-        self.sec = keys.get_private_key(
-            filepath=f"{privatekey}.sec", callback=cb)
+        print("key gen")
+        cb = partial(get_passphrase)    # Get passphrase for private key enc
 
+        # Directory for storing keys
+        key_dir = f"{os.path.abspath(os.getcwd())}/keys"
+        if not os.path.exists(key_dir) and not os.path.isdir(key_dir):
+            try:
+                os.mkdir(key_dir)   # Create "keys" folder if not exists
+            except OSError as ose:
+                sys.exit(f"The keys folder could not be created:", f"{ose}")
+
+        # Paths to private and public keys
+        priv_keyname = f"{key_dir}/{privatekey}.sec"
+        pub_keyname = f"{key_dir}/{publickey}.pub"
+        for k_ in [priv_keyname, pub_keyname]:
+            if os.path.exists(k_):
+                try:
+                    os.remove(k_)       # Delete old keys
+                except OSError as ose:
+                    sys.exit(
+                        f"The key {k_} exists but could not be deleted: ", f"{ose}")
+
+        try:
+            # Generate public key pair, encrypt private key
+            keys.generate(seckey=priv_keyname,
+                          pubkey=pub_keyname, callback=cb)
+        except EncryptionError as ee:
+            sys.exit(
+                f"The key pair {priv_keyname}/{pub_keyname} could not be generated: ", f"{ee}")
+        else:
+            try:
+                # Import keys, decrypt private key
+                self.pub = keys.get_public_key(filepath=pub_keyname)
+                self.sec = keys.get_private_key(filepath=priv_keyname,
+                                                callback=cb)
+            except EncryptionError as ee:
+                sys.exit(
+                    f"Could not get the keys {priv_keyname} & {pub_keyname}: ", f"{ee}")
 
     def encrypt(self, file: str, remote_pubkey):
         """Uses the remote public key and the own private key to encrypt a file"""
 
-        with open(file=file, mode='rb') as infile:
-            with open(file=f"{file}.c4gh", mode='wb+') as outfile:
-                engine.encrypt(keys=[(0, self.sec, remote_pubkey)],
-                               infile=infile, outfile=outfile)
+        encrypted_file = f"{file}.c4gh"   # Name of encrypted file.
+        if os.path.exists(encrypted_file):
+            try:
+                # Remove old encrypted file if exists
+                os.remove(encrypted_file)
+            except OSError as ose:
+                sys.exit(f"The old encrypted file {file} could not be deleted: ",
+                         f"{ose}")
 
-        return f"{file}.c4gh"
+        try:
+            # Encrypt file
+            with open(file=file, mode='rb') as infile:
+                with open(file=encrypted_file, mode='wb+') as outfile:
+                    # The 0 in keys is the method (only one allowed)
+                    engine.encrypt(keys=[(0, self.sec, remote_pubkey)],
+                                   infile=infile, outfile=outfile)
+        except EncryptionError as ee:
+            sys.exit(f"Could not encrypt file {file}: ",
+                     f"{ee}")
+        else:
+            return encrypted_file
 
 
 # FUNCTIONS ######################################################## FUNCTIONS #
+
+def get_passphrase():
+    """Gets passphrase for private key encryption"""
+
+    return "thisisapassphrasethatshouldbegeneratedsomehow"
+
 
 def all_data(data_tuple: tuple, data_file: str):
     """Puts all data from tuple and file into one tuple"""
@@ -141,7 +193,14 @@ def compress_data(fileorfolder: str):
 def compress_file(original: str, compressed: str) -> None:
     """Compresses file using gzip"""
 
+    if os.path.exists(compressed):
+        try:
+            os.remove(compressed)   # Delete compressed file if exists
+        except OSError as ose:
+            sys.exit(f"Compressed file {compressed} already "
+                     "exists, and could not be removed: ", f"{ose}")
     try:
+        # Compress file 
         with open(original, 'rb') as pathin:
             with gzip.open(compressed, 'wb') as pathout:
                 shutil.copyfileobj(pathin, pathout)
@@ -162,22 +221,23 @@ def compress_folder(dir_path: str, prev_path: str = "") -> list:
 
     result_dict = {comp_path: list()}   # Add path to upload dict
 
-    try:
-        os.mkdir(comp_path)     # Create comp path
-    except OSError as ose:
-        print(f"Could not create folder '{comp_path}': {ose}")
-    else:
-        # Iterate through all folders and files recursively
-        for path, dirs, files in os.walk(dir_path):
-            for file in sorted(files):  # For all files in folder root
-                original = os.path.join(path, file)
-                compressed = f"{comp_path}/{file}.gzip"
-                compress_file(original=original, compressed=compressed)
-                result_dict[comp_path].append(compressed)
-            for dir_ in sorted(dirs):   # For all folders in folder root
-                result_dict[comp_path].append(compress_folder(
-                    os.path.join(path, dir_), comp_path))
-            break
+    if not os.path.exists(comp_path):
+        try:
+            os.mkdir(comp_path)     # Create comp path
+        except OSError as ose:
+            print(f"Could not create folder '{comp_path}': {ose}")
+
+    # Iterate through all folders and files recursively
+    for path, dirs, files in os.walk(dir_path):
+        for file in sorted(files):  # For all files in folder root
+            original = os.path.join(path, file)
+            compressed = f"{comp_path}/{file}.gzip"
+            compress_file(original=original, compressed=compressed)
+            result_dict[comp_path].append(compressed)
+        for dir_ in sorted(dirs):   # For all folders in folder root
+            result_dict[comp_path].append(compress_folder(
+                os.path.join(path, dir_), comp_path))
+        break
 
     return result_dict
 
@@ -344,7 +404,7 @@ def file_type(fpath: str) -> str:
                     return None
 
 
-def process_file(file: str, prev_path: str = "") -> dict:
+def process_file(file: str, sensitive: bool = True, prev_path: str = "") -> dict:
     """Handles file specific compression, hashing and encryption"""
 
     fname = file.split('/')[-1]     # Get file or folder name
@@ -364,7 +424,7 @@ def process_file(file: str, prev_path: str = "") -> dict:
         else:
             upload_path = f"{prev_path}/{file.split('/')[-1]}.gzip"
 
-        ### Compress file ### 
+        ### Compress file ###
         compress_file(original=file, compressed=upload_path)
 
     ### Generate file checksum. ###
@@ -380,38 +440,42 @@ def process_file(file: str, prev_path: str = "") -> dict:
     encrypt_path = facility_kp.encrypt(
         file=upload_path, remote_pubkey=researcher_kp.pub)
 
-    ### Generate encrypted file checksum
+    # Generate encrypted file checksum
     hash_enc = gen_hmac(encrypt_path).hex()
-        
+
     return {upload_path: hash_file}, {encrypt_path: hash_enc}
 
 
-def process_folder(folder: str, prev_path: str = ""):
+def process_folder(folder: str, sensitive: bool = True, prev_path: str = ""):
     """Handles folder specific compression, hashing, and encryption"""
 
-    comp_path = ""
-    # If first (root) folder, create name for root "compressed" folder
-    # If subfolder, alter path to be in "compressed" folders
-    if prev_path == "":
-        comp_path = f"{folder}_comp"
-    else:
+    comp_path = ""      # Path to "compressed" folder
+    if prev_path == "":                 # If root folder
+        comp_path = f"{folder}_comp"    # path is the current path + comp
+    else:   # If subfolder alter path to be in new folder
         comp_path = f"{prev_path}/{folder.split('/')[-1]}_comp"
 
-    result_dict = {comp_path: list()}
-    try:
-        os.mkdir(comp_path)
-    except OSError as ose:
-        sys.exit(f"Could not create folder '{comp_path}': {ose}")
-    else:
-        # Iterate through all folders and files recursively
-        for path, dirs, files in os.walk(folder):
-            for file in sorted(files):  # For all files in folder root
-                result_dict[comp_path].append(process_file(
-                    file=os.path.join(path, file), prev_path=comp_path))
-            for dir_ in sorted(dirs):   # For all folders in folder root
-                result_dict[comp_path].append(process_folder(folder=os.path.join(path, dir_),
-                                                             prev_path=comp_path))
-            break
+    result_dict = {comp_path: list()}   # Dict for saving paths and hashes
+
+    if not os.path.exists(comp_path):
+        try:
+            os.mkdir(comp_path)     # Create folder if doesn't exist
+        except OSError as ose:
+            sys.exit(f"Could not create folder '{comp_path}': {ose}")
+
+    # Iterate through all folders and files recursively
+    for path, dirs, files in os.walk(folder):
+        for file in sorted(files):  # For all files in folder root
+            # Compress files and add to dict
+            result_dict[comp_path].append(process_file(file=os.path.join(path, file),
+                                                       sensitive=sensitive,
+                                                       prev_path=comp_path))
+        for dir_ in sorted(dirs):   # For all subfolders in folder root
+            # "Open" subfolder folder (the current method, recursive)
+            result_dict[comp_path].append(process_folder(folder=os.path.join(path, dir_),
+                                                         sensitive=sensitive,
+                                                         prev_path=comp_path))
+        break
 
     return result_dict
 
@@ -583,12 +647,18 @@ def put(config: str, username: str, password: str, project: str,
     ### Check if the data is compressed ###
     for path in data:
         if os.path.isfile(path):    # <---- FILES
-            upload_path[path] = process_file(file=path)
+            upload_path[path] = process_file(file=path,
+                                             sensitive=sensitive)
         elif os.path.isdir(path):   # <---- FOLDERS
-            upload_path[path] = process_folder(folder=path)
+            upload_path[path] = process_folder(folder=path,
+                                               sensitive=sensitive)
         else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
                      "Have you entered the correct path?")
+
+        ### Upload process here ###
+
+        ### Database update here ###
 
 
 @cli.command()

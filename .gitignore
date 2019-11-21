@@ -16,3 +16,4 @@ venv
 *.pub
 crypt4gh
 *gzip
+*DataDelivery_*

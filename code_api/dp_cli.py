@@ -39,30 +39,18 @@ class ECDHKeyPair:
     """Public key pair.
     Algorithm: Eliptic Curve Diffie-Hellman (Curve25519)"""
 
-    def __init__(self, privatekey: str = "key", publickey: str = "key"):
+    def __init__(self, privatekey: str = "key", publickey: str = "key", temp_dir: str = ""):
         """Generates a public key pair"""
 
         print("key gen")
         cb = partial(get_passphrase)    # Get passphrase for private key enc
 
         # Directory for storing keys
-        key_dir = f"{os.path.abspath(os.getcwd())}/keys"
-        if not os.path.exists(key_dir) and not os.path.isdir(key_dir):
-            try:
-                os.mkdir(key_dir)   # Create "keys" folder if not exists
-            except OSError as ose:
-                sys.exit(f"The keys folder could not be created:", f"{ose}")
+        key_dir = f"{temp_dir}/keys"
 
         # Paths to private and public keys
         priv_keyname = f"{key_dir}/{privatekey}.sec"
         pub_keyname = f"{key_dir}/{publickey}.pub"
-        for k_ in [priv_keyname, pub_keyname]:
-            if os.path.exists(k_):
-                try:
-                    os.remove(k_)       # Delete old keys
-                except OSError as ose:
-                    sys.exit(
-                        f"The key {k_} exists but could not be deleted: ", f"{ose}")
 
         try:
             # Generate public key pair, encrypt private key
@@ -81,17 +69,14 @@ class ECDHKeyPair:
                 sys.exit(
                     f"Could not get the keys {priv_keyname} & {pub_keyname}: ", f"{ee}")
 
-    def encrypt(self, file: str, remote_pubkey):
+    def encrypt(self, file: str, remote_pubkey, temp_dir: str, sub_dir: str):
         """Uses the remote public key and the own private key to encrypt a file"""
-
-        encrypted_file = f"{file}.c4gh"   # Name of encrypted file.
-        if os.path.exists(encrypted_file):
-            try:
-                # Remove old encrypted file if exists
-                os.remove(encrypted_file)
-            except OSError as ose:
-                sys.exit(f"The old encrypted file {file} could not be deleted: ",
-                         f"{ose}")
+        
+        fname = file.split('/')[-1]
+        if sub_dir == "":
+            encrypted_file = f"{temp_dir}/{fname}.c4gh"
+        else:
+            encrypted_file = f"{sub_dir}/{fname}.c4gh"
 
         try:
             # Encrypt file
@@ -104,7 +89,7 @@ class ECDHKeyPair:
             sys.exit(f"Could not encrypt file {file}: ",
                      f"{ee}")
         else:
-            return encrypted_file
+            return encrypted_file, "crypt4gh"
 
 
 # FUNCTIONS ######################################################## FUNCTIONS #
@@ -184,15 +169,15 @@ def compress_data(fileorfolder: str):
             return upload_path
 
 
-def compress_file(original: str, compressed: str) -> (str, str):
+def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
     """Compresses file using gzip"""
 
-    if os.path.exists(compressed):
-        try:
-            os.remove(compressed)   # Delete compressed file if exists
-        except OSError as ose:
-            sys.exit(f"Compressed file {compressed} already "
-                     "exists, and could not be removed: ", f"{ose}")
+    fname = original.split('/')[-1]
+    if sub_dir == "":
+        compressed = f"{temp_dir}/{fname}.gzip"
+    else:
+        compressed = f"{sub_dir}/{fname}.gzip"
+
     try:
         # Compress file
         with open(original, 'rb') as pathin:
@@ -406,7 +391,7 @@ def file_type(fpath: str) -> str:
                     return None
 
 
-def process_file(file: str, sensitive: bool = True, prev_path: str = "") -> dict:
+def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = True) -> dict:
     """Handles file specific compression, hashing and encryption"""
 
     fname = file.split('/')[-1]             # Get file or folder name
@@ -415,8 +400,10 @@ def process_file(file: str, sensitive: bool = True, prev_path: str = "") -> dict
     latest_path = ""                        # Latest file generated
     is_compressed = False                   # Saves info about compressed or not
     compression_algorithm = ""              # Which algorithm
+    hash_file = ""                          # Original/compressed file hash
     is_encrypted = False                    # Saves info about encrypted or not
-    encryption_algorithm = "crypt4gh"       # Which package/algorithm
+    encryption_algorithm = ""               # Which package/algorithm
+    hash_encrypted = ""                     # Encrypted file hash
 
     # Check if compressed format
     if mime in compression_list():
@@ -426,31 +413,33 @@ def process_file(file: str, sensitive: bool = True, prev_path: str = "") -> dict
         compression_algorithm = mime.split("/")[-1]
     else:
         # If not compressed perform compression
-        if prev_path == "":                 # If root folder
-            latest_path, compression_algorithm = compress_file(original=file,
-                                                               compressed=f"{file}.gzip")
-        else:   # If subfolder alter path to compressed folder
-            latest_path, compression_algorithm = compress_file(original=file,
-                                                               compressed=f"{prev_path}/{fname}.gzip")
+        latest_path, compression_algorithm = compress_file(original=file,
+                                                           temp_dir=temp_dir,
+                                                           sub_dir=sub_dir)
         is_compressed = True
 
     ### Generate file checksum (original or compressed) ###
     hash_file = gen_hmac(latest_path).hex()
 
-    ### Encrypt file ###
-    # Generate keys
-    researcher_kp = ECDHKeyPair(privatekey="researcher",
-                                publickey="researcher")
-    facility_kp = ECDHKeyPair(privatekey="facility",
-                              publickey="facility")
+    if sensitive:
+        ### Encrypt file ###
+        # Generate keys
+        researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
+                                    publickey=f"{fname}_researcher", 
+                                    temp_dir=temp_dir)
+        facility_kp = ECDHKeyPair(privatekey=f"{fname}_facility",
+                                  publickey=f"{fname}_facility", 
+                                  temp_dir=temp_dir)
 
-    # Encrypt
-    latest_path = facility_kp.encrypt(file=latest_path,
-                                      remote_pubkey=researcher_kp.pub)
-    is_encrypted = True
+        # Encrypt
+        latest_path, encryption_algorithm = facility_kp.encrypt(file=latest_path,
+                                                                remote_pubkey=researcher_kp.pub, 
+                                                                temp_dir=temp_dir, 
+                                                                sub_dir=sub_dir)
+        is_encrypted = True
 
-    # Generate encrypted file checksum
-    hash_encrypted = gen_hmac(latest_path).hex()
+        # Generate encrypted file checksum
+        hash_encrypted = gen_hmac(latest_path).hex()
 
     return {"Final path": latest_path,
             "Compression": {
@@ -466,35 +455,25 @@ def process_file(file: str, sensitive: bool = True, prev_path: str = "") -> dict
             }
 
 
-def process_folder(folder: str, sensitive: bool = True, prev_path: str = ""):
+def process_folder(folder: str, temp_dir: str, sub_dir: str = "", sensitive: bool = True):
     """Handles folder specific compression, hashing, and encryption"""
 
-    comp_path = ""                      # Path to "compressed" folder
-    if prev_path == "":                 # If root folder
-        comp_path = f"{folder}_comp"    # path is the current path + comp
-    else:                   # If subfolder alter path to be in new folder
-        comp_path = f"{prev_path}/{folder.split('/')[-1]}_comp"
-
-    result_dict = {comp_path: list()}   # Dict for saving paths and hashes
-
-    if not os.path.exists(comp_path):
-        try:
-            os.mkdir(comp_path)     # Create folder if doesn't exist
-        except OSError as ose:
-            sys.exit(f"Could not create folder '{comp_path}': {ose}")
+    result_dict = {folder: list()}   # Dict for saving paths and hashes
 
     # Iterate through all folders and files recursively
     for path, dirs, files in os.walk(folder):
         for file in sorted(files):  # For all files in folder root
             # Compress files and add to dict
-            result_dict[comp_path].append(process_file(file=os.path.join(path, file),
-                                                       sensitive=sensitive,
-                                                       prev_path=comp_path))
+            result_dict[folder].append(process_file(file=os.path.join(path, file),
+                                                    temp_dir=temp_dir,
+                                                    sub_dir=sub_dir,
+                                                    sensitive=sensitive))
         for dir_ in sorted(dirs):   # For all subfolders in folder root
             # "Open" subfolder folder (the current method, recursive)
-            result_dict[comp_path].append(process_folder(folder=os.path.join(path, dir_),
-                                                         sensitive=sensitive,
-                                                         prev_path=comp_path))
+            result_dict[folder].append(process_folder(folder=os.path.join(path, dir_),
+                                                      temp_dir=temp_dir,
+                                                      sub_dir=sub_dir,
+                                                      sensitive=sensitive))
         break
 
     return result_dict
@@ -669,6 +648,7 @@ def put(config: str, username: str, password: str, project: str,
     temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
     dirs = tuple(p for p in [temp_dir,
                              f"{temp_dir}/files",
+                             f"{temp_dir}/keys",
                              f"{temp_dir}/meta",
                              f"{temp_dir}/logs"]) + \
         tuple(f"{temp_dir}/files/{p.split('/')[-1].split('.')[0]}"
@@ -682,11 +662,16 @@ def put(config: str, username: str, password: str, project: str,
 
     ### Check if the data is compressed ###
     for path in data:
+        sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path,
+                                             temp_dir=temp_dir,
+                                             sub_dir=sub_dir,
                                              sensitive=sensitive)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path,
+                                               temp_dir=temp_dir,
+                                               sub_dir=sub_dir,
                                                sensitive=sensitive)
         else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."

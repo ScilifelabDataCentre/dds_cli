@@ -19,8 +19,11 @@ import sys
 import hashlib
 import os
 import filetype
+import mimetypes
 import datetime
 from itertools import chain
+import logging
+
 from crypt4gh import keys, engine, header
 from functools import partial
 from getpass import getpass
@@ -29,11 +32,12 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
     EncryptionError, SecurePasswordException
 
-
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
+COMPRESSED_FORMATS = dict()
 
 # CLASSES ############################################################ CLASSES #
+
 
 class ECDHKeyPair:
     """Public key pair.
@@ -71,7 +75,7 @@ class ECDHKeyPair:
 
     def encrypt(self, file: str, remote_pubkey, temp_dir: str, sub_dir: str):
         """Uses the remote public key and the own private key to encrypt a file"""
-        
+
         fname = file.split('/')[-1]
         if sub_dir == "":
             encrypted_file = f"{temp_dir}/{fname}.c4gh"
@@ -223,13 +227,23 @@ def compress_folder(dir_path: str, prev_path: str = "") -> list:
     return result_dict
 
 
-def compression_list():
+def compression_dict():
     """Returns a list of compressed-format mime types"""
 
-    extlist = ['epub+zip', 'zip', 'x-tar', 'x-rar-compressed', 'gzip', 'x-bzip2',
-               'x-7z-compressed', 'x-xz', 'vnd.ms-cab-compressed', 'x-unix-archive', 'x-compress', 'x-lzip']
+    extdict = mimetypes.encodings_map   # Original dict with compressed formats
 
-    return [f'application/{ext}' for ext in extlist]
+    # Add custom formats
+    extdict['.z'] = 'compress'
+    extdict['.tgz'] = 'tar+gzip'
+    extdict['.tbz2'] = 'tar+bz2'
+
+    # Add more formats with same name as extension
+    formats = ['gzip', 'lzo', 'snappy', 'zip', 'mp3', 'jpg',
+               'jpeg', 'mpg', 'mpeg', 'avi', 'gif', 'png']
+    for f_ in formats:
+        extdict[f'.{f_}'] = f_
+
+    return extdict
 
 
 def couch_connect():
@@ -352,65 +366,79 @@ def hash_dir(dir_path: str, key) -> str:
 def file_type(fpath: str) -> str:
     """Guesses file mime based on extension"""
 
+    mime = None             # file mime
+    is_compressed = False
+
     if os.path.isdir(fpath):
-        return "folder"
+        return "folder", is_compressed
     else:
-        kind = filetype.guess(fpath)    # Guess file type
-        if kind is not None:            # If guess successful
-            return kind.mime            # Return mime type
-        else:
-            # Check if clumped folders (tar or zipped)
-            if tarfile.is_tarfile(fpath):
-                return "application/tar"
-            elif zipfile.is_zipfile(fpath):
-                return "application/zip"
+        mime, encoding = mimetypes.guess_type(fpath)    # Guess file type
+        extension = os.path.splitext(fpath)[1]          # File extension
+
+        # Set compressed files as compressed
+        if extension in COMPRESSED_FORMATS:
+            is_compressed = True
+
+        # If the file mime type couldn't be found, manually check for ngs files
+        if mime is None:
+            if extension in mimetypes.types_map:
+                mime = mimetypes.types_map[extension]
             else:
-                # If no guess and not clumped folders
-                # check file extensions
-                extension = os.path.splitext(fpath)[1]
-                if extension in (".txt"):
-                    return "file/text"
-                elif extension in (".csv"):
-                    return "file/csv"
-                elif extension in (".abi", ".ab1"):
-                    return "ngs-data/abi"
-                elif extension in (".embl"):
-                    return "ngs-data/embl"
-                elif extension in (".clust", ".cw", ".clustal"):
-                    return "ngs-data/clustal"
-                elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
-                    return "ngs-data/fasta"
-                elif extension in (".fastq", ".fq"):
-                    return "ngs-data/fastq"
-                elif extension in (".gbk", ".genbank", ".gb"):
-                    return "ngs-data/genbank"
-                elif extension in (".paup", ".nexus"):
-                    return "ngs-data/nexus"
-                else:
-                    click.echo("Could not determine file format.")
-                    return None
+                mime = ngs_type(extension=extension)
+
+        return mime, extension, is_compressed
+
+
+def ngs_type(extension: str):
+    """Checks if the file is of ngs type"""
+
+    mime = ""
+    if extension in (".abi", ".ab1"):
+        mime = "ngs-data/abi"
+    elif extension in (".embl"):
+        mime = "ngs-data/embl"
+    elif extension in (".clust", ".cw", ".clustal"):
+        mime = "ngs-data/clustal"
+    elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
+        mime = "ngs-data/fasta"
+    elif extension in (".fastq", ".fq"):
+        mime = "ngs-data/fastq"
+    elif extension in (".gbk", ".genbank", ".gb"):
+        mime = "ngs-data/genbank"
+    elif extension in (".paup", ".nexus"):
+        mime = "ngs-data/nexus"
+    else:
+        mime = None
+
+    return mime
 
 
 def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = True) -> dict:
     """Handles file specific compression, hashing and encryption"""
 
-    fname = file.split('/')[-1]             # Get file or folder name
-    mime = file_type(file)                  # Check mime type
-    file_to_upload = ""                     # Final file to upload
-    latest_path = ""                        # Latest file generated
     is_compressed = False                   # Saves info about compressed or not
-    compression_algorithm = ""              # Which algorithm
-    hash_file = ""                          # Original/compressed file hash
     is_encrypted = False                    # Saves info about encrypted or not
+
+    fname = file.split('/')[-1]             # Get file or folder name
+    mime, ext, is_compressed = file_type(file)   # Check mime type
+    latest_path = ""                        # Latest file generated
+
+    compression_algorithm = ""              # Which algorithm
     encryption_algorithm = ""               # Which package/algorithm
+
+    hash_file = ""                          # Original/compressed file hash
     hash_encrypted = ""                     # Encrypted file hash
 
     # Check if compressed format
-    if mime in compression_list():
+    if is_compressed:
         # If compressed save original name as path
         latest_path = file
         is_compressed = True
-        compression_algorithm = mime.split("/")[-1]
+        if ext in COMPRESSED_FORMATS:
+            compression_algorithm = COMPRESSED_FORMATS[ext]
+        else:
+            compression_algorithm = ext
+        print("algorithm: ", compression_algorithm)
     else:
         # If not compressed perform compression
         latest_path, compression_algorithm = compress_file(original=file,
@@ -425,16 +453,16 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
         ### Encrypt file ###
         # Generate keys
         researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
-                                    publickey=f"{fname}_researcher", 
+                                    publickey=f"{fname}_researcher",
                                     temp_dir=temp_dir)
         facility_kp = ECDHKeyPair(privatekey=f"{fname}_facility",
-                                  publickey=f"{fname}_facility", 
+                                  publickey=f"{fname}_facility",
                                   temp_dir=temp_dir)
 
         # Encrypt
         latest_path, encryption_algorithm = facility_kp.encrypt(file=latest_path,
-                                                                remote_pubkey=researcher_kp.pub, 
-                                                                temp_dir=temp_dir, 
+                                                                remote_pubkey=researcher_kp.pub,
+                                                                temp_dir=temp_dir,
                                                                 sub_dir=sub_dir)
         is_encrypted = True
 
@@ -590,6 +618,8 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
 
 @click.group()
 def cli():
+    global COMPRESSED_FORMATS
+    COMPRESSED_FORMATS = compression_dict()
     click.echo("CLI group thing")
 
 
@@ -660,6 +690,15 @@ def put(config: str, username: str, password: str, project: str,
             sys.exit(f"The directory '{d_}' could not be created: {ose}"
                      "Cancelling delivery.")
 
+    logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
+                        level=logging.DEBUG)
+    logging.debug("debug")
+    logging.info("info")
+    logging.warning("warning")
+    logging.error("error")
+    logging.critical("critical")
+
+    
     ### Check if the data is compressed ###
     for path in data:
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"

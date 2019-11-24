@@ -30,7 +30,7 @@ from getpass import getpass
 
 from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
-    EncryptionError, SecurePasswordException
+    EncryptionError, HashException, SecurePasswordException
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
@@ -61,8 +61,8 @@ class ECDHKeyPair:
             keys.generate(seckey=priv_keyname,
                           pubkey=pub_keyname, callback=cb)
         except EncryptionError as ee:
-            sys.exit(
-                f"The key pair {priv_keyname}/{pub_keyname} could not be generated: ", f"{ee}")
+            self.pub = f"The key pair {priv_keyname}/{pub_keyname} could not be generated: {ee}"
+            self.sec = None
         else:
             try:
                 # Import keys, decrypt private key
@@ -90,9 +90,10 @@ class ECDHKeyPair:
                     engine.encrypt(keys=[(0, self.sec, remote_pubkey)],
                                    infile=infile, outfile=outfile)
         except EncryptionError as ee:
-            sys.exit(f"Could not encrypt file {file}: ",
-                     f"{ee}")
+            logging.error("Some error message here.")
+            return None, f"Could not encrypt file {file}: {ee}"
         else:
+            logging.info("Some success message here.")
             return encrypted_file, "crypt4gh"
 
 
@@ -188,8 +189,10 @@ def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
             with gzip.open(compressed, 'wb') as pathout:
                 shutil.copyfileobj(pathin, pathout)
     except CompressionError as ce:
-        sys.exit(f"Could not compress the file {original}: {ce}")
+        logging.error("Some error message here.")
+        return None, f"Compression failed. Could not compress the file {original}: {ce}"
     else:
+        logging.info("Some success message here.")
         return compressed, "gzip"
 
 
@@ -309,9 +312,15 @@ def gen_hmac(filepath: str) -> str:
     key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
     h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
 
-    with open(filepath, 'rb') as f:
-        for compressed_chunk in iter(lambda: f.read(16384), b''):
-            h.update(compressed_chunk)
+    try:
+        with open(filepath, 'rb') as f:
+            for compressed_chunk in iter(lambda: f.read(16384), b''):
+                h.update(compressed_chunk)
+    except HashException as he:
+        logging.error("Some error message here.")
+        return f"Checksum generation for file {filepath} failed. Can not guarantee file integrity. "
+    else:
+        logging.info("Some success message here.")
         return h.finalize()
 
 
@@ -386,6 +395,9 @@ def file_type(fpath: str) -> str:
             else:
                 mime = ngs_type(extension=extension)
 
+                if mime is None: 
+                    logging.warning("Some warning message here.")
+
         return mime, extension, is_compressed
 
 
@@ -433,21 +445,33 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
     if is_compressed:
         # If compressed save original name as path
         latest_path = file
-        is_compressed = True
         if ext in COMPRESSED_FORMATS:
             compression_algorithm = COMPRESSED_FORMATS[ext]
         else:
             compression_algorithm = ext
-        print("algorithm: ", compression_algorithm)
     else:
         # If not compressed perform compression
         latest_path, compression_algorithm = compress_file(original=file,
                                                            temp_dir=temp_dir,
                                                            sub_dir=sub_dir)
+        # If the compression fails the compression_algorithm is an error message
+        # and is returned in an error dict
+        if latest_path is None:
+            logging.error("Some error message here.")
+            return {"FAILED": compression_algorithm}
+
         is_compressed = True
 
     ### Generate file checksum (original or compressed) ###
-    hash_file = gen_hmac(latest_path).hex()
+    hash_output = gen_hmac(latest_path)
+
+    # If the hash generation failed the variable is a error message 
+    # Quit the current file and continue
+    if not isinstance(hash_output, bytes):
+        logging.error("Some error message here.")
+        return {"FAILED": hash_output}
+    
+    hash_file = hash_output.hex()
 
     if sensitive:
         ### Encrypt file ###
@@ -459,16 +483,38 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                                   publickey=f"{fname}_facility",
                                   temp_dir=temp_dir)
 
+        if researcher_kp.sec is None: 
+            logging.error("Some error message here.")
+            return {"FAILED": researcher_kp.pub}
+        elif facility_kp.sec is None:
+            logging.error("Some error message here.")
+            return {"FAILED": facility_kp.pub}
+
         # Encrypt
         latest_path, encryption_algorithm = facility_kp.encrypt(file=latest_path,
                                                                 remote_pubkey=researcher_kp.pub,
                                                                 temp_dir=temp_dir,
                                                                 sub_dir=sub_dir)
+        # If the encryption fails the encryption_algorithm is an error message
+        # and is returned in an error dict
+        if latest_path is None: 
+            logging.error("Some error message here.")
+            return {"FAILED": encryption_algorithm}
+        
         is_encrypted = True
 
         # Generate encrypted file checksum
-        hash_encrypted = gen_hmac(latest_path).hex()
+        hash_output_enc = gen_hmac(latest_path)
+        
+        # If the hash generation failed the variable is a error message 
+        # Quit the current file and continue
+        if not isinstance(hash_output_enc, bytes):
+            logging.error("Some error message here.")
+            return {"FAILED": hash_output_enc}
+        
+        hash_encrypted = hash_output_enc.hex()
 
+    logging.info("Some success message here.")
     return {"Final path": latest_path,
             "Compression": {
                 "Compressed": is_compressed,
@@ -698,7 +744,6 @@ def put(config: str, username: str, password: str, project: str,
     logging.error("error")
     logging.critical("critical")
 
-    
     ### Check if the data is compressed ###
     for path in data:
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"

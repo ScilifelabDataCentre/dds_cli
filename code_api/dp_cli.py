@@ -23,6 +23,9 @@ import mimetypes
 import datetime
 from itertools import chain
 import logging
+import logging.config
+
+from ctypes import *
 
 from crypt4gh import keys, engine, header
 from functools import partial
@@ -32,9 +35,17 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
     EncryptionError, HashException, SecurePasswordException
 
+# CONFIG ############################################################## CONFIG #
+
+logging.config.dictConfig({
+    'version': 1,
+    'disable_existing_loggers': True,
+})
+
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
 COMPRESSED_FORMATS = dict()
+
 
 # CLASSES ############################################################ CLASSES #
 
@@ -46,7 +57,6 @@ class ECDHKeyPair:
     def __init__(self, privatekey: str = "key", publickey: str = "key", temp_dir: str = ""):
         """Generates a public key pair"""
 
-        print("key gen")
         cb = partial(get_passphrase)    # Get passphrase for private key enc
 
         # Directory for storing keys
@@ -76,6 +86,8 @@ class ECDHKeyPair:
     def encrypt(self, file: str, remote_pubkey, temp_dir: str, sub_dir: str):
         """Uses the remote public key and the own private key to encrypt a file"""
 
+        error = ""
+
         fname = file.split('/')[-1]
         if sub_dir == "":
             encrypted_file = f"{temp_dir}/{fname}.c4gh"
@@ -91,10 +103,11 @@ class ECDHKeyPair:
                                    infile=infile, outfile=outfile)
         except EncryptionError as ee:
             logging.error("Some error message here.")
-            return None, f"Could not encrypt file {file}: {ee}"
+            error = f"Could not encrypt file {file}: {ee}"
         else:
             logging.info("Some success message here.")
-            return encrypted_file, "crypt4gh"
+
+        return encrypted_file, "crypt4gh", error
 
 
 # FUNCTIONS ######################################################## FUNCTIONS #
@@ -139,43 +152,10 @@ def check_access(username: str, password: str, project: str, upload: bool = True
             return user_id, sensitive
 
 
-def compress_data(fileorfolder: str):
-    """Makes sure that all data is compressed"""
-
-    upload_path = ""
-    name = fileorfolder.split('/')[-1]  # File or folder name
-    print("Name : ", name)
-    mime = file_type(fileorfolder)      # File or folder mime
-    print("Mime : ", mime)
-
-    if mime == 'folder':    # If folder
-        click.echo(f"~~~~ Compressing directory '{fileorfolder}'...")
-        try:
-            upload_path = compress_folder(
-                dir_path=fileorfolder, prev_path="")
-        except CompressionError as ce:
-            pass
-            # continue    # Move on to next file/folder
-        else:
-            click.echo(f"~~~~ Compression completed! Zip archive: \
-                '{next(iter(upload_path))}'")
-            return upload_path
-
-    else:                   # If file
-        # If compressed file, do not compress, and
-        # upload path the original path
-        if mime in compression_list():
-            upload_path = fileorfolder
-        else:
-            # If not compressed file, change file to be uploaded
-            # and compress
-            upload_path = f"{fileorfolder}.gzip"    # Comp file name
-            compress_file(fileorfolder, upload_path)
-            return upload_path
-
-
 def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
     """Compresses file using gzip"""
+
+    error = ""
 
     fname = original.split('/')[-1]
     if sub_dir == "":
@@ -190,10 +170,11 @@ def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
                 shutil.copyfileobj(pathin, pathout)
     except CompressionError as ce:
         logging.error("Some error message here.")
-        return None, f"Compression failed. Could not compress the file {original}: {ce}"
+        error = f"Compression failed. Could not compress the file {original}: {ce}"
     else:
         logging.info("Some success message here.")
-        return compressed, "gzip"
+
+    return compressed, "gzip", error
 
 
 def compress_folder(dir_path: str, prev_path: str = "") -> list:
@@ -285,7 +266,8 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                                        "user does not exist in database. ")
             else:
                 # If the password isn't correct quit
-                if user_db[id_]['password_hash'] != password:
+                if user_db[id_]['password']['hash'] != secure_password_hash(password=password,
+                                                                            settings=user_db[id_]['password']['settings']):
                     raise DeliveryPortalException("Wrong password. "
                                                   "Access to Delivery Portal "
                                                   "denied.")
@@ -309,6 +291,8 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
 def gen_hmac(filepath: str) -> str:
     """Generates HMAC for file"""
 
+    error = ""
+
     key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
     h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
 
@@ -318,10 +302,11 @@ def gen_hmac(filepath: str) -> str:
                 h.update(compressed_chunk)
     except HashException as he:
         logging.error("Some error message here.")
-        return f"Checksum generation for file {filepath} failed. Can not guarantee file integrity. "
+        error = f"Checksum generation for file {filepath} failed. Can not guarantee file integrity. "
     else:
         logging.info("Some success message here.")
-        return h.finalize()
+
+    return h.finalize(), error
 
 
 def get_current_time() -> str:
@@ -395,7 +380,7 @@ def file_type(fpath: str) -> str:
             else:
                 mime = ngs_type(extension=extension)
 
-                if mime is None: 
+                if mime is None:
                     logging.warning("Some warning message here.")
 
         return mime, extension, is_compressed
@@ -451,26 +436,29 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
             compression_algorithm = ext
     else:
         # If not compressed perform compression
-        latest_path, compression_algorithm = compress_file(original=file,
-                                                           temp_dir=temp_dir,
-                                                           sub_dir=sub_dir)
+        latest_path, compression_algorithm, message = compress_file(original=file,
+                                                                    temp_dir=temp_dir,
+                                                                    sub_dir=sub_dir)
         # If the compression fails the compression_algorithm is an error message
         # and is returned in an error dict
-        if latest_path is None:
+        if message != "":
             logging.error("Some error message here.")
-            return {"FAILED": compression_algorithm}
+            return {"FAILED": {"Path": latest_path,
+                               "Error": message}
+                    }
 
         is_compressed = True
 
     ### Generate file checksum (original or compressed) ###
-    hash_output = gen_hmac(latest_path)
+    hash_output, message = gen_hmac(latest_path)
 
-    # If the hash generation failed the variable is a error message 
+    # If the hash generation failed the variable is a error message
     # Quit the current file and continue
-    if not isinstance(hash_output, bytes):
+    if message != "":
         logging.error("Some error message here.")
-        return {"FAILED": hash_output}
-    
+        return {"FAILED": {"Path": latest_path,
+                           "Error": hash_output}}
+
     hash_file = hash_output.hex()
 
     if sensitive:
@@ -483,35 +471,39 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                                   publickey=f"{fname}_facility",
                                   temp_dir=temp_dir)
 
-        if researcher_kp.sec is None: 
+        if researcher_kp.sec is None:
             logging.error("Some error message here.")
-            return {"FAILED": researcher_kp.pub}
+            return {"FAILED": {"Path": latest_path,
+                               "Error": researcher_kp.pub}}
         elif facility_kp.sec is None:
             logging.error("Some error message here.")
-            return {"FAILED": facility_kp.pub}
+            return {"FAILED": {"Path": latest_path,
+                               "Error": facility_kp.pub}}
 
         # Encrypt
-        latest_path, encryption_algorithm = facility_kp.encrypt(file=latest_path,
-                                                                remote_pubkey=researcher_kp.pub,
-                                                                temp_dir=temp_dir,
-                                                                sub_dir=sub_dir)
+        latest_path, encryption_algorithm, message = facility_kp.encrypt(file=latest_path,
+                                                                         remote_pubkey=researcher_kp.pub,
+                                                                         temp_dir=temp_dir,
+                                                                         sub_dir=sub_dir)
         # If the encryption fails the encryption_algorithm is an error message
         # and is returned in an error dict
-        if latest_path is None: 
+        if message != "":
             logging.error("Some error message here.")
-            return {"FAILED": encryption_algorithm}
-        
+            return {"FAILED": {"Path": latest_path,
+                               "Error": encryption_algorithm}}
+
         is_encrypted = True
 
         # Generate encrypted file checksum
-        hash_output_enc = gen_hmac(latest_path)
-        
-        # If the hash generation failed the variable is a error message 
+        hash_output_enc, message = gen_hmac(latest_path)
+
+        # If the hash generation failed the variable is a error message
         # Quit the current file and continue
-        if not isinstance(hash_output_enc, bytes):
+        if message != "":
             logging.error("Some error message here.")
-            return {"FAILED": hash_output_enc}
-        
+            return {"FAILED": {"Path": latest_path,
+                               "Error": hash_output_enc}}
+
         hash_encrypted = hash_output_enc.hex()
 
     logging.info("Some success message here.")
@@ -587,10 +579,19 @@ def project_access(user: str, project: str) -> (bool, bool):
                     return True, project_info['sensitive']
 
 
-def secure_password_hash(password):
+def secure_password_hash(password: str, settings: str) -> str:
     """Generates secure password hash"""
 
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+    # n value for fast interactive login
+    split_settings = settings.split("$")
+    for i in [0, 1, 2]:
+        split_settings[i] = int(split_settings[i])
+
+    return hashlib.scrypt(password=password.encode('utf-8'),
+                          salt=bytes.fromhex(split_settings[-1]),
+                          n=split_settings[0],
+                          r=split_settings[1],
+                          p=split_settings[2]).hex()
 
 
 def validate_api_options(config: str, username: str, password: str, project: str,
@@ -641,7 +642,7 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
                         raise DeliveryPortalException("The config file does not "
                                                       f"contain: '{c}'.")
                 return credentials['username'], \
-                    secure_password_hash(credentials['password']), \
+                    credentials['password'], \
                     credentials['project']
         else:   # If config file is not entered check other options
             if username is None or password is None:
@@ -656,7 +657,7 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
                                                   "or add to config file using --config/-c"
                                                   "option.")
                 return username, \
-                    secure_password_hash(password), \
+                    password, \
                     project
 
 
@@ -666,7 +667,6 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
 def cli():
     global COMPRESSED_FORMATS
     COMPRESSED_FORMATS = compression_dict()
-    click.echo("CLI group thing")
 
 
 @cli.command()
@@ -749,17 +749,17 @@ def put(config: str, username: str, password: str, project: str,
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path,
-                                             temp_dir=temp_dir,
-                                             sub_dir=sub_dir,
-                                             sensitive=sensitive)
+                                            temp_dir=temp_dir,
+                                            sub_dir=sub_dir,
+                                            sensitive=sensitive)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path,
-                                               temp_dir=temp_dir,
-                                               sub_dir=sub_dir,
-                                               sensitive=sensitive)
+                                            temp_dir=temp_dir,
+                                            sub_dir=sub_dir,
+                                            sensitive=sensitive)
         else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
-                     "Have you entered the correct path?")
+                    "Have you entered the correct path?")
 
     print(upload_path)
 

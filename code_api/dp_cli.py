@@ -33,7 +33,7 @@ from getpass import getpass
 
 from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
-    EncryptionError, HashException, SecurePasswordException
+    EncryptionError, HashException, SecurePasswordException, StreamingError
 
 import code_api.test_dp
 
@@ -216,7 +216,10 @@ def check_access(username: str, password: str, project: str, upload: bool = True
 def compress_chunk(original_chunk):
     """Performs gzip compression and streams compressed chunk"""
 
-    yield gzip.compress(original_chunk)
+    try:
+        yield gzip.compress(original_chunk)
+    except CompressionError as ce:
+        yield "", f"Compression of chunk failed: {ce}"
 
 
 def decompress_chunk(compressed_chunk):
@@ -300,13 +303,6 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                                                       "option not granted. "
                                                       f"You chose: '{option}'. "
                                                       "For help: 'dp_api --help'")
-
-
-def stream_chunks(file_handle, chunk_size):
-    """Generates HMAC for file"""
-
-    for chunk in iter(lambda: file_handle.read(16384), b''):
-        yield chunk
 
 
 def gen_hmac(filepath: str) -> str:
@@ -447,8 +443,14 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
     h_orig = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
     h_comp = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
     with open(file, 'rb') as f:
-        chunk_stream = stream_chunks(file_handle=f, chunk_size=16384)
+        print("Name: ", f.name)
+        chunk_stream = stream_chunks(file_handle=f, chunk_size=65536)
         for chunk in chunk_stream:  # Continues here before above is finished
+            if isinstance(chunk, tuple):
+                logging.error("Some error message here.")
+                return {"FAILED": {"Path": f.name,
+                                   "Error": chunk[1]}}
+
             h_orig.update(chunk)    # Update hash for original file
 
             # If the file is not compressed, compress chunks
@@ -456,18 +458,22 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                 comp_chunk_stream = compress_chunk(original_chunk=chunk)
                 with open(file=f"{file}.gzip", mode='wb') as cf:
                     for comp_chunk in comp_chunk_stream:    # Continues here before above is finished
-                        # Updates hash for compressed file
-                        h_comp.update(comp_chunk)
-                        # Save compressed chunk to file
-                        cf.write(comp_chunk)
+                        if isinstance(comp_chunk, tuple):
+                            logging.error("Some error message here.")
+                            return {"FAILED": {"Path": cf.name,
+                                               "Error": comp_chunk[1]}}
+                    
+                        h_comp.update(comp_chunk)   # Updates hash for compressed file
+                        
+                        cf.write(comp_chunk)        # Save compressed chunk to file
 
                     is_compressed = True
                     compression_algorithm = "gzip"
-                    latest_path = f"{file}.gzip"
+                    latest_path = cf.name
 
             else:
                 latest_path = file
-    
+
     hash_original = h_orig.finalize().hex()
     hash_compressed = h_comp.finalize().hex()
 
@@ -514,7 +520,7 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
             return {"FAILED": {"Path": latest_path,
                                "Error": message}}
 
-        hash_encrypted = hash_output_enc 
+        hash_encrypted = hash_output_enc
 
     if hash_compressed == "":
         hash_compressed = hash_original
@@ -605,6 +611,16 @@ def secure_password_hash(password: str, settings: str) -> str:
                           n=split_settings[0],
                           r=split_settings[1],
                           p=split_settings[2]).hex()
+
+
+def stream_chunks(file_handle, chunk_size):
+    """Generates HMAC for file"""
+
+    try:
+        for chunk in iter(lambda: file_handle.read(chunk_size), b''):
+            yield chunk
+    except StreamingError as se:
+        yield "", f"Reading of the file {file_handle.name} failed: {se}"
 
 
 def validate_api_options(config: str, username: str, password: str, project: str,

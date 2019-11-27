@@ -33,7 +33,7 @@ from getpass import getpass
 
 from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
-    EncryptionError, HashException, SecurePasswordException
+    EncryptionError, HashException, SecurePasswordException, StreamingError
 
 # CONFIG ############################################################## CONFIG #
 
@@ -150,6 +150,15 @@ def check_access(username: str, password: str, project: str, upload: bool = True
             )
         else:
             return user_id, sensitive
+
+
+def compress_chunk(original_chunk):
+    """Compress individual chunks read in a streamed fashion"""
+
+    try:
+        yield gzip.compress(data=original_chunk, compresslevel=9)
+    except CompressionError as ce:
+        yield "error", f"Compression of chunk failed: {ce}"
 
 
 def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
@@ -288,17 +297,17 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                                                       "For help: 'dp_api --help'")
 
 
-def gen_hmac(filepath: str) -> str:
+def gen_hmac(filepath: str, chunk_size: int) -> str:
     """Generates HMAC for file"""
 
     error = ""
 
-    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
+    key = b"SuperSecureHmacKey"
     h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
 
     try:
         with open(filepath, 'rb') as f:
-            for compressed_chunk in iter(lambda: f.read(16384), b''):
+            for compressed_chunk in iter(lambda: f.read(chunk_size), b''):
                 h.update(compressed_chunk)
     except HashException as he:
         logging.error("Some error message here.")
@@ -306,7 +315,7 @@ def gen_hmac(filepath: str) -> str:
     else:
         logging.info("Some success message here.")
 
-    return h.finalize(), error
+    return h.finalize().hex(), error
 
 
 def get_current_time() -> str:
@@ -423,43 +432,61 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
     compression_algorithm = ""              # Which algorithm
     encryption_algorithm = ""               # Which package/algorithm
 
-    hash_file = ""                          # Original/compressed file hash
+    hash_original = ""                      # Original/compressed file hash
+    hash_compressed = ""                    # Hash for compressed file
     hash_encrypted = ""                     # Encrypted file hash
 
     # Check if compressed format
     if is_compressed:
+        # TODO: is sensitive? --> encrypt --> hash
         # If compressed save original name as path
         latest_path = file
         if ext in COMPRESSED_FORMATS:
             compression_algorithm = COMPRESSED_FORMATS[ext]
         else:
             compression_algorithm = ext
+
+        hash_original, message = gen_hmac(filepath=latest_path,
+                                          chunk_size=65536)
     else:
-        # If not compressed perform compression
-        latest_path, compression_algorithm, message = compress_file(original=file,
-                                                                    temp_dir=temp_dir,
-                                                                    sub_dir=sub_dir)
-        # If the compression fails the compression_algorithm is an error message
-        # and is returned in an error dict
-        if message != "":
-            logging.error("Some error message here.")
-            return {"FAILED": {"Path": latest_path,
-                               "Error": message}
-                    }
+        latest_path = file
+        key = b"SuperSecureHmacKey"
+        h_orig = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
+                           backend=default_backend())
+        h_comp = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
+                           backend=default_backend())
+        with open(file=latest_path, mode='rb') as f:
+            chunk_stream = stream_chunks(file_handle=f, chunk_size=65536)
+            if sub_dir == "":
+                compressed = f"{temp_dir}/{fname}.gzip"
+            else:
+                compressed = f"{sub_dir}/{fname}.gzip"
+            with open(file=compressed, mode='wb') as cf:
+                for chunk in chunk_stream:
+                    if isinstance(chunk, tuple):
+                        logging.error("Some error message here.")
+                        return {"FAILED": {"Path": latest_path,
+                                           "Error": chunk[0]}}
 
-        is_compressed = True
+                    h_orig.update(chunk)
 
-    ### Generate file checksum (original or compressed) ###
-    hash_output, message = gen_hmac(latest_path)
+                    latest_path = compressed
+                    is_compressed = True
+                    compressed_stream = compress_chunk(original_chunk=chunk)
+                    for compressed_chunk in compressed_stream:
+                        if isinstance(compressed_chunk, tuple):
+                            logging.error("Some error message here.")
+                            return {"FAILED": {"Path": latest_path,
+                                               "Error": chunk[0]}}
 
-    # If the hash generation failed the variable is a error message
-    # Quit the current file and continue
-    if message != "":
-        logging.error("Some error message here.")
-        return {"FAILED": {"Path": latest_path,
-                           "Error": hash_output}}
+                        h_comp.update(compressed_chunk)
 
-    hash_file = hash_output.hex()
+                        cf.write(compressed_chunk)
+        
+        hash_original = h_orig.finalize().hex()
+        hash_compressed = h_comp.finalize().hex()
+
+        # TODO: is sensitive? --> encrypt --> hash
 
     if sensitive:
         ### Encrypt file ###
@@ -511,7 +538,7 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
             "Compression": {
                 "Compressed": is_compressed,
                 "Algorithm": compression_algorithm,
-                "Checksum": hash_file
+                "Checksum": hash_original
             },
             "Encryption": {
                 "Encrypted": is_encrypted,
@@ -592,6 +619,16 @@ def secure_password_hash(password: str, settings: str) -> str:
                           n=split_settings[0],
                           r=split_settings[1],
                           p=split_settings[2]).hex()
+
+
+def stream_chunks(file_handle, chunk_size):
+    """Reads file and returns (streams) the content in chunks"""
+
+    try:
+        for chunk in iter(lambda: file_handle.read(chunk_size), b''):
+            yield chunk
+    except StreamingError as se:
+        yield "error", f"Could not yield chunk: {se}"
 
 
 def validate_api_options(config: str, username: str, password: str, project: str,
@@ -749,17 +786,17 @@ def put(config: str, username: str, password: str, project: str,
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path,
-                                            temp_dir=temp_dir,
-                                            sub_dir=sub_dir,
-                                            sensitive=sensitive)
+                                             temp_dir=temp_dir,
+                                             sub_dir=sub_dir,
+                                             sensitive=sensitive)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path,
-                                            temp_dir=temp_dir,
-                                            sub_dir=sub_dir,
-                                            sensitive=sensitive)
+                                               temp_dir=temp_dir,
+                                               sub_dir=sub_dir,
+                                               sensitive=sensitive)
         else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
-                    "Have you entered the correct path?")
+                     "Have you entered the correct path?")
 
     print(upload_path)
 

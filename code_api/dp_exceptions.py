@@ -79,3 +79,11 @@ class SecurePasswordException(Exception):
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""
         super().__init__(msg)
+
+
+class StreamingError(Exception):
+    """Custom exception class. Handles errors regarding streaming file contents."""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)

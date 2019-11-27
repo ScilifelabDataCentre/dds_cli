@@ -35,6 +35,8 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
     EncryptionError, HashException, SecurePasswordException
 
+import code_api.test_dp
+
 # CONFIG ############################################################## CONFIG #
 
 logging.config.dictConfig({
@@ -152,63 +154,75 @@ def check_access(username: str, password: str, project: str, upload: bool = True
             return user_id, sensitive
 
 
-def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
-    """Compresses file using gzip"""
+# def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
+#     """Compresses file using gzip"""
 
-    error = ""
+#     error = ""
 
-    fname = original.split('/')[-1]
-    if sub_dir == "":
-        compressed = f"{temp_dir}/{fname}.gzip"
-    else:
-        compressed = f"{sub_dir}/{fname}.gzip"
+#     fname = original.split('/')[-1]
+#     if sub_dir == "":
+#         compressed = f"{temp_dir}/{fname}.gzip"
+#     else:
+#         compressed = f"{sub_dir}/{fname}.gzip"
 
-    try:
-        # Compress file
-        with open(original, 'rb') as pathin:
-            with gzip.open(compressed, 'wb') as pathout:
-                shutil.copyfileobj(pathin, pathout)
-    except CompressionError as ce:
-        logging.error("Some error message here.")
-        error = f"Compression failed. Could not compress the file {original}: {ce}"
-    else:
-        logging.info("Some success message here.")
+#     try:
+#         # Compress file
+#         with open(original, 'rb') as pathin:
+#             with gzip.open(compressed, 'wb') as pathout:
+#                 shutil.copyfileobj(pathin, pathout)
+#     except CompressionError as ce:
+#         logging.error("Some error message here.")
+#         error = f"Compression failed. Could not compress the file {original}: {ce}"
+#     else:
+#         logging.info("Some success message here.")
 
-    return compressed, "gzip", error
+#     return compressed, "gzip", error
 
 
-def compress_folder(dir_path: str, prev_path: str = "") -> list:
-    """Iterates through a folder and compresses each file"""
+# def compress_folder(dir_path: str, prev_path: str = "") -> list:
+#     """Iterates through a folder and compresses each file"""
 
-    comp_path = ""
-    # If first (root) folder, create name for root "compressed" folder
-    # If subfolder, alter path to be in "compressed" folders
-    if prev_path == "":
-        comp_path = f"{dir_path}_comp"
-    else:
-        comp_path = f"{prev_path}/{dir_path.split('/')[-1]}_comp"
+#     comp_path = ""
+#     # If first (root) folder, create name for root "compressed" folder
+#     # If subfolder, alter path to be in "compressed" folders
+#     if prev_path == "":
+#         comp_path = f"{dir_path}_comp"
+#     else:
+#         comp_path = f"{prev_path}/{dir_path.split('/')[-1]}_comp"
 
-    result_dict = {comp_path: list()}   # Add path to upload dict
+#     result_dict = {comp_path: list()}   # Add path to upload dict
 
-    if not os.path.exists(comp_path):
-        try:
-            os.mkdir(comp_path)     # Create comp path
-        except OSError as ose:
-            print(f"Could not create folder '{comp_path}': {ose}")
+#     if not os.path.exists(comp_path):
+#         try:
+#             os.mkdir(comp_path)     # Create comp path
+#         except OSError as ose:
+#             print(f"Could not create folder '{comp_path}': {ose}")
 
-    # Iterate through all folders and files recursively
-    for path, dirs, files in os.walk(dir_path):
-        for file in sorted(files):  # For all files in folder root
-            original = os.path.join(path, file)
-            compressed = f"{comp_path}/{file}.gzip"
-            compress_file(original=original, compressed=compressed)
-            result_dict[comp_path].append(compressed)
-        for dir_ in sorted(dirs):   # For all folders in folder root
-            result_dict[comp_path].append(compress_folder(
-                os.path.join(path, dir_), comp_path))
-        break
+#     # Iterate through all folders and files recursively
+#     for path, dirs, files in os.walk(dir_path):
+#         for file in sorted(files):  # For all files in folder root
+#             original = os.path.join(path, file)
+#             compressed = f"{comp_path}/{file}.gzip"
+#             compress_file(original=original, compressed=compressed)
+#             result_dict[comp_path].append(compressed)
+#         for dir_ in sorted(dirs):   # For all folders in folder root
+#             result_dict[comp_path].append(compress_folder(
+#                 os.path.join(path, dir_), comp_path))
+#         break
 
-    return result_dict
+#     return result_dict
+
+
+def compress_chunk(original_chunk):
+    """Performs gzip compression and streams compressed chunk"""
+
+    yield gzip.compress(original_chunk)
+
+
+def decompress_chunk(compressed_chunk):
+    """Performs gzip compression and streams compressed chunk"""
+
+    yield gzip.decompress(compressed_chunk)
 
 
 def compression_dict():
@@ -288,25 +302,11 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                                                       "For help: 'dp_api --help'")
 
 
-def gen_hmac(filepath: str) -> str:
+def stream_chunks(file_handle, chunk_size):
     """Generates HMAC for file"""
 
-    error = ""
-
-    key = b"ThisIsTheSuperSecureKeyThatWillBeGeneratedLater"
-    h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
-
-    try:
-        with open(filepath, 'rb') as f:
-            for compressed_chunk in iter(lambda: f.read(16384), b''):
-                h.update(compressed_chunk)
-    except HashException as he:
-        logging.error("Some error message here.")
-        error = f"Checksum generation for file {filepath} failed. Can not guarantee file integrity. "
-    else:
-        logging.info("Some success message here.")
-
-    return h.finalize(), error
+    for chunk in iter(lambda: file_handle.read(16384), b''):
+        yield chunk
 
 
 def get_current_time() -> str:
@@ -423,68 +423,58 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
     compression_algorithm = ""              # Which algorithm
     encryption_algorithm = ""               # Which package/algorithm
 
-    hash_file = ""                          # Original/compressed file hash
+    hash_original = ""                      # Original file hash
+    hash_compressed = ""                    # Compressed file hash
     hash_encrypted = ""                     # Encrypted file hash
 
-    # Check if compressed format
-    if is_compressed:
-        # If compressed save original name as path
-        latest_path = file
-        if ext in COMPRESSED_FORMATS:
-            compression_algorithm = COMPRESSED_FORMATS[ext]
-        else:
-            compression_algorithm = ext
-    else:
-        # If not compressed perform compression
-        latest_path, compression_algorithm, message = compress_file(original=file,
-                                                                    temp_dir=temp_dir,
-                                                                    sub_dir=sub_dir)
-        # If the compression fails the compression_algorithm is an error message
-        # and is returned in an error dict
-        if message != "":
-            logging.error("Some error message here.")
-            return {"FAILED": {"Path": latest_path,
-                               "Error": message}
-                    }
+    key = b"Thisisakeythatshouldbechanged"
+    h_orig = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+    h_comp = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+    with open(file, 'rb') as f:
+        chunk_stream = stream_chunks(file_handle=f, chunk_size=16384)
+        for chunk in chunk_stream:  # Continues here before above is finished
+            h_orig.update(chunk)    # Update hash for original file
 
-        is_compressed = True
+            # If the file is not compressed, compress chunks
+            if not is_compressed:
+                comp_chunk_stream = compress_chunk(original_chunk=chunk)
+                for comp_chunk in comp_chunk_stream:    # Continues here before above is finished
+                    # Updates hash for compressed file
+                    h_comp.update(comp_chunk)
 
-    ### Generate file checksum (original or compressed) ###
-    hash_output, message = gen_hmac(latest_path)
+                # The hashes are different if cli compressed the file
+                hash_original = h_orig.finalize().hex()
+                hash_compressed = h_comp.finalize().hex()
+                is_compressed = True
+            else: 
+                # The hashes are identical if a compressed file is entered
+                hash_compressed = h_orig.finalize().hex()
+                hash_original = hash_compressed
 
-    # If the hash generation failed the variable is a error message
-    # Quit the current file and continue
-    if message != "":
-        logging.error("Some error message here.")
-        return {"FAILED": {"Path": latest_path,
-                           "Error": hash_output}}
+            if sensitive:
+                ### Encrypt file ###
+                # Generate keys
+                researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
+                                            publickey=f"{fname}_researcher",
+                                            temp_dir=temp_dir)
+                facility_kp = ECDHKeyPair(privatekey=f"{fname}_facility",
+                                          publickey=f"{fname}_facility",
+                                          temp_dir=temp_dir)
 
-    hash_file = hash_output.hex()
+                if researcher_kp.sec is None:
+                    logging.error("Some error message here.")
+                    return {"FAILED": {"Path": latest_path,
+                                    "Error": researcher_kp.pub}}
+                elif facility_kp.sec is None:
+                    logging.error("Some error message here.")
+                    return {"FAILED": {"Path": latest_path,
+                                    "Error": facility_kp.pub}}
 
-    if sensitive:
-        ### Encrypt file ###
-        # Generate keys
-        researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
-                                    publickey=f"{fname}_researcher",
-                                    temp_dir=temp_dir)
-        facility_kp = ECDHKeyPair(privatekey=f"{fname}_facility",
-                                  publickey=f"{fname}_facility",
-                                  temp_dir=temp_dir)
-
-        if researcher_kp.sec is None:
-            logging.error("Some error message here.")
-            return {"FAILED": {"Path": latest_path,
-                               "Error": researcher_kp.pub}}
-        elif facility_kp.sec is None:
-            logging.error("Some error message here.")
-            return {"FAILED": {"Path": latest_path,
-                               "Error": facility_kp.pub}}
-
-        # Encrypt
-        latest_path, encryption_algorithm, message = facility_kp.encrypt(file=latest_path,
-                                                                         remote_pubkey=researcher_kp.pub,
-                                                                         temp_dir=temp_dir,
-                                                                         sub_dir=sub_dir)
+                # Encrypt
+                # latest_path, encryption_algorithm, message = facility_kp.encrypt(file=latest_path,
+                #                                                                 remote_pubkey=researcher_kp.pub,
+                #                                                                 temp_dir=temp_dir,
+                #                                                                 sub_dir=sub_dir)
         # If the encryption fails the encryption_algorithm is an error message
         # and is returned in an error dict
         if message != "":
@@ -749,17 +739,17 @@ def put(config: str, username: str, password: str, project: str,
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path,
-                                            temp_dir=temp_dir,
-                                            sub_dir=sub_dir,
-                                            sensitive=sensitive)
+                                             temp_dir=temp_dir,
+                                             sub_dir=sub_dir,
+                                             sensitive=sensitive)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path,
-                                            temp_dir=temp_dir,
-                                            sub_dir=sub_dir,
-                                            sensitive=sensitive)
+                                               temp_dir=temp_dir,
+                                               sub_dir=sub_dir,
+                                               sensitive=sensitive)
         else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
-                    "Have you entered the correct path?")
+                     "Have you entered the correct path?")
 
     print(upload_path)
 

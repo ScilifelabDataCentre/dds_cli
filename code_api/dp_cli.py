@@ -309,6 +309,21 @@ def stream_chunks(file_handle, chunk_size):
         yield chunk
 
 
+def gen_hmac(filepath: str) -> str:
+    """Generates HMAC for file"""
+
+    error = ""
+
+    key = b"ina"
+    h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+
+    with open(filepath, 'rb') as f:
+        for chunk in iter(lambda: f.read(16384), b''):
+            h.update(chunk)
+
+    return h.finalize().hex(), error
+
+
 def get_current_time() -> str:
     """Gets the current time and formats for database."""
 
@@ -418,6 +433,7 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
 
     fname = file.split('/')[-1]             # Get file or folder name
     mime, ext, is_compressed = file_type(file)   # Check mime type
+    print(mime, is_compressed)
     latest_path = ""                        # Latest file generated
 
     compression_algorithm = ""              # Which algorithm
@@ -438,43 +454,47 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
             # If the file is not compressed, compress chunks
             if not is_compressed:
                 comp_chunk_stream = compress_chunk(original_chunk=chunk)
-                for comp_chunk in comp_chunk_stream:    # Continues here before above is finished
-                    # Updates hash for compressed file
-                    h_comp.update(comp_chunk)
+                with open(file=f"{file}.gzip", mode='wb') as cf:
+                    for comp_chunk in comp_chunk_stream:    # Continues here before above is finished
+                        # Updates hash for compressed file
+                        h_comp.update(comp_chunk)
+                        # Save compressed chunk to file
+                        cf.write(comp_chunk)
 
-                # The hashes are different if cli compressed the file
-                hash_original = h_orig.finalize().hex()
-                hash_compressed = h_comp.finalize().hex()
-                is_compressed = True
-            else: 
-                # The hashes are identical if a compressed file is entered
-                hash_compressed = h_orig.finalize().hex()
-                hash_original = hash_compressed
+                    is_compressed = True
+                    compression_algorithm = "gzip"
+                    latest_path = f"{file}.gzip"
 
-            if sensitive:
-                ### Encrypt file ###
-                # Generate keys
-                researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
-                                            publickey=f"{fname}_researcher",
-                                            temp_dir=temp_dir)
-                facility_kp = ECDHKeyPair(privatekey=f"{fname}_facility",
-                                          publickey=f"{fname}_facility",
-                                          temp_dir=temp_dir)
+            else:
+                latest_path = file
+    
+    hash_original = h_orig.finalize().hex()
+    hash_compressed = h_comp.finalize().hex()
 
-                if researcher_kp.sec is None:
-                    logging.error("Some error message here.")
-                    return {"FAILED": {"Path": latest_path,
-                                    "Error": researcher_kp.pub}}
-                elif facility_kp.sec is None:
-                    logging.error("Some error message here.")
-                    return {"FAILED": {"Path": latest_path,
-                                    "Error": facility_kp.pub}}
+    if sensitive:
+        ### Encrypt file ###
+        # Generate keys
+        researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
+                                    publickey=f"{fname}_researcher",
+                                    temp_dir=temp_dir)
+        facility_kp = ECDHKeyPair(privatekey=f"{fname}_facility",
+                                  publickey=f"{fname}_facility",
+                                  temp_dir=temp_dir)
 
-                # Encrypt
-                # latest_path, encryption_algorithm, message = facility_kp.encrypt(file=latest_path,
-                #                                                                 remote_pubkey=researcher_kp.pub,
-                #                                                                 temp_dir=temp_dir,
-                #                                                                 sub_dir=sub_dir)
+        if researcher_kp.sec is None:
+            logging.error("Some error message here.")
+            return {"FAILED": {"Path": latest_path,
+                               "Error": researcher_kp.pub}}
+        elif facility_kp.sec is None:
+            logging.error("Some error message here.")
+            return {"FAILED": {"Path": latest_path,
+                               "Error": facility_kp.pub}}
+
+        # Encrypt
+        latest_path, encryption_algorithm, message = facility_kp.encrypt(file=latest_path,
+                                                                         remote_pubkey=researcher_kp.pub,
+                                                                         temp_dir=temp_dir,
+                                                                         sub_dir=sub_dir)
         # If the encryption fails the encryption_algorithm is an error message
         # and is returned in an error dict
         if message != "":
@@ -485,23 +505,26 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
         is_encrypted = True
 
         # Generate encrypted file checksum
-        hash_output_enc, message = gen_hmac(latest_path)
+        hash_output_enc, message = gen_hmac(filepath=latest_path)
 
         # If the hash generation failed the variable is a error message
         # Quit the current file and continue
         if message != "":
             logging.error("Some error message here.")
             return {"FAILED": {"Path": latest_path,
-                               "Error": hash_output_enc}}
+                               "Error": message}}
 
-        hash_encrypted = hash_output_enc.hex()
+        hash_encrypted = hash_output_enc 
+
+    if hash_compressed == "":
+        hash_compressed = hash_original
 
     logging.info("Some success message here.")
     return {"Final path": latest_path,
             "Compression": {
                 "Compressed": is_compressed,
                 "Algorithm": compression_algorithm,
-                "Checksum": hash_file
+                "Checksum": hash_compressed
             },
             "Encryption": {
                 "Encrypted": is_encrypted,

@@ -438,7 +438,6 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
 
     # Check if compressed format
     if is_compressed:
-        # TODO: is sensitive? --> encrypt --> hash
         # If compressed save original name as path
         latest_path = file
         if ext in COMPRESSED_FORMATS:
@@ -448,19 +447,28 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
 
         hash_original, message = gen_hmac(filepath=latest_path,
                                           chunk_size=65536)
+        hash_compressed = hash_original
     else:
-        latest_path = file
+        latest_path = file  # File has not been compressed/encrypted yet
+
+        # Initializes HMACs
         key = b"SuperSecureHmacKey"
         h_orig = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
                            backend=default_backend())
         h_comp = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
                            backend=default_backend())
+
+        # Stream original file chunks
         with open(file=latest_path, mode='rb') as f:
-            chunk_stream = stream_chunks(file_handle=f, chunk_size=65536)
+            chunk_stream = stream_chunks(file_handle=f,
+                                         chunk_size=65536)
+            # Place to put temporary files
             if sub_dir == "":
                 compressed = f"{temp_dir}/{fname}.gzip"
             else:
                 compressed = f"{sub_dir}/{fname}.gzip"
+
+            # Open new gzip file and compress chunks
             with open(file=compressed, mode='wb') as cf:
                 for chunk in chunk_stream:
                     if isinstance(chunk, tuple):
@@ -468,10 +476,13 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                         return {"FAILED": {"Path": latest_path,
                                            "Error": chunk[0]}}
 
-                    h_orig.update(chunk)
+                    h_orig.update(chunk)    # Update original file hash
 
-                    latest_path = compressed
-                    is_compressed = True
+                    latest_path = compressed    # Compression starts
+                    is_compressed = True 
+                    compression_algorithm = "gzip"    
+
+                    # Compress chunks (streamed)
                     compressed_stream = compress_chunk(original_chunk=chunk)
                     for compressed_chunk in compressed_stream:
                         if isinstance(compressed_chunk, tuple):
@@ -479,16 +490,16 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                             return {"FAILED": {"Path": latest_path,
                                                "Error": chunk[0]}}
 
-                        h_comp.update(compressed_chunk)
+                        h_comp.update(compressed_chunk)     # Update compressed file hash
+                        cf.write(compressed_chunk)          # Save compressed chunk          
 
-                        cf.write(compressed_chunk)
-        
-        hash_original = h_orig.finalize().hex()
-        hash_compressed = h_comp.finalize().hex()
-
-        # TODO: is sensitive? --> encrypt --> hash
+        hash_original = h_orig.finalize().hex()             # Finalize original hash
+        hash_compressed = h_comp.finalize().hex()           # Finalize compressed hash 
 
     if sensitive:
+        # This is a test of the crypt4gh hacking
+
+
         ### Encrypt file ###
         # Generate keys
         researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
@@ -517,28 +528,26 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
         if message != "":
             logging.error("Some error message here.")
             return {"FAILED": {"Path": latest_path,
-                               "Error": encryption_algorithm}}
+                               "Error": message}}
 
         is_encrypted = True
 
         # Generate encrypted file checksum
-        hash_output_enc, message = gen_hmac(latest_path)
+        hash_encrypted, message = gen_hmac(latest_path, chunk_size=65536)
 
         # If the hash generation failed the variable is a error message
         # Quit the current file and continue
         if message != "":
             logging.error("Some error message here.")
             return {"FAILED": {"Path": latest_path,
-                               "Error": hash_output_enc}}
-
-        hash_encrypted = hash_output_enc.hex()
+                               "Error": message}}
 
     logging.info("Some success message here.")
     return {"Final path": latest_path,
             "Compression": {
                 "Compressed": is_compressed,
                 "Algorithm": compression_algorithm,
-                "Checksum": hash_original
+                "Checksum": hash_compressed
             },
             "Encryption": {
                 "Encrypted": is_encrypted,

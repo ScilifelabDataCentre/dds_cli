@@ -299,7 +299,9 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
 
 
 def _encrypt_segment(data, process, cipher):
-    '''Utility function to generate a nonce, encrypt data with Chacha20, and authenticate it with Poly1305.'''
+    """Utility function to generate a nonce, 
+    encrypt data with Chacha20, 
+    and authenticate it with Poly1305."""
 
     try:
         nonce = os.urandom(12)
@@ -333,6 +335,25 @@ def gen_hmac(filepath: str, chunk_size: int) -> str:
     return h.finalize().hex(), error
 
 
+def generate_header(own_private_key, remote_public_key):
+    """Generates crypt4gh format header"""
+
+    encryption_method = 0           # ChaCha20
+    session_key = os.urandom(32)    # Key (file)
+    cipher = ChaCha20Poly1305(session_key)  # Cipher (file)
+
+    # 'keys' format: (method, own-private-key, remote-public-key)
+    keys = [(0, own_private_key, remote_public_key)]
+
+    header_content = header.make_packet_data_enc(encryption_method=encryption_method,
+                                                 session_key=session_key)
+    header_packets = header.encrypt(packet=header_content,
+                                    keys=keys)
+    header_bytes = header.serialize(packets=header_packets)
+
+    return header_bytes, cipher
+
+
 def get_current_time() -> str:
     """Gets the current time and formats for database."""
 
@@ -362,6 +383,37 @@ def get_passphrase():
     return "thisisapassphrasethatshouldbegeneratedsomehow"
 
 
+
+
+
+def hash_encrypt_hash(file: str, encrypted_file: str, keypair) -> (str, str, str):
+    """hash + encrypt + hash"""
+
+    key = b"SuperSecureHmacKey"
+
+    hash_compressed = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
+                                backend=default_backend())
+    hash_encrypted = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
+                               backend=default_backend())
+
+    header_bytes, cipher = generate_header(keypair[0], keypair[1])
+
+    with open(file=file, mode='rb') as cf:
+        with open(file=encrypted_file, mode='wb') as ef:
+            ef.write(header_bytes)
+            chunk_stream = stream_chunks(file_handle=cf, chunk_size=65536)
+            for compressed_chunk in chunk_stream:
+                hash_compressed.update(compressed_chunk)
+                encrypted_stream = _encrypt_segment(data=compressed_chunk,
+                                                    process=ef.write,
+                                                    cipher=cipher)
+                for encrypted_chunk in encrypted_stream:
+                    hash_encrypted.update(encrypted_chunk)
+
+    return hash_compressed.finalize().hex(), \
+        hash_encrypted.finalize().hex(), file
+
+
 def hash_dir(dir_path: str, key) -> str:
     """Generates a hash for all contents within a folder"""
 
@@ -386,6 +438,7 @@ def file_type(fpath: str) -> str:
 
     mime = None             # file mime
     is_compressed = False
+    comp_alg = ""
 
     if os.path.isdir(fpath):
         return "folder", is_compressed
@@ -396,6 +449,7 @@ def file_type(fpath: str) -> str:
         # Set compressed files as compressed
         if extension in COMPRESSED_FORMATS:
             is_compressed = True
+            comp_alg = COMPRESSED_FORMATS[extension]
 
         # If the file mime type couldn't be found, manually check for ngs files
         if mime is None:
@@ -407,7 +461,7 @@ def file_type(fpath: str) -> str:
                 if mime is None:
                     logging.warning("Some warning message here.")
 
-        return mime, extension, is_compressed
+        return mime, extension, is_compressed, comp_alg
 
 
 def ngs_type(extension: str):
@@ -441,127 +495,124 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
     is_encrypted = False                    # Saves info about encrypted or not
 
     fname = file.split('/')[-1]             # Get file or folder name
-    mime, ext, is_compressed = file_type(file)   # Check mime type
+    mime, ext, is_compressed, \
+        compression_algorithm = file_type(file)   # Check mime type
     latest_path = ""                        # Latest file generated
 
-    compression_algorithm = ""              # Which algorithm
     encryption_algorithm = ""               # Which package/algorithm
 
     hash_original = ""                      # Original/compressed file hash
     hash_compressed = ""                    # Hash for compressed file
     hash_encrypted = ""                     # Encrypted file hash
 
-    # Generate keys -- ONLY USED IF SENSITIVE & THIS SHOULD BE MOVED SOMEWHERE ELSE
-    researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
-                                publickey=f"{fname}_researcher",
-                                temp_dir=temp_dir)
-    facility_kp = ECDHKeyPair(privatekey=f"{fname}_facility",
-                              publickey=f"{fname}_facility",
+    if sensitive:
+        # Generate keys
+        researcher_kp = ECDHKeyPair(privatekey=f"{fname}_researcher",
+                                    publickey=f"{fname}_researcher",
+                                    temp_dir=temp_dir)
+        facility_kp = ECDHKeyPair(privatekey=f"{fname}_facility",
+                                  publickey=f"{fname}_facility",
+                                  temp_dir=temp_dir)
+        if researcher_kp.sec is None:
+            logging.error("Some error message here.")
+            return {"FAILED": {"Path": latest_path,
+                               "Error": researcher_kp.pub}}
+        elif facility_kp.sec is None:
+            logging.error("Some error message here.")
+            return {"FAILED": {"Path": latest_path,
+                               "Error": facility_kp.pub}}
+
+        if is_compressed:
+            # TODO: hash + encrypt + hash
+            enc_dir = new_dir(filename=fname,
+                              sub_dir=sub_dir,
                               temp_dir=temp_dir)
-    if researcher_kp.sec is None:
-        logging.error("Some error message here.")
-        return {"FAILED": {"Path": latest_path,
-                           "Error": researcher_kp.pub}}
-    elif facility_kp.sec is None:
-        logging.error("Some error message here.")
-        return {"FAILED": {"Path": latest_path,
-                           "Error": facility_kp.pub}}
-
-    encryption_method = 0
-    session_key = os.urandom(32)
-    cipher = ChaCha20Poly1305(session_key)
-    keys = [(0, facility_kp.sec, researcher_kp.pub)]
-
-    header_content = header.make_packet_data_enc(
-        encryption_method, session_key)
-    header_packets = header.encrypt(header_content, keys)
-    header_bytes = header.serialize(header_packets)
-
-    # Check if compressed format
-    if is_compressed:
-        # If compressed save original name as path
-        latest_path = file
-        if ext in COMPRESSED_FORMATS:
-            compression_algorithm = COMPRESSED_FORMATS[ext]
+            hash_compressed, hash_encrypted, \
+                latest_path = hash_encrypt_hash(file=file,
+                                                encrypted_file=enc_dir,
+                                                keypair=(facility_kp.sec, researcher_kp.pub))
         else:
-            compression_algorithm = ext
+            # TODO: hash + compress + hash + encrypt + hash
+            latest_path = file  # File has not been compressed/encrypted yet
 
-        hash_original, message = gen_hmac(filepath=latest_path,
-                                          chunk_size=65536)
-        hash_compressed = hash_original
-    else:
-        latest_path = file  # File has not been compressed/encrypted yet
+            # Initializes HMACs
+            key = b"SuperSecureHmacKey"
+            h_orig = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
+                               backend=default_backend())
+            h_comp = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
+                               backend=default_backend())
+            h_enc = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
+                              backend=default_backend())
+            # Stream original file chunks
+            with open(file=latest_path, mode='rb') as f:
+                # Place to put temporary files
+                if sub_dir == "":
+                    compressed = f"{temp_dir}/{fname}.gzip"
+                else:
+                    compressed = f"{sub_dir}/{fname}.gzip"
 
-        # Initializes HMACs
-        key = b"SuperSecureHmacKey"
-        h_orig = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
-                           backend=default_backend())
-        h_comp = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
-                           backend=default_backend())
-        h_enc = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
-                          backend=default_backend())
-        # Stream original file chunks
-        with open(file=latest_path, mode='rb') as f:
-            # Place to put temporary files
-            if sub_dir == "":
-                compressed = f"{temp_dir}/{fname}.gzip"
-            else:
-                compressed = f"{sub_dir}/{fname}.gzip"
+                # Open new gzip file and compress chunks
+                with open(file=compressed, mode='wb') as cf:
 
-            # Open new gzip file and compress chunks
-            with open(file=compressed, mode='wb') as cf:
+                    # Open new c4gh file and encrypt chunks
+                    with open(f"{compressed}.c4gh", 'wb') as ef:
+                        ef.write(header_bytes)
 
-                # Open new c4gh file and encrypt chunks
-                with open(f"{compressed}.c4gh", 'wb') as ef:
-                    ef.write(header_bytes)
+                        chunk_stream = stream_chunks(file_handle=f,
+                                                     chunk_size=65536)
 
-                    chunk_stream = stream_chunks(file_handle=f,
-                                                chunk_size=65536)
-                
-                    for chunk in chunk_stream:
-                        if isinstance(chunk, tuple):
-                            logging.error("Some error message here.")
-                            return {"FAILED": {"Path": latest_path,
-                                            "Error": chunk[0]}}
-
-                        h_orig.update(chunk)    # Update original file hash
-
-                        latest_path = compressed    # Compression starts
-                        is_compressed = True
-                        compression_algorithm = "gzip"
-
-                        # Compress chunks (streamed)
-                        compressed_stream = compress_chunk(original_chunk=chunk)
-                        for compressed_chunk in compressed_stream:
-                            if isinstance(compressed_chunk, tuple):
+                        for chunk in chunk_stream:
+                            if isinstance(chunk, tuple):
                                 logging.error("Some error message here.")
                                 return {"FAILED": {"Path": latest_path,
-                                                "Error": compressed_chunk[1]}}
+                                                   "Error": chunk[0]}}
 
-                            # Update compressed file hash
-                            h_comp.update(compressed_chunk)
+                            h_orig.update(chunk)    # Update original file hash
 
-                            if not sensitive:
-                                # Save compressed chunks if not sensitive
-                                cf.write(compressed_chunk)
-                            else:   # If sensitive: encrypt
-                                latest_path = f"{latest_path}.c4gh"
-                                is_encrypted = True
-                                encryption_algorithm = "crypt4gh"
-                                encrypted_stream = _encrypt_segment(data=chunk,
-                                                                    process=ef.write,
-                                                                    cipher=cipher)
-                                for encrypted_chunk in encrypted_stream:
-                                    if isinstance(encrypted_chunk, tuple):
-                                        logging.error(
-                                            "Some error message here.")
-                                        return {"FAILED": {"Path": latest_path,
-                                                        "Error": encrypted_chunk[1]}}
-                                    h_enc.update(encrypted_chunk)
+                            latest_path = compressed    # Compression starts
+                            is_compressed = True
+                            compression_algorithm = "gzip"
 
+                            # Compress chunks (streamed)
+                            compressed_stream = compress_chunk(
+                                original_chunk=chunk)
+                            for compressed_chunk in compressed_stream:
+                                if isinstance(compressed_chunk, tuple):
+                                    logging.error("Some error message here.")
+                                    return {"FAILED": {"Path": latest_path,
+                                                       "Error": compressed_chunk[1]}}
+
+                                # Update compressed file hash
+                                h_comp.update(compressed_chunk)
+
+                                if not sensitive:
+                                    # Save compressed chunks if not sensitive
+                                    cf.write(compressed_chunk)
+                                else:   # If sensitive: encrypt
+                                    latest_path = f"{latest_path}.c4gh"
+                                    is_encrypted = True
+                                    encryption_algorithm = "crypt4gh"
+                                    encrypted_stream = _encrypt_segment(data=chunk,
+                                                                        process=ef.write,
+                                                                        cipher=cipher)
+                                    for encrypted_chunk in encrypted_stream:
+                                        if isinstance(encrypted_chunk, tuple):
+                                            logging.error(
+                                                "Some error message here.")
+                                            return {"FAILED": {"Path": latest_path,
+                                                               "Error": encrypted_chunk[1]}}
+                                        h_enc.update(encrypted_chunk)
         hash_original = h_orig.finalize().hex()             # Finalize original hash
         hash_compressed = h_comp.finalize().hex()           # Finalize compressed hash
         hash_encrypted = h_enc.finalize().hex()             # Finalize encrypted hash
+
+    else:  # If not sensitive
+        if is_compressed:
+            # TODO: hash
+            pass
+        else:
+            # TODO: hash + compress + hash
+            pass
 
     logging.info("Some success message here.")
     return {"Final path": latest_path,
@@ -726,6 +777,23 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
                 return username, \
                     password, \
                     project
+
+
+def new_dir(filename: str, sub_dir: str, temp_dir: str, operation: str) -> str:
+    """Checks which dir to place file in"""
+
+    ext = ""
+    if operation == "compression":
+        ext = ".gzip"
+    elif operation == "encryption":
+        ext = ".c4gh"
+    else:
+        pass    # Non allowed operation
+
+    if sub_dir == "":
+        return f"{temp_dir}/{filename}{ext}"
+    else:
+        return f"{sub_dir}/{filename}{ext}"
 
 
 # MAIN ################################################################## MAIN #

@@ -157,7 +157,7 @@ def compress_chunk(original_chunk):
     """Compress individual chunks read in a streamed fashion"""
 
     try:
-        yield gzip.compress(data=original_chunk, compresslevel=9)
+        yield gzip.compress(data=original_chunk)
     except CompressionError as ce:
         yield "error", f"Compression of chunk failed: {ce}"
 
@@ -735,7 +735,7 @@ def try_decryption(encrypted_file: str, keypair):
             engine.decrypt(keys=[(0, keypair[0], keypair[1])], infile=ef,
                         outfile=df)
 
-    hash_decrypted = hash_original = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
+    hash_decrypted = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
                                                backend=default_backend())              
     hash_decrypted = gen_hmac(filepath=f"{encrypted_file}.decrypted",
                               chunk_size=65536, hash_=hash_decrypted)

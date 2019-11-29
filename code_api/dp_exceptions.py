@@ -31,6 +31,14 @@ class CompressionError(Exception):
         super().__init__(msg)
 
 
+class DataException(Exception):
+    """Errors related to the data entered as an option"""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to the base class __init__"""
+        
+        super().__init__(msg)
+
 class DeliveryPortalException(Exception):
     """Custom exception class. Handles errors regarding Delivery Portal 
     access etc"""
@@ -43,6 +51,22 @@ class DeliveryPortalException(Exception):
 class DeliveryOptionException(Exception):
     """Custom exception class. Handles errors regarding data delivery 
     options (s3 delivery) etc."""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+        
+
+class EncryptionError(Exception):
+    """Handles errors regarding data encryption."""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+
+
+class HashException(Exception):
+    """Handles errors regarding checksum generation."""
 
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""

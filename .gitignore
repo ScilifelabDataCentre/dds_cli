@@ -16,3 +16,5 @@ venv
 *.pub
 crypt4gh
 *gzip
+*DataDelivery_*
+S3-Upload-Proxy

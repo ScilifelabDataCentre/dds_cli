@@ -1,5 +1,5 @@
 """
-
+Command line interface for Data Delivery Portal
 """
 
 # IMPORTS ############################################################ IMPORTS #
@@ -735,6 +735,7 @@ def try_decryption(encrypted_file: str, keypair):
             engine.decrypt(keys=[(0, keypair[0], keypair[1])], infile=ef,
                         outfile=df)
 
+    # NOT WORKING #
     hash_decrypted = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
                                                backend=default_backend())              
     hash_decrypted = gen_hmac(filepath=f"{encrypted_file}.decrypted",

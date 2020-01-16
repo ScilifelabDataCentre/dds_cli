@@ -28,7 +28,7 @@ import logging.config
 
 from ctypes import *
 
-from crypt4gh import keys, engine, header
+from crypt4gh import lib, header, keys 
 from functools import partial
 from getpass import getpass
 
@@ -40,7 +40,7 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
 
 logging.config.dictConfig({
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
 })
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
@@ -69,7 +69,7 @@ class ECDHKeyPair:
 
         try:
             # Generate public key pair, encrypt private key
-            keys.generate(seckey=priv_keyname,
+            keys.c4gh.generate(seckey=priv_keyname,
                           pubkey=pub_keyname, callback=cb)
         except EncryptionError as ee:
             self.pub = f"The key pair {priv_keyname}/{pub_keyname} could not be generated: {ee}"
@@ -100,7 +100,7 @@ class ECDHKeyPair:
             with open(file=file, mode='rb') as infile:
                 with open(file=encrypted_file, mode='wb+') as outfile:
                     # The 0 in keys is the method (only one allowed)
-                    engine.encrypt(keys=[(0, self.sec, remote_pubkey)],
+                    lib.encrypt(keys=[(0, self.sec, remote_pubkey)],
                                    infile=infile, outfile=outfile)
         except EncryptionError as ee:
             logging.error("Some error message here.")
@@ -335,6 +335,7 @@ def generate_header(own_private_key, remote_public_key):
 
     encryption_method = 0           # ChaCha20
     session_key = os.urandom(32)    # Key (file)
+    print(session_key)
     cipher = ChaCha20Poly1305(session_key)  # Cipher (file)
 
     # 'keys' format: (method, own-private-key, remote-public-key)
@@ -727,14 +728,15 @@ def stream_chunks(file_handle, chunk_size):
         yield "error", f"Could not yield chunk: {se}"
 
 
-def try_decryption(encrypted_file: str, keypair):
+def try_decryption(encrypted_file: str, keypair: tuple):
     """Tests decryption of encrypted c4gh file"""
-
+    
+    # Deconstruct header 
+    # body decrypt 
     with open(encrypted_file, 'rb') as ef:
         with open(f"{encrypted_file}.decrypted", 'wb') as df:
-            engine.decrypt(keys=[(0, keypair[0], keypair[1])], infile=ef,
-                        outfile=df)
-
+            lib.decrypt(keys=[(0, keypair[0], keypair[1])], infile=ef, outfile=df, sender_pubkey=keypair[1], offset=0, span=65536)
+           
     # NOT WORKING #
     hash_decrypted = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
                                                backend=default_backend())              
@@ -894,7 +896,7 @@ def put(config: str, username: str, password: str, project: str,
     logging.error("error")
     logging.critical("critical")
 
-    ### Check if the data is compressed ###
+    ### Process data ###
     for path in data:
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
         if os.path.isfile(path):    # <---- FILES

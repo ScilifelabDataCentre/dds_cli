@@ -27,7 +27,6 @@ import logging.config
 
 from ctypes import *
 
-from crypt4gh import keys, engine, header
 from functools import partial
 from getpass import getpass
 
@@ -266,8 +265,7 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                                        "user does not exist in database. ")
             else:
                 # If the password isn't correct quit
-                if user_db[id_]['password']['hash'] != secure_password_hash(password=password,
-                                                                            settings=user_db[id_]['password']['settings']):
+                if user_db[id_]['password_hash'] != hashlib.sha256(password.encode("utf-8")).hexdigest():
                     raise DeliveryPortalException("Wrong password. "
                                                   "Access to Delivery Portal "
                                                   "denied.")

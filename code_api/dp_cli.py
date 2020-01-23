@@ -7,6 +7,7 @@
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend
 import shutil
 import zipfile
@@ -265,7 +266,7 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                                        "user does not exist in database. ")
             else:
                 # If the password isn't correct quit
-                if user_db[id_]['password_hash'] != hashlib.sha256(password.encode("utf-8")).hexdigest():
+                if user_db[id_]['password']['hash'] != secure_password_hash(password=password, settings=user_db[id_]['password']['settings']):
                     raise DeliveryPortalException("Wrong password. "
                                                   "Access to Delivery Portal "
                                                   "denied.")
@@ -582,15 +583,17 @@ def secure_password_hash(password: str, settings: str) -> str:
 
     # n value for fast interactive login
     split_settings = settings.split("$")
-    for i in [0, 1, 2]:
+    for i in [1, 2, 3, 4]:
         split_settings[i] = int(split_settings[i])
 
-    return hashlib.scrypt(password=password.encode('utf-8'),
-                          salt=bytes.fromhex(split_settings[-1]),
-                          n=split_settings[0],
-                          r=split_settings[1],
-                          p=split_settings[2]).hex()
-
+    kdf = Scrypt(salt=bytes.fromhex(split_settings[0]),
+                 length=split_settings[1],
+                 n=2**split_settings[2],
+                 r=split_settings[3],
+                 p=split_settings[4],
+                 backend=default_backend())
+    return kdf.derive(password.encode('utf-8')).hex()
+    
 
 def validate_api_options(config: str, username: str, password: str, project: str,
                          pathfile: str, data: tuple) -> (str, str, str):
@@ -747,17 +750,17 @@ def put(config: str, username: str, password: str, project: str,
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path,
-                                            temp_dir=temp_dir,
-                                            sub_dir=sub_dir,
-                                            sensitive=sensitive)
+                                             temp_dir=temp_dir,
+                                             sub_dir=sub_dir,
+                                             sensitive=sensitive)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path,
-                                            temp_dir=temp_dir,
-                                            sub_dir=sub_dir,
-                                            sensitive=sensitive)
+                                               temp_dir=temp_dir,
+                                               sub_dir=sub_dir,
+                                               sensitive=sensitive)
         else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
-                    "Have you entered the correct path?")
+                     "Have you entered the correct path?")
 
     print(upload_path)
 

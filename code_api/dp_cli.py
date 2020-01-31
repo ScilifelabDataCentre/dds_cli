@@ -14,6 +14,10 @@ import zipfile
 import zlib
 import tarfile
 import gzip
+import json
+
+from pathlib import Path
+
 import click
 import couchdb
 import sys
@@ -35,12 +39,24 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
     EncryptionError, HashException, SecurePasswordException
 
+import boto3
+
+
 # CONFIG ############################################################## CONFIG #
 
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': True,
 })
+
+path = Path(os.getcwd()).parent
+print(f"{path}/s3_config.json")
+with open(f"{path}/s3_config.json") as f:
+    data = json.load(f)
+
+print(data)
+
+
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 

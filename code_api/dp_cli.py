@@ -150,19 +150,17 @@ def check_access(username: str, password: str, project: str, upload: bool = True
     else:
         # Search the database for the user
         for id_ in user_db:
-            # If the username does not exist in the database quit
+            # If the username exists in the database check password
             if username == user_db[id_]['username']:
                 # If the password isn't correct quit
-                if user_db[id_]['password']['hash'] != secure_password_hash(password=password, settings=user_db[id_]['password']['settings']):
+                if user_db[id_]['password']['hash'] != secure_password_hash(password_settings=user_db[id_]['password']['settings'], password_entered=password):
                     raise DeliveryPortalException("Wrong password. "
                                                   "Access to Delivery Portal "
                                                   "denied.")
                 else:
-                    # If facility is uploading or researcher is downloading
-                    # access is granted
+                    # If facility is uploading or researcher is downloading access is granted
                     if (user_db[id_]['role'] == 'facility' and upload) or \
                             (user_db[id_]['role'] == 'researcher' and not upload):
-                        # return True, id_
                         # Check project access
                         project_access_granted = project_access(
                             user=id_, project=project)
@@ -194,73 +192,6 @@ def compress_chunk(original_chunk):
         yield gzip.compress(data=original_chunk)
     except CompressionError as ce:
         yield "error", f"Compression of chunk failed: {ce}"
-
-# def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
-#     """Compresses file using gzip"""
-
-#     error = ""
-
-#     fname = original.split('/')[-1]
-#     if sub_dir == "":
-#         compressed = f"{temp_dir}/{fname}.gzip"
-#     else:
-#         compressed = f"{sub_dir}/{fname}.gzip"
-
-#     try:
-#         # Compress file
-#         with open(original, 'rb') as pathin:
-#             with gzip.open(compressed, 'wb') as pathout:
-#                 shutil.copyfileobj(pathin, pathout)
-#     except CompressionError as ce:
-#         logging.error("Some error message here.")
-#         error = f"Compression failed. Could not compress the file {original}: {ce}"
-#     else:
-#         logging.info("Some success message here.")
-
-#     return compressed, "gzip", error
-
-
-# def compress_folder(dir_path: str, prev_path: str = "") -> list:
-#     """Iterates through a folder and compresses each file"""
-
-#     comp_path = ""
-#     # If first (root) folder, create name for root "compressed" folder
-#     # If subfolder, alter path to be in "compressed" folders
-#     if prev_path == "":
-#         comp_path = f"{dir_path}_comp"
-#     else:
-#         comp_path = f"{prev_path}/{dir_path.split('/')[-1]}_comp"
-
-#     result_dict = {comp_path: list()}   # Add path to upload dict
-
-#     if not os.path.exists(comp_path):
-#         try:
-#             os.mkdir(comp_path)     # Create comp path
-#         except OSError as ose:
-#             print(f"Could not create folder '{comp_path}': {ose}")
-
-#     # Iterate through all folders and files recursively
-#     for path, dirs, files in os.walk(dir_path):
-#         for file in sorted(files):  # For all files in folder root
-#             original = os.path.join(path, file)
-#             compressed = f"{comp_path}/{file}.gzip"
-#             compress_file(original=original, compressed=compressed)
-#             result_dict[comp_path].append(compressed)
-#         for dir_ in sorted(dirs):   # For all folders in folder root
-#             result_dict[comp_path].append(compress_folder(
-#                 os.path.join(path, dir_), comp_path))
-#         break
-
-#     return result_dict
-
-
-def compress_chunk(original_chunk):
-    """Performs gzip compression and streams compressed chunk"""
-
-    try:
-        yield gzip.compress(original_chunk)
-    except CompressionError as ce:
-        yield "", f"Compression of chunk failed: {ce}"
 
 
 def decompress_chunk(compressed_chunk):
@@ -324,8 +255,8 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                                        "user does not exist in database. ")
             else:
                 # If the password isn't correct quit
-                if user_db[id_]['password']['hash'] != secure_password_hash(password=password,
-                                                                            settings=user_db[id_]['password']['settings']):
+                if user_db[id_]['password']['hash'] != secure_password_hash(password_correct=user_db[id_]['password'],
+                                                                            password_entered=password):
                     raise DeliveryPortalException("Wrong password. "
                                                   "Access to Delivery Portal "
                                                   "denied.")
@@ -810,23 +741,27 @@ def project_access(user: str, project: str) -> (bool, bool):
                     return True
 
 
-def secure_password_hash(password: str, settings: str) -> str:
+def secure_password_hash(password_settings: str, password_entered: str) -> str:
     """Generates secure password hash"""
     # TODO: SAVE
 
     # n value for fast interactive login
-    split_settings = settings.split("$")
+    settings = password_settings.split("$")
+    # split_settings = settings.split("$")
     for i in [1, 2, 3, 4]:
-        split_settings[i] = int(split_settings[i])
+        settings[i] = int(settings[i])
 
-    kdf = Scrypt(salt=bytes.fromhex(split_settings[0]),
-                 length=split_settings[1],
-                 n=2**split_settings[2],
-                 r=split_settings[3],
-                 p=split_settings[4],
+    # Salt - random string, length - key length
+    # n, r, p - tuning parameters for speed and memory => increased security, n - a power of 2,
+    # r - 8, p - 1, backend - lower level engine (default recommended, openssl alternative)
+    kdf = Scrypt(salt=bytes.fromhex(settings[0]),
+                 length=settings[1],
+                 n=2**settings[2],
+                 r=settings[3],
+                 p=settings[4],
                  backend=default_backend())
 
-    return kdf.derive(password.encode('utf-8')).hex()
+    return (kdf.derive(password_entered.encode('utf-8'))).hex()
 
 
 def stream_chunks(file_handle, chunk_size):
@@ -895,11 +830,14 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
     else:
         if config is not None:              # If config file entered
             if os.path.exists(config):
-                with open(config, 'r') as cf:
-                    for line in cf:
-                        # Get username, password and project ID
-                        (cred, val) = line.split(':')
-                        credentials[cred] = val.rstrip()
+                try:
+                    with open(config, 'r') as cf:
+                        for line in cf:
+                            # Get username, password and project ID
+                            (cred, val) = line.split(':')
+                            credentials[cred] = val.rstrip()
+                except OSError as ose:
+                    sys.exit(f"Could not open path-file {config}: {ose}")
 
                 # Check that all credentials are entered and quit if not
                 for c in ['username', 'password', 'project']:
@@ -979,6 +917,7 @@ def put(config: str, username: str, password: str, project: str,
     user_id = check_access(username=username, password=password,
                            project=project, upload=True)
 
+    # hit har jag kommit 2020-02-03
     # Check for entered files. Exception raised if no data.
     if not data and not pathfile:
         raise DeliveryPortalException(

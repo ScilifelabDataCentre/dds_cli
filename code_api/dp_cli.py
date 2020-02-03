@@ -33,7 +33,7 @@ import logging.config
 
 from ctypes import *
 
-from crypt4gh import lib, header, keys 
+from crypt4gh import lib, header, keys
 from functools import partial
 from getpass import getpass
 
@@ -79,7 +79,7 @@ class ECDHKeyPair:
         try:
             # Generate public key pair, encrypt private key
             keys.c4gh.generate(seckey=priv_keyname,
-                          pubkey=pub_keyname, callback=cb)
+                               pubkey=pub_keyname, callback=cb)
         except EncryptionError as ee:
             self.pub = f"The key pair {priv_keyname}/{pub_keyname} could not be generated: {ee}"
             self.sec = None
@@ -110,7 +110,7 @@ class ECDHKeyPair:
                 with open(file=encrypted_file, mode='wb+') as outfile:
                     # The 0 in keys is the method (only one allowed)
                     lib.encrypt(keys=[(0, self.sec, remote_pubkey)],
-                                   infile=infile, outfile=outfile)
+                                infile=infile, outfile=outfile)
         except EncryptionError as ee:
             logging.error("Some error message here.")
             error = f"Could not encrypt file {file}: {ee}"
@@ -164,7 +164,8 @@ def check_access(username: str, password: str, project: str, upload: bool = True
                             (user_db[id_]['role'] == 'researcher' and not upload):
                         # return True, id_
                         # Check project access
-                        project_access_granted = project_access(user=id_, project=project)
+                        project_access_granted = project_access(
+                            user=id_, project=project)
                         if not project_access_granted:
                             raise DeliveryPortalException(
                                 "Project access denied. Cancelling upload."
@@ -184,6 +185,7 @@ def check_access(username: str, password: str, project: str, upload: bool = True
 
         raise CouchDBException(
             "Username not found in database. Access to Delivery Portal denied.")
+
 
 def compress_chunk(original_chunk):
     """Compress individual chunks read in a streamed fashion"""
@@ -305,6 +307,7 @@ def couch_disconnect(couch, token):
     except CouchDBException:
         print("Could not logout from database.")
 
+
 def dp_access(username: str, password: str, upload: bool) -> (bool, str):
     """Check existance of user in database and the password validity."""
 
@@ -358,6 +361,7 @@ def _encrypt_segment(data, process, cipher):
     except EncryptionError as ee:
         yield "error", f"Encryption of chunk failed: {ee}"
 
+
 def gen_hmac(filepath: str, chunk_size: int, hash_) -> str:
     """Generates HMAC for file"""
 
@@ -372,7 +376,7 @@ def gen_hmac(filepath: str, chunk_size: int, hash_) -> str:
         logging.info("Some success message here.")
 
     return hash_.finalize().hex()
-  
+
     # key = b"ina"
     # h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
 
@@ -606,7 +610,7 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
 
     encryption_algorithm = ""               # Which package/algorithm
 
-    # LOOK THROUGH THIS!!! 
+    # LOOK THROUGH THIS!!!
     key = b"SuperSecureHmacKey"
 
     hash_original = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
@@ -643,10 +647,12 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                             logging.error("Some error message here.")
                             return {"FAILED": {"Path": cf.name,
                                                "Error": comp_chunk[1]}}
-                    
-                        h_comp.update(comp_chunk)   # Updates hash for compressed file
-                        
-                        cf.write(comp_chunk)        # Save compressed chunk to file
+
+                        # Updates hash for compressed file
+                        h_comp.update(comp_chunk)
+
+                        # Save compressed chunk to file
+                        cf.write(comp_chunk)
 
                     is_compressed = True
                     compression_algorithm = "gzip"
@@ -675,7 +681,7 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
             logging.error("Some error message here.")
             return {"FAILED": {"Path": latest_path,
                                "Error": facility_kp.pub}}
-      
+
         if is_compressed:   # If file is compressed
             # TODO: hash + encrypt + hash
             enc_dir = new_dir(filename=fname,
@@ -709,8 +715,10 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                                                                               hash_compressed=hash_compressed,
                                                                               hash_encrypted=hash_encrypted)
 
-            hash_decrypted = try_decryption(encrypted_file=latest_path, keypair=(researcher_kp.sec, facility_kp.pub))
-            print(hash_decrypted, hash_original, hash_decrypted == hash_original)
+            hash_decrypted = try_decryption(
+                encrypted_file=latest_path, keypair=(researcher_kp.sec, facility_kp.pub))
+            print(hash_decrypted, hash_original,
+                  hash_decrypted == hash_original)
     else:   # If not sensitive
         if is_compressed:   # If compressed
             # TODO: hash
@@ -810,19 +818,19 @@ def secure_password_hash(password: str, settings: str) -> str:
     split_settings = settings.split("$")
     for i in [1, 2, 3, 4]:
         split_settings[i] = int(split_settings[i])
-        
-     kdf = Scrypt(salt=bytes.fromhex(split_settings[0]),
+
+    kdf = Scrypt(salt=bytes.fromhex(split_settings[0]),
                  length=split_settings[1],
                  n=2**split_settings[2],
                  r=split_settings[3],
                  p=split_settings[4],
                  backend=default_backend())
-    
+
     return kdf.derive(password.encode('utf-8')).hex()
+
 
 def stream_chunks(file_handle, chunk_size):
     """Reads file and returns (streams) the content in chunks"""
-
 
     try:
         for chunk in iter(lambda: file_handle.read(chunk_size), b''):
@@ -833,16 +841,17 @@ def stream_chunks(file_handle, chunk_size):
 
 def try_decryption(encrypted_file: str, keypair: tuple):
     """Tests decryption of encrypted c4gh file"""
-    
-    # Deconstruct header 
-    # body decrypt 
+
+    # Deconstruct header
+    # body decrypt
     with open(encrypted_file, 'rb') as ef:
         with open(f"{encrypted_file}.decrypted", 'wb') as df:
-            lib.decrypt(keys=[(0, keypair[0], keypair[1])], infile=ef, outfile=df, sender_pubkey=keypair[1], offset=0, span=65536)
-           
+            lib.decrypt(keys=[(0, keypair[0], keypair[1])], infile=ef,
+                        outfile=df, sender_pubkey=keypair[1], offset=0, span=65536)
+
     # NOT WORKING #
     hash_decrypted = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
-                                               backend=default_backend())              
+                               backend=default_backend())
     hash_decrypted = gen_hmac(filepath=f"{encrypted_file}.decrypted",
                               chunk_size=65536, hash_=hash_decrypted)
 

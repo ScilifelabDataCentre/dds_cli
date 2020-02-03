@@ -7,6 +7,7 @@ Command line interface for Data Delivery Portal
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 import shutil
@@ -14,6 +15,10 @@ import zipfile
 import zlib
 import tarfile
 import gzip
+import json
+
+from pathlib import Path
+
 import click
 import couchdb
 import sys
@@ -36,12 +41,16 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
     EncryptionError, HashException, SecurePasswordException, StreamingError
 
+import boto3
+
+
 # CONFIG ############################################################## CONFIG #
 
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': False,
 })
+
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
@@ -129,28 +138,52 @@ def all_data(data_tuple: tuple, data_file: str):
         return data_tuple
 
 
-def check_access(username: str, password: str, project: str, upload: bool = True) -> (str, bool):
+def check_access(username: str, password: str, project: str, upload: bool = True) -> str:
     """Checks the users access to the delivery portal and the specified project,
     and the projects S3 access"""
+    # TODO: SAVE
 
-    ### Check DP access ###
-    access_granted, user_id = dp_access(username=username,
-                                        password=password,
-                                        upload=upload)
-    if not access_granted:
-        raise DeliveryPortalException(
-            "You are not authorized to access the Delivery Portal. Aborting."
-        )
+    try:
+        user_db = couch_connect()['user_db']    # Connect to user database
+    except CouchDBException as cdbe:
+        sys.exit(f"Could not collect database 'user_db'. {cdbe}")
     else:
-        ### Check project access ###
-        project_access_granted, sensitive = project_access(user=user_id,
-                                                           project=project)
-        if not project_access_granted:
-            raise DeliveryPortalException(
-                "Project access denied. Cancelling upload."
-            )
-        else:
-            return user_id, sensitive
+        # Search the database for the user
+        for id_ in user_db:
+            # If the username does not exist in the database quit
+            if username == user_db[id_]['username']:
+                # If the password isn't correct quit
+                if user_db[id_]['password']['hash'] != secure_password_hash(password=password, settings=user_db[id_]['password']['settings']):
+                    raise DeliveryPortalException("Wrong password. "
+                                                  "Access to Delivery Portal "
+                                                  "denied.")
+                else:
+                    # If facility is uploading or researcher is downloading
+                    # access is granted
+                    if (user_db[id_]['role'] == 'facility' and upload) or \
+                            (user_db[id_]['role'] == 'researcher' and not upload):
+                        # return True, id_
+                        # Check project access
+                        project_access_granted = project_access(user=id_, project=project)
+                        if not project_access_granted:
+                            raise DeliveryPortalException(
+                                "Project access denied. Cancelling upload."
+                            )
+                        else:
+                            return id_
+
+                    else:
+                        if upload:
+                            option = "Upload"
+                        else:
+                            option = "Download"
+                        raise DeliveryOptionException("Chosen upload/download "
+                                                      "option not granted. "
+                                                      f"You chose: '{option}'. "
+                                                      "For help: 'dp_api --help'")
+
+        raise CouchDBException(
+            "Username not found in database. Access to Delivery Portal denied.")
 
 def compress_chunk(original_chunk):
     """Compress individual chunks read in a streamed fashion"""
@@ -271,7 +304,6 @@ def couch_disconnect(couch, token):
         couch.logout(token)
     except CouchDBException:
         print("Could not logout from database.")
-
 
 def dp_access(username: str, password: str, upload: bool) -> (bool, str):
     """Check existance of user in database and the password validity."""
@@ -644,7 +676,6 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
             return {"FAILED": {"Path": latest_path,
                                "Error": facility_kp.pub}}
       
-      # THIS IS THE BEGINING OF A CONFLICT 
         if is_compressed:   # If file is compressed
             # TODO: hash + encrypt + hash
             enc_dir = new_dir(filename=fname,
@@ -696,36 +727,6 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                                                               compressed_file=comp_dir,
                                                               hash_original=hash_original,
                                                               hash_compressed=hash_compressed)
-      # THIS SHOULD MAYBE BE DELETED
-        # Encrypt
-        latest_path, encryption_algorithm, message = facility_kp.encrypt(file=latest_path,
-                                                                         remote_pubkey=researcher_kp.pub,
-                                                                         temp_dir=temp_dir,
-                                                                         sub_dir=sub_dir)
-        # If the encryption fails the encryption_algorithm is an error message
-        # and is returned in an error dict
-        if message != "":
-            logging.error("Some error message here.")
-            return {"FAILED": {"Path": latest_path,
-                               "Error": encryption_algorithm}}
-
-        is_encrypted = True
-
-        # Generate encrypted file checksum
-        hash_output_enc, message = gen_hmac(filepath=latest_path)
-
-        # If the hash generation failed the variable is a error message
-        # Quit the current file and continue
-        if message != "":
-            logging.error("Some error message here.")
-            return {"FAILED": {"Path": latest_path,
-                               "Error": message}}
-
-        hash_encrypted = hash_output_enc
-
-    if hash_compressed == "":
-        hash_compressed = hash_original
-    # THIS SHOULD MAYBE BE DELETED ^^^
 
     logging.info("Some success message here.")
     return {"Final path": latest_path,
@@ -768,6 +769,7 @@ def process_folder(folder: str, temp_dir: str, sub_dir: str = "", sensitive: boo
 
 def project_access(user: str, project: str) -> (bool, bool):
     """Checks the users access to a specific project."""
+    # TODO: SAVE
 
     proj_couch = couch_connect()    # Connect to database
     user_projects = proj_couch['user_db'][user]['projects']
@@ -797,23 +799,26 @@ def project_access(user: str, project: str) -> (bool, bool):
                 else:
                     # If the project exists and the chosen delivery option is S3
                     # grant project access and get project information
-                    return True, project_info['sensitive']
+                    return True
 
 
 def secure_password_hash(password: str, settings: str) -> str:
     """Generates secure password hash"""
+    # TODO: SAVE
 
     # n value for fast interactive login
     split_settings = settings.split("$")
-    for i in [0, 1, 2]:
+    for i in [1, 2, 3, 4]:
         split_settings[i] = int(split_settings[i])
-
-    return hashlib.scrypt(password=password.encode('utf-8'),
-                          salt=bytes.fromhex(split_settings[-1]),
-                          n=split_settings[0],
-                          r=split_settings[1],
-                          p=split_settings[2]).hex()
-
+        
+     kdf = Scrypt(salt=bytes.fromhex(split_settings[0]),
+                 length=split_settings[1],
+                 n=2**split_settings[2],
+                 r=split_settings[3],
+                 p=split_settings[4],
+                 backend=default_backend())
+    
+    return kdf.derive(password.encode('utf-8')).hex()
 
 def stream_chunks(file_handle, chunk_size):
     """Reads file and returns (streams) the content in chunks"""
@@ -867,6 +872,7 @@ def validate_api_options(config: str, username: str, password: str, project: str
 
 def verify_user_credentials(config: str, username: str, password: str, project: str) -> (str, str, str):
     """Checks that the correct options and credentials are entered"""
+    # TODO: SAVE
 
     credentials = dict()
 
@@ -938,13 +944,13 @@ def cli():
               help="Project to upload files to.")
 @click.option('--pathfile', '-f',
               required=False,
-              multiple=False,
               type=click.Path(exists=True),
+              multiple=False,
               help="Path to file containing all files and folders to be uploaded.")
 @click.option('--data', '-d',
               required=False,
-              multiple=True,
               type=click.Path(exists=True),
+              multiple=True,
               help="Path to file or folder to upload.")
 def put(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
@@ -954,20 +960,29 @@ def put(config: str, username: str, password: str, project: str,
     hash_dict = dict()      # format: {original-file:hmac}
     failed = dict()         # failed file/folder uploads
 
-    # Check that all CLI options are correctly entered
-    username, password, project = validate_api_options(config=config,
-                                                       username=username,
-                                                       password=password,
-                                                       project=project,
-                                                       pathfile=pathfile,
-                                                       data=data)
+    # Check for all required login credentials and project and return in correct format
+    username, password, project = verify_user_credentials(config=config,
+                                                          username=username,
+                                                          password=password,
+                                                          project=project)
 
     # Check user access to DP and project, and project to S3 delivery option
-    user_id, sensitive = check_access(username=username, password=password,
-                                      project=project, upload=True)
+    user_id = check_access(username=username, password=password,
+                           project=project, upload=True)
 
-    # Put all data in one tuple
-    data = all_data(data_tuple=data, data_file=pathfile)
+    # Check for entered files. Exception raised if no data.
+    if not data and not pathfile:
+        raise DeliveryPortalException(
+            "No data to be uploaded. Specify individual files/folders using "
+            "the --data/-d option one or more times, or the --pathfile/-f. "
+            "For help: 'dp_api --help'"
+        )
+    else:
+        # Put all data in one tuple
+        data = all_data(data_tuple=data, data_file=pathfile)
+
+    print(data)
+    sys.exit()
 
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
@@ -1050,36 +1065,3 @@ def get(config: str, username: str, password: str, project: str,
     """Handles file download. """
 
     click.echo("download function")
-
-
-# sys.exit()
-#             # Create file checksums and save in database
-#             # Save checksum and metadata in db
-#             # TODO: move this to after upload
-#             couch = couch_connect()               # Connect to database
-#             project_db = couch['project_db']      # Get project database
-#             if project not in project_db:       # Check if project exists in database
-#                 raise CouchDBException(
-#                     "The specified project is not recorded in the database. Aborting upload.")
-#             else:                                       # If project exists
-#                 project_doc = project_db[project]       # Get project document
-#                 project_files = project_doc['files']    # Get files
-
-#                 # Get project sensitive information from database
-#                 if 'project_info' in project_doc and 'sensitive' in project_doc['project_info']:
-#                     sensitive = project_db[project]['project_info']['sensitive']
-
-#                 for path in data:    # Generate and save checksums
-#                     try:
-#                         project_files[path] = {"size": get_filesize(path),
-#                                                "mime": file_type(path),
-#                                                "date_uploaded": get_current_time(),
-#                                                "checksum": "hashhere"}   # Save checksum in db
-#                     except CouchDBException:
-#                         print(f"Could not update {path} metadata.")
-
-#                 try:
-#                     project_db.save(project_doc)
-#                 except CouchDBException:
-#                     print(
-#                         f"Updating project {project} failed. Cancelling upload.")

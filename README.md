@@ -51,12 +51,12 @@ docker-compose down
 
 4. Create the databases. 
 ```bash
-curl -X PUT http://delport:delport@127.0.0.1:5984/projects
-curl -X PUT http://delport:delport@127.0.0.1:5984/dp_users
+curl -X PUT http://delport:delport@127.0.0.1:5984/projects_db
+curl -X PUT http://delport:delport@127.0.0.1:5984/user_db
 ```
 
 5. Import the database contents. 
 ```bash
-curl -d @dbfiles/projects.json -H "Content-type: application/json" -X POST http://delport:delport@127.0.0.1:5984/projects/_bulk_docs
-curl -d @dbfiles/dp_users.json -H "Content-type: application/json" -X POST http://delport:delport@127.0.0.1:5984/dp_users/_bulk_docs
+curl -d @dbfiles/project_db.json -H "Content-type: application/json" -X POST http://delport:delport@127.0.0.1:5984/project_db/_bulk_docs
+curl -d @dbfiles/user_db.json -H "Content-type: application/json" -X POST http://delport:delport@127.0.0.1:5984/user_db/_bulk_docs
 ```

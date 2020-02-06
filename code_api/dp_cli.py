@@ -7,6 +7,7 @@ Command line interface for Data Delivery Portal
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 import shutil
@@ -14,6 +15,10 @@ import zipfile
 import zlib
 import tarfile
 import gzip
+import json
+
+from pathlib import Path
+
 import click
 import couchdb
 import sys
@@ -28,7 +33,7 @@ import logging.config
 
 from ctypes import *
 
-from crypt4gh import lib, header, keys 
+from crypt4gh import lib, header, keys
 from functools import partial
 from getpass import getpass
 
@@ -36,12 +41,16 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
     EncryptionError, HashException, SecurePasswordException, StreamingError
 
+import boto3
+
+
 # CONFIG ############################################################## CONFIG #
 
 logging.config.dictConfig({
     'version': 1,
     'disable_existing_loggers': False,
 })
+
 
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 
@@ -70,7 +79,7 @@ class ECDHKeyPair:
         try:
             # Generate public key pair, encrypt private key
             keys.c4gh.generate(seckey=priv_keyname,
-                          pubkey=pub_keyname, callback=cb)
+                               pubkey=pub_keyname, callback=cb)
         except EncryptionError as ee:
             self.pub = f"The key pair {priv_keyname}/{pub_keyname} could not be generated: {ee}"
             self.sec = None
@@ -101,7 +110,7 @@ class ECDHKeyPair:
                 with open(file=encrypted_file, mode='wb+') as outfile:
                     # The 0 in keys is the method (only one allowed)
                     lib.encrypt(keys=[(0, self.sec, remote_pubkey)],
-                                   infile=infile, outfile=outfile)
+                                infile=infile, outfile=outfile)
         except EncryptionError as ee:
             logging.error("Some error message here.")
             error = f"Could not encrypt file {file}: {ee}"
@@ -129,28 +138,51 @@ def all_data(data_tuple: tuple, data_file: str):
         return data_tuple
 
 
-def check_access(username: str, password: str, project: str, upload: bool = True) -> (str, bool):
+def check_access(username: str, password: str, project: str, upload: bool = True) -> str:
     """Checks the users access to the delivery portal and the specified project,
     and the projects S3 access"""
+    # TODO: SAVE
 
-    ### Check DP access ###
-    access_granted, user_id = dp_access(username=username,
-                                        password=password,
-                                        upload=upload)
-    if not access_granted:
-        raise DeliveryPortalException(
-            "You are not authorized to access the Delivery Portal. Aborting."
-        )
+    try:
+        user_db = couch_connect()['user_db']    # Connect to user database
+    except CouchDBException as cdbe:
+        sys.exit(f"Could not collect database 'user_db'. {cdbe}")
     else:
-        ### Check project access ###
-        project_access_granted, sensitive = project_access(user=user_id,
-                                                           project=project)
-        if not project_access_granted:
-            raise DeliveryPortalException(
-                "Project access denied. Cancelling upload."
-            )
-        else:
-            return user_id, sensitive
+        # Search the database for the user
+        for id_ in user_db:
+            # If the username exists in the database check password
+            if username == user_db[id_]['username']:
+                # If the password isn't correct quit
+                if user_db[id_]['password']['hash'] != secure_password_hash(password_settings=user_db[id_]['password']['settings'], password_entered=password):
+                    raise DeliveryPortalException("Wrong password. "
+                                                  "Access to Delivery Portal "
+                                                  "denied.")
+                else:
+                    # If facility is uploading or researcher is downloading access is granted
+                    if (user_db[id_]['role'] == 'facility' and upload) or \
+                            (user_db[id_]['role'] == 'researcher' and not upload):
+                        # Check project access
+                        project_access_granted = project_access(
+                            user=id_, project=project)
+                        if not project_access_granted:
+                            raise DeliveryPortalException(
+                                "Project access denied. Cancelling upload."
+                            )
+                        else:
+                            return id_
+
+                    else:
+                        if upload:
+                            option = "Upload"
+                        else:
+                            option = "Download"
+                        raise DeliveryOptionException("Chosen upload/download "
+                                                      "option not granted. "
+                                                      f"You chose: '{option}'. "
+                                                      "For help: 'dp_api --help'")
+
+        raise CouchDBException(
+            "Username not found in database. Access to Delivery Portal denied.")
 
 
 def compress_chunk(original_chunk):
@@ -162,63 +194,10 @@ def compress_chunk(original_chunk):
         yield "error", f"Compression of chunk failed: {ce}"
 
 
-def compress_file(original: str, temp_dir: str, sub_dir: str) -> (str, str):
-    """Compresses file using gzip"""
+def decompress_chunk(compressed_chunk):
+    """Performs gzip compression and streams compressed chunk"""
 
-    error = ""
-
-    fname = original.split('/')[-1]
-    if sub_dir == "":
-        compressed = f"{temp_dir}/{fname}.gzip"
-    else:
-        compressed = f"{sub_dir}/{fname}.gzip"
-
-    try:
-        # Compress file
-        with open(original, 'rb') as pathin:
-            with gzip.open(compressed, 'wb') as pathout:
-                shutil.copyfileobj(pathin, pathout)
-    except CompressionError as ce:
-        logging.error("Some error message here.")
-        error = f"Compression failed. Could not compress the file {original}: {ce}"
-    else:
-        logging.info("Some success message here.")
-
-    return compressed, "gzip", error
-
-
-def compress_folder(dir_path: str, prev_path: str = "") -> list:
-    """Iterates through a folder and compresses each file"""
-
-    comp_path = ""
-    # If first (root) folder, create name for root "compressed" folder
-    # If subfolder, alter path to be in "compressed" folders
-    if prev_path == "":
-        comp_path = f"{dir_path}_comp"
-    else:
-        comp_path = f"{prev_path}/{dir_path.split('/')[-1]}_comp"
-
-    result_dict = {comp_path: list()}   # Add path to upload dict
-
-    if not os.path.exists(comp_path):
-        try:
-            os.mkdir(comp_path)     # Create comp path
-        except OSError as ose:
-            print(f"Could not create folder '{comp_path}': {ose}")
-
-    # Iterate through all folders and files recursively
-    for path, dirs, files in os.walk(dir_path):
-        for file in sorted(files):  # For all files in folder root
-            original = os.path.join(path, file)
-            compressed = f"{comp_path}/{file}.gzip"
-            compress_file(original=original, compressed=compressed)
-            result_dict[comp_path].append(compressed)
-        for dir_ in sorted(dirs):   # For all folders in folder root
-            result_dict[comp_path].append(compress_folder(
-                os.path.join(path, dir_), comp_path))
-        break
-
-    return result_dict
+    yield gzip.decompress(compressed_chunk)
 
 
 def compression_dict():
@@ -276,8 +255,8 @@ def dp_access(username: str, password: str, upload: bool) -> (bool, str):
                                        "user does not exist in database. ")
             else:
                 # If the password isn't correct quit
-                if user_db[id_]['password']['hash'] != secure_password_hash(password=password,
-                                                                            settings=user_db[id_]['password']['settings']):
+                if user_db[id_]['password']['hash'] != secure_password_hash(password_correct=user_db[id_]['password'],
+                                                                            password_entered=password):
                     raise DeliveryPortalException("Wrong password. "
                                                   "Access to Delivery Portal "
                                                   "denied.")
@@ -328,6 +307,15 @@ def gen_hmac(filepath: str, chunk_size: int, hash_) -> str:
         logging.info("Some success message here.")
 
     return hash_.finalize().hex()
+
+    # key = b"ina"
+    # h = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+
+    # with open(filepath, 'rb') as f:
+    #     for chunk in iter(lambda: f.read(16384), b''):
+    #        h.update(chunk)
+
+    # return h.finalize().hex(), error
 
 
 def generate_header(own_private_key, remote_public_key):
@@ -548,10 +536,12 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
     fname = file.split('/')[-1]             # Get file or folder name
     mime, ext, is_compressed, \
         compression_algorithm = file_type(file)   # Check mime type
+    print(mime, is_compressed)
     latest_path = ""                        # Latest file generated
 
     encryption_algorithm = ""               # Which package/algorithm
 
+    # LOOK THROUGH THIS!!!
     key = b"SuperSecureHmacKey"
 
     hash_original = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
@@ -560,6 +550,51 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                                 backend=default_backend())                    # Hash for compressed file
     hash_encrypted = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
                                backend=default_backend())                     # Encrypted file hash
+
+    hash_original = ""                      # Original file hash
+    hash_compressed = ""                    # Compressed file hash
+    hash_encrypted = ""                     # Encrypted file hash
+
+    key = b"Thisisakeythatshouldbechanged"
+    h_orig = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+    h_comp = hmac.HMAC(key, hashes.SHA256(), backend=default_backend())
+    with open(file, 'rb') as f:
+        print("Name: ", f.name)
+        chunk_stream = stream_chunks(file_handle=f, chunk_size=65536)
+        for chunk in chunk_stream:  # Continues here before above is finished
+            if isinstance(chunk, tuple):
+                logging.error("Some error message here.")
+                return {"FAILED": {"Path": f.name,
+                                   "Error": chunk[1]}}
+
+            h_orig.update(chunk)    # Update hash for original file
+
+            # If the file is not compressed, compress chunks
+            if not is_compressed:
+                comp_chunk_stream = compress_chunk(original_chunk=chunk)
+                with open(file=f"{file}.gzip", mode='wb') as cf:
+                    for comp_chunk in comp_chunk_stream:    # Continues here before above is finished
+                        if isinstance(comp_chunk, tuple):
+                            logging.error("Some error message here.")
+                            return {"FAILED": {"Path": cf.name,
+                                               "Error": comp_chunk[1]}}
+
+                        # Updates hash for compressed file
+                        h_comp.update(comp_chunk)
+
+                        # Save compressed chunk to file
+                        cf.write(comp_chunk)
+
+                    is_compressed = True
+                    compression_algorithm = "gzip"
+                    latest_path = cf.name
+
+            else:
+                latest_path = file
+
+    hash_original = h_orig.finalize().hex()
+    hash_compressed = h_comp.finalize().hex()
+    # LOOK THROUGH THIS!!! ^^^^
 
     if sensitive:
         # Generate keys
@@ -611,8 +646,10 @@ def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = 
                                                                               hash_compressed=hash_compressed,
                                                                               hash_encrypted=hash_encrypted)
 
-            hash_decrypted = try_decryption(encrypted_file=latest_path, keypair=(researcher_kp.sec, facility_kp.pub))
-            print(hash_decrypted, hash_original, hash_decrypted == hash_original)
+            hash_decrypted = try_decryption(
+                encrypted_file=latest_path, keypair=(researcher_kp.sec, facility_kp.pub))
+            print(hash_decrypted, hash_original,
+                  hash_decrypted == hash_original)
     else:   # If not sensitive
         if is_compressed:   # If compressed
             # TODO: hash
@@ -671,6 +708,7 @@ def process_folder(folder: str, temp_dir: str, sub_dir: str = "", sensitive: boo
 
 def project_access(user: str, project: str) -> (bool, bool):
     """Checks the users access to a specific project."""
+    # TODO: SAVE
 
     proj_couch = couch_connect()    # Connect to database
     user_projects = proj_couch['user_db'][user]['projects']
@@ -700,22 +738,30 @@ def project_access(user: str, project: str) -> (bool, bool):
                 else:
                     # If the project exists and the chosen delivery option is S3
                     # grant project access and get project information
-                    return True, project_info['sensitive']
+                    return True
 
 
-def secure_password_hash(password: str, settings: str) -> str:
+def secure_password_hash(password_settings: str, password_entered: str) -> str:
     """Generates secure password hash"""
+    # TODO: SAVE
 
     # n value for fast interactive login
-    split_settings = settings.split("$")
-    for i in [0, 1, 2]:
-        split_settings[i] = int(split_settings[i])
+    settings = password_settings.split("$")
+    # split_settings = settings.split("$")
+    for i in [1, 2, 3, 4]:
+        settings[i] = int(settings[i])
 
-    return hashlib.scrypt(password=password.encode('utf-8'),
-                          salt=bytes.fromhex(split_settings[-1]),
-                          n=split_settings[0],
-                          r=split_settings[1],
-                          p=split_settings[2]).hex()
+    # Salt - random string, length - key length
+    # n, r, p - tuning parameters for speed and memory => increased security, n - a power of 2,
+    # r - 8, p - 1, backend - lower level engine (default recommended, openssl alternative)
+    kdf = Scrypt(salt=bytes.fromhex(settings[0]),
+                 length=settings[1],
+                 n=2**settings[2],
+                 r=settings[3],
+                 p=settings[4],
+                 backend=default_backend())
+
+    return (kdf.derive(password_entered.encode('utf-8'))).hex()
 
 
 def stream_chunks(file_handle, chunk_size):
@@ -730,16 +776,17 @@ def stream_chunks(file_handle, chunk_size):
 
 def try_decryption(encrypted_file: str, keypair: tuple):
     """Tests decryption of encrypted c4gh file"""
-    
-    # Deconstruct header 
-    # body decrypt 
+
+    # Deconstruct header
+    # body decrypt
     with open(encrypted_file, 'rb') as ef:
         with open(f"{encrypted_file}.decrypted", 'wb') as df:
-            lib.decrypt(keys=[(0, keypair[0], keypair[1])], infile=ef, outfile=df, sender_pubkey=keypair[1], offset=0, span=65536)
-           
+            lib.decrypt(keys=[(0, keypair[0], keypair[1])], infile=ef,
+                        outfile=df, sender_pubkey=keypair[1], offset=0, span=65536)
+
     # NOT WORKING #
     hash_decrypted = hmac.HMAC(key=key, algorithm=hashes.SHA256(),
-                                               backend=default_backend())              
+                               backend=default_backend())
     hash_decrypted = gen_hmac(filepath=f"{encrypted_file}.decrypted",
                               chunk_size=65536, hash_=hash_decrypted)
 
@@ -769,6 +816,7 @@ def validate_api_options(config: str, username: str, password: str, project: str
 
 def verify_user_credentials(config: str, username: str, password: str, project: str) -> (str, str, str):
     """Checks that the correct options and credentials are entered"""
+    # TODO: SAVE
 
     credentials = dict()
 
@@ -782,11 +830,14 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
     else:
         if config is not None:              # If config file entered
             if os.path.exists(config):
-                with open(config, 'r') as cf:
-                    for line in cf:
-                        # Get username, password and project ID
-                        (cred, val) = line.split(':')
-                        credentials[cred] = val.rstrip()
+                try:
+                    with open(config, 'r') as cf:
+                        for line in cf:
+                            # Get username, password and project ID
+                            (cred, val) = line.split(':')
+                            credentials[cred] = val.rstrip()
+                except OSError as ose:
+                    sys.exit(f"Could not open path-file {config}: {ose}")
 
                 # Check that all credentials are entered and quit if not
                 for c in ['username', 'password', 'project']:
@@ -840,13 +891,13 @@ def cli():
               help="Project to upload files to.")
 @click.option('--pathfile', '-f',
               required=False,
-              multiple=False,
               type=click.Path(exists=True),
+              multiple=False,
               help="Path to file containing all files and folders to be uploaded.")
 @click.option('--data', '-d',
               required=False,
-              multiple=True,
               type=click.Path(exists=True),
+              multiple=True,
               help="Path to file or folder to upload.")
 def put(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
@@ -856,20 +907,30 @@ def put(config: str, username: str, password: str, project: str,
     hash_dict = dict()      # format: {original-file:hmac}
     failed = dict()         # failed file/folder uploads
 
-    # Check that all CLI options are correctly entered
-    username, password, project = validate_api_options(config=config,
-                                                       username=username,
-                                                       password=password,
-                                                       project=project,
-                                                       pathfile=pathfile,
-                                                       data=data)
+    # Check for all required login credentials and project and return in correct format
+    username, password, project = verify_user_credentials(config=config,
+                                                          username=username,
+                                                          password=password,
+                                                          project=project)
 
     # Check user access to DP and project, and project to S3 delivery option
-    user_id, sensitive = check_access(username=username, password=password,
-                                      project=project, upload=True)
+    user_id = check_access(username=username, password=password,
+                           project=project, upload=True)
 
-    # Put all data in one tuple
-    data = all_data(data_tuple=data, data_file=pathfile)
+    # hit har jag kommit 2020-02-03
+    # Check for entered files. Exception raised if no data.
+    if not data and not pathfile:
+        raise DeliveryPortalException(
+            "No data to be uploaded. Specify individual files/folders using "
+            "the --data/-d option one or more times, or the --pathfile/-f. "
+            "For help: 'dp_api --help'"
+        )
+    else:
+        # Put all data in one tuple
+        data = all_data(data_tuple=data, data_file=pathfile)
+
+    print(data)
+    sys.exit()
 
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
@@ -952,36 +1013,3 @@ def get(config: str, username: str, password: str, project: str,
     """Handles file download. """
 
     click.echo("download function")
-
-
-# sys.exit()
-#             # Create file checksums and save in database
-#             # Save checksum and metadata in db
-#             # TODO: move this to after upload
-#             couch = couch_connect()               # Connect to database
-#             project_db = couch['project_db']      # Get project database
-#             if project not in project_db:       # Check if project exists in database
-#                 raise CouchDBException(
-#                     "The specified project is not recorded in the database. Aborting upload.")
-#             else:                                       # If project exists
-#                 project_doc = project_db[project]       # Get project document
-#                 project_files = project_doc['files']    # Get files
-
-#                 # Get project sensitive information from database
-#                 if 'project_info' in project_doc and 'sensitive' in project_doc['project_info']:
-#                     sensitive = project_db[project]['project_info']['sensitive']
-
-#                 for path in data:    # Generate and save checksums
-#                     try:
-#                         project_files[path] = {"size": get_filesize(path),
-#                                                "mime": file_type(path),
-#                                                "date_uploaded": get_current_time(),
-#                                                "checksum": "hashhere"}   # Save checksum in db
-#                     except CouchDBException:
-#                         print(f"Could not update {path} metadata.")
-
-#                 try:
-#                     project_db.save(project_doc)
-#                 except CouchDBException:
-#                     print(
-#                         f"Updating project {project} failed. Cancelling upload.")

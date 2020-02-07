@@ -26,6 +26,8 @@ import hashlib
 import os
 import filetype
 import mimetypes
+from typing import Union
+
 import datetime
 from itertools import chain
 import logging
@@ -138,51 +140,58 @@ def all_data(data_tuple: tuple, data_file: str):
         return data_tuple
 
 
-def check_access(username: str, password: str, project: str, upload: bool = True) -> str:
+def check_access(login_info: dict) -> (str):
     """Checks the users access to the delivery portal and the specified project,
-    and the projects S3 access"""
+    and the projects S3 access.
+
+    Args: 
+        login_info: Dictionary containing username, password and project ID. 
+
+    Returns: 
+        str: User ID connected to the specified user. 
+
+    """
     # TODO: SAVE
+
+    username = login_info['username']
+    password = login_info['password']
+    project = login_info['project']
 
     try:
         user_db = couch_connect()['user_db']    # Connect to user database
     except CouchDBException as cdbe:
         sys.exit(f"Could not collect database 'user_db'. {cdbe}")
     else:
-        # Search the database for the user
-        for id_ in user_db:
-            # If the username exists in the database check password
-            if username == user_db[id_]['username']:
-                # If the password isn't correct quit
-                if user_db[id_]['password']['hash'] != secure_password_hash(password_settings=user_db[id_]['password']['settings'], password_entered=password):
+        for id_ in user_db:  # Search the database for the user
+            if username == user_db[id_]['username']:  # If found check password
+                if (user_db[id_]['password']['hash'] !=
+                        secure_password_hash(password_settings=user_db[id_]['password']['settings'],
+                                             password_entered=password)):
                     raise DeliveryPortalException("Wrong password. "
-                                                  "Access to Delivery Portal "
-                                                  "denied.")
+                                                  "Access to Delivery Portal denied.")
                 else:
-                    # If facility is uploading or researcher is downloading access is granted
-                    if (user_db[id_]['role'] == 'facility' and upload) or \
-                            (user_db[id_]['role'] == 'researcher' and not upload):
+                    calling_command = sys._getframe().f_back.f_code.co_name
+                    # If facility is uploading or researcher is downloading, access is granted
+                    if (user_db[id_]['role'] == 'facility' and calling_command == "put") or \
+                            (user_db[id_]['role'] == 'researcher' and calling_command == "get"):
                         # Check project access
-                        project_access_granted = project_access(
-                            user=id_, project=project)
+                        project_access_granted = project_access(user=id_,
+                                                                project=project)
                         if not project_access_granted:
                             raise DeliveryPortalException(
                                 "Project access denied. Cancelling upload."
                             )
                         else:
-                            return id_
+                            return id_  
 
                     else:
-                        if upload:
-                            option = "Upload"
-                        else:
-                            option = "Download"
                         raise DeliveryOptionException("Chosen upload/download "
                                                       "option not granted. "
-                                                      f"You chose: '{option}'. "
+                                                      f"You chose: '{calling_command}'. "
                                                       "For help: 'dp_api --help'")
-
-        raise CouchDBException(
-            "Username not found in database. Access to Delivery Portal denied.")
+        # The user not found.
+        raise CouchDBException("Username not found in database. "
+                               "Access to Delivery Portal denied.")
 
 
 def compress_chunk(original_chunk):
@@ -219,8 +228,14 @@ def compression_dict():
     return extdict
 
 
-def couch_connect():
-    """Connect to a couchdb interface."""
+def couch_connect() -> (couchdb.client.Server):
+    """Connects to a couchdb interface. Currently hard-coded. 
+
+    Returns: 
+        couchdb.client.Server: CouchDB server instance. 
+
+    """
+    # TODO: SAVE
 
     try:
         couch = couchdb.Server('http://delport:delport@localhost:5984/')
@@ -706,54 +721,66 @@ def process_folder(folder: str, temp_dir: str, sub_dir: str = "", sensitive: boo
     return result_dict
 
 
-def project_access(user: str, project: str) -> (bool, bool):
-    """Checks the users access to a specific project."""
+def project_access(user: str, project: str) -> (bool):
+    """Checks the users access to a specific project.
+
+    Args: 
+        user: User ID.
+        project: ID of project that the user is requiring access to.
+
+    Returns: 
+        bool: True if project access granted
+
+    """
     # TODO: SAVE
 
-    proj_couch = couch_connect()    # Connect to database
-    user_projects = proj_couch['user_db'][user]['projects']
+    couch = couch_connect()    # Connect to database
+    user_projects = couch['user_db'][user]['projects']
 
-    # If the specified project is not present in the users project list
-    # raise exception and quit
     if project not in proj_couch['project_db']:
         raise CouchDBException(f"The project {project} does not exist.")
     else:
-        if project not in set(chain(user_projects['ongoing'], user_projects['finished'])):
+        if project not in user_projects:
             raise DeliveryOptionException("You do not have access to the specified project "
                                           f"{project}. Aborting upload.")
         else:
+            project_db = couch['project_db'][project]
             # If the project exists but does not have any 'project_info'
             # raise exception and quit
-            if 'project_info' not in proj_couch['project_db'][project]:
-                raise CouchDBException("'project_info' not in "
-                                       "database 'project_db'.")
+            if 'project_info' not in project_db:
+                raise CouchDBException("There is no 'project_info' recorded "
+                                       "for the specified project.")
             else:
-                ### Does the project have S3 access (S3 delivery as option)? ###
-                # If the project exists, there is project information,
-                # but the project delivery option is not S3, raise except and quit
-                project_info = proj_couch['project_db'][project]['project_info']
-                if not project_info['delivery_option'] == "S3":
-                    raise DeliveryOptionException("The specified project does "
-                                                  "not have access to S3.")
+                # If the project delivery option is not S3, raise except and quit
+                if 'delivery_option' not in project_db['project_info']:
+                    raise CouchDBException("A delivery option has not been "
+                                           "specified for this project. ")
                 else:
-                    # If the project exists and the chosen delivery option is S3
-                    # grant project access and get project information
-                    return True
+                    if not project_db['project_info']['delivery_option'] == "S3":
+                        raise DeliveryOptionException("The specified project does "
+                                                      "not have access to S3 delivery.")
+                    else:
+                        return True # No exceptions - access granted 
 
 
-def secure_password_hash(password_settings: str, password_entered: str) -> str:
-    """Generates secure password hash"""
+def secure_password_hash(password_settings: str, password_entered: str) -> (str):
+    """Generates secure password hash.
+
+    Args: 
+        password_settings: String containing the salt, length of hash, n-exponential, 
+                            r and p variables. Taken from database. Separated by '$'. 
+        password_entered: The user-specified password. 
+
+    Returns: 
+        str: The derived hash from the user-specified password. 
+
+    """
     # TODO: SAVE
 
-    # n value for fast interactive login
     settings = password_settings.split("$")
-    # split_settings = settings.split("$")
     for i in [1, 2, 3, 4]:
         settings[i] = int(settings[i])
 
-    # Salt - random string, length - key length
-    # n, r, p - tuning parameters for speed and memory => increased security, n - a power of 2,
-    # r - 8, p - 1, backend - lower level engine (default recommended, openssl alternative)
     kdf = Scrypt(salt=bytes.fromhex(settings[0]),
                  length=settings[1],
                  n=2**settings[2],
@@ -815,13 +842,33 @@ def validate_api_options(config: str, username: str, password: str, project: str
 
 
 def verify_user_credentials(config: str, username: str, password: str, project: str) -> (str, str, str):
-    """Checks that the correct options and credentials are entered"""
+    """Checks that the correct options and credentials are entered.
+
+    Args: 
+        config:     File containing the users DP username and password, 
+                    and the project relating to the upload/download.
+                    Can be used instead of inputing the credentials separately.
+        username:   Username for DP log in. 
+        password:   Password connected to username.
+        project:    Project ID. 
+
+    Returns: 
+        tuple: A tuple containing three strings
+
+            Username (str)
+
+            Password (str)
+
+            Project ID (str)
+
+    """
+
     # TODO: SAVE
 
     credentials = dict()
 
     # If none of username, password and config options are set
-    # raise exception and quit execution
+    # raise exception and quit execution -- dp cannot be accessed
     if all(x is None for x in [username, password, config]):
         raise DeliveryPortalException("Delivery Portal login credentials "
                                       "not specified. Enter --username/-u "
@@ -829,13 +876,10 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
                                       "For help: 'dp_api --help'.")
     else:
         if config is not None:              # If config file entered
-            if os.path.exists(config):
+            if os.path.exists(config):      # and exist
                 try:
                     with open(config, 'r') as cf:
-                        for line in cf:
-                            # Get username, password and project ID
-                            (cred, val) = line.split(':')
-                            credentials[cred] = val.rstrip()
+                        credentials = json.load(cf)
                 except OSError as ose:
                     sys.exit(f"Could not open path-file {config}: {ose}")
 
@@ -844,9 +888,7 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
                     if c not in credentials:
                         raise DeliveryPortalException("The config file does not "
                                                       f"contain: '{c}'.")
-                return credentials['username'], \
-                    credentials['password'], \
-                    credentials['project']
+                return credentials
         else:   # If config file is not entered check other options
             if username is None or password is None:
                 raise DeliveryPortalException("Delivery Portal login credentials "
@@ -900,22 +942,25 @@ def cli():
               multiple=True,
               help="Path to file or folder to upload.")
 def put(config: str, username: str, password: str, project: str,
-        pathfile: str, data: tuple):
-    """Handles file upload. """
+        pathfile: str, data: tuple) -> (str):
+    """Uploads the files to S3 bucket. Only usable by facilities. """
+
+    cur_com = sys._getframe().f_code.co_name  # The current command, "put" here
+    # The calling function ("invoke" in this case)
+    cal_com = sys._getframe().f_back.f_code.co_name
 
     upload_path = dict()    # format: {original-file:file-to-be-uploaded}
     hash_dict = dict()      # format: {original-file:hmac}
     failed = dict()         # failed file/folder uploads
 
     # Check for all required login credentials and project and return in correct format
-    username, password, project = verify_user_credentials(config=config,
-                                                          username=username,
-                                                          password=password,
-                                                          project=project)
+    user_info = verify_user_credentials(config=config,
+                                        username=username,
+                                        password=password,
+                                        project=project)
 
     # Check user access to DP and project, and project to S3 delivery option
-    user_id = check_access(username=username, password=password,
-                           project=project, upload=True)
+    user_id = check_access(login_info=user_info)
 
     # hit har jag kommit 2020-02-03
     # Check for entered files. Exception raised if no data.
@@ -1010,6 +1055,6 @@ def put(config: str, username: str, password: str, project: str,
               help="Path to file or folder to upload.")
 def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
-    """Handles file download. """
+    """Downloads the files from S3 bucket. Not usable by facilities. """
 
     click.echo("download function")

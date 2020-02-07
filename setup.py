@@ -17,7 +17,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'dp_cli = code_api.dp_cli:put',
+            'dp_cli = code_api.dp_cli:cli',
         ],
     },
 )

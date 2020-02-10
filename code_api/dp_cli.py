@@ -18,6 +18,7 @@ import gzip
 import json
 
 from pathlib import Path
+import tempfile
 
 import click
 import couchdb
@@ -125,8 +126,8 @@ class ECDHKeyPair:
 # FUNCTIONS ######################################################## FUNCTIONS #
 
 def all_data(data_file: str) -> (tuple):
-    """Puts all data from tuple and file into one tuple.
-    
+    """Puts all data from data file into one tuple.
+
     Args: 
         data_file: Path to file containing paths to files which will be uploaded. 
 
@@ -134,6 +135,7 @@ def all_data(data_file: str) -> (tuple):
         tuple: All paths to the files.
 
     """
+    # TODO: SAVE
 
     try:
         if data_file:
@@ -187,7 +189,7 @@ def check_access(login_info: dict) -> (str):
                                 "Project access denied. Cancelling upload."
                             )
                         else:
-                            return id_  
+                            return id_
 
                     else:
                         raise DeliveryOptionException("Chosen upload/download "
@@ -258,6 +260,36 @@ def couch_disconnect(couch, token):
     except CouchDBException:
         print("Could not logout from database.")
 
+
+def create_directories(tdir: str, paths: tuple) -> (bool):
+    """Creates all temporary directories.
+    
+    Args: 
+        tdir: Path to new temporary directory
+        paths: Tuple containing all data-file paths
+        
+    Returns: 
+        bool: True if directories created
+    """
+    # TODO: SAVE
+    
+    dirs = tuple(p for p in [tdir,
+                             f"{tdir}/files",
+                             f"{tdir}/keys",
+                             f"{tdir}/meta",
+                             f"{tdir}/logs"]) + \
+        tuple(f"{tdir}/files/{p.split('/')[-1].split('.')[0]}"
+              for p in paths)
+
+    for d_ in dirs:
+        try:
+            os.mkdir(d_)
+        except OSError as ose:
+            click.echo(f"The directory '{d_}' could not be created: {ose}"
+                       "Cancelling delivery. Deleting temporary directory.")
+            return False 
+
+    return True
 
 def dp_access(username: str, password: str, upload: bool) -> (bool, str):
     """Check existance of user in database and the password validity."""
@@ -765,7 +797,7 @@ def project_access(user: str, project: str) -> (bool):
                         raise DeliveryOptionException("The specified project does "
                                                       "not have access to S3 delivery.")
                     else:
-                        return True # No exceptions - access granted 
+                        return True  # No exceptions - access granted
 
 
 def secure_password_hash(password_settings: str, password_entered: str) -> (str):
@@ -967,51 +999,38 @@ def put(config: str, username: str, password: str, project: str,
     # Check user access to DP and project, and project to S3 delivery option
     user_id = check_access(login_info=user_info)
 
-    if not isinstance(user_id, str): 
-        raise DeliveryPortalException("User ID not set, cannot proceed with data delivery.")
-    else:
-        # Check for entered files. Exception raised if no data.
-        if not data and not pathfile:
-            raise DeliveryPortalException(
-                "No data to be uploaded. Specify individual files/folders using "
-                "the --data/-d option one or more times, or the --pathfile/-f. "
-                "For help: 'dp_api --help'"
-            )
-        else:
-            # Put all data in one tuple
-            data = all_data(data_tuple=data, data_file=pathfile)
+    if not isinstance(user_id, str):
+        raise DeliveryPortalException("User ID not set, "
+                                      "cannot proceed with data delivery.")
 
-            print(data)
-            sys.exit()
+    if not data and not pathfile:   # Check for entered files
+        raise DeliveryPortalException(
+            "No data to be uploaded. Specify individual files/folders using "
+            "the --data/-d option one or more times, or the --pathfile/-f. "
+            "For help: 'dp_api --help'"
+        )
+    else:
+        data += all_data(data_file=pathfile)  # Put all data in one tuple
+
+        if not data:    # Should never be true - just precaution
+            raise DeliveryPortalException("Data tuple empty. Nothing to upload."
+                                          "Cancelling delivery.")
 
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
     temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
-    dirs = tuple(p for p in [temp_dir,
-                             f"{temp_dir}/files",
-                             f"{temp_dir}/keys",
-                             f"{temp_dir}/meta",
-                             f"{temp_dir}/logs"]) + \
-        tuple(f"{temp_dir}/files/{p.split('/')[-1].split('.')[0]}"
-              for p in data)
-    for d_ in dirs:
-        try:
-            os.mkdir(d_)
-        except OSError as ose:
-            sys.exit(f"The directory '{d_}' could not be created: {ose}"
-                     "Cancelling delivery.")
+    dirs_created = create_directories(tdir=temp_dir, paths=data)
+    print(dirs_created)
+    # dirs_deleted = delete_directories()
 
     logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
                         level=logging.DEBUG)
-    logging.debug("debug")
-    logging.info("info")
-    logging.warning("warning")
-    logging.error("error")
-    logging.critical("critical")
 
-    ### Process data ###
+    ### Begin data processing ###
     for path in data:
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
+        click.echo(sub_dir)
+        sys.exit()
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path,
                                              temp_dir=temp_dir,

@@ -508,15 +508,22 @@ def hash_dir(dir_path: str, key) -> str:
     return dir_hmac.finalize().hex()
 
 
-def file_type(fpath: str) -> str:
-    """Guesses file mime based on extension"""
+def file_type(fpath: str) -> (str, str, bool, str):
+    """Guesses file mime. 
+    
+    Args: 
+        fpath: Path to file.
+
+    """
+    # TODO: SAVE
 
     mime = None             # file mime
+    extension = ""
     is_compressed = False
-    comp_alg = ""
+    comp_alg = ""   # compression algorithm 
 
     if os.path.isdir(fpath):
-        return "folder", is_compressed
+        mime = "folder"
     else:
         mime, encoding = mimetypes.guess_type(fpath)    # Guess file type
         extension = os.path.splitext(fpath)[1]          # File extension
@@ -530,16 +537,30 @@ def file_type(fpath: str) -> str:
         if mime is None:
             if extension in mimetypes.types_map:
                 mime = mimetypes.types_map[extension]
+            elif extension == "": 
+                mime = None
+            elif extension in (".abi", ".ab1"):
+                mime = "ngs-data/abi"
+            elif extension in (".embl"):
+                mime = "ngs-data/embl"
+            elif extension in (".clust", ".cw", ".clustal"):
+                mime = "ngs-data/clustal"
+            elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
+                mime = "ngs-data/fasta"
+            elif extension in (".fastq", ".fq"):
+                mime = "ngs-data/fastq"
+            elif extension in (".gbk", ".genbank", ".gb"):
+                mime = "ngs-data/genbank"
+            elif extension in (".paup", ".nexus"):
+                mime = "ngs-data/nexus"
             else:
-                mime = ngs_type(extension=extension)
-
-                if mime is None:
-                    logging.warning("Some warning message here.")
+                mime = None
+                click.echo(f"Warning! Could not detect file type for file {fpath}")
 
         return mime, extension, is_compressed, comp_alg
 
 
-def new_dir(filename: str, sub_dir: str, temp_dir: str, operation: str) -> str:
+def new_dir(filename: str, sub_dir: str, temp_dir: str, operation: str) -> (str):
     """Checks which dir to place file in"""
 
     ext = ""
@@ -560,7 +581,9 @@ def ngs_type(extension: str):
     """Checks if the file is of ngs type"""
 
     mime = ""
-    if extension in (".abi", ".ab1"):
+    if extension == "": 
+        mime = None
+    elif extension in (".abi", ".ab1"):
         mime = "ngs-data/abi"
     elif extension in (".embl"):
         mime = "ngs-data/embl"
@@ -580,16 +603,27 @@ def ngs_type(extension: str):
     return mime
 
 
-def process_file(file: str, temp_dir: str, sub_dir: str = "", sensitive: bool = True) -> dict:
-    """Handles file specific compression, hashing and encryption"""
+def process_file(file: str, temp_dir: str, sub_dir: str = "") -> (dict):
+    """Process the files. This includes compression and encryption. 
+    
+    Args: 
+        file:   File to be uploaded 
+        temp_dir:   Temporary directory 
+        sub_dir:    Sub directory within temp_dir
+        
+    Returns: 
+        dict: Information about final files, checksums, errors etc. 
 
-    is_compressed = False                   # Saves info about compressed or not
-    is_encrypted = False                    # Saves info about encrypted or not
+    """
+    # TODO: SAVE
+
+    is_compressed = False               
+    is_encrypted = False                  
 
     fname = file.split('/')[-1]             # Get file or folder name
     mime, ext, is_compressed, \
         compression_algorithm = file_type(file)   # Check mime type
-    print(mime, is_compressed)
+    sys.exit()
     latest_path = ""                        # Latest file generated
 
     encryption_algorithm = ""               # Which package/algorithm
@@ -1011,7 +1045,8 @@ def put(config: str, username: str, password: str, project: str,
             "For help: 'dp_api --help'"
         )
     else:
-        data += all_data(data_file=pathfile)  # Put all data in one tuple
+        if pathfile is not None:
+            data += all_data(data_file=pathfile)  # Put all data in one tuple
 
         if not data:    # Should never be true - just precaution
             raise DeliveryPortalException("Data tuple empty. Nothing to upload."
@@ -1025,8 +1060,11 @@ def put(config: str, username: str, password: str, project: str,
         if os.path.exists(temp_dir):
             try:
                 shutil.rmtree(temp_dir)  # Remove all prev created folders
+                sys.exit(f"Temporary directory deleted. \n\n"
+                         "----DELIVERY CANCELLED---\n")  # and quit
             except OSError as ose:
-                sys.exit(f"Could not delete directory {temp_dir}: {ose}")
+                sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
+                         "----DELIVERY CANCELLED---\n")
     else:
         logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
                             level=logging.DEBUG)
@@ -1035,17 +1073,14 @@ def put(config: str, username: str, password: str, project: str,
     for path in data:
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
         click.echo(sub_dir)
-        sys.exit()
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path,
                                              temp_dir=temp_dir,
-                                             sub_dir=sub_dir,
-                                             sensitive=sensitive)
+                                             sub_dir=sub_dir)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path,
                                                temp_dir=temp_dir,
-                                               sub_dir=sub_dir,
-                                               sensitive=sensitive)
+                                               sub_dir=sub_dir)
         else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
                      "Have you entered the correct path?")

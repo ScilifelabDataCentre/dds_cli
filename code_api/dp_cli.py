@@ -124,20 +124,25 @@ class ECDHKeyPair:
 
 # FUNCTIONS ######################################################## FUNCTIONS #
 
-def all_data(data_tuple: tuple, data_file: str):
-    """Puts all data from tuple and file into one tuple"""
+def all_data(data_file: str) -> (tuple):
+    """Puts all data from tuple and file into one tuple.
+    
+    Args: 
+        data_file: Path to file containing paths to files which will be uploaded. 
 
-    # If both --data and --pathfile option --> all paths in data tuple
-    # If only --pathfile --> reads file and puts paths in data tuple
+    Returns: 
+        tuple: All paths to the files.
+
+    """
+
     try:
         if data_file:
             if os.path.exists(data_file):
                 with open(data_file, 'r') as pf:
-                    data_tuple += tuple(p for p in pf.read().splitlines())
+                    all_data_ = tuple(p for p in pf.read().splitlines())
+                return all_data_
     except DataException as de:
         sys.exit(f"Could not create data tuple: {de}")
-    else:
-        return data_tuple
 
 
 def check_access(login_info: dict) -> (str):
@@ -737,7 +742,7 @@ def project_access(user: str, project: str) -> (bool):
     couch = couch_connect()    # Connect to database
     user_projects = couch['user_db'][user]['projects']
 
-    if project not in proj_couch['project_db']:
+    if project not in couch['project_db']:
         raise CouchDBException(f"The project {project} does not exist.")
     else:
         if project not in user_projects:
@@ -962,20 +967,22 @@ def put(config: str, username: str, password: str, project: str,
     # Check user access to DP and project, and project to S3 delivery option
     user_id = check_access(login_info=user_info)
 
-    # hit har jag kommit 2020-02-03
-    # Check for entered files. Exception raised if no data.
-    if not data and not pathfile:
-        raise DeliveryPortalException(
-            "No data to be uploaded. Specify individual files/folders using "
-            "the --data/-d option one or more times, or the --pathfile/-f. "
-            "For help: 'dp_api --help'"
-        )
+    if not isinstance(user_id, str): 
+        raise DeliveryPortalException("User ID not set, cannot proceed with data delivery.")
     else:
-        # Put all data in one tuple
-        data = all_data(data_tuple=data, data_file=pathfile)
+        # Check for entered files. Exception raised if no data.
+        if not data and not pathfile:
+            raise DeliveryPortalException(
+                "No data to be uploaded. Specify individual files/folders using "
+                "the --data/-d option one or more times, or the --pathfile/-f. "
+                "For help: 'dp_api --help'"
+            )
+        else:
+            # Put all data in one tuple
+            data = all_data(data_tuple=data, data_file=pathfile)
 
-    print(data)
-    sys.exit()
+            print(data)
+            sys.exit()
 
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")

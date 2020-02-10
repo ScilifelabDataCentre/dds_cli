@@ -263,16 +263,16 @@ def couch_disconnect(couch, token):
 
 def create_directories(tdir: str, paths: tuple) -> (bool):
     """Creates all temporary directories.
-    
+
     Args: 
         tdir: Path to new temporary directory
         paths: Tuple containing all data-file paths
-        
+
     Returns: 
         bool: True if directories created
     """
     # TODO: SAVE
-    
+
     dirs = tuple(p for p in [tdir,
                              f"{tdir}/files",
                              f"{tdir}/keys",
@@ -287,9 +287,10 @@ def create_directories(tdir: str, paths: tuple) -> (bool):
         except OSError as ose:
             click.echo(f"The directory '{d_}' could not be created: {ose}"
                        "Cancelling delivery. Deleting temporary directory.")
-            return False 
+            return False
 
     return True
+
 
 def dp_access(username: str, password: str, upload: bool) -> (bool, str):
     """Check existance of user in database and the password validity."""
@@ -1020,11 +1021,15 @@ def put(config: str, username: str, password: str, project: str,
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
     temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
     dirs_created = create_directories(tdir=temp_dir, paths=data)
-    print(dirs_created)
-    # dirs_deleted = delete_directories()
-
-    logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
-                        level=logging.DEBUG)
+    if not dirs_created:  # If error when creating one of the folders
+        if os.path.exists(temp_dir):
+            try:
+                shutil.rmtree(temp_dir)  # Remove all prev created folders
+            except OSError as ose:
+                sys.exit(f"Could not delete directory {temp_dir}: {ose}")
+    else:
+        logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
+                            level=logging.DEBUG)
 
     ### Begin data processing ###
     for path in data:

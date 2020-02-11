@@ -1,3 +1,10 @@
+# CHECK CALLING FUNCTION
+cur_com = sys._getframe().f_code.co_name  # The current command, "put" here
+# The calling function ("invoke" in this case)
+cal_com = sys._getframe().f_back.f_code.co_name
+
+
+# ENCRYPTION KEY CLASS
 class ECDHKeyPair:
     """Public key pair.
     Algorithm: Eliptic Curve Diffie-Hellman (Curve25519)"""

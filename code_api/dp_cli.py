@@ -45,6 +45,8 @@ from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     EncryptionError, HashException, SecurePasswordException, StreamingError
 
 import boto3
+from boto3.s3.transfer import TransferConfig
+import smart_open
 
 
 # CONFIG ############################################################## CONFIG #
@@ -65,84 +67,84 @@ COMPRESSED_FORMATS = dict()
 
 # FUNCTIONS ######################################################## FUNCTIONS #
 
-def all_data(data_file: str) -> (tuple):
-    """Puts all data from data file into one tuple.
+# Cryptography # # # # # # # # # # # # # # # # # # # # # # # # # Cryptography #
+
+def secure_password_hash(password_settings: str, password_entered: str) -> (str):
+    """Generates secure password hash.
 
     Args: 
-        data_file: Path to file containing paths to files which will be uploaded. 
+        password_settings: String containing the salt, length of hash, n-exponential, 
+                            r and p variables. Taken from database. Separated by '$'. 
+        password_entered: The user-specified password. 
 
     Returns: 
-        tuple: All paths to the files.
+        str: The derived hash from the user-specified password. 
 
     """
-    # TODO: SAVE
 
-    try:
-        if data_file:
-            if os.path.exists(data_file):
-                with open(data_file, 'r') as pf:
-                    all_data_ = tuple(p for p in pf.read().splitlines())
-                return all_data_
-    except DataException as de:
-        sys.exit(f"Could not create data tuple: {de}")
+    settings = password_settings.split("$")
+    for i in [1, 2, 3, 4]:
+        settings[i] = int(settings[i])
+
+    kdf = Scrypt(salt=bytes.fromhex(settings[0]),
+                 length=settings[1],
+                 n=2**settings[2],
+                 r=settings[3],
+                 p=settings[4],
+                 backend=default_backend())
+
+    return (kdf.derive(password_entered.encode('utf-8'))).hex()
 
 
-def check_access(login_info: dict) -> (str):
-    """Checks the users access to the delivery portal and the specified project,
-    and the projects S3 access.
+# Database-related # # # # # # # # # # # # # # # # # # # # # Database-related #
 
-    Args: 
-        login_info: Dictionary containing username, password and project ID. 
+def couch_connect() -> (couchdb.client.Server):
+    """Connects to a couchdb interface. Currently hard-coded. 
 
     Returns: 
-        str: User ID connected to the specified user. 
+        couchdb.client.Server: CouchDB server instance. 
 
     """
-    # TODO: SAVE
-
-    username = login_info['username']
-    password = login_info['password']
-    project = login_info['project']
 
     try:
-        user_db = couch_connect()['user_db']    # Connect to user database
+        couch = couchdb.Server('http://delport:delport@localhost:5984/')
     except CouchDBException as cdbe:
-        sys.exit(f"Could not collect database 'user_db'. {cdbe}")
+        sys.exit(f"Database login failed. {cdbe}")
     else:
-        for id_ in user_db:  # Search the database for the user
-            if username == user_db[id_]['username']:  # If found check password
-                if (user_db[id_]['password']['hash'] !=
-                        secure_password_hash(password_settings=user_db[id_]['password']['settings'],
-                                             password_entered=password)):
-                    raise DeliveryPortalException("Wrong password. "
-                                                  "Access to Delivery Portal denied.")
-                else:
-                    calling_command = sys._getframe().f_back.f_code.co_name
-                    # If facility is uploading or researcher is downloading, access is granted
-                    if (user_db[id_]['role'] == 'facility' and calling_command == "put") or \
-                            (user_db[id_]['role'] == 'researcher' and calling_command == "get"):
-                        # Check project access
-                        project_access_granted = project_access(user=id_,
-                                                                project=project)
-                        if not project_access_granted:
-                            raise DeliveryPortalException(
-                                "Project access denied. Cancelling upload."
-                            )
-                        else:
-                            return id_
-
-                    else:
-                        raise DeliveryOptionException("Chosen upload/download "
-                                                      "option not granted. "
-                                                      f"You chose: '{calling_command}'. "
-                                                      "For help: 'dp_api --help'")
-        # The user not found.
-        raise CouchDBException("Username not found in database. "
-                               "Access to Delivery Portal denied.")
+        return couch
 
 
-def compression_dict():
-    """Returns a list of compressed-format mime types"""
+def get_current_time() -> (str):
+    """Gets the current time. Formats timestamp.
+
+    Returns: 
+        str: Timestamp in format 'YY-MM-DD_HH-MM-SS'
+
+    """
+
+    now = datetime.datetime.now()
+    timestamp = ""
+    sep = ""
+
+    for t in (now.year, "-", now.month, "-", now.day, " ",
+              now.hour, ":", now.minute, ":", now.second):
+        if len(str(t)) == 1 and isinstance(t, int):
+            timestamp += f"0{t}"
+        else:
+            timestamp += f"{t}"
+
+    return timestamp
+
+
+# Formats # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # Formats #
+
+def compression_dict() -> (dict):
+    """Creates a dictionary of compressed types.
+
+    Returns:
+        dict: All mime types regarded as compressed formats
+
+    """
 
     extdict = mimetypes.encodings_map   # Original dict with compressed formats
 
@@ -160,90 +162,18 @@ def compression_dict():
     return extdict
 
 
-def couch_connect() -> (couchdb.client.Server):
-    """Connects to a couchdb interface. Currently hard-coded. 
-
-    Returns: 
-        couchdb.client.Server: CouchDB server instance. 
-
-    """
-    # TODO: SAVE
-
-    try:
-        couch = couchdb.Server('http://delport:delport@localhost:5984/')
-    except CouchDBException as cdbe:
-        sys.exit(f"Database login failed. {cdbe}")
-    else:
-        return couch
-
-
-def create_directories(tdir: str, paths: tuple) -> (bool):
-    """Creates all temporary directories.
-
-    Args: 
-        tdir: Path to new temporary directory
-        paths: Tuple containing all data-file paths
-
-    Returns: 
-        bool: True if directories created
-    """
-    # TODO: SAVE
-
-    dirs = tuple(p for p in [tdir,
-                             f"{tdir}/files",
-                             f"{tdir}/keys",
-                             f"{tdir}/meta",
-                             f"{tdir}/logs"]) + \
-        tuple(f"{tdir}/files/{p.split('/')[-1].split('.')[0]}"
-              for p in paths)
-
-    for d_ in dirs:
-        try:
-            os.mkdir(d_)
-        except OSError as ose:
-            click.echo(f"The directory '{d_}' could not be created: {ose}"
-                       "Cancelling delivery. Deleting temporary directory.")
-            return False
-
-    return True
-
-
-def get_current_time() -> (str):
-    """Gets the current time. Formats timestamp.
-    
-    Returns: 
-        str: Timestamp in format 'YY-MM-DD_HH-MM-SS'
-        
-    """
-    # TODO: SAVE
-
-    now = datetime.datetime.now()
-    timestamp = ""
-    sep = ""
-
-    for t in (now.year, "-", now.month, "-", now.day, " ",
-              now.hour, ":", now.minute, ":", now.second):
-        if len(str(t)) == 1 and isinstance(t, int):
-            timestamp += f"0{t}"
-        else:
-            timestamp += f"{t}"
-
-    return timestamp
-
-
 def file_type(fpath: str) -> (str, str, bool, str):
     """Guesses file mime. 
-    
+
     Args: 
         fpath: Path to file.
 
     """
-    # TODO: SAVE
 
     mime = None             # file mime
     extension = None
     is_compressed = False
-    comp_alg = None   # compression algorithm 
+    comp_alg = None   # compression algorithm
 
     if os.path.isdir(fpath):
         mime = "folder"
@@ -260,7 +190,7 @@ def file_type(fpath: str) -> (str, str, bool, str):
         if mime is None:
             if extension in mimetypes.types_map:
                 mime = mimetypes.types_map[extension]
-            elif extension == "": 
+            elif extension == "":
                 mime = None
             elif extension in (".abi", ".ab1"):
                 mime = "ngs-data/abi"
@@ -278,157 +208,13 @@ def file_type(fpath: str) -> (str, str, bool, str):
                 mime = "ngs-data/nexus"
             else:
                 mime = None
-                click.echo(f"Warning! Could not detect file type for file {fpath}")
+                click.echo(
+                    f"Warning! Could not detect file type for file {fpath}")
 
         return mime, extension, is_compressed, comp_alg
 
 
-def process_file(file: str, temp_dir: str, sub_dir: str = "") -> (dict):
-    """Handles processing of files including compression and encryption. 
-    
-    Args: 
-        file:   File to be uploaded 
-        temp_dir:   Temporary directory 
-        sub_dir:    Sub directory within temp_dir
-        
-    Returns: 
-        dict: Information about final files, checksums, errors etc. 
-
-    """
-    # TODO: SAVE
-
-    is_compressed = False               
-    is_encrypted = False                  
-
-    fname = file.split('/')[-1]             # Get file or folder name
-    mime, ext, is_compressed, \
-        compression_algorithm = file_type(file)   # Check mime type
-
-    latest_path = ""                        # Latest file generated
-    encryption_algorithm = ""               # Which package/algorithm
-
-    hash_original = ""
-    hash_compressed = ""
-    hash_encrypted = ""
-
-    logging.info("Some success message here.")
-    return {"Final path": latest_path,
-            "Compression": {
-                "Compressed": is_compressed,
-                "Algorithm": compression_algorithm,
-                "Checksum": hash_compressed
-            },
-            "Encryption": {
-                "Encrypted": is_encrypted,
-                "Algorithm": encryption_algorithm,
-                "Checksum": hash_encrypted
-            }
-            }
-
-
-def process_folder(folder: str, temp_dir: str, sub_dir: str = "") -> (dict):
-    """Handles processing of folders. 
-    Opens folders and redirects to file processing function. 
-    
-    Args: 
-        folder: Path to folder
-        temp_dir: Temporary directory
-        sub_dir: Current sub directory within temp_dir
-
-    Returns: 
-        dict: Information abut final files, checksums, errors etc.
-
-    """
-    # TODO: SAVE
-
-    result_dict = {folder: list()}   # Dict for saving paths and hashes
-
-    # Iterate through all folders and files recursively
-    for path, dirs, files in os.walk(folder):
-        for file in sorted(files):  # For all files in folder root
-            # Compress files and add to dict
-            result_dict[folder].append(process_file(file=os.path.join(path, file),
-                                                    temp_dir=temp_dir,
-                                                    sub_dir=sub_dir))
-        for dir_ in sorted(dirs):   # For all subfolders in folder root
-            # "Open" subfolder folder (the current method, recursive)
-            result_dict[folder].append(process_folder(folder=os.path.join(path, dir_),
-                                                      temp_dir=temp_dir,
-                                                      sub_dir=sub_dir))
-        break
-
-    return result_dict
-
-
-def project_access(user: str, project: str) -> (bool):
-    """Checks the users access to a specific project.
-
-    Args: 
-        user: User ID.
-        project: ID of project that the user is requiring access to.
-
-    Returns: 
-        bool: True if project access granted
-
-    """
-    # TODO: SAVE
-
-    couch = couch_connect()    # Connect to database
-    user_projects = couch['user_db'][user]['projects']
-
-    if project not in couch['project_db']:
-        raise CouchDBException(f"The project {project} does not exist.")
-    else:
-        if project not in user_projects:
-            raise DeliveryOptionException("You do not have access to the specified project "
-                                          f"{project}. Aborting upload.")
-        else:
-            project_db = couch['project_db'][project]
-            # If the project exists but does not have any 'project_info'
-            # raise exception and quit
-            if 'project_info' not in project_db:
-                raise CouchDBException("There is no 'project_info' recorded "
-                                       "for the specified project.")
-            else:
-                # If the project delivery option is not S3, raise except and quit
-                if 'delivery_option' not in project_db['project_info']:
-                    raise CouchDBException("A delivery option has not been "
-                                           "specified for this project. ")
-                else:
-                    if not project_db['project_info']['delivery_option'] == "S3":
-                        raise DeliveryOptionException("The specified project does "
-                                                      "not have access to S3 delivery.")
-                    else:
-                        return True  # No exceptions - access granted
-
-
-def secure_password_hash(password_settings: str, password_entered: str) -> (str):
-    """Generates secure password hash.
-
-    Args: 
-        password_settings: String containing the salt, length of hash, n-exponential, 
-                            r and p variables. Taken from database. Separated by '$'. 
-        password_entered: The user-specified password. 
-
-    Returns: 
-        str: The derived hash from the user-specified password. 
-
-    """
-    # TODO: SAVE
-
-    settings = password_settings.split("$")
-    for i in [1, 2, 3, 4]:
-        settings[i] = int(settings[i])
-
-    kdf = Scrypt(salt=bytes.fromhex(settings[0]),
-                 length=settings[1],
-                 n=2**settings[2],
-                 r=settings[3],
-                 p=settings[4],
-                 backend=default_backend())
-
-    return (kdf.derive(password_entered.encode('utf-8'))).hex()
-
+# Login # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # Login #
 
 def verify_user_credentials(config: str, username: str, password: str, project: str) -> (str, str, str):
     """Checks that the correct options and credentials are entered.
@@ -451,8 +237,6 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
             Project ID (str)
 
     """
-
-    # TODO: SAVE
 
     credentials = dict()
 
@@ -495,6 +279,280 @@ def verify_user_credentials(config: str, username: str, password: str, project: 
                     project
 
 
+def check_access(login_info: dict) -> (str):
+    """Checks the users access to the delivery portal and the specified project,
+    and the projects S3 access.
+
+    Args: 
+        login_info: Dictionary containing username, password and project ID. 
+
+    Returns: 
+        str: User ID connected to the specified user. 
+
+    """
+
+    username = login_info['username']
+    password = login_info['password']
+    project = login_info['project']
+
+    try:
+        user_db = couch_connect()['user_db']    # Connect to user database
+    except CouchDBException as cdbe:
+        sys.exit(f"Could not collect database 'user_db'. {cdbe}")
+    else:
+        for id_ in user_db:  # Search the database for the user
+            if username == user_db[id_]['username']:  # If found check password
+                if (user_db[id_]['password']['hash'] !=
+                        secure_password_hash(password_settings=user_db[id_]['password']['settings'],
+                                             password_entered=password)):
+                    raise DeliveryPortalException("Wrong password. "
+                                                  "Access to Delivery Portal denied.")
+                else:
+                    calling_command = sys._getframe().f_back.f_code.co_name
+                    # If facility is uploading or researcher is downloading, access is granted
+                    if (user_db[id_]['role'] == 'facility' and calling_command == "put") or \
+                            (user_db[id_]['role'] == 'researcher' and calling_command == "get"):
+                        # Check project access
+                        project_access_granted = project_access(user=id_,
+                                                                project=project)
+                        if not project_access_granted:
+                            raise DeliveryPortalException(
+                                "Project access denied. Cancelling upload."
+                            )
+                        else:
+                            return id_
+
+                    else:
+                        raise DeliveryOptionException("Chosen upload/download "
+                                                      "option not granted. "
+                                                      f"You chose: '{calling_command}'. "
+                                                      "For help: 'dp_api --help'")
+        # The user not found.
+        raise CouchDBException("Username not found in database. "
+                               "Access to Delivery Portal denied.")
+
+
+def project_access(user: str, project: str) -> (bool):
+    """Checks the users access to a specific project.
+
+    Args: 
+        user: User ID.
+        project: ID of project that the user is requiring access to.
+
+    Returns: 
+        bool: True if project access granted
+
+    """
+
+    couch = couch_connect()    # Connect to database
+    user_projects = couch['user_db'][user]['projects']
+
+    if project not in couch['project_db']:
+        raise CouchDBException(f"The project {project} does not exist.")
+    else:
+        if project not in user_projects:
+            raise DeliveryOptionException("You do not have access to the specified project "
+                                          f"{project}. Aborting upload.")
+        else:
+            project_db = couch['project_db'][project]
+            # If the project exists but does not have any 'project_info'
+            # raise exception and quit
+            if 'project_info' not in project_db:
+                raise CouchDBException("There is no 'project_info' recorded "
+                                       "for the specified project.")
+            else:
+                # If the project delivery option is not S3, raise except and quit
+                if 'delivery_option' not in project_db['project_info']:
+                    raise CouchDBException("A delivery option has not been "
+                                           "specified for this project. ")
+                else:
+                    if not project_db['project_info']['delivery_option'] == "S3":
+                        raise DeliveryOptionException("The specified project does "
+                                                      "not have access to S3 delivery.")
+                    else:
+                        return True  # No exceptions - access granted
+
+
+# Path processing # # # # # # # # # # # # # # # # # # # # # # Path processing #
+
+def all_data(data_file: str) -> (tuple):
+    """Puts all data from data file into one tuple.
+
+    Args: 
+        data_file: Path to file containing paths to files which will be uploaded. 
+
+    Returns: 
+        tuple: All paths to the files.
+
+    """
+
+    try:
+        if data_file:
+            if os.path.exists(data_file):
+                with open(data_file, 'r') as pf:
+                    all_data_ = tuple(p for p in pf.read().splitlines())
+                return all_data_
+    except DataException as de:
+        sys.exit(f"Could not create data tuple: {de}")
+
+
+def create_directories(tdir: str, paths: tuple) -> (bool):
+    """Creates all temporary directories.
+
+    Args: 
+        tdir: Path to new temporary directory
+        paths: Tuple containing all data-file paths
+
+    Returns: 
+        bool: True if directories created
+    """
+
+    dirs = tuple(p for p in [tdir,
+                             f"{tdir}/files",
+                             f"{tdir}/keys",
+                             f"{tdir}/meta",
+                             f"{tdir}/logs"]) + \
+        tuple(f"{tdir}/files/{p.split('/')[-1].split('.')[0]}"
+              for p in paths)
+
+    for d_ in dirs:
+        try:
+            os.mkdir(d_)
+        except OSError as ose:
+            click.echo(f"The directory '{d_}' could not be created: {ose}"
+                       "Cancelling delivery. Deleting temporary directory.")
+            return False
+
+    return True
+
+
+def process_file(file: str, s3_resource, user: dict, temp_dir: str, sub_dir: str = "") -> (dict):
+    """Handles processing of files including compression and encryption. 
+
+    Args: 
+        file:   File to be uploaded 
+        temp_dir:   Temporary directory 
+        sub_dir:    Sub directory within temp_dir
+        s3_resource: The users S3 login credentials 
+
+    Returns: 
+        dict: Information about final files, checksums, errors etc. 
+
+    """
+
+    is_compressed = False
+    is_encrypted = False
+
+    encryption_algorithm = ""               # Which package/algorithm
+
+    hash_original = ""
+    hash_compressed = ""
+    hash_encrypted = ""
+
+    mime, ext, is_compressed, \
+        compression_algorithm = file_type(file)   # Check mime type
+
+    # Latest file generated
+
+    filetoupload = os.path.abspath(file)
+    filename = os.path.basename(filetoupload)
+    print("Full path: ", filetoupload)
+    print("Filename: ", filename)
+    # Generate file checksum
+    # ---
+
+    # Compress
+    # ---
+
+    # Generate compressed file checksum
+    # ---
+
+    # Encrypt
+    # ---
+
+    # Generate encrypted file checksum
+    # ---
+
+    # Upload file
+    # Check if bucket exists
+    bucketname = f"project_{user['project']}"
+    bucket = s3_resource.Bucket(bucketname)
+    MB = 1024 ** 2
+    GB = 1024 ** 3
+    config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
+    print(s3_resource.buckets.all())
+    if bucket in s3_resource.buckets.all():
+        print("yess")
+        objs = list(bucket.objects.filter())
+        for stuff in objs:
+            print(stuff.key)
+        # if filename in bucket.objects.all():
+            # print("the file already exists")
+        # else: 
+            # s3_resource.meta.client.upload_file(filetoupload, bucketname, filename, Config=config)
+
+    # Upload metadata to database
+    # ---
+
+    logging.info("Some success message here.")
+    # return {"Final path": latest_path,
+    #         "Compression": {
+    #             "Compressed": is_compressed,
+    #             "Algorithm": compression_algorithm,
+    #             "Checksum": hash_compressed
+    #         },
+    #         "Encryption": {
+    #             "Encrypted": is_encrypted,
+    #             "Algorithm": encryption_algorithm,
+    #             "Checksum": hash_encrypted
+    #         }
+    #         }
+
+
+def process_folder(folder: str, s3_resource, user: dict, temp_dir: str, sub_dir: str = "") -> (dict):
+    """Handles processing of folders. 
+    Opens folders and redirects to file processing function. 
+
+    Args: 
+        folder: Path to folder
+        temp_dir: Temporary directory
+        sub_dir: Current sub directory within temp_dir
+        s3_resource: 
+
+    Returns: 
+        dict: Information abut final files, checksums, errors etc.
+
+    """
+
+    result_dict = {folder: list()}   # Dict for saving paths and hashes
+
+    # Iterate through all folders and files recursively
+    for path, dirs, files in os.walk(folder):
+        for file in sorted(files):  # For all files in folder root
+            # Compress files and add to dict
+            # result_dict[folder].append(process_file(file=os.path.join(path, file),
+            #                                         temp_dir=temp_dir,
+                                                    # sub_dir=sub_dir))
+            process_file(file=os.path.join(path, file),
+                         s3_resource=s3_resource,
+                         user=user,
+                         temp_dir=temp_dir,
+                         sub_dir=sub_dir)
+        for dir_ in sorted(dirs):   # For all subfolders in folder root
+            # "Open" subfolder folder (the current method, recursive)
+            result_dict[folder].append(process_folder(folder=os.path.join(path, dir_),
+                                                      s3_resource=s3_resource,
+                                                      user=user,
+                                                      temp_dir=temp_dir,
+                                                      sub_dir=sub_dir))
+
+            # Create folder in s3 bucket
+            # code here
+        break
+
+    return result_dict
+
+
 # MAIN ################################################################## MAIN #
 
 @click.group()
@@ -533,10 +591,6 @@ def cli():
 def put(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
-
-    cur_com = sys._getframe().f_code.co_name  # The current command, "put" here
-    # The calling function ("invoke" in this case)
-    cal_com = sys._getframe().f_back.f_code.co_name
 
     upload_path = dict()    # format: {original-file:file-to-be-uploaded}
     hash_dict = dict()      # format: {original-file:hmac}
@@ -586,27 +640,56 @@ def put(config: str, username: str, password: str, project: str,
         logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
                             level=logging.DEBUG)
 
+    # S3 config
+    path = Path(os.getcwd()).parent
+    print(f"{path}/s3_config.json")
+
+    with open(f"{path}/s3_config.json") as f:
+        s3creds = json.load(f)
+
+    access_key = s3creds['access_key']
+    secret_key = s3creds['secret_key']
+    endpoint_url = s3creds['endpoint_url']
+
+    s3_resource = boto3.resource(
+        service_name='s3',
+        endpoint_url=endpoint_url,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+    )
+
+    fin = open()
+    # s3_session = boto3.Session(
+    #     service_name='s3',
+    #     endpoint_url=endpoint_url,
+    #     aws_access_key_id=access_key,
+    #     aws_secret_access_key=secret_key,
+    # )
+    sys.exit()
+
     ### Begin data processing ###
     for path in data:
         sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
         click.echo(sub_dir)
         if os.path.isfile(path):    # <---- FILES
             upload_path[path] = process_file(file=path,
+                                             s3_resource=s3_resource,
+                                             user=user_info,
                                              temp_dir=temp_dir,
                                              sub_dir=sub_dir)
         elif os.path.isdir(path):   # <---- FOLDERS
             upload_path[path] = process_folder(folder=path,
+                                               s3_resource=s3_resource,
+                                               user=user_info,
                                                temp_dir=temp_dir,
                                                sub_dir=sub_dir)
         else:                       # <---- TYPE UNKNOWN
             sys.exit(f"Path type {path} not identified."
                      "Have you entered the correct path?")
 
-    print(upload_path)
+    # print("Files to upload: \n", upload_path)
 
-    ### Upload process here ###
-
-    ### Database update here ###
+            ### Database update here ###
 
 
 @cli.command()

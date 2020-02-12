@@ -641,10 +641,9 @@ def put(config: str, username: str, password: str, project: str,
                             level=logging.DEBUG)
 
     # S3 config
-    path = Path(os.getcwd()).parent
-    print(f"{path}/s3_config.json")
-
-    with open(f"{path}/s3_config.json") as f:
+    s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
+    print(s3path)
+    with open(s3path) as f:
         s3creds = json.load(f)
 
     access_key = s3creds['access_key']

@@ -48,7 +48,9 @@ import boto3
 from boto3.s3.transfer import TransferConfig
 import smart_open
 
-from multiprocessing import Pool 
+from multiprocessing import Pool
+
+import time
 
 # CONFIG ############################################################## CONFIG #
 
@@ -397,7 +399,7 @@ def all_data(data_file: str) -> (tuple):
         sys.exit(f"Could not create data tuple: {de}")
 
 
-def create_directories(tdir: str, paths: tuple) -> (bool):
+def create_directories(tdir: str, paths: tuple) -> (bool, tuple):
     """Creates all temporary directories.
 
     Args: 
@@ -405,7 +407,10 @@ def create_directories(tdir: str, paths: tuple) -> (bool):
         paths: Tuple containing all data-file paths
 
     Returns: 
-        bool: True if directories created
+        tuple: Tuple containing
+            
+            bool: True if directories created
+            tuple: All created directories 
     """
 
     dirs = tuple(p for p in [tdir,
@@ -413,7 +418,7 @@ def create_directories(tdir: str, paths: tuple) -> (bool):
                              f"{tdir}/keys",
                              f"{tdir}/meta",
                              f"{tdir}/logs"]) + \
-        tuple(f"{tdir}/files/{p.split('/')[-1].split('.')[0]}"
+        tuple(f"{tdir}/files/{Path(p).stem}"
               for p in paths)
 
     for d_ in dirs:
@@ -424,7 +429,7 @@ def create_directories(tdir: str, paths: tuple) -> (bool):
                        "Cancelling delivery. Deleting temporary directory.")
             return False
 
-    return True
+    return True, dirs
 
 
 def process_file(file: str, s3_resource, user: dict, temp_dir: str, sub_dir: str = "") -> (dict):
@@ -476,41 +481,41 @@ def process_file(file: str, s3_resource, user: dict, temp_dir: str, sub_dir: str
 
     # Upload file
     # Check if bucket exists
-    bucketname = f"project_{user['project']}"
-    bucket = s3_resource.Bucket(bucketname)
-    MB = 1024 ** 2
-    GB = 1024 ** 3
-    config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
-    print(s3_resource.buckets.all())
-    if bucket in s3_resource.buckets.all():
-        print("yess")
-        objs = list(bucket.objects.filter())
-        for stuff in objs:
-            print(stuff.key)
+    # bucketname = f"project_{user['project']}"
+    # bucket = s3_resource.Bucket(bucketname)
+    # MB = 1024 ** 2
+    # GB = 1024 ** 3
+    # config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
+    # print(s3_resource.buckets.all())
+    # if bucket in s3_resource.buckets.all():
+    #     print("yess")
+    #     objs = list(bucket.objects.filter())
+    #     for stuff in objs:
+    #         print(stuff.key)
         # if filename in bucket.objects.all():
             # print("the file already exists")
-        # else: 
+        # else:
             # s3_resource.meta.client.upload_file(filetoupload, bucketname, filename, Config=config)
 
     # Upload metadata to database
     # ---
 
     logging.info("Some success message here.")
-    # return {"Final path": latest_path,
-    #         "Compression": {
-    #             "Compressed": is_compressed,
-    #             "Algorithm": compression_algorithm,
-    #             "Checksum": hash_compressed
-    #         },
-    #         "Encryption": {
-    #             "Encrypted": is_encrypted,
-    #             "Algorithm": encryption_algorithm,
-    #             "Checksum": hash_encrypted
-    #         }
-    #         }
+    return {"Final path": file,
+            "Compression": {
+                "Compressed": is_compressed,
+                "Algorithm": compression_algorithm,
+                "Checksum": hash_compressed
+            },
+            "Encryption": {
+                "Encrypted": is_encrypted,
+                "Algorithm": encryption_algorithm,
+                "Checksum": hash_encrypted
+            }
+            }
 
 
-def process_folder(folder: str, s3_resource, user: dict, temp_dir: str, sub_dir: str = "") -> (dict):
+def process_folder(folder: str, s3_resource, thepool, user: dict, temp_dir: str, sub_dir: str = "") -> (dict):
     """Handles processing of folders. 
     Opens folders and redirects to file processing function. 
 
@@ -553,6 +558,12 @@ def process_folder(folder: str, s3_resource, user: dict, temp_dir: str, sub_dir:
 
     return result_dict
 
+
+# Testing # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # Testing #
+
+def testfunction(number):
+    print(number)
+    
 
 # MAIN ################################################################## MAIN #
 
@@ -617,10 +628,13 @@ def put(config: str, username: str, password: str, project: str,
             "For help: 'dp_api --help'"
         )
     else:
-        # TODO: Add check for if the same path appears in data and pathfile
         if pathfile is not None:
             data += all_data(data_file=pathfile)  # Put all data in one tuple
 
+            for element in data:
+                if data.count(element) != 1:
+                    raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
+                                                    "please remove path dublicates.")
         if not data:    # Should never be true - just precaution
             raise DeliveryPortalException("Data tuple empty. Nothing to upload."
                                           "Cancelling delivery.")
@@ -628,7 +642,7 @@ def put(config: str, username: str, password: str, project: str,
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
     temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
-    dirs_created = create_directories(tdir=temp_dir, paths=data)
+    dirs_created, dirs = create_directories(tdir=temp_dir, paths=data)
     if not dirs_created:  # If error when creating one of the folders
         if os.path.exists(temp_dir):
             try:
@@ -658,46 +672,64 @@ def put(config: str, username: str, password: str, project: str,
         aws_secret_access_key=secret_key,
     )
 
-    GB = 1024 ** 3
-    config = TransferConfig(multipart_threshold=5*GB)
+    # GB = 1024 ** 3
+    # config = TransferConfig(multipart_threshold=5*GB)
 
-    s3_resource.meta.client.upload_file("requirements.txt", 'project1_bucket', 'uploadedfile.txt', Config=config)
-    
-    s3_resource.meta.client.download_file("project1_bucket", "uploadedfile.txt", "lol.txt", Config=config)
-    
-    print(s3_resource.meta.client.get_bucket_acl(Bucket='project1_bucket'))
+    # s3_resource.meta.client.upload_file(
+    #     "requirements.txt", 'project1_bucket', 'uploadedfile.txt', Config=config)
 
-    obj = s3_resource.Object(bucket_name='project1_bucket', key='uploadedfile.txt')
-    response = obj.get()
-    data = response['Body'].read()
-    print(data)
+    # s3_resource.meta.client.download_file(
+    #     "project1_bucket", "uploadedfile.txt", "lol.txt", Config=config)
 
-    obj = (s3_resource.Bucket('project1_bucket')).Object(key='new_file.txt')
-    print(obj.bucket_name)
-    print(obj.key)
+    # print(s3_resource.meta.client.get_bucket_acl(Bucket='project1_bucket'))
 
-    sys.exit()
+    # obj = s3_resource.Object(
+    #     bucket_name='project1_bucket', key='uploadedfile.txt')
+    # response = obj.get()
+    # resp = response['Body'].read()
+    # print(resp)
+
+    # obj = (s3_resource.Bucket('project1_bucket')).Object(key='new_file.txt')
+    # print(obj.bucket_name)
+    # print(obj.key)
 
     ### Begin data processing ###
-    for path in data:
-        sub_dir = f"{temp_dir}/files/{path.split('/')[-1].split('.')[0]}"
-        click.echo(sub_dir)
-        if os.path.isfile(path):    # <---- FILES
-            upload_path[path] = process_file(file=path,
-                                             s3_resource=s3_resource,
-                                             user=user_info,
-                                             temp_dir=temp_dir,
-                                             sub_dir=sub_dir)
-        elif os.path.isdir(path):   # <---- FOLDERS
-            upload_path[path] = process_folder(folder=path,
-                                               s3_resource=s3_resource,
-                                               user=user_info,
-                                               temp_dir=temp_dir,
-                                               sub_dir=sub_dir)
-        else:                       # <---- TYPE UNKNOWN
-            sys.exit(f"Path type {path} not identified."
-                     "Have you entered the correct path?")
+    # Create pool
+    with Pool(processes=os.cpu_count()) as processing_pool: 
+        # for i in range(40): 
+        #     processing_pool.apply_async(testfunction, args=(i, ))
 
+
+        # if file do something in pool
+        # if folder open
+        for path in data:
+            print("Tempdir: ", temp_dir)
+            print("Path: ", path)
+            print(str(Path(path).stem))
+            sub_dir = f"{temp_dir}/files/{Path(path).stem}" 
+            print("Sub_dir: ", sub_dir)
+            
+            # Cancel if directory not previously created 
+            if sub_dir not in dirs: 
+                raise OSError(f"Directory {sub_dir} does not exist. Cancelling upload.")
+
+            if os.path.isfile(path):    # <---- FILES
+                result = processing_pool.apply_async(process_file, args=(path, s3_resource, user_info, temp_dir, sub_dir, ))
+            elif os.path.isdir(path):   # <---- FOLDERS
+                upload_path[path] = process_folder(folder=path,
+                                                s3_resource=s3_resource,
+                                                thepool=processing_pool, 
+                                                user=user_info,
+                                                temp_dir=temp_dir,
+                                                sub_dir=sub_dir)
+            else:                       # <---- TYPE UNKNOWN
+                sys.exit(f"Path type {path} not identified."
+                        "Have you entered the correct path?")
+
+            upload_path[path] = result.get()
+        processing_pool.close()
+        processing_pool.join()
+        print(upload_path)
     # print("Files to upload: \n", upload_path)
 
             ### Database update here ###

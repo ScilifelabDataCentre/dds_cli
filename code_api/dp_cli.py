@@ -48,6 +48,7 @@ import boto3
 from boto3.s3.transfer import TransferConfig
 import smart_open
 
+from multiprocessing import Pool 
 
 # CONFIG ############################################################## CONFIG #
 
@@ -616,6 +617,7 @@ def put(config: str, username: str, password: str, project: str,
             "For help: 'dp_api --help'"
         )
     else:
+        # TODO: Add check for if the same path appears in data and pathfile
         if pathfile is not None:
             data += all_data(data_file=pathfile)  # Put all data in one tuple
 
@@ -642,7 +644,6 @@ def put(config: str, username: str, password: str, project: str,
 
     # S3 config
     s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
-    print(s3path)
     with open(s3path) as f:
         s3creds = json.load(f)
 
@@ -657,13 +658,24 @@ def put(config: str, username: str, password: str, project: str,
         aws_secret_access_key=secret_key,
     )
 
-    fin = open()
-    # s3_session = boto3.Session(
-    #     service_name='s3',
-    #     endpoint_url=endpoint_url,
-    #     aws_access_key_id=access_key,
-    #     aws_secret_access_key=secret_key,
-    # )
+    GB = 1024 ** 3
+    config = TransferConfig(multipart_threshold=5*GB)
+
+    s3_resource.meta.client.upload_file("requirements.txt", 'project1_bucket', 'uploadedfile.txt', Config=config)
+    
+    s3_resource.meta.client.download_file("project1_bucket", "uploadedfile.txt", "lol.txt", Config=config)
+    
+    print(s3_resource.meta.client.get_bucket_acl(Bucket='project1_bucket'))
+
+    obj = s3_resource.Object(bucket_name='project1_bucket', key='uploadedfile.txt')
+    response = obj.get()
+    data = response['Body'].read()
+    print(data)
+
+    obj = (s3_resource.Bucket('project1_bucket')).Object(key='new_file.txt')
+    print(obj.bucket_name)
+    print(obj.key)
+
     sys.exit()
 
     ### Begin data processing ###

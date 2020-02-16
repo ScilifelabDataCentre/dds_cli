@@ -48,7 +48,7 @@ import boto3
 from boto3.s3.transfer import TransferConfig
 import smart_open
 
-from multiprocessing import Pool
+import concurrent.futures
 
 import time
 
@@ -399,7 +399,7 @@ def all_data(data_file: str) -> (tuple):
         sys.exit(f"Could not create data tuple: {de}")
 
 
-def create_directories(tdir: str, paths: tuple) -> (bool, tuple):
+def create_directories(tdir: str) -> (bool, tuple):
     """Creates all temporary directories.
 
     Args: 
@@ -408,7 +408,7 @@ def create_directories(tdir: str, paths: tuple) -> (bool, tuple):
 
     Returns: 
         tuple: Tuple containing
-            
+
             bool: True if directories created
             tuple: All created directories 
     """
@@ -417,9 +417,7 @@ def create_directories(tdir: str, paths: tuple) -> (bool, tuple):
                              f"{tdir}/files",
                              f"{tdir}/keys",
                              f"{tdir}/meta",
-                             f"{tdir}/logs"]) + \
-        tuple(f"{tdir}/files/{Path(p).stem}"
-              for p in paths)
+                             f"{tdir}/logs"])
 
     for d_ in dirs:
         try:
@@ -492,10 +490,10 @@ def process_file(file: str, s3_resource, user: dict, temp_dir: str, sub_dir: str
     #     objs = list(bucket.objects.filter())
     #     for stuff in objs:
     #         print(stuff.key)
-        # if filename in bucket.objects.all():
-            # print("the file already exists")
-        # else:
-            # s3_resource.meta.client.upload_file(filetoupload, bucketname, filename, Config=config)
+    # if filename in bucket.objects.all():
+    # print("the file already exists")
+    # else:
+    # s3_resource.meta.client.upload_file(filetoupload, bucketname, filename, Config=config)
 
     # Upload metadata to database
     # ---
@@ -561,9 +559,9 @@ def process_folder(folder: str, s3_resource, thepool, user: dict, temp_dir: str,
 
 # Testing # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # Testing #
 
-def testfunction(number):
-    print(number)
-    
+def testfunction(file):
+    return f"{time.time()} \t {file}"
+
 
 # MAIN ################################################################## MAIN #
 
@@ -634,7 +632,7 @@ def put(config: str, username: str, password: str, project: str,
             for element in data:
                 if data.count(element) != 1:
                     raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
-                                                    "please remove path dublicates.")
+                                                  "please remove path dublicates.")
         if not data:    # Should never be true - just precaution
             raise DeliveryPortalException("Data tuple empty. Nothing to upload."
                                           "Cancelling delivery.")
@@ -642,7 +640,7 @@ def put(config: str, username: str, password: str, project: str,
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
     temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
-    dirs_created, dirs = create_directories(tdir=temp_dir, paths=data)
+    dirs_created, dirs = create_directories(tdir=temp_dir)
     if not dirs_created:  # If error when creating one of the folders
         if os.path.exists(temp_dir):
             try:
@@ -657,20 +655,20 @@ def put(config: str, username: str, password: str, project: str,
                             level=logging.DEBUG)
 
     # S3 config
-    s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
-    with open(s3path) as f:
-        s3creds = json.load(f)
+    # s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
+    # with open(s3path) as f:
+    #     s3creds = json.load(f)
 
-    access_key = s3creds['access_key']
-    secret_key = s3creds['secret_key']
-    endpoint_url = s3creds['endpoint_url']
+    # access_key = s3creds['access_key']
+    # secret_key = s3creds['secret_key']
+    # endpoint_url = s3creds['endpoint_url']
 
-    s3_resource = boto3.resource(
-        service_name='s3',
-        endpoint_url=endpoint_url,
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-    )
+    # s3_resource = boto3.resource(
+    #     service_name='s3',
+    #     endpoint_url=endpoint_url,
+    #     aws_access_key_id=access_key,
+    #     aws_secret_access_key=secret_key,
+    # )
 
     # GB = 1024 ** 3
     # config = TransferConfig(multipart_threshold=5*GB)
@@ -693,43 +691,49 @@ def put(config: str, username: str, password: str, project: str,
     # print(obj.bucket_name)
     # print(obj.key)
 
-    ### Begin data processing ###
-    # Create pool
-    with Pool(processes=os.cpu_count()) as processing_pool: 
-        # for i in range(40): 
-        #     processing_pool.apply_async(testfunction, args=(i, ))
-
-
-        # if file do something in pool
-        # if folder open
+    # Create multiprocessing pool
+    processes = []
+    with concurrent.futures.ProcessPoolExecutor() as executor: 
         for path in data:
-            print("Tempdir: ", temp_dir)
-            print("Path: ", path)
-            print(str(Path(path).stem))
-            sub_dir = f"{temp_dir}/files/{Path(path).stem}" 
-            print("Sub_dir: ", sub_dir)
-            
-            # Cancel if directory not previously created 
-            if sub_dir not in dirs: 
-                raise OSError(f"Directory {sub_dir} does not exist. Cancelling upload.")
-
-            if os.path.isfile(path):    # <---- FILES
-                result = processing_pool.apply_async(process_file, args=(path, s3_resource, user_info, temp_dir, sub_dir, ))
-            elif os.path.isdir(path):   # <---- FOLDERS
-                upload_path[path] = process_folder(folder=path,
-                                                s3_resource=s3_resource,
-                                                thepool=processing_pool, 
-                                                user=user_info,
-                                                temp_dir=temp_dir,
-                                                sub_dir=sub_dir)
-            else:                       # <---- TYPE UNKNOWN
+            # check if folder and then get all subfolders
+            if os.path.isdir(path):
+                print(f"\nDirectory: {path}")
+                all_dirs = [x[0] for x in os.walk(path)]  # all (sub)dirs
+                for dir_ in all_dirs:
+                    print(f"\nDirectory: {dir_}")
+                    # check which files are in the directory
+                    all_files = [f for f in os.listdir(dir_)
+                                if os.path.isfile(os.path.join(dir_, f))]
+                    for file in all_files:  # all files in dir
+                        # apply calls apply_async and returns result
+                        # apply_async returns a handle and 
+                        processes.append(executor.submit(testfunction, file))
+            elif os.path.isfile(path):
+                # Run file processing in pool
+                processes.append(executor.submit(testfunction, path))
+            else:
                 sys.exit(f"Path type {path} not identified."
                         "Have you entered the correct path?")
 
-            upload_path[path] = result.get()
-        processing_pool.close()
-        processing_pool.join()
-        print(upload_path)
+        for f in concurrent.futures.as_completed(processes):
+            print(f.result())
+
+        # if os.path.isfile(path):    # <---- FILES
+    #         result = processing_pool.apply_async(process_file, args=(path, s3_resource, user_info, temp_dir, sub_dir, ))
+    #     elif os.path.isdir(path):   # <---- FOLDERS
+    #         upload_path[path] = process_folder(folder=path,
+    #                                         s3_resource=s3_resource,
+    #                                         thepool=processing_pool,
+    #                                         user=user_info,
+    #                                         temp_dir=temp_dir,
+    #                                         sub_dir=sub_dir)
+    #     else:                       # <---- TYPE UNKNOWN
+    #
+
+    #     upload_path[path] = result.get()
+    # processing_pool.close()
+    # processing_pool.join()
+    # print(upload_path)
     # print("Files to upload: \n", upload_path)
 
             ### Database update here ###

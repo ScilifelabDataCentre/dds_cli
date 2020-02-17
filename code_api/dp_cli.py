@@ -430,7 +430,7 @@ def create_directories(tdir: str) -> (bool, tuple):
     return True, dirs
 
 
-def process_file(file: str, s3_resource, user: dict, temp_dir: str, sub_dir: str = "") -> (dict):
+def process_file(file: str, s3_resource, bucket) -> (dict):
     """Handles processing of files including compression and encryption. 
 
     Args: 
@@ -443,7 +443,7 @@ def process_file(file: str, s3_resource, user: dict, temp_dir: str, sub_dir: str
         dict: Information about final files, checksums, errors etc. 
 
     """
-
+    print("here")
     is_compressed = False
     is_encrypted = False
 
@@ -479,82 +479,37 @@ def process_file(file: str, s3_resource, user: dict, temp_dir: str, sub_dir: str
 
     # Upload file
     # Check if bucket exists
-    # bucketname = f"project_{user['project']}"
-    # bucket = s3_resource.Bucket(bucketname)
-    # MB = 1024 ** 2
-    # GB = 1024 ** 3
-    # config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
-    # print(s3_resource.buckets.all())
-    # if bucket in s3_resource.buckets.all():
-    #     print("yess")
-    #     objs = list(bucket.objects.filter())
-    #     for stuff in objs:
-    #         print(stuff.key)
-    # if filename in bucket.objects.all():
-    # print("the file already exists")
-    # else:
-    # s3_resource.meta.client.upload_file(filetoupload, bucketname, filename, Config=config)
+    
+    MB = 1024 ** 2
+    GB = 1024 ** 3
+    config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
+    if bucket in s3_resource.buckets.all():
+        print("yess")
+        objs = list(bucket.objects.filter())
+        for stuff in objs:
+            print(stuff.key)
+    if filename in bucket.objects.all():
+        print("the file already exists")
+    else:
+        s3_resource.meta.client.upload_file(filetoupload, bucket.name, filename, Config=config)
 
     # Upload metadata to database
     # ---
 
-    logging.info("Some success message here.")
-    return {"Final path": file,
-            "Compression": {
-                "Compressed": is_compressed,
-                "Algorithm": compression_algorithm,
-                "Checksum": hash_compressed
-            },
-            "Encryption": {
-                "Encrypted": is_encrypted,
-                "Algorithm": encryption_algorithm,
-                "Checksum": hash_encrypted
-            }
-            }
-
-
-def process_folder(folder: str, s3_resource, thepool, user: dict, temp_dir: str, sub_dir: str = "") -> (dict):
-    """Handles processing of folders. 
-    Opens folders and redirects to file processing function. 
-
-    Args: 
-        folder: Path to folder
-        temp_dir: Temporary directory
-        sub_dir: Current sub directory within temp_dir
-        s3_resource: 
-
-    Returns: 
-        dict: Information abut final files, checksums, errors etc.
-
-    """
-
-    result_dict = {folder: list()}   # Dict for saving paths and hashes
-
-    # Iterate through all folders and files recursively
-    for path, dirs, files in os.walk(folder):
-        for file in sorted(files):  # For all files in folder root
-            # Compress files and add to dict
-            # result_dict[folder].append(process_file(file=os.path.join(path, file),
-            #                                         temp_dir=temp_dir,
-                                                    # sub_dir=sub_dir))
-            process_file(file=os.path.join(path, file),
-                         s3_resource=s3_resource,
-                         user=user,
-                         temp_dir=temp_dir,
-                         sub_dir=sub_dir)
-        for dir_ in sorted(dirs):   # For all subfolders in folder root
-            # "Open" subfolder folder (the current method, recursive)
-            result_dict[folder].append(process_folder(folder=os.path.join(path, dir_),
-                                                      s3_resource=s3_resource,
-                                                      user=user,
-                                                      temp_dir=temp_dir,
-                                                      sub_dir=sub_dir))
-
-            # Create folder in s3 bucket
-            # code here
-        break
-
-    return result_dict
+    # logging.info("Some success message here.")
+    # return {"Final path": file,
+    #         "Compression": {
+    #             "Compressed": is_compressed,
+    #             "Algorithm": compression_algorithm,
+    #             "Checksum": hash_compressed
+    #         },
+    #         "Encryption": {
+    #             "Encrypted": is_encrypted,
+    #             "Algorithm": encryption_algorithm,
+    #             "Checksum": hash_encrypted
+    #         }
+    #         }
+    return f"{filetoupload}: \t success"
 
 
 # Testing # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # Testing #
@@ -655,21 +610,22 @@ def put(config: str, username: str, password: str, project: str,
                             level=logging.DEBUG)
 
     # S3 config
-    # s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
-    # with open(s3path) as f:
-    #     s3creds = json.load(f)
+    s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
+    with open(s3path) as f:
+        s3creds = json.load(f)
 
-    # access_key = s3creds['access_key']
-    # secret_key = s3creds['secret_key']
-    # endpoint_url = s3creds['endpoint_url']
+    access_key = s3creds['access_key']
+    secret_key = s3creds['secret_key']
+    endpoint_url = s3creds['endpoint_url']
 
-    # s3_resource = boto3.resource(
-    #     service_name='s3',
-    #     endpoint_url=endpoint_url,
-    #     aws_access_key_id=access_key,
-    #     aws_secret_access_key=secret_key,
-    # )
+    s3_resource = boto3.resource(
+        service_name='s3',
+        endpoint_url=endpoint_url,
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+    )
 
+    print("started s3 resource")
     # GB = 1024 ** 3
     # config = TransferConfig(multipart_threshold=5*GB)
 
@@ -691,31 +647,31 @@ def put(config: str, username: str, password: str, project: str,
     # print(obj.bucket_name)
     # print(obj.key)
 
+    bucketname = f"project_{user_info['project']}"
     # Create multiprocessing pool
-    processes = []
-    with concurrent.futures.ProcessPoolExecutor() as executor: 
+    with concurrent.futures.ThreadPoolExecutor() as executor: 
+        todo = []
         for path in data:
             # check if folder and then get all subfolders
             if os.path.isdir(path):
-                print(f"\nDirectory: {path}")
                 all_dirs = [x[0] for x in os.walk(path)]  # all (sub)dirs
                 for dir_ in all_dirs:
-                    print(f"\nDirectory: {dir_}")
                     # check which files are in the directory
                     all_files = [f for f in os.listdir(dir_)
                                 if os.path.isfile(os.path.join(dir_, f))]
+                    print("All files in directory: ", all_files)
                     for file in all_files:  # all files in dir
-                        # apply calls apply_async and returns result
-                        # apply_async returns a handle and 
-                        processes.append(executor.submit(testfunction, file))
+                        print("Current file: ", file)
+                        bucket = s3_resource.Bucket(bucketname)
+                        future = executor.submit(process_file, file, s3_resource, bucket)
             elif os.path.isfile(path):
                 # Run file processing in pool
-                processes.append(executor.submit(testfunction, path))
+                future = executor.submit(testfunction, path)
             else:
                 sys.exit(f"Path type {path} not identified."
                         "Have you entered the correct path?")
 
-        for f in concurrent.futures.as_completed(processes):
+        for f in concurrent.futures.as_completed(todo):
             print(f.result())
 
         # if os.path.isfile(path):    # <---- FILES

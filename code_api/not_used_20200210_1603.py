@@ -517,3 +517,48 @@ def stream_chunks(file_handle, chunk_size):
             yield chunk
     except StreamingError as se:
         yield "error", f"Could not yield chunk: {se}"
+
+
+# HANDLE FOLDERS
+def process_folder(folder: str, s3_resource, thepool, user: dict, temp_dir: str, sub_dir: str = "") -> (dict):
+    """Handles processing of folders. 
+    Opens folders and redirects to file processing function. 
+
+    Args: 
+        folder: Path to folder
+        temp_dir: Temporary directory
+        sub_dir: Current sub directory within temp_dir
+        s3_resource: 
+
+    Returns: 
+        dict: Information abut final files, checksums, errors etc.
+
+    """
+
+    result_dict = {folder: list()}   # Dict for saving paths and hashes
+
+    # Iterate through all folders and files recursively
+    for path, dirs, files in os.walk(folder):
+        for file in sorted(files):  # For all files in folder root
+            # Compress files and add to dict
+            # result_dict[folder].append(process_file(file=os.path.join(path, file),
+            #                                         temp_dir=temp_dir,
+                                                    # sub_dir=sub_dir))
+            process_file(file=os.path.join(path, file),
+                         s3_resource=s3_resource,
+                         user=user,
+                         temp_dir=temp_dir,
+                         sub_dir=sub_dir)
+        for dir_ in sorted(dirs):   # For all subfolders in folder root
+            # "Open" subfolder folder (the current method, recursive)
+            result_dict[folder].append(process_folder(folder=os.path.join(path, dir_),
+                                                      s3_resource=s3_resource,
+                                                      user=user,
+                                                      temp_dir=temp_dir,
+                                                      sub_dir=sub_dir))
+
+            # Create folder in s3 bucket
+            # code here
+        break
+
+    return result_dict

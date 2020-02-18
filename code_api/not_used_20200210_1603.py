@@ -562,3 +562,17 @@ def process_folder(folder: str, s3_resource, thepool, user: dict, temp_dir: str,
         break
 
     return result_dict
+
+# IN PROCESS_FILE
+
+    is_compressed = False
+    is_encrypted = False
+
+    encryption_algorithm = ""               # Which package/algorithm
+
+    hash_original = ""
+    hash_compressed = ""
+    hash_encrypted = ""
+
+    mime, ext, is_compressed, \
+        compression_algorithm = file_type(file)   # Check mime type

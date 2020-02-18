@@ -43,6 +43,7 @@ from getpass import getpass
 from code_api.dp_exceptions import AuthenticationError, CouchDBException, \
     CompressionError, DataException, DeliveryPortalException, DeliveryOptionException, \
     EncryptionError, HashException, SecurePasswordException, StreamingError
+from botocore.exceptions import ClientError
 
 import boto3
 from boto3.s3.transfer import TransferConfig
@@ -378,27 +379,6 @@ def project_access(user: str, project: str) -> (bool):
 
 # Path processing # # # # # # # # # # # # # # # # # # # # # # Path processing #
 
-def all_data(data_file: str) -> (tuple):
-    """Puts all data from data file into one tuple.
-
-    Args: 
-        data_file: Path to file containing paths to files which will be uploaded. 
-
-    Returns: 
-        tuple: All paths to the files.
-
-    """
-
-    try:
-        if data_file:
-            if os.path.exists(data_file):
-                with open(data_file, 'r') as pf:
-                    all_data_ = tuple(p for p in pf.read().splitlines())
-                return all_data_
-    except DataException as de:
-        sys.exit(f"Could not create data tuple: {de}")
-
-
 def create_directories(tdir: str) -> (bool, tuple):
     """Creates all temporary directories.
 
@@ -430,86 +410,56 @@ def create_directories(tdir: str) -> (bool, tuple):
     return True, dirs
 
 
-def process_file(file: str, s3_resource, bucket) -> (dict):
+def s3_upload(file: str, s3_resource, bucket):
     """Handles processing of files including compression and encryption. 
 
     Args: 
         file:   File to be uploaded 
-        temp_dir:   Temporary directory 
-        sub_dir:    Sub directory within temp_dir
-        s3_resource: The users S3 login credentials 
-
-    Returns: 
-        dict: Information about final files, checksums, errors etc. 
+        s3_resource: The S3 connection resource
+        bucket: S3 bucket to upload to
 
     """
-    print("here")
-    is_compressed = False
-    is_encrypted = False
-
-    encryption_algorithm = ""               # Which package/algorithm
-
-    hash_original = ""
-    hash_compressed = ""
-    hash_encrypted = ""
-
-    mime, ext, is_compressed, \
-        compression_algorithm = file_type(file)   # Check mime type
-
-    # Latest file generated
 
     filetoupload = os.path.abspath(file)
     filename = os.path.basename(filetoupload)
-    print("Full path: ", filetoupload)
-    print("Filename: ", filename)
-    # Generate file checksum
-    # ---
-
-    # Compress
-    # ---
-
-    # Generate compressed file checksum
-    # ---
-
-    # Encrypt
-    # ---
-
-    # Generate encrypted file checksum
-    # ---
 
     # Upload file
-    # Check if bucket exists
-    
     MB = 1024 ** 2
     GB = 1024 ** 3
     config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
     if bucket in s3_resource.buckets.all():
-        print("yess")
-        objs = list(bucket.objects.filter())
-        for stuff in objs:
-            print(stuff.key)
-    if filename in bucket.objects.all():
-        print("the file already exists")
-    else:
-        s3_resource.meta.client.upload_file(filetoupload, bucket.name, filename, Config=config)
+        if file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, filename=filename):
+            print(f"File exists: {filename}, not uploading file.")
+        else:
+            try:
+                s3_resource.meta.client.upload_file(filetoupload, bucket.name,
+                                                    filename, Config=config)
+            except Exception as e:
+                print("Something wrong: ", e)
 
-    # Upload metadata to database
-    # ---
 
-    # logging.info("Some success message here.")
-    # return {"Final path": file,
-    #         "Compression": {
-    #             "Compressed": is_compressed,
-    #             "Algorithm": compression_algorithm,
-    #             "Checksum": hash_compressed
-    #         },
-    #         "Encryption": {
-    #             "Encrypted": is_encrypted,
-    #             "Algorithm": encryption_algorithm,
-    #             "Checksum": hash_encrypted
-    #         }
-    #         }
-    return f"{filetoupload}: \t success"
+# S3 checks # # # # # # # # # # # # # # # # # # # # # # # # # # # # S3 checks #
+
+def file_exists_in_bucket(s3_resource, bucketname: str, filename: str) -> (bool):
+    """Checks if the current file already exists in the specified bucket.
+    If so, the file will not be uploaded.
+
+    Args: 
+        s3_resource: Boto3 S3 resource
+        bucketname: Name of bucket to check for file
+        filename: Name of file to look for 
+
+    Returns: 
+        bool: True if the file already exists, False if it doesnt
+
+    """
+
+    try:  # Check if file already exists in bucket
+        s3_resource.Object(bucketname, filename).load()  # None if exists
+    except ClientError as ce:
+        return False
+    else:  # File exists
+        return True
 
 
 # Testing # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # Testing #
@@ -557,6 +507,7 @@ def put(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
+    all_files = list()
     upload_path = dict()    # format: {original-file:file-to-be-uploaded}
     hash_dict = dict()      # format: {original-file:hmac}
     failed = dict()         # failed file/folder uploads
@@ -574,21 +525,37 @@ def put(config: str, username: str, password: str, project: str,
         raise DeliveryPortalException("User ID not set, "
                                       "cannot proceed with data delivery.")
 
-    if not data and not pathfile:   # Check for entered files
+    # If no files are entered --> quit
+    if not data and not pathfile:   
         raise DeliveryPortalException(
             "No data to be uploaded. Specify individual files/folders using "
             "the --data/-d option one or more times, or the --pathfile/-f. "
             "For help: 'dp_api --help'"
         )
-    else:
-        if pathfile is not None:
-            data += all_data(data_file=pathfile)  # Put all data in one tuple
+    else:   
+        # If --data option --> put all files in list
+        if data is not None:    
+            all_files = [os.path.abspath(d) if os.path.exists(d)
+                         else [None, d] for d in data]
 
-            for element in data:
-                if data.count(element) != 1:
+        # If --pathfile option --> put all files in list
+        if pathfile is not None:
+            pathfile_abs = os.path.abspath(pathfile)
+            if os.path.exists(pathfile_abs):    # Precaution, already checked in click.option
+                with open(pathfile_abs, 'r') as file: # Read lines, strip \n and put in list
+                    all_files += [os.path.abspath(line.strip()) if os.path.exists(line.strip())
+                                  else [None, line.strip()] for line in file]
+            else: 
+                raise IOError(f"--pathfile option {pathfile} does not exist. Cancelling delivery.")
+            
+            # Check for file duplicates
+            for element in all_files:
+                if all_files.count(element) != 1:
                     raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
                                                   "please remove path dublicates.")
-        if not data:    # Should never be true - just precaution
+        
+        # This should never be able to be true - just precaution
+        if not all_files:    
             raise DeliveryPortalException("Data tuple empty. Nothing to upload."
                                           "Cancelling delivery.")
 
@@ -609,15 +576,17 @@ def put(config: str, username: str, password: str, project: str,
         logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
                             level=logging.DEBUG)
 
-    # S3 config
+    # Get S3 credentials
     s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
     with open(s3path) as f:
         s3creds = json.load(f)
 
+    # Keys and endpoint from file
     access_key = s3creds['access_key']
     secret_key = s3creds['secret_key']
     endpoint_url = s3creds['endpoint_url']
 
+    # Start s3 connection resource
     s3_resource = boto3.resource(
         service_name='s3',
         endpoint_url=endpoint_url,
@@ -625,74 +594,38 @@ def put(config: str, username: str, password: str, project: str,
         aws_secret_access_key=secret_key,
     )
 
-    print("started s3 resource")
-    # GB = 1024 ** 3
-    # config = TransferConfig(multipart_threshold=5*GB)
+    # Bucket to upload to specified by user
+    bucketname = f"project_{user_info['project']}" 
+    bucket = s3_resource.Bucket(bucketname)
 
-    # s3_resource.meta.client.upload_file(
-    #     "requirements.txt", 'project1_bucket', 'uploadedfile.txt', Config=config)
+    # Create multithreading pool
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        upload_threads = []
+        for path in all_files:
+            if type(path) == str: 
+                # check if folder and then get all subfolders
+                if os.path.isdir(path):
+                    all_dirs = [x[0] for x in os.walk(path)]  # all (sub)dirs
+                    for dir_ in all_dirs:
+                        # check which files are in the directory
+                        all_files = [f for f in os.listdir(dir_)
+                                    if os.path.isfile(os.path.join(dir_, f))]
+                        # Upload all files
+                        for file in all_files:  
+                            future = executor.submit(s3_upload, file,
+                                                    s3_resource, bucket)
+                            upload_threads.append(future)
+                elif os.path.isfile(path):
+                    # Upload file
+                    future = executor.submit(s3_upload, path,
+                                            s3_resource, bucket)
+                    upload_threads.append(future)
+                else:
+                    sys.exit(f"Path type {path} not identified."
+                            "Have you entered the correct path?")
 
-    # s3_resource.meta.client.download_file(
-    #     "project1_bucket", "uploadedfile.txt", "lol.txt", Config=config)
-
-    # print(s3_resource.meta.client.get_bucket_acl(Bucket='project1_bucket'))
-
-    # obj = s3_resource.Object(
-    #     bucket_name='project1_bucket', key='uploadedfile.txt')
-    # response = obj.get()
-    # resp = response['Body'].read()
-    # print(resp)
-
-    # obj = (s3_resource.Bucket('project1_bucket')).Object(key='new_file.txt')
-    # print(obj.bucket_name)
-    # print(obj.key)
-
-    bucketname = f"project_{user_info['project']}"
-    # Create multiprocessing pool
-    with concurrent.futures.ThreadPoolExecutor() as executor: 
-        todo = []
-        for path in data:
-            # check if folder and then get all subfolders
-            if os.path.isdir(path):
-                all_dirs = [x[0] for x in os.walk(path)]  # all (sub)dirs
-                for dir_ in all_dirs:
-                    # check which files are in the directory
-                    all_files = [f for f in os.listdir(dir_)
-                                if os.path.isfile(os.path.join(dir_, f))]
-                    print("All files in directory: ", all_files)
-                    for file in all_files:  # all files in dir
-                        print("Current file: ", file)
-                        bucket = s3_resource.Bucket(bucketname)
-                        future = executor.submit(process_file, file, s3_resource, bucket)
-            elif os.path.isfile(path):
-                # Run file processing in pool
-                future = executor.submit(testfunction, path)
-            else:
-                sys.exit(f"Path type {path} not identified."
-                        "Have you entered the correct path?")
-
-        for f in concurrent.futures.as_completed(todo):
+        for f in concurrent.futures.as_completed(upload_threads):
             print(f.result())
-
-        # if os.path.isfile(path):    # <---- FILES
-    #         result = processing_pool.apply_async(process_file, args=(path, s3_resource, user_info, temp_dir, sub_dir, ))
-    #     elif os.path.isdir(path):   # <---- FOLDERS
-    #         upload_path[path] = process_folder(folder=path,
-    #                                         s3_resource=s3_resource,
-    #                                         thepool=processing_pool,
-    #                                         user=user_info,
-    #                                         temp_dir=temp_dir,
-    #                                         sub_dir=sub_dir)
-    #     else:                       # <---- TYPE UNKNOWN
-    #
-
-    #     upload_path[path] = result.get()
-    # processing_pool.close()
-    # processing_pool.join()
-    # print(upload_path)
-    # print("Files to upload: \n", upload_path)
-
-            ### Database update here ###
 
 
 @cli.command()

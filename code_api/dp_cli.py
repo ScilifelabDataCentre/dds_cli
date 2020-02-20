@@ -477,24 +477,43 @@ def s3_upload(file: str, spec_path: str, sub_path: str, s3_resource, bucket) -> 
     root_folder = os.path.basename(os.path.normpath(spec_path))
     all_subfolders = filetoupload.split(root_folder)
 
-    print(f"subfolders : {all_subfolders} \t length: {len(all_subfolders)} \n last is filename? : {all_subfolders[-1]}, {filename}\n" )
-    if len(all_subfolders) == 2 and all_subfolders[-1] == f"/{filename}": 
-        print(f"file {filetoupload} goes in root")
-    else: 
-        print(f"file {filetoupload} split: ", all_subfolders[-1].split("/"))
-        # for each folder check if exists and then put file in there 
+    # print(f"subfolders : {all_subfolders} \t length: {len(all_subfolders)} \n last is filename? : {all_subfolders[-1]}, {filename}\n" )
+    if len(all_subfolders) == 2 and all_subfolders[-1] == f"/{filename}":
+        response = s3_resource.meta.client.list_objects_v2(
+            Bucket=bucket.name,
+            Prefix="",
+        )
+        for obj in response.get('Contents', []):
+            print("---->", obj)
+            if obj['Key'] == root_folder:
+                print(f"the folder {root_folder} exists")
+            else:
+                s3_resource.meta.client.put_object(Bucket=bucket.name,
+                                                   Key=f"{root_folder}/")
+    else:
+        all_subfolders = all_subfolders[-1].split("/")
+        # for each folder check if exists and then put file in there
+        path_from_root = "files"
+        for folder in all_subfolders[1:-1]:
+            print("subfolder: ", folder)
 
     # Upload file
     MB = 1024 ** 2
     GB = 1024 ** 3
     config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
     if bucket in s3_resource.buckets.all():
-        if file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, filename=filename):
+        print(len(all_subfolders))
+        if len(all_subfolders) > 2:
+            print("här")
+            for folder in all_subfolders:
+                print("folder: ", folder)
+
+        if file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=filename):
             return f"File exists: {filename}, not uploading file."
         else:
             try:
                 s3_resource.meta.client.upload_file(filetoupload, bucket.name,
-                                                    filename, Config=config)
+                                                    f"{root_folder}/{filename}", Config=config)
             except Exception as e:
                 print("Something wrong: ", e)
             else:
@@ -544,26 +563,29 @@ def get_s3_info(current_project: str, s3_proj: str):
     return s3_resource, bucket
 
 
-def file_exists_in_bucket(s3_resource, bucketname: str, filename: str) -> (bool):
+def file_exists_in_bucket(s3_resource, bucketname, key: str) -> (bool):
     """Checks if the current file already exists in the specified bucket.
     If so, the file will not be uploaded.
 
     Args:
         s3_resource:    Boto3 S3 resource
-        bucketname:     Name of bucket to check for file
-        filename:       Name of file to look for
+        bucket:         Name of bucket to check for file
+        key:            Name of file to look for
 
     Returns:
         bool:   True if the file already exists, False if it doesnt
 
     """
 
-    try:  # Check if file already exists in bucket
-        s3_resource.Object(bucketname, filename).load()  # None if exists
-    except ClientError as ce:
-        return False
-    else:  # File exists
-        return True
+    response = s3_resource.meta.client.list_objects_v2(
+        Bucket=bucketname,
+        Prefix=key,
+    )
+    for obj in response.get('Contents', []):
+        if obj['Key'] == key:
+            return True
+
+    return False
 
 
 # Testing # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # Testing #

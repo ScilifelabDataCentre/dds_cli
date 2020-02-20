@@ -17,5 +17,4 @@
 /Users/inaod568/repos/Data-Delivery-Portal/files/filenumber17.txt
 /Users/inaod568/repos/Data-Delivery-Portal/files/filenumber18.txt
 /Users/inaod568/repos/Data-Delivery-Portal/files/filenumber19.txt
-/Users/inaod568/repos/Data-Delivery-Portal/files/filenumber20.txt
-blablabla
+/Users/inaod568/repos/Data-Delivery-Portal/files

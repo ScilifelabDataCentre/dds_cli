@@ -76,13 +76,13 @@ COMPRESSED_FORMATS = dict()
 def secure_password_hash(password_settings: str, password_entered: str) -> (str):
     """Generates secure password hash.
 
-    Args: 
-        password_settings:  String containing the salt, length of hash, n-exponential, 
-                            r and p variables. Taken from database. Separated by '$'. 
-        password_entered:   The user-specified password. 
+    Args:
+        password_settings:  String containing the salt, length of hash, n-exponential,
+                            r and p variables. Taken from database. Separated by '$'.
+        password_entered:   The user-specified password.
 
-    Returns: 
-        str:    The derived hash from the user-specified password. 
+    Returns:
+        str:    The derived hash from the user-specified password.
 
     """
 
@@ -103,10 +103,10 @@ def secure_password_hash(password_settings: str, password_entered: str) -> (str)
 # Database-related # # # # # # # # # # # # # # # # # # # # # Database-related #
 
 def couch_connect() -> (couchdb.client.Server):
-    """Connects to a couchdb interface. Currently hard-coded. 
+    """Connects to a couchdb interface. Currently hard-coded.
 
-    Returns: 
-        couchdb.client.Server:  CouchDB server instance. 
+    Returns:
+        couchdb.client.Server:  CouchDB server instance.
 
     """
 
@@ -121,7 +121,7 @@ def couch_connect() -> (couchdb.client.Server):
 def get_current_time() -> (str):
     """Gets the current time. Formats timestamp.
 
-    Returns: 
+    Returns:
         str:    Timestamp in format 'YY-MM-DD_HH-MM-SS'
 
     """
@@ -167,9 +167,9 @@ def compression_dict() -> (dict):
 
 
 def file_type(fpath: str) -> (str, str, bool, str):
-    """Guesses file mime. 
+    """Guesses file mime.
 
-    Args: 
+    Args:
         fpath: Path to file.
 
     """
@@ -224,16 +224,16 @@ def verify_user_input(config: str, username: str, password: str,
                       project: str, owner: str = "") -> (str, str, str):
     """Checks that the correct options and credentials are entered.
 
-    Args: 
-        config:     File containing the users DP username and password, 
+    Args:
+        config:     File containing the users DP username and password,
                     and the project relating to the upload/download.
                     Can be used instead of inputing the credentials separately.
-        username:   Username for DP log in. 
+        username:   Username for DP log in.
         password:   Password connected to username.
-        project:    Project ID. 
-        owner:      The owner of the data/project. 
+        project:    Project ID.
+        owner:      The owner of the data/project.
 
-    Returns: 
+    Returns:
         tuple: A tuple containing three strings
 
             Username (str)
@@ -256,7 +256,7 @@ def verify_user_input(config: str, username: str, password: str,
                                       "For help: 'dp_api --help'.")
     else:
         if owner == "":
-            owner = None
+            owner = None    # Should be a "researcher" role trying to download
 
         if config is not None:              # If config file entered
             if os.path.exists(config):      # and exist
@@ -296,14 +296,15 @@ def check_access(login_info: dict) -> (str):
     """Checks the users access to the delivery portal and the specified project,
     and the projects S3 access.
 
-    Args: 
-        login_info:     Dictionary containing username, password and project ID. 
+    Args:
+        login_info:     Dictionary containing username, password and project ID.
 
-    Returns: 
-        str:    User ID connected to the specified user. 
+    Returns:
+        str:    User ID connected to the specified user.
 
     """
 
+    # Get user specified options
     username = login_info['username']
     password = login_info['password']
     project = login_info['project']
@@ -322,7 +323,8 @@ def check_access(login_info: dict) -> (str):
                     raise DeliveryPortalException("Wrong password. "
                                                   "Access to Delivery Portal denied.")
                 else:   # Correct password
-                    calling_command = sys._getframe().f_back.f_code.co_name
+                    calling_command = sys._getframe().f_back.f_code.co_name  # get or put
+
                     # If facility is uploading or researcher is downloading, access is granted
                     if (user_db[id_]['role'] == 'facility' and calling_command == "put" and owner is not None) or \
                             (user_db[id_]['role'] == 'researcher' and calling_command == "get" and owner is None):
@@ -364,12 +366,12 @@ def check_access(login_info: dict) -> (str):
 def project_access(user: str, project: str, owner: str) -> (bool):
     """Checks the users access to a specific project.
 
-    Args: 
+    Args:
         user:       User ID.
         project:    ID of project that the user is requiring access to.
-        owner:      Owner of project. 
+        owner:      Owner of project.
 
-    Returns: 
+    Returns:
         bool:   True if project access granted
 
     """
@@ -429,15 +431,15 @@ def project_access(user: str, project: str, owner: str) -> (bool):
 def create_directories(tdir: str) -> (bool, tuple):
     """Creates all temporary directories.
 
-    Args: 
+    Args:
         tdir:   Path to new temporary directory
         paths:  Tuple containing all data-file paths
 
-    Returns: 
+    Returns:
         tuple:  Tuple containing
 
             bool:   True if directories created
-            tuple:  All created directories 
+            tuple:  All created directories
     """
 
     dirs = tuple(p for p in [tdir,
@@ -457,11 +459,13 @@ def create_directories(tdir: str) -> (bool, tuple):
     return True, dirs
 
 
-def s3_upload(file: str, s3_resource, bucket) -> (str):
-    """Handles processing of files including compression and encryption. 
+def s3_upload(file: str, spec_path: str, sub_path: str, s3_resource, bucket) -> (str):
+    """Handles processing of files including compression and encryption.
 
-    Args: 
-        file:           File to be uploaded 
+    Args:
+        file:           File to be uploaded
+        spec_path:      The original specified path 
+        sub_path:       The current subfolder 
         s3_resource:    The S3 connection resource
         bucket:         S3 bucket to upload to
 
@@ -469,6 +473,16 @@ def s3_upload(file: str, s3_resource, bucket) -> (str):
 
     filetoupload = os.path.abspath(file)
     filename = os.path.basename(filetoupload)
+
+    root_folder = os.path.basename(os.path.normpath(spec_path))
+    all_subfolders = filetoupload.split(root_folder)
+
+    print(f"subfolders : {all_subfolders} \t length: {len(all_subfolders)} \n last is filename? : {all_subfolders[-1]}, {filename}\n" )
+    if len(all_subfolders) == 2 and all_subfolders[-1] == f"/{filename}": 
+        print(f"file {filetoupload} goes in root")
+    else: 
+        print(f"file {filetoupload} split: ", all_subfolders[-1].split("/"))
+        # for each folder check if exists and then put file in there 
 
     # Upload file
     MB = 1024 ** 2
@@ -491,18 +505,18 @@ def s3_upload(file: str, s3_resource, bucket) -> (str):
 
 
 def get_s3_info(current_project: str, s3_proj: str):
-    """Gets the users s3 credentials including endpoint and key pair, 
-    and a bucket object representing the current project. 
+    """Gets the users s3 credentials including endpoint and key pair,
+    and a bucket object representing the current project.
 
-    Args: 
-        current_project:    The project ID to which the data belongs.  
+    Args:
+        current_project:    The project ID to which the data belongs.
         s3_proj:            Safespring S3 project, facility specific.
 
-    Returns: 
+    Returns:
         tuple:  Tuple containing
 
             s3_resource:    S3 resource (connection)
-            bucket:         S3 bucket to upload to/download from 
+            bucket:         S3 bucket to upload to/download from
 
         """
 
@@ -534,12 +548,12 @@ def file_exists_in_bucket(s3_resource, bucketname: str, filename: str) -> (bool)
     """Checks if the current file already exists in the specified bucket.
     If so, the file will not be uploaded.
 
-    Args: 
+    Args:
         s3_resource:    Boto3 S3 resource
         bucketname:     Name of bucket to check for file
-        filename:       Name of file to look for 
+        filename:       Name of file to look for
 
-    Returns: 
+    Returns:
         bool:   True if the file already exists, False if it doesnt
 
     """
@@ -603,7 +617,7 @@ def put(config: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
-    all_files = list()
+    all_files = list()      # List of all files to be uploaded
     upload_path = dict()    # format: {original-file:file-to-be-uploaded}
     hash_dict = dict()      # format: {original-file:hmac}
     failed = dict()         # failed file/folder uploads
@@ -681,21 +695,30 @@ def put(config: str, username: str, password: str, project: str,
     # Create multithreading pool
     with concurrent.futures.ThreadPoolExecutor() as executor:
         upload_threads = []
+        print(f"All files: {all_files}")
         for path in all_files:
             if type(path) == str:
                 # check if folder and then get all subfolders
                 if os.path.isdir(path):
+                    print(f"Path: {path}")
                     all_dirs = [x[0] for x in os.walk(path)]  # all (sub)dirs
+                    print(f"All directories: {all_dirs}")
                     for dir_ in all_dirs:
                         # check which files are in the directory
-                        all_files = [f for f in os.listdir(dir_)
+                        all_files = [os.path.join(dir_, f) for f in os.listdir(dir_)
                                      if os.path.isfile(os.path.join(dir_, f))]
+                        print(f"Current directory: {dir_}")
+                        print(f"All files: {all_files}")
                         # Upload all files
                         for file in all_files:
-                            future = executor.submit(s3_upload, file,
+                            print(f"File: {file} \n"
+                                  f"Path: {path} \n "
+                                  f"Directory: {dir_} \n")
+                            future = executor.submit(s3_upload, file, path, dir_,
                                                      s3_resource, project_bucket)
                             upload_threads.append(future)
                 elif os.path.isfile(path):
+                    print(path)
                     # Upload file
                     future = executor.submit(s3_upload, path,
                                              s3_resource, project_bucket)

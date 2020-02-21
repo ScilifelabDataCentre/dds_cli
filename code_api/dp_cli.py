@@ -459,13 +459,12 @@ def create_directories(tdir: str) -> (bool, tuple):
     return True, dirs
 
 
-def s3_upload(file: str, spec_path: str, sub_path: str, s3_resource, bucket) -> (str):
+def s3_upload(file: str, spec_path: str, s3_resource, bucket) -> (str):
     """Handles processing of files including compression and encryption.
 
     Args:
         file:           File to be uploaded
-        spec_path:      The original specified path
-        sub_path:       The current subfolder
+        spec_path:      The original specified path, None if single specified file
         s3_resource:    The S3 connection resource
         bucket:         S3 bucket to upload to
 
@@ -474,9 +473,9 @@ def s3_upload(file: str, spec_path: str, sub_path: str, s3_resource, bucket) -> 
     filetoupload = os.path.abspath(file)
     filename = os.path.basename(filetoupload)
 
-    root_folder = os.path.basename(os.path.normpath(spec_path))
-    filepath = f"{root_folder}{filetoupload.split(root_folder)[-1]}"
-    all_subfolders = f"{filepath.split(filename)[0]}"
+    root_folder = ""
+    filepath = ""
+    all_subfolders = ""
 
     # Upload file
     MB = 1024 ** 2
@@ -485,21 +484,29 @@ def s3_upload(file: str, spec_path: str, sub_path: str, s3_resource, bucket) -> 
 
     # check if bucket exists
     if bucket in s3_resource.buckets.all():
-        # check if folder exists
-        response = s3_resource.meta.client.list_objects_v2(
-            Bucket=bucket.name,
-            Prefix="",
-        )
+        # if file, not within folder
+        if spec_path is None:
+            filepath = filename
+        else:
+            root_folder = os.path.basename(os.path.normpath(spec_path))
+            filepath = f"{root_folder}{filetoupload.split(root_folder)[-1]}"
+            all_subfolders = f"{filepath.split(filename)[0]}"
 
-        found = False
-        for obj in response.get('Contents', []):
-            if obj['Key'] == all_subfolders:
-                found = True
-                break
+            # check if folder exists
+            response = s3_resource.meta.client.list_objects_v2(
+                Bucket=bucket.name,
+                Prefix="",
+            )
 
-        if not found:   # if folder doesn't exist then create folder
-            s3_resource.meta.client.put_object(Bucket=bucket.name,
-                                               Key=all_subfolders)
+            found = False
+            for obj in response.get('Contents', []):
+                if obj['Key'] == all_subfolders:
+                    found = True
+                    break
+
+            if not found:   # if folder doesn't exist then create folder
+                s3_resource.meta.client.put_object(Bucket=bucket.name,
+                                                   Key=all_subfolders)
 
         # check if file exists
         if file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=filepath):
@@ -722,12 +729,12 @@ def put(config: str, username: str, password: str, project: str,
                                      if os.path.isfile(os.path.join(dir_, f))]
                         # Upload all files
                         for file in all_files:
-                            future = executor.submit(s3_upload, file, path, dir_,
+                            future = executor.submit(s3_upload, file, path,
                                                      s3_resource, project_bucket)
                             upload_threads.append(future)
                 elif os.path.isfile(path):
                     # Upload file
-                    future = executor.submit(s3_upload, path, path, path, 
+                    future = executor.submit(s3_upload, path, None,
                                              s3_resource, project_bucket)
                     upload_threads.append(future)
                 else:

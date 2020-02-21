@@ -621,7 +621,7 @@ def cli():
               type=str,
               help="Project to upload files to.")
 @click.option('--owner', '-o',
-              required=False,
+              required=True,
               type=str,
               multiple=False,
               default="",
@@ -775,5 +775,6 @@ def put(config: str, username: str, password: str, project: str,
 def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
+
 
     click.echo("download function")

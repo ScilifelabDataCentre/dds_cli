@@ -464,8 +464,8 @@ def s3_upload(file: str, spec_path: str, sub_path: str, s3_resource, bucket) -> 
 
     Args:
         file:           File to be uploaded
-        spec_path:      The original specified path 
-        sub_path:       The current subfolder 
+        spec_path:      The original specified path
+        sub_path:       The current subfolder
         s3_resource:    The S3 connection resource
         bucket:         S3 bucket to upload to
 
@@ -475,45 +475,39 @@ def s3_upload(file: str, spec_path: str, sub_path: str, s3_resource, bucket) -> 
     filename = os.path.basename(filetoupload)
 
     root_folder = os.path.basename(os.path.normpath(spec_path))
-    all_subfolders = filetoupload.split(root_folder)
-
-    # print(f"subfolders : {all_subfolders} \t length: {len(all_subfolders)} \n last is filename? : {all_subfolders[-1]}, {filename}\n" )
-    if len(all_subfolders) == 2 and all_subfolders[-1] == f"/{filename}":
-        response = s3_resource.meta.client.list_objects_v2(
-            Bucket=bucket.name,
-            Prefix="",
-        )
-        for obj in response.get('Contents', []):
-            print("---->", obj)
-            if obj['Key'] == root_folder:
-                print(f"the folder {root_folder} exists")
-            else:
-                s3_resource.meta.client.put_object(Bucket=bucket.name,
-                                                   Key=f"{root_folder}/")
-    else:
-        all_subfolders = all_subfolders[-1].split("/")
-        # for each folder check if exists and then put file in there
-        path_from_root = "files"
-        for folder in all_subfolders[1:-1]:
-            print("subfolder: ", folder)
+    filepath = f"{root_folder}{filetoupload.split(root_folder)[-1]}"
+    all_subfolders = f"{filepath.split(filename)[0]}"
 
     # Upload file
     MB = 1024 ** 2
     GB = 1024 ** 3
     config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
-    if bucket in s3_resource.buckets.all():
-        print(len(all_subfolders))
-        if len(all_subfolders) > 2:
-            print("här")
-            for folder in all_subfolders:
-                print("folder: ", folder)
 
-        if file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=filename):
+    # check if bucket exists
+    if bucket in s3_resource.buckets.all():
+        # check if folder exists
+        response = s3_resource.meta.client.list_objects_v2(
+            Bucket=bucket.name,
+            Prefix="",
+        )
+
+        found = False
+        for obj in response.get('Contents', []):
+            if obj['Key'] == all_subfolders:
+                found = True
+                break
+
+        if not found:   # if folder doesn't exist then create folder
+            s3_resource.meta.client.put_object(Bucket=bucket.name,
+                                               Key=all_subfolders)
+
+        # check if file exists
+        if file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=filepath):
             return f"File exists: {filename}, not uploading file."
         else:
             try:
                 s3_resource.meta.client.upload_file(filetoupload, bucket.name,
-                                                    f"{root_folder}/{filename}", Config=config)
+                                                    filepath, Config=config)
             except Exception as e:
                 print("Something wrong: ", e)
             else:
@@ -717,32 +711,23 @@ def put(config: str, username: str, password: str, project: str,
     # Create multithreading pool
     with concurrent.futures.ThreadPoolExecutor() as executor:
         upload_threads = []
-        print(f"All files: {all_files}")
         for path in all_files:
             if type(path) == str:
                 # check if folder and then get all subfolders
                 if os.path.isdir(path):
-                    print(f"Path: {path}")
                     all_dirs = [x[0] for x in os.walk(path)]  # all (sub)dirs
-                    print(f"All directories: {all_dirs}")
                     for dir_ in all_dirs:
                         # check which files are in the directory
                         all_files = [os.path.join(dir_, f) for f in os.listdir(dir_)
                                      if os.path.isfile(os.path.join(dir_, f))]
-                        print(f"Current directory: {dir_}")
-                        print(f"All files: {all_files}")
                         # Upload all files
                         for file in all_files:
-                            print(f"File: {file} \n"
-                                  f"Path: {path} \n "
-                                  f"Directory: {dir_} \n")
                             future = executor.submit(s3_upload, file, path, dir_,
                                                      s3_resource, project_bucket)
                             upload_threads.append(future)
                 elif os.path.isfile(path):
-                    print(path)
                     # Upload file
-                    future = executor.submit(s3_upload, path,
+                    future = executor.submit(s3_upload, path, path, path, 
                                              s3_resource, project_bucket)
                     upload_threads.append(future)
                 else:

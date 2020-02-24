@@ -231,7 +231,7 @@ def verify_user_input(config: str, username: str, password: str,
         username:   Username for DP log in.
         password:   Password connected to username.
         project:    Project ID.
-        owner:      The owner of the data/project.
+        owner:      The owner of the data/project, "" if downloading 
 
     Returns:
         tuple: A tuple containing three strings
@@ -408,6 +408,9 @@ def project_access(user: str, project: str, owner: str) -> (bool):
                     else:
                         # The user is a facility and has specified a data owner
                         # or the user is the owner and is a researcher
+                        print(f"owner: {owner}\n"
+                              f"user: {user}\n"
+                              f"real owner: {project_db['project_info']['owner']}\n")
                         if (owner is not None and owner == project_db['project_info']['owner']) or \
                                 (owner is None and user == project_db['project_info']['owner']):
                             # If the project delivery option is not S3, raise except and quit
@@ -521,6 +524,37 @@ def s3_upload(file: str, spec_path: str, s3_resource, bucket) -> (str):
                 return f"Success: {filetoupload} uploaded to S3!"
 
 
+def s3_download(file: str, s3_resource, bucket, dl_file: str) -> (str):
+    """Downloads the specified files
+
+    Args: 
+        file:           File to be downloaded
+        s3_resource:    S3 connection
+        bucket:         Bucket to download from
+        dl_file:        Name of downloaded file
+
+    Returns:
+        str:    Success message if download successful 
+
+    """
+
+    print(f"{file}, {s3_resource}, {bucket}, {bucket.name}")
+    # check if bucket exists
+    if bucket in s3_resource.buckets.all():
+
+        # check if file exists
+        if not file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=file) and not \
+                file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=f"{file}/"):
+            return f"File does not exist: {file}, not downloading anything."
+        else:
+            try:
+                s3_resource.meta.client.download_file(bucket.name, os.path.basename(file), dl_file)
+            except Exception as e:
+                print("Something wrong: ", e)
+            else:
+                return f"Success: {file} downloaded from S3!"
+
+
 # S3 specific # # # # # # # # # # # # # # # # # # # # # # # # # # # # S3 specific #
 
 
@@ -582,7 +616,10 @@ def file_exists_in_bucket(s3_resource, bucketname, key: str) -> (bool):
         Bucket=bucketname,
         Prefix=key,
     )
+    print(response, key)
     for obj in response.get('Contents', []):
+        print(obj['Key'], key)
+        print(obj['Key'] == key)
         if obj['Key'] == key:
             return True
 
@@ -641,9 +678,6 @@ def put(config: str, username: str, password: str, project: str,
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
     all_files = list()      # List of all files to be uploaded
-    upload_path = dict()    # format: {original-file:file-to-be-uploaded}
-    hash_dict = dict()      # format: {original-file:hmac}
-    failed = dict()         # failed file/folder uploads
 
     # Check for all required login credentials and project and return in correct format
     user_info = verify_user_input(config=config,
@@ -770,11 +804,99 @@ def put(config: str, username: str, password: str, project: str,
 @click.option('--data', '-d',
               required=False,
               multiple=True,
-              type=click.Path(exists=True),
+              type=str,
               help="Path to file or folder to upload.")
 def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
+    print(f"config: \t {config}\n"
+          f"username: \t {username}\n"
+          f"password: \t {password}\n"
+          f"project: \t {project}\n"
+          f"pathfile: \t {pathfile}\n"
+          f"data: \t {data}\n")
 
-    click.echo("download function")
+    user_info = verify_user_input(config=config,
+                                  username=username,
+                                  password=password,
+                                  project=project)
+
+    print("user info: ", user_info)
+
+    user_id, s3_proj = check_access(login_info=user_info)
+
+    print(f"user id: {user_id}\n"
+          f"s3_proj: {s3_proj}\n")
+
+    if not isinstance(user_id, str):
+        raise DeliveryPortalException("User ID not set, "
+                                      "cannot proceed with data delivery.")
+
+    # If no files are entered --> quit
+    if not data and not pathfile:
+        raise DeliveryPortalException(
+            "No files chosen for download. Specify individual files/folders using "
+            "the --data/-d option one or more times, or the --pathfile/-f. "
+            "For help: 'dp_api --help'"
+        )
+    else:
+        # If --data option --> put all files in list
+        if data is not None:
+            all_files = [d for d in data]
+
+        # If --pathfile option --> put all files in list
+        if pathfile is not None:
+            pathfile_abs = os.path.abspath(pathfile)
+            # Precaution, already checked in click.option
+            if os.path.exists(pathfile_abs):
+                with open(pathfile_abs, 'r') as file:  # Read lines, strip \n and put in list
+                    all_files += [line.strip() for line in file]
+            else:
+                raise IOError(f"--pathfile option {pathfile} does not exist. "
+                              "Cancelling delivery.")
+
+            # Check for file duplicates
+            for element in all_files:
+                if all_files.count(element) != 1:
+                    raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
+                                                  "please remove path dublicates.")
+
+        # This should never be able to be true - just precaution
+        if not all_files:
+            raise DeliveryPortalException("Data tuple empty. Nothing to upload."
+                                          "Cancelling delivery.")
+
+    # Create temporary folder with timestamp and all subfolders
+    timestamp = get_current_time().replace(" ", "_").replace(":", "-")
+    temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
+    dirs_created, dirs = create_directories(tdir=temp_dir)
+    if not dirs_created:  # If error when creating one of the folders
+        if os.path.exists(temp_dir):
+            try:
+                shutil.rmtree(temp_dir)  # Remove all prev created folders
+                sys.exit(f"Temporary directory deleted. \n\n"
+                         "----DELIVERY CANCELLED---\n")  # and quit
+            except OSError as ose:
+                sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
+                         "----DELIVERY CANCELLED---\n")
+    else:
+        logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
+                            level=logging.DEBUG)
+
+    s3_resource, project_bucket = get_s3_info(current_project=user_info['project'],
+                                              s3_proj=s3_proj)
+
+    # Create multithreading pool
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        upload_threads = []
+        for path in all_files:
+            print(f"Path: {path}, {all_files}")
+            if type(path) == str:
+                # Download all files
+                future = executor.submit(s3_download, path,
+                                         s3_resource, project_bucket, f"{temp_dir}/files/{path}")
+                upload_threads.append(future)
+
+        for f in concurrent.futures.as_completed(upload_threads):
+            print(f.result())

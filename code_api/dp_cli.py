@@ -408,9 +408,6 @@ def project_access(user: str, project: str, owner: str) -> (bool):
                     else:
                         # The user is a facility and has specified a data owner
                         # or the user is the owner and is a researcher
-                        print(f"owner: {owner}\n"
-                              f"user: {user}\n"
-                              f"real owner: {project_db['project_info']['owner']}\n")
                         if (owner is not None and owner == project_db['project_info']['owner']) or \
                                 (owner is None and user == project_db['project_info']['owner']):
                             # If the project delivery option is not S3, raise except and quit
@@ -431,12 +428,69 @@ def project_access(user: str, project: str, owner: str) -> (bool):
 
 # Path processing # # # # # # # # # # # # # # # # # # # # # # Path processing #
 
-def create_directories(tdir: str) -> (bool, tuple):
+def collect_all_data(data: tuple, pathfile: str) -> (list):
+    """Puts all entered paths into one list
+    
+    Args: 
+        data:       Tuple containing paths
+        pathfile:   Path to file containing paths
+
+    Returns: 
+        list: List of all paths entered in data and pathfile option
+
+    """
+    
+    all_files = list() 
+
+    delivery_option = sys._getframe().f_back.f_code.co_name
+
+    # If no files are entered --> quit
+    if not data and not pathfile:
+        raise DeliveryPortalException(
+            "No data to be uploaded. Specify individual files/folders using "
+            "the --data/-d option one or more times, or the --pathfile/-f. "
+            "For help: 'dp_api --help'"
+        )
+    else:
+        # If --data option --> put all files in list
+        if data is not None:
+            if delivery_option == "put":
+                all_files = [os.path.abspath(d) if os.path.exists(d)
+                            else [None, d] for d in data]
+            elif delivery_option == "get":
+                all_files = [d for d in data]
+            else: 
+                pass    # raise an error here 
+
+        # If --pathfile option --> put all files in list
+        if pathfile is not None:
+            pathfile_abs = os.path.abspath(pathfile)
+            # Precaution, already checked in click.option
+            if os.path.exists(pathfile_abs):
+                with open(pathfile_abs, 'r') as file:  # Read lines, strip \n and put in list
+                    if delivery_option == "put":
+                        all_files += [os.path.abspath(line.strip()) if os.path.exists(line.strip())
+                                    else [None, line.strip()] for line in file]
+                    elif delivery_option == "get":
+                        all_files += [line.strip() for line in file]
+                    else: 
+                        pass    # raise an error here 
+            else:
+                raise IOError(
+                    f"--pathfile option {pathfile} does not exist. Cancelling delivery.")
+
+            # Check for file duplicates
+            for element in all_files:
+                if all_files.count(element) != 1:
+                    raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
+                                                "please remove path dublicates.")
+    return all_files 
+
+def create_directories(dirs: str, temp_dir: str) -> (bool, tuple):
     """Creates all temporary directories.
 
     Args:
         tdir:   Path to new temporary directory
-        paths:  Tuple containing all data-file paths
 
     Returns:
         tuple:  Tuple containing
@@ -445,21 +499,31 @@ def create_directories(tdir: str) -> (bool, tuple):
             tuple:  All created directories
     """
 
-    dirs = tuple(p for p in [tdir,
-                             f"{tdir}/files",
-                             f"{tdir}/keys",
-                             f"{tdir}/meta",
-                             f"{tdir}/logs"])
-
+    print("Directories: ", dirs)
     for d_ in dirs:
         try:
             os.mkdir(d_)
         except OSError as ose:
             click.echo(f"The directory '{d_}' could not be created: {ose}"
                        "Cancelling delivery. Deleting temporary directory.")
+            
+            if os.path.exists(temp_dir):
+                try:
+                    shutil.rmtree(temp_dir)  # Remove all prev created folders
+                    sys.exit(f"Temporary directory deleted. \n\n"
+                         "----DELIVERY CANCELLED---\n")  # and quit
+                except OSError as ose:
+                    sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
+                         "----DELIVERY CANCELLED---\n")
+    
             return False
 
-    return True, dirs
+        else: 
+            pass # create log file here 
+            # logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
+            #         level=logging.DEBUG)
+
+    return True
 
 
 def s3_upload(file: str, spec_path: str, s3_resource, bucket) -> (str):
@@ -537,8 +601,7 @@ def s3_download(file: str, s3_resource, bucket, dl_file: str) -> (str):
         str:    Success message if download successful 
 
     """
-
-    print(f"{file}, {s3_resource}, {bucket}, {bucket.name}")
+    print(file, os.path.basename(file))
     # check if bucket exists
     if bucket in s3_resource.buckets.all():
 
@@ -548,7 +611,7 @@ def s3_download(file: str, s3_resource, bucket, dl_file: str) -> (str):
             return f"File does not exist: {file}, not downloading anything."
         else:
             try:
-                s3_resource.meta.client.download_file(bucket.name, os.path.basename(file), dl_file)
+                s3_resource.meta.client.download_file(bucket.name, file, dl_file)
             except Exception as e:
                 print("Something wrong: ", e)
             else:
@@ -616,10 +679,7 @@ def file_exists_in_bucket(s3_resource, bucketname, key: str) -> (bool):
         Bucket=bucketname,
         Prefix=key,
     )
-    print(response, key)
     for obj in response.get('Contents', []):
-        print(obj['Key'], key)
-        print(obj['Key'] == key)
         if obj['Key'] == key:
             return True
 
@@ -677,8 +737,6 @@ def put(config: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
-    all_files = list()      # List of all files to be uploaded
-
     # Check for all required login credentials and project and return in correct format
     user_info = verify_user_input(config=config,
                                   username=username,
@@ -692,59 +750,23 @@ def put(config: str, username: str, password: str, project: str,
     if not isinstance(user_id, str):
         raise DeliveryPortalException("User ID not set, "
                                       "cannot proceed with data delivery.")
+ 
+    all_files = collect_all_data(data=data, pathfile=pathfile)
 
-    # If no files are entered --> quit
-    if not data and not pathfile:
-        raise DeliveryPortalException(
-            "No data to be uploaded. Specify individual files/folders using "
-            "the --data/-d option one or more times, or the --pathfile/-f. "
-            "For help: 'dp_api --help'"
-        )
-    else:
-        # If --data option --> put all files in list
-        if data is not None:
-            all_files = [os.path.abspath(d) if os.path.exists(d)
-                         else [None, d] for d in data]
-
-        # If --pathfile option --> put all files in list
-        if pathfile is not None:
-            pathfile_abs = os.path.abspath(pathfile)
-            # Precaution, already checked in click.option
-            if os.path.exists(pathfile_abs):
-                with open(pathfile_abs, 'r') as file:  # Read lines, strip \n and put in list
-                    all_files += [os.path.abspath(line.strip()) if os.path.exists(line.strip())
-                                  else [None, line.strip()] for line in file]
-            else:
-                raise IOError(
-                    f"--pathfile option {pathfile} does not exist. Cancelling delivery.")
-
-            # Check for file duplicates
-            for element in all_files:
-                if all_files.count(element) != 1:
-                    raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
-                                                  "please remove path dublicates.")
-
-        # This should never be able to be true - just precaution
-        if not all_files:
-            raise DeliveryPortalException("Data tuple empty. Nothing to upload."
-                                          "Cancelling delivery.")
+    # This should never be able to be true - just precaution
+    if not all_files:
+        raise DeliveryPortalException("Data tuple empty. Nothing to upload."
+                                    "Cancelling delivery.")
 
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
     temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
-    dirs_created, dirs = create_directories(tdir=temp_dir)
+    dirs = tuple(f"{temp_dir}/{sf}" for sf in ["", "files/", "keys/", "meta/", "logs/"])
+
+    dirs_created = create_directories(dirs=dirs, temp_dir=temp_dir)
     if not dirs_created:  # If error when creating one of the folders
-        if os.path.exists(temp_dir):
-            try:
-                shutil.rmtree(temp_dir)  # Remove all prev created folders
-                sys.exit(f"Temporary directory deleted. \n\n"
-                         "----DELIVERY CANCELLED---\n")  # and quit
-            except OSError as ose:
-                sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
-                         "----DELIVERY CANCELLED---\n")
-    else:
-        logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
-                            level=logging.DEBUG)
+        raise Exception("")
+        pass    # raise exception here 
 
     s3_resource, project_bucket = get_s3_info(current_project=user_info['project'],
                                               s3_proj=s3_proj)
@@ -810,79 +832,34 @@ def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
-    print(f"config: \t {config}\n"
-          f"username: \t {username}\n"
-          f"password: \t {password}\n"
-          f"project: \t {project}\n"
-          f"pathfile: \t {pathfile}\n"
-          f"data: \t {data}\n")
+    all_files = list() 
 
     user_info = verify_user_input(config=config,
                                   username=username,
                                   password=password,
                                   project=project)
 
-    print("user info: ", user_info)
-
     user_id, s3_proj = check_access(login_info=user_info)
-
-    print(f"user id: {user_id}\n"
-          f"s3_proj: {s3_proj}\n")
 
     if not isinstance(user_id, str):
         raise DeliveryPortalException("User ID not set, "
                                       "cannot proceed with data delivery.")
 
-    # If no files are entered --> quit
-    if not data and not pathfile:
-        raise DeliveryPortalException(
-            "No files chosen for download. Specify individual files/folders using "
-            "the --data/-d option one or more times, or the --pathfile/-f. "
-            "For help: 'dp_api --help'"
-        )
-    else:
-        # If --data option --> put all files in list
-        if data is not None:
-            all_files = [d for d in data]
-
-        # If --pathfile option --> put all files in list
-        if pathfile is not None:
-            pathfile_abs = os.path.abspath(pathfile)
-            # Precaution, already checked in click.option
-            if os.path.exists(pathfile_abs):
-                with open(pathfile_abs, 'r') as file:  # Read lines, strip \n and put in list
-                    all_files += [line.strip() for line in file]
-            else:
-                raise IOError(f"--pathfile option {pathfile} does not exist. "
-                              "Cancelling delivery.")
-
-            # Check for file duplicates
-            for element in all_files:
-                if all_files.count(element) != 1:
-                    raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
-                                                  "please remove path dublicates.")
-
-        # This should never be able to be true - just precaution
-        if not all_files:
-            raise DeliveryPortalException("Data tuple empty. Nothing to upload."
-                                          "Cancelling delivery.")
+    all_files = collect_all_data(data=data, pathfile=pathfile)
+                   
+    # This should never be able to be true - just precaution
+    if not all_files:
+        raise DeliveryPortalException("Data tuple empty. Nothing to upload."
+                                        "Cancelling delivery.")
 
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
     temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
-    dirs_created, dirs = create_directories(tdir=temp_dir)
+    dirs = tuple(f"{temp_dir}/{sf}" for sf in ["", "files/", "keys/", "meta/", "logs/"])
+    
+    dirs_created = create_directories(dirs=dirs, temp_dir=temp_dir)
     if not dirs_created:  # If error when creating one of the folders
-        if os.path.exists(temp_dir):
-            try:
-                shutil.rmtree(temp_dir)  # Remove all prev created folders
-                sys.exit(f"Temporary directory deleted. \n\n"
-                         "----DELIVERY CANCELLED---\n")  # and quit
-            except OSError as ose:
-                sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
-                         "----DELIVERY CANCELLED---\n")
-    else:
-        logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
-                            level=logging.DEBUG)
+        pass    # raise exception here 
 
     s3_resource, project_bucket = get_s3_info(current_project=user_info['project'],
                                               s3_proj=s3_proj)
@@ -891,7 +868,6 @@ def get(config: str, username: str, password: str, project: str,
     with concurrent.futures.ThreadPoolExecutor() as executor:
         upload_threads = []
         for path in all_files:
-            print(f"Path: {path}, {all_files}")
             if type(path) == str:
                 # Download all files
                 future = executor.submit(s3_download, path,

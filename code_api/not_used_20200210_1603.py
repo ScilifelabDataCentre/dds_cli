@@ -576,3 +576,610 @@ def process_folder(folder: str, s3_resource, thepool, user: dict, temp_dir: str,
 
     mime, ext, is_compressed, \
         compression_algorithm = file_type(file)   # Check mime type
+
+# 20200226 - refactoring to classes 
+
+def verify_user_input(config: str, username: str, password: str,
+                      project: str, owner: str = "") -> (str, str, str):
+    """Checks that the correct options and credentials are entered.
+
+    Args:
+        config:     File containing the users DP username and password,
+                    and the project relating to the upload/download.
+                    Can be used instead of inputing the credentials separately.
+        username:   Username for DP log in.
+        password:   Password connected to username.
+        project:    Project ID.
+        owner:      The owner of the data/project, "" if downloading 
+
+    Returns:
+        tuple: A tuple containing three strings
+
+            Username (str)
+
+            Password (str)
+
+            Project ID (str)
+
+    """
+
+    credentials = dict()
+
+    # If none of username, password and config options are set
+    # raise exception and quit execution -- dp cannot be accessed
+    if all(x is None for x in [username, password, config]):
+        raise DeliveryPortalException("Delivery Portal login credentials "
+                                      "not specified. Enter: \n --username/-u "
+                                      "AND --password/-pw, or --config/-c\n "
+                                      "--owner/-o\n"
+                                      "For help: 'dp_api --help'.")
+    else:
+        if owner == "":
+            owner = None    # Should be a "researcher" role trying to download
+
+        if config is not None:              # If config file entered
+            if os.path.exists(config):      # and exist
+                try:
+                    with open(config, 'r') as cf:
+                        credentials = json.load(cf)
+                except OSError as ose:
+                    sys.exit(f"Could not open path-file {config}: {ose}")
+
+                credentials['owner'] = owner
+
+                # Check that all credentials are entered and quit if not
+                for c in ['username', 'password', 'project', 'owner']:
+                    if c not in credentials:
+                        raise DeliveryPortalException("The config file does not "
+                                                      f"contain: '{c}'.")
+                return credentials
+        else:   # If config file is not entered check other options
+            if username is None or password is None:
+                raise DeliveryPortalException("Delivery Portal login credentials "
+                                              "not specified. Enter --username/-u "
+                                              "AND --password/-pw, or --config/-c."
+                                              "For help: 'dp_api --help'.")
+            else:
+                if project is None:
+                    raise DeliveryPortalException("Project not specified. Enter "
+                                                  "project ID using --project option "
+                                                  "or add to config file using --config/-c"
+                                                  "option.")
+                return {'username': username,
+                        'password': password,
+                        'project': project,
+                        'owner': owner}
+
+
+def check_access(login_info: dict) -> (str):
+    """Checks the users access to the delivery portal and the specified project,
+    and the projects S3 access.
+
+    Args:
+        login_info:     Dictionary containing username, password and project ID.
+
+    Returns:
+        str:    User ID connected to the specified user.
+
+    """
+
+    # Get user specified options
+    username = login_info['username']
+    password = login_info['password']
+    project = login_info['project']
+    owner = login_info['owner']
+
+    try:
+        user_db = couch_connect()['user_db']    # Connect to user database
+    except CouchDBException as cdbe:
+        sys.exit(f"Could not collect database 'user_db'. {cdbe}")
+    else:
+        for id_ in user_db:  # Search the database for the user
+            if username == user_db[id_]['username']:  # If found check password
+                if (user_db[id_]['password']['hash'] !=
+                        secure_password_hash(password_settings=user_db[id_]['password']['settings'],
+                                             password_entered=password)):
+                    raise DeliveryPortalException("Wrong password. "
+                                                  "Access to Delivery Portal denied.")
+                else:   # Correct password
+                    calling_command = sys._getframe().f_back.f_code.co_name  # get or put
+
+                    # If facility is uploading or researcher is downloading, access is granted
+                    if (user_db[id_]['role'] == 'facility' and calling_command == "put" and owner is not None) or \
+                            (user_db[id_]['role'] == 'researcher' and calling_command == "get" and owner is None):
+                        # Check project access
+                        project_access_granted = project_access(user=id_,
+                                                                project=project,
+                                                                owner=owner)
+                        if not project_access_granted:
+                            raise DeliveryPortalException(
+                                "Project access denied. Cancelling upload."
+                            )
+                        else:
+                            if 's3_project' not in user_db[id_]:
+                                raise DeliveryPortalException("Safespring S3 project not specified. "
+                                                              "Cannot proceed with delivery. Aborted.")
+                            else:
+                                try:
+                                    s3_project = user_db[id_]['s3_project']['name']
+                                except DeliveryPortalException as dpe:
+                                    sys.exit("Could not get Safespring S3 project name from database."
+                                             f"{dpe}.\nDelivery aborted. ")
+                                else:
+                                    return id_, s3_project
+
+                    else:  # Otherwise there is an option error.
+                        if owner is None:
+                            raise DeliveryOptionException("You did not specify the data owner."
+                                                          "For help: 'dp_api --help'")
+                        else:
+                            raise DeliveryOptionException("Chosen upload/download "
+                                                          "option not granted. "
+                                                          f"You chose: '{calling_command}'. "
+                                                          "For help: 'dp_api --help'")
+        # The user not found.
+        raise CouchDBException("Username not found in database. "
+                               "Access to Delivery Portal denied.")
+
+
+def project_access(user: str, project: str, owner: str) -> (bool):
+    """Checks the users access to a specific project.
+
+    Args:
+        user:       User ID.
+        project:    ID of project that the user is requiring access to.
+        owner:      Owner of project.
+
+    Returns:
+        bool:   True if project access granted
+
+    """
+
+    try:
+        couch = couch_connect()    # Connect to database
+    except CouchDBException as cdbe:
+        sys.exit(f"Could not connect to CouchDB: {cdbe}")
+    else:
+        # Get the projects registered for the user
+        user_projects = couch['user_db'][user]['projects']
+
+        # If the specified project does not exist in the project database quit
+        if project not in couch['project_db']:
+            raise CouchDBException(f"The project {project} does not exist.")
+        else:
+            # If the specified project does not exist in the users project list quit
+            if project not in user_projects:
+                raise DeliveryOptionException("You do not have access to the specified project "
+                                              f"{project}. Aborting upload.")
+            else:
+                project_db = couch['project_db'][project]
+                # If the project exists but does not have any 'project_info'
+                # raise exception and quit
+                if 'project_info' not in project_db:
+                    raise CouchDBException("There is no 'project_info' recorded "
+                                           "for the specified project.")
+                else:
+                    # If the specified project does not have a owner quit
+                    if 'owner' not in project_db['project_info']:
+                        raise CouchDBException("A owner of the data has not been "
+                                               "specified. Cannot guarantee data "
+                                               "security. Cancelling delivery.")
+                    else:
+                        # The user is a facility and has specified a data owner
+                        # or the user is the owner and is a researcher
+                        if (owner is not None and owner == project_db['project_info']['owner']) or \
+                                (owner is None and user == project_db['project_info']['owner']):
+                            # If the project delivery option is not S3, raise except and quit
+                            if 'delivery_option' not in project_db['project_info']:
+                                raise CouchDBException("A delivery option has not been "
+                                                       "specified for this project. ")
+                            else:
+                                if not project_db['project_info']['delivery_option'] == "S3":
+                                    raise DeliveryOptionException("The specified project does "
+                                                                  "not have access to S3 delivery.")
+                                else:
+                                    return True  # No exceptions - access granted
+                        else:
+                            raise DeliveryOptionException("Incorrect data owner! You do not "
+                                                          "have access to this project. "
+                                                          "Cancelling delivery.")
+
+
+def collect_all_data(data: tuple, pathfile: str) -> (list):
+    """Puts all entered paths into one list
+
+    Args: 
+        data:       Tuple containing paths
+        pathfile:   Path to file containing paths
+
+    Returns: 
+        list: List of all paths entered in data and pathfile option
+
+    """
+
+    all_files = list()
+
+    delivery_option = sys._getframe().f_back.f_code.co_name
+
+    # If no files are entered --> quit
+    if not data and not pathfile:
+        raise DeliveryPortalException(
+            "No data to be uploaded. Specify individual files/folders using "
+            "the --data/-d option one or more times, or the --pathfile/-f. "
+            "For help: 'dp_api --help'"
+        )
+    else:
+        # If --data option --> put all files in list
+        if data is not None:
+            if delivery_option == "put":
+                all_files = [os.path.abspath(d) if os.path.exists(d)
+                             else [None, d] for d in data]
+            elif delivery_option == "get":
+                all_files = [d for d in data]
+            else:
+                pass    # raise an error here
+
+        # If --pathfile option --> put all files in list
+        if pathfile is not None:
+            pathfile_abs = os.path.abspath(pathfile)
+            # Precaution, already checked in click.option
+            if os.path.exists(pathfile_abs):
+                with open(pathfile_abs, 'r') as file:  # Read lines, strip \n and put in list
+                    if delivery_option == "put":
+                        all_files += [os.path.abspath(line.strip()) if os.path.exists(line.strip())
+                                      else [None, line.strip()] for line in file]
+                    elif delivery_option == "get":
+                        all_files += [line.strip() for line in file]
+                    else:
+                        pass    # raise an error here
+            else:
+                raise IOError(
+                    f"--pathfile option {pathfile} does not exist. Cancelling delivery.")
+
+            # Check for file duplicates
+            for element in all_files:
+                if all_files.count(element) != 1:
+                    raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
+                                                  "please remove path dublicates.")
+    return all_files
+
+def create_directories(dirs: str, temp_dir: str) -> (bool, tuple):
+    """Creates all temporary directories.
+
+    Args:
+        tdir:   Path to new temporary directory
+
+    Returns:
+        tuple:  Tuple containing
+
+            bool:   True if directories created
+            tuple:  All created directories
+    """
+
+    print("Directories: ", dirs)
+    for d_ in dirs:
+        try:
+            os.mkdir(d_)
+        except OSError as ose:
+            click.echo(f"The directory '{d_}' could not be created: {ose}"
+                       "Cancelling delivery. Deleting temporary directory.")
+
+            if os.path.exists(temp_dir):
+                try:
+                    shutil.rmtree(temp_dir)  # Remove all prev created folders
+                    sys.exit(f"Temporary directory deleted. \n\n"
+                             "----DELIVERY CANCELLED---\n")  # and quit
+                except OSError as ose:
+                    sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
+                             "----DELIVERY CANCELLED---\n")
+
+            return False
+
+        else:
+            pass  # create log file here
+            # logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
+            #         level=logging.DEBUG)
+
+    return True
+
+    def file_type(fpath: str) -> (str, str, bool, str):
+    """Guesses file mime.
+
+    Args:
+        fpath: Path to file.
+
+    """
+
+    mime = None             # file mime
+    extension = None
+    is_compressed = False
+    comp_alg = None   # compression algorithm
+
+    if os.path.isdir(fpath):
+        mime = "folder"
+    else:
+        mime, encoding = mimetypes.guess_type(fpath)    # Guess file type
+        extension = os.path.splitext(fpath)[1]          # File extension
+
+        # Set compressed files as compressed
+        if extension in COMPRESSED_FORMATS:
+            is_compressed = True
+            comp_alg = COMPRESSED_FORMATS[extension]
+
+        # If the file mime type couldn't be found, manually check for ngs files
+        if mime is None:
+            if extension in mimetypes.types_map:
+                mime = mimetypes.types_map[extension]
+            elif extension == "":
+                mime = None
+            elif extension in (".abi", ".ab1"):
+                mime = "ngs-data/abi"
+            elif extension in (".embl"):
+                mime = "ngs-data/embl"
+            elif extension in (".clust", ".cw", ".clustal"):
+                mime = "ngs-data/clustal"
+            elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
+                mime = "ngs-data/fasta"
+            elif extension in (".fastq", ".fq"):
+                mime = "ngs-data/fastq"
+            elif extension in (".gbk", ".genbank", ".gb"):
+                mime = "ngs-data/genbank"
+            elif extension in (".paup", ".nexus"):
+                mime = "ngs-data/nexus"
+            else:
+                mime = None
+                click.echo(
+                    f"Warning! Could not detect file type for file {fpath}")
+
+        return mime, extension, is_compressed, comp_alg
+
+def file_type(fpath: str) -> (str, str, bool, str):
+    """Guesses file mime.
+
+    Args:
+        fpath: Path to file.
+
+    """
+
+    mime = None             # file mime
+    extension = None
+    is_compressed = False
+    comp_alg = None   # compression algorithm
+
+    if os.path.isdir(fpath):
+        mime = "folder"
+    else:
+        mime, encoding = mimetypes.guess_type(fpath)    # Guess file type
+        extension = os.path.splitext(fpath)[1]          # File extension
+
+        # Set compressed files as compressed
+        if extension in COMPRESSED_FORMATS:
+            is_compressed = True
+            comp_alg = COMPRESSED_FORMATS[extension]
+
+        # If the file mime type couldn't be found, manually check for ngs files
+        if mime is None:
+            if extension in mimetypes.types_map:
+                mime = mimetypes.types_map[extension]
+            elif extension == "":
+                mime = None
+            elif extension in (".abi", ".ab1"):
+                mime = "ngs-data/abi"
+            elif extension in (".embl"):
+                mime = "ngs-data/embl"
+            elif extension in (".clust", ".cw", ".clustal"):
+                mime = "ngs-data/clustal"
+            elif extension in (".fa", ".fasta", ".fas", ".fna", ".faa", ".afasta"):
+                mime = "ngs-data/fasta"
+            elif extension in (".fastq", ".fq"):
+                mime = "ngs-data/fastq"
+            elif extension in (".gbk", ".genbank", ".gb"):
+                mime = "ngs-data/genbank"
+            elif extension in (".paup", ".nexus"):
+                mime = "ngs-data/nexus"
+            else:
+                mime = None
+                click.echo(
+                    f"Warning! Could not detect file type for file {fpath}")
+
+        return mime, extension, is_compressed, comp_alg
+
+def get_s3_info(current_project: str, s3_proj: str):
+    """Gets the users s3 credentials including endpoint and key pair,
+    and a bucket object representing the current project.
+
+    Args:
+        current_project:    The project ID to which the data belongs.
+        s3_proj:            Safespring S3 project, facility specific.
+
+    Returns:
+        tuple:  Tuple containing
+
+            s3_resource:    S3 resource (connection)
+            bucket:         S3 bucket to upload to/download from
+
+        """
+
+    # Project access granted -- Get S3 credentials
+    s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
+    with open(s3path) as f:
+        s3creds = json.load(f)
+
+    # Keys and endpoint from file - this will be changed to database
+    endpoint_url = s3creds['endpoint_url']
+    project_keys = s3creds['sfsp_keys'][s3_proj]
+
+    # Start s3 connection resource
+    s3_resource = boto3.resource(
+        service_name='s3',
+        endpoint_url=endpoint_url,
+        aws_access_key_id=project_keys['access_key'],
+        aws_secret_access_key=project_keys['secret_key'],
+    )
+
+    # Bucket to upload to specified by user
+    bucketname = f"project_{current_project}"
+    bucket = s3_resource.Bucket(bucketname)
+
+    return s3_resource, bucket
+
+def timestamp() -> (str):
+    """Gets the current time. Formats timestamp.
+
+    Returns:
+        str:    Timestamp in format 'YY-MM-DD_HH-MM-SS'
+
+    """
+
+    now = datetime.datetime.now()
+    timestamp = ""
+    sep = ""
+
+    for t in (now.year, "-", now.month, "-", now.day, " ",
+              now.hour, ":", now.minute, ":", now.second):
+        if len(str(t)) == 1 and isinstance(t, int):
+            timestamp += f"0{t}"
+        else:
+            timestamp += f"{t}"
+
+    return timestamp.replace(" ", "_").replace(":", "-")
+
+def s3_upload(file: str, spec_path: str, s3_resource, bucket) -> (str):
+    """Handles processing of files including compression and encryption.
+
+    Args:
+        file:           File to be uploaded
+        spec_path:      The original specified path, None if single specified file
+        s3_resource:    The S3 connection resource
+        bucket:         S3 bucket to upload to
+
+    """
+
+    filetoupload = os.path.abspath(file)
+    filename = os.path.basename(filetoupload)
+
+    root_folder = ""
+    filepath = ""
+    all_subfolders = ""
+
+    # Upload file
+    MB = 1024 ** 2
+    GB = 1024 ** 3
+    config = TransferConfig(multipart_threshold=5*GB, multipart_chunksize=5*MB)
+
+    # check if bucket exists
+    if bucket in s3_resource.buckets.all():
+        # if file, not within folder
+        if spec_path is None:
+            filepath = filename
+        else:
+            root_folder = os.path.basename(os.path.normpath(spec_path))
+            filepath = f"{root_folder}{filetoupload.split(root_folder)[-1]}"
+            all_subfolders = f"{filepath.split(filename)[0]}"
+
+            # check if folder exists
+            response = s3_resource.meta.client.list_objects_v2(
+                Bucket=bucket.name,
+                Prefix="",
+            )
+
+            found = False
+            for obj in response.get('Contents', []):
+                if obj['Key'] == all_subfolders:
+                    found = True
+                    break
+
+            if not found:   # if folder doesn't exist then create folder
+                s3_resource.meta.client.put_object(Bucket=bucket.name,
+                                                   Key=all_subfolders)
+
+        # check if file exists
+        if file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=filepath):
+            return f"File exists: {filename}, not uploading file."
+        else:
+            try:
+                s3_resource.meta.client.upload_file(filetoupload, bucket.name,
+                                                    filepath, Config=config)
+            except Exception as e:
+                print("Something wrong: ", e)
+            else:
+                return f"Success: {filetoupload} uploaded to S3!"
+
+
+def s3_download(file: str, s3_resource, bucket, dl_file: str) -> (str):
+    """Downloads the specified files
+
+    Args: 
+        file:           File to be downloaded
+        s3_resource:    S3 connection
+        bucket:         Bucket to download from
+        dl_file:        Name of downloaded file
+
+    Returns:
+        str:    Success message if download successful 
+
+    """
+    print(file, os.path.basename(file))
+    # check if bucket exists
+    if bucket in s3_resource.buckets.all():
+
+        # check if file exists
+        if not file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=file) and not \
+                file_exists_in_bucket(s3_resource=s3_resource, bucketname=bucket.name, key=f"{file}/"):
+            return f"File does not exist: {file}, not downloading anything."
+        else:
+            try:
+                s3_resource.meta.client.download_file(
+                    bucket.name, file, dl_file)
+            except Exception as e:
+                print("Something wrong: ", e)
+            else:
+                return f"Success: {file} downloaded from S3!"
+
+def file_exists_in_bucket(s3_resource, bucketname, key: str) -> (bool):
+    """Checks if the current file already exists in the specified bucket.
+    If so, the file will not be uploaded.
+
+    Args:
+        s3_resource:    Boto3 S3 resource
+        bucket:         Name of bucket to check for file
+        key:            Name of file to look for
+
+    Returns:
+        bool:   True if the file already exists, False if it doesnt
+
+    """
+
+    response = s3_resource.meta.client.list_objects_v2(
+        Bucket=bucketname,
+        Prefix=key,
+    )
+    for obj in response.get('Contents', []):
+        if obj['Key'] == key:
+            return True
+
+    return False
+
+
+def compression_dict() -> (dict):
+    """Creates a dictionary of compressed types.
+
+    Returns:
+        dict:   All mime types regarded as compressed formats
+
+    """
+
+    extdict = mimetypes.encodings_map   # Original dict with compressed formats
+
+    # Add custom formats
+    extdict['.z'] = 'compress'
+    extdict['.tgz'] = 'tar+gzip'
+    extdict['.tbz2'] = 'tar+bz2'
+
+    # Add more formats with same name as extension
+    formats = ['gzip', 'lzo', 'snappy', 'zip', 'mp3', 'jpg',
+               'jpeg', 'mpg', 'mpeg', 'avi', 'gif', 'png']
+    for f_ in formats:
+        extdict[f'.{f_}'] = f_
+
+    return extdict

@@ -73,7 +73,7 @@ COMPRESSED_FORMATS = dict()
 @click.group()
 def cli():
     global COMPRESSED_FORMATS
-    
+
 
 @cli.command()
 @click.option('--config', '-c',
@@ -151,7 +151,10 @@ def put(config: str, username: str, password: str, project: str,
 def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
-
+    
+    with DataDeliverer(config=config, username=username, password=password,
+                       project_id=project, pathfile=pathfile, data=data) as delivery:
+        delivery.get()
     pass
     # all_files = list()
 

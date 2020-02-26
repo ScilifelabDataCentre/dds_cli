@@ -14,7 +14,6 @@ import concurrent
 import couchdb
 
 
-
 class DPUser():
     '''
     A Data Delivery Portal user.
@@ -89,7 +88,7 @@ class DataDeliverer():
 
             self.check_user_input(config=config)
 
-            dp_access_granted, self.user.id = self.check_dp_access()
+            dp_access_granted = self.check_dp_access()
             if dp_access_granted and self.user.id is not None:
                 proj_access_granted, self.s3.project = self.check_project_access()
                 if proj_access_granted and self.s3.project is not None:
@@ -136,11 +135,11 @@ class DataDeliverer():
 
     def couch_connect(self):
         '''Connects to a couchdb interface. Currently hard-coded.
-        
+
         Returns:
             couchdb.client.Server:  CouchDB server instance.
             '''
-            
+
         try:
             couch = couchdb.Server('http://delport:delport@localhost:5984/')
         except CouchDBException as cdbe:
@@ -170,7 +169,7 @@ class DataDeliverer():
                     sys.exit(f"Could not open path-file {config}: {ose}")
 
                 # Check that all credentials are entered and quit if not
-                for c in ['username', 'password', 'project', 'owner']:
+                for c in ['username', 'password', 'project']:
                     if c not in credentials:
                         raise DeliveryOptionException("The config file does not "
                                                       f"contain: '{c}'.")
@@ -178,7 +177,8 @@ class DataDeliverer():
                 self.user.username = credentials['username']
                 self.user.password = credentials['password']
                 self.project_id = credentials['project']
-                self.project_owner = credentials['owner']
+                if 'owner' in credentials:
+                    self.project_owner = credentials['owner']
             else:
                 raise OSError(f"Config file {config} does not exist. "
                               "Cancelling delivery.")
@@ -200,6 +200,10 @@ class DataDeliverer():
                 if self.project_owner is None:
                     self.project_owner = self.user.username
 
+        if self.project_owner is None and self.method == 'put':
+            raise DeliveryOptionException("Project owner not specified. "
+                                          "Cancelling delivery.")
+
     def check_dp_access(self):
         '''Checks the users access to the delivery portal
 
@@ -219,14 +223,14 @@ class DataDeliverer():
             user_db = self.couch_connect()['user_db']
         except CouchDBException as cdbe:
             sys.exit(f"Could not collect database 'user_db'. {cdbe}")
-        else:
+        else:   
             # Search the database for the user
             for id_ in user_db:
                 # If found, create secure password hash and compare to correct password
                 if self.user.username == user_db[id_]['username']:
                     password_settings = user_db[id_]['password']['settings']
                     password_hash = secure_password_hash(password_settings=password_settings,
-                                                                password_entered=self.user.password)
+                                                         password_entered=self.user.password)
                     if user_db[id_]['password']['hash'] != password_hash:
                         raise DeliveryPortalException("Wrong password. "
                                                       "Access to Delivery Portal denied.")
@@ -235,11 +239,13 @@ class DataDeliverer():
                         self.user.role = user_db[id_]['role']
                         if (self.user.role == 'facility' and self.method == 'put') or \
                                 (self.user.role == 'researcher' and self.method == 'get'):
-                            return True, id_
-
-            # The user not found.
+                            self.user.id = id_
+                            if (self.user.role == 'researcher' and self.method == 'get' and self.project_owner is None):
+                                self.project_owner = self.user.id
+                            return True
+            
             raise CouchDBException("Username not found in database. "
-                                   "Access to Delivery Portal denied.")
+                                "Access to Delivery Portal denied.")
 
     def check_project_access(self):
         '''Checks the users access to a specific project.
@@ -388,7 +394,7 @@ class DataDeliverer():
                 os.mkdir(d_)
             except IOError as ose:
                 sys.exit(f"The directory '{d_}' could not be created: {ose}"
-                           "Cancelling delivery. Deleting temporary directory.")
+                         "Cancelling delivery. Deleting temporary directory.")
 
                 if os.path.exists(temp_dir):
                     try:
@@ -470,4 +476,4 @@ class DataDeliverer():
 
         '''
 
-        pass
+        print(self.project_owner)

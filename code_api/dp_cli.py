@@ -68,10 +68,362 @@ COMPRESSED_FORMATS = dict()
 
 # CLASSES ############################################################ CLASSES #
 
+class DPUser():
+    ''''''
+
+    def __init__(self, username=None, password=None):
+        ''''''
+
+        self.username = username
+        self.password = password
+        self.id = None
+        self.role = None
+
+
+class S3Object():
+    ''''''
+
+    def __init__(self):
+        ''''''
+
+        self.resource = None
+        self.project = None
+        self.bucket = None
+
+    def get_info(self, current_project: str):
+        '''Gets the users s3 credentials including endpoint and key pair,
+        and a bucket object representing the current project.
+
+        Args:
+            current_project:    The project ID to which the data belongs.
+            s3_proj:            Safespring S3 project, facility specific.
+
+        Returns:
+            tuple:  Tuple containing
+
+                s3_resource:    S3 resource (connection)
+                bucket:         S3 bucket to upload to/download from
+
+        '''
+
+        # Project access granted -- Get S3 credentials
+        s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
+        with open(s3path) as f:
+            s3creds = json.load(f)
+
+        # Keys and endpoint from file - this will be changed to database
+        endpoint_url = s3creds['endpoint_url']
+        project_keys = s3creds['sfsp_keys'][self.project]
+
+        # Start s3 connection resource
+        self.resource = boto3.resource(
+            service_name='s3',
+            endpoint_url=endpoint_url,
+            aws_access_key_id=project_keys['access_key'],
+            aws_secret_access_key=project_keys['secret_key'],
+        )
+
+        # Bucket to upload to specified by user
+        bucketname = f"project_{current_project}"
+        self.bucket = self.resource.Bucket(bucketname)
+
+
+class DataDeliverer():
+    '''
+    Raises:
+        DeliveryPortalException:    All required info not found
+        OSError:                    Config file not found
+    '''
+
+    def __init__(self, config=None, username=None, password=None,
+                 project_id=None, project_owner=None, pathfile=None, data=None):
+
+        # If none of username, password and config options are set
+        # raise exception and quit execution -- dp cannot be accessed
+        if all(x is None for x in [username, password, config]):
+            raise DeliveryPortalException("Delivery Portal login credentials "
+                                          "not specified. Enter: \n --username/-u "
+                                          "AND --password/-pw, or --config/-c\n "
+                                          "--owner/-o\n"
+                                          "For help: 'dp_api --help'.")
+        else:
+            # put or get
+            self.method = sys._getframe().f_back.f_code.co_name
+            self.user = DPUser(username=username, password=password)
+            self.project_id = project_id
+            self.project_owner = project_owner
+            self.data = None
+            self.s3 = S3Object()
+
+            self.check_user_input(config=config)
+
+            dp_access_granted, self.user.id = self.check_dp_access()
+            if dp_access_granted and self.user.id is not None:
+                proj_access_granted, self.s3.project = self.check_project_access()
+                if proj_access_granted and self.s3.project is not None:
+                    # If no data to upload, cancel
+                    if not data and not pathfile:
+                        raise DeliveryPortalException(
+                            "No data to be uploaded. Specify individual files/folders using "
+                            "the --data/-d option one or more times, or the --pathfile/-f. "
+                            "For help: 'dp_api --help'"
+                        )
+                    else:
+                        self.data = self.data_to_deliver(data=data,
+                                                         pathfile=pathfile)
+                else:
+                    raise DeliveryPortalException(f"Access to project {self.project_id} "
+                                                  "denied. Delivery cancelled.")
+            else:
+                raise DeliveryPortalException("Delivery Portal access denied! "
+                                              "Delivery cancelled.")
+
+            if self.data is not None:
+                dirs_created, self.tempdir = self.create_directories()
+                if not dirs_created:
+                    raise DeliveryPortalException(
+                        "Temporary directory could not be created. Unable to continue delivery. Aborting. ")
+
+                self.s3.get_info(self.project_id)
+
+    def check_user_input(self, config):
+        ''''''
+        if config is not None:              # If config file entered
+            if os.path.exists(config):      # and exist
+                try:
+                    with open(config, 'r') as cf:
+                        credentials = json.load(cf)
+                except OSError as ose:
+                    sys.exit(f"Could not open path-file {config}: {ose}")
+
+                # Check that all credentials are entered and quit if not
+                for c in ['username', 'password', 'project', 'owner']:
+                    if c not in credentials:
+                        raise DeliveryPortalException("The config file does not "
+                                                      f"contain: '{c}'.")
+
+                self.user.username = credentials['username']
+                self.user.password = credentials['password']
+                self.project_id = credentials['project']
+                self.project_owner = credentials['owner']
+
+        else:
+            if self.user.username is None or self.user.password is None:
+                raise DeliveryPortalException("Delivery Portal login credentials "
+                                              "not specified. Enter --username/-u "
+                                              "AND --password/-pw, or --config/-c."
+                                              "For help: 'dp_api --help'.")
+            else:
+                if self.project_id is None:
+                    raise DeliveryPortalException("Project not specified. Enter "
+                                                  "project ID using --project option "
+                                                  "or add to config file using --config/-c"
+                                                  "option.")
+
+                # If no owner is set then assuming current user is owner
+                if self.project_owner is None:
+                    self.project_owner = self.user.username
+
+    def check_dp_access(self):
+        ''''''
+        try:
+            user_db = couch_connect()['user_db']
+        except CouchDBException as cdbe:
+            sys.exit(f"Could not collect database 'user_db'. {cdbe}")
+        else:
+            # Search the database for the user
+            for id_ in user_db:
+                # If found, create secure password hash and compare to correct password
+                if self.user.username == user_db[id_]['username']:
+                    password_settings = user_db[id_]['password']['settings']
+                    password_hash = secure_password_hash(password_settings=password_settings,
+                                                         password_entered=self.user.password)
+                    if user_db[id_]['password']['hash'] != password_hash:
+                        raise DeliveryPortalException("Wrong password. "
+                                                      "Access to Delivery Portal denied.")
+                    else:
+                        # Check that facility is uploading or researcher downloading
+                        self.user.role = user_db[id_]['role']
+                        if (self.user.role == 'facility' and self.method == 'put') or \
+                                (self.user.role == 'researcher' and self.method == 'get'):
+                            return True, id_
+
+            # The user not found.
+            raise CouchDBException("Username not found in database. "
+                                   "Access to Delivery Portal denied.")
+
+    def check_project_access(self):
+        ''''''
+        try:
+            couch = couch_connect()  # Connect to database
+        except CouchDBException as cdbe:
+            sys.exit(f"Could not connect to CouchDB: {cdbe}")
+        else:
+            user_db = couch['user_db']
+            # Get the projects registered to the user
+            user_projects = user_db[self.user.id]['projects']
+            # Check if project exists in project database
+            if self.project_id not in couch['project_db']:
+                raise CouchDBException(
+                    f"The project {self.project_id} does not exist.")
+            else:
+                # If user does not have access to the project, quit
+                if self.project_id not in user_projects:
+                    raise DeliveryOptionException("You do not have access to the specified project "
+                                                  f"{self.project_id}. Aborting delivery.")
+                else:
+                    current_project = couch['project_db'][self.project_id]
+                    # Get project information if it exists
+                    if 'project_info' not in current_project:
+                        raise CouchDBException("There is no 'project_info' recorded "
+                                               "for the specified project. Aborting delivery.")
+                    else:
+                        # Find owner of project and check if specified owner matches
+                        if 'owner' not in current_project['project_info']:
+                            raise CouchDBException("An owner of the data has not been "
+                                                   "specified. Cannot guarantee data "
+                                                   "security. Cancelling delivery.")
+                        else:
+                            correct_owner = current_project['project_info']['owner']
+                            # If facility specified correct user or researcher is owner
+                            if (self.method == 'put' and correct_owner == self.project_owner != self.user.id) or \
+                                    (self.method == 'get' and correct_owner == self.project_owner == self.user.id):
+                                if 'delivery_option' not in current_project['project_info']:
+                                    raise CouchDBException("A delivery option has not been "
+                                                           "specified for this project.")
+                                else:
+                                    if current_project['project_info']['delivery_option'] != "S3":
+                                        raise DeliveryOptionException("The specified project does not "
+                                                                      "have access to S3 delivery.")
+                                    else:
+                                        try:
+                                            s3_project = user_db[self.user.id]['s3_project']['name']
+                                        except DeliveryPortalException as dpe:
+                                            sys.exit("Could not get Safespring S3 project name from database."
+                                                     f"{dpe}. \nDelivery aborted.")
+                                        else:
+                                            return True, s3_project
+                            else:
+                                raise DeliveryOptionException("Incorrect data owner! You do not "
+                                                              "have access to this project. "
+                                                              "Cancelling delivery.")
+
+    def data_to_deliver(self, data: tuple, pathfile: str) -> (list):
+        ''''''
+
+        all_files = list()
+
+        # If --data option --> put all files in list
+        if data is not None:
+            if self.method == "put":
+                all_files = [os.path.abspath(d) if os.path.exists(d)
+                             else [None, d] for d in data]
+            elif self.method == "get":
+                all_files = [d for d in data]
+            else:
+                pass    # raise an error here
+
+        # If --pathfile option --> put all files in list
+        if pathfile is not None:
+            pathfile_abs = os.path.abspath(pathfile)
+            # Precaution, already checked in click.option
+            if os.path.exists(pathfile_abs):
+                with open(pathfile_abs, 'r') as file:  # Read lines, strip \n and put in list
+                    if self.method == "put":
+                        all_files += [os.path.abspath(line.strip()) if os.path.exists(line.strip())
+                                      else [None, line.strip()] for line in file]
+                    elif self.method == "get":
+                        all_files += [line.strip() for line in file]
+                    else:
+                        pass    # raise an error here
+            else:
+                raise IOError(
+                    f"--pathfile option {pathfile} does not exist. Cancelling delivery.")
+
+        # Check for file duplicates
+        for element in all_files:
+            if all_files.count(element) != 1:
+                raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
+                                              "please remove path dublicates.")
+
+        return all_files
+
+    def create_directories(self):
+        ''''''
+        # Create temporary folder with timestamp and all subfolders
+        timestamp_ = timestamp()
+        temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp_}"
+        dirs = tuple(
+            f"{temp_dir}/{sf}" for sf in ["", "files/", "keys/", "meta/", "logs/"])
+
+        for d_ in dirs:
+            try:
+                os.mkdir(d_)
+            except OSError as ose:
+                click.echo(f"The directory '{d_}' could not be created: {ose}"
+                           "Cancelling delivery. Deleting temporary directory.")
+
+                if os.path.exists(temp_dir):
+                    try:
+                        # Remove all prev created folders
+                        shutil.rmtree(temp_dir)
+                        sys.exit(f"Temporary directory deleted. \n\n"
+                                 "----DELIVERY CANCELLED---\n")  # and quit
+                    except OSError as ose:
+                        sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
+                                 "----DELIVERY CANCELLED---\n")
+
+                        return False, ()
+
+                else:
+                    pass  # create log file here
+                    # logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
+                    #         level=logging.DEBUG)
+
+        return True, dirs
+
+    def put(self):
+        ''''''
+
+        # Create multithreading pool
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            upload_threads = []
+            for path in self.data:
+                if type(path) == str:
+                    # check if folder and then get all subfolders
+                    if os.path.isdir(path):
+                        all_dirs = [x[0]
+                                    for x in os.walk(path)]  # all (sub)dirs
+                        for dir_ in all_dirs:
+                            # check which files are in the directory
+                            all_files = [os.path.join(dir_, f) for f in os.listdir(dir_)
+                                         if os.path.isfile(os.path.join(dir_, f))]
+                            # Upload all files
+                            for file in all_files:
+                                future = executor.submit(s3_upload, file, path,
+                                                         self.s3.resource, self.s3.bucket)
+                                upload_threads.append(future)
+                    elif os.path.isfile(path):
+                        # Upload file
+                        future = executor.submit(s3_upload, path, None,
+                                                 self.s3.resource, self.s3.bucket)
+                        upload_threads.append(future)
+                    else:
+                        sys.exit(f"Path type {path} not identified."
+                                 "Have you entered the correct path?")
+
+            for f in concurrent.futures.as_completed(upload_threads):
+                print(f.result())
+
+    def get(self):
+        ''''''
+
+        pass
 
 # FUNCTIONS ######################################################## FUNCTIONS #
 
 # Cryptography # # # # # # # # # # # # # # # # # # # # # # # # # Cryptography #
+
 
 def secure_password_hash(password_settings: str, password_entered: str) -> (str):
     """Generates secure password hash.
@@ -118,7 +470,7 @@ def couch_connect() -> (couchdb.client.Server):
         return couch
 
 
-def get_current_time() -> (str):
+def timestamp() -> (str):
     """Gets the current time. Formats timestamp.
 
     Returns:
@@ -137,7 +489,7 @@ def get_current_time() -> (str):
         else:
             timestamp += f"{t}"
 
-    return timestamp
+    return timestamp.replace(" ", "_").replace(":", "-")
 
 
 # Formats # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # Formats #
@@ -430,7 +782,7 @@ def project_access(user: str, project: str, owner: str) -> (bool):
 
 def collect_all_data(data: tuple, pathfile: str) -> (list):
     """Puts all entered paths into one list
-    
+
     Args: 
         data:       Tuple containing paths
         pathfile:   Path to file containing paths
@@ -439,8 +791,8 @@ def collect_all_data(data: tuple, pathfile: str) -> (list):
         list: List of all paths entered in data and pathfile option
 
     """
-    
-    all_files = list() 
+
+    all_files = list()
 
     delivery_option = sys._getframe().f_back.f_code.co_name
 
@@ -456,11 +808,11 @@ def collect_all_data(data: tuple, pathfile: str) -> (list):
         if data is not None:
             if delivery_option == "put":
                 all_files = [os.path.abspath(d) if os.path.exists(d)
-                            else [None, d] for d in data]
+                             else [None, d] for d in data]
             elif delivery_option == "get":
                 all_files = [d for d in data]
-            else: 
-                pass    # raise an error here 
+            else:
+                pass    # raise an error here
 
         # If --pathfile option --> put all files in list
         if pathfile is not None:
@@ -470,11 +822,11 @@ def collect_all_data(data: tuple, pathfile: str) -> (list):
                 with open(pathfile_abs, 'r') as file:  # Read lines, strip \n and put in list
                     if delivery_option == "put":
                         all_files += [os.path.abspath(line.strip()) if os.path.exists(line.strip())
-                                    else [None, line.strip()] for line in file]
+                                      else [None, line.strip()] for line in file]
                     elif delivery_option == "get":
                         all_files += [line.strip() for line in file]
-                    else: 
-                        pass    # raise an error here 
+                    else:
+                        pass    # raise an error here
             else:
                 raise IOError(
                     f"--pathfile option {pathfile} does not exist. Cancelling delivery.")
@@ -483,8 +835,9 @@ def collect_all_data(data: tuple, pathfile: str) -> (list):
             for element in all_files:
                 if all_files.count(element) != 1:
                     raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
-                                                "please remove path dublicates.")
-    return all_files 
+                                                  "please remove path dublicates.")
+    return all_files
+
 
 def create_directories(dirs: str, temp_dir: str) -> (bool, tuple):
     """Creates all temporary directories.
@@ -506,20 +859,20 @@ def create_directories(dirs: str, temp_dir: str) -> (bool, tuple):
         except OSError as ose:
             click.echo(f"The directory '{d_}' could not be created: {ose}"
                        "Cancelling delivery. Deleting temporary directory.")
-            
+
             if os.path.exists(temp_dir):
                 try:
                     shutil.rmtree(temp_dir)  # Remove all prev created folders
                     sys.exit(f"Temporary directory deleted. \n\n"
-                         "----DELIVERY CANCELLED---\n")  # and quit
+                             "----DELIVERY CANCELLED---\n")  # and quit
                 except OSError as ose:
                     sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
-                         "----DELIVERY CANCELLED---\n")
-    
+                             "----DELIVERY CANCELLED---\n")
+
             return False
 
-        else: 
-            pass # create log file here 
+        else:
+            pass  # create log file here
             # logging.basicConfig(filename=f"{temp_dir}/logs/data-delivery.log",
             #         level=logging.DEBUG)
 
@@ -611,7 +964,8 @@ def s3_download(file: str, s3_resource, bucket, dl_file: str) -> (str):
             return f"File does not exist: {file}, not downloading anything."
         else:
             try:
-                s3_resource.meta.client.download_file(bucket.name, file, dl_file)
+                s3_resource.meta.client.download_file(
+                    bucket.name, file, dl_file)
             except Exception as e:
                 print("Something wrong: ", e)
             else:
@@ -737,68 +1091,14 @@ def put(config: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
-    # Check for all required login credentials and project and return in correct format
-    user_info = verify_user_input(config=config,
-                                  username=username,
-                                  password=password,
-                                  project=project,
-                                  owner=owner)
+    with DataDeliverer(config=config, username=username, password=password,
+                       project_id=project, project_owner=owner, pathfile=pathfile, data=data) as delivery:
 
-    # Check user access to DP and project, and project to S3 delivery option
-    user_id, s3_proj = check_access(login_info=user_info)
+        print(f"{delivery.method}, {delivery.project_id}, {delivery.project_owner}, "
+              f"\n{delivery.user.username}, {delivery.user.password}, {delivery.user.id}")
+        print(f"{delivery.tempdir},\n {delivery.s3.resource}, {delivery.s3.project}, {delivery.s3.bucket}, {delivery.s3.bucket.name}")
 
-    if not isinstance(user_id, str):
-        raise DeliveryPortalException("User ID not set, "
-                                      "cannot proceed with data delivery.")
- 
-    all_files = collect_all_data(data=data, pathfile=pathfile)
-
-    # This should never be able to be true - just precaution
-    if not all_files:
-        raise DeliveryPortalException("Data tuple empty. Nothing to upload."
-                                    "Cancelling delivery.")
-
-    # Create temporary folder with timestamp and all subfolders
-    timestamp = get_current_time().replace(" ", "_").replace(":", "-")
-    temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
-    dirs = tuple(f"{temp_dir}/{sf}" for sf in ["", "files/", "keys/", "meta/", "logs/"])
-
-    dirs_created = create_directories(dirs=dirs, temp_dir=temp_dir)
-    if not dirs_created:  # If error when creating one of the folders
-        raise Exception("")
-        pass    # raise exception here 
-
-    s3_resource, project_bucket = get_s3_info(current_project=user_info['project'],
-                                              s3_proj=s3_proj)
-
-    # Create multithreading pool
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        upload_threads = []
-        for path in all_files:
-            if type(path) == str:
-                # check if folder and then get all subfolders
-                if os.path.isdir(path):
-                    all_dirs = [x[0] for x in os.walk(path)]  # all (sub)dirs
-                    for dir_ in all_dirs:
-                        # check which files are in the directory
-                        all_files = [os.path.join(dir_, f) for f in os.listdir(dir_)
-                                     if os.path.isfile(os.path.join(dir_, f))]
-                        # Upload all files
-                        for file in all_files:
-                            future = executor.submit(s3_upload, file, path,
-                                                     s3_resource, project_bucket)
-                            upload_threads.append(future)
-                elif os.path.isfile(path):
-                    # Upload file
-                    future = executor.submit(s3_upload, path, None,
-                                             s3_resource, project_bucket)
-                    upload_threads.append(future)
-                else:
-                    sys.exit(f"Path type {path} not identified."
-                             "Have you entered the correct path?")
-
-        for f in concurrent.futures.as_completed(upload_threads):
-            print(f.result())
+        delivery.put()
 
 
 @cli.command()
@@ -832,7 +1132,7 @@ def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
-    all_files = list() 
+    all_files = list()
 
     user_info = verify_user_input(config=config,
                                   username=username,
@@ -846,20 +1146,21 @@ def get(config: str, username: str, password: str, project: str,
                                       "cannot proceed with data delivery.")
 
     all_files = collect_all_data(data=data, pathfile=pathfile)
-                   
+
     # This should never be able to be true - just precaution
     if not all_files:
         raise DeliveryPortalException("Data tuple empty. Nothing to upload."
-                                        "Cancelling delivery.")
+                                      "Cancelling delivery.")
 
     # Create temporary folder with timestamp and all subfolders
     timestamp = get_current_time().replace(" ", "_").replace(":", "-")
     temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
-    dirs = tuple(f"{temp_dir}/{sf}" for sf in ["", "files/", "keys/", "meta/", "logs/"])
-    
+    dirs = tuple(
+        f"{temp_dir}/{sf}" for sf in ["", "files/", "keys/", "meta/", "logs/"])
+
     dirs_created = create_directories(dirs=dirs, temp_dir=temp_dir)
     if not dirs_created:  # If error when creating one of the folders
-        pass    # raise exception here 
+        pass    # raise exception here
 
     s3_resource, project_bucket = get_s3_info(current_project=user_info['project'],
                                               s3_proj=s3_proj)

@@ -87,3 +87,10 @@ class StreamingError(Exception):
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""
         super().__init__(msg)
+
+class S3Error(Exception):
+    """Handles errors regarding S3 storage, e.g. upload, download, 
+    buckets, resources, etc. """
+
+    def __init__(self, msg: str):
+        super().__init__(msg)

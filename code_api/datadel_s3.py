@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 import json
 
 import boto3
@@ -34,8 +35,8 @@ class S3Object():
         '''
 
         # Project access granted -- Get S3 credentials
-        s3path = str(Path(os.getcwd())) + "/sensitive/s3_config.json"
-        with open(s3path) as f:
+        s3path = Path.cwd() / Path("sensitive/s3_config.json")
+        with s3path.open(mode='r') as f:
             s3creds = json.load(f)
 
         # Keys and endpoint from file - this will be changed to database
@@ -67,106 +68,24 @@ class S3Object():
             bool:   True if the file already exists, False if it doesnt
 
         '''
-
+        print("här")
         response = self.resource.meta.client.list_objects_v2(
             Bucket=self.bucket.name,
             Prefix=key,
         )
+        print(f"Length: {len(response.get('Contents', []))}")
+
+        matching_paths = [path['Key'] for path in response.get('Contents', []) if key in path['Key']]
+        (f"Download paths: {matching_paths}")
+
+
         for obj in response.get('Contents', []):
+            print(f"{obj['Key']}, {key in obj['Key']}")
+            print(Path(obj['Key']).match(f'{key}*'))
             if obj['Key'] == key:
+                # print(Path(obj['Key']).parts)
                 return True
+            else: 
+                print("nope")
 
         return False
-
-    def upload(self, file: str, spec_path: str) -> (str):
-        '''Handles processing of files including compression and encryption.
-
-        Args:
-            file:           File to be uploaded
-            spec_path:      The original specified path, None if single specified file
-            s3_resource:    The S3 connection resource
-            bucket:         S3 bucket to upload to
-
-        '''
-
-        filetoupload = os.path.abspath(file)
-        filename = os.path.basename(filetoupload)
-
-        root_folder = ""
-        filepath = ""
-        all_subfolders = ""
-
-        # Upload file
-        MB = 1024 ** 2
-        GB = 1024 ** 3
-        config = TransferConfig(multipart_threshold=5*GB,
-                                multipart_chunksize=5*MB)
-
-        # check if bucket exists
-        if self.bucket in self.resource.buckets.all():
-            # if file, not within folder
-            if spec_path is None:
-                filepath = filename
-            else:
-                root_folder = os.path.basename(os.path.normpath(spec_path))
-                filepath = f"{root_folder}{filetoupload.split(root_folder)[-1]}"
-                all_subfolders = f"{filepath.split(filename)[0]}"
-
-                # check if folder exists
-                response = self.resource.meta.client.list_objects_v2(
-                    Bucket=self.bucket.name,
-                    Prefix="",
-                )
-
-                found = False
-                for obj in response.get('Contents', []):
-                    if obj['Key'] == all_subfolders:
-                        found = True
-                        break
-
-                if not found:   # if folder doesn't exist then create folder
-                    self.resource.meta.client.put_object(Bucket=self.bucket.name,
-                                                         Key=all_subfolders)
-
-            # check if file exists
-            if self.file_exists_in_bucket(key=filepath):
-                return f"File exists: {filename}, not uploading file."
-            else:
-                try:
-                    self.resource.meta.client.upload_file(filetoupload, self.bucket.name,
-                                                          filepath, Config=config)
-                except Exception as e:
-                    print("Something wrong: ", e)
-                else:
-                    return f"Success: {filetoupload} uploaded to S3!"
-
-    def download(self, file: str, dl_file: str) -> (str):
-        '''Downloads the specified files
-
-        Args: 
-            file:           File to be downloaded
-            s3_resource:    S3 connection
-            bucket:         Bucket to download from
-            dl_file:        Name of downloaded file
-
-        Returns:
-            str:    Success message if download successful 
-
-        '''
-
-        print(file, os.path.basename(file))
-        # check if bucket exists
-        if self.bucket in self.resource.buckets.all():
-
-            # check if file exists
-            if not self.file_exists_in_bucket(key=file) and not \
-                    self.file_exists_in_bucket(key=f"{file}/"):
-                return f"File does not exist: {file}, not downloading anything."
-            else:
-                try:
-                    self.resource.meta.client.download_file(
-                        self.bucket.name, file, dl_file)
-                except Exception as e:
-                    print("Something wrong: ", e)
-                else:
-                    return f"Success: {file} downloaded from S3!"

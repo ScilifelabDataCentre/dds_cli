@@ -114,7 +114,34 @@ def put(config: str, username: str, password: str, project: str,
 
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner, pathfile=pathfile, data=data) as delivery:
-        delivery.put()
+        # Create multithreading pool
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            upload_threads = []
+            for path in delivery.data:
+                if isinstance(path, Path):
+                    # check if folder and then get all subfolders
+                    if path.is_dir():
+                        path_base = path.name
+                        # sys.exit(f"{path}, {path_base}")
+                        all_dirs = list(path.glob('**')) # all (sub)dirs
+                        for dir_ in all_dirs:
+                            # check which files are in the directory
+                            all_files = [f for f in dir_.glob('*') if f.is_file()]
+                            for file in all_files: # Upload all files
+                                future = executor.submit(delivery.put, file, path_base)
+                                upload_threads.append(future)
+                    elif path.is_file():
+                        # Upload file
+                        future = executor.submit(delivery.put, path, None)
+                        upload_threads.append(future)
+                    else:
+                        sys.exit(f"Path type {path} not identified."
+                                 "Have you entered the correct path?")
+                else: 
+                    pass # do something, file not uploaded because not found 
+
+            for f in concurrent.futures.as_completed(upload_threads):
+                print(f.result())
 
         # print(f"{delivery.method}, {delivery.project_id}, {delivery.project_owner}, "
         #       f"\n{delivery.user.username}, {delivery.user.password}, {delivery.user.id}")
@@ -154,50 +181,16 @@ def get(config: str, username: str, password: str, project: str,
     
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, pathfile=pathfile, data=data) as delivery:
-        delivery.get()
-    pass
-    # all_files = list()
 
-    # user_info = verify_user_input(config=config,
-    #                               username=username,
-    #                               password=password,
-    #                               project=project)
+        # Create multithreading pool
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            upload_threads = []
+            for path in delivery.data:
+                print(path)
+                if isinstance(path, str):
+                    # Download all files
+                    future = executor.submit(delivery.get, path)
+                    upload_threads.append(future)
 
-    # user_id, s3_proj = check_access(login_info=user_info)
-
-    # if not isinstance(user_id, str):
-    #     raise DeliveryPortalException("User ID not set, "
-    #                                   "cannot proceed with data delivery.")
-
-    # all_files = collect_all_data(data=data, pathfile=pathfile)
-
-    # # This should never be able to be true - just precaution
-    # if not all_files:
-    #     raise DeliveryPortalException("Data tuple empty. Nothing to upload."
-    #                                   "Cancelling delivery.")
-
-    # # Create temporary folder with timestamp and all subfolders
-    # timestamp = get_current_time().replace(" ", "_").replace(":", "-")
-    # temp_dir = f"{os.getcwd()}/DataDelivery_{timestamp}"
-    # dirs = tuple(
-    #     f"{temp_dir}/{sf}" for sf in ["", "files/", "keys/", "meta/", "logs/"])
-
-    # dirs_created = create_directories(dirs=dirs, temp_dir=temp_dir)
-    # if not dirs_created:  # If error when creating one of the folders
-    #     pass    # raise exception here
-
-    # s3_resource, project_bucket = get_s3_info(current_project=user_info['project'],
-    #                                           s3_proj=s3_proj)
-
-    # # Create multithreading pool
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     upload_threads = []
-    #     for path in all_files:
-    #         if type(path) == str:
-    #             # Download all files
-    #             future = executor.submit(s3_download, path,
-    #                                      s3_resource, project_bucket, f"{temp_dir}/files/{path}")
-    #             upload_threads.append(future)
-
-    #     for f in concurrent.futures.as_completed(upload_threads):
-    #         print(f.result())
+            for f in concurrent.futures.as_completed(upload_threads):
+                print(f.result())

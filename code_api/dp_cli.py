@@ -2,7 +2,7 @@
 Command line interface for Data Delivery Portal
 """
 
-# IMPORTS ############################################################ IMPORTS #
+# IMPORTS ########################################################### IMPORTS #
 
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
@@ -55,7 +55,7 @@ import traceback
 from code_api.datadel_s3 import S3Object
 from code_api.data_deliverer import DataDeliverer, DPUser
 
-# CONFIG ############################################################## CONFIG #
+# CONFIG ############################################################# CONFIG #
 
 logging.config.dictConfig({
     'version': 1,
@@ -63,12 +63,12 @@ logging.config.dictConfig({
 })
 
 
-# GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
+# GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
 
 COMPRESSED_FORMATS = dict()
 
 
-# MAIN ################################################################## MAIN #
+# MAIN ################################################################# MAIN #
 
 @click.group()
 def cli():
@@ -79,7 +79,8 @@ def cli():
 @click.option('--config', '-c',
               required=False,
               type=click.Path(exists=True),
-              help="Path to config file containing e.g. username, password, project id, etc.")
+              help="Path to config file containing e.g. username, password, "
+                   "project id, etc.")
 @click.option('--username', '-u',
               required=False,
               type=str,
@@ -102,7 +103,8 @@ def cli():
               required=False,
               type=click.Path(exists=True),
               multiple=False,
-              help="Path to file containing all files and folders to be uploaded.")
+              help="Path to file containing all files and "
+                   "folders to be uploaded.")
 @click.option('--data', '-d',
               required=False,
               type=click.Path(exists=True),
@@ -112,8 +114,11 @@ def put(config: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
+    # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
-                       project_id=project, project_owner=owner, pathfile=pathfile, data=data) as delivery:
+                       project_id=project, project_owner=owner,
+                       pathfile=pathfile, data=data) \
+            as delivery:
         # Create multithreading pool
         with concurrent.futures.ThreadPoolExecutor() as executor:
             upload_threads = []
@@ -122,13 +127,14 @@ def put(config: str, username: str, password: str, project: str,
                     # check if folder and then get all subfolders
                     if path.is_dir():
                         path_base = path.name
-                        # sys.exit(f"{path}, {path_base}")
-                        all_dirs = list(path.glob('**')) # all (sub)dirs
+                        all_dirs = list(path.glob('**'))  # all (sub)dirs
                         for dir_ in all_dirs:
                             # check which files are in the directory
-                            all_files = [f for f in dir_.glob('*') if f.is_file()]
-                            for file in all_files: # Upload all files
-                                future = executor.submit(delivery.put, file, path_base)
+                            all_files = \
+                                [f for f in dir_.glob('*') if f.is_file()]
+                            for file in all_files:  # Upload all files
+                                future = executor.submit(delivery.put,
+                                                         file, path_base)
                                 upload_threads.append(future)
                     elif path.is_file():
                         # Upload file
@@ -137,22 +143,19 @@ def put(config: str, username: str, password: str, project: str,
                     else:
                         sys.exit(f"Path type {path} not identified."
                                  "Have you entered the correct path?")
-                else: 
-                    pass # do something, file not uploaded because not found 
+                else:
+                    pass  # do something, file not uploaded because not found
 
             for f in concurrent.futures.as_completed(upload_threads):
                 print(f.result())
-
-        # print(f"{delivery.method}, {delivery.project_id}, {delivery.project_owner}, "
-        #       f"\n{delivery.user.username}, {delivery.user.password}, {delivery.user.id}")
-        # print(f"{delivery.tempdir},\n {delivery.s3.resource}, {delivery.s3.project}, {delivery.s3.bucket}, {delivery.s3.bucket.name}")
 
 
 @cli.command()
 @click.option('--config', '-c',
               required=False,
               type=click.Path(exists=True),
-              help="Path to config file containing e.g. username, password, project id, etc.")
+              help="Path to config file containing e.g. username, password, "
+                   "project id, etc.")
 @click.option('--username', '-u',
               required=False,
               type=str,
@@ -169,7 +172,8 @@ def put(config: str, username: str, password: str, project: str,
               required=False,
               multiple=False,
               type=click.Path(exists=True),
-              help="Path to file containing all files and folders to be uploaded.")
+              help="Path to file containing all files and "
+                   "folders to be uploaded.")
 @click.option('--data', '-d',
               required=False,
               multiple=True,
@@ -178,10 +182,10 @@ def put(config: str, username: str, password: str, project: str,
 def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
-    
-    with DataDeliverer(config=config, username=username, password=password,
-                       project_id=project, pathfile=pathfile, data=data) as delivery:
 
+    with DataDeliverer(config=config, username=username, password=password,
+                       project_id=project, pathfile=pathfile, data=data) \
+            as delivery:
         # Create multithreading pool
         with concurrent.futures.ThreadPoolExecutor() as executor:
             upload_threads = []

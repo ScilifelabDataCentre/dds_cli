@@ -48,11 +48,11 @@ class DataDeliverer():
     the data to the S3 storage.
 
     Args:
-        config (str):           Path to file containing user credentials and project info
-        username (str):         User specified username, None if config entered
-        password (str):         User specified password, None if config entered
-        project_id (str):       User specified project ID, None if config entered
-        project_owner (str):    User specified project owner, None if config entered
+        config (str):           Path to file with user creds and project info
+        username (str):         User spec. username, None if config used
+        password (str):         User spec. password, None if config used
+        project_id (str):       User spec. project ID, None if config used
+        project_owner (str):    User spec. project owner, None if config used
         pathfile (str):         Path to file containing file paths
         data (tuple):           All paths to be uploaded/downloaded
 
@@ -72,14 +72,15 @@ class DataDeliverer():
     '''
 
     def __init__(self, config=None, username=None, password=None,
-                 project_id=None, project_owner=None, pathfile=None, data=None):
+                 project_id=None, project_owner=None,
+                 pathfile=None, data=None):
         # If none of username, password and config options are set
         # raise exception and quit execution -- dp cannot be accessed
         if all(x is None for x in [username, password, config]):
             raise DeliveryPortalException("Delivery Portal login credentials "
-                                          "not specified. Enter: \n --username/-u "
-                                          "AND --password/-pw, or --config/-c\n "
-                                          "--owner/-o\n"
+                                          "not specified. Enter: "
+                                          "\n--username/-u AND --password/-pw,"
+                                          " or --config/-c\n --owner/-o\n"
                                           "For help: 'dp_api --help'.")
         else:
             # put or get
@@ -94,21 +95,25 @@ class DataDeliverer():
 
             dp_access_granted = self.check_dp_access()
             if dp_access_granted and self.user.id is not None:
-                proj_access_granted, self.s3.project = self.check_project_access()
+                proj_access_granted, self.s3.project = \
+                    self.check_project_access()
                 if proj_access_granted and self.s3.project is not None:
                     # If no data to upload, cancel
                     if not data and not pathfile:
                         raise DeliveryPortalException(
-                            "No data to be uploaded. Specify individual files/folders using "
-                            "the --data/-d option one or more times, or the --pathfile/-f. "
+                            "No data to be uploaded. Specify individual "
+                            "files/folders using the --data/-d option one or "
+                            "more times, or the --pathfile/-f. "
                             "For help: 'dp_api --help'"
                         )
                     else:
                         self.data = self.data_to_deliver(data=data,
                                                          pathfile=pathfile)
                 else:
-                    raise DeliveryPortalException(f"Access to project {self.project_id} "
-                                                  "denied. Delivery cancelled.")
+                    raise DeliveryPortalException(
+                        f"Access to project {self.project_id} "
+                        "denied. Delivery cancelled."
+                    )
             else:
                 raise DeliveryPortalException("Delivery Portal access denied! "
                                               "Delivery cancelled.")
@@ -157,7 +162,7 @@ class DataDeliverer():
         Args:
             config:     File containing the users DP username and password,
                         and the project relating to the upload/download.
-                        Can be used instead of inputing the credentials separately.
+                        Can be used instead of inputing the creds separately.
 
         Raises:
             OSError:                    Config file not found or opened
@@ -176,8 +181,9 @@ class DataDeliverer():
                 # Check that all credentials are entered and quit if not
                 for c in ['username', 'password', 'project']:
                     if c not in credentials:
-                        raise DeliveryOptionException("The config file does not "
-                                                      f"contain: '{c}'.")
+                        raise DeliveryOptionException(
+                            f"The config file does not contain: '{c}'."
+                        )
 
                 self.user.username = credentials['username']
                 self.user.password = credentials['password']
@@ -190,16 +196,18 @@ class DataDeliverer():
 
         else:
             if self.user.username is None or self.user.password is None:
-                raise DeliveryOptionException("Delivery Portal login credentials "
-                                              "not specified. Enter --username/-u "
-                                              "AND --password/-pw, or --config/-c."
-                                              "For help: 'dp_api --help'.")
+                raise DeliveryOptionException(
+                    "Delivery Portal login credentials not specified. "
+                    "Enter --username/-u AND --password/-pw, or --config/-c."
+                    "For help: 'dp_api --help'."
+                )
             else:
                 if self.project_id is None:
-                    raise DeliveryOptionException("Project not specified. Enter "
-                                                  "project ID using --project option "
-                                                  "or add to config file using --config/-c"
-                                                  "option.")
+                    raise DeliveryOptionException(
+                        "Project not specified. Enter project ID using "
+                        "--project option or add to config file using "
+                        "--config/-c option."
+                    )
 
                 # If no owner is set then assuming current user is owner
                 if self.project_owner is None:
@@ -231,22 +239,33 @@ class DataDeliverer():
         else:
             # Search the database for the user
             for id_ in user_db:
-                # If found, create secure password hash and compare to correct password
+                # If found, create secure password hash
                 if self.user.username == user_db[id_]['username']:
                     password_settings = user_db[id_]['password']['settings']
-                    password_hash = secure_password_hash(password_settings=password_settings,
-                                                         password_entered=self.user.password)
+                    password_hash = \
+                        secure_password_hash(
+                            password_settings=password_settings,
+                            password_entered=self.user.password
+                        )
+                    # Compare to correct password
                     if user_db[id_]['password']['hash'] != password_hash:
-                        raise DeliveryPortalException("Wrong password. "
-                                                      "Access to Delivery Portal denied.")
+                        raise DeliveryPortalException(
+                            "Wrong password. Access to Delivery Portal "
+                            "denied."
+                        )
                     else:
-                        # Check that facility is uploading or researcher downloading
+                        # Check that facility putting or researcher getting
                         self.user.role = user_db[id_]['role']
-                        if (self.user.role == 'facility' and self.method == 'put') or \
-                                (self.user.role == 'researcher' and self.method == 'get'):
+                        if (self.user.role == 'facility'
+                            and self.method == 'put') \
+                           or (self.user.role == 'researcher'
+                                and self.method == 'get'):
                             self.user.id = id_
-                            if (self.user.role == 'researcher' and self.method == 'get' and self.project_owner is None):
+                            if (self.user.role == 'researcher'
+                                and self.method == 'get'
+                                    and self.project_owner is None):
                                 self.project_owner = self.user.id
+
                             return True
 
             raise CouchDBException("Username not found in database. "
@@ -277,51 +296,67 @@ class DataDeliverer():
             user_db = couch['user_db']
             # Get the projects registered to the user
             user_projects = user_db[self.user.id]['projects']
-            # Check if project exists in project database
+            # Check if project doesn't exists in project database -> quit
             if self.project_id not in couch['project_db']:
                 raise CouchDBException(
                     f"The project {self.project_id} does not exist.")
-            else:
-                # If user does not have access to the project, quit
-                if self.project_id not in user_projects:
-                    raise DeliveryPortalException("You do not have access to the specified project "
-                                                  f"{self.project_id}. Aborting delivery.")
+
+            # If project exists, check if user has access to the project->quit
+            if self.project_id not in user_projects:
+                raise DeliveryPortalException(
+                    "You do not have access to the specified project "
+                    f"{self.project_id}. Aborting delivery."
+                )
+
+            # If user has access, get current project
+            current_project = couch['project_db'][self.project_id]
+            # If project information doesn't exist -> quit
+            if 'project_info' not in current_project:
+                raise CouchDBException(
+                    "There is no 'project_info' recorded for the specified "
+                    "project. Aborting delivery."
+                )
+
+            # If project info exists, check if owner info exists.
+            # If not -> quit
+            if 'owner' not in current_project['project_info']:
+                raise CouchDBException("An owner of the data has not been "
+                                       "specified. Cannot guarantee data "
+                                       "security. Cancelling delivery.")
+
+            # If owner info exists, find owner of project
+            # and check if specified owner matches. If not -> quit
+            correct_owner = current_project['project_info']['owner']
+            # If facility specified correct user or researcher is owner
+            if (self.method == 'put'
+                and correct_owner == self.project_owner != self.user.id) \
+                or (self.method == 'get'
+                    and correct_owner == self.project_owner == self.user.id):
+                # If delivery_option not recorded in database -> quit
+                if 'delivery_option' not in current_project['project_info']:
+                    raise CouchDBException("A delivery option has not been "
+                                           "specified for this project.")
+
+                # If delivery option exists, check if S3. If not -> quit
+                if current_project['project_info']['delivery_option'] != "S3":
+                    raise DeliveryOptionException(
+                        "The specified project does not "
+                        "have access to S3 delivery."
+                    )
+
+                # If S3 option specified, return S3 project ID
+                try:
+                    s3_project = user_db[self.user.id]['s3_project']['name']
+                except DeliveryPortalException as dpe:
+                    sys.exit("Could not get Safespring S3 project name from "
+                             f"database: {dpe}. \nDelivery aborted.")
                 else:
-                    current_project = couch['project_db'][self.project_id]
-                    # Get project information if it exists
-                    if 'project_info' not in current_project:
-                        raise CouchDBException("There is no 'project_info' recorded "
-                                               "for the specified project. Aborting delivery.")
-                    else:
-                        # Find owner of project and check if specified owner matches
-                        if 'owner' not in current_project['project_info']:
-                            raise CouchDBException("An owner of the data has not been "
-                                                   "specified. Cannot guarantee data "
-                                                   "security. Cancelling delivery.")
-                        else:
-                            correct_owner = current_project['project_info']['owner']
-                            # If facility specified correct user or researcher is owner
-                            if (self.method == 'put' and correct_owner == self.project_owner != self.user.id) or \
-                                    (self.method == 'get' and correct_owner == self.project_owner == self.user.id):
-                                if 'delivery_option' not in current_project['project_info']:
-                                    raise CouchDBException("A delivery option has not been "
-                                                           "specified for this project.")
-                                else:
-                                    if current_project['project_info']['delivery_option'] != "S3":
-                                        raise DeliveryOptionException("The specified project does not "
-                                                                      "have access to S3 delivery.")
-                                    else:
-                                        try:
-                                            s3_project = user_db[self.user.id]['s3_project']['name']
-                                        except DeliveryPortalException as dpe:
-                                            sys.exit("Could not get Safespring S3 project name from database."
-                                                     f"{dpe}. \nDelivery aborted.")
-                                        else:
-                                            return True, s3_project
-                            else:
-                                raise DeliveryOptionException("Incorrect data owner! You do not "
-                                                              "have access to this project. "
-                                                              "Cancelling delivery.")
+                    return True, s3_project
+            else:
+                raise DeliveryOptionException(
+                    "Incorrect data owner! You do not have access to this "
+                    "project. Cancelling delivery."
+                )
 
     def data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list
@@ -359,22 +394,27 @@ class DataDeliverer():
                 # Read lines, strip \n and put in list
                 with pathfile_abs.open(mode='r') as file:
                     if self.method == "put":
-                        all_files += [Path(line.strip()).resolve() if Path(line.strip()).exists()
-                                      else [None, line.strip()] for line in file]
+                        all_files += \
+                            [Path(line.strip()).resolve()
+                             if Path(line.strip()).exists()
+                             else [None, line.strip()] for line in file]
                     elif self.method == "get":
                         all_files += [line.strip() for line in file]
                     else:
-                        raise DeliveryOptionException("Delivery option {self.method} not "
-                                                      "allowed. Cancelling delivery.")
+                        raise DeliveryOptionException(
+                            "Delivery option {self.method} not allowed. "
+                            "Cancelling delivery.")
             else:
-                raise IOError(
-                    f"--pathfile option {pathfile} does not exist. Cancelling delivery.")
+                raise IOError(f"- -pathfile option {pathfile} does not exist. "
+                              "Cancelling delivery.")
 
         # Check for file duplicates
         for element in all_files:
             if all_files.count(element) != 1:
-                raise DeliveryOptionException(f"The path to file {element} is listed multiple times, "
-                                              "please remove path dublicates.")
+                raise DeliveryOptionException(
+                    f"The path to file {element} is listed multiple times, "
+                    "please remove path dublicates."
+                )
 
         return all_files
 
@@ -410,8 +450,8 @@ class DataDeliverer():
                         sys.exit(f"Temporary directory deleted. \n\n"
                                  "----DELIVERY CANCELLED---\n")  # and quit
                     except IOError as ose:
-                        sys.exit(f"Could not delete directory {temp_dir}: {ose}\n\n "
-                                 "----DELIVERY CANCELLED---\n")
+                        sys.exit(f"Could not delete directory {temp_dir}: "
+                                 f"{ose}\n\n ----DELIVERY CANCELLED---\n")
 
                         return False, ()
 
@@ -446,11 +486,11 @@ class DataDeliverer():
 
         Args: 
             file:       File to be uploaded
-            spec_path:  Folder path to file
+            spec_path:  Root folder path to file
         '''
 
-        filepath = ""
-        all_subfolders = ""
+        filepath = ""           # Path to upload
+        all_subfolders = ""     # All subfolders in a specific path 
 
         # Configs
         MB = 1024 ** 2
@@ -463,34 +503,42 @@ class DataDeliverer():
             if spec_path is None:
                 filepath = file.name   # file goes in root
             else:
+                # New folder path for s3 storage from root 
                 filepath = f"{spec_path}{str(file).split(spec_path)[-1]}"
                 all_subfolders = f"{filepath.split(file.name)[0]}"
 
-                # check if folder exists
+                # check if bucket exists 
                 response = self.s3.resource.meta.client.list_objects_v2(
                     Bucket=self.s3.bucket.name,
                     Prefix="",
                 )
 
+                # Check if current folders exist in bucket 
                 found = False
                 for obj in response.get('Contents', []):
                     if obj['Key'] == all_subfolders:
                         found = True
                         break
-
+                
+                # Create folders if they don't exist 
                 if not found:   # if folder doesn't exist then create folder
-                    self.s3.resource.meta.client.put_object(Bucket=self.s3.bucket.name,
-                                                            Key=all_subfolders)
+                    self.s3.resource.meta.client.put_object(
+                        Bucket=self.s3.bucket.name,
+                        Key=all_subfolders
+                    )
 
-            # check if file exists
-            file_already_in_bucket, filelist = self.s3.file_exists_in_bucket(
-                key=filepath)
+            # Check if file exists in bucket folder path 
+            file_already_in_bucket, filelist = \
+                self.s3.file_exists_in_bucket(key=filepath)
+            # Upload if doesn't exist 
             if file_already_in_bucket:
                 return f"File exists: {file.name}, not uploading file."
             else:
                 try:
-                    self.s3.resource.meta.client.upload_file(str(file), self.s3.bucket.name,
-                                                             filepath, Config=config)
+                    self.s3.resource.meta.client.upload_file(
+                        str(file), self.s3.bucket.name,
+                        filepath, Config=config
+                    )
                 except Exception as e:
                     print(f"{str(file)} not uploaded: ", e)
                 else:
@@ -511,15 +559,19 @@ class DataDeliverer():
 
         '''
 
-        # check if bucket exists
+        # Check if bucket exists 
         if self.s3.bucket in self.s3.resource.buckets.all():
-            # check if file exists
+            # Check if path exists in bucket
             file_in_bucket, filelist = self.s3.file_exists_in_bucket(key=path)
+
+            # If path exists, check if local paths exist  
             if not file_in_bucket:
-                return f"File does not exist: {path}, not downloading anything."
+                return f"File does not exist: {path}, " \
+                    "not downloading anything."
             else:
                 for f in filelist:
                     new_path = self.tempdir[1] / Path(f)
+                    # If the local paths don't exist create them 
                     if not new_path.parent.exists():
                         try:
                             new_path.parent.mkdir(parents=True)
@@ -529,14 +581,18 @@ class DataDeliverer():
                                      "proceed with delivery. Cancelling: "
                                      f"{ioe}")
 
+                    # If the file doesn't exist locally, download to path
                     if not new_path.exists():
                         try:
-                            self.s3.resource.meta.client.download_file(self.s3.bucket.name,
-                                                                       f, str(new_path))
+                            self.s3.resource.meta.client.download_file(
+                                self.s3.bucket.name,
+                                f, str(new_path)
+                            )
                         except Exception as e:
                             print(f"Download of file {f} failed.")
                         else:
-                            return f"Success: {str(new_path)} downloaded from S3 to folder '{path}'!"
+                            return f"Success: {str(new_path)} downloaded " \
+                                "from S3 to folder '{path}'!"
                     else:
                         print(f"File {str(new_path)} already exists. "
                               "Not downloading.")

@@ -69,10 +69,11 @@ class S3Object():
 
         '''
 
+        # 
         folder = (len(key.split(os.extsep)) == 1)
         matching_paths = list()
 
-        if folder: 
+        if folder:
             if not key.endswith(os.path.sep):  # path is a folder
                 key += os.path.sep
 
@@ -81,9 +82,11 @@ class S3Object():
             Prefix=key,
         )
 
-        matching_paths = [path['Key'] for path in response.get('Contents', []) if path['Key'].startswith(key) and Path(path['Key']).is_file()]
-        
-        if matching_paths: 
+        matching_paths = [path['Key'] for path in response.get('Contents', [])
+                          if path['Key'].startswith(key)
+                          and Path(path['Key']).is_file()]
+
+        if matching_paths:
             return True, matching_paths
-        else: 
+        else:
             return False, matching_paths

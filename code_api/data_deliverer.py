@@ -521,21 +521,22 @@ class DataDeliverer():
                 for f in filelist:
                     new_path = self.tempdir[1] / Path(f)
                     if not new_path.parent.exists():
-                        try: 
+                        try:
                             new_path.parent.mkdir(parents=True)
                         except IOError as ioe:
                             sys.exit("Could not create folder "
                                      f"{new_path.parent}. Cannot"
                                      "proceed with delivery. Cancelling: "
                                      f"{ioe}")
-                    
+
                     if not new_path.exists():
                         try:
                             self.s3.resource.meta.client.download_file(self.s3.bucket.name,
-                                                                    f, str(new_path))
+                                                                       f, str(new_path))
                         except Exception as e:
-                            print("Something wrong: ", e)
+                            print(f"Download of file {f} failed.")
                         else:
-                            print(f"Success: {str(new_path)} downloaded from S3 to folder '{path}'!")
-                    else: 
-                        print(f"File {str(new_path)} already exists. Not downloading.")
+                            return f"Success: {str(new_path)} downloaded from S3 to folder '{path}'!"
+                    else:
+                        print(f"File {str(new_path)} already exists. "
+                              "Not downloading.")

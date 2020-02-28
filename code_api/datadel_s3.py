@@ -87,15 +87,3 @@ class S3Object():
             return True, matching_paths
         else: 
             return False, matching_paths
-        # sys.exit(f"Download paths: {matching_paths}")
-
-        # for obj in response.get('Contents', []):
-        #     print(f"{obj['Key']}, {key in obj['Key']}")
-        #     print(Path(obj['Key']).match(f'{key}*'))
-        #     if obj['Key'] == key:
-        #         # print(Path(obj['Key']).parts)
-        #         return True
-        #     else: 
-        #         print("nope")
-
-        # return False

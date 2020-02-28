@@ -68,24 +68,34 @@ class S3Object():
             bool:   True if the file already exists, False if it doesnt
 
         '''
-        print("här")
+
+        folder = (len(key.split(os.extsep)) == 1)
+        matching_paths = list()
+
+        if folder: 
+            if not key.endswith(os.path.sep):  # path is a folder
+                key += os.path.sep
+
         response = self.resource.meta.client.list_objects_v2(
             Bucket=self.bucket.name,
             Prefix=key,
         )
-        print(f"Length: {len(response.get('Contents', []))}")
 
-        matching_paths = [path['Key'] for path in response.get('Contents', []) if key in path['Key']]
-        (f"Download paths: {matching_paths}")
+        matching_paths = [path['Key'] for path in response.get('Contents', []) if path['Key'].startswith(key) and Path(path['Key']).is_file()]
+        
+        if matching_paths: 
+            return True, matching_paths
+        else: 
+            return False, matching_paths
+        # sys.exit(f"Download paths: {matching_paths}")
 
+        # for obj in response.get('Contents', []):
+        #     print(f"{obj['Key']}, {key in obj['Key']}")
+        #     print(Path(obj['Key']).match(f'{key}*'))
+        #     if obj['Key'] == key:
+        #         # print(Path(obj['Key']).parts)
+        #         return True
+        #     else: 
+        #         print("nope")
 
-        for obj in response.get('Contents', []):
-            print(f"{obj['Key']}, {key in obj['Key']}")
-            print(Path(obj['Key']).match(f'{key}*'))
-            if obj['Key'] == key:
-                # print(Path(obj['Key']).parts)
-                return True
-            else: 
-                print("nope")
-
-        return False
+        # return False

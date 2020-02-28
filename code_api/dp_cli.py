@@ -186,7 +186,6 @@ def get(config: str, username: str, password: str, project: str,
         with concurrent.futures.ThreadPoolExecutor() as executor:
             upload_threads = []
             for path in delivery.data:
-                print(path)
                 if isinstance(path, str):
                     # Download all files
                     future = executor.submit(delivery.get, path)

@@ -483,7 +483,9 @@ class DataDeliverer():
                                                             Key=all_subfolders)
 
             # check if file exists
-            if self.s3.file_exists_in_bucket(key=filepath):
+            file_already_in_bucket, filelist = self.s3.file_exists_in_bucket(
+                key=filepath)
+            if file_already_in_bucket:
                 return f"File exists: {file.name}, not uploading file."
             else:
                 try:
@@ -497,7 +499,7 @@ class DataDeliverer():
             raise S3Error("The project does not have an S3 bucket."
                           "Unable to perform delivery.")
 
-    def get(self, file: str) -> (str):
+    def get(self, path: str) -> (str):
         '''Downloads specified data from S3 bucket
 
         Args: 
@@ -511,17 +513,29 @@ class DataDeliverer():
 
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
-
             # check if file exists
-            if not self.s3.file_exists_in_bucket(key=file) and not \
-                    self.s3.file_exists_in_bucket(key=f"{file}/"):
-                return f"File does not exist: {file}, not downloading anything."
+            file_in_bucket, filelist = self.s3.file_exists_in_bucket(key=path)
+            if not file_in_bucket:
+                return f"File does not exist: {path}, not downloading anything."
             else:
-                
-                try:
-                    self.s3.resource.meta.client.download_file(
-                        self.s3.bucket.name, file)
-                except Exception as e:
-                    print("Something wrong: ", e)
-                else:
-                    return f"Success: {file} downloaded from S3!"
+                for f in filelist:
+                    new_path = self.tempdir[1] / Path(f)
+                    if not new_path.parent.exists():
+                        try: 
+                            new_path.parent.mkdir(parents=True)
+                        except IOError as ioe:
+                            sys.exit("Could not create folder "
+                                     f"{new_path.parent}. Cannot"
+                                     "proceed with delivery. Cancelling: "
+                                     f"{ioe}")
+                    
+                    if not new_path.exists():
+                        try:
+                            self.s3.resource.meta.client.download_file(self.s3.bucket.name,
+                                                                    f, str(new_path))
+                        except Exception as e:
+                            print("Something wrong: ", e)
+                        else:
+                            print(f"Success: {str(new_path)} downloaded from S3 to folder '{path}'!")
+                    else: 
+                        print(f"File {str(new_path)} already exists. Not downloading.")

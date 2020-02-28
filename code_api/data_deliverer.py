@@ -493,10 +493,10 @@ class DataDeliverer():
         all_subfolders = ""     # All subfolders in a specific path 
 
         # Configs
-        MB = 1024 ** 2
-        GB = 1024 ** 3
-        config = TransferConfig(multipart_threshold=5*GB,
-                                multipart_chunksize=5*MB)
+        # MB = 1024 ** 2
+        # GB = 1024 ** 3
+        # config = TransferConfig(multipart_threshold=5*GB,
+        #                         multipart_chunksize=5*MB)
 
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
@@ -535,9 +535,13 @@ class DataDeliverer():
                 return f"File exists: {file.name}, not uploading file."
             else:
                 try:
+                    # print("här")
+                    # self.s3.bucket.upload_file(str(file), filepath)
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
-                        filepath, Config=config
+                        filepath, Config=TransferConfig(5*(1024**3)),
+                        ExtraArgs={'ACL': 'bucket-owner-full-control'}, 
+                        Callback=ProgressPercentage(str(file))
                     )
                 except Exception as e:
                     print(f"{str(file)} not uploaded: ", e)
@@ -596,3 +600,24 @@ class DataDeliverer():
                     else:
                         print(f"File {str(new_path)} already exists. "
                               "Not downloading.")
+
+import threading
+
+class ProgressPercentage(object):
+
+    def __init__(self, filename):
+        self._filename = filename
+        self._size = float(os.path.getsize(filename))
+        self._seen_so_far = 0
+        self._lock = threading.Lock()
+
+    def __call__(self, bytes_amount):
+        # To simplify, assume this is hooked up to a single filename
+        with self._lock:
+            self._seen_so_far += bytes_amount
+            percentage = (self._seen_so_far / self._size) * 100
+            sys.stdout.write(
+                "\r%s  %s / %s  (%.2f%%)" % (
+                    self._filename, self._seen_so_far, self._size,
+                    percentage))
+            sys.stdout.flush()

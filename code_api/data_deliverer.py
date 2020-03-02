@@ -1,3 +1,4 @@
+import threading
 from code_api.dp_exceptions import *
 from code_api.datadel_s3 import S3Object
 from code_api.dp_crypto import secure_password_hash
@@ -490,47 +491,54 @@ class DataDeliverer():
         '''
 
         filepath = ""           # Path to upload
-        all_subfolders = ""     # All subfolders in a specific path 
+        all_subfolders = ""     # All subfolders in a specific pathß
 
-        # Configs
-        # MB = 1024 ** 2
-        # GB = 1024 ** 3
-        # config = TransferConfig(multipart_threshold=5*GB,
-        #                         multipart_chunksize=5*MB)
+        # Default configs: 
+        # multipart_threshold = 8388608 (8 MB) - multipart uploads/downloads 
+        #                                           automatically triggered
+        # max_concurrency = 10 - max number of threads used to perform transfer
+        #                           reduce bandwidth usage -> reduce value  
+        # multipart_chunksize = 8388608 (8 MB) - partition size for a multipart
+        #                                           transfer, chunk size
+        # num_download_attempts = 5 - number of times retried upon errors
+        # max_io_queue = 100 - max amount of read parts queued in memory 
+        # io_chunksize = 262144 (256 KB) - max size of each chunk in io queue
+        # use_threads = True - threads will be used when performing S3 transfer
+        config = TransferConfig(max_concurrency=10) 
 
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
             if spec_path is None:
                 filepath = file.name   # file goes in root
             else:
-                # New folder path for s3 storage from root 
+                # New folder path for s3 storage from root
                 filepath = f"{spec_path}{str(file).split(spec_path)[-1]}"
                 all_subfolders = f"{filepath.split(file.name)[0]}"
 
-                # check if bucket exists 
+                # check if bucket exists
                 response = self.s3.resource.meta.client.list_objects_v2(
                     Bucket=self.s3.bucket.name,
                     Prefix="",
                 )
 
-                # Check if current folders exist in bucket 
+                # Check if current folders exist in bucket
                 found = False
                 for obj in response.get('Contents', []):
                     if obj['Key'] == all_subfolders:
                         found = True
                         break
-                
-                # Create folders if they don't exist 
+
+                # Create folders if they don't exist
                 if not found:   # if folder doesn't exist then create folder
                     self.s3.resource.meta.client.put_object(
                         Bucket=self.s3.bucket.name,
                         Key=all_subfolders
                     )
 
-            # Check if file exists in bucket folder path 
+            # Check if file exists in bucket folder path
             file_already_in_bucket, filelist = \
                 self.s3.file_exists_in_bucket(key=filepath)
-            # Upload if doesn't exist 
+            # Upload if doesn't exist
             if file_already_in_bucket:
                 return f"File exists: {file.name}, not uploading file."
             else:
@@ -539,9 +547,9 @@ class DataDeliverer():
                     # self.s3.bucket.upload_file(str(file), filepath)
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
-                        filepath, Config=TransferConfig(5*(1024**3)),
-                        ExtraArgs={'ACL': 'bucket-owner-full-control'}, 
-                        Callback=ProgressPercentage(str(file))
+                        filepath, 
+                        Callback=ProgressPercentage(
+                            str(file), float(os.path.getsize(str(file))))
                     )
                 except Exception as e:
                     print(f"{str(file)} not uploaded: ", e)
@@ -563,19 +571,19 @@ class DataDeliverer():
 
         '''
 
-        # Check if bucket exists 
+        # Check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
             # Check if path exists in bucket
             file_in_bucket, filelist = self.s3.file_exists_in_bucket(key=path)
-
-            # If path exists, check if local paths exist  
+            print(file_in_bucket)
+            # If path exists, check if local paths exist
             if not file_in_bucket:
                 return f"File does not exist: {path}, " \
                     "not downloading anything."
             else:
                 for f in filelist:
                     new_path = self.tempdir[1] / Path(f)
-                    # If the local paths don't exist create them 
+                    # If the local paths don't exist create them
                     if not new_path.parent.exists():
                         try:
                             new_path.parent.mkdir(parents=True)
@@ -584,30 +592,31 @@ class DataDeliverer():
                                      f"{new_path.parent}. Cannot"
                                      "proceed with delivery. Cancelling: "
                                      f"{ioe}")
-
                     # If the file doesn't exist locally, download to path
                     if not new_path.exists():
                         try:
+                            
                             self.s3.resource.meta.client.download_file(
                                 self.s3.bucket.name,
-                                f, str(new_path)
+                                f, str(new_path),
+                                Callback=ProgressPercentage(
+                                    str(new_path), (self.s3.resource.meta.client.head_object(Bucket=self.s3.bucket.name, Key=f))["ContentLength"])
                             )
                         except Exception as e:
-                            print(f"Download of file {f} failed.")
+                            print(f"Download of file {f} failed: {e}")
                         else:
                             return f"Success: {str(new_path)} downloaded " \
-                                "from S3 to folder '{path}'!"
+                                f"from S3 to folder '{path}'!"
                     else:
                         print(f"File {str(new_path)} already exists. "
                               "Not downloading.")
 
-import threading
 
 class ProgressPercentage(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, filesize):
         self._filename = filename
-        self._size = float(os.path.getsize(filename))
+        self._size = filesize
         self._seen_so_far = 0
         self._lock = threading.Lock()
 

@@ -264,14 +264,16 @@ class DataDeliverer():
                             self.user.id = id_
                             if (self.user.role == 'researcher'
                                 and self.method == 'get'
-                                    and self.project_owner is None):
+                                    and (self.project_owner is None or
+                                         self.project_owner ==
+                                         self.user.username)):
                                 self.project_owner = self.user.id
                             return True
                         else:
                             raise DeliveryOptionException(
                                 "Method error. Facilities can only use 'put' "
                                 "and Researchers can only use 'get'."
-                                )
+                            )
 
             raise CouchDBException("Username not found in database. "
                                    "Access to Delivery Portal denied.")

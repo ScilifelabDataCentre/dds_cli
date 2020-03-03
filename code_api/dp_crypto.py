@@ -37,11 +37,12 @@ def secure_password_hash(password_settings: str, password_entered: str) -> (str)
     return (kdf.derive(password_entered.encode('utf-8'))).hex()
 
 
-def gen_hmac(file, upload: bool = True):
+def gen_hmac(file):
     '''Generates a HMAC for a file'''
 
-    file_hash = hmac.HMAC(
-        key=b'testing', algorithm=hashes.SHA256(), backend=default_backend())
+    file_hash = hmac.HMAC(key=b'SuperSecureChecksumKey',
+                          algorithm=hashes.SHA256(),
+                          backend=default_backend())
     try:
         with file.open(mode='rb') as f:
             for chunk in iter(lambda: f.read(8388608), b''):
@@ -49,18 +50,4 @@ def gen_hmac(file, upload: bool = True):
     except HashException as he:
         sys.exit(f"HMAC for file {str(file)} could not be generated.")
     else:
-        finalized = file_hash.finalize().hex()
-        if upload:
-            try:
-                with open(file="checksum.txt", mode='w') as cf:
-                    cf.write(finalized)
-            except IOError as ioe:
-                sys.exit("Could not save hash to file.")
-        else:
-            try:
-                with open(file="checksum.txt", mode='r') as cf:
-                    original = cf.read()
-                    [print("SUCCESS!" if original == finalized
-                           else print("FAILED CHECKSUM VERIFICATION!"))]
-            except IOError as ioe2:
-                sys.exit("Could not read hash from file.")
+        return file_hash.finalize().hex()

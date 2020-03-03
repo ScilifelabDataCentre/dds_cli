@@ -134,12 +134,12 @@ def put(config: str, username: str, password: str, project: str,
                             all_files = \
                                 [f for f in dir_.glob('*') if f.is_file()]
                             for file in all_files:  # Upload all files
-                                gen_hmac(file)
+                                checksum = gen_hmac(file)
                                 future = executor.submit(delivery.put,
                                                          file, path_base)
                                 upload_threads.append(future)
                     elif path.is_file():
-                        gen_hmac(path)
+                        checksum = gen_hmac(path)
                         # Upload file
                         future = executor.submit(delivery.put, path, None)
                         upload_threads.append(future)
@@ -199,9 +199,6 @@ def get(config: str, username: str, password: str, project: str,
                     upload_threads.append(future)
 
             for f in concurrent.futures.as_completed(upload_threads):
-                print(f.result())
-                print(delivery.tempdir)
-                print(delivery.data)
-                [gen_hmac(x, False) for x in delivery.tempdir[1].glob('**/*') if x.is_file()]
+                [gen_hmac(x) for x in delivery.tempdir[1].glob('**/*') if x.is_file()]
 
                     

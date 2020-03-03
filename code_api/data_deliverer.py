@@ -266,8 +266,12 @@ class DataDeliverer():
                                 and self.method == 'get'
                                     and self.project_owner is None):
                                 self.project_owner = self.user.id
-
                             return True
+                        else:
+                            raise DeliveryOptionException(
+                                "Method error. Facilities can only use 'put' "
+                                "and Researchers can only use 'get'."
+                                )
 
             raise CouchDBException("Username not found in database. "
                                    "Access to Delivery Portal denied.")
@@ -493,18 +497,18 @@ class DataDeliverer():
         filepath = ""           # Path to upload
         all_subfolders = ""     # All subfolders in a specific pathß
 
-        # Default configs: 
-        # multipart_threshold = 8388608 (8 MB) - multipart uploads/downloads 
+        # Default configs:
+        # multipart_threshold = 8388608 (8 MB) - multipart uploads/downloads
         #                                           automatically triggered
         # max_concurrency = 10 - max number of threads used to perform transfer
-        #                           reduce bandwidth usage -> reduce value  
+        #                           reduce bandwidth usage -> reduce value
         # multipart_chunksize = 8388608 (8 MB) - partition size for a multipart
         #                                           transfer, chunk size
         # num_download_attempts = 5 - number of times retried upon errors
-        # max_io_queue = 100 - max amount of read parts queued in memory 
+        # max_io_queue = 100 - max amount of read parts queued in memory
         # io_chunksize = 262144 (256 KB) - max size of each chunk in io queue
         # use_threads = True - threads will be used when performing S3 transfer
-        config = TransferConfig(max_concurrency=10) 
+        config = TransferConfig(max_concurrency=10)
 
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
@@ -547,7 +551,7 @@ class DataDeliverer():
                     # self.s3.bucket.upload_file(str(file), filepath)
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
-                        filepath, 
+                        filepath,
                         Callback=ProgressPercentage(
                             str(file), float(os.path.getsize(str(file))))
                     )
@@ -595,7 +599,7 @@ class DataDeliverer():
                     # If the file doesn't exist locally, download to path
                     if not new_path.exists():
                         try:
-                            
+
                             self.s3.resource.meta.client.download_file(
                                 self.s3.bucket.name,
                                 f, str(new_path),

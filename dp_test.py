@@ -393,17 +393,5 @@ class TestDpCli(unittest.TestCase):
         except Exception as e: 
             self.fail(f"Test failed unexpectedly: {e}")
 
-
-        # try:
-        #     from code_api.dp_crypto import gen_hmac
-        #     for f in files_checksums:
-        #         checksum = gen_hmac(f)
-        #         print(
-        #             f"{checksum}, {files_checksums[f]}, {checksum == files_checksums[f]}")
-        #         assert checksum == files_checksums[f]
-        # except HashException as he:
-        #     self.fail(he)
-
-
 if __name__ == "__main__":
     unittest.main()

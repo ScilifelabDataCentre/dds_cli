@@ -82,17 +82,16 @@ class S3Object():
             Prefix=key,
         )
 
-        print([path['Key'] for path in response.get('Contents', [])])
-        print([path['Key'] for path in response.get('Contents', []) if
-               path['Key'].startswith(key)])
-        for x in [(path['Size'] != 0) for path in response.get('Contents', []) if
-               path['Key'].startswith(key)]:
-            print(x)
+        # print([path['Key'] for path in response.get('Contents', [])])
+        # print([path['Key'] for path in response.get('Contents', []) if
+        #        path['Key'].startswith(key)])
+        # for x in [(path['Size'] != 0) for path in response.get('Contents', []) if
+        #        path['Key'].startswith(key)]:
+        #     print(x)
 
         matching_paths = [path['Key'] for path in response.get('Contents', [])
                           if (path['Key'].startswith(key)
                           and path['Size'] != 0)]
-        print("Matching paths : ", matching_paths)
         if matching_paths:
             return True, matching_paths
         else:

@@ -1,5 +1,5 @@
-from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
+# from Crypto.Cipher import AES
+# from Crypto.Random import get_random_bytes
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend

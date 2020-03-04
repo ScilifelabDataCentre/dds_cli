@@ -56,6 +56,8 @@ from code_api.datadel_s3 import S3Object
 from code_api.data_deliverer import DataDeliverer, DPUser
 from code_api.dp_crypto import gen_hmac
 
+from tqdm_multi_thread import TqdmMultiThreadFactory
+
 # CONFIG ############################################################# CONFIG #
 
 logging.config.dictConfig({
@@ -134,12 +136,16 @@ def put(config: str, username: str, password: str, project: str,
                             all_files = \
                                 [f for f in dir_.glob('*') if f.is_file()]
                             for file in all_files:  # Upload all files
-                                checksum = gen_hmac(file)
+                                checksum = executor.submit(gen_hmac, file)
+                                upload_threads.append(checksum)
+
                                 future = executor.submit(delivery.put,
                                                          file, path_base)
                                 upload_threads.append(future)
                     elif path.is_file():
-                        checksum = gen_hmac(path)
+                        checksum = executor.submit(gen_hmac, path)
+                        upload_threads.append(checksum)
+
                         # Upload file
                         future = executor.submit(delivery.put, path, None)
                         upload_threads.append(future)
@@ -199,6 +205,5 @@ def get(config: str, username: str, password: str, project: str,
                     upload_threads.append(future)
 
             for f in concurrent.futures.as_completed(upload_threads):
-                [gen_hmac(x) for x in delivery.tempdir[1].glob('**/*') if x.is_file()]
-
-                    
+                [gen_hmac(x) for x in delivery.tempdir[1].glob(
+                    '**/*') if x.is_file()]

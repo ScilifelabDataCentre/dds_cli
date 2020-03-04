@@ -19,6 +19,7 @@ import couchdb
 import boto3
 from boto3.s3.transfer import TransferConfig
 
+import progressbar
 
 class DPUser():
     '''
@@ -445,12 +446,13 @@ class DataDeliverer():
                      for sf in ["", "files/", "keys/", "meta/", "logs/"])
         for d_ in dirs:
             try:
-                d_.mkdir()
+                d_.mkdir(parents=True)
             except IOError as ose:
                 print(f"The directory '{d_}' could not be created: {ose}"
-                      "Cancelling delivery. Deleting temporary directory.")
+                      "Cancelling delivery. ")
 
-                if temp_dir.exists():
+                if temp_dir.exists() and not isinstance(ose, FileExistsError):
+                    print("Deleting temporary directory.")
                     try:
                         # Remove all prev created folders
                         shutil.rmtree(temp_dir)
@@ -549,13 +551,14 @@ class DataDeliverer():
                 return f"File exists: {file.name}, not uploading file."
             else:
                 try:
-                    # print("här")
-                    # self.s3.bucket.upload_file(str(file), filepath)
+                    print(f"Uploading file: {str(file)}\t Size: {file.stat().st_size}")
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
-                        filepath,
-                        Callback=ProgressPercentage(
-                            str(file), float(os.path.getsize(str(file))))
+                        filepath
+                        # ,
+                        # Callback=ProgressPercentage(
+                        #     str(file), float(os.path.getsize(str(file)))
+                    # )
                     )
                 except Exception as e:
                     print(f"{str(file)} not uploaded: ", e)
@@ -581,7 +584,6 @@ class DataDeliverer():
         if self.s3.bucket in self.s3.resource.buckets.all():
             # Check if path exists in bucket
             file_in_bucket, filelist = self.s3.file_exists_in_bucket(key=path)
-            print(file_in_bucket)
             # If path exists, check if local paths exist
             if not file_in_bucket:
                 return f"File does not exist: {path}, " \
@@ -601,7 +603,6 @@ class DataDeliverer():
                     # If the file doesn't exist locally, download to path
                     if not new_path.exists():
                         try:
-
                             self.s3.resource.meta.client.download_file(
                                 self.s3.bucket.name,
                                 f, str(new_path),
@@ -620,19 +621,30 @@ class DataDeliverer():
 
 class ProgressPercentage(object):
 
-    def __init__(self, filename, filesize):
-        self._filename = filename
-        self._size = filesize
-        self._seen_so_far = 0
+    def __init__(self, progress):
+        self._progress = progress   
         self._lock = threading.Lock()
 
+
     def __call__(self, bytes_amount):
-        # To simplify, assume this is hooked up to a single filename
         with self._lock:
-            self._seen_so_far += bytes_amount
-            percentage = (self._seen_so_far / self._size) * 100
-            sys.stdout.write(
-                "\r%s  %s / %s  (%.2f%%)" % (
-                    self._filename, self._seen_so_far, self._size,
-                    percentage))
-            sys.stdout.flush()
+            self._progress.update(bytes_amount)
+
+
+
+# class ProgressPercentage(object):
+
+#     def __init__(self, filename, filesize):
+#         self._filename = filename
+#         self._size = filesize
+#         self._seen_so_far = 0
+#         self._lock = threading.Lock()
+
+#     def __call__(self, bytes_amount):
+#         # To simplify, assume this is hooked up to a single filename
+#         with self._lock:
+#             self._seen_so_far += bytes_amount
+#             percentage = (self._seen_so_far / self._size) * 100
+#             print(f"\r{self._filename}  {self._seen_so_far} / "
+#                              f"{self._size}  ({percentage:.2f}%)")
+#             #sys.stdout.flush()

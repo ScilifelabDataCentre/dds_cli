@@ -21,6 +21,7 @@ from boto3.s3.transfer import TransferConfig
 
 import progressbar
 
+
 class DPUser():
     '''
     A Data Delivery Portal user.
@@ -378,8 +379,8 @@ class DataDeliverer():
 
         Raises:
             IOError:                    Pathfile not found
-            DeliveryOptionException:    Multiple identical files or 
-                                        false delivery method 
+            DeliveryOptionException:    Multiple identical files or
+                                        false delivery method
         '''
 
         all_files = list()
@@ -440,7 +441,7 @@ class DataDeliverer():
         '''
 
         # Create temporary folder with timestamp and all subfolders
-        timestamp_ = self.timestamp()
+        timestamp_ = timestamp()
         temp_dir = Path.cwd() / Path(f"DataDelivery_{timestamp_}")
         dirs = tuple(temp_dir / Path(sf)
                      for sf in ["", "files/", "keys/", "meta/", "logs/"])
@@ -469,31 +470,10 @@ class DataDeliverer():
 
         return True, dirs
 
-    def timestamp(self) -> (str):
-        '''Gets the current time. Formats timestamp.
-
-        Returns:
-            str:    Timestamp in format 'YY-MM-DD_HH-MM-SS'
-
-        '''
-
-        now = datetime.datetime.now()
-        timestamp = ""
-        sep = ""
-
-        for t in (now.year, "-", now.month, "-", now.day, " ",
-                  now.hour, ":", now.minute, ":", now.second):
-            if len(str(t)) == 1 and isinstance(t, int):
-                timestamp += f"0{t}"
-            else:
-                timestamp += f"{t}"
-
-        return timestamp.replace(" ", "_").replace(":", "-")
-
     def put(self, file: str, spec_path: str) -> (str):
         '''Uploads specified data to the S3 bucket.
 
-        Args: 
+        Args:
             file:       File to be uploaded
             spec_path:  Root folder path to file
         '''
@@ -551,14 +531,15 @@ class DataDeliverer():
                 return f"File exists: {file.name}, not uploading file."
             else:
                 try:
-                    print(f"Uploading file: {str(file)}\t Size: {file.stat().st_size}")
+                    # print(
+                    #     f"Uploading file: {str(file)}\t Size: {file.stat().st_size}")
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
                         filepath
                         # ,
                         # Callback=ProgressPercentage(
                         #     str(file), float(os.path.getsize(str(file)))
-                    # )
+                        # )
                     )
                 except Exception as e:
                     print(f"{str(file)} not uploaded: ", e)
@@ -571,12 +552,12 @@ class DataDeliverer():
     def get(self, path: str) -> (str):
         '''Downloads specified data from S3 bucket
 
-        Args: 
+        Args:
             file:           File to be downloaded
             dl_file:        Name of downloaded file
 
         Returns:
-            str:    Success message if download successful 
+            str:    Success message if download successful
 
         '''
 
@@ -605,9 +586,10 @@ class DataDeliverer():
                         try:
                             self.s3.resource.meta.client.download_file(
                                 self.s3.bucket.name,
-                                f, str(new_path),
-                                Callback=ProgressPercentage(
-                                    str(new_path), (self.s3.resource.meta.client.head_object(Bucket=self.s3.bucket.name, Key=f))["ContentLength"])
+                                f, str(new_path)
+                                # Callback=ProgressPercentage(
+                                #     str(new_path),
+                                #     (self.s3.resource.meta.client.head_object(Bucket=self.s3.bucket.name, Key=f))["ContentLength"])
                             )
                         except Exception as e:
                             print(f"Download of file {f} failed: {e}")
@@ -622,14 +604,12 @@ class DataDeliverer():
 class ProgressPercentage(object):
 
     def __init__(self, progress):
-        self._progress = progress   
+        self._progress = progress
         self._lock = threading.Lock()
-
 
     def __call__(self, bytes_amount):
         with self._lock:
             self._progress.update(bytes_amount)
-
 
 
 # class ProgressPercentage(object):
@@ -648,3 +628,24 @@ class ProgressPercentage(object):
 #             print(f"\r{self._filename}  {self._seen_so_far} / "
 #                              f"{self._size}  ({percentage:.2f}%)")
 #             #sys.stdout.flush()
+
+def timestamp() -> (str):
+    '''Gets the current time. Formats timestamp.
+
+    Returns:
+        str:    Timestamp in format 'YY-MM-DD_HH-MM-SS'
+
+    '''
+
+    now = datetime.datetime.now()
+    timestamp = ""
+    sep = ""
+
+    for t in (now.year, "-", now.month, "-", now.day, " ",
+              now.hour, ":", now.minute, ":", now.second):
+        if len(str(t)) == 1 and isinstance(t, int):
+            timestamp += f"0{t}"
+        else:
+            timestamp += f"{t}"
+
+    return timestamp.replace(" ", "_").replace(":", "-")

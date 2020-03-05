@@ -1,3 +1,5 @@
+import csv
+from code_api.data_deliverer import timestamp
 import unittest
 import subprocess
 import sys
@@ -38,6 +40,60 @@ files_checksums = {
     Path("../files/testfolder/testfile_33000.fna"): "e661bd31be7096b1b240165b288601ce2c171221bf6108f3dd7f0d1a760bfaaa"
 }
 
+equal_files = {Path("../files/testfolder/testfile_33000_2.fna"): "e661bd31be7096b1b240165b288601ce2c171221bf6108f3dd7f0d1a760bfaaa",
+               Path("../files/testfolder/testfile_33000_3.fna"): "e661bd31be7096b1b240165b288601ce2c171221bf6108f3dd7f0d1a760bfaaa"}
+
+all_files = {**files_checksums, **equal_files}
+
+logfile = f"tests/test_{timestamp()}.csv"
+
+with open(logfile, 'w+') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    writer.writerow(["Function", "One/multiple file(s)",
+                     "Size (MB)", "Time", "Speed (MB/s)"])
+
+
+class TimerError(Exception):
+    """A custom exception used to report errors in use of Timer class"""
+
+
+class Timer:
+
+    def __init__(self):
+        self._start_time = None
+
+    def start(self):
+        """Start a new timer"""
+
+        if self._start_time is not None:
+            raise TimerError(f"Timer is running. Use .stop() to stop it")
+
+        self._start_time = time.perf_counter()
+
+    def stop(self):
+        """Stop the timer, and report the elapsed time"""
+
+        if self._start_time is None:
+            raise TimerError(f"Timer is not running. Use .start() to start it")
+
+        elapsed_time = time.perf_counter() - self._start_time
+        self._start_time = None
+
+        return elapsed_time
+
+
+class PrintBlocker:
+
+    def __init__(self):
+        self._print_enabled = True
+
+    def blockPrint(self):
+        sys.stdout = open(os.devnull, 'w')
+        self._print_enabled = False
+
+    def enablePrint(self):
+        sys.stdout = sys.__stdout__
+
 
 class TestDpCli(unittest.TestCase):
     '''Tests the different aspects of the Data Delivery Portal, 
@@ -45,8 +101,9 @@ class TestDpCli(unittest.TestCase):
     multiple files, and using the --data and --pathfile option), checksum
     generation and verification. '''
 
-    # def test_credentials(self):
+    # def test_a_credentials(self):
     #     '''Tries to log in to the DP with different credentials'''
+    #     print("Testing credentials...")
 
     #     from code_api.data_deliverer import DataDeliverer
 
@@ -144,8 +201,12 @@ class TestDpCli(unittest.TestCase):
     #         get()
     #     self.assertTrue("No data to be uploaded" in str(dpe.exception))
 
-    # def test_data(self):
+    #     print("\tCredentials tested!")
+
+    # def test_b_data(self):
     #     '''Logs in and specifies data'''
+        
+    #     print("Testing data collection...")
 
     #     from code_api.data_deliverer import DataDeliverer
     #     one_file = (str(list(files_checksums.keys())[0]), )
@@ -286,112 +347,196 @@ class TestDpCli(unittest.TestCase):
     #         self.fail(f"Test failed unexpectedly: {e}")
     #     time.sleep(1)
 
-    # def test_checksum(self):
+    #     print("\tData collection tested!")
+
+    # def test_c_checksum(self):
     #     '''Generates checksum and saves to file'''
+
+    #     print("Testing checksum generation...")
 
     #     try:
     #         from code_api.dp_crypto import gen_hmac
     #         for f in files_checksums:
+    #             test_timer = Timer()
+    #             test_timer.start()
     #             checksum = gen_hmac(f)
-    #             print(
-    #                 f"{checksum}, {files_checksums[f]}, {checksum == files_checksums[f]}")
+    #             print_result(function="test_c_checksum",
+    #                          file=[f], stoptime=test_timer.stop())
     #             assert checksum == files_checksums[f]
     #     except HashException as he:
     #         self.fail(he)
 
-    # def test_upload(self):
+    #     print("\tChecksum generation tested!")
+
+    # def test_d_upload(self):
     #     '''Uploads to S3'''
 
+    #     print("Testing separate upload...")
+
     #     for f in files_checksums:
+    #         test_timer2 = Timer()
+    #         test_timer2.start()
     #         subprocess.run(["dp_cli", "put",
     #                         "--username", f"{correct_facility}",
     #                         "--password", f"{correct_facility_password}",
     #                         "--project", f"{correct_project}",
     #                         "--owner", f"{correct_project_owner}",
     #                         "--data", f"{str(f)}"],
-    #                         stdout=subprocess.DEVNULL)
+    #                        stdout=subprocess.DEVNULL)
+    #         print_result(function="test_d_upload",
+    #                      file=[f], stoptime=test_timer2.stop())
 
-    def test_threaded_upload(self):
-        '''Uploads all files using threadpool'''
+    #     print("\tUpload tested!")
 
-        from code_api.data_deliverer import DataDeliverer
+    # def test_e_threaded_upload(self):
+    #     '''Uploads all files using threadpool'''
 
-        # Facility config
-        command = ["dp_cli", "put",
-                   "--username", f"{correct_facility}",
-                   "--password", f"{correct_facility_password}",
-                   "--project", f"{correct_project}",
-                   "--owner", f"{correct_project_owner}"]
+    #     print("Testing threaded upload...")
 
-        # command1 = command
-        # for f in files_checksums:
-        #     for x in f"--data {f}".split():
-        #         command1.append(x)
-        # try:
-        #     subprocess.run(command)
-        #     #    stdout=subprocess.DEVNULL)
-        # except Exception as e:
-        #     self.fail(f"Test failed unexpectedly: {e}")
-        # time.sleep(1)
+    #     from code_api.data_deliverer import DataDeliverer
 
-        # command2 = \
-        #     command.extend(["--data", "../files/testfolder/testfile_33000_2.fna",
-        #                     "--data", "../files/testfolder/testfile_33000_3.fna"])
-        # try:
-        #     subprocess.run(command)
-        # except Exception as e:
-        #     self.fail(f"Test failed unexpectedly: {e}")
-        # time.sleep(1)
+    #     # Facility config
+    #     command = ["dp_cli", "put",
+    #                "--username", f"{correct_facility}",
+    #                "--password", f"{correct_facility_password}",
+    #                "--project", f"{correct_project}",
+    #                "--owner", f"{correct_project_owner}"]
 
-    def test_download(self):
-        '''Downloads from S3'''
+    #     command1 = command
+    #     for f in files_checksums:
+    #         for x in f"--data {f}".split():
+    #             command1.append(x)
+    #     try:
+    #         test_timer3 = Timer()
+    #         test_timer3.start()
+    #         subprocess.run(command1)
+    #         print_result(function="test_e_threaded_upload",
+    #                      file=[f for f in files_checksums],
+    #                      stoptime=test_timer3.stop())
+    #     except Exception as e:
+    #         self.fail(f"Test failed unexpectedly: {e}")
+    #     time.sleep(1)
 
-        # from code_api.data_deliverer import DataDeliverer
+    #     print("Testing threaded upload 2...")
+    #     command2 = command
+    #     for f in equal_files:
+    #         for x in f"--data {f}".split():
+    #             command2.append(x)
+    #     try:
+    #         test_timer4 = Timer()
+    #         test_timer4.start()
+    #         subprocess.run(command2)
+    #         print_result(function="test_e_threaded_upload",
+    #                      file=[f for f in equal_files],
+    #                      stoptime=test_timer4.stop())
+    #     except Exception as e:
+    #         self.fail(f"Test failed unexpectedly: {e}")
+    #     time.sleep(1)
 
-        # # Research config
-        # command = ["dp_cli", "get",
-        #            "--username", f"{correct_facility}",
-        #            "--password", f"{correct_facility_password}",
-        #            "--project", f"{correct_project}"]
+    #     print("\tThreaded upload tested!")
 
-        # command1 = command
-        # for f in files_checksums:
-        #     for x in f"--data {f.name}".split():
-        #         command1.append(x)
+    def test_f_download(self):
+    #     '''Downloads from S3'''
 
-        # try:
-        #     subprocess.run(command)
-        #     #    stdout=subprocess.DEVNULL)
-        # except Exception as e:
-        #     self.fail(f"Test failed unexpectedly: {e}")
-        # time.sleep(1)
+    #     print("Testing download...")
 
-        # command2 = \
-        #     command.extend(["--data", "testfile_33000_2.fna",
-        #                     "--data", "testfile_33000_3.fna"])
-        # try:
-        #     subprocess.run(command)
-        # except Exception as e:
-        #     self.fail(f"Test failed unexpectedly: {e}")
-        # time.sleep(1)
+    #     from code_api.data_deliverer import DataDeliverer
 
-    def test_checksum_verification(self):
+    #     # Research config
+        command = ["dp_cli", "get",
+                   "--username", f"{correct_researcher}",
+                   "--password", f"{correct_researcher_password}",
+                   "--project", f"{correct_project}"]
+
+    #     command1 = command
+    #     for f in files_checksums:
+    #         for x in f"--data {f.name}".split():
+    #             command1.append(x)
+
+    #     try:
+    #         test_timer5 = Timer()
+    #         test_timer5.start()
+    #         subprocess.run(command1)
+    #         print_result(function="test_f_download",
+    #                      file=[f for f in files_checksums],
+    #                      stoptime=test_timer5.stop())
+    #     except Exception as e:
+    #         self.fail(f"Test failed unexpectedly: {e}")
+    #     time.sleep(1)
+
+        print("Testing download 2...")
+        command2 = command
+        for x in ["--data", "testfile_33000_2.fna",
+                  "--data", "testfile_33000_3.fna"]:
+            command2.append(x)
+
+        try:
+            test_timer6 = Timer()
+            test_timer6.start()
+            subprocess.run(command2)
+            print_result(function="test_f_download",
+                         file=["testfile_33000_2.fna", "testfile_33000_3.fna"],
+                         stoptime=test_timer6.stop())
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
+
+        print("\tDownload tested!")
+
+    def test_g_checksum_verification(self):
         '''Verifies the downloaded files checksum'''
+
+        print("Testing checksum verification...")
 
         latest = max([x for x in Path(".").glob("**")
                       if x.match("DataDelivery*")], key=os.path.getmtime)
-        
-        try: 
-            from code_api.dp_crypto import gen_hmac        
+
+        try:
+            from code_api.dp_crypto import gen_hmac
             for p in (latest / Path("files")).glob("*"):
                 filename = p.name
-                print(filename)
                 checksum = gen_hmac(p)
-                for f in files_checksums: 
-                    if f.name == filename: 
+                files_checksums.update(equal_files)
+                for f in files_checksums:
+                    if f.name == filename:
                         assert checksum == files_checksums[f]
-        except Exception as e: 
+        except Exception as e:
             self.fail(f"Test failed unexpectedly: {e}")
+
+        print("\tChecksum verification tested!")
+
+
+def print_result(function, file, stoptime):
+
+    size = 0        # Bytes
+    KB = 1024
+    MB = KB * 1024
+    GB = MB * 1024
+
+    for f in file:
+        print(f)
+        if isinstance(f, str):
+            print("string")
+            for x in all_files:
+                print(x)
+                if x.name == f:
+                    print(size)
+                    size += x.stat().st_size
+                    print(size)
+        else:
+            size += f.stat().st_size
+
+    size = size/MB
+
+    import csv
+    with open(logfile, 'a+') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow([function,
+                         "M" if len(file) > 1 else "1",
+                         f"{size}",
+                         f"{stoptime}",
+                         f"{(size/stoptime):0.4f}"])
+
 
 if __name__ == "__main__":
     unittest.main()

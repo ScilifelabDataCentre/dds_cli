@@ -5,10 +5,20 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
+import crypt4gh
+#crypt4gh.keys.c4gh.gener
 import sys
 
 from code_api.dp_exceptions import HashException
 
+class Crypt4GHKey:
+
+    def __init__(self):
+        self.public = b""
+        self.private = b""
+    
+    def generate(self):
+        '''Generate publoc'''
 
 def secure_password_hash(password_settings: str, password_entered: str) -> (str):
     '''Generates secure password hash.

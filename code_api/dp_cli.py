@@ -136,15 +136,15 @@ def put(config: str, username: str, password: str, project: str,
                             all_files = \
                                 [f for f in dir_.glob('*') if f.is_file()]
                             for file in all_files:  # Upload all files
-                                checksum = executor.submit(gen_hmac, file)
-                                upload_threads.append(checksum)
+                                # checksum = executor.submit(gen_hmac, file)
+                                # upload_threads.append(checksum)
 
                                 future = executor.submit(delivery.put,
                                                          file, path_base)
                                 upload_threads.append(future)
                     elif path.is_file():
-                        checksum = executor.submit(gen_hmac, path)
-                        upload_threads.append(checksum)
+                        # checksum = executor.submit(gen_hmac, path)
+                        # upload_threads.append(checksum)
 
                         # Upload file
                         future = executor.submit(delivery.put, path, None)

@@ -479,8 +479,15 @@ class DataDeliverer():
         '''
 
         filepath = ""           # Path to upload
-        all_subfolders = ""     # All subfolders in a specific pathß
+        all_subfolders = ""     # All subfolders in a specific path
 
+        # Generate checksum
+        # Check compression
+        # Compress if not 
+        # Generate encryption keys 
+        # Encrypt 
+        # Upload 
+        
         # Default configs:
         # multipart_threshold = 8388608 (8 MB) - multipart uploads/downloads
         #                                           automatically triggered
@@ -594,6 +601,8 @@ class DataDeliverer():
                         except Exception as e:
                             print(f"Download of file {f} failed: {e}")
                         else:
+                            # get encryption keys 
+                            # decrypt file 
                             return f"Success: {str(new_path)} downloaded " \
                                 f"from S3 to folder '{path}'!"
                     else:

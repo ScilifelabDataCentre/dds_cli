@@ -101,346 +101,346 @@ class TestDpCli(unittest.TestCase):
     multiple files, and using the --data and --pathfile option), checksum
     generation and verification. '''
 
-    # def test_a_credentials(self):
-    #     '''Tries to log in to the DP with different credentials'''
-    #     print("Testing credentials...")
+    def test_a_credentials(self):
+        '''Tries to log in to the DP with different credentials'''
+        print("Testing credentials...")
 
-    #     from code_api.data_deliverer import DataDeliverer
+        from code_api.data_deliverer import DataDeliverer
 
-    #     # Nothing
-    #     with self.assertRaises(DeliveryPortalException) as dpe:
-    #         DataDeliverer()
-    #     self.assertTrue("Delivery Portal login credentials not specified"
-    #                     in str(dpe.exception))
+        # Nothing
+        with self.assertRaises(DeliveryPortalException) as dpe:
+            DataDeliverer()
+        self.assertTrue("Delivery Portal login credentials not specified"
+                        in str(dpe.exception))
 
-    #     # Any username, only username
-    #     with self.assertRaises(DeliveryOptionException) as doe:
-    #         DataDeliverer(username=any_username)
-    #     self.assertTrue("Delivery Portal login credentials not specified"
-    #                     in str(doe.exception))
+        # Any username, only username
+        with self.assertRaises(DeliveryOptionException) as doe:
+            DataDeliverer(username=any_username)
+        self.assertTrue("Delivery Portal login credentials not specified"
+                        in str(doe.exception))
 
-    #     # Any password, only password
-    #     with self.assertRaises(DeliveryOptionException) as doe:
-    #         DataDeliverer(password=any_password)
-    #     self.assertTrue("Delivery Portal login credentials not specified"
-    #                     in str(doe.exception))
+        # Any password, only password
+        with self.assertRaises(DeliveryOptionException) as doe:
+            DataDeliverer(password=any_password)
+        self.assertTrue("Delivery Portal login credentials not specified"
+                        in str(doe.exception))
 
-    #     # Any project, only project
-    #     with self.assertRaises(DeliveryPortalException) as dpe:
-    #         DataDeliverer(project_id=any_project)
-    #     self.assertTrue("Delivery Portal login credentials not specified"
-    #                     in str(dpe.exception))
+        # Any project, only project
+        with self.assertRaises(DeliveryPortalException) as dpe:
+            DataDeliverer(project_id=any_project)
+        self.assertTrue("Delivery Portal login credentials not specified"
+                        in str(dpe.exception))
 
-    #     # Any owner, only owner
-    #     with self.assertRaises(DeliveryPortalException) as dpe:
-    #         DataDeliverer(project_owner=any_project_owner)
-    #     self.assertTrue("Delivery Portal login credentials not specified"
-    #                     in str(dpe.exception))
+        # Any owner, only owner
+        with self.assertRaises(DeliveryPortalException) as dpe:
+            DataDeliverer(project_owner=any_project_owner)
+        self.assertTrue("Delivery Portal login credentials not specified"
+                        in str(dpe.exception))
 
-    #     # Any username and password
-    #     with self.assertRaises(DeliveryOptionException) as doe:
-    #         DataDeliverer(username=any_username,
-    #                       password=any_password)
-    #     self.assertTrue("Project not specified" in str(doe.exception))
+        # Any username and password
+        with self.assertRaises(DeliveryOptionException) as doe:
+            DataDeliverer(username=any_username,
+                          password=any_password)
+        self.assertTrue("Project not specified" in str(doe.exception))
 
-    #     # Correct facility username and password
-    #     with self.assertRaises(DeliveryOptionException) as doe:
-    #         DataDeliverer(username=correct_facility,
-    #                       password=correct_facility_password)
-    #     self.assertTrue("Project not specified" in str(doe.exception))
+        # Correct facility username and password
+        with self.assertRaises(DeliveryOptionException) as doe:
+            DataDeliverer(username=correct_facility,
+                          password=correct_facility_password)
+        self.assertTrue("Project not specified" in str(doe.exception))
 
-    #     # Correct facility username, password and project
-    #     with self.assertRaises(DeliveryOptionException) as doe:
-    #         def put():
-    #             DataDeliverer(username=correct_facility,
-    #                           password=correct_facility_password,
-    #                           project_id=correct_project)
-    #         put()
-    #     self.assertTrue("Incorrect data owner" in str(doe.exception))
+        # Correct facility username, password and project
+        with self.assertRaises(DeliveryOptionException) as doe:
+            def put():
+                DataDeliverer(username=correct_facility,
+                              password=correct_facility_password,
+                              project_id=correct_project)
+            put()
+        self.assertTrue("Incorrect data owner" in str(doe.exception))
 
-    #     # Correct facility username, password and project. Incorrect owner.
-    #     with self.assertRaises(DeliveryOptionException) as doe:
-    #         def put():
-    #             DataDeliverer(username=correct_facility,
-    #                           password=correct_facility_password,
-    #                           project_id=correct_project,
-    #                           project_owner=false_project_owner)
-    #         put()
-    #     self.assertTrue("Incorrect data owner" in str(doe.exception))
+        # Correct facility username, password and project. Incorrect owner.
+        with self.assertRaises(DeliveryOptionException) as doe:
+            def put():
+                DataDeliverer(username=correct_facility,
+                              password=correct_facility_password,
+                              project_id=correct_project,
+                              project_owner=false_project_owner)
+            put()
+        self.assertTrue("Incorrect data owner" in str(doe.exception))
 
-    #     # Correct facility
-    #     with self.assertRaises(DeliveryPortalException) as dpe:
-    #         def put():
-    #             DataDeliverer(username=correct_facility,
-    #                           password=correct_facility_password,
-    #                           project_id=correct_project,
-    #                           project_owner=correct_project_owner)
-    #         put()
-    #     self.assertTrue("No data to be uploaded" in str(dpe.exception))
+        # Correct facility
+        with self.assertRaises(DeliveryPortalException) as dpe:
+            def put():
+                DataDeliverer(username=correct_facility,
+                              password=correct_facility_password,
+                              project_id=correct_project,
+                              project_owner=correct_project_owner)
+            put()
+        self.assertTrue("No data to be uploaded" in str(dpe.exception))
 
-    #     # Correct researcher
-    #     with self.assertRaises(DeliveryPortalException) as dpe:
-    #         def get():
-    #             DataDeliverer(username=correct_researcher,
-    #                           password=correct_researcher_password,
-    #                           project_id=correct_project)
-    #         get()
-    #     self.assertTrue("No data to be uploaded" in str(dpe.exception))
+        # Correct researcher
+        with self.assertRaises(DeliveryPortalException) as dpe:
+            def get():
+                DataDeliverer(username=correct_researcher,
+                              password=correct_researcher_password,
+                              project_id=correct_project)
+            get()
+        self.assertTrue("No data to be uploaded" in str(dpe.exception))
 
-    #     # Correct facility config
-    #     with self.assertRaises(DeliveryPortalException) as dpe:
-    #         def put():
-    #             DataDeliverer(config=correct_facility_config)
-    #         put()
-    #     self.assertTrue("No data to be uploaded" in str(dpe.exception))
+        # Correct facility config
+        with self.assertRaises(DeliveryPortalException) as dpe:
+            def put():
+                DataDeliverer(config=correct_facility_config)
+            put()
+        self.assertTrue("No data to be uploaded" in str(dpe.exception))
 
-    #     # Correct researcher config
-    #     with self.assertRaises(DeliveryPortalException) as dpe:
-    #         def get():
-    #             DataDeliverer(config=correct_researcher_config)
-    #         get()
-    #     self.assertTrue("No data to be uploaded" in str(dpe.exception))
+        # Correct researcher config
+        with self.assertRaises(DeliveryPortalException) as dpe:
+            def get():
+                DataDeliverer(config=correct_researcher_config)
+            get()
+        self.assertTrue("No data to be uploaded" in str(dpe.exception))
 
-    #     print("\tCredentials tested!")
+        print("\tCredentials tested!")
 
-    # def test_b_data(self):
-    #     '''Logs in and specifies data'''
-        
-    #     print("Testing data collection...")
+    def test_b_data(self):
+        '''Logs in and specifies data'''
 
-    #     from code_api.data_deliverer import DataDeliverer
-    #     one_file = (str(list(files_checksums.keys())[0]), )
-    #     multiple_files = tuple(str(f) for f in files_checksums)
+        print("Testing data collection...")
 
-    #     # Facility, single creds and --data option
-    #     try:
-    #         def put():
-    #             DataDeliverer(username=correct_facility,
-    #                           password=correct_facility_password,
-    #                           project_id=correct_project,
-    #                           project_owner=correct_project_owner,
-    #                           data=one_file)
-    #         put()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        from code_api.data_deliverer import DataDeliverer
+        one_file = (str(list(files_checksums.keys())[0]), )
+        multiple_files = tuple(str(f) for f in files_checksums)
 
-    #     # Researcher, single creds and --data option
-    #     try:
-    #         def get():
-    #             DataDeliverer(username=correct_researcher,
-    #                           password=correct_researcher_password,
-    #                           project_id=correct_project,
-    #                           data=one_file)
-    #         get()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Facility, single creds and --data option
+        try:
+            def put():
+                DataDeliverer(username=correct_facility,
+                              password=correct_facility_password,
+                              project_id=correct_project,
+                              project_owner=correct_project_owner,
+                              data=one_file)
+            put()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Facility, config and --data option
-    #     try:
-    #         def put():
-    #             DataDeliverer(config=correct_facility_config,
-    #                           data=one_file)
-    #         put()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Researcher, single creds and --data option
+        try:
+            def get():
+                DataDeliverer(username=correct_researcher,
+                              password=correct_researcher_password,
+                              project_id=correct_project,
+                              data=one_file)
+            get()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Researcher, config and --data option
-    #     try:
-    #         def get():
-    #             DataDeliverer(config=correct_researcher_config,
-    #                           data=one_file)
-    #         get()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Facility, config and --data option
+        try:
+            def put():
+                DataDeliverer(config=correct_facility_config,
+                              data=one_file)
+            put()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Facility, single creds and multiple files in --data option
-    #     try:
-    #         def put():
-    #             DataDeliverer(username=correct_facility,
-    #                           password=correct_facility_password,
-    #                           project_id=correct_project,
-    #                           project_owner=correct_project_owner,
-    #                           data=multiple_files)
-    #         put()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Researcher, config and --data option
+        try:
+            def get():
+                DataDeliverer(config=correct_researcher_config,
+                              data=one_file)
+            get()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Researcher, single creds and multiple files in --data option
-    #     try:
-    #         def get():
-    #             DataDeliverer(username=correct_researcher,
-    #                           password=correct_researcher_password,
-    #                           project_id=correct_project,
-    #                           data=multiple_files)
-    #         get()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Facility, single creds and multiple files in --data option
+        try:
+            def put():
+                DataDeliverer(username=correct_facility,
+                              password=correct_facility_password,
+                              project_id=correct_project,
+                              project_owner=correct_project_owner,
+                              data=multiple_files)
+            put()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Facility, config and multiple files in --data option
-    #     try:
-    #         def put():
-    #             DataDeliverer(config=correct_facility_config,
-    #                           data=multiple_files)
-    #         put()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Researcher, single creds and multiple files in --data option
+        try:
+            def get():
+                DataDeliverer(username=correct_researcher,
+                              password=correct_researcher_password,
+                              project_id=correct_project,
+                              data=multiple_files)
+            get()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Researcher, config and multiple files in --data option
-    #     try:
-    #         def get():
-    #             DataDeliverer(config=correct_researcher_config,
-    #                           data=multiple_files)
-    #         get()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Facility, config and multiple files in --data option
+        try:
+            def put():
+                DataDeliverer(config=correct_facility_config,
+                              data=multiple_files)
+            put()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Facility, single creds and --pathfile option
-    #     try:
-    #         def put():
-    #             DataDeliverer(username=correct_facility,
-    #                           password=correct_facility_password,
-    #                           project_id=correct_project,
-    #                           project_owner=correct_project_owner,
-    #                           pathfile="test_pathfile.txt")
-    #         put()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Researcher, config and multiple files in --data option
+        try:
+            def get():
+                DataDeliverer(config=correct_researcher_config,
+                              data=multiple_files)
+            get()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Researcher, single creds and --pathfile option
-    #     try:
-    #         def get():
-    #             DataDeliverer(username=correct_researcher,
-    #                           password=correct_researcher_password,
-    #                           project_id=correct_project,
-    #                           pathfile="test_pathfile.txt")
-    #         get()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Facility, single creds and --pathfile option
+        try:
+            def put():
+                DataDeliverer(username=correct_facility,
+                              password=correct_facility_password,
+                              project_id=correct_project,
+                              project_owner=correct_project_owner,
+                              pathfile="test_pathfile.txt")
+            put()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Facility, config and --pathfile option
-    #     try:
-    #         def put():
-    #             DataDeliverer(config=correct_facility_config,
-    #                           pathfile="test_pathfile.txt")
-    #         put()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Researcher, single creds and --pathfile option
+        try:
+            def get():
+                DataDeliverer(username=correct_researcher,
+                              password=correct_researcher_password,
+                              project_id=correct_project,
+                              pathfile="test_pathfile.txt")
+            get()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     # Researcher, config and --pathfile option
-    #     try:
-    #         def get():
-    #             DataDeliverer(config=correct_researcher_config,
-    #                           pathfile="test_pathfile.txt")
-    #         get()
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Facility, config and --pathfile option
+        try:
+            def put():
+                DataDeliverer(config=correct_facility_config,
+                              pathfile="test_pathfile.txt")
+            put()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     print("\tData collection tested!")
+        # Researcher, config and --pathfile option
+        try:
+            def get():
+                DataDeliverer(config=correct_researcher_config,
+                              pathfile="test_pathfile.txt")
+            get()
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    # def test_c_checksum(self):
-    #     '''Generates checksum and saves to file'''
+        print("\tData collection tested!")
 
-    #     print("Testing checksum generation...")
+    def test_c_checksum(self):
+        '''Generates checksum and saves to file'''
 
-    #     try:
-    #         from code_api.dp_crypto import gen_hmac
-    #         for f in files_checksums:
-    #             test_timer = Timer()
-    #             test_timer.start()
-    #             checksum = gen_hmac(f)
-    #             print_result(function="test_c_checksum",
-    #                          file=[f], stoptime=test_timer.stop())
-    #             assert checksum == files_checksums[f]
-    #     except HashException as he:
-    #         self.fail(he)
+        print("Testing checksum generation...")
 
-    #     print("\tChecksum generation tested!")
+        try:
+            from code_api.dp_crypto import gen_hmac
+            for f in files_checksums:
+                test_timer = Timer()
+                test_timer.start()
+                checksum = gen_hmac(f)
+                print_result(function="test_c_checksum",
+                             file=[f], stoptime=test_timer.stop())
+                assert checksum == files_checksums[f]
+        except HashException as he:
+            self.fail(he)
 
-    # def test_d_upload(self):
-    #     '''Uploads to S3'''
+        print("\tChecksum generation tested!")
 
-    #     print("Testing separate upload...")
+    def test_d_upload(self):
+        '''Uploads to S3'''
 
-    #     for f in files_checksums:
-    #         test_timer2 = Timer()
-    #         test_timer2.start()
-    #         subprocess.run(["dp_cli", "put",
-    #                         "--username", f"{correct_facility}",
-    #                         "--password", f"{correct_facility_password}",
-    #                         "--project", f"{correct_project}",
-    #                         "--owner", f"{correct_project_owner}",
-    #                         "--data", f"{str(f)}"],
-    #                        stdout=subprocess.DEVNULL)
-    #         print_result(function="test_d_upload",
-    #                      file=[f], stoptime=test_timer2.stop())
+        print("Testing separate upload...")
 
-    #     print("\tUpload tested!")
+        for f in files_checksums:
+            test_timer2 = Timer()
+            test_timer2.start()
+            subprocess.run(["dp_cli", "put",
+                            "--username", f"{correct_facility}",
+                            "--password", f"{correct_facility_password}",
+                            "--project", f"{correct_project}",
+                            "--owner", f"{correct_project_owner}",
+                            "--data", f"{str(f)}"],
+                           stdout=subprocess.DEVNULL)
+            print_result(function="test_d_upload",
+                         file=[f], stoptime=test_timer2.stop())
 
-    # def test_e_threaded_upload(self):
-    #     '''Uploads all files using threadpool'''
+        print("\tUpload tested!")
 
-    #     print("Testing threaded upload...")
+    def test_e_threaded_upload(self):
+        '''Uploads all files using threadpool'''
 
-    #     from code_api.data_deliverer import DataDeliverer
+        print("Testing threaded upload...")
 
-    #     # Facility config
-    #     command = ["dp_cli", "put",
-    #                "--username", f"{correct_facility}",
-    #                "--password", f"{correct_facility_password}",
-    #                "--project", f"{correct_project}",
-    #                "--owner", f"{correct_project_owner}"]
+        from code_api.data_deliverer import DataDeliverer
 
-    #     command1 = command
-    #     for f in files_checksums:
-    #         for x in f"--data {f}".split():
-    #             command1.append(x)
-    #     try:
-    #         test_timer3 = Timer()
-    #         test_timer3.start()
-    #         subprocess.run(command1)
-    #         print_result(function="test_e_threaded_upload",
-    #                      file=[f for f in files_checksums],
-    #                      stoptime=test_timer3.stop())
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        # Facility config
+        command = ["dp_cli", "put",
+                   "--username", f"{correct_facility}",
+                   "--password", f"{correct_facility_password}",
+                   "--project", f"{correct_project}",
+                   "--owner", f"{correct_project_owner}"]
 
-    #     print("Testing threaded upload 2...")
-    #     command2 = command
-    #     for f in equal_files:
-    #         for x in f"--data {f}".split():
-    #             command2.append(x)
-    #     try:
-    #         test_timer4 = Timer()
-    #         test_timer4.start()
-    #         subprocess.run(command2)
-    #         print_result(function="test_e_threaded_upload",
-    #                      file=[f for f in equal_files],
-    #                      stoptime=test_timer4.stop())
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        command1 = list(command)
+        for f in files_checksums:
+            for x in f"--data {f}".split():
+                command1.append(x)
+        try:
+            test_timer3 = Timer()
+            test_timer3.start()
+            subprocess.run(command1)
+            print_result(function="test_e_threaded_upload",
+                         file=[f for f in files_checksums],
+                         stoptime=test_timer3.stop())
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
-    #     print("\tThreaded upload tested!")
+        print("Testing threaded upload 2...")
+        command2 = list(command)
+        for f in equal_files:
+            for x in f"--data {f}".split():
+                command2.append(x)
+        try:
+            test_timer4 = Timer()
+            test_timer4.start()
+            subprocess.run(command2)
+            print_result(function="test_e_threaded_upload",
+                         file=[f for f in equal_files],
+                         stoptime=test_timer4.stop())
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
+
+        print("\tThreaded upload tested!")
 
     def test_f_download(self):
-    #     '''Downloads from S3'''
+        #     '''Downloads from S3'''
 
-    #     print("Testing download...")
+        print("Testing download...")
 
-    #     from code_api.data_deliverer import DataDeliverer
+        from code_api.data_deliverer import DataDeliverer
 
     #     # Research config
         command = ["dp_cli", "get",
@@ -448,24 +448,24 @@ class TestDpCli(unittest.TestCase):
                    "--password", f"{correct_researcher_password}",
                    "--project", f"{correct_project}"]
 
-    #     command1 = command
-    #     for f in files_checksums:
-    #         for x in f"--data {f.name}".split():
-    #             command1.append(x)
+        command1 = list(command)
+        for f in files_checksums:
+            for x in f"--data {f.name}".split():
+                command1.append(x)
 
-    #     try:
-    #         test_timer5 = Timer()
-    #         test_timer5.start()
-    #         subprocess.run(command1)
-    #         print_result(function="test_f_download",
-    #                      file=[f for f in files_checksums],
-    #                      stoptime=test_timer5.stop())
-    #     except Exception as e:
-    #         self.fail(f"Test failed unexpectedly: {e}")
-    #     time.sleep(1)
+        try:
+            test_timer5 = Timer()
+            test_timer5.start()
+            subprocess.run(command1)
+            print_result(function="test_f_download",
+                         file=[f for f in files_checksums],
+                         stoptime=test_timer5.stop())
+        except Exception as e:
+            self.fail(f"Test failed unexpectedly: {e}")
+        time.sleep(1)
 
         print("Testing download 2...")
-        command2 = command
+        command2 = list(command)
         for x in ["--data", "testfile_33000_2.fna",
                   "--data", "testfile_33000_3.fna"]:
             command2.append(x)

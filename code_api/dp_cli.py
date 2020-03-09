@@ -81,9 +81,43 @@ def put(config: str, username: str, password: str, project: str,
             as delivery:
 
         # Create multiprocess pool
-        with concurrent.futures.ProcessPoolExecutor() as poolexecutor:
-            pass
+        with concurrent.futures.ProcessPoolExecutor() as pex:
+            pools = []
+            file_info = {}
+            for path in delivery.data:
+                if isinstance(path, Path):
+                    # check if folder and then get all subfolders
+                    if path.is_dir():
+                        path_base = path.name
+                        all_dirs = list(path.glob('**'))  # all (sub)dirs
+                        for dir_ in all_dirs:
+                            # check which files are in the directory
+                            all_files = [f for f in dir_.glob('*')
+                                         if f.is_file()]
+                            for file in all_files:  # Upload all files
+                                pfuture = pex.submit(gen_hmac, file)
+                                pools.append(pfuture)
+                                file_info[file] = {"path_base": path_base,
+                                                   "hash": ""}
+                    elif path.is_file():
+                        # Upload file
+                        pfuture = pex.submit(gen_hmac, path)
+                        pools.append(pfuture)
+                        file_info[path] = {"path_base": None,
+                                           "hash": ""}
+                    else:
+                        sys.exit(f"Path type {path} not identified."
+                                 "Have you entered the correct path?")
+                else:
+                    pass  # do something, file not uploaded because not found
 
+            for f in concurrent.futures.as_completed(pools):
+                print(f.result())
+                print(file_info[f.result()[0]])
+                file_info[f.result()[0]]["hash"] = f.result()[1]
+                print(file_info[f.result()[0]])
+
+        sys.exit()
         # Create multithreading pool
         with concurrent.futures.ThreadPoolExecutor() as tex:
             upload_threads = []

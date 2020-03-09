@@ -1,31 +1,30 @@
-# from Crypto.Cipher import AES
-# from Crypto.Random import get_random_bytes
+import sys
+
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-
-import crypt4gh
-#crypt4gh.keys.c4gh.gener
-import sys
 
 from code_api.dp_exceptions import HashException
+
 
 class Crypt4GHKey:
 
     def __init__(self):
         self.public = b""
         self.private = b""
-    
+
     def generate(self):
         '''Generate publoc'''
 
-def secure_password_hash(password_settings: str, password_entered: str) -> (str):
+
+def secure_password_hash(password_settings: str,
+                         password_entered: str) -> (str):
     '''Generates secure password hash.
 
     Args:
-            password_settings:  String containing the salt, length of hash, n-exponential,
-                                                    r and p variables. Taken from database. Separated by '$'.
+            password_settings:  String containing the salt, length of hash,
+                                n-exponential, r and p variables.
+                                Taken from database. Separated by '$'.
             password_entered:   The user-specified password.
 
     Returns:
@@ -58,6 +57,6 @@ def gen_hmac(file):
             for chunk in iter(lambda: f.read(8388608), b''):
                 file_hash.update(chunk)
     except HashException as he:
-        sys.exit(f"HMAC for file {str(file)} could not be generated.")
+        sys.exit(f"HMAC for file {str(file)} could not be generated: {he}")
     else:
-        return file_hash.finalize().hex()
+        return file, file_hash.finalize().hex()

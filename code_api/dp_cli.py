@@ -4,59 +4,16 @@ Command line interface for Data Delivery Portal
 
 # IMPORTS ########################################################### IMPORTS #
 
-from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
-from cryptography.hazmat.primitives import hashes, hmac
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-import shutil
-import zipfile
-import zlib
-import tarfile
-import gzip
-import json
-
-from pathlib import Path
-import tempfile
-
-import click
-import couchdb
-import sys
-import hashlib
-import os
-import filetype
-import mimetypes
-from typing import Union
-
-import datetime
-from itertools import chain
+import concurrent.futures
 import logging
 import logging.config
+from pathlib import Path
+import sys
 
-from ctypes import *
+import click
 
-from crypt4gh import lib, header, keys
-from functools import partial
-from getpass import getpass
-
-from code_api.dp_exceptions import *
-from botocore.exceptions import ClientError
-
-import boto3
-from boto3.s3.transfer import TransferConfig
-import smart_open
-
-import concurrent.futures
-
-import time
-import traceback
-
-from code_api.datadel_s3 import S3Object
-from code_api.data_deliverer import DataDeliverer, DPUser
+from code_api.data_deliverer import DataDeliverer
 from code_api.dp_crypto import gen_hmac
-
-from tqdm_multi_thread import TqdmMultiThreadFactory
 
 # CONFIG ############################################################# CONFIG #
 
@@ -122,8 +79,13 @@ def put(config: str, username: str, password: str, project: str,
                        project_id=project, project_owner=owner,
                        pathfile=pathfile, data=data) \
             as delivery:
+
+        # Create multiprocess pool
+        with concurrent.futures.ProcessPoolExecutor() as poolexecutor:
+            pass
+
         # Create multithreading pool
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor() as tex:
             upload_threads = []
             for path in delivery.data:
                 if isinstance(path, Path):
@@ -136,18 +98,13 @@ def put(config: str, username: str, password: str, project: str,
                             all_files = \
                                 [f for f in dir_.glob('*') if f.is_file()]
                             for file in all_files:  # Upload all files
-                                # checksum = executor.submit(gen_hmac, file)
-                                # upload_threads.append(checksum)
-
-                                future = executor.submit(delivery.put,
-                                                         file, path_base)
+                                future = tex.submit(delivery.put,
+                                                    file, path_base)
                                 upload_threads.append(future)
                     elif path.is_file():
-                        # checksum = executor.submit(gen_hmac, path)
-                        # upload_threads.append(checksum)
-
                         # Upload file
-                        future = executor.submit(delivery.put, path, None)
+                        future = tex.submit(
+                            delivery.put, path, None)
                         upload_threads.append(future)
                     else:
                         sys.exit(f"Path type {path} not identified."

@@ -1,3 +1,47 @@
+# IMPORTS 
+
+from cryptography.hazmat.primitives import hashes, hmac
+from cryptography.hazmat.primitives.kdf.scrypt imporat Scrypt
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+import shutil
+import zipfile
+import zlib
+import tarfile
+import gzip
+import json
+import tempfile
+import couchdb
+import hashlib
+import os
+import filetype
+import mimetypes
+from typing import Union
+import datetime
+from itertools import chain
+from ctypes import *
+from crypt4gh import lib, header, keys
+from functools import partial
+from getpass import getpass
+
+from code_api.dp_exceptions import *
+from botocore.exceptions import ClientError
+
+import boto3
+from boto3.s3.transfer import TransferConfig
+import smart_open
+
+import time
+import traceback
+
+from code_api.datadel_s3 import S3Object
+from code_api.data_deliverer import DataDeliverer, DPUser
+
+from tqdm_multi_thread import TqdmMultiThreadFactory
+
+# .-------------
+
+
 # CHECK CALLING FUNCTION
 cur_com = sys._getframe().f_code.co_name  # The current command, "put" here
 # The calling function ("invoke" in this case)
@@ -1183,3 +1227,23 @@ def compression_dict() -> (dict):
         extdict[f'.{f_}'] = f_
 
     return extdict
+
+
+# progress bar
+
+# class ProgressPercentage(object):
+
+#     def __init__(self, filename, filesize):
+#         self._filename = filename
+#         self._size = filesize
+#         self._seen_so_far = 0
+#         self._lock = threading.Lock()
+
+#     def __call__(self, bytes_amount):
+#         # To simplify, assume this is hooked up to a single filename
+#         with self._lock:
+#             self._seen_so_far += bytes_amount
+#             percentage = (self._seen_so_far / self._size) * 100
+#             print(f"\r{self._filename}  {self._seen_so_far} / "
+#                              f"{self._size}  ({percentage:.2f}%)")
+#             #sys.stdout.flush()

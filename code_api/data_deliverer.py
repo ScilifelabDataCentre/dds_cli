@@ -1,25 +1,20 @@
-import threading
-from code_api.dp_exceptions import *
-from code_api.datadel_s3 import S3Object
-from code_api.dp_crypto import secure_password_hash
-
-import sys
-import os
 from pathlib import Path
+import sys
 
 import json
 import shutil
 import datetime
 
 import traceback
-import concurrent
 
 import couchdb
 
-import boto3
-from boto3.s3.transfer import TransferConfig
+# from boto3.s3.transfer import TransferConfig
 
-import progressbar
+from code_api.dp_exceptions import DeliveryOptionException, \
+    DeliveryPortalException, CouchDBException, S3Error
+from code_api.datadel_s3 import S3Object
+from code_api.dp_crypto import secure_password_hash
 
 
 class DPUser():
@@ -481,13 +476,6 @@ class DataDeliverer():
         filepath = ""           # Path to upload
         all_subfolders = ""     # All subfolders in a specific path
 
-        # Generate checksum
-        # Check compression
-        # Compress if not 
-        # Generate encryption keys 
-        # Encrypt 
-        # Upload 
-        
         # Default configs:
         # multipart_threshold = 8388608 (8 MB) - multipart uploads/downloads
         #                                           automatically triggered
@@ -499,7 +487,7 @@ class DataDeliverer():
         # max_io_queue = 100 - max amount of read parts queued in memory
         # io_chunksize = 262144 (256 KB) - max size of each chunk in io queue
         # use_threads = True - threads will be used when performing S3 transfer
-        config = TransferConfig(max_concurrency=10)
+        # config = TransferConfig(max_concurrency=10)
 
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
@@ -538,8 +526,6 @@ class DataDeliverer():
                 return f"File exists: {file.name}, not uploading file."
             else:
                 try:
-                    # print(
-                    #     f"Uploading file: {str(file)}\t Size: {file.stat().st_size}")
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
                         filepath
@@ -594,49 +580,18 @@ class DataDeliverer():
                             self.s3.resource.meta.client.download_file(
                                 self.s3.bucket.name,
                                 f, str(new_path)
-                                # Callback=ProgressPercentage(
-                                #     str(new_path),
-                                #     (self.s3.resource.meta.client.head_object(Bucket=self.s3.bucket.name, Key=f))["ContentLength"])
                             )
                         except Exception as e:
                             print(f"Download of file {f} failed: {e}")
                         else:
-                            # get encryption keys 
-                            # decrypt file 
+                            # get encryption keys
+                            # decrypt file
                             return f"Success: {str(new_path)} downloaded " \
                                 f"from S3 to folder '{path}'!"
                     else:
                         print(f"File {str(new_path)} already exists. "
                               "Not downloading.")
 
-
-class ProgressPercentage(object):
-
-    def __init__(self, progress):
-        self._progress = progress
-        self._lock = threading.Lock()
-
-    def __call__(self, bytes_amount):
-        with self._lock:
-            self._progress.update(bytes_amount)
-
-
-# class ProgressPercentage(object):
-
-#     def __init__(self, filename, filesize):
-#         self._filename = filename
-#         self._size = filesize
-#         self._seen_so_far = 0
-#         self._lock = threading.Lock()
-
-#     def __call__(self, bytes_amount):
-#         # To simplify, assume this is hooked up to a single filename
-#         with self._lock:
-#             self._seen_so_far += bytes_amount
-#             percentage = (self._seen_so_far / self._size) * 100
-#             print(f"\r{self._filename}  {self._seen_so_far} / "
-#                              f"{self._size}  ({percentage:.2f}%)")
-#             #sys.stdout.flush()
 
 def timestamp() -> (str):
     '''Gets the current time. Formats timestamp.
@@ -648,7 +603,6 @@ def timestamp() -> (str):
 
     now = datetime.datetime.now()
     timestamp = ""
-    sep = ""
 
     for t in (now.year, "-", now.month, "-", now.day, " ",
               now.hour, ":", now.minute, ":", now.second):

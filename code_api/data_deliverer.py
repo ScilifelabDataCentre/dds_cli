@@ -1,5 +1,7 @@
 from pathlib import Path
 import sys
+import os
+import threading
 
 import json
 import shutil
@@ -528,11 +530,10 @@ class DataDeliverer():
                 try:
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
-                        filepath
-                        # ,
-                        # Callback=ProgressPercentage(
-                        #     str(file), float(os.path.getsize(str(file)))
-                        # )
+                        filepath,
+                        Callback=ProgressPercentage(
+                            str(file), float(os.path.getsize(str(file)))
+                        )
                     )
                 except Exception as e:
                     print(f"{str(file)} not uploaded: ", e)
@@ -586,8 +587,9 @@ class DataDeliverer():
                         else:
                             # get encryption keys
                             # decrypt file
-                            return f"Success: {str(new_path)} downloaded " \
-                                f"from S3 to folder '{path}'!"
+                            # return f"Success: {str(new_path)} downloaded " \
+                            #     f"from S3 to folder '{path}'!"
+                            return new_path
                     else:
                         print(f"File {str(new_path)} already exists. "
                               "Not downloading.")
@@ -612,3 +614,21 @@ def timestamp() -> (str):
             timestamp += f"{t}"
 
     return timestamp.replace(" ", "_").replace(":", "-")
+
+
+class ProgressPercentage(object):
+
+    def __init__(self, filename, filesize):
+        self._filename = filename
+        self._size = filesize
+        self._seen_so_far = 0
+        self._lock = threading.Lock()
+
+    def __call__(self, bytes_amount):
+        # To simplify, assume this is hooked up to a single filename
+        with self._lock:
+            self._seen_so_far += bytes_amount
+            percentage = (self._seen_so_far / self._size) * 100
+            sys.stdout.write(f"\r{self._filename}  {self._seen_so_far} / "
+                             f"{self._size}  ({percentage:.2f}%)")
+            sys.stdout.flush()

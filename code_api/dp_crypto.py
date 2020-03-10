@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -46,8 +47,18 @@ def secure_password_hash(password_settings: str,
     return (kdf.derive(password_entered.encode('utf-8'))).hex()
 
 
-def gen_hmac(file):
-    '''Generates a HMAC for a file'''
+def gen_hmac(file) -> (Path, str):
+    '''Generates a HMAC for a file
+
+    Args:
+        file: Path to hash
+
+    Returns:
+        tuple: File and path
+
+            Path:   Path to file
+            str:    HMAC generated for file
+    '''
 
     file_hash = hmac.HMAC(key=b'SuperSecureChecksumKey',
                           algorithm=hashes.SHA256(),

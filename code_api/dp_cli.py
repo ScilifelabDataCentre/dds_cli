@@ -81,9 +81,9 @@ def put(config: str, username: str, password: str, project: str,
             as delivery:
 
         # Create multiprocess pool
-        with concurrent.futures.ProcessPoolExecutor() as pex:
+        with concurrent.futures.ProcessPoolExecutor() as pool_exec:
             pools = []
-            file_info = {}
+            all_files = {}
             for path in delivery.data:
                 if isinstance(path, Path):
                     # check if folder and then get all subfolders
@@ -92,62 +92,44 @@ def put(config: str, username: str, password: str, project: str,
                         all_dirs = list(path.glob('**'))  # all (sub)dirs
                         for dir_ in all_dirs:
                             # check which files are in the directory
-                            all_files = [f for f in dir_.glob('*')
-                                         if f.is_file()]
+                            all_files = {f: {} for f in dir_.glob('*')
+                                         if f.is_file()}
                             for file in all_files:  # Upload all files
-                                pfuture = pex.submit(gen_hmac, file)
-                                pools.append(pfuture)
-                                file_info[file] = {"path_base": path_base,
+                                p_future = pool_exec.submit(gen_hmac, file)
+                                pools.append(p_future)
+                                all_files[file] = {"path_base": path_base,
                                                    "hash": ""}
                     elif path.is_file():
                         # Upload file
-                        pfuture = pex.submit(gen_hmac, path)
-                        pools.append(pfuture)
-                        file_info[path] = {"path_base": None,
+                        p_future = pool_exec.submit(gen_hmac, path)
+                        pools.append(p_future)
+                        all_files[path] = {"path_base": None,
                                            "hash": ""}
                     else:
-                        sys.exit(f"Path type {path} not identified."
-                                 "Have you entered the correct path?")
+                        raise OSError(f"Path type {path} not identified."
+                                      "Have you entered the correct path?")
                 else:
-                    pass  # do something, file not uploaded because not found
+                    raise OSError(f"The specified path {path} "
+                                  "was not recognized. Delivery Portal error.")
 
-            for f in concurrent.futures.as_completed(pools):
-                print(f.result())
-                print(file_info[f.result()[0]])
-                file_info[f.result()[0]]["hash"] = f.result()[1]
-                print(file_info[f.result()[0]])
+            # Create multithreading pool
+            with concurrent.futures.ThreadPoolExecutor() as thread_exec:
+                upload_threads = []
+                # When the pools are finished
+                for f in concurrent.futures.as_completed(pools):
+                    # save file hash in dict
+                    all_files[f.result()[0]]["hash"] = f.result()[1]
 
-        sys.exit()
-        # Create multithreading pool
-        with concurrent.futures.ThreadPoolExecutor() as tex:
-            upload_threads = []
-            for path in delivery.data:
-                if isinstance(path, Path):
-                    # check if folder and then get all subfolders
-                    if path.is_dir():
-                        path_base = path.name
-                        all_dirs = list(path.glob('**'))  # all (sub)dirs
-                        for dir_ in all_dirs:
-                            # check which files are in the directory
-                            all_files = \
-                                [f for f in dir_.glob('*') if f.is_file()]
-                            for file in all_files:  # Upload all files
-                                future = tex.submit(delivery.put,
-                                                    file, path_base)
-                                upload_threads.append(future)
-                    elif path.is_file():
-                        # Upload file
-                        future = tex.submit(
-                            delivery.put, path, None)
-                        upload_threads.append(future)
-                    else:
-                        sys.exit(f"Path type {path} not identified."
-                                 "Have you entered the correct path?")
-                else:
-                    pass  # do something, file not uploaded because not found
+                    # begin upload
+                    t_future = thread_exec.submit(
+                        delivery.put,
+                        f.result()[0],
+                        all_files[f.result()[0]]['path_base']
+                    )
+                    upload_threads.append(t_future)
 
-            for f in concurrent.futures.as_completed(upload_threads):
-                print(f.result())
+                for t in concurrent.futures.as_completed(upload_threads):
+                    print(t.result())
 
 
 @cli.command()
@@ -187,14 +169,19 @@ def get(config: str, username: str, password: str, project: str,
                        project_id=project, pathfile=pathfile, data=data) \
             as delivery:
         # Create multithreading pool
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            upload_threads = []
+        with concurrent.futures.ThreadPoolExecutor() as thread_exec:
+            download_threads = []
             for path in delivery.data:
                 if isinstance(path, str):
                     # Download all files
-                    future = executor.submit(delivery.get, path)
-                    upload_threads.append(future)
+                    t_future = thread_exec.submit(delivery.get, path)
+                    download_threads.append(t_future)
 
-            for f in concurrent.futures.as_completed(upload_threads):
-                [gen_hmac(x) for x in delivery.tempdir[1].glob(
-                    '**/*') if x.is_file()]
+            with concurrent.futures.ProcessPoolExecutor() as pool_exec:
+                pools = []
+                for f in concurrent.futures.as_completed(download_threads):
+                    p_future = pool_exec.submit(gen_hmac, f.result())
+                    pools.append(p_future)
+
+                for p in concurrent.futures.as_completed(pools):
+                    print(p.result())

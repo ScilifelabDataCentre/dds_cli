@@ -11,9 +11,12 @@ from pathlib import Path
 import sys
 
 import click
+from crypt4gh import lib, header, keys
+from code_api.crypt4gh.crypt4gh.lib import encrypt
 
 from code_api.data_deliverer import DataDeliverer
 from code_api.dp_crypto import gen_hmac
+from code_api.dp_crypto import Crypt4GHKey
 
 # CONFIG ############################################################# CONFIG #
 
@@ -74,6 +77,15 @@ def put(config: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
+    recip_keys = Crypt4GHKey()
+    keys = Crypt4GHKey()
+    # x = Path("../files/testfolder/test109/testfile_109_2.fna")
+    # encrypt(keys,
+    #         recip_keys,
+    #         x.open('rb'),
+    #         Path(x.with_suffix(".c4gh")).open('wb'))
+
+    # sys.exit()
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
@@ -83,6 +95,7 @@ def put(config: str, username: str, password: str, project: str,
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
             pools = []
+            encryption_pools = []
             all_files = {}
             for path in delivery.data:
                 if isinstance(path, Path):
@@ -100,11 +113,19 @@ def put(config: str, username: str, password: str, project: str,
                                 all_files[file] = {"path_base": path_base,
                                                    "hash": ""}
                     elif path.is_file():
-                        # Upload file
-                        p_future = pool_exec.submit(gen_hmac, path)
+                        p_future = pool_exec.submit(keys.prep_upload,
+                                                    path,
+                                                    recip_keys.public_parsed)
                         pools.append(p_future)
-                        all_files[path] = {"path_base": None,
-                                           "hash": ""}
+                        # with path.open(mode='rb') as infile:
+                        #     with Path("encrypted").open(mode='wb') as outfile:
+                        #         encrypt(keys, recip_keys,
+                        #                 infile, outfile, path)
+                        # Upload file
+                        # p_future = pool_exec.submit(gen_hmac, path)
+                        # pools.append(p_future)
+                        # all_files[path] = {"path_base": None,
+                        #                    "hash": ""}
                     else:
                         raise OSError(f"Path type {path} not identified."
                                       "Have you entered the correct path?")
@@ -112,24 +133,38 @@ def put(config: str, username: str, password: str, project: str,
                     raise OSError(f"The specified path {path} "
                                   "was not recognized. Delivery Portal error.")
 
-            # Create multithreading pool
-            with concurrent.futures.ThreadPoolExecutor() as thread_exec:
-                upload_threads = []
-                # When the pools are finished
                 for f in concurrent.futures.as_completed(pools):
+                    print(f.result())
                     # save file hash in dict
-                    all_files[f.result()[0]]["hash"] = f.result()[1]
+                    # hashed_file = f.result()[0]
+                    # all_files[hashed_file]["hash"] = f.result()[1]
+                    # pe_future = pool_exec.submit(
+                    #     encrypt, keys, recip_keys,
+                    #     Path(hashed_file),
+                    #     Path(path.with_suffix(".c4gh")))
+                    # encryption_pools.append(pe_future)
 
-                    # begin upload
-                    t_future = thread_exec.submit(
-                        delivery.put,
-                        f.result()[0],
-                        all_files[f.result()[0]]['path_base']
-                    )
-                    upload_threads.append(t_future)
+                    # for x in concurrent.futures.as_completed(encryption_pools):
+                    #     print(x.result())
 
-                for t in concurrent.futures.as_completed(upload_threads):
-                    print(t.result())
+            # # Create multithreading pool
+            # with concurrent.futures.ThreadPoolExecutor() as thread_exec:
+            #     upload_threads = []
+            #     # When the pools are finished
+            #     for f in concurrent.futures.as_completed(pools):
+            #         # save file hash in dict
+            #         all_files[f.result()[0]]["hash"] = f.result()[1]
+
+            #         # begin upload
+            #         t_future = thread_exec.submit(
+            #             delivery.put,
+            #             f.result()[0],
+            #             all_files[f.result()[0]]['path_base']
+            #         )
+            #         upload_threads.append(t_future)
+
+            #     for t in concurrent.futures.as_completed(upload_threads):
+            #         print(t.result())
 
 
 @cli.command()

@@ -1,22 +1,22 @@
-from pathlib import Path
-import sys
-import os
-import threading
-
-import json
-import shutil
 import datetime
-
+import json
+import os
+from pathlib import Path
+import shutil
+import sys
+import threading
 import traceback
 
 import couchdb
 
-# from boto3.s3.transfer import TransferConfig
+from code_api.crypt4gh.crypt4gh import lib, header
+import code_api.crypt4gh.crypt4gh.keys.c4gh as keys
+from code_api.crypt4gh.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
 
 from code_api.dp_exceptions import DeliveryOptionException, \
     DeliveryPortalException, CouchDBException, S3Error
 from code_api.datadel_s3 import S3Object
-from code_api.dp_crypto import secure_password_hash
+from code_api.dp_crypto import secure_password_hash, gen_hmac
 
 
 class DPUser():

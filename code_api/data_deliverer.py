@@ -530,15 +530,17 @@ class DataDeliverer():
                 try:
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
-                        filepath,
-                        Callback=ProgressPercentage(
-                            str(file), float(os.path.getsize(str(file)))
-                        )
+                        filepath
+                        # ,
+                        # Callback=ProgressPercentage(
+                        #     str(file), float(os.path.getsize(str(file)))
+                        # )
                     )
                 except Exception as e:
                     print(f"{str(file)} not uploaded: ", e)
                 else:
-                    return f"Success: {file} uploaded to S3!"
+                    print(f"Success: {file} uploaded to S3!")
+                    return "ues"
         else:
             raise S3Error("The project does not have an S3 bucket."
                           "Unable to perform delivery.")

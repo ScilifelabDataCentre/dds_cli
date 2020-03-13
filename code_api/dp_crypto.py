@@ -15,7 +15,7 @@ from code_api.crypt4gh.crypt4gh import lib, header
 import code_api.crypt4gh.crypt4gh.keys.c4gh as keys
 from code_api.crypt4gh.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
 
-from code_api.dp_exceptions import HashException
+from code_api.dp_exceptions import HashException, EncryptionError
 
 SEGMENT_SIZE = 65536
 
@@ -25,14 +25,14 @@ class Crypt4GHKey:
     def __init__(self):
 
         self.public, self.secret = keys.generate()
-        print("public: ", self.public)
-        print("secret: ", self.secret)
+        # print("public: ", self.public)
+        # print("secret: ", self.secret)
 
         # correct private key
         lines_pub = self.public.splitlines()
         assert(b'CRYPT4GH' in lines_pub[0])
         self.public_parsed = b64decode(b''.join(lines_pub[1:-1]))
-        print(self.public_parsed)
+        # print(self.public_parsed)
 
         # correct secret key
         lines = self.secret.splitlines()
@@ -45,7 +45,7 @@ class Crypt4GHKey:
         magic_word = stream.read(len(MAGIC_WORD))
         if magic_word == MAGIC_WORD:  # it's a crypt4gh key
             self.secret_decrypted = parse_private_key(stream)
-            print(self.secret_decrypted)
+            # print(self.secret_decrypted)
 
     def encrypt(self, recip_pubkey, infile, outfile, offset=0, span=None):
         '''Encrypt infile into outfile, using the list of keys.
@@ -106,23 +106,32 @@ class Crypt4GHKey:
             of.write(nonce)
             of.write(encrypted_data)
 
-    def prep_upload(self, file: str, recip_keys):
+    def prep_upload(self, file: str, recip_keys, tempdir):
         '''Prepares the files for upload'''
+
+        filesdir = tempdir[1]
+        file_suffixes = "".join(file.suffixes)
+        file_stem = Path(file.name.split(file_suffixes)[0])
+        print("File stem: ", file_stem)
+        if isinstance(filesdir, Path):
+            try:
+                filesdir = filesdir / file_stem
+                print("filesdir: ", filesdir)
+                filesdir.mkdir(parents=True)
+            except IOError as ioe:
+                sys.exit(f"Could not create folder {filesdir}")
 
         # hash
         _, checksum = gen_hmac(file=file)
-        print(checksum)
         # encrypt
-        encrypted_file = file.with_suffix(".c4gh")
-        print("encrypted file: ", encrypted_file)
-        print(type(encrypted_file))
+        encrypted_file = filesdir / Path(file.name + ".c4gh")
         # sys.exit(encrypted_file)
         try:
             self.encrypt(recip_keys, file, encrypted_file)
-        except Exception as e:
-            print(e)
-        
-        return True
+        except EncryptionError as ee:
+            sys.exit(f"Encryption of file {file} failed: {ee}")
+
+        return file, encrypted_file, checksum
 
 
 def secure_password_hash(password_settings: str,

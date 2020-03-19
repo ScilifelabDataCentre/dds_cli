@@ -481,7 +481,7 @@ class DataDeliverer():
         else:
             return Path(stem)
 
-    def put(self, file: str, spec_path: str) -> (str):
+    def put(self, file: str, spec_path: str, orig_file: str) -> (str):
         '''Uploads specified data to the S3 bucket.
 
         Args:
@@ -498,7 +498,7 @@ class DataDeliverer():
                 self.s3.file_exists_in_bucket(key=filepath)
             # Upload if doesn't exist
             if file_already_in_bucket:
-                return f"File exists: {file.name}, not uploading file."
+                return orig_file, file, False, filepath, "exists"
             else:
                 try:
                     self.s3.resource.meta.client.upload_file(
@@ -506,9 +506,9 @@ class DataDeliverer():
                         filepath
                     )
                 except Exception as e:
-                    print(f"{str(file)} not uploaded: ", e)
+                    return orig_file, file, False, filepath, f"ERROR: {e}"
                 else:
-                    print(f"Success: {file} uploaded to S3!")
+                    return orig_file, file, True, filepath, f"success"
         else:
             raise S3Error("The project does not have an S3 bucket."
                           "Unable to perform delivery.")

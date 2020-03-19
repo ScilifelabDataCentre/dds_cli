@@ -92,54 +92,53 @@ def put(config: str, username: str, password: str, project: str,
             pools = []                  # Ongoing pool operations
             file_dict = {}              # Information about each path
             for path in delivery.data:
-                if isinstance(path, Path):
-                    if path.is_dir():           # If the path is a folder
-                        path_base = path.name   # The folders name
-                        all_dirs = list(path.glob('**'))    # All subfolders
-                        for dir_ in all_dirs:
-                            all_files = [f for f in dir_.glob('*')  # All files
-                                         if f.is_file()
-                                         and "DS_Store" not in str(f)]  # del
-                            for file in all_files:  # Upload all files
-                                path_from_base = \
-                                    delivery.get_bucket_path(
-                                        file=file,
-                                        path_base=path_base
-                                    )
-
-                                # Prepare files for upload incl hashing and
-                                # encryption
-                                p_future = \
-                                    pool_exec.submit(keys.prep_upload,
-                                                     file,
-                                                     recip_keys.public_parsed,
-                                                     delivery.tempdir,
-                                                     path_from_base)
-                                pools.append(p_future)
-                                file_dict[file] = \
-                                    {"path_base": path_base,
-                                     "hash": "",
-                                     "bucket_path": path_from_base}
-                    elif path.is_file():
-                        path_from_base = delivery.get_bucket_path(file=path)
-
-                        # Prepare files for upload incl hashing etc
-                        p_future = pool_exec.submit(keys.prep_upload,
-                                                    path,
-                                                    recip_keys.public_parsed,
-                                                    delivery.tempdir,
-                                                    path_from_base)
-                        pools.append(p_future)
-                        file_dict[path] = {"path_base": None,
-                                           "hash": "",
-                                           "bucket_path": path_from_base}
-
-                    else:
-                        raise OSError(f"Path type {path} not identified."
-                                      "Have you entered the correct path?")
-                else:
+                if not isinstance(path, Path):
                     raise OSError(f"The specified path {path} "
                                   "was not recognized. Delivery Portal error.")
+
+                if not path.is_dir() and not path.is_file():
+                    raise OSError(f"Path type {path} not identified."
+                                  "Have you entered the correct path?")
+
+                if path.is_dir():           # If the path is a folder
+                    path_base = path.name   # The folders name
+                    all_dirs = list(path.glob('**'))    # All subfolders
+                    for dir_ in all_dirs:
+                        all_files = [f for f in dir_.glob('*') if f.is_file()
+                                     and "DS_Store" not in str(f)]  # <- delete
+                        for file in all_files:  # Upload all files
+                            path_from_base = delivery.get_bucket_path(
+                                file=file,
+                                path_base=path_base
+                            )
+
+                            # Prepare files for upload incl hashing and
+                            # encryption
+                            p_future = pool_exec.submit(
+                                keys.prep_upload,
+                                file,
+                                recip_keys.public_parsed,
+                                delivery.tempdir,
+                                path_from_base
+                            )
+
+                            pools.append(p_future)
+                            file_dict[file] = {"path_base": path_base,
+                                               "hash": "",
+                                               "bucket_path": path_from_base}
+                elif path.is_file():
+                    path_from_base = delivery.get_bucket_path(file=path)
+
+                    # Prepare files for upload incl hashing etc
+                    p_future = pool_exec.submit(keys.prep_upload,
+                                                path,
+                                                recip_keys.public_parsed,
+                                                delivery.tempdir,
+                                                path_from_base)
+                    pools.append(p_future)
+                    file_dict[path] = {"path_base": None,
+                                       "hash": "",
+                                       "bucket_path": path_from_base}
 
             # Create multithreading pool
             with concurrent.futures.ThreadPoolExecutor() as thread_exec:
@@ -147,22 +146,54 @@ def put(config: str, username: str, password: str, project: str,
                 # When the pools are finished
                 # for f in concurrent.futures.as_completed(pools):
                 for f in concurrent.futures.as_completed(pools):
-                    print(f.result())
                     # save file hash in dict
-                    orig_file = f.result()[0]
-                    file_dict[orig_file]["encrypted"] = f.result()[1]
-                    file_dict[orig_file]["hash"] = f.result()[2]
+                    prep_result = f.result()
+                    o_f = prep_result[0]  # original file
+                    file_dict[o_f]["encrypted"] = prep_result[1]
+                    file_dict[o_f]["hash"] = prep_result[2]
 
                     # begin upload
                     t_future = thread_exec.submit(
                         delivery.put,
-                        file_dict[orig_file]['encrypted'],
-                        file_dict[orig_file]['bucket_path']
+                        file_dict[o_f]['encrypted'],
+                        file_dict[o_f]['bucket_path'],
+                        o_f
                     )
                     upload_threads.append(t_future)
 
                 for t in concurrent.futures.as_completed(upload_threads):
-                    print(t.result())
+                    upload_result = t.result()
+                    o_f_u = upload_result[0]  # original file
+                    if o_f_u not in file_dict:
+                        raise Exception("ERROR! File not recognized.")
+
+                    if file_dict[o_f_u]['encrypted'] \
+                            != upload_result[1]:
+                        raise Exception("Encrypted file path not recorded "
+                                        "for original, entered path.")
+
+                    file_dict[o_f_u]['uploaded'] = upload_result[2]
+                    file_dict[o_f_u]['bucket_path'] = upload_result[3]
+                    file_dict[o_f_u]['message'] = upload_result[4]
+
+                    if file_dict[o_f_u]['uploaded'] \
+                            and "ERROR" not in file_dict[o_f_u]['message']:
+                        pass
+                        # update database here
+
+        print("Delivery completed. The following files were uploaded: ")
+        for fx in file_dict:
+            if file_dict[fx]['uploaded']:
+                print(fx)
+
+        print("The following files were NOT uploaded: ")
+        for n_u in file_dict:
+            if not file_dict[n_u]['uploaded']:
+                if file_dict[n_u]['message'] == "exists":
+                    print(f"File already in bucket:\t{n_u}")
+                elif "ERROR" in file_dict[n_u]['message']:
+                    print(f"Upload failed:\t{n_u}\t"
+                          f"{file_dict[n_u]['message']}")
 
 
 @cli.command()

@@ -80,13 +80,7 @@ def put(config: str, username: str, password: str, project: str,
 
     recip_keys = Crypt4GHKey()
     keys = Crypt4GHKey()
-    # x = Path("../files/testfolder/test109/testfile_109_2.fna")
-    # encrypt(keys,
-    #         recip_keys,
-    #         x.open('rb'),
-    #         Path(x.with_suffix(".c4gh")).open('wb'))
 
-    # sys.exit()
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
@@ -95,40 +89,51 @@ def put(config: str, username: str, password: str, project: str,
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
-            pools = []
-            encryption_pools = []
-            file_dict = {}
-
+            pools = []                  # Ongoing pool operations
+            file_dict = {}              # Information about each path
             for path in delivery.data:
                 if isinstance(path, Path):
-                    # check if folder and then get all subfolders
-                    if path.is_dir():
-                        path_base = path.name
-                        all_dirs = list(path.glob('**'))  # all (sub)dirs
+                    if path.is_dir():           # If the path is a folder
+                        path_base = path.name   # The folders name
+                        all_dirs = list(path.glob('**'))    # All subfolders
                         for dir_ in all_dirs:
-                            # check which files are in the directory
-                            all_files = [f for f in dir_.glob('*')
-                                         if f.is_file()]
+                            all_files = [f for f in dir_.glob('*')  # All files
+                                         if f.is_file()
+                                         and "DS_Store" not in str(f)]  # del
                             for file in all_files:  # Upload all files
-                                p_future = pool_exec.submit(gen_hmac, file)
+                                path_from_base = \
+                                    delivery.get_bucket_path(
+                                        file=file,
+                                        path_base=path_base
+                                    )
+
+                                # Prepare files for upload incl hashing and
+                                # encryption
+                                p_future = \
+                                    pool_exec.submit(keys.prep_upload,
+                                                     file,
+                                                     recip_keys.public_parsed,
+                                                     delivery.tempdir,
+                                                     path_from_base)
                                 pools.append(p_future)
-                                file_dict[file] = {"path_base": path_base,
-                                                   "hash": ""}
+                                file_dict[file] = \
+                                    {"path_base": path_base,
+                                     "hash": "",
+                                     "bucket_path": path_from_base}
                     elif path.is_file():
+                        path_from_base = delivery.get_bucket_path(file=path)
+
+                        # Prepare files for upload incl hashing etc
                         p_future = pool_exec.submit(keys.prep_upload,
                                                     path,
                                                     recip_keys.public_parsed,
-                                                    delivery.tempdir)
+                                                    delivery.tempdir,
+                                                    path_from_base)
                         pools.append(p_future)
-                        # with path.open(mode='rb') as infile:
-                        #     with Path("encrypted").open(mode='wb') as outfile:
-                        #         encrypt(keys, recip_keys,
-                        #                 infile, outfile, path)
-                        # Upload file
-                        # p_future = pool_exec.submit(gen_hmac, path)
-                        # pools.append(p_future)
                         file_dict[path] = {"path_base": None,
-                                           "hash": ""}
+                                           "hash": "",
+                                           "bucket_path": path_from_base}
+
                     else:
                         raise OSError(f"Path type {path} not identified."
                                       "Have you entered the correct path?")
@@ -147,12 +152,12 @@ def put(config: str, username: str, password: str, project: str,
                     orig_file = f.result()[0]
                     file_dict[orig_file]["encrypted"] = f.result()[1]
                     file_dict[orig_file]["hash"] = f.result()[2]
-                    
+
                     # begin upload
                     t_future = thread_exec.submit(
                         delivery.put,
                         file_dict[orig_file]['encrypted'],
-                        file_dict[orig_file]['path_base']
+                        file_dict[orig_file]['bucket_path']
                     )
                     upload_threads.append(t_future)
 

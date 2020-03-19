@@ -467,6 +467,20 @@ class DataDeliverer():
 
         return True, dirs
 
+    def get_bucket_path(self, file: Path, path_base: str = None):
+        """Gets the path to the file, from the entered folder. """
+
+        filename = file.name    # name + suffixes
+        suff = "".join(file.suffixes)   # suffixes
+        stem = filename.split(suff)[0]  # name only
+
+        if path_base is not None:
+            return Path(*Path(path_base +
+                              str(file).split(path_base)[-1])
+                        .parts[0:-1]) / Path(stem)
+        else:
+            return Path(stem)
+
     def put(self, file: str, spec_path: str) -> (str):
         '''Uploads specified data to the S3 bucket.
 
@@ -475,52 +489,11 @@ class DataDeliverer():
             spec_path:  Root folder path to file
         '''
 
-        filepath = ""           # Path to upload
-        all_subfolders = ""     # All subfolders in a specific path
-
-        # Default configs:
-        # multipart_threshold = 8388608 (8 MB) - multipart uploads/downloads
-        #                                           automatically triggered
-        # max_concurrency = 10 - max number of threads used to perform transfer
-        #                           reduce bandwidth usage -> reduce value
-        # multipart_chunksize = 8388608 (8 MB) - partition size for a multipart
-        #                                           transfer, chunk size
-        # num_download_attempts = 5 - number of times retried upon errors
-        # max_io_queue = 100 - max amount of read parts queued in memory
-        # io_chunksize = 262144 (256 KB) - max size of each chunk in io queue
-        # use_threads = True - threads will be used when performing S3 transfer
-        # config = TransferConfig(max_concurrency=10)
+        filepath = str(Path(spec_path / Path(file.name)))
 
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
-            if spec_path is None:
-                filepath = file.name   # file goes in root
-            else:
-                # New folder path for s3 storage from root
-                filepath = f"{spec_path}{str(file).split(spec_path)[-1]}"
-                all_subfolders = f"{filepath.split(file.name)[0]}"
-
-                # check if bucket exists
-                response = self.s3.resource.meta.client.list_objects_v2(
-                    Bucket=self.s3.bucket.name,
-                    Prefix="",
-                )
-
-                # Check if current folders exist in bucket
-                found = False
-                for obj in response.get('Contents', []):
-                    if obj['Key'] == all_subfolders:
-                        found = True
-                        break
-
-                # Create folders if they don't exist
-                if not found:   # if folder doesn't exist then create folder
-                    self.s3.resource.meta.client.put_object(
-                        Bucket=self.s3.bucket.name,
-                        Key=all_subfolders
-                    )
-
-            # Check if file exists in bucket folder path
+            # Check if file exists (including path)
             file_already_in_bucket, filelist = \
                 self.s3.file_exists_in_bucket(key=filepath)
             # Upload if doesn't exist
@@ -531,16 +504,11 @@ class DataDeliverer():
                     self.s3.resource.meta.client.upload_file(
                         str(file), self.s3.bucket.name,
                         filepath
-                        # ,
-                        # Callback=ProgressPercentage(
-                        #     str(file), float(os.path.getsize(str(file)))
-                        # )
                     )
                 except Exception as e:
                     print(f"{str(file)} not uploaded: ", e)
                 else:
                     print(f"Success: {file} uploaded to S3!")
-                    return "ues"
         else:
             raise S3Error("The project does not have an S3 bucket."
                           "Unable to perform delivery.")

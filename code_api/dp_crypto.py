@@ -106,31 +106,30 @@ class Crypt4GHKey:
             of.write(nonce)
             of.write(encrypted_data)
 
-    def prep_upload(self, file: str, recip_keys, tempdir):
+    def prep_upload(self, file: str, recip_keys, tempdir, path_from_base):
         '''Prepares the files for upload'''
 
-        filesdir = tempdir[1]
-        file_suffixes = "".join(file.suffixes)
-        file_stem = Path(file.name.split(file_suffixes)[0])
-        print("File stem: ", file_stem)
-        if isinstance(filesdir, Path):
+        tempdir_files = tempdir[1]  # Path to temporary delivery file folder
+        
+        filedir = None
+        if isinstance(tempdir_files, Path):
             try:
-                filesdir = filesdir / file_stem
-                print("filesdir: ", filesdir)
-                filesdir.mkdir(parents=True)
+                filedir = tempdir_files / path_from_base
+                print("Created folder: ", filedir)
+                filedir.mkdir(parents=True)
             except IOError as ioe:
-                sys.exit(f"Could not create folder {filesdir}")
+                sys.exit(f"Could not create folder {filedir}")
 
         # hash
         _, checksum = gen_hmac(file=file)
+
         # encrypt
-        encrypted_file = filesdir / Path(file.name + ".c4gh")
-        # sys.exit(encrypted_file)
+        encrypted_file = filedir / Path(file.name + ".c4gh")
         try:
             self.encrypt(recip_keys, file, encrypted_file)
         except EncryptionError as ee:
             sys.exit(f"Encryption of file {file} failed: {ee}")
-
+        
         return file, encrypted_file, checksum
 
 

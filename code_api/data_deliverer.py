@@ -489,7 +489,9 @@ class DataDeliverer():
             spec_path:  Root folder path to file
         '''
 
-        filepath = str(Path(spec_path / Path(file.name)))
+        filepath = str(Path(str(spec_path) if spec_path else "")
+                       / Path(file.name))
+        print(f"{file}\n{file.name}\n{spec_path}\n{orig_file}\n{filepath}\n")
 
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():

@@ -25,14 +25,11 @@ class Crypt4GHKey:
     def __init__(self):
 
         self.public, self.secret = keys.generate()
-        # print("public: ", self.public)
-        # print("secret: ", self.secret)
 
         # correct private key
         lines_pub = self.public.splitlines()
         assert(b'CRYPT4GH' in lines_pub[0])
         self.public_parsed = b64decode(b''.join(lines_pub[1:-1]))
-        # print(self.public_parsed)
 
         # correct secret key
         lines = self.secret.splitlines()
@@ -45,7 +42,6 @@ class Crypt4GHKey:
         magic_word = stream.read(len(MAGIC_WORD))
         if magic_word == MAGIC_WORD:  # it's a crypt4gh key
             self.secret_decrypted = parse_private_key(stream)
-            # print(self.secret_decrypted)
 
     def encrypt(self, recip_pubkey, infile, outfile, offset=0, span=None):
         '''Encrypt infile into outfile, using the list of keys.
@@ -73,10 +69,8 @@ class Crypt4GHKey:
 
         segment = bytearray(SEGMENT_SIZE)
 
-        print("här")
         # The whole file
         with infile.open(mode='rb') as inf:
-            print("opened")
             while True:
                 segment_len = inf.readinto(segment)
 
@@ -92,7 +86,7 @@ class Crypt4GHKey:
                 data = bytes(segment)  # this is a full segment
                 self._encrypt_segment(data, outfile, session_key)
 
-        return "ues"
+        return True
 
     def _encrypt_segment(self, data, outfile, key):
         '''Utility function to generate a nonce, encrypt data with Chacha20, and authenticate it with Poly1305.'''
@@ -110,15 +104,14 @@ class Crypt4GHKey:
         '''Prepares the files for upload'''
 
         tempdir_files = tempdir[1]  # Path to temporary delivery file folder
-        
+
         filedir = None
         if isinstance(tempdir_files, Path):
             try:
                 filedir = tempdir_files / path_from_base
-                print("Created folder: ", filedir)
                 filedir.mkdir(parents=True)
             except IOError as ioe:
-                sys.exit(f"Could not create folder {filedir}")
+                sys.exit(f"Could not create folder {filedir}: {ioe}")
 
         # hash
         _, checksum = gen_hmac(file=file)
@@ -129,9 +122,18 @@ class Crypt4GHKey:
             self.encrypt(recip_keys, file, encrypted_file)
         except EncryptionError as ee:
             sys.exit(f"Encryption of file {file} failed: {ee}")
-        
-        return file, encrypted_file, checksum
 
+        return file, encrypted_file, checksum
+    
+    # def finish_download():
+    #     '''Finishes file download, including decryption and 
+    #     checksum generation'''
+
+
+def file_decrypt():
+    '''Decrypt downloaded file'''
+
+    
 
 def secure_password_hash(password_settings: str,
                          password_entered: str) -> (str):

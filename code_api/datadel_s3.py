@@ -92,6 +92,7 @@ class S3Object():
         matching_paths = [path['Key'] for path in response.get('Contents', [])
                           if (path['Key'].startswith(key)
                           and path['Size'] != 0)]
+        print(matching_paths)
         if matching_paths:
             return True, matching_paths
         else:

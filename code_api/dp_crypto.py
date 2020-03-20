@@ -11,9 +11,9 @@ from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
 from nacl.exceptions import CryptoError
 
-from code_api.crypt4gh.crypt4gh import lib, header
-import code_api.crypt4gh.crypt4gh.keys.c4gh as keys
-from code_api.crypt4gh.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
+from code_api.crypt4gh_altered.crypt4gh import lib, header
+import code_api.crypt4gh_altered.crypt4gh.keys.c4gh as keys
+from code_api.crypt4gh_altered.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
 
 from code_api.dp_exceptions import HashException, EncryptionError
 
@@ -130,7 +130,7 @@ class Crypt4GHKey:
     #     checksum generation'''
 
 
-def file_decrypt():
+def file_decrypt(file, ):
     '''Decrypt downloaded file'''
 
     

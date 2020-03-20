@@ -14,7 +14,7 @@ venv
 *.fna
 *.sec
 *.pub
-crypt4gh
+crypt4gh*
 *gzip
 *DataDelivery_*
 S3-Upload-Proxy

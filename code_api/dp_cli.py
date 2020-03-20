@@ -12,7 +12,9 @@ import sys
 
 import click
 from crypt4gh import lib, header, keys
-from code_api.crypt4gh.crypt4gh.lib import encrypt, decrypt
+from code_api.crypt4gh_altered.crypt4gh.lib import encrypt, decrypt
+
+import code_api.crypt4gh.crypt4gh.lib as engine
 import tqdm
 
 from code_api.data_deliverer import DataDeliverer
@@ -269,11 +271,12 @@ def get(config: str, username: str, password: str, project: str,
                 for f in concurrent.futures.as_completed(download_threads):
                     print(f.result())
 
-                    p_future = pool_exec.submit(decrypt, f.result(),
+                    p_future = pool_exec.submit(decrypt, recip_key_public, f.result(), 
                                                 "decrypted.fna", sender_key_public_parsed)
 
+                    pools.append(p_future)
                     # p_future = pool_exec.submit(gen_hmac, f.result())
                     # pools.append(p_future)
 
-                # for p in concurrent.futures.as_completed(pools):
-                #     print(p.result())
+                for p in concurrent.futures.as_completed(pools):
+                    print(p.result())

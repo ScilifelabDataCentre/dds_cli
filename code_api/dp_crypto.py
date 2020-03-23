@@ -7,9 +7,12 @@ from base64 import b64decode, b64encode
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend
-from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
+from nacl.bindings import (crypto_kx_client_session_keys,
+                           crypto_kx_server_session_keys,
+                           crypto_aead_chacha20poly1305_ietf_encrypt,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
 from nacl.exceptions import CryptoError
+from nacl.public import PrivateKey
 
 from code_api.crypt4gh_altered.crypt4gh import lib, header
 import code_api.crypt4gh_altered.crypt4gh.keys.c4gh as keys
@@ -18,6 +21,8 @@ from code_api.crypt4gh_altered.crypt4gh.keys.c4gh import MAGIC_WORD, parse_priva
 from code_api.dp_exceptions import HashException, EncryptionError
 
 SEGMENT_SIZE = 65536
+MAGIC_NUMBER = b'crypt4gh'
+VERSION = 1
 
 
 class Crypt4GHKey:
@@ -124,16 +129,132 @@ class Crypt4GHKey:
             sys.exit(f"Encryption of file {file} failed: {ee}")
 
         return file, encrypted_file, checksum
-    
-    # def finish_download():
-    #     '''Finishes file download, including decryption and 
-    #     checksum generation'''
+
+    def parse_header(self, infile):
+        
+        buf = bytearray(16)
+        with infile.open(mode='rb') as file:
+            if file.readinto(buf) != 16:
+                raise ValueError('Header too small')
+            
+            magic_number = bytes(buf[:8]) # 8 bytes
+            if magic_number != MAGIC_NUMBER:
+                raise ValueError('Not a CRYPT4GH formatted file')
+            
+            # Version, 4 bytes
+            version = int.from_bytes(bytes(buf[8:12]), byteorder='little')
+            if version != VERSION: # only version 1, so far
+                raise ValueError('Unsupported CRYPT4GH version')
+            
+            # Packets count
+            packets_count = int.from_bytes(bytes(buf[12:16]), byteorder='little')
+
+            # Spit out one packet at a time
+            for i in range(packets_count):
+                encrypted_packet_len = int.from_bytes(file.read(4), byteorder='little') - 4 # include packet_len itself
+                if encrypted_packet_len < 0:
+                    raise ValueError(f'Invalid packet length {encrypted_packet_len}')
+                encrypted_packet_data = file.read(encrypted_packet_len)
+                if len(encrypted_packet_data) < encrypted_packet_len:
+                    raise ValueError('Packet {} too small'.format(i))
+                yield encrypted_packet_data
+
+    def decrypt_header_packet(self, encrypted_packet, sender_pubkey):
+
+        packet_encryption_method = int.from_bytes(encrypted_packet[:4], byteorder='little')
+        print("Packet encryption method: ", packet_encryption_method)
+
+        if packet_encryption_method != 0:
+            print("WRONG METHOD") # not a corresponding key anyway
+        
+        try:
+            privkey = self.secret_decrypted
+            return self.decrypt_X25519_Chacha20_Poly1305(encrypted_packet[4:], privkey, sender_pubkey=sender_pubkey)
+        except CryptoError as tag:
+            sys.exit(tag)
+            # LOG.error('Packet Decryption failed: %s', tag)
+        except Exception as e: # Any other error, like (IndexError, TypeError, ValueError)
+            sys.exit(e)
+            # LOG.error('Not a X25519 key: ignoring | %s', e)
+            # try the next one
+
+    def decrypt_X25519_Chacha20_Poly1305(self, encrypted_part, privkey, sender_pubkey=None):
+
+        peer_pubkey = encrypted_part[:32]
+        print("Peer public key: ", peer_pubkey)
+        if sender_pubkey and sender_pubkey != peer_pubkey:
+            raise ValueError("Invalid Peer's Public Key")
+
+        nonce = encrypted_part[32:44]
+        packet_data = encrypted_part[44:]
+
+        # X25519 shared key
+        pubkey = bytes(PrivateKey(privkey).public_key)  # slightly inefficient, but working
+        # print("Shared key: ", pubkey)
+        shared_key, _ = crypto_kx_client_session_keys(pubkey, privkey, peer_pubkey)
+        print("Shared key: ", shared_key)
+        # Chacha20_Poly1305
+        return crypto_aead_chacha20poly1305_ietf_decrypt(packet_data, None, nonce, shared_key)  # no add
+
+    def decrypt(self, infile, sender_keys):
+        '''Decrypt infile into outfile, using a given set of keys.
+
+        If sender_pubkey is specified, it verifies the provenance of the header.
+
+        If no header packet is decryptable, it raises a ValueError
+        '''
+
+        # assert( # Checking the range
+        #     isinstance(offset, int)
+        #     and offset >= 0
+        #     and (
+        #         span is None
+        #         or
+        #         (isinstance(span, int) and span > 0)
+        #     )
+        # )
+
+        # session_keys, edit_list = header.deconstruct(infile, keys, sender_pubkey=sender_pubkey)
+
+        encrypted_header_packet_stream = self.parse_header(infile)
+        decrypted_packets = []
+        ignored_packets = []
+        for packet in encrypted_header_packet_stream:
+            print("Packet from stream: ", packet)
+
+            decrypted_packet = self.decrypt_header_packet(packet, sender_pubkey=sender_keys.public_parsed)
+            print("Decrypted_packet: ", decrypted_packet)
+            if decrypted_packet is None: # They all failed
+                ignored_packets.append(packet)
+            else:
+                decrypted_packets.append(decrypted_packet)
+
+        print("Decrypted packets: ", decrypted_packets)
+        print("Ignored packets: ", ignored_packets)
 
 
-def file_decrypt(file, ):
-    '''Decrypt downloaded file'''
+        # Infile in now positioned at the beginning of the data portion
 
-    
+        # Generator to slice the output
+        # output = limited_output(offset=offset, limit=span, process=outfile.write)
+        # next(output) # start it
+
+        # if edit_list is None:
+        #     # No edit list: decrypt all segments until the end
+        #     body_decrypt(infile, session_keys, output, offset)
+        #     # We could use body_decrypt_parts but there is an inner buffer, and segments might not be aligned
+        # else:
+        #     # Edit list: it drives which segments is decrypted
+        #     body_decrypt_parts(infile, session_keys, output, edit_list=list(edit_list))
+
+        # LOG.info('Decryption Over')
+
+    def finish_download(self, file, sender_keys):
+        '''Finishes file download, including decryption and
+        checksum generation'''
+
+        self.decrypt(file, sender_keys)
+
 
 def secure_password_hash(password_settings: str,
                          password_entered: str) -> (str):

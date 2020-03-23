@@ -11,17 +11,10 @@ from pathlib import Path
 import sys
 
 import click
-from crypt4gh import lib, header, keys
-from code_api.crypt4gh_altered.crypt4gh.lib import encrypt, decrypt
-
-import code_api.crypt4gh.crypt4gh.lib as engine
-import tqdm
 
 from code_api.data_deliverer import DataDeliverer
-from code_api.dp_crypto import gen_hmac
 from code_api.dp_crypto import Crypt4GHKey
-from code_api.dp_exceptions import DataException, DeliveryOptionException, \
-    DeliveryPortalException, CouchDBException
+from code_api.dp_exceptions import DataException
 
 # CONFIG ############################################################# CONFIG #
 
@@ -244,15 +237,18 @@ def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
-    recip_key_public = b'-----BEGIN CRYPT4GH PUBLIC KEY-----\n+XuYOw8pawjCRQaHTXPY9b4730N4ex21vqTnedaLIC8=\n-----END CRYPT4GH PUBLIC KEY-----\n'
-    recip_key_public_parsed = b'\xf9{\x98;\x0f)k\x08\xc2E\x06\x87Ms\xd8\xf5\xbe;\xdfCx{\x1d\xb5\xbe\xa4\xe7y\xd6\x8b /'
-    recip_key_secret = b'-----BEGIN CRYPT4GH PRIVATE KEY-----\nYzRnaC12MQAGc2NyeXB0ABQAAAAAepEiIg+NeDjLp5yE9V98rAARY2hhY2hhMjBfcG9seTEzMDUAPE+akuodTEJbxn4oaNoYvbO/W8A1jKH4M5pY+ij+kX+nKz8oJP+BAq+WBwynskwNhvZFOUbgOYu5uFlQvQ==\n-----END CRYPT4GH PRIVATE KEY-----\n'
-    recip_key_secret_decrypted = b'\x86W\\\x19\xda\xa5\xeb\xc5\x988\x9e\xef&\xdc&\x1f^\xd1O\xf3\xfa\xea\xa4\x14\xcd\xc4"\xcf\x0f\xe8\x83\x14'
+    recip_keys = Crypt4GHKey()
+    sender_keys = Crypt4GHKey()
 
-    sender_key_public = b'-----BEGIN CRYPT4GH PUBLIC KEY-----\nMYi1iAbrtJnpOmLbKRVpt3soZ+OSOVyESlkRxqkrXG8=\n-----END CRYPT4GH PUBLIC KEY-----\n'
-    sender_key_public_parsed = b'1\x88\xb5\x88\x06\xeb\xb4\x99\xe9:b\xdb)\x15i\xb7{(g\xe3\x929\\\x84JY\x11\xc6\xa9+\\o'
-    sender_key_secret = b'-----BEGIN CRYPT4GH PRIVATE KEY-----\nYzRnaC12MQAGc2NyeXB0ABQAAAAAns6OpLk5MjEAnE++eR3/xQARY2hhY2hhMjBfcG9seTEzMDUAPBJN4e5i+WOuqLDGfs4fuzzfxndBbpq6copPvVAM7reKHxralQFoVUCAIEEfbMHGo/vKUAGr7ONUI5cJDQ==\n-----END CRYPT4GH PRIVATE KEY-----\n'
-    sender_key_secret_decrypted = b'\xd4\x1e\xef\x9a~\xe6\x8b\xd8\xe6\xc3\xec\xaeI\x9e9\x03B\xb4\xf4\x16\xc5\xac=YMJV\x0cv\xd3\x89N'
+    recip_keys.public = b'-----BEGIN CRYPT4GH PUBLIC KEY-----\n+XuYOw8pawjCRQaHTXPY9b4730N4ex21vqTnedaLIC8=\n-----END CRYPT4GH PUBLIC KEY-----\n'
+    recip_keys.public_parsed = b'\xf9{\x98;\x0f)k\x08\xc2E\x06\x87Ms\xd8\xf5\xbe;\xdfCx{\x1d\xb5\xbe\xa4\xe7y\xd6\x8b /'
+    recip_keys.secret = b'-----BEGIN CRYPT4GH PRIVATE KEY-----\nYzRnaC12MQAGc2NyeXB0ABQAAAAAepEiIg+NeDjLp5yE9V98rAARY2hhY2hhMjBfcG9seTEzMDUAPE+akuodTEJbxn4oaNoYvbO/W8A1jKH4M5pY+ij+kX+nKz8oJP+BAq+WBwynskwNhvZFOUbgOYu5uFlQvQ==\n-----END CRYPT4GH PRIVATE KEY-----\n'
+    recip_keys.secret_decrypted = b'\x86W\\\x19\xda\xa5\xeb\xc5\x988\x9e\xef&\xdc&\x1f^\xd1O\xf3\xfa\xea\xa4\x14\xcd\xc4"\xcf\x0f\xe8\x83\x14'
+
+    sender_keys.public = b'-----BEGIN CRYPT4GH PUBLIC KEY-----\nMYi1iAbrtJnpOmLbKRVpt3soZ+OSOVyESlkRxqkrXG8=\n-----END CRYPT4GH PUBLIC KEY-----\n'
+    sender_keys.public_parsed = b'1\x88\xb5\x88\x06\xeb\xb4\x99\xe9:b\xdb)\x15i\xb7{(g\xe3\x929\\\x84JY\x11\xc6\xa9+\\o'
+    sender_keys.secret = b'-----BEGIN CRYPT4GH PRIVATE KEY-----\nYzRnaC12MQAGc2NyeXB0ABQAAAAAns6OpLk5MjEAnE++eR3/xQARY2hhY2hhMjBfcG9seTEzMDUAPBJN4e5i+WOuqLDGfs4fuzzfxndBbpq6copPvVAM7reKHxralQFoVUCAIEEfbMHGo/vKUAGr7ONUI5cJDQ==\n-----END CRYPT4GH PRIVATE KEY-----\n'
+    sender_keys.secret_decrypted = b'\xd4\x1e\xef\x9a~\xe6\x8b\xd8\xe6\xc3\xec\xaeI\x9e9\x03B\xb4\xf4\x16\xc5\xac=YMJV\x0cv\xd3\x89N'
 
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, pathfile=pathfile, data=data) \
@@ -271,8 +267,8 @@ def get(config: str, username: str, password: str, project: str,
                 for f in concurrent.futures.as_completed(download_threads):
                     print(f.result())
 
-                    p_future = pool_exec.submit(decrypt, recip_key_public, f.result(), 
-                                                "decrypted.fna", sender_key_public_parsed)
+                    p_future = pool_exec.submit(recip_keys.finish_download,
+                                                f.result(), sender_keys)
 
                     pools.append(p_future)
                     # p_future = pool_exec.submit(gen_hmac, f.result())

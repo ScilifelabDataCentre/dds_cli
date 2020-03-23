@@ -23,6 +23,8 @@ from code_api.dp_exceptions import HashException, EncryptionError
 SEGMENT_SIZE = 65536
 MAGIC_NUMBER = b'crypt4gh'
 VERSION = 1
+CIPHER_DIFF = 28
+CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + CIPHER_DIFF
 
 
 class Crypt4GHKey:
@@ -131,29 +133,32 @@ class Crypt4GHKey:
         return file, encrypted_file, checksum
 
     def parse_header(self, infile):
-        
+
         buf = bytearray(16)
         with infile.open(mode='rb') as file:
             if file.readinto(buf) != 16:
                 raise ValueError('Header too small')
-            
-            magic_number = bytes(buf[:8]) # 8 bytes
+
+            magic_number = bytes(buf[:8])  # 8 bytes
             if magic_number != MAGIC_NUMBER:
                 raise ValueError('Not a CRYPT4GH formatted file')
-            
+
             # Version, 4 bytes
             version = int.from_bytes(bytes(buf[8:12]), byteorder='little')
-            if version != VERSION: # only version 1, so far
+            if version != VERSION:  # only version 1, so far
                 raise ValueError('Unsupported CRYPT4GH version')
-            
+
             # Packets count
-            packets_count = int.from_bytes(bytes(buf[12:16]), byteorder='little')
+            packets_count = int.from_bytes(
+                bytes(buf[12:16]), byteorder='little')
 
             # Spit out one packet at a time
             for i in range(packets_count):
-                encrypted_packet_len = int.from_bytes(file.read(4), byteorder='little') - 4 # include packet_len itself
+                encrypted_packet_len = int.from_bytes(
+                    file.read(4), byteorder='little') - 4  # include packet_len itself
                 if encrypted_packet_len < 0:
-                    raise ValueError(f'Invalid packet length {encrypted_packet_len}')
+                    raise ValueError(
+                        f'Invalid packet length {encrypted_packet_len}')
                 encrypted_packet_data = file.read(encrypted_packet_len)
                 if len(encrypted_packet_data) < encrypted_packet_len:
                     raise ValueError('Packet {} too small'.format(i))
@@ -161,19 +166,21 @@ class Crypt4GHKey:
 
     def decrypt_header_packet(self, encrypted_packet, sender_pubkey):
 
-        packet_encryption_method = int.from_bytes(encrypted_packet[:4], byteorder='little')
+        packet_encryption_method = int.from_bytes(
+            encrypted_packet[:4], byteorder='little')
         print("Packet encryption method: ", packet_encryption_method)
 
         if packet_encryption_method != 0:
-            print("WRONG METHOD") # not a corresponding key anyway
-        
+            print("WRONG METHOD")  # not a corresponding key anyway
+
         try:
             privkey = self.secret_decrypted
             return self.decrypt_X25519_Chacha20_Poly1305(encrypted_packet[4:], privkey, sender_pubkey=sender_pubkey)
         except CryptoError as tag:
             sys.exit(tag)
             # LOG.error('Packet Decryption failed: %s', tag)
-        except Exception as e: # Any other error, like (IndexError, TypeError, ValueError)
+        # Any other error, like (IndexError, TypeError, ValueError)
+        except Exception as e:
             sys.exit(e)
             # LOG.error('Not a X25519 key: ignoring | %s', e)
             # try the next one
@@ -189,14 +196,94 @@ class Crypt4GHKey:
         packet_data = encrypted_part[44:]
 
         # X25519 shared key
-        pubkey = bytes(PrivateKey(privkey).public_key)  # slightly inefficient, but working
+        # slightly inefficient, but working
+        pubkey = bytes(PrivateKey(privkey).public_key)
         # print("Shared key: ", pubkey)
-        shared_key, _ = crypto_kx_client_session_keys(pubkey, privkey, peer_pubkey)
+        shared_key, _ = crypto_kx_client_session_keys(
+            pubkey, privkey, peer_pubkey)
         print("Shared key: ", shared_key)
         # Chacha20_Poly1305
-        return crypto_aead_chacha20poly1305_ietf_decrypt(packet_data, None, nonce, shared_key)  # no add
+        # no add
+        return crypto_aead_chacha20poly1305_ietf_decrypt(packet_data, None, nonce, shared_key)
 
-    def decrypt(self, infile, sender_keys):
+    def limited_output(self, outfile, offset=0, limit=None):
+        '''Generator that receives clear text and does not process more than limit bytes (if limit is not None).
+
+        Raises ProcessingOver if the limit is reached'''
+
+        with outfile.open(mode='wb') as decrypted_file:
+            while True:
+                data = yield
+                data_len = len(data)
+
+                if data_len < offset:  # not enough data to chop off
+                    offset -= data_len
+                    continue  # ignore output
+
+                if limit is None:
+                    # no copying here if offset=0!
+                    decrypted_file.write(data[offset:])
+                else:
+
+                    if limit < (data_len - offset):  # should stop early
+                        decrypted_file.write(data[offset:limit+offset])
+                        raise ProcessingOver()
+                    else:
+                        # no copying here if offset=0!
+                        decrypted_file.write(data[offset:])
+                        limit -= (data_len - offset)
+
+                offset = 0  # reset offset
+
+    def cipher_chunker(self, f, size):
+        with f.open(mode='rb') as f:
+            while True:
+                ciphersegment = f.read(size)
+                ciphersegment_len = len(ciphersegment)
+                if ciphersegment_len == 0:
+                    break  # We were at the last segment. Exits the loop
+                assert(ciphersegment_len > CIPHER_DIFF)
+                yield ciphersegment
+
+    def body_decrypt(self, infile, session_keys, output, offset):
+        """Decrypt the whole data portion.
+
+        We fast-forward if offset >= SEGMENT_SIZE.
+        We decrypt until the first one occurs:
+        * `output` reaches its end
+        * `infile` reaches its end."""
+
+        # In this case, we try to fast-forward, and adjust the offset
+        # if offset >= SEGMENT_SIZE:
+        #     start_segment, offset = divmod(offset, SEGMENT_SIZE)
+        #     start_ciphersegment = start_segment * CIPHER_SEGMENT_SIZE
+        #     infile.seek(start_ciphersegment, io.SEEK_CUR)  # move forward
+
+        try:
+            for ciphersegment in self.cipher_chunker(infile, CIPHER_SEGMENT_SIZE):
+                segment = self.decrypt_block(ciphersegment, session_keys)
+                output.send(segment)
+        except ProcessingOver:  # output raised it
+            pass
+
+    def decrypt_block(self, ciphersegment, session_keys):
+        # Trying the different session keys (via the cipher objects)
+        # Note: we could order them and if one fails, we move it at the end of the list
+        # So... LRU solution. For now, try them as they come.
+        nonce = ciphersegment[:12]
+        data = ciphersegment[12:]
+
+        for key in session_keys:
+            try:
+                # no add, and break the loop
+                return crypto_aead_chacha20poly1305_ietf_decrypt(data, None, nonce, key)
+            except CryptoError as tag:
+                print(tag)
+                # LOG.error('Decryption failed: %s', tag)
+        else:  # no cipher worked: Bark!
+            raise ValueError('Could not decrypt that block')
+
+    def decrypt(self, infile, outfile, sender_keys):
         '''Decrypt infile into outfile, using a given set of keys.
 
         If sender_pubkey is specified, it verifies the provenance of the header.
@@ -222,9 +309,10 @@ class Crypt4GHKey:
         for packet in encrypted_header_packet_stream:
             print("Packet from stream: ", packet)
 
-            decrypted_packet = self.decrypt_header_packet(packet, sender_pubkey=sender_keys.public_parsed)
+            decrypted_packet = self.decrypt_header_packet(
+                packet, sender_pubkey=sender_keys.public_parsed)
             print("Decrypted_packet: ", decrypted_packet)
-            if decrypted_packet is None: # They all failed
+            if decrypted_packet is None:  # They all failed
                 ignored_packets.append(packet)
             else:
                 decrypted_packets.append(decrypted_packet)
@@ -232,20 +320,30 @@ class Crypt4GHKey:
         print("Decrypted packets: ", decrypted_packets)
         print("Ignored packets: ", ignored_packets)
 
+        data_packets, edit_packet = header.partition_packets(decrypted_packets)
+        print("Data packets: ", data_packets)
+        # Parse returns the session key (since it should be method 0)
+        session_keys = [header.parse_enc_packet(
+            packet) for packet in data_packets]
+        print("Session keys: ", session_keys)
+        edit_list = header.parse_edit_list_packet(
+            edit_packet) if edit_packet else None
+        print("Edit list: ", edit_list)
 
         # Infile in now positioned at the beginning of the data portion
 
         # Generator to slice the output
-        # output = limited_output(offset=offset, limit=span, process=outfile.write)
-        # next(output) # start it
+        output = self.limited_output(outfile=outfile)
+        next(output)  # start it
 
-        # if edit_list is None:
-        #     # No edit list: decrypt all segments until the end
-        #     body_decrypt(infile, session_keys, output, offset)
-        #     # We could use body_decrypt_parts but there is an inner buffer, and segments might not be aligned
-        # else:
-        #     # Edit list: it drives which segments is decrypted
-        #     body_decrypt_parts(infile, session_keys, output, edit_list=list(edit_list))
+        if edit_list is None:
+            # No edit list: decrypt all segments until the end
+            self.body_decrypt(infile, session_keys, output, 0)
+            # We could use body_decrypt_parts but there is an inner buffer, and segments might not be aligned
+        else:
+            print("error")
+            # Edit list: it drives which segments is decrypted
+            # body_decrypt_parts(infile, session_keys, output, edit_list=list(edit_list))
 
         # LOG.info('Decryption Over')
 
@@ -253,7 +351,7 @@ class Crypt4GHKey:
         '''Finishes file download, including decryption and
         checksum generation'''
 
-        self.decrypt(file, sender_keys)
+        self.decrypt(file, Path(str(file) + ".decrypted"), sender_keys)
 
 
 def secure_password_hash(password_settings: str,
@@ -332,3 +430,7 @@ def gen_hmac_streamed(file) -> (Path, str):
         sys.exit(f"HMAC for file {str(file)} could not be generated: {he}")
     else:
         return file, file_hash.finalize().hex()
+
+
+class ProcessingOver(Exception):
+    pass

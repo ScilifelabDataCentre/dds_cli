@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 
 import click
+from code_api.crypt4gh.crypt4gh import lib, header, keys
 
 from code_api.data_deliverer import DataDeliverer
 from code_api.dp_crypto import Crypt4GHKey
@@ -75,22 +76,26 @@ def put(config: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
-    recip_keys = Crypt4GHKey()
-    print(f"\nRecipient public key: {recip_keys.public}\n"
-          f"Recipient public key, parsed: {recip_keys.public_parsed}\n"
-          f"Recipient private key: {recip_keys.secret}\n"
-          f"Recipient private key, decrypted: {recip_keys.secret_decrypted}\n")
-    keys = Crypt4GHKey()
-    print(f"\nSender public key: {keys.public}\n"
-          f"Sender public key, parsed: {keys.public_parsed}\n"
-          f"Sender private key: {keys.secret}\n"
-          f"Sender private key, decrypted: {keys.secret_decrypted}\n")
+    # sys.exit(f"{key.pubkey}\t{key.seckey}")
+    # recip_keys = Crypt4GHKey()
+    # print(f"\nRecipient public key: {recip_keys.public}\n"
+    #       f"Recipient public key, parsed: {recip_keys.public_parsed}\n"
+    #       f"Recipient private key: {recip_keys.secret}\n"
+    #       f"Recipient private key, decrypted: {recip_keys.secret_decrypted}\n")
+    # keys = Crypt4GHKey()
+    # print(f"\nSender public key: {keys.public}\n"
+    #       f"Sender public key, parsed: {keys.public_parsed}\n"
+    #       f"Sender private key: {keys.secret}\n"
+    #       f"Sender private key, decrypted: {keys.secret_decrypted}\n")
 
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
                        pathfile=pathfile, data=data) \
             as delivery:
+
+        key = Crypt4GHKey("sender", delivery.tempdir[2])
+        recip_key = Crypt4GHKey("recipient", delivery.tempdir[2])
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
@@ -120,9 +125,9 @@ def put(config: str, username: str, password: str, project: str,
                             # Prepare files for upload incl hashing and
                             # encryption
                             p_future = pool_exec.submit(
-                                keys.prep_upload,
+                                key.prep_upload,
                                 file,
-                                recip_keys.public_parsed,
+                                recip_key.pubkey,
                                 delivery.tempdir,
                                 path_from_base
                             )
@@ -135,9 +140,9 @@ def put(config: str, username: str, password: str, project: str,
                     path_from_base = delivery.get_bucket_path(file=path)
 
                     # Prepare files for upload incl hashing etc
-                    p_future = pool_exec.submit(keys.prep_upload,
+                    p_future = pool_exec.submit(key.prep_upload,
                                                 path,
-                                                recip_keys.public_parsed,
+                                                recip_key.pubkey,
                                                 delivery.tempdir,
                                                 path_from_base)
                     pools.append(p_future)
@@ -237,22 +242,19 @@ def get(config: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
-    recip_keys = Crypt4GHKey()
-    sender_keys = Crypt4GHKey()
-
-    recip_keys.public = b'-----BEGIN CRYPT4GH PUBLIC KEY-----\n+XuYOw8pawjCRQaHTXPY9b4730N4ex21vqTnedaLIC8=\n-----END CRYPT4GH PUBLIC KEY-----\n'
-    recip_keys.public_parsed = b'\xf9{\x98;\x0f)k\x08\xc2E\x06\x87Ms\xd8\xf5\xbe;\xdfCx{\x1d\xb5\xbe\xa4\xe7y\xd6\x8b /'
-    recip_keys.secret = b'-----BEGIN CRYPT4GH PRIVATE KEY-----\nYzRnaC12MQAGc2NyeXB0ABQAAAAAepEiIg+NeDjLp5yE9V98rAARY2hhY2hhMjBfcG9seTEzMDUAPE+akuodTEJbxn4oaNoYvbO/W8A1jKH4M5pY+ij+kX+nKz8oJP+BAq+WBwynskwNhvZFOUbgOYu5uFlQvQ==\n-----END CRYPT4GH PRIVATE KEY-----\n'
-    recip_keys.secret_decrypted = b'\x86W\\\x19\xda\xa5\xeb\xc5\x988\x9e\xef&\xdc&\x1f^\xd1O\xf3\xfa\xea\xa4\x14\xcd\xc4"\xcf\x0f\xe8\x83\x14'
-
-    sender_keys.public = b'-----BEGIN CRYPT4GH PUBLIC KEY-----\nMYi1iAbrtJnpOmLbKRVpt3soZ+OSOVyESlkRxqkrXG8=\n-----END CRYPT4GH PUBLIC KEY-----\n'
-    sender_keys.public_parsed = b'1\x88\xb5\x88\x06\xeb\xb4\x99\xe9:b\xdb)\x15i\xb7{(g\xe3\x929\\\x84JY\x11\xc6\xa9+\\o'
-    sender_keys.secret = b'-----BEGIN CRYPT4GH PRIVATE KEY-----\nYzRnaC12MQAGc2NyeXB0ABQAAAAAns6OpLk5MjEAnE++eR3/xQARY2hhY2hhMjBfcG9seTEzMDUAPBJN4e5i+WOuqLDGfs4fuzzfxndBbpq6copPvVAM7reKHxralQFoVUCAIEEfbMHGo/vKUAGr7ONUI5cJDQ==\n-----END CRYPT4GH PRIVATE KEY-----\n'
-    sender_keys.secret_decrypted = b'\xd4\x1e\xef\x9a~\xe6\x8b\xd8\xe6\xc3\xec\xaeI\x9e9\x03B\xb4\xf4\x16\xc5\xac=YMJV\x0cv\xd3\x89N'
-
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, pathfile=pathfile, data=data) \
             as delivery:
+
+        recip_keys = Crypt4GHKey()
+        sender_keys = Crypt4GHKey()
+
+        recip_keys.pubkey = keys.get_public_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-03-25_15-16-28/keys/recipient.pub")
+        recip_keys.seckey = keys.get_private_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-03-25_15-16-28/keys/recipient.sec")
+
+        sender_keys.pubkey = keys.get_public_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-03-25_15-16-28/keys/sender.pub")
+        sender_keys.seckey = keys.get_private_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-03-25_15-16-28/keys/sender.sec")
+
         # Create multithreading pool
         with concurrent.futures.ThreadPoolExecutor() as thread_exec:
             download_threads = []

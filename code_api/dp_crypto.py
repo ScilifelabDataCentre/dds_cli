@@ -30,16 +30,20 @@ CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + CIPHER_DIFF
 
 class Crypt4GHKey:
 
-    def __init__(self, name, tempdir):
+    def __init__(self, name="", tempdir="", put=True):
 
-        print("tempdir: ", tempdir)
-        secpath = tempdir / Path(f"{name}.sec")
-        pubpath = tempdir / Path(f"{name}.pub")
-        keys.c4gh.generate(seckey=secpath,
-                           pubkey=pubpath)
+        if put:
+            print("tempdir: ", tempdir)
+            secpath = tempdir / Path(f"{name}.sec")
+            pubpath = tempdir / Path(f"{name}.pub")
+            keys.c4gh.generate(seckey=secpath,
+                               pubkey=pubpath)
 
-        self.pubkey = keys.get_public_key(pubpath)
-        self.seckey = keys.get_private_key(secpath, callback=None)
+            self.pubkey = keys.get_public_key(pubpath)
+            self.seckey = keys.get_private_key(secpath, callback=None)
+        else:
+            self.pubkey = ""
+            self.seckey = ""
         # self.public, self.secret = keys.generate()
 
         # # correct private key
@@ -378,8 +382,29 @@ class Crypt4GHKey:
         '''Finishes file download, including decryption and
         checksum generation'''
 
-        with 
+        print(f"File to decrypt: {file}")
 
+        if isinstance(file, Path):
+            try:
+                dec_file = Path(str(file).split(
+                    file.name)[0]) / Path(file.stem)
+                print(dec_file)
+            except Exception:
+                sys.exit("FEL")
+            finally:
+                original_umask = os.umask(0)
+                with file.open(mode='rb') as infile:
+                    with dec_file.open(mode='ab+') as outfile:
+                        lib.decrypt(keys=[(0, self.seckey, sender_keys)],
+                                    infile=infile,
+                                    outfile=outfile)
+        
+        _, checksum = gen_hmac(file=dec_file)
+        _, checksum_orig = gen_hmac(file=Path("/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_05.fna"))
+
+        print(checksum)
+        print(checksum_orig)
+        print(f"Decryption successful - original and decrypted file identical: {checksum==checksum_orig}")
 
 def secure_password_hash(password_settings: str,
                          password_entered: str) -> (str):

@@ -246,14 +246,14 @@ def get(config: str, username: str, password: str, project: str,
                        project_id=project, pathfile=pathfile, data=data) \
             as delivery:
 
-        recip_keys = Crypt4GHKey()
-        sender_keys = Crypt4GHKey()
+        recip_keys = Crypt4GHKey(put=False)
+        sender_keys = Crypt4GHKey(put=False)
 
-        recip_keys.pubkey = keys.get_public_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-03-25_15-16-28/keys/recipient.pub")
-        recip_keys.seckey = keys.get_private_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-03-25_15-16-28/keys/recipient.sec")
+        recip_keys.pubkey = keys.get_public_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-04-08_19-13-26/keys/recipient.pub")
+        recip_keys.seckey = keys.get_private_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-04-08_19-13-26/keys/recipient.sec", callback=None)
 
-        sender_keys.pubkey = keys.get_public_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-03-25_15-16-28/keys/sender.pub")
-        sender_keys.seckey = keys.get_private_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-03-25_15-16-28/keys/sender.sec")
+        sender_keys.pubkey = keys.get_public_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-04-08_19-13-26/keys/sender.pub")
+        sender_keys.seckey = keys.get_private_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-04-08_19-13-26/keys/sender.sec", callback=None)
 
         # Create multithreading pool
         with concurrent.futures.ThreadPoolExecutor() as thread_exec:

@@ -30,20 +30,17 @@ CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + CIPHER_DIFF
 
 class Crypt4GHKey:
 
-    def __init__(self, name="", tempdir="", put=True):
+    def __init__(self, name="", tempdir=""):
 
-        if put:
-            print("tempdir: ", tempdir)
-            secpath = tempdir / Path(f"{name}.sec")
-            pubpath = tempdir / Path(f"{name}.pub")
-            keys.c4gh.generate(seckey=secpath,
-                               pubkey=pubpath)
+        print("tempdir: ", tempdir)
+        secpath = tempdir / Path(f"{name}.sec")
+        pubpath = tempdir / Path(f"{name}.pub")
+        keys.c4gh.generate(seckey=secpath,
+                           pubkey=pubpath)
 
-            self.pubkey = keys.get_public_key(pubpath)
-            self.seckey = keys.get_private_key(secpath, callback=None)
-        else:
-            self.pubkey = ""
-            self.seckey = ""
+        self.pubkey = keys.get_public_key(pubpath)
+        self.seckey = keys.get_private_key(secpath, callback=None)
+
         # self.public, self.secret = keys.generate()
 
         # # correct private key
@@ -398,13 +395,16 @@ class Crypt4GHKey:
                         lib.decrypt(keys=[(0, self.seckey, sender_keys)],
                                     infile=infile,
                                     outfile=outfile)
-        
+
         _, checksum = gen_hmac(file=dec_file)
-        _, checksum_orig = gen_hmac(file=Path("/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_05.fna"))
+        _, checksum_orig = gen_hmac(file=Path(
+            "/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_05.fna"))
 
         print(checksum)
         print(checksum_orig)
-        print(f"Decryption successful - original and decrypted file identical: {checksum==checksum_orig}")
+        print(
+            f"Decryption successful - original and decrypted file identical: {checksum==checksum_orig}")
+
 
 def secure_password_hash(password_settings: str,
                          password_entered: str) -> (str):
@@ -486,3 +486,4 @@ def gen_hmac_streamed(file) -> (Path, str):
 
 class ProcessingOver(Exception):
     pass
+

@@ -13,7 +13,7 @@ import sys
 import click
 from code_api.crypt4gh.crypt4gh import lib, header, keys
 
-from code_api.data_deliverer import DataDeliverer
+from code_api.data_deliverer import DataDeliverer, timestamp
 from code_api.dp_crypto import Crypt4GHKey
 from code_api.dp_exceptions import DataException
 
@@ -76,18 +76,6 @@ def put(config: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
-    # sys.exit(f"{key.pubkey}\t{key.seckey}")
-    # recip_keys = Crypt4GHKey()
-    # print(f"\nRecipient public key: {recip_keys.public}\n"
-    #       f"Recipient public key, parsed: {recip_keys.public_parsed}\n"
-    #       f"Recipient private key: {recip_keys.secret}\n"
-    #       f"Recipient private key, decrypted: {recip_keys.secret_decrypted}\n")
-    # keys = Crypt4GHKey()
-    # print(f"\nSender public key: {keys.public}\n"
-    #       f"Sender public key, parsed: {keys.public_parsed}\n"
-    #       f"Sender private key: {keys.secret}\n"
-    #       f"Sender private key, decrypted: {keys.secret_decrypted}\n")
-
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
@@ -95,7 +83,6 @@ def put(config: str, username: str, password: str, project: str,
             as delivery:
 
         key = Crypt4GHKey("sender", delivery.tempdir[2])
-        recip_key = Crypt4GHKey("recipient", delivery.tempdir[2])
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
@@ -139,10 +126,13 @@ def put(config: str, username: str, password: str, project: str,
                 elif path.is_file():
                     path_from_base = delivery.get_bucket_path(file=path)
 
+                    # get recipient public key
+                    recip_pub = delivery.get_recipient_key()
+
                     # Prepare files for upload incl hashing etc
                     p_future = pool_exec.submit(key.prep_upload,
                                                 path,
-                                                recip_key.pubkey,
+                                                recip_pub,
                                                 delivery.tempdir,
                                                 path_from_base)
                     pools.append(p_future)
@@ -188,8 +178,18 @@ def put(config: str, username: str, password: str, project: str,
 
                     if file_dict[o_f_u]['uploaded'] \
                             and "ERROR" not in file_dict[o_f_u]['message']:
-                        pass
                         # update database here
+                        dbconnection = delivery.couch_connect()
+                        project_db = dbconnection['project_db']
+                        print(file_dict)
+                        _project = project_db[delivery.project_id]
+                        _project['files'][file_dict[o_f_u]['bucket_path']] \
+                            = {"size": upload_result[1].stat().st_size,
+                               "mime": "",
+                               "date_uploaded": timestamp(),
+                               "checksum": file_dict[o_f_u]['hash'],
+                               "public_key": key.pubkey.hex()}
+                        project_db.save(_project)
 
         print("\n----DELIVERY COMPLETED----\n"
               "The following files were uploaded: ")
@@ -246,14 +246,8 @@ def get(config: str, username: str, password: str, project: str,
                        project_id=project, pathfile=pathfile, data=data) \
             as delivery:
 
-        recip_keys = Crypt4GHKey(put=False)
-        sender_keys = Crypt4GHKey(put=False)
-
-        recip_keys.pubkey = keys.get_public_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-04-08_19-13-26/keys/recipient.pub")
-        recip_keys.seckey = keys.get_private_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-04-08_19-13-26/keys/recipient.sec", callback=None)
-
-        sender_keys.pubkey = keys.get_public_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-04-08_19-13-26/keys/sender.pub")
-        sender_keys.seckey = keys.get_private_key("/Users/inaod568/repos/Data-Delivery-Portal/dp_api/DataDelivery_2020-04-08_19-13-26/keys/sender.sec", callback=None)
+        recip_pub = delivery.get_recipient_key(keytype="public")
+        recip_secret = delivery.get_recipient_key(keytype="private")
 
         # Create multithreading pool
         with concurrent.futures.ThreadPoolExecutor() as thread_exec:
@@ -268,7 +262,8 @@ def get(config: str, username: str, password: str, project: str,
                 pools = []
                 for f in concurrent.futures.as_completed(download_threads):
                     print(f.result())
-
+                    sender_pub = delivery.get_sender_key(file=f.result())
+                    print("Sender public key: ", sender_pub)
                     p_future = pool_exec.submit(recip_keys.finish_download,
                                                 f.result(), sender_keys)
 

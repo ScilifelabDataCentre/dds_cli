@@ -147,7 +147,7 @@ class DataDeliverer():
 
         Returns:
             couchdb.client.Server:  CouchDB server instance.
-            '''
+        '''
 
         try:
             couch = couchdb.Server('http://delport:delport@localhost:5984/')
@@ -480,6 +480,75 @@ class DataDeliverer():
                         .parts[0:-1]) / Path(stem)
         else:
             return Path(stem)
+
+    def get_recipient_key(self, keytype="public"):
+        """Retrieves the recipient public key from the database."""
+
+        try:
+            dbconnection = self.couch_connect()
+        except CouchDBException as cdbe:
+            sys.exit(f"Could not connect to the database: {cdbe}")
+        else:
+            try:
+                user_db = dbconnection['user_db']
+            except CouchDBException as cdbe2:
+                sys.exit(f"Could not connect to the user database: {cdbe2}")
+            else:
+                if self.project_owner not in user_db:
+                    raise CouchDBException(f"The user {self.project_owner} "
+                                           "does not exist.")
+
+                if "projects" not in user_db[self.project_owner]:
+                    raise CouchDBException(f"Could not find any projects for "
+                                           "the user {self.project_owner}.")
+
+                if self.project_id not in \
+                        user_db[self.project_owner]["projects"]:
+                    raise CouchDBException(
+                        f"The project {self.project_id} does not exist "
+                        "or does not belong to the user {self.project_owner}."
+                    )
+
+                if keytype not in user_db[self.project_owner]["projects"][self.project_id]:
+                    raise CouchDBException(
+                        f"There is no public key recorded for "
+                        "user {self.project_owner} and "
+                        "project {self.project_id}."
+                    )
+
+                return bytes.fromhex(user_db[self.project_owner]["projects"][self.project_id][keytype])
+
+    def get_sender_key(self, file):
+        """Retrieves the senders public key"""
+
+        try:
+            dbconnection = self.couch_connect()
+        except CouchDBException as cdbe:
+            sys.exit(f"Could not connect to the database: {cdbe}")
+        else:
+            try:
+                project_db = dbconnection[project_db]
+            except CouchDBException as cdbe2:
+                sys.exit(f"Could not connect to the user database: {cdbe2}")
+            else:
+                if self.project_id not in project_db:
+                    raise CouchDBException(f"The project {self.project_id} "
+                                           "does not exist.")
+
+                if 'files' not in project_db[self.project_id]:
+                    raise CouchDBException("There are no recorded files "
+                                           "within the project "
+                                           f"{self.project_id}.")
+
+                if file not in project_db[self.project_id]['files']:
+                    raise CouchDBException(f"The file {file} doesn't exist in "
+                                           "the database.")
+
+                if 'public_key' not in project_db[self.project_id]['files'][file]:
+                    raise CouchDBException("There is no public key recorded "
+                                           "for the file {file}.")
+
+                return bytes.fromhex(project_db[self.project_id]['files'][file]['public_key'])
 
     def put(self, file: str, spec_path: str, orig_file: str) -> (str):
         '''Uploads specified data to the S3 bucket.

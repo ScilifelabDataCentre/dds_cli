@@ -14,9 +14,10 @@ from nacl.bindings import (crypto_kx_client_session_keys,
 from nacl.exceptions import CryptoError
 from nacl.public import PrivateKey
 
-from code_api.crypt4gh_altered.crypt4gh import lib, header
-import code_api.crypt4gh_altered.crypt4gh.keys.c4gh as keys
-from code_api.crypt4gh_altered.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
+# from code_api.crypt4gh_altered.crypt4gh import lib, header
+# import code_api.crypt4gh_altered.crypt4gh.keys.c4gh as keys
+# from code_api.crypt4gh_altered.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
+from code_api.crypt4gh.crypt4gh import lib, header, keys
 
 from code_api.dp_exceptions import HashException, EncryptionError
 
@@ -29,26 +30,35 @@ CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + CIPHER_DIFF
 
 class Crypt4GHKey:
 
-    def __init__(self):
+    def __init__(self, name="", tempdir=""):
 
-        self.public, self.secret = keys.generate()
+        print("tempdir: ", tempdir)
+        secpath = tempdir / Path(f"{name}.sec")
+        pubpath = tempdir / Path(f"{name}.pub")
+        keys.c4gh.generate(seckey=secpath,
+                           pubkey=pubpath)
 
-        # correct private key
-        lines_pub = self.public.splitlines()
-        assert(b'CRYPT4GH' in lines_pub[0])
-        self.public_parsed = b64decode(b''.join(lines_pub[1:-1]))
+        self.pubkey = keys.get_public_key(pubpath)
+        self.seckey = keys.get_private_key(secpath, callback=None)
 
-        # correct secret key
-        lines = self.secret.splitlines()
-        assert(lines[0].startswith(b'-----BEGIN ') and
-               lines[-1].startswith(b'-----END '))
-        data = b64decode(b''.join(lines[1:-1]))
+        # self.public, self.secret = keys.generate()
 
-        stream = io.BytesIO(data)
+        # # correct private key
+        # lines_pub = self.public.splitlines()
+        # assert(b'CRYPT4GH' in lines_pub[0])
+        # self.public_parsed = b64decode(b''.join(lines_pub[1:-1]))
 
-        magic_word = stream.read(len(MAGIC_WORD))
-        if magic_word == MAGIC_WORD:  # it's a crypt4gh key
-            self.secret_decrypted = parse_private_key(stream)
+        # # correct secret key
+        # lines = self.secret.splitlines()
+        # assert(lines[0].startswith(b'-----BEGIN ') and
+        #        lines[-1].startswith(b'-----END '))
+        # data = b64decode(b''.join(lines[1:-1]))
+
+        # stream = io.BytesIO(data)
+
+        # magic_word = stream.read(len(MAGIC_WORD))
+        # if magic_word == MAGIC_WORD:  # it's a crypt4gh key
+        #     self.secret_decrypted = parse_private_key(stream)
 
     def encrypt(self, recip_pubkey, infile, outfile, offset=0, span=None):
         '''Encrypt infile into outfile, using the list of keys.
@@ -63,6 +73,7 @@ class Crypt4GHKey:
         # Preparing the encryption engine
         encryption_method = 0  # only choice for this version
         session_key = os.urandom(32)  # we use one session key for all blocks
+        print("Session key encryption: ", session_key)
 
         # Output the header
         header_content = header.make_packet_data_enc(encryption_method,
@@ -70,6 +81,8 @@ class Crypt4GHKey:
         header_packets = header.encrypt(header_content, self.secret_decrypted,
                                         recip_pubkey)
         header_bytes = header.serialize(header_packets)
+
+        print("Header bytes: ", header_bytes)
 
         with outfile.open(mode='wb+') as of:
             of.write(header_bytes)
@@ -107,7 +120,7 @@ class Crypt4GHKey:
             of.write(nonce)
             of.write(encrypted_data)
 
-    def prep_upload(self, file: str, recip_keys, tempdir, path_from_base):
+    def prep_upload(self, file: str, recip_pub, tempdir, path_from_base):
         '''Prepares the files for upload'''
 
         tempdir_files = tempdir[1]  # Path to temporary delivery file folder
@@ -116,9 +129,12 @@ class Crypt4GHKey:
         if isinstance(tempdir_files, Path):
             try:
                 filedir = tempdir_files / path_from_base
+                original_umask = os.umask(0)
                 filedir.mkdir(parents=True)
             except IOError as ioe:
                 sys.exit(f"Could not create folder {filedir}: {ioe}")
+            finally:
+                os.umask(original_umask)
 
         # hash
         _, checksum = gen_hmac(file=file)
@@ -126,9 +142,17 @@ class Crypt4GHKey:
         # encrypt
         encrypted_file = filedir / Path(file.name + ".c4gh")
         try:
-            self.encrypt(recip_keys, file, encrypted_file)
+            original_umask = os.umask(0)
+            with file.open(mode='rb') as infile:
+                with encrypted_file.open(mode='ab+') as outfile:
+                    lib.encrypt(keys=[(0, self.seckey, recip_pub)],
+                                infile=infile,
+                                outfile=outfile)
+            # self.encrypt(recip_keys, file, encrypted_file)
         except EncryptionError as ee:
             sys.exit(f"Encryption of file {file} failed: {ee}")
+        finally:
+            os.umask(original_umask)
 
         return file, encrypted_file, checksum
 
@@ -271,14 +295,18 @@ class Crypt4GHKey:
         # Note: we could order them and if one fails, we move it at the end of the list
         # So... LRU solution. For now, try them as they come.
         nonce = ciphersegment[:12]
+        print("Nonce: ", nonce)
         data = ciphersegment[12:]
-
+        print("Data: ", data)
         for key in session_keys:
+            print("Key: ", key)
             try:
                 # no add, and break the loop
                 return crypto_aead_chacha20poly1305_ietf_decrypt(data, None, nonce, key)
             except CryptoError as tag:
-                print(tag)
+                print("---> ", tag)
+                print(sys.exc_info()[0])
+                raise
                 # LOG.error('Decryption failed: %s', tag)
         else:  # no cipher worked: Bark!
             raise ValueError('Could not decrypt that block')
@@ -351,7 +379,31 @@ class Crypt4GHKey:
         '''Finishes file download, including decryption and
         checksum generation'''
 
-        self.decrypt(file, Path(str(file) + ".decrypted"), sender_keys)
+        print(f"File to decrypt: {file}")
+
+        if isinstance(file, Path):
+            try:
+                dec_file = Path(str(file).split(
+                    file.name)[0]) / Path(file.stem)
+                print(dec_file)
+            except Exception:
+                sys.exit("FEL")
+            finally:
+                original_umask = os.umask(0)
+                with file.open(mode='rb') as infile:
+                    with dec_file.open(mode='ab+') as outfile:
+                        lib.decrypt(keys=[(0, self.seckey, sender_keys)],
+                                    infile=infile,
+                                    outfile=outfile)
+
+        _, checksum = gen_hmac(file=dec_file)
+        _, checksum_orig = gen_hmac(file=Path(
+            "/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_05.fna"))
+
+        print(checksum)
+        print(checksum_orig)
+        print(
+            f"Decryption successful - original and decrypted file identical: {checksum==checksum_orig}")
 
 
 def secure_password_hash(password_settings: str,
@@ -434,3 +486,4 @@ def gen_hmac_streamed(file) -> (Path, str):
 
 class ProcessingOver(Exception):
     pass
+

@@ -13,7 +13,7 @@ import sys
 import click
 from code_api.crypt4gh.crypt4gh import lib, header, keys
 
-from code_api.data_deliverer import DataDeliverer, timestamp
+from code_api.data_deliverer import DataDeliverer, timestamp, finish_download
 from code_api.dp_crypto import Crypt4GHKey
 from code_api.dp_exceptions import DataException
 
@@ -187,8 +187,8 @@ def put(config: str, username: str, password: str, project: str,
                             = {"size": upload_result[1].stat().st_size,
                                "mime": "",
                                "date_uploaded": timestamp(),
-                               "checksum": file_dict[o_f_u]['hash'],
-                               "public_key": key.pubkey.hex()}
+                               "checksum": file_dict[o_f_u]['hash']}
+                        _project['project_keys']['fac_public'] = key.pubkey.hex()
                         project_db.save(_project)
 
         print("\n----DELIVERY COMPLETED----\n"
@@ -262,10 +262,10 @@ def get(config: str, username: str, password: str, project: str,
                 pools = []
                 for f in concurrent.futures.as_completed(download_threads):
                     print(f.result())
-                    sender_pub = delivery.get_sender_key(file=f.result())
+                    sender_pub = delivery.get_recipient_key(keytype="fac_public")
                     print("Sender public key: ", sender_pub)
-                    p_future = pool_exec.submit(recip_keys.finish_download,
-                                                f.result(), sender_keys)
+                    p_future = pool_exec.submit(finish_download,
+                                                f.result(), recip_secret, sender_pub)
 
                     pools.append(p_future)
                     # p_future = pool_exec.submit(gen_hmac, f.result())

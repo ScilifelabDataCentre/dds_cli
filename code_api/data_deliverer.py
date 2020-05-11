@@ -490,44 +490,7 @@ class DataDeliverer():
             sys.exit(f"Could not connect to the database: {cdbe}")
         else:
             try:
-                user_db = dbconnection['user_db']
-            except CouchDBException as cdbe2:
-                sys.exit(f"Could not connect to the user database: {cdbe2}")
-            else:
-                if self.project_owner not in user_db:
-                    raise CouchDBException(f"The user {self.project_owner} "
-                                           "does not exist.")
-
-                if "projects" not in user_db[self.project_owner]:
-                    raise CouchDBException(f"Could not find any projects for "
-                                           "the user {self.project_owner}.")
-
-                if self.project_id not in \
-                        user_db[self.project_owner]["projects"]:
-                    raise CouchDBException(
-                        f"The project {self.project_id} does not exist "
-                        "or does not belong to the user {self.project_owner}."
-                    )
-
-                if keytype not in user_db[self.project_owner]["projects"][self.project_id]:
-                    raise CouchDBException(
-                        f"There is no public key recorded for "
-                        "user {self.project_owner} and "
-                        "project {self.project_id}."
-                    )
-
-                return bytes.fromhex(user_db[self.project_owner]["projects"][self.project_id][keytype])
-
-    def get_sender_key(self, file):
-        """Retrieves the senders public key"""
-
-        try:
-            dbconnection = self.couch_connect()
-        except CouchDBException as cdbe:
-            sys.exit(f"Could not connect to the database: {cdbe}")
-        else:
-            try:
-                project_db = dbconnection[project_db]
+                project_db = dbconnection['project_db']
             except CouchDBException as cdbe2:
                 sys.exit(f"Could not connect to the user database: {cdbe2}")
             else:
@@ -535,20 +498,31 @@ class DataDeliverer():
                     raise CouchDBException(f"The project {self.project_id} "
                                            "does not exist.")
 
-                if 'files' not in project_db[self.project_id]:
-                    raise CouchDBException("There are no recorded files "
-                                           "within the project "
-                                           f"{self.project_id}.")
+                if 'project_info' not in project_db[self.project_id]:
+                    raise CouchDBException("There is no project information"
+                                           "registered for the specified "
+                                           "project.")
 
-                if file not in project_db[self.project_id]['files']:
-                    raise CouchDBException(f"The file {file} doesn't exist in "
-                                           "the database.")
+                if 'owner' not in project_db[self.project_id]['project_info']:
+                    raise CouchDBException("The specified project does not "
+                                           "have a recorded owner.")
 
-                if 'public_key' not in project_db[self.project_id]['files'][file]:
-                    raise CouchDBException("There is no public key recorded "
-                                           "for the file {file}.")
+                if self.project_owner != project_db[self.project_id]['project_info']['owner']:
+                    raise CouchDBException(f"The user {self.project_owner} "
+                                           "does not exist.")
 
-                return bytes.fromhex(project_db[self.project_id]['files'][file]['public_key'])
+                if 'project_keys' not in project_db[self.project_id]:
+                    raise CouchDBException(f"Could not find any projects for "
+                                           "the user {self.project_owner}.")
+
+                if keytype not in project_db[self.project_id]['project_keys']:
+                    raise CouchDBException(
+                        f"There is no public key recorded for "
+                        "user {self.project_owner} and "
+                        "project {self.project_id}."
+                    )
+
+                return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
 
     def put(self, file: str, spec_path: str, orig_file: str) -> (str):
         '''Uploads specified data to the S3 bucket.
@@ -634,6 +608,39 @@ class DataDeliverer():
                     else:
                         print(f"File {str(new_path)} already exists. "
                               "Not downloading.")
+
+
+def finish_download(file, recipient_sec, sender_pub):
+    '''Finishes file download, including decryption and
+    checksum generation'''
+
+    print(f"File to decrypt: {file}")
+
+    if isinstance(file, Path):
+        try:
+            dec_file = Path(str(file).split(
+                file.name)[0]) / Path(file.stem)
+            print(dec_file)
+        except Exception:
+            sys.exit("FEL")
+        finally:
+            original_umask = os.umask(0)
+            with file.open(mode='rb') as infile:
+                with dec_file.open(mode='ab+') as outfile:
+                    lib.decrypt(keys=[(0, recipient_sec, sender_pub)],
+                                infile=infile,
+                                outfile=outfile)
+
+    # _, checksum = gen_hmac(file=dec_file)
+    # _, checksum_orig = gen_hmac(file=Path(
+    #     "/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_05.fna"))
+
+    # print(checksum)
+    # print(checksum_orig)
+    # print(
+    #     f"Decryption successful - original and decrypted file identical: {checksum==checksum_orig}")
+
+    return file
 
 
 def timestamp() -> (str):

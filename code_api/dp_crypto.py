@@ -7,6 +7,8 @@ from base64 import b64decode, b64encode
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+
 from nacl.bindings import (crypto_kx_client_session_keys,
                            crypto_kx_server_session_keys,
                            crypto_aead_chacha20poly1305_ietf_encrypt,
@@ -30,35 +32,22 @@ CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + CIPHER_DIFF
 
 class Crypt4GHKey:
 
-    def __init__(self, name="", tempdir=""):
+    # def __init__(self, name="", tempdir=""):
+    def __init__(self):
+        '''Generate public key pair'''
+        
+        sk = PrivateKey.generate()
+        self.seckey = bytes(sk)
+        self.pubkey = bytes(sk.public_key)
 
-        print("tempdir: ", tempdir)
-        secpath = tempdir / Path(f"{name}.sec")
-        pubpath = tempdir / Path(f"{name}.pub")
-        keys.c4gh.generate(seckey=secpath,
-                           pubkey=pubpath)
+        # print("tempdir: ", tempdir)
+        # secpath = tempdir / Path(f"{name}.sec")
+        # pubpath = tempdir / Path(f"{name}.pub")
+        # keys.c4gh.generate(seckey=secpath,
+        #                    pubkey=pubpath)
 
-        self.pubkey = keys.get_public_key(pubpath)
-        self.seckey = keys.get_private_key(secpath, callback=None)
-
-        # self.public, self.secret = keys.generate()
-
-        # # correct private key
-        # lines_pub = self.public.splitlines()
-        # assert(b'CRYPT4GH' in lines_pub[0])
-        # self.public_parsed = b64decode(b''.join(lines_pub[1:-1]))
-
-        # # correct secret key
-        # lines = self.secret.splitlines()
-        # assert(lines[0].startswith(b'-----BEGIN ') and
-        #        lines[-1].startswith(b'-----END '))
-        # data = b64decode(b''.join(lines[1:-1]))
-
-        # stream = io.BytesIO(data)
-
-        # magic_word = stream.read(len(MAGIC_WORD))
-        # if magic_word == MAGIC_WORD:  # it's a crypt4gh key
-        #     self.secret_decrypted = parse_private_key(stream)
+        # self.pubkey = keys.get_public_key(pubpath)
+        # self.seckey = keys.get_private_key(secpath, callback=None)
 
     def encrypt(self, recip_pubkey, infile, outfile, offset=0, span=None):
         '''Encrypt infile into outfile, using the list of keys.

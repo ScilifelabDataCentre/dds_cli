@@ -82,7 +82,7 @@ def put(config: str, username: str, password: str, project: str,
                        pathfile=pathfile, data=data) \
             as delivery:
 
-        key = Crypt4GHKey("sender", delivery.tempdir[2])
+        key = Crypt4GHKey()
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:

@@ -13,7 +13,8 @@ import sys
 import click
 from code_api.crypt4gh.crypt4gh import lib, header, keys
 
-from code_api.data_deliverer import DataDeliverer, timestamp, finish_download
+from code_api.data_deliverer import DataDeliverer, DatabaseConnection, \
+    timestamp, finish_download
 from code_api.dp_crypto import Crypt4GHKey
 from code_api.dp_exceptions import DataException
 
@@ -82,6 +83,7 @@ def put(config: str, username: str, password: str, project: str,
                        pathfile=pathfile, data=data) \
             as delivery:
 
+        # Generate public key pair
         key = Crypt4GHKey()
 
         # Create multiprocess pool
@@ -179,17 +181,15 @@ def put(config: str, username: str, password: str, project: str,
                     if file_dict[o_f_u]['uploaded'] \
                             and "ERROR" not in file_dict[o_f_u]['message']:
                         # update database here
-                        dbconnection = delivery.couch_connect()
-                        project_db = dbconnection['project_db']
-                        print(file_dict)
-                        _project = project_db[delivery.project_id]
-                        _project['files'][file_dict[o_f_u]['bucket_path']] \
-                            = {"size": upload_result[1].stat().st_size,
-                               "mime": "",
-                               "date_uploaded": timestamp(),
-                               "checksum": file_dict[o_f_u]['hash']}
-                        _project['project_keys']['fac_public'] = key.pubkey.hex()
-                        project_db.save(_project)
+                        with DatabaseConnection('project_db') as project_db:
+                            _project = project_db[delivery.project_id]
+                            _project['files'][file_dict[o_f_u]['bucket_path']] \
+                                = {"size": upload_result[1].stat().st_size,
+                                   "mime": "",
+                                   "date_uploaded": timestamp(),
+                                   "checksum": file_dict[o_f_u]['hash']}
+                            _project['project_keys']['fac_public'] = key.pubkey.hex()
+                            project_db.save(_project)
 
         print("\n----DELIVERY COMPLETED----\n"
               "The following files were uploaded: ")
@@ -262,7 +262,8 @@ def get(config: str, username: str, password: str, project: str,
                 pools = []
                 for f in concurrent.futures.as_completed(download_threads):
                     print(f.result())
-                    sender_pub = delivery.get_recipient_key(keytype="fac_public")
+                    sender_pub = delivery.get_recipient_key(
+                        keytype="fac_public")
                     print("Sender public key: ", sender_pub)
                     p_future = pool_exec.submit(finish_download,
                                                 f.result(), recip_secret, sender_pub)

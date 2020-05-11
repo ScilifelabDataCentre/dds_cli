@@ -41,6 +41,41 @@ class DPUser():
         self.role = None
 
 
+class DatabaseConnection():
+
+    def __init__(self, db_name = None):
+        '''Initializes the db connection'''
+
+        self.db_name = db_name
+
+    def __enter__(self):
+        '''Connects to database.
+        Currently hard-coded. '''
+
+        try:
+            couch = couchdb.Server('http://delport:delport@localhost:5984/')
+        except CouchDBException as cdbe:
+            sys.exit(f"Database login failed. {cdbe}")
+        else:
+            if self.db_name is None:
+                return couch
+
+            if self.db_name not in couch:
+                raise CouchDBException(f"The database {self.db_name} does "
+                                       "not exist in the couchDB instance.")
+            return couch[self.db_name]
+
+    def __exit__(self, exc_type, exc_value, tb):
+        '''Allows for implementation using "with" statement.
+        Tear it down. Delete class.'''
+
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+            return False  # uncomment to pass exception through
+
+        return True
+
+
 class DataDeliverer():
     '''
     Instanstiates the delivery by logging the user into the Delivery Portal,
@@ -142,20 +177,6 @@ class DataDeliverer():
 
         return True
 
-    def couch_connect(self):
-        '''Connects to a couchdb interface. Currently hard-coded.
-
-        Returns:
-            couchdb.client.Server:  CouchDB server instance.
-        '''
-
-        try:
-            couch = couchdb.Server('http://delport:delport@localhost:5984/')
-        except CouchDBException as cdbe:
-            sys.exit(f"Database login failed. {cdbe}")
-        else:
-            return couch
-
     def check_user_input(self, config):
         '''Checks that the correct options and credentials are entered.
 
@@ -232,47 +253,42 @@ class DataDeliverer():
             DeliveryPortalException:    Wrong password
         '''
 
-        try:
-            user_db = self.couch_connect()['user_db']
-        except CouchDBException as cdbe:
-            sys.exit(f"Could not collect database 'user_db'. {cdbe}")
-        else:
+        with DatabaseConnection('user_db') as user_db:
             # Search the database for the user
             for id_ in user_db:
                 # If found, create secure password hash
                 if self.user.username == user_db[id_]['username']:
                     password_settings = user_db[id_]['password']['settings']
-                    password_hash = \
-                        secure_password_hash(
-                            password_settings=password_settings,
-                            password_entered=self.user.password
-                        )
+                    password_hash = secure_password_hash(
+                        password_settings=password_settings,
+                        password_entered=self.user.password
+                    )
                     # Compare to correct password
                     if user_db[id_]['password']['hash'] != password_hash:
                         raise DeliveryPortalException(
                             "Wrong password. Access to Delivery Portal "
                             "denied."
                         )
-                    else:
-                        # Check that facility putting or researcher getting
-                        self.user.role = user_db[id_]['role']
-                        if (self.user.role == 'facility'
-                            and self.method == 'put') \
-                           or (self.user.role == 'researcher'
-                                and self.method == 'get'):
-                            self.user.id = id_
-                            if (self.user.role == 'researcher'
-                                and self.method == 'get'
-                                    and (self.project_owner is None or
-                                         self.project_owner ==
-                                         self.user.username)):
-                                self.project_owner = self.user.id
-                            return True
-                        else:
-                            raise DeliveryOptionException(
-                                "Method error. Facilities can only use 'put' "
-                                "and Researchers can only use 'get'."
-                            )
+
+                    # Check that facility putting or researcher getting
+                    self.user.role = user_db[id_]['role']
+                    if (self.user.role == 'facility' and
+                            self.method == 'put') \
+                            or (self.user.role == 'researcher' and
+                                self.method == 'get'):
+                        self.user.id = id_
+                        if (self.user.role == 'researcher'
+                            and self.method == 'get'
+                                and (self.project_owner is None or
+                                     self.project_owner ==
+                                     self.user.username)):
+                            self.project_owner = self.user.id
+                        return True
+                    
+                    raise DeliveryOptionException(
+                        "Method error. Facilities can only use 'put' "
+                        "and Researchers can only use 'get'."
+                    )
 
             raise CouchDBException("Username not found in database. "
                                    "Access to Delivery Portal denied.")
@@ -294,11 +310,7 @@ class DataDeliverer():
                                         or incorrect project owner
         '''
 
-        try:
-            couch = self.couch_connect()  # Connect to database
-        except CouchDBException as cdbe:
-            sys.exit(f"Could not connect to CouchDB: {cdbe}")
-        else:
+        with DatabaseConnection() as couch:
             user_db = couch['user_db']
             # Get the projects registered to the user
             user_projects = user_db[self.user.id]['projects']
@@ -484,45 +496,37 @@ class DataDeliverer():
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
 
-        try:
-            dbconnection = self.couch_connect()
-        except CouchDBException as cdbe:
-            sys.exit(f"Could not connect to the database: {cdbe}")
-        else:
-            try:
-                project_db = dbconnection['project_db']
-            except CouchDBException as cdbe2:
-                sys.exit(f"Could not connect to the user database: {cdbe2}")
-            else:
-                if self.project_id not in project_db:
-                    raise CouchDBException(f"The project {self.project_id} "
-                                           "does not exist.")
+        with DatabaseConnection('project_db') as project_db:
 
-                if 'project_info' not in project_db[self.project_id]:
-                    raise CouchDBException("There is no project information"
-                                           "registered for the specified "
-                                           "project.")
+            if self.project_id not in project_db:
+                raise CouchDBException(f"The project {self.project_id} "
+                                        "does not exist.")
 
-                if 'owner' not in project_db[self.project_id]['project_info']:
-                    raise CouchDBException("The specified project does not "
-                                           "have a recorded owner.")
+            if 'project_info' not in project_db[self.project_id]:
+                raise CouchDBException("There is no project information"
+                                        "registered for the specified "
+                                        "project.")
 
-                if self.project_owner != project_db[self.project_id]['project_info']['owner']:
-                    raise CouchDBException(f"The user {self.project_owner} "
-                                           "does not exist.")
+            if 'owner' not in project_db[self.project_id]['project_info']:
+                raise CouchDBException("The specified project does not "
+                                        "have a recorded owner.")
 
-                if 'project_keys' not in project_db[self.project_id]:
-                    raise CouchDBException(f"Could not find any projects for "
-                                           "the user {self.project_owner}.")
+            if self.project_owner != project_db[self.project_id]['project_info']['owner']:
+                raise CouchDBException(f"The user {self.project_owner} "
+                                        "does not exist.")
 
-                if keytype not in project_db[self.project_id]['project_keys']:
-                    raise CouchDBException(
-                        f"There is no public key recorded for "
-                        "user {self.project_owner} and "
-                        "project {self.project_id}."
-                    )
+            if 'project_keys' not in project_db[self.project_id]:
+                raise CouchDBException(f"Could not find any projects for "
+                                        "the user {self.project_owner}.")
 
-                return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
+            if keytype not in project_db[self.project_id]['project_keys']:
+                raise CouchDBException(
+                    f"There is no public key recorded for "
+                    "user {self.project_owner} and "
+                    "project {self.project_id}."
+                )
+
+            return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
 
     def put(self, file: str, spec_path: str, orig_file: str) -> (str):
         '''Uploads specified data to the S3 bucket.

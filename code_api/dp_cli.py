@@ -9,6 +9,7 @@ import logging
 import logging.config
 from pathlib import Path
 import sys
+import os
 
 import click
 from code_api.crypt4gh.crypt4gh import lib, header, keys
@@ -92,41 +93,47 @@ def put(config: str, username: str, password: str, project: str,
             pools = []                  # Ongoing pool operations
             file_dict = {}              # Information about each path
             for path in delivery.data:
-                if not isinstance(path, Path):
-                    raise OSError(f"The specified path {path} "
-                                  "was not recognized. Delivery Portal error.")
-
-                if not path.is_dir() and not path.is_file():
+                if not delivery.data[path]:
                     raise OSError(f"Path type {path} not identified."
                                   "Have you entered the correct path?")
 
-                if path.is_dir():           # If the path is a folder
-                    path_base = path.name   # The folders name
-                    all_dirs = list(path.glob('**'))    # All subfolders
-                    for dir_ in all_dirs:
-                        all_files = [f for f in dir_.glob('*') if f.is_file()
-                                     and "DS_Store" not in str(f)]  # <- delete
-                        for file in all_files:  # Upload all files
-                            path_from_base = delivery.get_bucket_path(
-                                file=file,
-                                path_base=path_base
-                            )
+                if delivery.data[path]['directory']:  # If the path is a folder
+                    path_base = path.name             # The folders name
 
-                            # Prepare files for upload incl hashing and
-                            # encryption
-                            p_future = pool_exec.submit(
-                                key.prep_upload,
-                                file,
-                                recip_key.pubkey,
-                                delivery.tempdir,
-                                path_from_base
-                            )
+                    # Create folder in temporary dir
+                    try:
+                        original_umask = os.umask(0)
+                        filedir = delivery.tempdir[1] / path_base
+                        filedir.mkdir(parents=True)
+                    except IOError as ioe:
+                        sys.exit(f"Could not create folder {filedir}: {ioe}")
+                    finally:
+                        os.umask(original_umask)
 
-                            pools.append(p_future)
-                            file_dict[file] = {"path_base": path_base,
-                                               "hash": "",
-                                               "bucket_path": path_from_base}
-                elif path.is_file():
+                    # Iterate through all files in folder
+                    for file in delivery.data[path]['contents']:
+                        # Path from folder to file
+                        path_from_base = delivery.get_bucket_path(
+                            file=file,
+                            path_base=path_base
+                        )
+
+                        # Get recipient public key
+                        recip_pub = delivery.get_recipient_key()
+
+                        # Prepare files for upload incl hashing and encryption
+                        p_future = pool_exec.submit(key.prep_upload,
+                                                    file,
+                                                    recip_pub,
+                                                    delivery.tempdir,
+                                                    path_from_base)
+
+                        pools.append(p_future)  # Add to pool list
+                        file_dict[file] = {"path_base": path_base,
+                                           "path_from_base": path_from_base,
+                                           "hash": "",
+                                           "bucket_path": path_from_base}
+                elif delivery.data[path]['file']:
                     path_from_base = delivery.get_bucket_path(file=path)
 
                     # get recipient public key
@@ -140,6 +147,7 @@ def put(config: str, username: str, password: str, project: str,
                                                 path_from_base)
                     pools.append(p_future)
                     file_dict[path] = {"path_base": None,
+                                       "path_from_base": path_from_base,
                                        "hash": "",
                                        "bucket_path": path_from_base}
 
@@ -159,7 +167,7 @@ def put(config: str, username: str, password: str, project: str,
                     t_future = thread_exec.submit(
                         delivery.put,
                         file_dict[o_f]['encrypted'],
-                        file_dict[o_f]['path_base'],
+                        file_dict[o_f]['path_from_base'],
                         o_f
                     )
                     upload_threads.append(t_future)
@@ -191,6 +199,8 @@ def put(config: str, username: str, password: str, project: str,
                                    "checksum": file_dict[o_f_u]['hash']}
                             _project['project_keys']['fac_public'] = key.pubkey.hex()
                             project_db.save(_project)
+                        
+                        print("--->", o_f_u)
 
         print("\n----DELIVERY COMPLETED----\n"
               "The following files were uploaded: ")

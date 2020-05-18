@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 from pathlib import Path
+import glob
 import shutil
 import sys
 import threading
@@ -17,7 +18,6 @@ from code_api.dp_exceptions import DeliveryOptionException, \
     DeliveryPortalException, CouchDBException, S3Error
 from code_api.datadel_s3 import S3Object
 from code_api.dp_crypto import secure_password_hash, gen_hmac
-from code_api.database_connector import DatabaseConnector
 
 
 class DPUser():
@@ -143,6 +143,20 @@ class DataDeliverer():
 
         return True
 
+    def couch_connect(self):
+        '''Connects to a couchdb interface. Currently hard-coded.
+
+        Returns:
+            couchdb.client.Server:  CouchDB server instance.
+        '''
+
+        try:
+            couch = couchdb.Server('http://delport:delport@localhost:5984/')
+        except CouchDBException as cdbe:
+            sys.exit(f"Database login failed. {cdbe}")
+        else:
+            return couch
+
     def check_user_input(self, config):
         '''Checks that the correct options and credentials are entered.
 
@@ -219,42 +233,47 @@ class DataDeliverer():
             DeliveryPortalException:    Wrong password
         '''
 
-        with DatabaseConnector('user_db') as user_db:
+        try:
+            user_db = self.couch_connect()['user_db']
+        except CouchDBException as cdbe:
+            sys.exit(f"Could not collect database 'user_db'. {cdbe}")
+        else:
             # Search the database for the user
             for id_ in user_db:
                 # If found, create secure password hash
                 if self.user.username == user_db[id_]['username']:
                     password_settings = user_db[id_]['password']['settings']
-                    password_hash = secure_password_hash(
-                        password_settings=password_settings,
-                        password_entered=self.user.password
-                    )
+                    password_hash = \
+                        secure_password_hash(
+                            password_settings=password_settings,
+                            password_entered=self.user.password
+                        )
                     # Compare to correct password
                     if user_db[id_]['password']['hash'] != password_hash:
                         raise DeliveryPortalException(
                             "Wrong password. Access to Delivery Portal "
                             "denied."
                         )
-
-                    # Check that facility putting or researcher getting
-                    self.user.role = user_db[id_]['role']
-                    if (self.user.role == 'facility' and
-                            self.method == 'put') \
-                            or (self.user.role == 'researcher' and
-                                self.method == 'get'):
-                        self.user.id = id_
-                        if (self.user.role == 'researcher'
-                            and self.method == 'get'
-                                and (self.project_owner is None or
-                                     self.project_owner ==
-                                     self.user.username)):
-                            self.project_owner = self.user.id
-                        return True
-                    
-                    raise DeliveryOptionException(
-                        "Method error. Facilities can only use 'put' "
-                        "and Researchers can only use 'get'."
-                    )
+                    else:
+                        # Check that facility putting or researcher getting
+                        self.user.role = user_db[id_]['role']
+                        if (self.user.role == 'facility'
+                            and self.method == 'put') \
+                           or (self.user.role == 'researcher'
+                                and self.method == 'get'):
+                            self.user.id = id_
+                            if (self.user.role == 'researcher'
+                                and self.method == 'get'
+                                    and (self.project_owner is None or
+                                         self.project_owner ==
+                                         self.user.username)):
+                                self.project_owner = self.user.id
+                            return True
+                        else:
+                            raise DeliveryOptionException(
+                                "Method error. Facilities can only use 'put' "
+                                "and Researchers can only use 'get'."
+                            )
 
             raise CouchDBException("Username not found in database. "
                                    "Access to Delivery Portal denied.")
@@ -276,7 +295,11 @@ class DataDeliverer():
                                         or incorrect project owner
         '''
 
-        with DatabaseConnector() as couch:
+        try:
+            couch = self.couch_connect()  # Connect to database
+        except CouchDBException as cdbe:
+            sys.exit(f"Could not connect to CouchDB: {cdbe}")
+        else:
             user_db = couch['user_db']
             # Get the projects registered to the user
             user_projects = user_db[self.user.id]['projects']
@@ -358,47 +381,39 @@ class DataDeliverer():
                                         false delivery method
         '''
 
-        all_files = list()
+        all_files = dict()
+        data_list = list(data)
 
-        # If --data option --> put all files in list
-        if data is not None:
-            if self.method == "put":
-                all_files = [Path(d).resolve() if Path(d).exists()
-                             else [None, d] for d in data]
-            elif self.method == "get":
-                all_files = [d for d in data]
-            else:
-                pass    # raise an error here
+        if pathfile is not None and Path(pathfile).exists():
+            with Path(pathfile).resolve().open(mode='r') as file:
+                data_list += [line.strip() for line in file]
 
-        # If --pathfile option --> put all files in list
-        if pathfile is not None:
-            pathfile_abs = Path(pathfile).resolve()
-            # Precaution, already checked in click.option
-            if pathfile_abs.exists():
-                # Read lines, strip \n and put in list
-                with pathfile_abs.open(mode='r') as file:
-                    if self.method == "put":
-                        all_files += \
-                            [Path(line.strip()).resolve()
-                             if Path(line.strip()).exists()
-                             else [None, line.strip()] for line in file]
-                    elif self.method == "get":
-                        all_files += [line.strip() for line in file]
-                    else:
-                        raise DeliveryOptionException(
-                            "Delivery option {self.method} not allowed. "
-                            "Cancelling delivery.")
-            else:
-                raise IOError(f"- -pathfile option {pathfile} does not exist. "
-                              "Cancelling delivery.")
-
-        # Check for file duplicates
-        for element in all_files:
-            if all_files.count(element) != 1:
+        for d in data_list:
+            if d in all_files or Path(d).resolve() in all_files:
                 raise DeliveryOptionException(
-                    f"The path to file {element} is listed multiple times, "
+                    f"The path to file {d} is listed multiple times, "
                     "please remove path dublicates."
                 )
+
+            if Path(d).exists():
+                curr_path = Path(d).resolve()
+                all_files[curr_path] = {"file": curr_path.is_file(),
+                                        "directory": curr_path.is_dir(),
+                                        "contents": None if curr_path.is_file()
+                                        else {f: {"file": f.is_file()} for f
+                                              in curr_path.glob('**/*')
+                                              if f.is_file()
+                                              and "DS_Store" not in str(f)}}
+            else:
+                if self.method == "put":
+                    all_files[d] = False
+                elif self.method == "get":
+                    all_files[d] = None
+                else:
+                    raise DeliveryOptionException(
+                        "Delivery option {self.method} not allowed. "
+                        "Cancelling delivery."
+                    )
 
         return all_files
 
@@ -453,46 +468,54 @@ class DataDeliverer():
         stem = filename.split(suff)[0]  # name only
 
         if path_base is not None:
-            return Path(*Path(path_base +
-                              str(file).split(path_base)[-1])
-                        .parts[0:-1]) / Path(stem)
+            fileparts = file.parts
+            start_ind = fileparts.index(path_base)
+            return Path(*fileparts[start_ind:-1])
         else:
-            return Path(stem)
+            return ""
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
 
-        with DatabaseConnector('project_db') as project_db:
+        try:
+            dbconnection = self.couch_connect()
+        except CouchDBException as cdbe:
+            sys.exit(f"Could not connect to the database: {cdbe}")
+        else:
+            try:
+                project_db = dbconnection['project_db']
+            except CouchDBException as cdbe2:
+                sys.exit(f"Could not connect to the user database: {cdbe2}")
+            else:
+                if self.project_id not in project_db:
+                    raise CouchDBException(f"The project {self.project_id} "
+                                           "does not exist.")
 
-            if self.project_id not in project_db:
-                raise CouchDBException(f"The project {self.project_id} "
-                                        "does not exist.")
+                if 'project_info' not in project_db[self.project_id]:
+                    raise CouchDBException("There is no project information"
+                                           "registered for the specified "
+                                           "project.")
 
-            if 'project_info' not in project_db[self.project_id]:
-                raise CouchDBException("There is no project information"
-                                        "registered for the specified "
-                                        "project.")
+                if 'owner' not in project_db[self.project_id]['project_info']:
+                    raise CouchDBException("The specified project does not "
+                                           "have a recorded owner.")
 
-            if 'owner' not in project_db[self.project_id]['project_info']:
-                raise CouchDBException("The specified project does not "
-                                        "have a recorded owner.")
+                if self.project_owner != project_db[self.project_id]['project_info']['owner']:
+                    raise CouchDBException(f"The user {self.project_owner} "
+                                           "does not exist.")
 
-            if self.project_owner != project_db[self.project_id]['project_info']['owner']:
-                raise CouchDBException(f"The user {self.project_owner} "
-                                        "does not exist.")
+                if 'project_keys' not in project_db[self.project_id]:
+                    raise CouchDBException(f"Could not find any projects for "
+                                           "the user {self.project_owner}.")
 
-            if 'project_keys' not in project_db[self.project_id]:
-                raise CouchDBException(f"Could not find any projects for "
-                                        "the user {self.project_owner}.")
+                if keytype not in project_db[self.project_id]['project_keys']:
+                    raise CouchDBException(
+                        f"There is no public key recorded for "
+                        "user {self.project_owner} and "
+                        "project {self.project_id}."
+                    )
 
-            if keytype not in project_db[self.project_id]['project_keys']:
-                raise CouchDBException(
-                    f"There is no public key recorded for "
-                    "user {self.project_owner} and "
-                    "project {self.project_id}."
-                )
-
-            return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
+                return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
 
     def put(self, file: str, spec_path: str, orig_file: str) -> (str):
         '''Uploads specified data to the S3 bucket.
@@ -502,9 +525,7 @@ class DataDeliverer():
             spec_path:  Root folder path to file
         '''
 
-        filepath = str(Path(str(spec_path) if spec_path else "")
-                       / Path(file.name))
-        print(f"{file}\n{file.name}\n{spec_path}\n{orig_file}\n{filepath}\n")
+        filepath = str(spec_path / Path(file.name))
 
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():

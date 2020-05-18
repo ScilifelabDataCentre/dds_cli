@@ -70,22 +70,25 @@ class Crypt4GHKey:
 
         tempdir_files = tempdir[1]  # Path to temporary delivery file folder
 
+        # filedir = None
         filedir = None
         if isinstance(tempdir_files, Path):
-            try:
-                filedir = tempdir_files / path_from_base
-                original_umask = os.umask(0)
-                filedir.mkdir(parents=True)
-            except IOError as ioe:
-                sys.exit(f"Could not create folder {filedir}: {ioe}")
-            finally:
-                os.umask(original_umask)
+            filedir = tempdir_files / path_from_base
+            if not filedir.exists():
+                try:
+                    original_umask = os.umask(0)
+                    filedir.mkdir(parents=True)
+                except IOError as ioe:
+                    sys.exit(f"Could not create folder {filedir}: {ioe}")
+                finally:
+                    os.umask(original_umask)
 
         # hash
         _, checksum = gen_hmac(file=file)
 
         # encrypt
         encrypted_file = filedir / Path(file.name + ".c4gh")
+        print("encrypted file", encrypted_file)
         try:
             original_umask = os.umask(0)
             with file.open(mode='rb') as infile:
@@ -98,7 +101,7 @@ class Crypt4GHKey:
             sys.exit(f"Encryption of file {file} failed: {ee}")
         finally:
             os.umask(original_umask)
-
+        
         return file, encrypted_file, checksum
 
 

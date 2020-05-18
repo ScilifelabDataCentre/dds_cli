@@ -17,6 +17,7 @@ from code_api.dp_exceptions import DeliveryOptionException, \
     DeliveryPortalException, CouchDBException, S3Error
 from code_api.datadel_s3 import S3Object
 from code_api.dp_crypto import secure_password_hash, gen_hmac
+from code_api.database_connector import DatabaseConnector
 
 
 class DPUser():
@@ -39,41 +40,6 @@ class DPUser():
         self.password = password
         self.id = None
         self.role = None
-
-
-class DatabaseConnection():
-
-    def __init__(self, db_name = None):
-        '''Initializes the db connection'''
-
-        self.db_name = db_name
-
-    def __enter__(self):
-        '''Connects to database.
-        Currently hard-coded. '''
-
-        try:
-            couch = couchdb.Server('http://delport:delport@localhost:5984/')
-        except CouchDBException as cdbe:
-            sys.exit(f"Database login failed. {cdbe}")
-        else:
-            if self.db_name is None:
-                return couch
-
-            if self.db_name not in couch:
-                raise CouchDBException(f"The database {self.db_name} does "
-                                       "not exist in the couchDB instance.")
-            return couch[self.db_name]
-
-    def __exit__(self, exc_type, exc_value, tb):
-        '''Allows for implementation using "with" statement.
-        Tear it down. Delete class.'''
-
-        if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
-            return False  # uncomment to pass exception through
-
-        return True
 
 
 class DataDeliverer():
@@ -253,7 +219,7 @@ class DataDeliverer():
             DeliveryPortalException:    Wrong password
         '''
 
-        with DatabaseConnection('user_db') as user_db:
+        with DatabaseConnector('user_db') as user_db:
             # Search the database for the user
             for id_ in user_db:
                 # If found, create secure password hash
@@ -310,7 +276,7 @@ class DataDeliverer():
                                         or incorrect project owner
         '''
 
-        with DatabaseConnection() as couch:
+        with DatabaseConnector() as couch:
             user_db = couch['user_db']
             # Get the projects registered to the user
             user_projects = user_db[self.user.id]['projects']
@@ -496,7 +462,7 @@ class DataDeliverer():
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
 
-        with DatabaseConnection('project_db') as project_db:
+        with DatabaseConnector('project_db') as project_db:
 
             if self.project_id not in project_db:
                 raise CouchDBException(f"The project {self.project_id} "

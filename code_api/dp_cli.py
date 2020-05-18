@@ -13,10 +13,11 @@ import sys
 import click
 from code_api.crypt4gh.crypt4gh import lib, header, keys
 
-from code_api.data_deliverer import DataDeliverer, DatabaseConnection, \
+from code_api.data_deliverer import DataDeliverer, \
     timestamp, finish_download
 from code_api.dp_crypto import Crypt4GHKey
 from code_api.dp_exceptions import DataException
+from code_api.database_connector import DatabaseConnector
 
 # CONFIG ############################################################# CONFIG #
 
@@ -181,7 +182,7 @@ def put(config: str, username: str, password: str, project: str,
                     if file_dict[o_f_u]['uploaded'] \
                             and "ERROR" not in file_dict[o_f_u]['message']:
                         # update database here
-                        with DatabaseConnection('project_db') as project_db:
+                        with DatabaseConnector('project_db') as project_db:
                             _project = project_db[delivery.project_id]
                             _project['files'][file_dict[o_f_u]['bucket_path']] \
                                 = {"size": upload_result[1].stat().st_size,

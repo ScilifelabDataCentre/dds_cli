@@ -1261,3 +1261,44 @@ def compression_dict() -> (dict):
         # io_chunksize = 262144 (256 KB) - max size of each chunk in io queue
         # use_threads = True - threads will be used when performing S3 transfer
         # config = TransferConfig(max_concurrency=10)
+
+# 20200519 -- check if item exist in bucket
+        # response = self.resource.meta.client.list_objects_v2(
+        #     Bucket=self.bucket.name,
+        #     Prefix=key,
+        # )
+
+        # print("Key: ", key)
+        # matching_paths = [path['Key'] for path in response.get('Contents', [])
+        #                   if (path['Key'].startswith(key)
+        #                   and path['Size'] != 0)]
+
+        #  if matching_paths:
+        #     return True, matching_paths
+        # else:
+        #     return False, matching_paths
+
+# File or folder handling in put 
+ # elif delivery.data[path]['file']:
+                #     path_from_base = delivery.get_bucket_path(file=path)
+
+                #     exists, _ = delivery.s3.file_exists_in_bucket(
+                #         str(path_from_base / file.name))
+                #     if exists:
+                #         file_dict[file] = {"Error": "Exists"}
+                #         continue  # moves on to next file
+
+                #     # get recipient public key
+                #     recip_pub = delivery.get_recipient_key()
+
+                #     # Prepare files for upload incl hashing etc
+                #     p_future = pool_exec.submit(key.prep_upload,
+                #                                 path,
+                #                                 recip_pub,
+                #                                 delivery.tempdir,
+                #                                 path_from_base)
+                #     pools.append(p_future)
+                #     file_dict[path] = {"path_base": None,
+                #                        "path_from_base": path_from_base,
+                #                        "hash": "",
+                #                        "bucket_path": path_from_base}

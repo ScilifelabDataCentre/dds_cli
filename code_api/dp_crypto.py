@@ -98,7 +98,7 @@ class Crypt4GHKey:
                                 outfile=outfile)
             # self.encrypt(recip_keys, file, encrypted_file)
         except EncryptionError as ee:
-            sys.exit(f"Encryption of file {file} failed: {ee}")
+            return file, "Error", ee
         finally:
             os.umask(original_umask)
         

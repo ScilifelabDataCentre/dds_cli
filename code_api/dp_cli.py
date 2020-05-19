@@ -19,6 +19,7 @@ from code_api.data_deliverer import DataDeliverer, \
 from code_api.dp_crypto import Crypt4GHKey
 from code_api.dp_exceptions import DataException
 from code_api.database_connector import DatabaseConnector
+from code_api.datadel_s3 import S3Object
 
 # CONFIG ############################################################# CONFIG #
 
@@ -82,8 +83,7 @@ def put(config: str, username: str, password: str, project: str,
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
-                       pathfile=pathfile, data=data) \
-            as delivery:
+                       pathfile=pathfile, data=data) as delivery:
 
         # Generate public key pair
         key = Crypt4GHKey()
@@ -91,133 +91,139 @@ def put(config: str, username: str, password: str, project: str,
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
             pools = []                  # Ongoing pool operations
-            file_dict = {}              # Information about each path
             for path in delivery.data:
                 if not delivery.data[path]:
                     raise OSError(f"Path type {path} not identified."
                                   "Have you entered the correct path?")
 
-                if delivery.data[path]['directory']:  # If the path is a folder
-                    path_base = path.name             # The folders name
+                # If the specified path was a folder
+                if delivery.data[path]['path_base'] is not None:
 
                     # Create folder in temporary dir
                     try:
                         original_umask = os.umask(0)
-                        filedir = delivery.tempdir[1] / path_base
-                        filedir.mkdir(parents=True)
+                        filedir = delivery.tempdir[1] / \
+                            delivery.data[path]['path_base']
+                        if not filedir.exists():
+                            filedir.mkdir(parents=True)
                     except IOError as ioe:
                         sys.exit(f"Could not create folder {filedir}: {ioe}")
                     finally:
                         os.umask(original_umask)
 
-                    # Iterate through all files in folder
-                    for file in delivery.data[path]['contents']:
-                        # Path from folder to file
-                        path_from_base = delivery.get_bucket_path(
-                            file=file,
-                            path_base=path_base
-                        )
+                # Path from folder to file
+                path_from_base = delivery.get_bucket_path(
+                    file=path,
+                    path_base=delivery.data[path]['path_base']
+                )
 
-                        # Get recipient public key
-                        recip_pub = delivery.get_recipient_key()
+                exists, _ = delivery.s3.file_exists_in_bucket(
+                    str(path_from_base / Path(path.name)))
+                if exists:
+                    delivery.data[path].update({"Error": "Exists"})
+                    continue  # moves on to next file
 
-                        # Prepare files for upload incl hashing and encryption
-                        p_future = pool_exec.submit(key.prep_upload,
-                                                    file,
-                                                    recip_pub,
-                                                    delivery.tempdir,
-                                                    path_from_base)
+                # Get recipient public key
+                recip_pub = delivery.get_recipient_key()
 
-                        pools.append(p_future)  # Add to pool list
-                        file_dict[file] = {"path_base": path_base,
-                                           "path_from_base": path_from_base,
-                                           "hash": "",
-                                           "bucket_path": path_from_base}
-                elif delivery.data[path]['file']:
-                    path_from_base = delivery.get_bucket_path(file=path)
+                # Prepare files for upload incl hashing and encryption
+                p_future = pool_exec.submit(key.prep_upload,
+                                            path,
+                                            recip_pub,
+                                            delivery.tempdir,
+                                            path_from_base)
 
-                    # get recipient public key
-                    recip_pub = delivery.get_recipient_key()
-
-                    # Prepare files for upload incl hashing etc
-                    p_future = pool_exec.submit(key.prep_upload,
-                                                path,
-                                                recip_pub,
-                                                delivery.tempdir,
-                                                path_from_base)
-                    pools.append(p_future)
-                    file_dict[path] = {"path_base": None,
-                                       "path_from_base": path_from_base,
-                                       "hash": "",
-                                       "bucket_path": path_from_base}
+                pools.append(p_future)  # Add to pool list
+                delivery.data[path].update({"path_from_base": path_from_base})
 
             # Create multithreading pool
             with concurrent.futures.ThreadPoolExecutor() as thread_exec:
                 upload_threads = []
                 # When the pools are finished
-                # for f in concurrent.futures.as_completed(pools):
                 for f in concurrent.futures.as_completed(pools):
                     # save file hash in dict
-                    prep_result = f.result()
-                    o_f = prep_result[0]  # original file
-                    file_dict[o_f]["encrypted"] = prep_result[1]
-                    file_dict[o_f]["hash"] = prep_result[2]
+                    original_file = f.result()[0]
+                    encrypted_file = f.result()[1]
+                    checksum = f.result()[2]
+
+                    if encrypted_file == "Error":
+                        # If the encryption failed, the checksum is an exception
+                        delivery.data[original_file]["Error"] = checksum
+                    else:
+                        delivery.data[original_file].update(
+                            {"encrypted": encrypted_file,
+                             "hash": checksum}
+                        )
 
                     # begin upload
                     t_future = thread_exec.submit(
                         delivery.put,
-                        file_dict[o_f]['encrypted'],
-                        file_dict[o_f]['path_from_base'],
-                        o_f
+                        delivery.data[original_file]['encrypted'],
+                        delivery.data[original_file]['path_from_base'],
+                        original_file
                     )
                     upload_threads.append(t_future)
 
                 for t in concurrent.futures.as_completed(upload_threads):
-                    upload_result = t.result()
-                    o_f_u = upload_result[0]  # original file
-                    if o_f_u not in file_dict:
+                    original_file_ = t.result()[0]
+                    uploaded_file = t.result()[1]
+                    success = t.result()[2]
+                    bucket_path = t.result()[3]
+
+                    if original_file_ not in delivery.data:
                         raise DataException("ERROR! File not recognized.")
 
-                    if file_dict[o_f_u]['encrypted'] \
-                            != upload_result[1]:
+                    if delivery.data[original_file_]['encrypted'] \
+                            != uploaded_file:
                         raise DataException("Encrypted file path not recorded "
                                             "for original, entered path.")
 
-                    file_dict[o_f_u]['uploaded'] = upload_result[2]
-                    file_dict[o_f_u]['bucket_path'] = upload_result[3]
-                    file_dict[o_f_u]['message'] = upload_result[4]
-
-                    if file_dict[o_f_u]['uploaded'] \
-                            and "ERROR" not in file_dict[o_f_u]['message']:
+                    if not success:
+                        # If upload failed, bucket_path is an error message
+                        delivery.data[original_file_].update(
+                            {"success": False,
+                             "Error": bucket_path}
+                        )
+                    elif success:
                         # update database here
                         with DatabaseConnector('project_db') as project_db:
                             _project = project_db[delivery.project_id]
-                            _project['files'][file_dict[o_f_u]['bucket_path']] \
-                                = {"size": upload_result[1].stat().st_size,
-                                   "mime": "",
-                                   "date_uploaded": timestamp(),
-                                   "checksum": file_dict[o_f_u]['hash']}
+                            _project['files'][str(delivery.data[original_file_]['path_from_base'])] = \
+                                {"size": original_file_.stat().st_size,
+                                 "mime": "",
+                                 "date_uploaded": timestamp(),
+                                 "checksum": delivery.data[original_file_]['hash']}
                             _project['project_keys']['fac_public'] = key.pubkey.hex()
                             project_db.save(_project)
-                        
-                        print("--->", o_f_u)
+                        delivery.data[original_file_]["success"] = True
+                    else:
+                        raise Exception("The upload did not return boolean, "
+                                        "cannot determine if delivery successful!")
 
-        print("\n----DELIVERY COMPLETED----\n"
-              "The following files were uploaded: ")
-        for fx in file_dict:
-            if file_dict[fx]['uploaded']:
-                print(fx)
+        failed = {}
+        succeeded = []
+        for f in delivery.data:
+            if "success" in delivery.data[f]:
+                if delivery.data[f]["success"]:
+                    if delivery.data[f]["path_base"] is not None:
+                        succeeded.append(delivery.data[f]["path_base"])
+                    else:
+                        succeeded.append(f)
+            elif "Error" in delivery.data[f]:
+                failed[f] = delivery.data[f]["Error"]
 
-        print("\nThe following files were NOT uploaded: ")
-        for n_u in file_dict:
-            if not file_dict[n_u]['uploaded']:
-                if file_dict[n_u]['message'] == "exists":
-                    print(f"File already in bucket:\t{n_u}")
-                elif "ERROR" in file_dict[n_u]['message']:
-                    print(f"Upload failed:\t{n_u}\t"
-                          f"{file_dict[n_u]['message']}")
+        print("\n----DELIVERY COMPLETED----")
+        if len(succeeded) != 0:
+            print("\nThe following files were uploaded: ")
+            for u in succeeded:
+                print(u)
 
-        print()
+        if failed != {}:
+            print("\nThe following files were NOT uploaded: ")
+            for n_u in failed:
+                print(f"{n_u}\t -- {failed[n_u]}")
+        
+        print("\n--------------------------")
 
 
 @cli.command()
@@ -254,8 +260,7 @@ def get(config: str, username: str, password: str, project: str,
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
     with DataDeliverer(config=config, username=username, password=password,
-                       project_id=project, pathfile=pathfile, data=data) \
-            as delivery:
+                       project_id=project, pathfile=pathfile, data=data) as delivery:
 
         recip_pub = delivery.get_recipient_key(keytype="public")
         recip_secret = delivery.get_recipient_key(keytype="private")

@@ -1,4 +1,5 @@
 import couchdb
+import traceback
 
 
 class DatabaseConnector():
@@ -32,7 +33,7 @@ class DatabaseConnector():
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
-        else: 
+        else:
             self.conn = None
 
         return True

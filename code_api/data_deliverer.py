@@ -18,6 +18,7 @@ from code_api.dp_exceptions import DeliveryOptionException, \
     DeliveryPortalException, CouchDBException, S3Error
 from code_api.datadel_s3 import S3Object
 from code_api.dp_crypto import secure_password_hash, gen_hmac
+from code_api.database_connector import DatabaseConnector
 
 
 class DPUser():
@@ -143,20 +144,6 @@ class DataDeliverer():
 
         return True
 
-    def couch_connect(self):
-        '''Connects to a couchdb interface. Currently hard-coded.
-
-        Returns:
-            couchdb.client.Server:  CouchDB server instance.
-        '''
-
-        try:
-            couch = couchdb.Server('http://delport:delport@localhost:5984/')
-        except CouchDBException as cdbe:
-            sys.exit(f"Database login failed. {cdbe}")
-        else:
-            return couch
-
     def check_user_input(self, config):
         '''Checks that the correct options and credentials are entered.
 
@@ -233,11 +220,7 @@ class DataDeliverer():
             DeliveryPortalException:    Wrong password
         '''
 
-        try:
-            user_db = self.couch_connect()['user_db']
-        except CouchDBException as cdbe:
-            sys.exit(f"Could not collect database 'user_db'. {cdbe}")
-        else:
+        with DatabaseConnector('user_db') as user_db:
             # Search the database for the user
             for id_ in user_db:
                 # If found, create secure password hash
@@ -295,11 +278,7 @@ class DataDeliverer():
                                         or incorrect project owner
         '''
 
-        try:
-            couch = self.couch_connect()  # Connect to database
-        except CouchDBException as cdbe:
-            sys.exit(f"Could not connect to CouchDB: {cdbe}")
-        else:
+        with DatabaseConnector() as couch:
             user_db = couch['user_db']
             # Get the projects registered to the user
             user_projects = user_db[self.user.id]['projects']
@@ -397,13 +376,25 @@ class DataDeliverer():
 
             if Path(d).exists():
                 curr_path = Path(d).resolve()
-                all_files[curr_path] = {"file": curr_path.is_file(),
-                                        "directory": curr_path.is_dir(),
-                                        "contents": None if curr_path.is_file()
-                                        else {f: {"file": f.is_file()} for f
-                                              in curr_path.glob('**/*')
-                                              if f.is_file()
-                                              and "DS_Store" not in str(f)}}
+                if curr_path.is_file():
+                    all_files[curr_path] = {"file": True,
+                                            "directory": False,
+                                            "path_base": None}
+                elif curr_path.is_dir():
+                    all_files.update({f: {"file": True,
+                                          "directory": False,
+                                          "path_base": curr_path.name} for f
+                                      in curr_path.glob('**/*') if f.is_file()
+                                      and "DS_Store" not in str(f)})
+                # all_files[curr_path] = \
+                #     {"file": curr_path.is_file(),
+                #      "directory": curr_path.is_dir(),
+                #      "path_base": None,
+                #      "contents": None if curr_path.is_file()
+                #      else {f: {"file": f.is_file(),
+                #                "path_base": curr_path.name}
+                #            for f in curr_path.glob('**/*')
+                #            if f.is_file() and "DS_Store" not in str(f)}}
             else:
                 if self.method == "put":
                     all_files[d] = False
@@ -472,16 +463,17 @@ class DataDeliverer():
             start_ind = fileparts.index(path_base)
             return Path(*fileparts[start_ind:-1])
         else:
-            return ""
+            return Path("")
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
 
-        try:
-            dbconnection = self.couch_connect()
-        except CouchDBException as cdbe:
-            sys.exit(f"Could not connect to the database: {cdbe}")
-        else:
+        with DatabaseConnector() as dbconnection:
+            # try:
+            #     dbconnection = self.couch_connect()
+            # except CouchDBException as cdbe:
+            #     sys.exit(f"Could not connect to the database: {cdbe}")
+            # else:
             try:
                 project_db = dbconnection['project_db']
             except CouchDBException as cdbe2:
@@ -542,12 +534,11 @@ class DataDeliverer():
                         filepath
                     )
                 except Exception as e:
-                    return orig_file, file, False, filepath, f"ERROR: {e}"
+                    return orig_file, file, False, e
                 else:
-                    return orig_file, file, True, filepath, f"success"
+                    return orig_file, file, True, filepath
         else:
-            raise S3Error("The project does not have an S3 bucket."
-                          "Unable to perform delivery.")
+            return orig_file, file, False, "Bucket not found in S3 resource"
 
     def get(self, path: str) -> (str):
         '''Downloads specified data from S3 bucket

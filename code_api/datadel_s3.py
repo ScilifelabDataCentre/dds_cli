@@ -25,6 +25,17 @@ class S3Object():
         self.project = None
         self.bucket = None
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+            return False  # uncomment to pass exception through
+        else:
+            self = None
+        return True
+
     def get_info(self, current_project: str):
         '''Gets the users s3 credentials including endpoint and key pair,
         and a bucket object representing the current project.
@@ -68,8 +79,8 @@ class S3Object():
             bool:   True if the file already exists, False if it doesnt
 
         '''
-
-        #
+        
+        # If extension --> file, if not --> folder (?)
         folder = (len(key.split(os.extsep)) == 1)
         matching_paths = list()
 
@@ -77,23 +88,9 @@ class S3Object():
             if not key.endswith(os.path.sep):  # path is a folder
                 key += os.path.sep
 
-        response = self.resource.meta.client.list_objects_v2(
-            Bucket=self.bucket.name,
-            Prefix=key,
-        )
+        object_summary_iterator = self.bucket.objects.filter(Prefix=key)
+        # If it enters the for loop -- file exists in bucket
+        for x in object_summary_iterator:
+            return True, matching_paths  # remove matching paths
 
-        # print([path['Key'] for path in response.get('Contents', [])])
-        # print([path['Key'] for path in response.get('Contents', []) if
-        #        path['Key'].startswith(key)])
-        # for x in [(path['Size'] != 0) for path in response.get('Contents', []) if
-        #        path['Key'].startswith(key)]:
-        #     print(x)
-
-        matching_paths = [path['Key'] for path in response.get('Contents', [])
-                          if (path['Key'].startswith(key)
-                          and path['Size'] != 0)]
-        print(matching_paths)
-        if matching_paths:
-            return True, matching_paths
-        else:
-            return False, matching_paths
+        return False, matching_paths

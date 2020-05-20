@@ -66,7 +66,7 @@ class S3Object():
         bucketname = f"project_{current_project}"
         self.bucket = self.resource.Bucket(bucketname)
 
-    def file_exists_in_bucket(self, key: str) -> (bool):
+    def file_exists_in_bucket(self, key: str, put: bool = True) -> (bool):
         '''Checks if the current file already exists in the specified bucket.
         If so, the file will not be uploaded.
 
@@ -79,18 +79,41 @@ class S3Object():
             bool:   True if the file already exists, False if it doesnt
 
         '''
-        
         # If extension --> file, if not --> folder (?)
         folder = (len(key.split(os.extsep)) == 1)
-        matching_paths = list()
 
         if folder:
             if not key.endswith(os.path.sep):  # path is a folder
                 key += os.path.sep
 
         object_summary_iterator = self.bucket.objects.filter(Prefix=key)
-        # If it enters the for loop -- file exists in bucket
-        for x in object_summary_iterator:
-            return True, matching_paths  # remove matching paths
 
-        return False, matching_paths
+        for x in object_summary_iterator:
+            return True
+        return False
+
+    def files_in_bucket(self, key: str):
+        '''Checks if the current file already exists in the specified bucket.
+        If so, the file will not be uploaded.
+
+        Args:
+            s3_resource:    Boto3 S3 resource
+            bucket:         Name of bucket to check for file
+            key:            Name of file to look for
+
+        Returns:
+            bool:   True if the file already exists, False if it doesnt
+
+        '''
+        # If extension --> file, if not --> folder (?)
+        folder = (len(key.split(os.extsep)) == 1)
+
+        if folder:
+            if not key.endswith(os.path.sep):  # path is a folder
+                key += os.path.sep
+
+        object_summary_iterator = self.bucket.objects.filter(Prefix=key)
+        return object_summary_iterator
+        # for o in object_summary_iterator:
+        #     yield o
+        

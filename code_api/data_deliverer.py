@@ -399,7 +399,7 @@ class DataDeliverer():
                 if self.method == "put":
                     all_files[d] = False
                 elif self.method == "get":
-                    all_files[d] = None
+                    all_files[d] = {}
                 else:
                     raise DeliveryOptionException(
                         "Delivery option {self.method} not allowed. "
@@ -522,7 +522,7 @@ class DataDeliverer():
         # check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
             # Check if file exists (including path)
-            file_already_in_bucket, filelist = \
+            file_already_in_bucket = \
                 self.s3.file_exists_in_bucket(key=filepath)
             # Upload if doesn't exist
             if file_already_in_bucket:
@@ -551,58 +551,50 @@ class DataDeliverer():
             str:    Success message if download successful
 
         '''
-
         # Check if bucket exists
         if self.s3.bucket in self.s3.resource.buckets.all():
             # Check if path exists in bucket
-            file_in_bucket, filelist = self.s3.file_exists_in_bucket(key=path)
-            # If path exists, check if local paths exist
-            if not file_in_bucket:
-                return f"File does not exist: {path}, " \
-                    "not downloading anything."
-            else:
-                for f in filelist:
-                    new_path = self.tempdir[1] / Path(f)
-                    # If the local paths don't exist create them
-                    if not new_path.parent.exists():
-                        try:
-                            new_path.parent.mkdir(parents=True)
-                        except IOError as ioe:
-                            sys.exit("Could not create folder "
-                                     f"{new_path.parent}. Cannot"
-                                     "proceed with delivery. Cancelling: "
-                                     f"{ioe}")
-                    # If the file doesn't exist locally, download to path
-                    if not new_path.exists():
-                        try:
-                            self.s3.resource.meta.client.download_file(
-                                self.s3.bucket.name,
-                                f, str(new_path)
-                            )
-                        except Exception as e:
-                            print(f"Download of file {f} failed: {e}")
-                        else:
-                            # get encryption keys
-                            # decrypt file
-                            # return f"Success: {str(new_path)} downloaded " \
-                            #     f"from S3 to folder '{path}'!"
-                            return new_path
+            file_in_bucket = self.s3.files_in_bucket(key=path)
+
+            for file in file_in_bucket:
+                new_path = self.tempdir[1] / \
+                    Path(file.key)  # Path to downloaded
+                if not new_path.parent.exists():
+                    try:
+                        new_path.parent.mkdir(parents=True)
+                    except IOError as ioe:
+                        sys.exit("Could not create folder "
+                                 f"{new_path.parent}. Cannot"
+                                 "proceed with delivery. Cancelling: "
+                                 f"{ioe}")
+
+                if not new_path.exists():
+                    try:
+                        self.s3.resource.meta.client.download_file(
+                            self.s3.bucket.name,
+                            file.key, str(new_path))
+                    except Exception as e:
+                        self.data[path][new_path] = {"downloaded": False,
+                                                     "error": e}
                     else:
-                        print(f"File {str(new_path)} already exists. "
-                              "Not downloading.")
+                        self.data[path][new_path] = {"downloaded": True}
+
+                else:
+                    print(f"File {str(new_path)} already exists. "
+                          "Not downloading.")
+            return True, path
+
+        raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
 
 
 def finish_download(file, recipient_sec, sender_pub):
     '''Finishes file download, including decryption and
     checksum generation'''
 
-    print(f"File to decrypt: {file}")
-
     if isinstance(file, Path):
         try:
             dec_file = Path(str(file).split(
                 file.name)[0]) / Path(file.stem)
-            print(dec_file)
         except Exception:
             sys.exit("FEL")
         finally:

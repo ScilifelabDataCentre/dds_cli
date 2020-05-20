@@ -117,8 +117,9 @@ def put(config: str, username: str, password: str, project: str,
                     path_base=delivery.data[path]['path_base']
                 )
 
-                exists, _ = delivery.s3.file_exists_in_bucket(
+                exists = delivery.s3.file_exists_in_bucket(
                     str(path_from_base / Path(path.name)))
+
                 if exists:
                     delivery.data[path].update({"Error": "Exists"})
                     continue  # moves on to next file
@@ -222,7 +223,7 @@ def put(config: str, username: str, password: str, project: str,
             print("\nThe following files were NOT uploaded: ")
             for n_u in failed:
                 print(f"{n_u}\t -- {failed[n_u]}")
-        
+
         print("\n--------------------------")
 
 
@@ -260,7 +261,8 @@ def get(config: str, username: str, password: str, project: str,
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
     with DataDeliverer(config=config, username=username, password=password,
-                       project_id=project, pathfile=pathfile, data=data) as delivery:
+                       project_id=project, pathfile=pathfile, data=data) \
+            as delivery:
 
         recip_pub = delivery.get_recipient_key(keytype="public")
         recip_secret = delivery.get_recipient_key(keytype="private")
@@ -269,24 +271,26 @@ def get(config: str, username: str, password: str, project: str,
         with concurrent.futures.ThreadPoolExecutor() as thread_exec:
             download_threads = []
             for path in delivery.data:
-                if isinstance(path, str):
-                    # Download all files
-                    t_future = thread_exec.submit(delivery.get, path)
-                    download_threads.append(t_future)
+
+                # Download all files
+                t_future = thread_exec.submit(delivery.get, path)
+                download_threads.append(t_future)
 
             with concurrent.futures.ProcessPoolExecutor() as pool_exec:
                 pools = []
                 for f in concurrent.futures.as_completed(download_threads):
-                    print(f.result())
-                    sender_pub = delivery.get_recipient_key(
-                        keytype="fac_public")
-                    print("Sender public key: ", sender_pub)
-                    p_future = pool_exec.submit(finish_download,
-                                                f.result(), recip_secret, sender_pub)
+                    downloaded = f.result()[0]
+                    down_path = f.result()[1]
 
-                    pools.append(p_future)
-                    # p_future = pool_exec.submit(gen_hmac, f.result())
-                    # pools.append(p_future)
+                    for p in delivery.data[down_path]:
+                        sender_pub = delivery.get_recipient_key(
+                            keytype="fac_public")
+                        p_future = pool_exec.submit(finish_download,
+                                                    p, recip_secret, sender_pub)
 
-                for p in concurrent.futures.as_completed(pools):
-                    print(p.result())
+                        pools.append(p_future)
+                        # p_future = pool_exec.submit(gen_hmac, p)
+                        # pools.append(p_future)
+
+                    for p in concurrent.futures.as_completed(pools):
+                        print(p.result())

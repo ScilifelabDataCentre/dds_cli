@@ -32,22 +32,12 @@ CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + CIPHER_DIFF
 
 class Crypt4GHKey:
 
-    # def __init__(self, name="", tempdir=""):
     def __init__(self):
         '''Generate public key pair'''
 
         sk = PrivateKey.generate()
         self.seckey = bytes(sk)
         self.pubkey = bytes(sk.public_key)
-
-        # print("tempdir: ", tempdir)
-        # secpath = tempdir / Path(f"{name}.sec")
-        # pubpath = tempdir / Path(f"{name}.pub")
-        # keys.c4gh.generate(seckey=secpath,
-        #                    pubkey=pubpath)
-
-        # self.pubkey = keys.get_public_key(pubpath)
-        # self.seckey = keys.get_private_key(secpath, callback=None)
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -65,23 +55,8 @@ class Crypt4GHKey:
 
         return True
         
-    def prep_upload(self, file: str, recip_pub, tempdir, path_from_base):
+    def prep_upload(self, file: str, recip_pub, filedir, path_from_base):
         '''Prepares the files for upload'''
-
-        tempdir_files = tempdir[1]  # Path to temporary delivery file folder
-
-        # filedir = None
-        filedir = None
-        if isinstance(tempdir_files, Path):
-            filedir = tempdir_files / path_from_base
-            if not filedir.exists():
-                try:
-                    original_umask = os.umask(0)
-                    filedir.mkdir(parents=True)
-                except IOError as ioe:
-                    sys.exit(f"Could not create folder {filedir}: {ioe}")
-                finally:
-                    os.umask(original_umask)
 
         # hash
         _, checksum = gen_hmac(file=file)
@@ -96,7 +71,6 @@ class Crypt4GHKey:
                     lib.encrypt(keys=[(0, self.seckey, recip_pub)],
                                 infile=infile,
                                 outfile=outfile)
-            # self.encrypt(recip_keys, file, encrypted_file)
         except EncryptionError as ee:
             return file, "Error", ee
         finally:

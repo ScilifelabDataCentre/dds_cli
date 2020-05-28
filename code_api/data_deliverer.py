@@ -142,7 +142,31 @@ class DataDeliverer():
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        return True
+        failed = {}
+        succeeded = []
+        for f in self.data:
+            if "success" in self.data[f]:
+                if self.data[f]["success"]:
+                    if self.data[f]["path_base"] is not None:
+                        succeeded.append(self.data[f]["path_base"])
+                    else:
+                        succeeded.append(f)
+            elif "Error" in self.data[f]:
+                failed[f] = self.data[f]["Error"]
+
+        print("\n----DELIVERY COMPLETED----")
+        if len(succeeded) != 0:
+            print("\nThe following files were uploaded: ")
+            succeeded = list(dict.fromkeys(succeeded))
+            for u in succeeded:
+                print(u)
+
+        if failed != {}:
+            print("\nThe following files were NOT uploaded: ")
+            for n_u in failed:
+                print(f"{n_u}\t -- {failed[n_u]}")
+
+        print("\n--------------------------")
 
     def check_user_input(self, config):
         '''Checks that the correct options and credentials are entered.
@@ -363,11 +387,13 @@ class DataDeliverer():
         all_files = dict()
         data_list = list(data)
 
+        # Get all paths from pathfile
         if pathfile is not None and Path(pathfile).exists():
             with Path(pathfile).resolve().open(mode='r') as file:
                 data_list += [line.strip() for line in file]
 
         for d in data_list:
+            # Throw error if there are duplicate files
             if d in all_files or Path(d).resolve() in all_files:
                 raise DeliveryOptionException(
                     f"The path to file {d} is listed multiple times, "
@@ -376,25 +402,16 @@ class DataDeliverer():
 
             if Path(d).exists():
                 curr_path = Path(d).resolve()
-                if curr_path.is_file():
+                if curr_path.is_file():  # Save file info to dict
                     all_files[curr_path] = {"file": True,
                                             "directory": False,
                                             "path_base": None}
-                elif curr_path.is_dir():
+                elif curr_path.is_dir():  # Get info on files in folder
                     all_files.update({f: {"file": True,
                                           "directory": False,
                                           "path_base": curr_path.name} for f
                                       in curr_path.glob('**/*') if f.is_file()
                                       and "DS_Store" not in str(f)})
-                # all_files[curr_path] = \
-                #     {"file": curr_path.is_file(),
-                #      "directory": curr_path.is_dir(),
-                #      "path_base": None,
-                #      "contents": None if curr_path.is_file()
-                #      else {f: {"file": f.is_file(),
-                #                "path_base": curr_path.name}
-                #            for f in curr_path.glob('**/*')
-                #            if f.is_file() and "DS_Store" not in str(f)}}
             else:
                 if self.method == "put":
                     all_files[d] = False

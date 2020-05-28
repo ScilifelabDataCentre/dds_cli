@@ -1302,3 +1302,19 @@ def compression_dict() -> (dict):
                 #                        "path_from_base": path_from_base,
                 #                        "hash": "",
                 #                        "bucket_path": path_from_base}
+
+
+#  CREATING FOLDER IN TEMPDIR FILES      
+#  # tempdir_files = tempdir[1]  # Path to temporary delivery file folder
+
+        # filedir = None
+        # if isinstance(tempdir_files, Path):
+        #     filedir = tempdir_files / path_from_base
+        #     if not filedir.exists():
+        #         try:
+        #             original_umask = os.umask(0)
+        #             filedir.mkdir(parents=True)
+        #         except IOError as ioe:
+        #             sys.exit(f"Could not create folder {filedir}: {ioe}")
+        #         finally:
+        #             os.umask(original_umask)

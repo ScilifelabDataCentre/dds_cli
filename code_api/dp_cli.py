@@ -96,13 +96,13 @@ def put(config: str, username: str, password: str, project: str,
                     raise OSError(f"Path type {path} not identified."
                                   "Have you entered the correct path?")
 
+                filedir = delivery.tempdir[1]
                 # If the specified path was a folder
                 if delivery.data[path]['path_base'] is not None:
-
                     # Create folder in temporary dir
                     try:
                         original_umask = os.umask(0)
-                        filedir = delivery.tempdir[1] / \
+                        filedir = filedir / \
                             delivery.data[path]['path_base']
                         if not filedir.exists():
                             filedir.mkdir(parents=True)
@@ -116,7 +116,7 @@ def put(config: str, username: str, password: str, project: str,
                     file=path,
                     path_base=delivery.data[path]['path_base']
                 )
-
+                    
                 exists = delivery.s3.file_exists_in_bucket(
                     str(path_from_base / Path(path.name)))
 
@@ -131,7 +131,7 @@ def put(config: str, username: str, password: str, project: str,
                 p_future = pool_exec.submit(key.prep_upload,
                                             path,
                                             recip_pub,
-                                            delivery.tempdir,
+                                            filedir,
                                             path_from_base)
 
                 pools.append(p_future)  # Add to pool list
@@ -201,32 +201,7 @@ def put(config: str, username: str, password: str, project: str,
                         raise Exception("The upload did not return boolean, "
                                         "cannot determine if delivery successful!")
 
-        failed = {}
-        succeeded = []
-        for f in delivery.data:
-            if "success" in delivery.data[f]:
-                if delivery.data[f]["success"]:
-                    if delivery.data[f]["path_base"] is not None:
-                        succeeded.append(delivery.data[f]["path_base"])
-                    else:
-                        succeeded.append(f)
-            elif "Error" in delivery.data[f]:
-                failed[f] = delivery.data[f]["Error"]
-
-        print("\n----DELIVERY COMPLETED----")
-        if len(succeeded) != 0:
-            print("\nThe following files were uploaded: ")
-            for u in succeeded:
-                print(u)
-
-        if failed != {}:
-            print("\nThe following files were NOT uploaded: ")
-            for n_u in failed:
-                print(f"{n_u}\t -- {failed[n_u]}")
-
-        print("\n--------------------------")
-
-
+        
 @cli.command()
 @click.option('--config', '-c',
               required=False,

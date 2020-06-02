@@ -6,7 +6,7 @@ import json
 import boto3
 from boto3.s3.transfer import TransferConfig
 
-from code_api.dp_exceptions import *
+from cli_code.exceptions_ds import *
 
 
 class S3Object():

@@ -16,12 +16,12 @@ from nacl.bindings import (crypto_kx_client_session_keys,
 from nacl.exceptions import CryptoError
 from nacl.public import PrivateKey
 
-# from code_api.crypt4gh_altered.crypt4gh import lib, header
-# import code_api.crypt4gh_altered.crypt4gh.keys.c4gh as keys
-# from code_api.crypt4gh_altered.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
-from code_api.crypt4gh.crypt4gh import lib, header, keys
+# from cli_code.crypt4gh_altered.crypt4gh import lib, header
+# import cli_code.crypt4gh_altered.crypt4gh.keys.c4gh as keys
+# from cli_code.crypt4gh_altered.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
+from cli_code.crypt4gh.crypt4gh import lib, header, keys
 
-from code_api.dp_exceptions import HashException, EncryptionError
+from cli_code.exceptions_ds import HashException, EncryptionError
 
 SEGMENT_SIZE = 65536
 MAGIC_NUMBER = b'crypt4gh'

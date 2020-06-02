@@ -486,11 +486,6 @@ class DataDeliverer():
         """Retrieves the recipient public key from the database."""
 
         with DatabaseConnector() as dbconnection:
-            # try:
-            #     dbconnection = self.couch_connect()
-            # except CouchDBException as cdbe:
-            #     sys.exit(f"Could not connect to the database: {cdbe}")
-            # else:
             try:
                 project_db = dbconnection['project_db']
             except CouchDBException as cdbe2:
@@ -514,14 +509,14 @@ class DataDeliverer():
                                            "does not exist.")
 
                 if 'project_keys' not in project_db[self.project_id]:
-                    raise CouchDBException(f"Could not find any projects for "
-                                           "the user {self.project_owner}.")
+                    raise CouchDBException("Could not find any projects for "
+                                           f"the user {self.project_owner}.")
 
                 if keytype not in project_db[self.project_id]['project_keys']:
                     raise CouchDBException(
-                        f"There is no public key recorded for "
-                        "user {self.project_owner} and "
-                        "project {self.project_id}."
+                        "There is no public key recorded for "
+                        f"user {self.project_owner} and "
+                        f"project {self.project_id}."
                     )
 
                 return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])

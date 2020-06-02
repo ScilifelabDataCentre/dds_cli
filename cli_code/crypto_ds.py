@@ -63,7 +63,7 @@ class Crypt4GHKey:
 
         # encrypt
         encrypted_file = filedir / Path(file.name + ".c4gh")
-        print("encrypted file", encrypted_file)
+        print("encrypting file", encrypted_file)
         try:
             original_umask = os.umask(0)
             with file.open(mode='rb') as infile:

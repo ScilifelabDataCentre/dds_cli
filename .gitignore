@@ -9,7 +9,6 @@ venv
 .vscode
 .Rproj.user
 *testfile*
-*.json
 *.png
 *.fna
 *.sec

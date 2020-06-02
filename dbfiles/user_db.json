@@ -1,0 +1,82 @@
+{
+    "total_rows": 2,
+    "offset": 0,
+    "rows": [
+        {
+            "id": "0372838e2cf1f4a2b86997472300112a",
+            "key": "0372838e2cf1f4a2b86997472300112a",
+            "value": {
+                "rev": "1-02e9f3048a1e9e22027ebcc2f4840345"
+            },
+            "doc": {
+                "_id": "0372838e2cf1f4a2b86997472300112a",
+                "_rev": "1-02e9f3048a1e9e22027ebcc2f4840345",
+                "role": "facility",
+                "name": "Facility 1",
+                "username": "facility1",
+                "password": {
+                    "hash": "3561e6bd8d25714b753c55545375fe057328e15d4f130904836894149f6f4158",
+                    "settings": "41ec11c65b21a72b0ef38c6cd343e62b$32$14$8$1"
+                },
+                "contact_info": {
+                    "address": {
+                        "postal": "Postal address 1",
+                        "billing": "Billing address 1"
+                    },
+                    "email": "facility1@example.com",
+                    "phone": "0700000000"
+                },
+                "s3_project": {
+                    "name": "intra1.scilifelab.se",
+                    "size": 0,
+                    "order": "MB"
+                },
+                "projects": {
+                    "0372838e2cf1f4a2b869974723002bb7": {
+                        "size": "thisisthesizeoftheproject",
+                        "status": "ongoing"
+                    }
+                },
+                "invoice_information": {}
+            }
+        },
+        {
+            "id": "1116e4785a1877d84c7c7e6e86008c1c",
+            "key": "1116e4785a1877d84c7c7e6e86008c1c",
+            "value": {
+                "rev": "1-c80c124f8998add2a67f39344ba12769"
+            },
+            "doc": {
+                "_id": "1116e4785a1877d84c7c7e6e86008c1c",
+                "_rev": "1-c80c124f8998add2a67f39344ba12769",
+                "role": "researcher",
+                "name": "Researcher 1",
+                "username": "researcher1",
+                "password": {
+                    "hash": "d6bcf8c97947b374b0b6ffa399b6b02a20d1fb247550f5acdd44c5d2ad75c469",
+                    "settings": "cc0d61202e611bac6a8d6fd756c2c332$32$14$8$1"
+                },
+                "contact_info": {
+                    "address": {
+                        "postal": "Postal address 2",
+                        "billing": "Billing address 2"
+                    },
+                    "email": "researcher1@example.com",
+                    "phone": "0700000001"
+                },
+                "s3_project": {
+                    "name": "intra1.scilifelab.se",
+                    "size": 0,
+                    "order": "MB"
+                },
+                "projects": {
+                    "0372838e2cf1f4a2b869974723002bb7": {
+                        "size": "thisisthesizeoftheproject",
+                        "status": "ongoing"
+                    }
+                },
+                "invoice_information": {}
+            }
+        }
+    ]
+}

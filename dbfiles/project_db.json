@@ -1,0 +1,59 @@
+{
+    "total_rows": 1,
+    "offset": 0,
+    "rows": [
+        {
+            "id": "0372838e2cf1f4a2b869974723002bb7",
+            "key": "0372838e2cf1f4a2b869974723002bb7",
+            "value": {
+                "rev": "14-995dc2a468ac83167d7a16a243577f4b"
+            },
+            "doc": {
+                "_id": "0372838e2cf1f4a2b869974723002bb7",
+                "_rev": "14-995dc2a468ac83167d7a16a243577f4b",
+                "project_info": {
+                    "title": "Project number one",
+                    "category": "Category 1",
+                    "order_date": "2019-08-01",
+                    "final_delivery_date": "2019-10-06",
+                    "status": "Ongoing",
+                    "sensitive": true,
+                    "description": "This is a facility project used for testing the dp.",
+                    "principal_investigator": "pi1",
+                    "owner": "1116e4785a1877d84c7c7e6e86008c1c",
+                    "delivery_option": "S3"
+                },
+                "project_keys": {
+                    "public": "321bd5ecbeba06c6ac4ba4ec6eccea4a9df405edf56db713b99a7416d6ecdc05",
+                    "private": "86d40fa263e21aaa0a81cac9a29b845ad789559e095094a74bdd9fb0128f0882",
+                    "fac_public": "73a95d91db96db74d76182b985ce68455995e11209a65f9e4a21e6361b60b932"
+                },
+                "invoice": {},
+                "comment": "",
+                "files": {
+                    "js": {
+                        "size": 41355,
+                        "mime": "",
+                        "date_uploaded": "2020-06-02_14-10-09",
+                        "checksum": "af3b5fe550322eabf60576acda27601531f93b2075a5f8e406e96194069b51ba"
+                    },
+                    "js/subfolder": {
+                        "size": 21,
+                        "mime": "",
+                        "date_uploaded": "2020-06-02_14-10-09",
+                        "checksum": "66f98b349040f6ff7790ede1fc25cff9f2eba6ed2bf8bf33b979b436d1240b69"
+                    },
+                    ".": {
+                        "size": 532557,
+                        "mime": "",
+                        "date_uploaded": "2020-06-02_14-10-09",
+                        "checksum": "a255a94e1ec8309aff7321cc63f74c5f8a72a372a29fb3a70a3befcd84e95214"
+                    }
+                },
+                "users": {
+                    "0372838e2cf1f4a2b86997472300112a": "facility1"
+                }
+            }
+        }
+    ]
+}

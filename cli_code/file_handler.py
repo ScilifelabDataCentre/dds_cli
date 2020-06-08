@@ -1,3 +1,10 @@
+import gzip
+import sys
+
+def compress_file(chunk):
+    yield gzip.compress(data=chunk, compresslevel=9)
+
+
 def file_reader(file):
     for chunk in iter(lambda: file.read(65536), b''):
         yield chunk
@@ -7,9 +14,12 @@ def prep_upload(file):
     '''Prepares the files for upload'''
 
     with file.open(mode='rb') as f:
-        chunk = file_reader(f)
-        for c in chunk:
-            print("----", c)
+        chunks = file_reader(f)
+        for c in chunks:
+            print("----\t", c)
+            compressed_chunks = compress_file(c)
+            for cc in compressed_chunks:
+                print("xxxx\t", cc)
 
     sys.exit()
     # hash

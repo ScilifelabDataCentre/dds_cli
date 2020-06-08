@@ -86,28 +86,28 @@ def put(config: str, username: str, password: str, project: str,
                        pathfile=pathfile, data=data) as delivery:
 
         # Generate public key pair
-        key = Crypt4GHKey()
+        # key = Crypt4GHKey()
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
             pools = []                  # Ongoing pool operations
-            for path in delivery.data:
+            for path in delivery.data:  # Iterate through all files
                 if not delivery.data[path]:
                     raise OSError(f"Path type {path} not identified."
                                   "Have you entered the correct path?")
 
-                filedir = delivery.tempdir[1]
+                filedir = Path("")
                 # If the specified path was a folder
                 if delivery.data[path]['path_base'] is not None:
                     # Create folder in temporary dir
                     try:
                         original_umask = os.umask(0)
-                        filedir = filedir / \
+                        filedir = delivery.tempdir.files / \
                             delivery.data[path]['path_base']
                         if not filedir.exists():
                             filedir.mkdir(parents=True)
                     except IOError as ioe:
-                        sys.exit(f"Could not create folder {filedir}: {ioe}")
+                        sys.exit(f"Could not create folder: {ioe}")
                     finally:
                         os.umask(original_umask)
 
@@ -116,7 +116,7 @@ def put(config: str, username: str, password: str, project: str,
                     file=path,
                     path_base=delivery.data[path]['path_base']
                 )
-                    
+
                 exists = delivery.s3.file_exists_in_bucket(
                     str(path_from_base / Path(path.name)))
 
@@ -125,14 +125,14 @@ def put(config: str, username: str, password: str, project: str,
                     continue  # moves on to next file
 
                 # Get recipient public key
-                recip_pub = delivery.get_recipient_key()
+                # recip_pub = delivery.get_recipient_key()
 
                 # Prepare files for upload incl hashing and encryption
-                p_future = pool_exec.submit(key.prep_upload,
-                                            path,
-                                            recip_pub,
-                                            filedir,
-                                            path_from_base)
+                import cli_code.file_handler as fh
+                p_future = pool_exec.submit(fh.prep_upload,
+                                            path
+                                            # path_from_base
+                                            )
 
                 pools.append(p_future)  # Add to pool list
                 delivery.data[path].update({"path_from_base": path_from_base})
@@ -201,7 +201,7 @@ def put(config: str, username: str, password: str, project: str,
                         raise Exception("The upload did not return boolean, "
                                         "cannot determine if delivery successful!")
 
-        
+
 @cli.command()
 @click.option('--config', '-c',
               required=False,

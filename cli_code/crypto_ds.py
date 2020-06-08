@@ -30,6 +30,10 @@ CIPHER_DIFF = 28
 CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + CIPHER_DIFF
 
 
+class Encryptor():
+    pass
+
+
 class Crypt4GHKey:
 
     def __init__(self):

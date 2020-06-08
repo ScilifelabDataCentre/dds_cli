@@ -7,6 +7,7 @@ import shutil
 import sys
 import threading
 import traceback
+import collections
 
 import couchdb
 
@@ -441,8 +442,14 @@ class DataDeliverer():
         # Create temporary folder with timestamp and all subfolders
         timestamp_ = timestamp()
         temp_dir = Path.cwd() / Path(f"DataDelivery_{timestamp_}")
-        dirs = tuple(temp_dir / Path(sf)
-                     for sf in ["", "files/", "keys/", "meta/", "logs/"])
+
+        TemporaryDirectories = collections.namedtuple('TemporaryDirectories',
+                                                      'root files meta logs')
+        dirs = TemporaryDirectories(root=temp_dir / Path(""),
+                                    files=temp_dir / Path("files/"),
+                                    meta=temp_dir / Path("meta/"),
+                                    logs=temp_dir / Path("logs/"))
+
         for d_ in dirs:
             try:
                 d_.mkdir(parents=True)
@@ -569,7 +576,7 @@ class DataDeliverer():
             file_in_bucket = self.s3.files_in_bucket(key=path)
 
             for file in file_in_bucket:
-                new_path = self.tempdir[1] / \
+                new_path = self.tempdir.files / \
                     Path(file.key)  # Path to downloaded
                 if not new_path.parent.exists():
                     try:

@@ -130,9 +130,8 @@ def put(config: str, username: str, password: str, project: str,
                 # Prepare files for upload incl hashing and encryption
                 import cli_code.file_handler as fh
                 p_future = pool_exec.submit(fh.prep_upload,
-                                            path
-                                            # path_from_base
-                                            )
+                                            path,
+                                            filedir)
 
                 pools.append(p_future)  # Add to pool list
                 delivery.data[path].update({"path_from_base": path_from_base})

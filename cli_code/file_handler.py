@@ -4,6 +4,10 @@ import os
 from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
+from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
+                           crypto_aead_chacha20poly1305_ietf_decrypt)
+from nacl.exceptions import CryptoError
+
 
 def compress_file(file: Path, chunk_size: int = 65536):
     for chunk in iter(lambda: file.read(chunk_size), b''):
@@ -15,14 +19,24 @@ def file_reader(file: Path, chunk_size: int = 65536):
         yield chunk
 
 
+def aead_encrypt_chacha(gen, key):
+    '''Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+    construction described in RFC7539'''
+
+    aad = None  # Associated data, unencrypted but authenticated
+    for chunk in gen:
+        nonce = os.urandom(12)
+        yield nonce, crypto_aead_chacha20poly1305_ietf_encrypt(message=chunk,
+                                                               aad=aad,
+                                                               nonce=nonce,
+                                                               key=key)
+
+
 def prep_upload(file: Path, filedir: Path):
     '''Prepares the files for upload'''
 
     proc_suff = ""  # Suffix after file processed
-    aad = b"authenticated but unencrypted data"  # Associated data
-    key = ChaCha20Poly1305.generate_key()  # 32 bytes, fix own key later
-    chacha = ChaCha20Poly1305(key=key)  # Initialize cipher
-    nonce = os.urandom(12)
+    key = os.urandom(32)
 
     # Original file size
     if not isinstance(file, Path):
@@ -43,12 +57,10 @@ def prep_upload(file: Path, filedir: Path):
     # Read file
     with file.open(mode='rb') as f:
         chunk_stream = file_reader(f) if compressed else compress_file(f)
-        with outfile.open(mode='wb') as o_f:
-            for chunk in chunk_stream:
-                print("compressed : ", chunk)
-                print("encrypted : ", chacha.encrypt(nonce, chunk, aad)) 
-                o_f.write(chacha.encrypt(nonce, chunk, aad))
-                print("decrypted : ", chacha.decrypt(nonce, chacha.encrypt(nonce, chunk, aad), aad))
+        with outfile.open(mode='ab+') as outfile:
+            for nonce, ciphertext in aead_encrypt_chacha(chunk_stream, key):
+                outfile.write(nonce)
+                outfile.write(ciphertext)
 
     # Compress
 

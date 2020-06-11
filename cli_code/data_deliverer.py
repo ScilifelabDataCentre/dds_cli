@@ -20,28 +20,9 @@ from cli_code.exceptions_ds import DeliveryOptionException, \
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash, gen_hmac
 from cli_code.database_connector import DatabaseConnector
+from cli_code.file_handler import create_directories
 
-
-class DSUser():
-    '''
-    A Data Delivery System user.
-
-    Args:
-        username (str):   Delivery System username
-        password (str):   Delivery System password
-
-    Attributes:
-        username (str): Delivery System username
-        password (str): Delivery System password
-        id (str):       User ID
-        role (str):     Facility or researcher
-    '''
-
-    def __init__(self, username=None, password=None):
-        self.username = username
-        self.password = password
-        self.id = None
-        self.role = None
+# DATA DELIVERER ############################################# DATA DELIVERER #
 
 
 class DataDeliverer():
@@ -124,7 +105,7 @@ class DataDeliverer():
                                           "Delivery cancelled.")
 
         if self.data is not None:
-            dirs_created, self.tempdir = self.create_directories()
+            dirs_created, self.tempdir = create_directories()
             if not dirs_created:
                 raise OSError("Temporary directory could not be created. "
                               "Unable to continue delivery. Aborting. ")
@@ -437,82 +418,6 @@ class DataDeliverer():
 
         return all_files
 
-    def create_directories(self):
-        '''Creates all temporary directories.
-
-        Returns:
-            tuple:  Directories created and all paths
-
-                bool:   True if directories created
-                tuple:  All created directories
-
-        Raises:
-            IOError:    Temporary folder failure
-        '''
-
-        # Create temporary folder with timestamp and all subfolders
-        timestamp_ = timestamp()
-        temp_dir = Path.cwd() / Path(f"DataDelivery_{timestamp_}")
-
-        TemporaryDirectories = collections.namedtuple('TemporaryDirectories',
-                                                      'root files meta logs')
-        dirs = TemporaryDirectories(root=temp_dir / Path(""),
-                                    files=temp_dir / Path("files/"),
-                                    meta=temp_dir / Path("meta/"),
-                                    logs=temp_dir / Path("logs/"))
-
-        for d_ in dirs:
-            try:
-                d_.mkdir(parents=True)
-            except IOError as ose:
-                print(f"The directory '{d_}' could not be created: {ose}"
-                      "Cancelling delivery. ")
-
-                if temp_dir.exists() and not isinstance(ose, FileExistsError):
-                    print("Deleting temporary directory.")
-                    try:
-                        # Remove all prev created folders
-                        shutil.rmtree(temp_dir)
-                        sys.exit(f"Temporary directory deleted. \n\n"
-                                 "----DELIVERY CANCELLED---\n")  # and quit
-                    except IOError as ose:
-                        sys.exit(f"Could not delete directory {temp_dir}: "
-                                 f"{ose}\n\n ----DELIVERY CANCELLED---\n")
-
-                        return False, ()
-                else:
-                    pass  # create log file here
-
-        return True, dirs
-
-    def get_root_path(self, file: Path, path_base: str = None):
-        """Gets the path to the file, from the entered folder. """
-
-        filename = file.name    # name + suffixes
-        suff = "".join(file.suffixes)   # suffixes
-
-        if path_base is not None:
-            fileparts = file.parts
-            start_ind = fileparts.index(path_base)
-            return Path(*fileparts[start_ind:-1])
-        else:
-            return Path("")
-
-    def update_dir(self, old_dir, new_dir):
-        '''Update file directory and create folder'''
-
-        try:
-            original_umask = os.umask(0)
-            updated_dir = old_dir / new_dir
-            if not updated_dir.exists():
-                updated_dir.mkdir(parents=True)
-        except IOError as ioe:
-            sys.exit(f"Could not create folder: {ioe}")
-        finally:
-            os.umask(original_umask)
-
-        return updated_dir
-
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
 
@@ -629,56 +534,31 @@ class DataDeliverer():
 
         raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
 
-
-def finish_download(file, recipient_sec, sender_pub):
-    '''Finishes file download, including decryption and
-    checksum generation'''
-
-    if isinstance(file, Path):
-        try:
-            dec_file = Path(str(file).split(
-                file.name)[0]) / Path(file.stem)
-        except Exception:
-            sys.exit("FEL")
-        finally:
-            original_umask = os.umask(0)
-            with file.open(mode='rb') as infile:
-                with dec_file.open(mode='ab+') as outfile:
-                    lib.decrypt(keys=[(0, recipient_sec, sender_pub)],
-                                infile=infile,
-                                outfile=outfile)
-
-    # _, checksum = gen_hmac(file=dec_file)
-    # _, checksum_orig = gen_hmac(file=Path(
-    #     "/Users/inaod568/repos/Data-Delivery-System/files/testfolder/testfile_05.fna"))
-
-    # print(checksum)
-    # print(checksum_orig)
-    # print(
-    #     f"Decryption successful - original and decrypted file identical: {checksum==checksum_orig}")
-
-    return file
+# DSUSER ############################################################## DSUER #
 
 
-def timestamp() -> (str):
-    '''Gets the current time. Formats timestamp.
+class DSUser():
+    '''
+    A Data Delivery System user.
 
-    Returns:
-        str:    Timestamp in format 'YY-MM-DD_HH-MM-SS'
+    Args:
+        username (str):   Delivery System username
+        password (str):   Delivery System password
 
+    Attributes:
+        username (str): Delivery System username
+        password (str): Delivery System password
+        id (str):       User ID
+        role (str):     Facility or researcher
     '''
 
-    now = datetime.datetime.now()
-    timestamp = ""
+    def __init__(self, username=None, password=None):
+        self.username = username
+        self.password = password
+        self.id = None
+        self.role = None
 
-    for t in (now.year, "-", now.month, "-", now.day, " ",
-              now.hour, ":", now.minute, ":", now.second):
-        if len(str(t)) == 1 and isinstance(t, int):
-            timestamp += f"0{t}"
-        else:
-            timestamp += f"{t}"
-
-    return timestamp.replace(" ", "_").replace(":", "-")
+# PROGRESS BAR ################################################# PROGRESS BAR #
 
 
 class ProgressPercentage(object):
@@ -697,3 +577,27 @@ class ProgressPercentage(object):
             sys.stdout.write(f"\r{self._filename}  {self._seen_so_far} / "
                              f"{self._size}  ({percentage:.2f}%)")
             sys.stdout.flush()
+
+# FUNCTIONS ####################################################### FUNCTIONS #
+
+
+def finish_download(file, recipient_sec, sender_pub):
+    '''Finishes file download, including decryption and
+    checksum generation'''
+
+    if isinstance(file, Path):
+        try:
+            dec_file = Path(str(file).split(
+                file.name)[0]) / Path(file.stem)
+        except Exception:   # FIX EXCEPTION
+            sys.exit("FEL")
+        finally:
+            original_umask = os.umask(0)
+            with file.open(mode='rb') as infile:
+                with dec_file.open(mode='ab+') as outfile:
+                    lib.decrypt(keys=[(0, recipient_sec, sender_pub)],
+                                infile=infile,
+                                outfile=outfile)
+            os.umask(original_umask)
+
+    return file

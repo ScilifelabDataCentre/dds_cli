@@ -14,8 +14,7 @@ import os
 import click
 from cli_code.crypt4gh.crypt4gh import lib, header, keys
 
-from cli_code.data_deliverer import DataDeliverer, \
-    timestamp, finish_download
+from cli_code.data_deliverer import DataDeliverer, finish_download
 from cli_code.crypto_ds import Crypt4GHKey
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import DataException
@@ -95,7 +94,7 @@ def put(config: str, username: str, password: str, project: str,
                                   "Have you entered the correct path?")
 
                 # All subfolders from entered directory to file
-                directory_path = delivery.get_root_path(
+                directory_path = fh.get_root_path(
                     file=path,
                     path_base=delivery.data[path]['path_base']
                 )
@@ -106,9 +105,11 @@ def put(config: str, username: str, password: str, project: str,
                 if exists:
                     delivery.data[path].update({"Error": "Exists"})
                     continue  # moves on to next file
-                
+                # Check if file exists in database
+                # here
+
                 # Update where to save file
-                filedir = delivery.update_dir(
+                filedir = fh.update_dir(
                     delivery.tempdir.files,
                     directory_path
                 )
@@ -191,7 +192,7 @@ def put(config: str, username: str, password: str, project: str,
                                 {"full_path": file_path,
                                  "size": original_file_.stat().st_size,
                                  "mime": "",
-                                 "date_uploaded": timestamp(),
+                                 "date_uploaded": fh.timestamp(),
                                  "checksum": delivery.data[original_file_]['hash']}
                             project_db.save(_project)
                         delivery.data[original_file_]["success"] = True

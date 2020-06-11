@@ -1,13 +1,122 @@
-import gzip
+"""
+File handler. 
+Responsible for IO related operations, including compression, encryption, etc.
+"""
+
+# IMPORTS
+
 import zstandard as zstd
 import sys
 import os
+import shutil
+import datetime
+import collections
 from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
 from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
 from nacl.exceptions import CryptoError
+
+
+# IO
+def create_directories():
+    '''Creates all temporary directories.
+
+    Returns:
+        tuple:  Directories created and all paths
+
+            bool:   True if directories created
+            tuple:  All created directories
+
+    Raises:
+        IOError:    Temporary folder failure
+    '''
+
+    # Create temporary folder with timestamp and all subfolders
+    timestamp_ = timestamp()
+    temp_dir = Path.cwd() / Path(f"DataDelivery_{timestamp_}")
+
+    TemporaryDirectories = collections.namedtuple('TemporaryDirectories',
+                                                  'root files meta logs')
+    dirs = TemporaryDirectories(root=temp_dir / Path(""),
+                                files=temp_dir / Path("files/"),
+                                meta=temp_dir / Path("meta/"),
+                                logs=temp_dir / Path("logs/"))
+
+    for d_ in dirs:
+        try:
+            d_.mkdir(parents=True)
+        except IOError as ose:
+            print(f"The directory '{d_}' could not be created: {ose}"
+                  "Cancelling delivery. ")
+
+            if temp_dir.exists() and not isinstance(ose, FileExistsError):
+                print("Deleting temporary directory.")
+                try:
+                    # Remove all prev created folders
+                    shutil.rmtree(temp_dir)
+                    sys.exit(f"Temporary directory deleted. \n\n"
+                             "----DELIVERY CANCELLED---\n")  # and quit
+                except IOError as ose:
+                    sys.exit(f"Could not delete directory {temp_dir}: "
+                             f"{ose}\n\n ----DELIVERY CANCELLED---\n")
+
+                    return False, ()
+            else:
+                pass  # create log file here
+
+    return True, dirs
+
+
+def update_dir(old_dir, new_dir):
+    '''Update file directory and create folder'''
+
+    try:
+        original_umask = os.umask(0)
+        updated_dir = old_dir / new_dir
+        if not updated_dir.exists():
+            updated_dir.mkdir(parents=True)
+    except IOError as ioe:
+        sys.exit(f"Could not create folder: {ioe}")
+    finally:
+        os.umask(original_umask)
+
+    return updated_dir
+
+
+def get_root_path(file: Path, path_base: str = None):
+    '''Gets the path to the file, from the entered folder. '''
+
+    if path_base is not None:
+        fileparts = file.parts
+        start_ind = fileparts.index(path_base)
+        return Path(*fileparts[start_ind:-1])
+    else:
+        return Path("")
+
+
+def timestamp() -> (str):
+    '''Gets the current time. Formats timestamp.
+
+    Returns:
+        str:    Timestamp in format 'YY-MM-DD_HH-MM-SS'
+
+    '''
+
+    now = datetime.datetime.now()
+    timestamp = ""
+
+    for t in (now.year, "-", now.month, "-", now.day, " ",
+              now.hour, ":", now.minute, ":", now.second):
+        if len(str(t)) == 1 and isinstance(t, int):
+            timestamp += f"0{t}"
+        else:
+            timestamp += f"{t}"
+
+    return timestamp.replace(" ", "_").replace(":", "-")
+
+# CRYPTO ############################################################# CRYPTO #
 
 
 def compress_file(file: Path, chunk_size: int = 65536):
@@ -33,6 +142,8 @@ def aead_encrypt_chacha(gen, key):
                                                                aad=aad,
                                                                nonce=nonce,
                                                                key=key)
+
+# PREP AND FINISH ########################################### PREP AND FINISH #
 
 
 def prep_upload(file: Path, filedir: Path = Path(""),

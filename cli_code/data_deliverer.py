@@ -16,23 +16,23 @@ import cli_code.crypt4gh.crypt4gh.keys.c4gh as keys
 from cli_code.crypt4gh.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
 
 from cli_code.exceptions_ds import DeliveryOptionException, \
-    DeliveryPortalException, CouchDBException, S3Error
-from cli_code.s3_connector import S3Object
+    DeliverySystemException, CouchDBException, S3Error
+from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash, gen_hmac
 from cli_code.database_connector import DatabaseConnector
 
 
-class DPUser():
+class DSUser():
     '''
-    A Data Delivery Portal user.
+    A Data Delivery System user.
 
     Args:
-        username (str):   Delivery Portal username
-        password (str):   Delivery Portal password
+        username (str):   Delivery System username
+        password (str):   Delivery System password
 
     Attributes:
-        username (str): Delivery Portal username
-        password (str): Delivery Portal password
+        username (str): Delivery System username
+        password (str): Delivery System password
         id (str):       User ID
         role (str):     Facility or researcher
     '''
@@ -46,7 +46,7 @@ class DPUser():
 
 class DataDeliverer():
     '''
-    Instanstiates the delivery by logging the user into the Delivery Portal,
+    Instanstiates the delivery by logging the user into the Delivery System,
     checking the users access to the specified project, and uploads/downloads
     the data to the S3 storage.
 
@@ -65,11 +65,11 @@ class DataDeliverer():
         project_owner (str):    Owner of the current project
         data (list):            Paths to files/folders
         tempdir (list):         Paths to temporary DP folders
-        user (DPUser):          Data Delivery Portal user
-        s3 (S3Object):          S3 connection object
+        user (DSUser):          Data Delivery System user
+        s3 (S3Connector):          S3 connection object
 
     Raises:
-        DeliveryPortalException:    Required info not found or access denied
+        DeliverySystemException:    Required info not found or access denied
         OSError:                    Temporary directory failure
 
     '''
@@ -77,57 +77,59 @@ class DataDeliverer():
     def __init__(self, config=None, username=None, password=None,
                  project_id=None, project_owner=None,
                  pathfile=None, data=None):
-        # If none of username, password and config options are set
-        # raise exception and quit execution -- dp cannot be accessed
+        # Quit execution if none of username, password, config are set
         if all(x is None for x in [username, password, config]):
-            raise DeliveryPortalException("Delivery Portal login credentials "
-                                          "not specified. Enter: "
-                                          "\n--username/-u AND --password/-pw,"
-                                          " or --config/-c\n --owner/-o\n"
-                                          "For help: 'dp_api --help'.")
-        else:
-            # put or get
-            self.method = sys._getframe().f_back.f_code.co_name
-            self.user = DPUser(username=username, password=password)
-            self.project_id = project_id
-            self.project_owner = project_owner
-            self.data = None
-            self.s3 = S3Object()
+            raise DeliverySystemException(
+                "Delivery System login credentials not specified. "
+                "Enter: \n--username/-u AND --password/-pw,"
+                " or --config/-c\n --owner/-o\n"
+                "For help: 'ds_deliver --help'."
+            )
 
-            self.check_user_input(config=config)
+        # Initialize attributes
+        self.method = sys._getframe().f_back.f_code.co_name  # put or get?
+        self.user = DSUser(username=username, password=password)
+        self.project_id = project_id
+        self.project_owner = project_owner  # user, not facility
+        self.data = None           # dictionary, keeps track of delivery
+        self.s3 = S3Connector()
 
-            dp_access_granted = self.check_dp_access()
-            if dp_access_granted and self.user.id is not None:
-                proj_access_granted, self.s3.project = \
-                    self.check_project_access()
-                if proj_access_granted and self.s3.project is not None:
-                    # If no data to upload, cancel
-                    if not data and not pathfile:
-                        raise DeliveryPortalException(
-                            "No data to be uploaded. Specify individual "
-                            "files/folders using the --data/-d option one or "
-                            "more times, or the --pathfile/-f. "
-                            "For help: 'dp_api --help'"
-                        )
-                    else:
-                        self.data = self.data_to_deliver(data=data,
-                                                         pathfile=pathfile)
-                else:
-                    raise DeliveryPortalException(
-                        f"Access to project {self.project_id} "
-                        "denied. Delivery cancelled."
+        # Check if all required info is entered
+        self.check_user_input(config=config)
+
+        # Check if user has access to delivery system
+        ds_access_granted = self.check_ds_access()
+        if ds_access_granted and self.user.id is not None:
+            # Check users access to specified project
+            proj_access_granted, self.s3.project = self.check_project_access()
+            if proj_access_granted and self.s3.project is not None:
+                # If no data to upload, cancel
+                if not data and not pathfile:
+                    raise DeliverySystemException(
+                        "No data to be uploaded. Specify individual "
+                        "files/folders using the --data/-d option one or "
+                        "more times, or the --pathfile/-f. "
+                        "For help: 'ds_deliver --help'"
                     )
+                else:
+                    self.data = self.data_to_deliver(data=data,
+                                                     pathfile=pathfile)
             else:
-                raise DeliveryPortalException("Delivery Portal access denied! "
-                                              "Delivery cancelled.")
+                raise DeliverySystemException(
+                    f"Access to project {self.project_id} "
+                    "denied. Delivery cancelled."
+                )
+        else:
+            raise DeliverySystemException("Delivery System access denied! "
+                                          "Delivery cancelled.")
 
-            if self.data is not None:
-                dirs_created, self.tempdir = self.create_directories()
-                if not dirs_created:
-                    raise OSError("Temporary directory could not be created. "
-                                  "Unable to continue delivery. Aborting. ")
+        if self.data is not None:
+            dirs_created, self.tempdir = self.create_directories()
+            if not dirs_created:
+                raise OSError("Temporary directory could not be created. "
+                              "Unable to continue delivery. Aborting. ")
 
-                self.s3.get_info(self.project_id)
+            self.s3.get_info(self.project_id)
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -182,56 +184,59 @@ class DataDeliverer():
             DeliveryOptionException:    Required information not found
         '''
 
-        if config is not None:              # If config file entered
-            user_config = Path(config).resolve()
-            if user_config.is_file():      # and exist
-                try:
-                    with user_config.open(mode='r') as cf:
-                        credentials = json.load(cf)
-                except OSError as ose:
-                    sys.exit(f"Could not open path-file {config}: {ose}")
-
-                # Check that all credentials are entered and quit if not
-                for c in ['username', 'password', 'project']:
-                    if c not in credentials:
-                        raise DeliveryOptionException(
-                            f"The config file does not contain: '{c}'."
-                        )
-
-                self.user.username = credentials['username']
-                self.user.password = credentials['password']
-                self.project_id = credentials['project']
-                if 'owner' in credentials:
-                    self.project_owner = credentials['owner']
-            else:
-                raise OSError(f"Config file {config} does not exist. "
-                              "Cancelling delivery.")
-
-        else:
-            if self.user.username is None or self.user.password is None:
+        # If config file not entered use loose credentials
+        if config is None:
+            # If username or password not specified cancel delivery
+            if not all([self.user.username, self.user.password]):
                 raise DeliveryOptionException(
-                    "Delivery Portal login credentials not specified. "
+                    "Delivery System login credentials not specified. "
                     "Enter --username/-u AND --password/-pw, or --config/-c."
-                    "For help: 'dp_api --help'."
+                    "For help: 'ds_deliver --help'."
                 )
-            else:
-                if self.project_id is None:
-                    raise DeliveryOptionException(
-                        "Project not specified. Enter project ID using "
-                        "--project option or add to config file using "
-                        "--config/-c option."
-                    )
 
-                # If no owner is set then assuming current user is owner
-                if self.project_owner is None:
-                    self.project_owner = self.user.username
+            # If project_id not specified cancel delivery
+            if self.project_id is None:
+                raise DeliveryOptionException(
+                    "Project not specified. Enter project ID using "
+                    "--project option or add to config file using "
+                    "--config/-c option."
+                )
+
+            # If no owner is set assume current user is owner
+            if self.project_owner is None:
+                self.project_owner = self.user.username
+                return
+
+        # If config file specified move on to check credentials in it
+        user_config = Path(config).resolve()
+        try:
+            # Get info from credentials file
+            with user_config.open(mode='r') as cf:
+                credentials = json.load(cf)
+        except OSError as ose:
+            sys.exit(f"Could not open path-file {config}: {ose}")
+
+        # Check that all credentials are entered and quit if not
+        if not all(c in credentials
+                   for c in ['username', 'password', 'project']):
+            raise DeliveryOptionException(
+                "The config file does not contain all required information."
+            )
+
+        # Save username, password and project_id from credentials file
+        self.user.username = credentials['username']
+        self.user.password = credentials['password']
+        self.project_id = credentials['project']
+        if 'owner' in credentials:
+            self.project_owner = credentials['owner']
+            return
 
         if self.project_owner is None and self.method == 'put':
             raise DeliveryOptionException("Project owner not specified. "
                                           "Cancelling delivery.")
 
-    def check_dp_access(self):
-        '''Checks the users access to the delivery portal
+    def check_ds_access(self):
+        '''Checks the users access to the delivery system
 
         Returns:
             tuple:  Granted access and user ID
@@ -242,7 +247,7 @@ class DataDeliverer():
         Raises:
             CouchDBException:           Database connection failure or
                                         user not found
-            DeliveryPortalException:    Wrong password
+            DeliverySystemException:    Wrong password
         '''
 
         with DatabaseConnector('user_db') as user_db:
@@ -258,33 +263,31 @@ class DataDeliverer():
                         )
                     # Compare to correct password
                     if user_db[id_]['password']['hash'] != password_hash:
-                        raise DeliveryPortalException(
-                            "Wrong password. Access to Delivery Portal "
-                            "denied."
+                        raise DeliverySystemException(
+                            "Wrong password. Access to Delivery System denied."
                         )
-                    else:
-                        # Check that facility putting or researcher getting
-                        self.user.role = user_db[id_]['role']
-                        if (self.user.role == 'facility'
-                            and self.method == 'put') \
-                           or (self.user.role == 'researcher'
-                                and self.method == 'get'):
-                            self.user.id = id_
-                            if (self.user.role == 'researcher'
-                                and self.method == 'get'
-                                    and (self.project_owner is None or
-                                         self.project_owner ==
-                                         self.user.username)):
-                                self.project_owner = self.user.id
-                            return True
-                        else:
-                            raise DeliveryOptionException(
-                                "Method error. Facilities can only use 'put' "
-                                "and Researchers can only use 'get'."
-                            )
 
-            raise CouchDBException("Username not found in database. "
-                                   "Access to Delivery Portal denied.")
+                    # Check that facility putting or researcher getting
+                    self.user.role = user_db[id_]['role']
+                    if (self.user.role == 'facility'and self.method == 'put') \
+                            or (self.user.role == 'researcher' and self.method == 'get'):
+                        self.user.id = id_  # User granted access to put or get
+
+                        if (self.user.role == 'researcher' and self.method == 'get'
+                                and (self.project_owner is None or
+                                     self.project_owner == self.user.username)):
+                            self.project_owner = self.user.id
+                        return True  # Access granted
+                    else:
+                        raise DeliveryOptionException(
+                            "Method error. Facilities can only use 'put' "
+                            "and Researchers can only use 'get'."
+                        )
+
+            raise CouchDBException(
+                "Username not found in database. "
+                "Access to Delivery System denied."
+            )
 
     def check_project_access(self):
         '''Checks the users access to a specific project.
@@ -298,23 +301,26 @@ class DataDeliverer():
         Raises:
             CouchDBException:           Database connection failure
                                         or missing project information
-            DeliveryPortalException:    Access denied
+            DeliverySystemException:    Access denied
             DeliveryOptionException:    S3 delivery option not available
                                         or incorrect project owner
         '''
 
         with DatabaseConnector() as couch:
             user_db = couch['user_db']
+
             # Get the projects registered to the user
             user_projects = user_db[self.user.id]['projects']
+
             # Check if project doesn't exists in project database -> quit
             if self.project_id not in couch['project_db']:
                 raise CouchDBException(
-                    f"The project {self.project_id} does not exist.")
+                    f"The project {self.project_id} does not exist."
+                )
 
             # If project exists, check if user has access to the project->quit
             if self.project_id not in user_projects:
-                raise DeliveryPortalException(
+                raise DeliverySystemException(
                     "You do not have access to the specified project "
                     f"{self.project_id}. Aborting delivery."
                 )
@@ -331,9 +337,10 @@ class DataDeliverer():
             # If project info exists, check if owner info exists.
             # If not -> quit
             if 'owner' not in current_project['project_info']:
-                raise CouchDBException("An owner of the data has not been "
-                                       "specified. Cannot guarantee data "
-                                       "security. Cancelling delivery.")
+                raise CouchDBException(
+                    "An owner of the data has not been specified. "
+                    "Cannot guarantee data security. Cancelling delivery."
+                )
 
             # If owner info exists, find owner of project
             # and check if specified owner matches. If not -> quit
@@ -345,8 +352,10 @@ class DataDeliverer():
                     and correct_owner == self.project_owner == self.user.id):
                 # If delivery_option not recorded in database -> quit
                 if 'delivery_option' not in current_project['project_info']:
-                    raise CouchDBException("A delivery option has not been "
-                                           "specified for this project.")
+                    raise CouchDBException(
+                        "A delivery option has not been "
+                        "specified for this project."
+                    )
 
                 # If delivery option exists, check if S3. If not -> quit
                 if current_project['project_info']['delivery_option'] != "S3":
@@ -358,9 +367,11 @@ class DataDeliverer():
                 # If S3 option specified, return S3 project ID
                 try:
                     s3_project = user_db[self.user.id]['s3_project']['name']
-                except DeliveryPortalException as dpe:
-                    sys.exit("Could not get Safespring S3 project name from "
-                             f"database: {dpe}. \nDelivery aborted.")
+                except DeliverySystemException as dpe:
+                    sys.exit(
+                        "Could not get Safespring S3 project name from "
+                        f"database: {dpe}. \nDelivery aborted."
+                    )
                 else:
                     return True, s3_project
             else:
@@ -500,9 +511,8 @@ class DataDeliverer():
             sys.exit(f"Could not create folder: {ioe}")
         finally:
             os.umask(original_umask)
-        
-        return updated_dir
 
+        return updated_dir
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
@@ -641,7 +651,7 @@ def finish_download(file, recipient_sec, sender_pub):
 
     # _, checksum = gen_hmac(file=dec_file)
     # _, checksum_orig = gen_hmac(file=Path(
-    #     "/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_05.fna"))
+    #     "/Users/inaod568/repos/Data-Delivery-System/files/testfolder/testfile_05.fna"))
 
     # print(checksum)
     # print(checksum_orig)

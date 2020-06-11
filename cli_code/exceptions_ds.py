@@ -39,7 +39,7 @@ class DataException(Exception):
         
         super().__init__(msg)
 
-class DeliveryPortalException(Exception):
+class DeliverySystemException(Exception):
     """Custom exception class. Handles errors regarding Delivery Portal 
     access etc"""
 

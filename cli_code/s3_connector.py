@@ -9,7 +9,7 @@ from boto3.s3.transfer import TransferConfig
 from cli_code.exceptions_ds import *
 
 
-class S3Object():
+class S3Connector():
     '''
     Keeps information regarding the resource, project and bucket
     currently in use, and handles S3-related checks.

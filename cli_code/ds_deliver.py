@@ -20,7 +20,7 @@ from cli_code.crypto_ds import Crypt4GHKey
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import DataException
 import cli_code.file_handler as fh
-from cli_code.s3_connector import S3Object
+from cli_code.s3_connector import S3Connector
 
 # CONFIG ############################################################# CONFIG #
 
@@ -85,9 +85,6 @@ def put(config: str, username: str, password: str, project: str,
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
                        pathfile=pathfile, data=data) as delivery:
-
-        # Generate public key pair
-        # key = Crypt4GHKey()
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:

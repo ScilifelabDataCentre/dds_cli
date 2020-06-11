@@ -105,8 +105,6 @@ def put(config: str, username: str, password: str, project: str,
                 if exists:
                     delivery.data[path].update({"Error": "Exists"})
                     continue  # moves on to next file
-                # Check if file exists in database
-                # here
 
                 # Update where to save file
                 filedir = fh.update_dir(

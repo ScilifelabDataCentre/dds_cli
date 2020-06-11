@@ -97,45 +97,43 @@ def put(config: str, username: str, password: str, project: str,
                     raise OSError(f"Path type {path} not identified."
                                   "Have you entered the correct path?")
 
-                filedir = Path("")
+                filedir = delivery.tempdir.files
                 # If the specified path was a folder
                 if delivery.data[path]['path_base'] is not None:
-                    # Create folder in temporary dir
-                    try:
-                        original_umask = os.umask(0)
-                        filedir = delivery.tempdir.files / \
-                            delivery.data[path]['path_base']
-                        if not filedir.exists():
-                            filedir.mkdir(parents=True)
-                    except IOError as ioe:
-                        sys.exit(f"Could not create folder: {ioe}")
-                    finally:
-                        os.umask(original_umask)
+                    # Update where to save files
+                    filedir = delivery.update_dir(
+                        filedir,
+                        delivery.data[path]['path_base']
+                    )
 
                 # Path from folder to file
-                path_from_base = delivery.get_bucket_path(
+                bucket_path = delivery.get_bucket_path(
                     file=path,
                     path_base=delivery.data[path]['path_base']
                 )
 
-                print("bucket_path : ", path_from_base)
                 exists = delivery.s3.file_exists_in_bucket(
-                    str(path_from_base / Path(path.name)))
+                    str(bucket_path / Path(path.name)))
 
                 if exists:
                     delivery.data[path].update({"Error": "Exists"})
                     continue  # moves on to next file
 
-                # Get recipient public key
-                # recip_pub = delivery.get_recipient_key()
+                if not bucket_path.exists():
+                    # Update where to save file
+                    filedir = delivery.update_dir(
+                        filedir,
+                        Path(*bucket_path.parts[1::])
+                    )
 
                 # Prepare files for upload incl hashing and encryption
                 p_future = pool_exec.submit(fh.prep_upload,
                                             path,
-                                            filedir)
+                                            filedir,
+                                            bucket_path)
 
                 pools.append(p_future)  # Add to pool list
-                delivery.data[path].update({"path_from_base": path_from_base})
+                delivery.data[path].update({"bucket_path": bucket_path})
 
             # Create multithreading pool
             with concurrent.futures.ThreadPoolExecutor() as thread_exec:
@@ -165,7 +163,7 @@ def put(config: str, username: str, password: str, project: str,
                     t_future = thread_exec.submit(
                         delivery.put,
                         delivery.data[original_file]['encrypted'],
-                        delivery.data[original_file]['path_from_base'],
+                        delivery.data[original_file]['bucket_path'],
                         original_file
                     )
                     upload_threads.append(t_future)
@@ -196,17 +194,18 @@ def put(config: str, username: str, password: str, project: str,
                         )
                         continue
                     else:
-                        print("path to upload to database: ", original_file_)
-                        print(delivery.data[original_file_])
                         # update database here
                         with DatabaseConnector('project_db') as project_db:
                             _project = project_db[delivery.project_id]
-                            _project['files'][str(delivery.data[original_file_]['path_from_base'])] = \
-                                {"size": original_file_.stat().st_size,
+                            file_path = \
+                                str(uploaded_file).partition(str(filedir))[-1]
+                            # ADD CHECK IF EXISTS IN DB - BEFORE UPLOAD?
+                            _project['files'][uploaded_file.name] = \
+                                {"full_path": file_path,
+                                 "size": original_file_.stat().st_size,
                                  "mime": "",
                                  "date_uploaded": timestamp(),
                                  "checksum": delivery.data[original_file_]['hash']}
-                            # _project['project_keys']['fac_public'] = key.pubkey.hex()
                             project_db.save(_project)
                         delivery.data[original_file_]["success"] = True
 

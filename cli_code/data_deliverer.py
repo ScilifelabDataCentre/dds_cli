@@ -423,7 +423,6 @@ class DataDeliverer():
                         "Delivery option {self.method} not allowed. "
                         "Cancelling delivery."
                     )
-
         return all_files
 
     def create_directories(self):
@@ -488,6 +487,22 @@ class DataDeliverer():
             return Path(*fileparts[start_ind:-1])
         else:
             return Path("")
+
+    def update_dir(self, old_dir, new_dir):
+        '''Update file directory and create folder'''
+
+        try:
+            original_umask = os.umask(0)
+            updated_dir = old_dir / new_dir
+            if not updated_dir.exists():
+                updated_dir.mkdir(parents=True)
+        except IOError as ioe:
+            sys.exit(f"Could not create folder: {ioe}")
+        finally:
+            os.umask(original_umask)
+        
+        return updated_dir
+
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""

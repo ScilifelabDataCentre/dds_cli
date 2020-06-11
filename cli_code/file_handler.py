@@ -35,7 +35,8 @@ def aead_encrypt_chacha(gen, key):
                                                                key=key)
 
 
-def prep_upload(file: Path, filedir: Path = Path(""), chunk_size: int = 65536):
+def prep_upload(file: Path, filedir: Path = Path(""),
+                bucket_path: Path = Path(""), chunk_size: int = 65536):
     '''Prepares the files for upload'''
 
     proc_suff = ""  # Suffix after file processed
@@ -56,7 +57,6 @@ def prep_upload(file: Path, filedir: Path = Path(""), chunk_size: int = 65536):
         proc_suff += ".zstd"
     proc_suff += ".ccp"
     outfile = filedir / Path(file.name + proc_suff)
-
     # Read file
     try:
         original_umask = os.umask(0)

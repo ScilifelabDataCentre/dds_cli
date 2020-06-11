@@ -538,26 +538,26 @@ class DataDeliverer():
 
         filepath = str(spec_path / Path(file.name))
 
-        # check if bucket exists
-        if self.s3.bucket in self.s3.resource.buckets.all():
-            # Check if file exists (including path)
-            file_already_in_bucket = \
-                self.s3.file_exists_in_bucket(key=filepath)
-            # Upload if doesn't exist
-            if file_already_in_bucket:
-                return orig_file, file, False, filepath, "exists"
-            else:
-                try:
-                    self.s3.resource.meta.client.upload_file(
-                        str(file), self.s3.bucket.name,
-                        filepath
-                    )
-                except Exception as e:
-                    return orig_file, file, False, e
-                else:
-                    return orig_file, file, True, filepath
-        else:
+        # Return error if bucket doesn't exist
+        if self.s3.bucket not in self.s3.resource.buckets.all():
             return orig_file, file, False, "Bucket not found in S3 resource"
+
+        # Check if file exists (including path)
+        file_already_in_bucket = self.s3.file_exists_in_bucket(key=filepath)
+
+        # Upload if doesn't exist
+        if file_already_in_bucket:
+            return orig_file, file, False, filepath, "exists"
+        else:
+            try:
+                self.s3.resource.meta.client.upload_file(
+                    str(file), self.s3.bucket.name,
+                    filepath
+                )
+            except Exception as e:   # FIX EXCEPTION
+                return orig_file, file, False, e
+            else:
+                return orig_file, file, True, filepath
 
     def get(self, path: str) -> (str):
         '''Downloads specified data from S3 bucket

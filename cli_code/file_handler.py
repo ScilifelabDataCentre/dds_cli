@@ -43,10 +43,10 @@ def prep_upload(file: Path, filedir: Path = Path(""), chunk_size: int = 65536):
 
     # Original file size
     if not isinstance(file, Path):
-        pass  # update dict with error
+        return file, 0, "Error", "The file is not a Path", None
 
     if not file.exists():
-        pass  # update dict with error
+        return file, 0, "Error", "The file does not exist", None
 
     o_size = file.stat().st_size  # Original size in bytes
 
@@ -65,16 +65,18 @@ def prep_upload(file: Path, filedir: Path = Path(""), chunk_size: int = 65536):
             # Compress if not compressed
             chunk_stream = file_reader(f) if compressed else compress_file(f)
             # Encrypt
-            with outfile.open(mode='ab+') as outfile:
+            with outfile.open(mode='ab+') as of:
                 for nonce, ciphertext in aead_encrypt_chacha(chunk_stream, key):
-                    outfile.write(nonce)
-                    outfile.write(ciphertext)
+                    of.write(nonce)
+                    of.write(ciphertext)
     except Exception as ee:  # FIX EXCEPTION
-        return file, "Error", ee
+        return file, o_size, "Error", ee, False
+    else:
+        compressed = True
     finally:
         os.umask(original_umask)
 
     # Check encrypted file size
     e_size = outfile.stat().st_size  # Encrypted size in bytes
 
-    return file, outfile, ""
+    return file, o_size, outfile, e_size, compressed

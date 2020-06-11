@@ -17,8 +17,9 @@ from cli_code.crypt4gh.crypt4gh import lib, header, keys
 from cli_code.data_deliverer import DataDeliverer, \
     timestamp, finish_download
 from cli_code.crypto_ds import Crypt4GHKey
-from cli_code.exceptions_ds import DataException
 from cli_code.database_connector import DatabaseConnector
+from cli_code.exceptions_ds import DataException
+import cli_code.file_handler as fh
 from cli_code.s3_connector import S3Object
 
 # CONFIG ############################################################# CONFIG #
@@ -117,6 +118,7 @@ def put(config: str, username: str, password: str, project: str,
                     path_base=delivery.data[path]['path_base']
                 )
 
+                print("bucket_path : ", path_from_base)
                 exists = delivery.s3.file_exists_in_bucket(
                     str(path_from_base / Path(path.name)))
 
@@ -128,7 +130,6 @@ def put(config: str, username: str, password: str, project: str,
                 # recip_pub = delivery.get_recipient_key()
 
                 # Prepare files for upload incl hashing and encryption
-                import cli_code.file_handler as fh
                 p_future = pool_exec.submit(fh.prep_upload,
                                             path,
                                             filedir)
@@ -143,16 +144,21 @@ def put(config: str, username: str, password: str, project: str,
                 for f in concurrent.futures.as_completed(pools):
                     # save file hash in dict
                     original_file = f.result()[0]
-                    encrypted_file = f.result()[1]
-                    checksum = f.result()[2]
+                    o_size = f.result()[1]
+                    encrypted_file = f.result()[2]
+                    e_size = f.result()[3]
+                    compressed = f.result()[4]
 
                     if encrypted_file == "Error":
-                        # If the encryption failed, the checksum is an exception
-                        delivery.data[original_file]["Error"] = checksum
+                        # If the encryption failed, the e_size is an exception
+                        delivery.data[original_file]["Error"] = e_size
                     else:
                         delivery.data[original_file].update(
-                            {"encrypted": encrypted_file,
-                             "hash": checksum}
+                            {"original_size": o_size,
+                             "compressed": compressed,
+                             "encrypted": encrypted_file,
+                             "encrypted_size": e_size,
+                             "hash": "haven't fixed this yet"}
                         )
 
                     # begin upload
@@ -178,13 +184,20 @@ def put(config: str, username: str, password: str, project: str,
                         raise DataException("Encrypted file path not recorded "
                                             "for original, entered path.")
 
+                    if not isinstance(success, bool):
+                        raise Exception("The upload did not return boolean, "
+                                        "cannot determine if delivery "
+                                        "successful!")
                     if not success:
                         # If upload failed, bucket_path is an error message
                         delivery.data[original_file_].update(
                             {"success": False,
                              "Error": bucket_path}
                         )
-                    elif success:
+                        continue
+                    else:
+                        print("path to upload to database: ", original_file_)
+                        print(delivery.data[original_file_])
                         # update database here
                         with DatabaseConnector('project_db') as project_db:
                             _project = project_db[delivery.project_id]
@@ -193,12 +206,9 @@ def put(config: str, username: str, password: str, project: str,
                                  "mime": "",
                                  "date_uploaded": timestamp(),
                                  "checksum": delivery.data[original_file_]['hash']}
-                            _project['project_keys']['fac_public'] = key.pubkey.hex()
+                            # _project['project_keys']['fac_public'] = key.pubkey.hex()
                             project_db.save(_project)
                         delivery.data[original_file_]["success"] = True
-                    else:
-                        raise Exception("The upload did not return boolean, "
-                                        "cannot determine if delivery successful!")
 
 
 @cli.command()

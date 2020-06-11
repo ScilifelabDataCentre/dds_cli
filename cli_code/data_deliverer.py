@@ -434,6 +434,7 @@ class DataDeliverer():
                         "Delivery option {self.method} not allowed. "
                         "Cancelling delivery."
                     )
+
         return all_files
 
     def create_directories(self):
@@ -479,18 +480,16 @@ class DataDeliverer():
                                  f"{ose}\n\n ----DELIVERY CANCELLED---\n")
 
                         return False, ()
-
                 else:
                     pass  # create log file here
 
         return True, dirs
 
-    def get_bucket_path(self, file: Path, path_base: str = None):
+    def get_root_path(self, file: Path, path_base: str = None):
         """Gets the path to the file, from the entered folder. """
 
         filename = file.name    # name + suffixes
         suff = "".join(file.suffixes)   # suffixes
-        stem = filename.split(suff)[0]  # name only
 
         if path_base is not None:
             fileparts = file.parts

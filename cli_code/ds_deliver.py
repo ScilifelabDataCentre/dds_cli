@@ -94,55 +94,45 @@ def put(config: str, username: str, password: str, project: str,
                     raise OSError(f"Path type {path} not identified."
                                   "Have you entered the correct path?")
 
-                filedir = delivery.tempdir.files
-                # If the specified path was a folder
-                if delivery.data[path]['path_base'] is not None:
-                    # Update where to save files
-                    filedir = delivery.update_dir(
-                        filedir,
-                        delivery.data[path]['path_base']
-                    )
-
-                # Path from folder to file
-                bucket_path = delivery.get_bucket_path(
+                # All subfolders from entered directory to file
+                directory_path = delivery.get_root_path(
                     file=path,
                     path_base=delivery.data[path]['path_base']
                 )
 
+                # Check if file exists in bucket already
                 exists = delivery.s3.file_exists_in_bucket(
-                    str(bucket_path / Path(path.name)))
-
+                    str(directory_path / Path(path.name)))
                 if exists:
                     delivery.data[path].update({"Error": "Exists"})
                     continue  # moves on to next file
-
-                if not bucket_path.exists():
-                    # Update where to save file
-                    filedir = delivery.update_dir(
-                        filedir,
-                        Path(*bucket_path.parts[1::])
-                    )
+                
+                # Update where to save file
+                filedir = delivery.update_dir(
+                    delivery.tempdir.files,
+                    directory_path
+                )
 
                 # Prepare files for upload incl hashing and encryption
                 p_future = pool_exec.submit(fh.prep_upload,
                                             path,
                                             filedir,
-                                            bucket_path)
+                                            directory_path)
 
-                pools.append(p_future)  # Add to pool list
-                delivery.data[path].update({"bucket_path": bucket_path})
+                # Add to pool list and update file info
+                pools.append(p_future)
+                delivery.data[path].update({"directory_path": directory_path})
 
             # Create multithreading pool
             with concurrent.futures.ThreadPoolExecutor() as thread_exec:
                 upload_threads = []
                 # When the pools are finished
                 for f in concurrent.futures.as_completed(pools):
-                    # save file hash in dict
                     original_file = f.result()[0]
-                    o_size = f.result()[1]
+                    o_size = f.result()[1]  # Original file size
                     encrypted_file = f.result()[2]
-                    e_size = f.result()[3]
-                    compressed = f.result()[4]
+                    e_size = f.result()[3]  # Encrypted file size
+                    compressed = f.result()[4]  # Boolean
 
                     if encrypted_file == "Error":
                         # If the encryption failed, the e_size is an exception
@@ -160,7 +150,7 @@ def put(config: str, username: str, password: str, project: str,
                     t_future = thread_exec.submit(
                         delivery.put,
                         delivery.data[original_file]['encrypted'],
-                        delivery.data[original_file]['bucket_path'],
+                        delivery.data[original_file]['directory_path'],
                         original_file
                     )
                     upload_threads.append(t_future)
@@ -169,7 +159,7 @@ def put(config: str, username: str, password: str, project: str,
                     original_file_ = t.result()[0]
                     uploaded_file = t.result()[1]
                     success = t.result()[2]
-                    bucket_path = t.result()[3]
+                    directory_path = t.result()[3]
 
                     if original_file_ not in delivery.data:
                         raise DataException("ERROR! File not recognized.")
@@ -184,10 +174,10 @@ def put(config: str, username: str, password: str, project: str,
                                         "cannot determine if delivery "
                                         "successful!")
                     if not success:
-                        # If upload failed, bucket_path is an error message
+                        # If upload failed, directory_path is an error message
                         delivery.data[original_file_].update(
                             {"success": False,
-                             "Error": bucket_path}
+                             "Error": directory_path}
                         )
                         continue
                     else:

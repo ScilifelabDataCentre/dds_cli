@@ -1,5 +1,5 @@
 """
-File handler. 
+File handler.
 Responsible for IO related operations, including compression, encryption, etc.
 """
 

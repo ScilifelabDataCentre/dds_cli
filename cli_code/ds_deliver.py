@@ -23,9 +23,48 @@ from cli_code.s3_connector import S3Connector
 
 # CONFIG ############################################################# CONFIG #
 
+# DEBUG: Detailed information, typically of interest only when diagnosing
+#        problems
+# INFO: Confirmations that things are workig as expected
+# WARNING: An indication that something unexpected happened, or indicative of
+#         some problem in the near future (e.g. disk space low). Software is
+#         still working as expected. (default)
+# ERROR: Due to a more serious problem, the software has not been able to
+#        perform some function.
+# CRITICAL: A serious error, indicating that the program itself may be unable
+#           to continue running.
+
 logging.config.dictConfig({
     'version': 1,
-    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '%(asctime)s - %(levelname)s - %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+            'stream': 'ext://sys.stdout'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'default',
+            'filename': log_path,
+            'maxBytes': 1024,
+            'backupCount': 3
+        }
+    },
+    'loggers': {
+        'default': {
+            'level': 'DEBUG',
+            'handlers': ['console', 'file']
+        }
+    },
+    'disable_existing_loggers': False
 })
 
 

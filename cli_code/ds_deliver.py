@@ -23,57 +23,34 @@ from cli_code.s3_connector import S3Connector
 
 # CONFIG ############################################################# CONFIG #
 
-# DEBUG: Detailed information, typically of interest only when diagnosing
-#        problems
-# INFO: Confirmations that things are workig as expected
-# WARNING: An indication that something unexpected happened, or indicative of
-#         some problem in the near future (e.g. disk space low). Software is
-#         still working as expected. (default)
-# ERROR: Due to a more serious problem, the software has not been able to
-#        perform some function.
-# CRITICAL: A serious error, indicating that the program itself may be unable
-#           to continue running.
+logger = logging.getLogger(__name__)  # Track the package/module hierarchy
+logger.setLevel(logging.DEBUG)        # Root logger has DEBUG as level
 
-logging.config.dictConfig({
-    'version': 1,
-    'formatters': {
-        'default': {
-            'format': '%(asctime)s - %(levelname)s - %(message)s',
-            'datefmt': '%Y-%m-%d %H:%M:%S'
-        }
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'default',
-            'stream': 'ext://sys.stdout'
-        },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'default',
-            'filename': log_path,
-            'maxBytes': 1024,
-            'backupCount': 3
-        }
-    },
-    'loggers': {
-        'default': {
-            'level': 'DEBUG',
-            'handlers': ['console', 'file']
-        }
-    },
-    'disable_existing_loggers': False
-})
+# Save logs to file
+file_handler = logging.FileHandler('test.log')
+file_handler.setLevel(logging.DEBUG)
 
+fh_formatter = logging.Formatter("%(asctime)s::%(levelname)s::%(name)s::"
+                                 "%(filename)s::%(lineno)d::%(message)s")
+file_handler.setFormatter(fh_formatter)
+
+# Display logs in console
+stream_handler = logging.StreamHandler()
+sh_formatter = logging.Formatter("%(asctime)s::%(levelname)s::%(name)s::"
+                                 "%(filename)s::%(lineno)d::%(message)s")
+stream_handler.setFormatter(sh_formatter)
+
+# Add handlers to logger
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
 
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
 
+
 COMPRESSED_FORMATS = dict()
 
-
 # MAIN ################################################################# MAIN #
+
 
 @click.group()
 def cli():
@@ -222,15 +199,14 @@ def put(config: str, username: str, password: str, project: str,
                         # update database here
                         with DatabaseConnector('project_db') as project_db:
                             _project = project_db[delivery.project_id]
-                            file_path = \
-                                str(uploaded_file).partition(str(filedir))[-1]
+                            file_path = str(uploaded_file).partition(
+                                str(filedir))[-1]
                             # ADD CHECK IF EXISTS IN DB - BEFORE UPLOAD?
-                            _project['files'][uploaded_file.name] = \
-                                {"full_path": file_path,
-                                 "size": original_file_.stat().st_size,
-                                 "mime": "",
-                                 "date_uploaded": fh.timestamp(),
-                                 "checksum": delivery.data[original_file_]['hash']}
+                            _project['files'][uploaded_file.name] = {"full_path": file_path,
+                                                                     "size": original_file_.stat().st_size,
+                                                                     "mime": "",
+                                                                     "date_uploaded": fh.timestamp(),
+                                                                     "checksum": delivery.data[original_file_]['hash']}
                             project_db.save(_project)
                         delivery.data[original_file_]["success"] = True
 

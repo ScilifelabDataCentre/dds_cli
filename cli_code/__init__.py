@@ -1,3 +1,5 @@
+import logging
+
 __title__ = 'SciLifeLab Data Delivery System'
 __version__ = '0.1'
 __author__ = 'Ina Odén Österbo'

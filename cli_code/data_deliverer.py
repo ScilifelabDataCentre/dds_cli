@@ -8,6 +8,7 @@ import sys
 import threading
 import traceback
 import collections
+import logging
 
 import couchdb
 
@@ -21,6 +22,22 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash, gen_hmac
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import create_directories
+
+# CONFIG ############################################################# CONFIG #
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+log_format = "%(asctime)s::%(levelname)s::%(name)s::"\
+             "%(filename)s::%(lineno)d::%(message)s"
+formatter = logging.Formatter(log_format)
+
+# file_handler = logging.FileHandler('employee.log')
+# file_handler.setFormatter(formatter)
+
+# logger.addHandler(file_handler)
+logger.warning("yes")
 
 # DATA DELIVERER ############################################# DATA DELIVERER #
 

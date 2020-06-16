@@ -14,11 +14,10 @@ from cli_code.exceptions_ds import DeliveryOptionException, \
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
-from cli_code.file_handler import create_directories
+from cli_code.file_handler import create_directories, config_logger as cl
 
 # CONFIG ############################################################# CONFIG #
 
-LOG = logging.getLogger(__name__)
 
 # DATA DELIVERER ############################################# DATA DELIVERER #
 
@@ -109,9 +108,22 @@ class DataDeliverer():
                 raise OSError("Temporary directory could not be created. "
                               "Unable to continue delivery. Aborting. ")
 
+            # Initialize logger
             self.logfile = str(self.tempdir.logs / Path("ds.log"))
-            self.config_logger()
-            LOG.debug("debugging")
+            self.logger = logging.getLogger(__name__)
+            self.logger.setLevel(logging.DEBUG)
+            # self.logfile = self.config_logger()
+            self.logger = cl(
+                logger=self.logger, filename=self.logfile,
+                file=True, file_setlevel=logging.DEBUG,
+                fh_format="%(asctime)s::%(levelname)s::" +
+                "%(name)s::%(lineno)d::%(message)s",
+                stream=True, stream_setlevel=logging.DEBUG,
+                sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
+                "%(lineno)d::%(message)s"
+            )
+
+            self.logger.debug("testing")
 
             self.s3.get_info(self.project_id)
 
@@ -367,27 +379,33 @@ class DataDeliverer():
     def config_logger(self):
         '''Creates log file '''
 
-        # Save logs to file
-        file_handler = logging.FileHandler(filename=self.logfile)
+        logfile = str(self.tempdir.logs / Path("ds.log"))
+
+        # Define handlers
+        file_handler = logging.FileHandler(filename=logfile)  # save to file
+        stream_handler = logging.StreamHandler()  # display in console
+
+        # Set levels
         file_handler.setLevel('DEBUG')
+        stream_handler.setLevel('DEBUG')
+
+        # Define formats
         fh_formatter = logging.Formatter(
             "%(asctime)s::%(levelname)s::%(name)s::%(lineno)d::%(message)s"
         )
-        file_handler.setFormatter(fh_formatter)
-
-        # Display logs in console
-        stream_handler = logging.StreamHandler()
-        stream_handler.setLevel('DEBUG')
         sh_formatter = logging.Formatter(
             "%(levelname)s::%(name)s::%(lineno)d::%(message)s"
         )
+
+        # Set formats
+        file_handler.setFormatter(fh_formatter)
         stream_handler.setFormatter(sh_formatter)
 
         # Add handlers to logger
-        LOG.addHandler(file_handler)
-        LOG.addHandler(stream_handler)
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(stream_handler)
 
-        LOG.debug("here")
+        return logfile
 
     def data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list

@@ -23,6 +23,37 @@ from cli_code.s3_connector import S3Connector
 
 # CONFIG ############################################################# CONFIG #
 
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
+
+
+def config_logger(logfile: str):
+    '''Creates log file '''
+
+    # Define handlers
+    file_handler = logging.FileHandler(filename=logfile)  # save to file
+    stream_handler = logging.StreamHandler()  # display in console
+
+    # Set levels
+    file_handler.setLevel('DEBUG')
+    stream_handler.setLevel('DEBUG')
+
+    # Define formats
+    fh_formatter = logging.Formatter(
+        "%(asctime)s::%(levelname)s::%(name)s::%(lineno)d::%(message)s"
+    )
+    sh_formatter = logging.Formatter(
+        "%(levelname)s::%(name)s::%(lineno)d::%(message)s"
+    )
+
+    # Set formats
+    file_handler.setFormatter(fh_formatter)
+    stream_handler.setFormatter(sh_formatter)
+
+    # Add handlers to logger
+    LOG.addHandler(file_handler)
+    LOG.addHandler(stream_handler)
+
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
 
 
@@ -79,7 +110,18 @@ def put(config: str, username: str, password: str, project: str,
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
                        pathfile=pathfile, data=data) as delivery:
-        
+
+        # Setup logging
+        # config_logger(logfile=delivery.logfile)
+        logger = fh.config_logger(logger=LOG, filename=delivery.logfile,
+                                  file=True, file_setlevel=logging.DEBUG,
+                                  fh_format="%(asctime)s::%(levelname)s::" +
+                                  "%(name)s::%(lineno)d::%(message)s",
+                                  stream=True, stream_setlevel=logging.DEBUG,
+                                  sh_format="%(asctime)s::%(levelname)s::" +
+                                  "%(name)s::%(lineno)d::%(message)s")
+        logger.debug("här")
+
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
             pools = []                  # Ongoing pool operations

@@ -2,11 +2,28 @@ from pathlib import Path
 import os
 import sys
 import json
+import logging
 
 import boto3
 from boto3.s3.transfer import TransferConfig
 
 from cli_code.exceptions_ds import *
+from cli_code import LOG_FILE
+from cli_code.file_handler import config_logger
+
+S3_LOG = logging.getLogger(__name__)
+S3_LOG.setLevel(logging.DEBUG)
+
+S3_LOG = config_logger(
+    logger=S3_LOG, filename=LOG_FILE,
+    file=True, file_setlevel=logging.DEBUG,
+    fh_format="%(asctime)s::%(levelname)s::" +
+    "%(name)s::%(lineno)d::%(message)s",
+    stream=True, stream_setlevel=logging.DEBUG,
+    sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
+    "%(lineno)d::%(message)s"
+)
+S3_LOG.debug("6. debug")
 
 
 class S3Connector():
@@ -116,4 +133,3 @@ class S3Connector():
         return object_summary_iterator
         # for o in object_summary_iterator:
         #     yield o
-        

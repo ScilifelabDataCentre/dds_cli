@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import io
 from base64 import b64decode, b64encode
+import logging
 
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -20,14 +21,29 @@ from nacl.public import PrivateKey
 # import cli_code.crypt4gh_altered.crypt4gh.keys.c4gh as keys
 # from cli_code.crypt4gh_altered.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
 from cli_code.crypt4gh.crypt4gh import lib, header, keys
-
 from cli_code.exceptions_ds import HashException, EncryptionError
+from cli_code import LOG_FILE
+from cli_code.file_handler import config_logger
 
 SEGMENT_SIZE = 65536
 MAGIC_NUMBER = b'crypt4gh'
 VERSION = 1
 CIPHER_DIFF = 28
 CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + CIPHER_DIFF
+
+CRYPTO_LOG = logging.getLogger(__name__)
+CRYPTO_LOG.setLevel(logging.DEBUG)
+
+CRYPTO_LOG = config_logger(
+    logger=CRYPTO_LOG, filename=LOG_FILE,
+    file=True, file_setlevel=logging.DEBUG,
+    fh_format="%(asctime)s::%(levelname)s::" +
+    "%(name)s::%(lineno)d::%(message)s",
+    stream=True, stream_setlevel=logging.DEBUG,
+    sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
+    "%(lineno)d::%(message)s"
+)
+CRYPTO_LOG.debug("2. debug")
 
 
 class Encryptor():
@@ -58,7 +74,7 @@ class Crypt4GHKey:
             return False  # uncomment to pass exception through
 
         return True
-        
+
     def prep_upload(self, file: str, recip_pub, filedir, path_from_base):
         '''Prepares the files for upload'''
 
@@ -79,7 +95,7 @@ class Crypt4GHKey:
             return file, "Error", ee
         finally:
             os.umask(original_umask)
-        
+
         return file, encrypted_file, checksum
 
 

@@ -3,7 +3,7 @@ File handler.
 Responsible for IO related operations, including compression, encryption, etc.
 """
 
-# IMPORTS
+# IMPORTS ########################################################### IMPORTS #
 
 import zstandard as zstd
 import sys
@@ -19,58 +19,12 @@ from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
 from nacl.exceptions import CryptoError
 
+from cli_code import LOG_FILE
 
-# IO
-def create_directories():
-    '''Creates all temporary directories.
-
-    Returns:
-        tuple:  Directories created and all paths
-
-            bool:   True if directories created
-            tuple:  All created directories
-
-    Raises:
-        IOError:    Temporary folder failure
-    '''
-
-    # Create temporary folder with timestamp and all subfolders
-    timestamp_ = timestamp()
-    temp_dir = Path.cwd() / Path(f"DataDelivery_{timestamp_}")
-
-    TemporaryDirectories = collections.namedtuple('TemporaryDirectories',
-                                                  'root files meta logs')
-    dirs = TemporaryDirectories(root=temp_dir / Path(""),
-                                files=temp_dir / Path("files/"),
-                                meta=temp_dir / Path("meta/"),
-                                logs=temp_dir / Path("logs/"))
-
-    for d_ in dirs:
-        try:
-            d_.mkdir(parents=True)
-        except IOError as ose:
-            print(f"The directory '{d_}' could not be created: {ose}"
-                  "Cancelling delivery. ")
-
-            if temp_dir.exists() and not isinstance(ose, FileExistsError):
-                print("Deleting temporary directory.")
-                try:
-                    # Remove all prev created folders
-                    shutil.rmtree(temp_dir)
-                    sys.exit(f"Temporary directory deleted. \n\n"
-                             "----DELIVERY CANCELLED---\n")  # and quit
-                except IOError as ose:
-                    sys.exit(f"Could not delete directory {temp_dir}: "
-                             f"{ose}\n\n ----DELIVERY CANCELLED---\n")
-
-                    return False, ()
-            else:
-                pass  # create log file here
-
-    return True, dirs
+# IO FUNCTIONS ################################################# IO FUNCTIONS #
 
 
-def config_logger(logger, filename: str, file: bool = False,
+def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
                   file_setlevel=logging.WARNING, fh_format: str = "",
                   stream: bool = False, stream_setlevel=logging.WARNING,
                   sh_format: str = ""):
@@ -120,27 +74,6 @@ def get_root_path(file: Path, path_base: str = None):
         return Path(*fileparts[start_ind:-1])
     else:
         return Path("")
-
-
-def timestamp() -> (str):
-    '''Gets the current time. Formats timestamp.
-
-    Returns:
-        str:    Timestamp in format 'YY-MM-DD_HH-MM-SS'
-
-    '''
-
-    now = datetime.datetime.now()
-    timestamp = ""
-
-    for t in (now.year, "-", now.month, "-", now.day, " ",
-              now.hour, ":", now.minute, ":", now.second):
-        if len(str(t)) == 1 and isinstance(t, int):
-            timestamp += f"0{t}"
-        else:
-            timestamp += f"{t}"
-
-    return timestamp.replace(" ", "_").replace(":", "-")
 
 # CRYPTO ############################################################# CRYPTO #
 
@@ -217,3 +150,19 @@ def prep_upload(file: Path, filedir: Path = Path(""),
     e_size = outfile.stat().st_size  # Encrypted size in bytes
 
     return file, o_size, outfile, e_size, compressed
+
+# CONFIG ############################################################# CONFIG #
+
+
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
+LOG = config_logger(
+    logger=LOG, filename=LOG_FILE,
+    file=True, file_setlevel=logging.DEBUG,
+    fh_format="%(asctime)s::%(levelname)s::" +
+    "%(name)s::%(lineno)d::%(message)s",
+    stream=True, stream_setlevel=logging.DEBUG,
+    sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
+    "%(lineno)d::%(message)s"
+)
+LOG.debug("5. debug")

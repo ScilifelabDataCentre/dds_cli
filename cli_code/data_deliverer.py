@@ -9,15 +9,18 @@ import logging
 
 from cli_code.crypt4gh.crypt4gh import lib
 
+from cli_code import DIRS, LOG_FILE
 from cli_code.exceptions_ds import DeliveryOptionException, \
     DeliverySystemException, CouchDBException, S3Error
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
-from cli_code.file_handler import create_directories, config_logger as cl
+from cli_code.file_handler import config_logger
 
 # CONFIG ############################################################# CONFIG #
 
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 # DATA DELIVERER ############################################# DATA DELIVERER #
 
@@ -103,17 +106,13 @@ class DataDeliverer():
                                           "Delivery cancelled.")
 
         if self.data is not None:
-            dirs_created, self.tempdir = create_directories()
-            if not dirs_created:
-                raise OSError("Temporary directory could not be created. "
-                              "Unable to continue delivery. Aborting. ")
-
+            self.tempdir = DIRS
+            
             # Initialize logger
-            self.logfile = str(self.tempdir.logs / Path("ds.log"))
+            self.logfile = LOG_FILE
             self.logger = logging.getLogger(__name__)
             self.logger.setLevel(logging.DEBUG)
-            # self.logfile = self.config_logger()
-            self.logger = cl(
+            self.logger = config_logger(
                 logger=self.logger, filename=self.logfile,
                 file=True, file_setlevel=logging.DEBUG,
                 fh_format="%(asctime)s::%(levelname)s::" +
@@ -122,8 +121,7 @@ class DataDeliverer():
                 sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
                 "%(lineno)d::%(message)s"
             )
-
-            self.logger.debug("testing")
+            self.logger.debug("3. debug")
 
             self.s3.get_info(self.project_id)
 
@@ -375,37 +373,6 @@ class DataDeliverer():
                     "Incorrect data owner! You do not have access to this "
                     "project. Cancelling delivery."
                 )
-
-    def config_logger(self):
-        '''Creates log file '''
-
-        logfile = str(self.tempdir.logs / Path("ds.log"))
-
-        # Define handlers
-        file_handler = logging.FileHandler(filename=logfile)  # save to file
-        stream_handler = logging.StreamHandler()  # display in console
-
-        # Set levels
-        file_handler.setLevel('DEBUG')
-        stream_handler.setLevel('DEBUG')
-
-        # Define formats
-        fh_formatter = logging.Formatter(
-            "%(asctime)s::%(levelname)s::%(name)s::%(lineno)d::%(message)s"
-        )
-        sh_formatter = logging.Formatter(
-            "%(levelname)s::%(name)s::%(lineno)d::%(message)s"
-        )
-
-        # Set formats
-        file_handler.setFormatter(fh_formatter)
-        stream_handler.setFormatter(sh_formatter)
-
-        # Add handlers to logger
-        self.logger.addHandler(file_handler)
-        self.logger.addHandler(stream_handler)
-
-        return logfile
 
     def data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list

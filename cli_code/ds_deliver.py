@@ -14,6 +14,7 @@ import os
 import click
 from cli_code.crypt4gh.crypt4gh import lib, header, keys
 
+from cli_code import LOG_FILE
 from cli_code.data_deliverer import DataDeliverer, finish_download
 from cli_code.crypto_ds import Crypt4GHKey
 from cli_code.database_connector import DatabaseConnector
@@ -30,29 +31,14 @@ LOG.setLevel(logging.DEBUG)
 def config_logger(logfile: str):
     '''Creates log file '''
 
-    # Define handlers
-    file_handler = logging.FileHandler(filename=logfile)  # save to file
-    stream_handler = logging.StreamHandler()  # display in console
+    return fh.config_logger(logger=LOG, filename=logfile,
+                            file=True, file_setlevel=logging.DEBUG,
+                            fh_format="%(asctime)s::%(levelname)s::" +
+                            "%(name)s::%(lineno)d::%(message)s",
+                            stream=True, stream_setlevel=logging.DEBUG,
+                            sh_format="%(asctime)s::%(levelname)s::" +
+                            "%(name)s::%(lineno)d::%(message)s")
 
-    # Set levels
-    file_handler.setLevel('DEBUG')
-    stream_handler.setLevel('DEBUG')
-
-    # Define formats
-    fh_formatter = logging.Formatter(
-        "%(asctime)s::%(levelname)s::%(name)s::%(lineno)d::%(message)s"
-    )
-    sh_formatter = logging.Formatter(
-        "%(levelname)s::%(name)s::%(lineno)d::%(message)s"
-    )
-
-    # Set formats
-    file_handler.setFormatter(fh_formatter)
-    stream_handler.setFormatter(sh_formatter)
-
-    # Add handlers to logger
-    LOG.addHandler(file_handler)
-    LOG.addHandler(stream_handler)
 
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
 
@@ -112,15 +98,8 @@ def put(config: str, username: str, password: str, project: str,
                        pathfile=pathfile, data=data) as delivery:
 
         # Setup logging
-        # config_logger(logfile=delivery.logfile)
-        logger = fh.config_logger(logger=LOG, filename=delivery.logfile,
-                                  file=True, file_setlevel=logging.DEBUG,
-                                  fh_format="%(asctime)s::%(levelname)s::" +
-                                  "%(name)s::%(lineno)d::%(message)s",
-                                  stream=True, stream_setlevel=logging.DEBUG,
-                                  sh_format="%(asctime)s::%(levelname)s::" +
-                                  "%(name)s::%(lineno)d::%(message)s")
-        logger.debug("här")
+        CLI_LOGGER = config_logger(LOG_FILE)
+        CLI_LOGGER.debug("1. debug")
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:

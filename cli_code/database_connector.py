@@ -1,5 +1,23 @@
 import couchdb
+import logging
 import traceback
+
+from cli_code import LOG_FILE
+from cli_code.file_handler import config_logger
+
+DB_LOG = logging.getLogger(__name__)
+DB_LOG.setLevel(logging.DEBUG)
+
+DB_LOG = config_logger(
+    logger=DB_LOG, filename=LOG_FILE,
+    file=True, file_setlevel=logging.DEBUG,
+    fh_format="%(asctime)s::%(levelname)s::" +
+    "%(name)s::%(lineno)d::%(message)s",
+    stream=True, stream_setlevel=logging.DEBUG,
+    sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
+    "%(lineno)d::%(message)s"
+)
+DB_LOG.debug("4. debug")
 
 
 class DatabaseConnector():
@@ -23,7 +41,7 @@ class DatabaseConnector():
 
         if self.db_name not in self.conn:
             raise CouchDBException(f"The database {self.db_name} does "
-                                    "not exist in the couchDB instance.")
+                                   "not exist in the couchDB instance.")
         return self.conn[self.db_name]
 
     def __exit__(self, exc_type, exc_value, tb):

@@ -14,7 +14,7 @@ DB_LOG = config_logger(
     fh_format="%(asctime)s::%(levelname)s::" +
     "%(name)s::%(lineno)d::%(message)s",
     stream=True, stream_setlevel=logging.DEBUG,
-    sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
+    sh_format="%(levelname)s::%(name)s::" +
     "%(lineno)d::%(message)s"
 )
 DB_LOG.debug("4. debug")

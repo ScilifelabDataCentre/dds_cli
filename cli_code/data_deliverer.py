@@ -107,7 +107,7 @@ class DataDeliverer():
 
         if self.data is not None:
             self.tempdir = DIRS
-            
+
             # Initialize logger
             self.logfile = LOG_FILE
             self.logger = logging.getLogger(__name__)
@@ -118,12 +118,21 @@ class DataDeliverer():
                 fh_format="%(asctime)s::%(levelname)s::" +
                 "%(name)s::%(lineno)d::%(message)s",
                 stream=True, stream_setlevel=logging.DEBUG,
-                sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
+                sh_format="%(levelname)s::%(name)s::" +
                 "%(lineno)d::%(message)s"
             )
-            self.logger.debug("3. debug")
+            self.logger.debug(f"-- Login successful -- \n"
+                              f"\t\tmethod: {self.method}, \n"
+                              f"\t\tusername: {self.user.username}, \n"
+                              f"\t\tpassword: {self.user.password}, \n"
+                              f"\t\tproject ID: {self.project_id}, \n"
+                              f"\t\tproject owner: {self.project_owner}, \n"
+                              f"\t\tdata: {self.data} \n")
 
             self.s3.get_info(self.project_id)
+            self.logger.debug(f"S3 info: {self.s3.get_info}")
+
+            self.logger.info("Delivery initialization successful.")
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.

@@ -36,8 +36,8 @@ def config_logger(logfile: str):
                             fh_format="%(asctime)s::%(levelname)s::" +
                             "%(name)s::%(lineno)d::%(message)s",
                             stream=True, stream_setlevel=logging.DEBUG,
-                            sh_format="%(asctime)s::%(levelname)s::" +
-                            "%(name)s::%(lineno)d::%(message)s")
+                            sh_format="%(levelname)s::%(name)s::" +
+                            "%(lineno)d::%(message)s")
 
 
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
@@ -99,15 +99,21 @@ def put(config: str, username: str, password: str, project: str,
 
         # Setup logging
         CLI_LOGGER = config_logger(LOG_FILE)
-        CLI_LOGGER.debug("1. debug")
+
+        CLI_LOGGER.info(f"Number of files to upload: {len(delivery.data)}")
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
+            CLI_LOGGER.debug("Started ProcessPoolExecutor...")
+
             pools = []                  # Ongoing pool operations
             for path in delivery.data:  # Iterate through all files
+                CLI_LOGGER.debug(f"Beginning delivery of {path}")
+
                 if not delivery.data[path]:
-                    raise OSError(f"Path type {path} not identified."
-                                  "Have you entered the correct path?")
+                    CLI_LOGGER.exception(f"Path type {path} not identified."
+                                         "Have you entered the correct path?")
+                    continue    # Move on to next file
 
                 # All subfolders from entered directory to file
                 directory_path = fh.get_root_path(

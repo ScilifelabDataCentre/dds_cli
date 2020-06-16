@@ -14,13 +14,9 @@ from nacl.bindings import (crypto_kx_client_session_keys,
                            crypto_kx_server_session_keys,
                            crypto_aead_chacha20poly1305_ietf_encrypt,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
-from nacl.exceptions import CryptoError
 from nacl.public import PrivateKey
 
-# from cli_code.crypt4gh_altered.crypt4gh import lib, header
-# import cli_code.crypt4gh_altered.crypt4gh.keys.c4gh as keys
-# from cli_code.crypt4gh_altered.crypt4gh.keys.c4gh import MAGIC_WORD, parse_private_key
-from cli_code.crypt4gh.crypt4gh import lib, header, keys
+from cli_code.crypt4gh.crypt4gh import lib
 from cli_code.exceptions_ds import HashException, EncryptionError
 from cli_code import LOG_FILE
 from cli_code.file_handler import config_logger
@@ -40,7 +36,7 @@ CRYPTO_LOG = config_logger(
     fh_format="%(asctime)s::%(levelname)s::" +
     "%(name)s::%(lineno)d::%(message)s",
     stream=True, stream_setlevel=logging.DEBUG,
-    sh_format="%(asctime)s::%(levelname)s::%(name)s::" +
+    sh_format="%(levelname)s::%(name)s::" +
     "%(lineno)d::%(message)s"
 )
 CRYPTO_LOG.debug("2. debug")

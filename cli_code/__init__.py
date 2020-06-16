@@ -8,5 +8,7 @@ __license__ = 'MIT'
 
 PROG = 'ds_deliver'
 
+LOG = logging.getLogger(__name__)
+
 VERSION = 1
 SEGMENT_SIZE = 65536

@@ -1,5 +1,5 @@
 """
-Command line interface for Data Delivery Portal
+Command line interface for Data Delivery System
 """
 
 # IMPORTS ########################################################### IMPORTS #
@@ -22,27 +22,6 @@ import cli_code.file_handler as fh
 from cli_code.s3_connector import S3Connector
 
 # CONFIG ############################################################# CONFIG #
-
-logger = logging.getLogger(__name__)  # Track the package/module hierarchy
-logger.setLevel(logging.DEBUG)        # Root logger has DEBUG as level
-
-# Save logs to file
-file_handler = logging.FileHandler('test.log')
-file_handler.setLevel(logging.DEBUG)
-
-fh_formatter = logging.Formatter("%(asctime)s::%(levelname)s::%(name)s::"
-                                 "%(filename)s::%(lineno)d::%(message)s")
-file_handler.setFormatter(fh_formatter)
-
-# Display logs in console
-stream_handler = logging.StreamHandler()
-sh_formatter = logging.Formatter("%(asctime)s::%(levelname)s::%(name)s::"
-                                 "%(filename)s::%(lineno)d::%(message)s")
-stream_handler.setFormatter(sh_formatter)
-
-# Add handlers to logger
-logger.addHandler(file_handler)
-logger.addHandler(stream_handler)
 
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
 
@@ -100,7 +79,7 @@ def put(config: str, username: str, password: str, project: str,
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
                        pathfile=pathfile, data=data) as delivery:
-
+        
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_exec:
             pools = []                  # Ongoing pool operations

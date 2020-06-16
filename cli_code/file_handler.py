@@ -11,6 +11,7 @@ import os
 import shutil
 import datetime
 import collections
+import logging
 from pathlib import Path
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
@@ -67,6 +68,46 @@ def create_directories():
                 pass  # create log file here
 
     return True, dirs
+
+
+def config_logger(logger, filename: str, file: bool = False,
+                  file_setlevel=logging.WARNING, file_time: bool = False,
+                  file_level: bool = False, file_name: bool = False,
+                  file_lineno: bool = False, stream: bool = False,
+                  stream_setlevel=logging.WARNING, stream_time: bool = False,
+                  stream_level: bool = False, stream_name: bool = False,
+                  stream_lineno: bool = False):
+    '''Creates log file '''
+
+    # Save logs to file
+    if file:
+        file_handler = logging.FileHandler(filename=filename)
+        file_handler.setLevel(file_setlevel)
+        fh_formatter = logging.Formatter(
+            f"{'%(asctime)s::' if file_time else ''}" +
+            f"{'%(levelname)s::' if file_level else ''}" +
+            f"{'%(name)s::' if file_name else ''}" +
+            f"{'%(lineno)d::' if file_lineno else ''}" +
+            "%(message)s"
+        )
+        file_handler.setFormatter(fh_formatter)
+        logger.addHandler(file_handler)
+
+    # Display logs in console
+    if stream:
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(stream_setlevel)
+        sh_formatter = logging.Formatter(
+            f"{'%(asctime)s::' if stream_time else ''}" +
+            f"{'%(levelname)s::' if stream_level else ''}" +
+            f"{'%(name)s::' if stream_name else ''}" +
+            f"{'%(lineno)d::' if stream_lineno else ''}" +
+            "%(message)s"
+        )
+        stream_handler.setFormatter(sh_formatter)
+        logger.addHandler(stream_handler)
+
+    return logger
 
 
 def update_dir(old_dir, new_dir):

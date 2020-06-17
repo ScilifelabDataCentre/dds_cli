@@ -10,6 +10,7 @@ import logging.config
 from pathlib import Path
 import sys
 import os
+import itertools
 
 import click
 from cli_code.crypt4gh.crypt4gh import lib, header, keys
@@ -25,7 +26,7 @@ from cli_code.s3_connector import S3Connector
 # CONFIG ############################################################# CONFIG #
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
+LOG.setLevel(logging.FATAL)
 
 
 def config_logger(logfile: str):

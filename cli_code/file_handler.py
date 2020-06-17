@@ -130,24 +130,38 @@ def prep_upload(file: Path, filedir: Path = Path(""),
                 bucket_path: Path = Path(""), chunk_size: int = 65536):
     '''Prepares the files for upload'''
 
+    LOG.debug(f"Processing {file}, filedir: {filedir}, "
+              f"bucket_path: {bucket_path}, chunk_size: {chunk_size}")
+
     proc_suff = ""  # Suffix after file processed
     key = os.urandom(32)
 
+    LOG.debug(f"Data encryption key: {key}")
+
     # Original file size
     if not isinstance(file, Path):
+        LOG.exception(f"Wrong format! {file} is not a 'Path' object.")
         return file, 0, "Error", "The file is not a Path", None
 
     if not file.exists():
+        LOG.exception(f"The file {file} does not exist!")
         return file, 0, "Error", "The file does not exist", None
 
     o_size = file.stat().st_size  # Original size in bytes
+    LOG.info(f"Original file size: {o_size} ({file})")
 
     # Check if compressed and save algorithm info if yes
     compressed = False
-    if compressed:
+    if not compressed:
         proc_suff += ".zstd"
+        LOG.debug(f"File {file.name} not compressed. "
+                  f"New file suffix: {proc_suff}")
     proc_suff += ".ccp"
+    LOG.debug(f"New file suffix: {proc_suff}")
+
     outfile = filedir / Path(file.name + proc_suff)
+    LOG.debug(f"Processed file will be saved in location: {outfile}")
+
     # Read file
     try:
         original_umask = os.umask(0)
@@ -161,14 +175,17 @@ def prep_upload(file: Path, filedir: Path = Path(""),
                     of.write(nonce)
                     of.write(ciphertext)
     except Exception as ee:  # FIX EXCEPTION
+        LOG.exception(f"Processig failed! {ee}")
         return file, o_size, "Error", ee, False
     else:
+        LOG.info(f"Compression of {file} -- completed!")
         compressed = True
     finally:
         os.umask(original_umask)
 
     # Check encrypted file size
     e_size = outfile.stat().st_size  # Encrypted size in bytes
+    LOG.info(f"Encrypted file size: {e_size} ({outfile})")
 
     return file, o_size, outfile, e_size, compressed
 

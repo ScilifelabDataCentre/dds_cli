@@ -161,8 +161,15 @@ def put(config: str, username: str, password: str, project: str,
                     encrypted_file = f.result()[2]
                     e_size = f.result()[3]  # Encrypted file size
                     compressed = f.result()[4]  # Boolean
+                    CLI_LOGGER.debug("Completed future---"
+                                     f"Original file: {original_file}"
+                                     f"-- size: {o_size}, "
+                                     f"Encrypted file: {encrypted_file}"
+                                     f"-- size: {e_size}, "
+                                     f"Compressed? {compressed}")
 
                     if encrypted_file == "Error":
+                        CLI_LOGGER.exception(f"Encryption failed! -- {e_size}")
                         # If the encryption failed, the e_size is an exception
                         delivery.data[original_file]["Error"] = e_size
                     else:
@@ -173,6 +180,9 @@ def put(config: str, username: str, password: str, project: str,
                              "encrypted_size": e_size,
                              "hash": "haven't fixed this yet"}
                         )
+                        CLI_LOGGER.debug("Updated data dictionary! \n"
+                                         f"{original_file}: "
+                                         f"{delivery.data[original_file]}")
 
                     # begin upload
                     t_future = thread_exec.submit(

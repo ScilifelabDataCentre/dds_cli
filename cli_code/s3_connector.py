@@ -98,14 +98,17 @@ class S3Connector():
         '''
         # If extension --> file, if not --> folder (?)
         folder = (len(key.split(os.extsep)) == 1)
+        S3_LOG.debug(f"{key} -- folder? -- {folder}, should be false for put")
 
         if folder:
             if not key.endswith(os.path.sep):  # path is a folder
                 key += os.path.sep
+                S3_LOG.debug(f"Folder to search for in bucket: {key}")
 
         object_summary_iterator = self.bucket.objects.filter(Prefix=key)
 
         for x in object_summary_iterator:
+            S3_LOG.info(f"{key} exists in bucket")
             return True
         return False
 

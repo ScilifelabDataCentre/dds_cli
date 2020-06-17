@@ -14,7 +14,7 @@ import os
 import click
 from cli_code.crypt4gh.crypt4gh import lib, header, keys
 
-from cli_code import LOG_FILE
+from cli_code import LOG_FILE, timestamp
 from cli_code.data_deliverer import DataDeliverer, finish_download
 from cli_code.crypto_ds import Crypt4GHKey
 from cli_code.database_connector import DatabaseConnector
@@ -120,11 +120,13 @@ def put(config: str, username: str, password: str, project: str,
                     file=path,
                     path_base=delivery.data[path]['path_base']
                 )
+                CLI_LOGGER.debug(f"{path} -- directory path: {directory_path}")
 
                 # Check if file exists in bucket already
                 exists = delivery.s3.file_exists_in_bucket(
                     str(directory_path / Path(path.name)))
                 if exists:
+                    CLI_LOGGER.warning(f"{path.name} already exists in bucket")
                     delivery.data[path].update({"Error": "Exists"})
                     continue  # moves on to next file
 
@@ -133,6 +135,8 @@ def put(config: str, username: str, password: str, project: str,
                     delivery.tempdir.files,
                     directory_path
                 )
+                CLI_LOGGER.debug(f"File {path} will be processed and saved to"
+                                 f"{filedir}")
 
                 # Prepare files for upload incl hashing and encryption
                 p_future = pool_exec.submit(fh.prep_upload,
@@ -140,9 +144,12 @@ def put(config: str, username: str, password: str, project: str,
                                             filedir,
                                             directory_path)
 
+                CLI_LOGGER.info(f"Started processing {path}...")
                 # Add to pool list and update file info
                 pools.append(p_future)
                 delivery.data[path].update({"directory_path": directory_path})
+                CLI_LOGGER.debug(f"Updated data dictionary. "
+                                 f"{path}: {delivery.data[path]}")
 
             # Create multithreading pool
             with concurrent.futures.ThreadPoolExecutor() as thread_exec:
@@ -211,7 +218,7 @@ def put(config: str, username: str, password: str, project: str,
                             _project['files'][uploaded_file.name] = {"full_path": file_path,
                                                                      "size": original_file_.stat().st_size,
                                                                      "mime": "",
-                                                                     "date_uploaded": fh.timestamp(),
+                                                                     "date_uploaded": timestamp(),
                                                                      "checksum": delivery.data[original_file_]['hash']}
                             project_db.save(_project)
                         delivery.data[original_file_]["success"] = True

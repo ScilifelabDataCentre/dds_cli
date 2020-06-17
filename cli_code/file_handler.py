@@ -48,6 +48,23 @@ def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
 
     return logger
 
+# Set up logger #
+
+
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
+LOG = config_logger(
+    logger=LOG, filename=LOG_FILE,
+    file=True, file_setlevel=logging.DEBUG,
+    fh_format="%(asctime)s::%(levelname)s::" +
+    "%(name)s::%(lineno)d::%(message)s",
+    stream=True, stream_setlevel=logging.DEBUG,
+    sh_format="%(levelname)s::%(name)s::" +
+    "%(lineno)d::%(message)s"
+)
+
+# Set up logger #
+
 
 def update_dir(old_dir, new_dir):
     '''Update file directory and create folder'''
@@ -69,10 +86,14 @@ def get_root_path(file: Path, path_base: str = None):
     '''Gets the path to the file, from the entered folder. '''
 
     if path_base is not None:
+        LOG.info(f"path_base = {path_base} "
+                 "--> root path is from chosen folder.")
         fileparts = file.parts
         start_ind = fileparts.index(path_base)
         return Path(*fileparts[start_ind:-1])
     else:
+        LOG.info(f"path_base = {path_base} "
+                 "--> root path is . (user specified file)")
         return Path("")
 
 # CRYPTO ############################################################# CRYPTO #
@@ -152,17 +173,3 @@ def prep_upload(file: Path, filedir: Path = Path(""),
     return file, o_size, outfile, e_size, compressed
 
 # CONFIG ############################################################# CONFIG #
-
-
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
-LOG = config_logger(
-    logger=LOG, filename=LOG_FILE,
-    file=True, file_setlevel=logging.DEBUG,
-    fh_format="%(asctime)s::%(levelname)s::" +
-    "%(name)s::%(lineno)d::%(message)s",
-    stream=True, stream_setlevel=logging.DEBUG,
-    sh_format="%(levelname)s::%(name)s::" +
-    "%(lineno)d::%(message)s"
-)
-LOG.debug("5. debug")

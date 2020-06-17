@@ -1,4 +1,4 @@
-# IMPORTS 
+# IMPORTS
 
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt imporat Scrypt
@@ -132,8 +132,8 @@ def generate_header(own_private_key, remote_public_key):
 
 # CHUNK ENCRYPTION
 def _encrypt_segment(data, process, cipher):
-    """Utility function to generate a nonce, 
-    encrypt data with Chacha20, 
+    """Utility function to generate a nonce,
+    encrypt data with Chacha20,
     and authenticate it with Poly1305."""
 
     try:
@@ -167,7 +167,7 @@ def try_decryption(encrypted_file: str, keypair: tuple):
     return hash_decrypted
 
 
-# CHUNK COMPRESSION 
+# CHUNK COMPRESSION
 def compress_chunk(original_chunk):
     """Compress individual chunks read in a streamed fashion"""
 
@@ -182,7 +182,7 @@ def decompress_chunk(compressed_chunk):
     """Performs gzip compression and streams compressed chunk"""
 
     yield gzip.decompress(compressed_chunk)
-	
+
 
 # COMPRESSION -- PROCESS_FILE
 hash_original = ""                      # Original file hash
@@ -1318,3 +1318,18 @@ def compression_dict() -> (dict):
         #             sys.exit(f"Could not create folder {filedir}: {ioe}")
         #         finally:
         #             os.umask(original_umask)
+
+
+# checking if file is path and logging exception
+if not delivery.data[path]:
+                    CLI_LOGGER.exception(f"Path type {path} not identified."
+                                         "Have you entered the correct path?")
+                    continue    # Move on to next file
+
+# Directory path 
+# All subfolders from entered directory to file
+                directory_path = fh.get_root_path(
+                    file=path,
+                    path_base=delivery.data[path]['path_base']
+                )
+                CLI_LOGGER.debug(f"{path} -- directory path: {directory_path}")

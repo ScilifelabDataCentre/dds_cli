@@ -15,7 +15,7 @@ from cli_code.exceptions_ds import DeliveryOptionException, \
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
-from cli_code.file_handler import config_logger
+from cli_code.file_handler import config_logger, get_root_path
 
 # CONFIG ############################################################# CONFIG #
 
@@ -418,15 +418,26 @@ class DataDeliverer():
             if Path(d).exists():
                 curr_path = Path(d).resolve()
                 if curr_path.is_file():  # Save file info to dict
-                    all_files[curr_path] = {"file": True,
-                                            "directory": False,
-                                            "path_base": None}
+                    all_files[curr_path] = \
+                        {"file": True,
+                         "directory": False,
+                         "path_base": None,
+                         "directory_path": get_root_path(file=curr_path,
+                                                         path_base=None)}
                 elif curr_path.is_dir():  # Get info on files in folder
-                    all_files.update({f: {"file": True,
-                                          "directory": False,
-                                          "path_base": curr_path.name} for f
-                                      in curr_path.glob('**/*') if f.is_file()
-                                      and "DS_Store" not in str(f)})
+                    all_files.update(
+                        {f: {"file": True,
+                             "directory": False,
+                             "path_base": curr_path.name,
+                             "directory_path": get_root_path(
+                                 file=f,
+                                 path_base=curr_path.name
+                             )}
+                         for f in curr_path.glob('**/*')
+                         if f.is_file()
+                         and "DS_Store" not in str(f)}
+                    )
+
             else:
                 if self.method == "put":
                     all_files[d] = False

@@ -110,21 +110,11 @@ def put(config: str, username: str, password: str, project: str,
             for path in delivery.data:  # Iterate through all files
                 CLI_LOGGER.debug(f"Beginning delivery of {path}")
 
-                if not delivery.data[path]:
-                    CLI_LOGGER.exception(f"Path type {path} not identified."
-                                         "Have you entered the correct path?")
-                    continue    # Move on to next file
-
-                # All subfolders from entered directory to file
-                directory_path = fh.get_root_path(
-                    file=path,
-                    path_base=delivery.data[path]['path_base']
-                )
-                CLI_LOGGER.debug(f"{path} -- directory path: {directory_path}")
-
                 # Check if file exists in bucket already
                 exists = delivery.s3.file_exists_in_bucket(
-                    str(directory_path / Path(path.name)))
+                    str(delivery.data[path]['directory_path'] /
+                        Path(path.name))
+                )
                 if exists:
                     CLI_LOGGER.warning(f"{path.name} already exists in bucket")
                     delivery.data[path].update({"Error": "Exists"})
@@ -133,7 +123,7 @@ def put(config: str, username: str, password: str, project: str,
                 # Update where to save file
                 filedir = fh.update_dir(
                     delivery.tempdir.files,
-                    directory_path
+                    delivery.data[path]['directory_path']
                 )
                 CLI_LOGGER.debug(f"File {path} will be processed and saved to"
                                  f"{filedir}")
@@ -142,12 +132,11 @@ def put(config: str, username: str, password: str, project: str,
                 p_future = pool_exec.submit(fh.prep_upload,
                                             path,
                                             filedir,
-                                            directory_path)
+                                            delivery.data[path]['directory_path'])
 
                 CLI_LOGGER.info(f"Started processing {path}...")
                 # Add to pool list and update file info
                 pools.append(p_future)
-                delivery.data[path].update({"directory_path": directory_path})
                 CLI_LOGGER.debug(f"Updated data dictionary. "
                                  f"{path}: {delivery.data[path]}")
 

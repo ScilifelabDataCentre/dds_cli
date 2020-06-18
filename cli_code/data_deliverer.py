@@ -415,7 +415,7 @@ class DataDeliverer():
                     "please remove path dublicates."
                 )
 
-            if Path(d).exists():
+            if Path(d).exists():     # Should always be valid for put 
                 curr_path = Path(d).resolve()
                 if curr_path.is_file():  # Save file info to dict
                     all_files[curr_path] = \

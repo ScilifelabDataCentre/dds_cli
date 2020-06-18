@@ -26,7 +26,7 @@ from cli_code.s3_connector import S3Connector
 # CONFIG ############################################################# CONFIG #
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.FATAL)
+LOG.setLevel(logging.DEBUG)
 
 
 def config_logger(logfile: str):

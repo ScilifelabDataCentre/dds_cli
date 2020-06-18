@@ -96,7 +96,32 @@ def get_root_path(file: Path, path_base: str = None):
                  "--> root path is . (user specified file)")
         return Path("")
 
-# CRYPTO ############################################################# CRYPTO #
+# COMPRESSION ################################################### COMPRESSION #
+
+
+magic_dict = {
+    b'\x913HF': "hap",
+    b'ustar': "tar",
+    b'`\xea': "arj",
+    b"_\'\xa8\x89": "jar",
+    b'ZOO ': "zoo",
+    b'PK\x03\x04': "zip",
+    b'UFA\xc6\xd2\xc1': "ufa",
+    b'StuffIt ': "sit",
+    b'Rar!\x1a\x07\x00': "rar v4.x",
+    b'Rar!\x1a\x07\x01\x00': "rar v5",
+    b'MAr0\x00': "mar",
+    b'DMS!': "dms",
+    b'CRUSH v': "cru",
+    b'BZh': "bz2",
+    b'-lh': "lha",
+    b'(This fi': "hqx",
+    b'!\x12': "ain",
+    b'\x1a\x0b': "pak",
+    b'(\xb5/\xfd': "zst"
+}
+magic_dict
+max_len = max(len(x) for x in magic_dict)
 
 
 def compress_file(file: Path, chunk_size: int = 65536):
@@ -104,6 +129,22 @@ def compress_file(file: Path, chunk_size: int = 65536):
     with cctzx.stream_reader(file) as reader:
         for chunk in iter(lambda: reader.read(chunk_size), b''):
             yield chunk
+
+
+def is_compressed(file: Path):
+    '''Checks for file signatures in common compression formats'''
+
+    with file.open(mode='rb') as f:
+        file_start = f.read(max_len)
+        LOG.debug(f"file start: {file_start}, type: {type(file_start)}")
+        for magic, filetype in magic_dict.items():
+            LOG.debug(f"magic: {magic}, filetype: {filetype}")
+            if file_start.startswith(magic):
+                return True, filetype
+        
+    return False, ""
+
+# CRYPTO ############################################################# CRYPTO #
 
 
 def file_reader(file: Path, chunk_size: int = 65536):
@@ -151,7 +192,8 @@ def prep_upload(file: Path, filedir: Path = Path(""),
     LOG.info(f"Original file size: {o_size} ({file})")
 
     # Check if compressed and save algorithm info if yes
-    compressed = False
+    compressed, alg = is_compressed(file)
+    LOG.debug(f"{compressed}, {alg}")
     if not compressed:
         proc_suff += ".zstd"
         LOG.debug(f"File {file.name} not compressed. "

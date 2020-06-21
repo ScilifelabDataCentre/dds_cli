@@ -195,7 +195,7 @@ def prep_upload(file: Path, filedir: Path = Path(""),
     compressed, alg = is_compressed(file)
     LOG.debug(f"{compressed}, {alg}")
     if not compressed:
-        proc_suff += ".zstd"
+        proc_suff += f".zst"
         LOG.debug(f"File {file.name} not compressed. "
                   f"New file suffix: {proc_suff}")
     proc_suff += ".ccp"

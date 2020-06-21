@@ -182,7 +182,7 @@ def put(config: str, username: str, password: str, project: str,
                         original_file
                     )
                     CLI_LOGGER.debug(
-                        "Upload of {original_file} "
+                        f"Upload of {original_file} "
                         f"({delivery.data[original_file]['encrypted']})"
                         "started."
                     )

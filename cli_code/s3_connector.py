@@ -6,6 +6,8 @@ import logging
 
 import boto3
 from boto3.s3.transfer import TransferConfig
+import botocore
+
 
 from cli_code.exceptions_ds import *
 from cli_code import LOG_FILE
@@ -100,17 +102,28 @@ class S3Connector():
         folder = (len(key.split(os.extsep)) == 1)
         S3_LOG.debug(f"{key} -- folder? -- {folder}, should be false for put")
 
-        if folder:
-            if not key.endswith(os.path.sep):  # path is a folder
-                key += os.path.sep
+        if folder:  # path is a folder
+            if not key.endswith(os.path.sep):
+                key += os.path.sep  # add path ending
                 S3_LOG.debug(f"Folder to search for in bucket: {key}")
 
-        object_summary_iterator = self.bucket.objects.filter(Prefix=key)
-
-        for x in object_summary_iterator:
-            S3_LOG.info(f"{key} exists in bucket")
+        try:    # Check if file has been uploaded previously
+            self.resource.Object(
+                self.bucket.name, key   # swap to suff or full
+            ).load()    # Calls head_object() -- retrieves meta data for object
+        except botocore.exceptions.ClientError as e:
+            S3_LOG.debug(f"-------error: {e}")
+            if e.response['Error']['Code'] == "404":
+                S3_LOG.debug("The file doesn't exist")
+                return False
+            else:
+                error_message = f"Checking for file in S3 bucket failed! " \
+                    f"Error: {e}"
+                S3_LOG.warning(error_message)
+                return error_message
+        else:
+            S3_LOG.debug("The file already exists.")
             return True
-        return False
 
     def files_in_bucket(self, key: str):
         '''Checks if the current file already exists in the specified bucket.

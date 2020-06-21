@@ -415,24 +415,30 @@ class DataDeliverer():
                     "please remove path dublicates."
                 )
 
-            if Path(d).exists():     # Should always be valid for put 
+            if Path(d).exists():     # Should always be valid for put
                 curr_path = Path(d).resolve()
                 if curr_path.is_file():  # Save file info to dict
                     all_files[curr_path] = \
                         {"file": True,
                          "directory": False,
-                         "path_base": None,
-                         "directory_path": get_root_path(file=curr_path,
-                                                         path_base=None)}
+                         "path_base": None,     # Because file --> root
+                         "directory_path": get_root_path(
+                             file=curr_path,
+                             path_base=None),   # path in bucket & tempfolder
+                         "size": curr_path.stat().st_size, 
+                         "suffixes": curr_path.suffixes}
+                    print(f"{curr_path}: {all_files[curr_path]}")
                 elif curr_path.is_dir():  # Get info on files in folder
                     all_files.update(
                         {f: {"file": True,
                              "directory": False,
-                             "path_base": curr_path.name,
+                             "path_base": curr_path.name,  # --> folder
                              "directory_path": get_root_path(
                                  file=f,
                                  path_base=curr_path.name
-                             )}
+                             ),  # path in bucket & tempfolder
+                             "size": f.stat().st_size,
+                             "suffixes": f.suffixes}
                          for f in curr_path.glob('**/*')
                          if f.is_file()
                          and "DS_Store" not in str(f)}

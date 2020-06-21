@@ -100,7 +100,6 @@ def put(config: str, username: str, password: str, project: str,
 
         # Setup logging
         CLI_LOGGER = config_logger(LOG_FILE)
-
         CLI_LOGGER.info(f"Number of files to upload: {len(delivery.data)}")
 
         # Create multiprocess pool
@@ -130,10 +129,13 @@ def put(config: str, username: str, password: str, project: str,
                                  f"{filedir}")
 
                 # Prepare files for upload incl hashing and encryption
-                p_future = pool_exec.submit(fh.prep_upload,
-                                            path,
-                                            filedir,
-                                            delivery.data[path]['directory_path'])
+                p_future = pool_exec.submit(
+                    fh.prep_upload,
+                    path,
+                    delivery.data[path]['suffixes'],
+                    filedir,
+                    delivery.data[path]['directory_path']
+                )
 
                 CLI_LOGGER.info(f"Started processing {path}...")
                 # Add to pool list and update file info

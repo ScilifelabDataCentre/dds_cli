@@ -167,19 +167,14 @@ def aead_encrypt_chacha(gen, key):
 # PREP AND FINISH ########################################### PREP AND FINISH #
 
 
-def prep_upload(file: Path, filedir: Path = Path(""),
+def prep_upload(file: Path, suffixes: list, filedir: Path = Path(""),
                 bucket_path: Path = Path(""), chunk_size: int = 65536):
     '''Prepares the files for upload'''
 
     LOG.debug(f"Processing {file}, filedir: {filedir}, "
               f"bucket_path: {bucket_path}, chunk_size: {chunk_size}")
 
-    proc_suff = ""  # Suffix after file processed
-    key = os.urandom(32)
-
-    LOG.debug(f"Data encryption key: {key}")
-
-    # Original file size
+    # Checking for errors first
     if not isinstance(file, Path):
         LOG.exception(f"Wrong format! {file} is not a 'Path' object.")
         return file, 0, "Error", "The file is not a Path", None
@@ -188,8 +183,11 @@ def prep_upload(file: Path, filedir: Path = Path(""),
         LOG.exception(f"The file {file} does not exist!")
         return file, 0, "Error", "The file does not exist", None
 
-    o_size = file.stat().st_size  # Original size in bytes
-    LOG.info(f"Original file size: {o_size} ({file})")
+    proc_suff = "".join(suffixes)  # Suffix after file processed
+    LOG.debug(f"Original suffixes: {proc_suff}")
+
+    key = os.urandom(32)
+    LOG.debug(f"Data encryption key: {key}")
 
     # Check if compressed and save algorithm info if yes
     compressed, alg = is_compressed(file)
@@ -218,7 +216,7 @@ def prep_upload(file: Path, filedir: Path = Path(""),
                     of.write(ciphertext)
     except Exception as ee:  # FIX EXCEPTION
         LOG.exception(f"Processig failed! {ee}")
-        return file, o_size, "Error", ee, False
+        return file, "Error", ee, False
     else:
         LOG.info(f"Compression of {file} -- completed!")
         compressed = True
@@ -229,6 +227,6 @@ def prep_upload(file: Path, filedir: Path = Path(""),
     e_size = outfile.stat().st_size  # Encrypted size in bytes
     LOG.info(f"Encrypted file size: {e_size} ({outfile})")
 
-    return file, o_size, outfile, e_size, compressed
+    return file, outfile, e_size, compressed
 
 # CONFIG ############################################################# CONFIG #

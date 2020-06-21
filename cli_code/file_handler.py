@@ -18,8 +18,9 @@ from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
 from nacl.exceptions import CryptoError
+from bitstring import BitArray
 
-from cli_code import LOG_FILE
+from cli_code import LOG_FILE, MAX_CTR
 
 # IO FUNCTIONS ################################################# IO FUNCTIONS #
 
@@ -141,7 +142,7 @@ def is_compressed(file: Path):
             LOG.debug(f"magic: {magic}, filetype: {filetype}")
             if file_start.startswith(magic):
                 return True, filetype
-        
+
     return False, ""
 
 # CRYPTO ############################################################# CRYPTO #
@@ -183,8 +184,8 @@ def prep_upload(file: Path, suffixes: list, filedir: Path = Path(""),
         LOG.exception(f"The file {file} does not exist!")
         return file, 0, "Error", "The file does not exist", None
 
-    proc_suff = "".join(suffixes)  # Suffix after file processed
-    LOG.debug(f"Original suffixes: {proc_suff}")
+    proc_suff = ""  # Suffix after file processed
+    LOG.debug(f"Original suffixes: {''.join(suffixes)}")
 
     key = os.urandom(32)
     LOG.debug(f"Data encryption key: {key}")
@@ -193,10 +194,20 @@ def prep_upload(file: Path, suffixes: list, filedir: Path = Path(""),
     compressed, alg = is_compressed(file)
     LOG.debug(f"{compressed}, {alg}")
     if not compressed:
-        proc_suff += f".zst"
+        if alg in proc_suff:
+            LOG.warning(f"Extension {alg} present in file name, "
+                        "but there is no indication of the file "
+                        "being in a compressed format. Compressing the file"
+                        f"'{file}'.")
+        proc_suff += ".zst"
         LOG.debug(f"File {file.name} not compressed. "
                   f"New file suffix: {proc_suff}")
-    proc_suff += ".ccp"
+    elif compressed and alg not in proc_suff:
+        LOG.warning(f"Indications of the file '{file}' being in a compressed "
+                    f"format but extension {alg} not present in file "
+                    "extensions. Not compressing the file.")
+
+    proc_suff += ".ccp"     # chacha extension
     LOG.debug(f"New file suffix: {proc_suff}")
 
     outfile = filedir / Path(file.name + proc_suff)

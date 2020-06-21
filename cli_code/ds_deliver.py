@@ -149,13 +149,12 @@ def put(config: str, username: str, password: str, project: str,
                 # When the pools are finished
                 for f in concurrent.futures.as_completed(pools):
                     original_file = f.result()[0]
-                    o_size = f.result()[1]  # Original file size
-                    encrypted_file = f.result()[2]
-                    e_size = f.result()[3]  # Encrypted file size
-                    compressed = f.result()[4]  # Boolean
+                    encrypted_file = f.result()[1]
+                    e_size = f.result()[2]  # Encrypted file size
+                    compressed = f.result()[3]  # Boolean
                     CLI_LOGGER.debug("Completed pool future---"
                                      f"Original file: {original_file}"
-                                     f"-- size: {o_size}, "
+                                     f"-- size: {delivery.data[original_file]['size']}, "
                                      f"Encrypted file: {encrypted_file}"
                                      f"-- size: {e_size}, "
                                      f"Compressed? {compressed}")
@@ -166,7 +165,7 @@ def put(config: str, username: str, password: str, project: str,
                         delivery.data[original_file]["Error"] = e_size
                     else:
                         delivery.data[original_file].update(
-                            {"original_size": o_size,
+                            {"original_size": delivery.data[original_file]['size'],
                              "compressed": compressed,
                              "encrypted": encrypted_file,
                              "encrypted_size": e_size,

@@ -168,21 +168,44 @@ def aead_encrypt_chacha(gen, key):
 # PREP AND FINISH ########################################### PREP AND FINISH #
 
 
-def prep_upload(file: Path, suffixes: list, filedir: Path = Path(""),
-                bucket_path: Path = Path(""), chunk_size: int = 65536):
-    '''Prepares the files for upload'''
+def process_file(file: Path):
 
-    LOG.debug(f"Processing {file}, filedir: {filedir}, "
-              f"bucket_path: {bucket_path}, chunk_size: {chunk_size}")
-
+    LOG.debug(f"file: {file}")
     # Checking for errors first
     if not isinstance(file, Path):
         LOG.exception(f"Wrong format! {file} is not a 'Path' object.")
         return file, 0, "Error", "The file is not a Path", None
 
     if not file.exists():
-        LOG.exception(f"The file {file} does not exist!")
+        LOG.exception(f"The path {file} does not exist!")
         return file, 0, "Error", "The file does not exist", None
+
+    failure = False
+    if failure:
+        return False
+    else:
+        return True
+
+
+def process_folder(folder_contents: dict):
+
+    for file in folder_contents:
+        LOG.debug(file)
+        success = process_file(file)
+        LOG.debug(success)
+        if not success:
+            return "here the entire folder should be skipped."
+
+
+def prep_upload(path: Path, path_info: dict):
+    '''Prepares the files for upload'''
+
+    LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
+    if path_info['directory']:
+        process_folder(path_info['contents'])
+    elif path_info['file']:
+        process_file(path)
+    return
 
     proc_suff = ""  # Suffix after file processed
     LOG.debug(f"Original suffixes: {''.join(suffixes)}")

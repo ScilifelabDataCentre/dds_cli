@@ -418,35 +418,46 @@ class DataDeliverer():
             if Path(d).exists():     # Should always be valid for put
                 curr_path = Path(d).resolve()
                 if curr_path.is_file():  # Save file info to dict
+                    path_base = None
                     all_files[curr_path] = \
                         {"file": True,
                          "directory": False,
-                         "path_base": None,     # Because file --> root
+                         "contents": None,
+                         "path_base": path_base,
                          "directory_path": get_root_path(
                              file=curr_path,
-                             path_base=None),   # path in bucket & tempfolder
-                         "size": curr_path.stat().st_size, 
+                             path_base=path_base
+                         ),   # path in bucket & tempfolder
+                         "size": curr_path.stat().st_size,
                          "suffixes": curr_path.suffixes}
                     print(f"{curr_path}: {all_files[curr_path]}")
                 elif curr_path.is_dir():  # Get info on files in folder
-                    all_files.update(
-                        {f: {"file": True,
-                             "directory": False,
-                             "path_base": curr_path.name,  # --> folder
-                             "directory_path": get_root_path(
-                                 file=f,
-                                 path_base=curr_path.name
-                             ),  # path in bucket & tempfolder
-                             "size": f.stat().st_size,
-                             "suffixes": f.suffixes}
-                         for f in curr_path.glob('**/*')
-                         if f.is_file()
-                         and "DS_Store" not in str(f)}
-                    )
+                    path_base = curr_path.name
+                    all_files[curr_path] = \
+                        {
+                            "file": False,
+                            "directory": True,
+                            "contents": {f: {"file": True,
+                                             "directory": False,
+                                             "contents": None,
+                                             "path_base": path_base,
+                                             "directory_path": get_root_path(
+                                                 file=f,
+                                                 path_base=path_base
+                                             ),  # path in bucket & tempfolder
+                                             "size": f.stat().st_size,
+                                             "suffixes": f.suffixes}
+                                         for f in curr_path.glob('**/*')
+                                         if f.is_file()
+                                         and "DS_Store" not in str(f)}
+                    }
 
             else:
                 if self.method == "put":
-                    all_files[d] = False
+                    error_message = "Trying to deliver a non-existing " \
+                        f"file/folder: {d} -- Delivery not possible."
+                    LOG.fatal(error_message)
+                    all_files[d] = {"error": error_message}
                 elif self.method == "get":
                     all_files[d] = {}
                 else:

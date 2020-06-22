@@ -108,19 +108,10 @@ def put(config: str, username: str, password: str, project: str,
 
             pools = []                  # Ongoing pool operations
             for path in delivery.data:  # Iterate through all files
+
                 CLI_LOGGER.debug(f"Beginning delivery of {path}")
 
-                if path.is_file():
-                    proceed, compressed, algorithm, new_file = \
-                        delivery.do_file_checks(
-                            file=path, file_info=delivery.data[path]
-                        )
-                    if proceed:
-                        delivery.data[path].update({"compressed": compressed,
-                                                    "algorithm": algorithm,
-                                                    "new_file": new_file})
-                elif path.is_dir():
-                    proceed = delivery.get_content_info(folder=path)
+                proceed = delivery.get_content_info(item=path)
 
                 if not proceed:
                     CLI_LOGGER.warning("One or more of the file/directory "
@@ -142,28 +133,11 @@ def put(config: str, username: str, password: str, project: str,
                     delivery.tempdir.files
                 )
 
-                # # Update where to save file
-                # filedir = fh.update_dir(
-                #     delivery.tempdir.files,
-                #     delivery.data[path]['directory_path']
-                # )
-                # CLI_LOGGER.debug(f"File {path} will be processed and saved to"
-                #                  f"{filedir}")
-
-                # # Prepare files for upload incl hashing and encryption
-                # p_future = pool_exec.submit(
-                #     fh.prep_upload,
-                #     path,
-                #     delivery.data[path]['suffixes'],
-                #     filedir,
-                #     delivery.data[path]['directory_path']
-                # )
-
-                # CLI_LOGGER.info(f"Started processing {path}...")
+                CLI_LOGGER.info(f"Started processing {path}...")
                 # # Add to pool list and update file info
                 pools.append(p_future)
-                # CLI_LOGGER.debug(f"Updated data dictionary. "
-                #                  f"{path}: {delivery.data[path]}")
+                CLI_LOGGER.debug(f"Updated data dictionary. "
+                                 f"{path}: {delivery.data[path]}")
 
             for f in concurrent.futures.as_completed(pools):
                 print(f.result())

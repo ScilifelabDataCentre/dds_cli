@@ -186,6 +186,9 @@ def process_file(file: Path, file_info: dict, filedir):
     outfile = filedir / file_info['new_file']
     LOG.debug(f"Processed file will be saved in location: {outfile}")
 
+    new_dir = filedir / file_info['directory_path']
+    if not new_dir.exists():
+        new_dir.mkdir(parents=True)
     # Read file
     try:
         original_umask = os.umask(0)
@@ -195,6 +198,7 @@ def process_file(file: Path, file_info: dict, filedir):
             chunk_stream = file_reader(f) if file_info['compressed'] \
                 else compress_file(f)
             # Encrypt
+            LOG.debug(type(outfile))
             with outfile.open(mode='ab+') as of:
                 for nonce, ciphertext in aead_encrypt_chacha(chunk_stream, key):
                     of.write(nonce)

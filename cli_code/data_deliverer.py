@@ -16,7 +16,7 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import config_logger, get_root_path, \
-    process_file, process_folder, is_compressed
+    process_file, process_folder, is_compressed, update_dir
 
 # CONFIG ############################################################# CONFIG #
 
@@ -514,34 +514,61 @@ class DataDeliverer():
                     f"{file.name} already exists in bucket")
                 proceed = False
 
+        # filedir = update_dir(
+        #     self.tempdir.files,
+        #     file_info['directory_path']
+        # )
+        # self.logger.debug(f"filedir : {filedir}")
         return proceed, compressed, alg, bucketfilename
 
-    def get_content_info(self, folder):
+    def get_content_info(self, item):
 
-        self.logger.debug(f"folder: {folder}")
-        folder_file_info = {}
+        proceed = False
 
-        # Check if compressed archive first
+        self.logger.debug(f"item: {item}")
 
-        # if not compressed archive check files
-        for file in self.data[folder]['contents']:
+        if item.is_file():
             proceed, compressed, algorithm, new_file = \
                 self.do_file_checks(
-                    file=file,
-                    file_info=self.data[folder]['contents'][file]
+                    file=item, file_info=self.data[item]
                 )
+            self.logger.debug(f"proceed: {proceed}, \n"
+                              f"compressed: {compressed}, \n"
+                              f"algorithm: {algorithm}, \n"
+                              f"new_file: {new_file} \n")
             if proceed:
-                folder_file_info[file] = {"compressed": compressed,
-                                          "algorithm": algorithm,
-                                          "new_file": new_file}
-            else:
-                return False
+                self.data[item].update({"compressed": compressed,
+                                        "algorithm": algorithm,
+                                        "new_file": new_file})
 
-        for file in self.data[folder]['contents']:
-            self.data[folder]['contents'][file].update(
-                folder_file_info[file]
-            )
-        return True
+        elif item.is_dir():
+            folder_file_info = {}
+
+            # Check if compressed archive first
+            '''here'''
+
+            # if not compressed archive check files
+            for file in self.data[item]['contents']:
+                proceed, compressed, algorithm, new_file = \
+                    self.do_file_checks(
+                        file=file,
+                        file_info=self.data[item]['contents'][file]
+                    )
+                if proceed:
+                    folder_file_info[file] = {"compressed": compressed,
+                                              "algorithm": algorithm,
+                                              "new_file": new_file}
+                else:
+                    return proceed
+
+            for file in self.data[item]['contents']:
+                self.data[item]['contents'][file].update(
+                    folder_file_info[file]
+                )
+
+        self.data[item].update({"error": "Exists"})
+
+        return proceed
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""

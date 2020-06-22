@@ -168,7 +168,7 @@ def aead_encrypt_chacha(gen, key):
 # PREP AND FINISH ########################################### PREP AND FINISH #
 
 
-def process_file(file: Path):
+def process_file(file: Path, file_info: dict):
 
     LOG.debug(f"file: {file}")
     # Checking for errors first
@@ -179,33 +179,6 @@ def process_file(file: Path):
     if not file.exists():
         LOG.exception(f"The path {file} does not exist!")
         return file, 0, "Error", "The file does not exist", None
-
-    failure = False
-    if failure:
-        return False
-    else:
-        return True
-
-
-def process_folder(folder_contents: dict):
-
-    for file in folder_contents:
-        LOG.debug(file)
-        success = process_file(file)
-        LOG.debug(success)
-        if not success:
-            return "here the entire folder should be skipped."
-
-
-def prep_upload(path: Path, path_info: dict):
-    '''Prepares the files for upload'''
-
-    LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
-    if path_info['directory']:
-        process_folder(path_info['contents'])
-    elif path_info['file']:
-        process_file(path)
-    return
 
     proc_suff = ""  # Suffix after file processed
     LOG.debug(f"Original suffixes: {''.join(suffixes)}")
@@ -263,4 +236,27 @@ def prep_upload(path: Path, path_info: dict):
 
     return file, outfile, e_size, compressed
 
-# CONFIG ############################################################# CONFIG #
+
+def process_folder(folder_contents: dict):
+
+    for file in folder_contents:
+        LOG.debug(file)
+        success = process_file(file)
+        LOG.debug(success)
+        if not success:
+            return "here the entire folder should be skipped."
+
+    return
+
+
+def prep_upload(path: Path, path_info: dict, s3_info):
+    '''Prepares the files for upload'''
+
+    LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
+
+    # if path_info['directory']:
+    #     process_info = process_folder(path_info['contents'])
+    # elif path_info['file']:
+    #     process_info = process_file(path, path_info)
+
+    # return process_info

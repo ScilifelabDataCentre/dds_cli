@@ -110,21 +110,26 @@ def put(config: str, username: str, password: str, project: str,
             for path in delivery.data:  # Iterate through all files
                 CLI_LOGGER.debug(f"Beginning delivery of {path}")
 
+                with S3Connector(bucketname=delivery.bucketname,
+                                 project=delivery.s3project) as s3:
+                    # Check if file exists in bucket already
+                    exists = s3.file_exists_in_bucket(
+                        path
+                    )
+                    if exists:
+                        CLI_LOGGER.warning(
+                            f"{path.name} already exists in bucket")
+                        delivery.data[path].update({"Error": "Exists"})
+                        # continue  # moves on to next file
+
+                continue
+
                 p_future = pool_executor.submit(
                     fh.prep_upload,
                     path,
-                    delivery.data[path]
+                    delivery.data[path],
+                    [delivery.bucketname, delivery.s3project]
                 )
-
-                # # Check if file exists in bucket already
-                # exists = delivery.s3.file_exists_in_bucket(
-                #     str(delivery.data[path]['directory_path'] /
-                #         Path(path.name))
-                # )
-                # if exists:
-                #     CLI_LOGGER.warning(f"{path.name} already exists in bucket")
-                #     delivery.data[path].update({"Error": "Exists"})
-                #     continue  # moves on to next file
 
                 # # Update where to save file
                 # filedir = fh.update_dir(
@@ -149,12 +154,16 @@ def put(config: str, username: str, password: str, project: str,
                 # CLI_LOGGER.debug(f"Updated data dictionary. "
                 #                  f"{path}: {delivery.data[path]}")
 
+            for f in concurrent.futures.as_completed(pools):
+                print(f.result()[0])
+
             # Create multithreading pool
-            with concurrent.futures.ThreadPoolExecutor() as thread_exec:
-                upload_threads = []
+            # with concurrent.futures.ThreadPoolExecutor() as thread_exec:
+            #     upload_threads = []
                 # When the pools are finished
-                for f in concurrent.futures.as_completed(pools):
-                    LOG.debug(f.result())
+                # for f in concurrent.futures.as_completed(pools):
+                #     CLI_LOGGER.debug(f.result())
+                # CLI_LOGGER.debug(f.result())
                 #     original_file = f.result()[0]
                 #     encrypted_file = f.result()[1]
                 #     e_size = f.result()[2]  # Encrypted file size

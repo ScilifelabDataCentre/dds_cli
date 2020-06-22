@@ -15,7 +15,8 @@ from cli_code.exceptions_ds import DeliveryOptionException, \
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
-from cli_code.file_handler import config_logger, get_root_path
+from cli_code.file_handler import config_logger, get_root_path, \
+    process_file, process_folder
 
 # CONFIG ############################################################# CONFIG #
 
@@ -74,7 +75,8 @@ class DataDeliverer():
         self.project_id = project_id
         self.project_owner = project_owner  # user, not facility
         self.data = None           # dictionary, keeps track of delivery
-        self.s3 = S3Connector()
+        self.bucketname = ""
+        self.s3project = ""
 
         # Check if all required info is entered
         self.check_user_input(config=config)
@@ -83,8 +85,8 @@ class DataDeliverer():
         ds_access_granted = self.check_ds_access()
         if ds_access_granted and self.user.id is not None:
             # Check users access to specified project
-            proj_access_granted, self.s3.project = self.check_project_access()
-            if proj_access_granted and self.s3.project is not None:
+            proj_access_granted, self.s3project = self.check_project_access()
+            if proj_access_granted and self.s3project is not None:
                 # If no data to upload, cancel
                 if not data and not pathfile:
                     raise DeliverySystemException(
@@ -129,8 +131,8 @@ class DataDeliverer():
                               f"\t\tproject owner: {self.project_owner}, \n"
                               f"\t\tdata: {self.data} \n")
 
-            self.s3.get_info(self.project_id)
-            self.logger.debug(f"S3 info: {self.s3.get_info}")
+            self.bucketname = f"project_{self.project_id}"
+            self.logger.debug(f"S3 bucket: {self.bucketname}")
 
             self.logger.info("Delivery initialization successful.")
 

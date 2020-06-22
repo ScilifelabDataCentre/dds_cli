@@ -110,25 +110,36 @@ def put(config: str, username: str, password: str, project: str,
             for path in delivery.data:  # Iterate through all files
                 CLI_LOGGER.debug(f"Beginning delivery of {path}")
 
-                with S3Connector(bucketname=delivery.bucketname,
-                                 project=delivery.s3project) as s3:
-                    # Check if file exists in bucket already
-                    exists = s3.file_exists_in_bucket(
-                        path
-                    )
-                    if exists:
-                        CLI_LOGGER.warning(
-                            f"{path.name} already exists in bucket")
-                        delivery.data[path].update({"Error": "Exists"})
-                        # continue  # moves on to next file
+                if path.is_file():
+                    proceed, compressed, algorithm, new_file = \
+                        delivery.do_file_checks(
+                            file=path, file_info=delivery.data[path]
+                        )
+                    if proceed:
+                        delivery.data[path].update({"compressed": compressed,
+                                                    "algorithm": algorithm,
+                                                    "new_file": new_file})
+                elif path.is_dir():
+                    proceed = delivery.get_content_info(folder=path)
 
-                continue
+                if not proceed:
+                    CLI_LOGGER.warning("One or more of the file/directory "
+                                       f"{path} contents has/have already "
+                                       "been uploaded to the assigned "
+                                       "S3 project bucket. Not uploading "
+                                       "the specified path.")
+                    delivery.data[path].update(
+                        {"error": "Exists"}
+                    )
+                    continue
+
+                CLI_LOGGER.debug(f"proceed: {proceed} --> {path}")
 
                 p_future = pool_executor.submit(
                     fh.prep_upload,
                     path,
                     delivery.data[path],
-                    [delivery.bucketname, delivery.s3project]
+                    delivery.tempdir.files
                 )
 
                 # # Update where to save file
@@ -155,7 +166,7 @@ def put(config: str, username: str, password: str, project: str,
                 #                  f"{path}: {delivery.data[path]}")
 
             for f in concurrent.futures.as_completed(pools):
-                print(f.result()[0])
+                print(f.result())
 
             # Create multithreading pool
             # with concurrent.futures.ThreadPoolExecutor() as thread_exec:

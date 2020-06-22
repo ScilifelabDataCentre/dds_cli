@@ -16,7 +16,7 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import config_logger, get_root_path, \
-    process_file, process_folder
+    process_file, process_folder, is_compressed
 
 # CONFIG ############################################################# CONFIG #
 
@@ -469,6 +469,79 @@ class DataDeliverer():
                     )
 
         return all_files
+
+    def do_file_checks(self, file, file_info):
+        ''''''
+
+        self.logger.debug(f"do file checks: {file}")
+        proceed = True
+
+        # Check if compressed and save algorithm info if yes
+        compressed, alg = is_compressed(file)
+        self.logger.debug(f"{compressed}, {alg}")
+
+        proc_suff = ""  # Suffix after file processed
+        LOG.debug(f"Original suffixes: {''.join(file_info['suffixes'])}")
+        if not compressed:
+            # check if suffixes are in magic dict
+
+            # update the future suffix
+            proc_suff += ".zst"
+            alg = ".zst"
+            self.logger.debug(f"File {file.name} not compressed. "
+                              f"New file suffix: {proc_suff}")
+        elif compressed and alg not in file_info['suffixes']:
+            self.logger.warning(f"Indications of the file '{file}' being in a "
+                                f"compressed format but extension {alg} not "
+                                "present in file extensions. Not compressing "
+                                "the file.")
+
+        proc_suff += ".ccp"     # chacha extension
+        self.logger.debug(f"New file suffix: {proc_suff}")
+
+        bucketfilename = str(file_info['directory_path'] /
+                             Path(file.name + proc_suff))
+        self.logger.debug(f"bucket file name: {bucketfilename}")
+        # Check if file/folder exists in bucket
+        with S3Connector(bucketname=self.bucketname,
+                         project=self.s3project) as s3:
+            # Check if file exists in bucket already
+            exists = s3.file_exists_in_bucket(
+                bucketfilename
+            )
+            if exists:
+                self.logger.warning(
+                    f"{file.name} already exists in bucket")
+                proceed = False
+
+        return proceed, compressed, alg, bucketfilename
+
+    def get_content_info(self, folder):
+
+        self.logger.debug(f"folder: {folder}")
+        folder_file_info = {}
+
+        # Check if compressed archive first
+
+        # if not compressed archive check files
+        for file in self.data[folder]['contents']:
+            proceed, compressed, algorithm, new_file = \
+                self.do_file_checks(
+                    file=file,
+                    file_info=self.data[folder]['contents'][file]
+                )
+            if proceed:
+                folder_file_info[file] = {"compressed": compressed,
+                                          "algorithm": algorithm,
+                                          "new_file": new_file}
+            else:
+                return False
+
+        for file in self.data[folder]['contents']:
+            self.data[folder]['contents'][file].update(
+                folder_file_info[file]
+            )
+        return True
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""

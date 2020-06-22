@@ -41,7 +41,7 @@ class S3Connector():
     '''
 
     def __init__(self, bucketname, project):
-        
+
         self.project = project
         self.bucketname = bucketname
         self.resource = None
@@ -91,14 +91,14 @@ class S3Connector():
 
         '''
 
-        # If extension --> file, if not --> folder (?)
-        folder = (len(key.split(os.extsep)) == 1)
-        S3_LOG.debug(f"{key} -- folder? -- {folder}, should be false for put")
+        # if not put:
+        #     # If extension --> file, if not --> folder (?)
+        #     folder = (len(key.split(os.extsep)) == 1)
 
-        if folder:  # path is a folder
-            if not key.endswith(os.path.sep):
-                key += os.path.sep  # add path ending
-                S3_LOG.debug(f"Folder to search for in bucket: {key}")
+        #     if folder:  # path is a folder
+        #         if not key.endswith(os.path.sep):
+        #             key += os.path.sep  # add path ending
+        #             S3_LOG.debug(f"Folder to search for in bucket: {key}")
 
         try:    # Check if file has been uploaded previously
             self.resource.Object(

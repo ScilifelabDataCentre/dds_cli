@@ -168,7 +168,7 @@ def aead_encrypt_chacha(gen, key):
 # PREP AND FINISH ########################################### PREP AND FINISH #
 
 
-def process_file(file: Path, file_info: dict):
+def process_file(file: Path, file_info: dict, filedir):
 
     LOG.debug(f"file: {file}")
     # Checking for errors first
@@ -180,33 +180,10 @@ def process_file(file: Path, file_info: dict):
         LOG.exception(f"The path {file} does not exist!")
         return file, 0, "Error", "The file does not exist", None
 
-    proc_suff = ""  # Suffix after file processed
-    LOG.debug(f"Original suffixes: {''.join(suffixes)}")
-
     key = os.urandom(32)
     LOG.debug(f"Data encryption key: {key}")
 
-    # Check if compressed and save algorithm info if yes
-    compressed, alg = is_compressed(file)
-    LOG.debug(f"{compressed}, {alg}")
-    if not compressed:
-        if alg in proc_suff:
-            LOG.warning(f"Extension {alg} present in file name, "
-                        "but there is no indication of the file "
-                        "being in a compressed format. Compressing the file"
-                        f"'{file}'.")
-        proc_suff += ".zst"
-        LOG.debug(f"File {file.name} not compressed. "
-                  f"New file suffix: {proc_suff}")
-    elif compressed and alg not in proc_suff:
-        LOG.warning(f"Indications of the file '{file}' being in a compressed "
-                    f"format but extension {alg} not present in file "
-                    "extensions. Not compressing the file.")
-
-    proc_suff += ".ccp"     # chacha extension
-    LOG.debug(f"New file suffix: {proc_suff}")
-
-    outfile = filedir / Path(file.name + proc_suff)
+    outfile = filedir / file_info['new_file']
     LOG.debug(f"Processed file will be saved in location: {outfile}")
 
     # Read file
@@ -215,7 +192,8 @@ def process_file(file: Path, file_info: dict):
         with file.open(mode='rb') as f:
             # Should we hash the file and save to file before comp and enc?
             # Compress if not compressed
-            chunk_stream = file_reader(f) if compressed else compress_file(f)
+            chunk_stream = file_reader(f) if file_info['compressed'] \
+                else compress_file(f)
             # Encrypt
             with outfile.open(mode='ab+') as of:
                 for nonce, ciphertext in aead_encrypt_chacha(chunk_stream, key):
@@ -237,11 +215,11 @@ def process_file(file: Path, file_info: dict):
     return file, outfile, e_size, compressed
 
 
-def process_folder(folder_contents: dict):
+def process_folder(folder_contents: dict, filedir):
 
     for file in folder_contents:
         LOG.debug(file)
-        success = process_file(file)
+        success = process_file(file, folder_contents[file], filedir)
         LOG.debug(success)
         if not success:
             return "here the entire folder should be skipped."
@@ -249,14 +227,14 @@ def process_folder(folder_contents: dict):
     return
 
 
-def prep_upload(path: Path, path_info: dict, s3_info):
+def prep_upload(path: Path, path_info: dict, filedir):
     '''Prepares the files for upload'''
 
     LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
 
-    # if path_info['directory']:
-    #     process_info = process_folder(path_info['contents'])
-    # elif path_info['file']:
-    #     process_info = process_file(path, path_info)
+    if path_info['directory']:
+        process_info = process_folder(path_info['contents'], filedir)
+    elif path_info['file']:
+        process_info = process_file(path, path_info, filedir)
 
-    # return process_info
+    return process_info

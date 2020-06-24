@@ -574,6 +574,24 @@ class DataDeliverer():
 
         return proceed
 
+    def update_data_dict(self, item, info: dict):
+
+        self.logger.debug(f"{item}: {'file' in info}")
+        if item.is_dir() and 'file' not in info:
+            for file in info:
+                self.logger.debug(file)
+                self.data[item][file] = {
+                    'encrypted': info[file]['efile'],
+                    'encrypted_size': info[file]['encrypted_size'],
+                    'compressed': info[file]['compressed']
+                }
+        elif item.is_file() and 'file' in info:
+            self.data[item] = {'encrypted': info['efile'],
+                               'encrypted_size': info['encrypted_size'],
+                               'compressed': info['compressed']}
+
+        return True
+
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
 
@@ -613,7 +631,7 @@ class DataDeliverer():
 
                 return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
 
-    def put(self, file: str, spec_path: str, orig_file: str) -> (str):
+    def put(self, file: str) -> (str):
         '''Uploads specified data to the S3 bucket.
 
         Args:
@@ -621,6 +639,9 @@ class DataDeliverer():
             spec_path:  Root folder path to file
         '''
 
+        
+        self.logger.debug(self.data[file])
+        return
         filepath = str(spec_path / Path(file.name))
         self.logger.debug(f"Path in bucket: {filepath}")
 

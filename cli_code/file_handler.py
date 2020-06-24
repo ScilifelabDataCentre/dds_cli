@@ -233,7 +233,8 @@ def process_file(file: Path, file_info: dict, filedir):
                 of.write(nonce)
     except Exception as ee:  # FIX EXCEPTION
         LOG.exception(f"Processig failed! {ee}")
-        return False, file, "Error", ee, False
+        return False, {'file': file, 'efile': outfile,
+                       'error': ee, 'compressed': False}
     else:
         LOG.info(f"Encryption of '{file}' -- completed!")
         compressed = True
@@ -244,19 +245,22 @@ def process_file(file: Path, file_info: dict, filedir):
     e_size = outfile.stat().st_size  # Encrypted size in bytes
     LOG.info(f"Encrypted file size: {e_size} ({outfile})")
 
-    return True, file, outfile, e_size, compressed
+    return True, {'file': file, 'efile': outfile,
+                  'encrypted_size': e_size, 'compressed': compressed}
 
 
 def process_folder(folder_contents: dict, filedir):
 
+    fileinfo = {}
     for file in folder_contents:
         LOG.debug(f"Processing file in folder: {file}")
-        success, *info = process_file(file, folder_contents[file], filedir)
+        success, info = process_file(file, folder_contents[file], filedir)
+        fileinfo[file] = info
         LOG.debug(f"{success}: {info}")
         if not success:
-            return success, info
+            return success, fileinfo
 
-    return success, info
+    return success, fileinfo
 
 
 def prep_upload(path: Path, path_info: dict, filedir):
@@ -266,7 +270,8 @@ def prep_upload(path: Path, path_info: dict, filedir):
 
     if path_info['directory']:
         success, process_info = process_folder(path_info['contents'], filedir)
-    elif path_info['file']:
-        success, (*process_info) = process_file(path, path_info, filedir)
 
-    return success, process_info
+    elif path_info['file']:
+        success, process_info = process_file(path, path_info, filedir)
+
+    return success, process_info, path

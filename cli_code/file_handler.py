@@ -24,6 +24,8 @@ from bitstring import BitArray
 
 from cli_code import LOG_FILE, MAX_CTR
 
+max_nonce = 2**(12*8)
+
 # IO FUNCTIONS ################################################# IO FUNCTIONS #
 
 
@@ -162,8 +164,11 @@ def aead_encrypt_chacha(gen, key, iv):
 
     iv_int = int.from_bytes(iv, 'little')
     aad = None  # Associated data, unencrypted but authenticated
+    iv_int = max_nonce + 1
     for chunk in gen:
-        nonce = (iv_int).to_bytes(length=12, byteorder='little')
+        nonce = (iv_int if iv_int < max_nonce
+                 else iv_int % max_nonce).to_bytes(length=12,
+                                                   byteorder='little')
         yield nonce, crypto_aead_chacha20poly1305_ietf_encrypt(message=chunk,
                                                                aad=aad,
                                                                nonce=nonce,

@@ -13,6 +13,8 @@ import datetime
 import collections
 import logging
 from pathlib import Path
+import tarfile
+
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
 from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
@@ -87,14 +89,14 @@ def get_root_path(file: Path, path_base: str = None):
     '''Gets the path to the file, from the entered folder. '''
 
     if path_base is not None:
-        LOG.info(f"path_base = {path_base} "
-                 "--> root path is from chosen folder.")
+        # LOG.info(f"path_base = {path_base} "
+        #          "--> root path is from chosen folder.")
         fileparts = file.parts
         start_ind = fileparts.index(path_base)
         return Path(*fileparts[start_ind:-1])
     else:
-        LOG.info(f"path_base = {path_base} "
-                 "--> root path is . (user specified file)")
+        # LOG.info(f"path_base = {path_base} "
+        #          "--> root path is . (user specified file)")
         return Path("")
 
 # COMPRESSION ################################################### COMPRESSION #
@@ -137,9 +139,10 @@ def is_compressed(file: Path):
 
     with file.open(mode='rb') as f:
         file_start = f.read(max_len)
-        LOG.debug(f"file start: {file_start}, type: {type(file_start)}")
+        LOG.debug(f"file: {file}\tfile start: {file_start}"
+                  f"\ttype: {type(file_start)}")
         for magic, filetype in magic_dict.items():
-            LOG.debug(f"magic: {magic}, filetype: {filetype}")
+            # LOG.debug(f"magic: {magic}, filetype: {filetype}")
             if file_start.startswith(magic):
                 return True, filetype
 
@@ -170,7 +173,7 @@ def aead_encrypt_chacha(gen, key):
 
 def process_file(file: Path, file_info: dict, filedir):
 
-    LOG.debug(f"file: {file}")
+    LOG.debug(f"Processing {file}....")
     # Checking for errors first
     if not isinstance(file, Path):
         LOG.exception(f"Wrong format! {file} is not a 'Path' object.")
@@ -184,30 +187,33 @@ def process_file(file: Path, file_info: dict, filedir):
     LOG.debug(f"Data encryption key: {key}")
 
     outfile = filedir / file_info['new_file']
-    LOG.debug(f"Processed file will be saved in location: {outfile}")
+    LOG.debug(f"Processed file will be saved in location: '{outfile}'")
 
     new_dir = filedir / file_info['directory_path']
+    LOG.debug(f"new_dir: {new_dir}")
     if not new_dir.exists():
+        LOG.debug(f"The temporary directory '{new_dir}' did not exist, "
+                  "creating it.")
         new_dir.mkdir(parents=True)
+
     # Read file
     try:
         original_umask = os.umask(0)
         with file.open(mode='rb') as f:
-            # Should we hash the file and save to file before comp and enc?
             # Compress if not compressed
             chunk_stream = file_reader(f) if file_info['compressed'] \
                 else compress_file(f)
             # Encrypt
-            LOG.debug(type(outfile))
+            LOG.info(f"Beginning encryption of file '{file}'.")
             with outfile.open(mode='ab+') as of:
                 for nonce, ciphertext in aead_encrypt_chacha(chunk_stream, key):
                     of.write(nonce)
                     of.write(ciphertext)
     except Exception as ee:  # FIX EXCEPTION
         LOG.exception(f"Processig failed! {ee}")
-        return file, "Error", ee, False
+        return False, file, "Error", ee, False
     else:
-        LOG.info(f"Compression of {file} -- completed!")
+        LOG.info(f"Encryption of '{file}' -- completed!")
         compressed = True
     finally:
         os.umask(original_umask)
@@ -216,19 +222,19 @@ def process_file(file: Path, file_info: dict, filedir):
     e_size = outfile.stat().st_size  # Encrypted size in bytes
     LOG.info(f"Encrypted file size: {e_size} ({outfile})")
 
-    return file, outfile, e_size, compressed
+    return True, file, outfile, e_size, compressed
 
 
 def process_folder(folder_contents: dict, filedir):
 
     for file in folder_contents:
-        LOG.debug(file)
-        success = process_file(file, folder_contents[file], filedir)
-        LOG.debug(success)
+        LOG.debug(f"Processing file in folder: {file}")
+        success, *info = process_file(file, folder_contents[file], filedir)
+        LOG.debug(f"{success}: {info}")
         if not success:
-            return "here the entire folder should be skipped."
+            return success, info
 
-    return
+    return success, info
 
 
 def prep_upload(path: Path, path_info: dict, filedir):
@@ -237,8 +243,8 @@ def prep_upload(path: Path, path_info: dict, filedir):
     LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
 
     if path_info['directory']:
-        process_info = process_folder(path_info['contents'], filedir)
+        success, process_info = process_folder(path_info['contents'], filedir)
     elif path_info['file']:
-        process_info = process_file(path, path_info, filedir)
+        success, (*process_info) = process_file(path, path_info, filedir)
 
-    return process_info
+    return success, process_info

@@ -100,7 +100,8 @@ def put(config: str, username: str, password: str, project: str,
 
         # Setup logging
         CLI_LOGGER = config_logger(LOG_FILE)
-        CLI_LOGGER.info(f"Number of files to upload: {len(delivery.data)}")
+        CLI_LOGGER.info(f"Data to deliver: {delivery.data}\n"
+                        f"Number of items to upload: {len(delivery.data)}")
 
         # Create multiprocess pool
         with concurrent.futures.ProcessPoolExecutor() as pool_executor:
@@ -122,6 +123,7 @@ def put(config: str, username: str, password: str, project: str,
                     delivery.data[path].update(
                         {"error": "Exists"}
                     )
+                    CLI_LOGGER.debug(f"--- {proceed}\n{delivery.data[path]}")
                     continue
 
                 CLI_LOGGER.debug(f"proceed: {proceed} --> {path}")
@@ -136,11 +138,16 @@ def put(config: str, username: str, password: str, project: str,
                 CLI_LOGGER.info(f"Started processing {path}...")
                 # # Add to pool list and update file info
                 pools.append(p_future)
-                CLI_LOGGER.debug(f"Updated data dictionary. "
-                                 f"{path}: {delivery.data[path]}")
+                CLI_LOGGER.info(f"Updated data dictionary. "
+                                f"{path}: {delivery.data[path]}")
 
             for f in concurrent.futures.as_completed(pools):
-                print(f.result())
+                success, (ofile, efile, esize, compressed) = f.result()
+                CLI_LOGGER.debug(f"Finished processing of file '{ofile}'.\n"
+                                 f"Success: {success}\t "
+                                 f"Compressed: {compressed}\n"
+                                 f"Encrypted file saved in location: '{efile}'"
+                                 f"\tSize: {esize} bytes")
 
             # Create multithreading pool
             # with concurrent.futures.ThreadPoolExecutor() as thread_exec:

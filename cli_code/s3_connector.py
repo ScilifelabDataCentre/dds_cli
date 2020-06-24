@@ -26,8 +26,6 @@ S3_LOG = config_logger(
     sh_format="%(levelname)s::%(name)s::" +
     "%(lineno)d::%(message)s"
 )
-S3_LOG.debug("6. debug")
-
 
 class S3Connector():
     '''
@@ -105,9 +103,9 @@ class S3Connector():
                 self.bucket.name, key   # swap to suff or full
             ).load()    # Calls head_object() -- retrieves meta data for object
         except botocore.exceptions.ClientError as e:
-            S3_LOG.debug(f"-------error: {e}")
+            # S3_LOG.debug(f"-------error: {e}")
             if e.response['Error']['Code'] == "404":
-                S3_LOG.debug("The file doesn't exist")
+                # S3_LOG.debug("The file doesn't exist")
                 return False
             else:
                 error_message = f"Checking for file in S3 bucket failed! " \
@@ -115,7 +113,7 @@ class S3Connector():
                 S3_LOG.warning(error_message)
                 return error_message
         else:
-            S3_LOG.debug("The file already exists.")
+            S3_LOG.debug(f"The file {key} already exists.")
             return True
 
     def files_in_bucket(self, key: str):

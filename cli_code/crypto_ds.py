@@ -39,7 +39,6 @@ CRYPTO_LOG = config_logger(
     sh_format="%(levelname)s::%(name)s::" +
     "%(lineno)d::%(message)s"
 )
-CRYPTO_LOG.debug("2. debug")
 
 
 class Encryptor():

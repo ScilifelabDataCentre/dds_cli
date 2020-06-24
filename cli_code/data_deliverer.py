@@ -123,16 +123,16 @@ class DataDeliverer():
                 sh_format="%(levelname)s::%(name)s::" +
                 "%(lineno)d::%(message)s"
             )
-            self.logger.debug(f"-- Login successful -- \n"
-                              f"\t\tmethod: {self.method}, \n"
-                              f"\t\tusername: {self.user.username}, \n"
-                              f"\t\tpassword: {self.user.password}, \n"
-                              f"\t\tproject ID: {self.project_id}, \n"
-                              f"\t\tproject owner: {self.project_owner}, \n"
-                              f"\t\tdata: {self.data} \n")
+            # self.logger.debug(f"-- Login successful -- \n"
+            #                   f"\t\tmethod: {self.method}, \n"
+            #                   f"\t\tusername: {self.user.username}, \n"
+            #                   f"\t\tpassword: {self.user.password}, \n"
+            #                   f"\t\tproject ID: {self.project_id}, \n"
+            #                   f"\t\tproject owner: {self.project_owner}, \n"
+            #                   f"\t\tdata: {self.data} \n")
 
             self.bucketname = f"project_{self.project_id}"
-            self.logger.debug(f"S3 bucket: {self.bucketname}")
+            # self.logger.debug(f"S3 bucket: {self.bucketname}")
 
             self.logger.info("Delivery initialization successful.")
 
@@ -478,18 +478,21 @@ class DataDeliverer():
 
         # Check if compressed and save algorithm info if yes
         compressed, alg = is_compressed(file)
-        self.logger.debug(f"{compressed}, {alg}")
+        self.logger.debug(f"file: {file}\t compressed: {compressed} - {alg}")
 
         proc_suff = ""  # Suffix after file processed
-        LOG.debug(f"Original suffixes: {''.join(file_info['suffixes'])}")
+        self.logger.debug(
+            f"Original suffixes: {''.join(file_info['suffixes'])}"
+        )
         if not compressed:
             # check if suffixes are in magic dict
+            '''here'''
 
             # update the future suffix
             proc_suff += ".zst"
             alg = ".zst"
             self.logger.debug(f"File {file.name} not compressed. "
-                              f"New file suffix: {proc_suff}")
+                              f"Added file suffix: {proc_suff}")
         elif compressed and alg not in file_info['suffixes']:
             self.logger.warning(f"Indications of the file '{file}' being in a "
                                 f"compressed format but extension {alg} not "
@@ -497,7 +500,7 @@ class DataDeliverer():
                                 "the file.")
 
         proc_suff += ".ccp"     # chacha extension
-        self.logger.debug(f"New file suffix: {proc_suff}")
+        self.logger.debug(f"Added file suffix: {proc_suff}")
 
         bucketfilename = str(file_info['directory_path'] /
                              Path(file.name + proc_suff))
@@ -554,6 +557,9 @@ class DataDeliverer():
                         file=file,
                         file_info=self.data[item]['contents'][file]
                     )
+                self.logger.debug(f"\nfile: {file}\t compressed: {compressed}"
+                                  f"\t algorithm: {algorithm}\t"
+                                  f"new file name: {new_file}")
                 if proceed:
                     folder_file_info[file] = {"compressed": compressed,
                                               "algorithm": algorithm,
@@ -565,8 +571,6 @@ class DataDeliverer():
                 self.data[item]['contents'][file].update(
                     folder_file_info[file]
                 )
-
-        self.data[item].update({"error": "Exists"})
 
         return proceed
 

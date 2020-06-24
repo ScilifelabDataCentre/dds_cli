@@ -156,17 +156,20 @@ def file_reader(file: Path, chunk_size: int = 65536):
         yield chunk
 
 
-def aead_encrypt_chacha(gen, key):
+def aead_encrypt_chacha(gen, key, iv):
     '''Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
     construction described in RFC7539'''
 
+    iv_int = int.from_bytes(iv, 'little')
     aad = None  # Associated data, unencrypted but authenticated
     for chunk in gen:
-        nonce = os.urandom(12)
+        nonce = (iv_int).to_bytes(length=12, byteorder='little')
         yield nonce, crypto_aead_chacha20poly1305_ietf_encrypt(message=chunk,
                                                                aad=aad,
                                                                nonce=nonce,
                                                                key=key)
+        iv_int += 1
+
 
 # PREP AND FINISH ########################################### PREP AND FINISH #
 
@@ -206,9 +209,23 @@ def process_file(file: Path, file_info: dict, filedir):
             # Encrypt
             LOG.info(f"Beginning encryption of file '{file}'.")
             with outfile.open(mode='ab+') as of:
-                for nonce, ciphertext in aead_encrypt_chacha(chunk_stream, key):
-                    of.write(nonce)
+                iv_bytes = os.urandom(12)
+                # LOG.debug(f"Initial nonce -- bytes: {iv_bytes}\n"
+                #           f"\tint: {int.from_bytes(iv_bytes, 'little')}")
+                of.write(iv_bytes)
+                saved_bytes = (0).to_bytes(length=12, byteorder='little')
+                of.write(saved_bytes)
+                nonce = b''
+                for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
+                                                             key=key,
+                                                             iv=iv_bytes):
+                    # of.write(nonce)
+                    # LOG.debug(f"Nonce: {nonce}, "
+                    #           f"int: {int.from_bytes(nonce, 'little')}")
                     of.write(ciphertext)
+                of.seek(12)
+                # LOG.debug(f"last nonce: {nonce}")
+                of.write(nonce)
     except Exception as ee:  # FIX EXCEPTION
         LOG.exception(f"Processig failed! {ee}")
         return False, file, "Error", ee, False

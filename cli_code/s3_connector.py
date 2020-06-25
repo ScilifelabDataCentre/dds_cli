@@ -42,6 +42,7 @@ class S3Connector():
 
         self.project = project
         self.bucketname = bucketname
+        self.bucket = None
         self.resource = None
         self.connect()
 

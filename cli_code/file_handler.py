@@ -184,12 +184,14 @@ def process_file(file: Path, file_info: dict, filedir):
     LOG.debug(f"Processing {file}....")
     # Checking for errors first
     if not isinstance(file, Path):
-        LOG.exception(f"Wrong format! {file} is not a 'Path' object.")
-        return file, 0, "Error", "The file is not a Path", None
+        emessage = f"Wrong format! {file} is not a 'Path' object."
+        LOG.exception(emessage)
+        return False, file, None, None, False, emessage
 
     if not file.exists():
-        LOG.exception(f"The path {file} does not exist!")
-        return file, 0, "Error", "The file does not exist", None
+        emessage = f"The path {file} does not exist!"
+        LOG.exception(emessage)
+        return False, file, None, None, False, emessage
 
     key = os.urandom(32)
     LOG.debug(f"Data encryption key: {key}")
@@ -233,8 +235,7 @@ def process_file(file: Path, file_info: dict, filedir):
                 of.write(nonce)
     except Exception as ee:  # FIX EXCEPTION
         LOG.exception(f"Processig failed! {ee}")
-        return False, {'item': file, 'efile': outfile,
-                       'error': ee, 'compressed': False}
+        return False, file, outfile, 0, False, ee
     else:
         LOG.info(f"Encryption of '{file}' -- completed!")
         compressed = True
@@ -245,22 +246,15 @@ def process_file(file: Path, file_info: dict, filedir):
     e_size = outfile.stat().st_size  # Encrypted size in bytes
     LOG.info(f"Encrypted file size: {e_size} ({outfile})")
 
-    return True, {'item': file, 'efile': outfile,
-                  'encrypted_size': e_size, 'compressed': compressed}
+    # success, original_file, processed_file, processed_size, compressed, error
+    return True, file, outfile, e_size, compressed, None
 
 
 def process_folder(folder_contents: dict, filedir):
-
-    fileinfo = []
-    for file in folder_contents:
-        LOG.debug(f"Processing file in folder: {file}")
-        success, info = process_file(file, folder_contents[file], filedir)
-        fileinfo.append(info)
-        LOG.debug(f"{success}: {fileinfo}")
-        if not success:
-            return success, fileinfo, info['error']
-
-    return success, fileinfo, ""
+    # for file in folder_contents:
+    #     LOG.debug(f"Processing file in folder: {file}")
+    #     yield process_file(file, folder_contents[file], filedir)
+    pass
 
 
 def prep_upload(path: Path, path_info: dict, filedir):
@@ -268,19 +262,39 @@ def prep_upload(path: Path, path_info: dict, filedir):
 
     LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
 
+    success = False
     process_info = {}
-    if path_info['directory']:
-        process_info = {'item': path, 'contents': []}
-        success, process_info['contents'], err = process_folder(
-            path_info['contents'],
-            filedir
-        )
-        if not success:
-            process_info['error'] = err
+    # if path_info['directory']:
+    #     process_info[path] = {'directory': True}
+    #     for file in path_info['contents']:
+    #         LOG.debug(f"Processing file in folder: {file}")
+    #         success, file_, *info = process_file(
+    #             file=file,
+    #             file_info=path_info['contents'][file],
+    #             filedir=filedir
+    #         )
+    #         if not success:
+    #             return success, path, process_info, info[1]
+    #         elif file != file:
+    #             emessage = ("The processing did not return the same file as "
+    #                         f"was input -- cannot continue delivery.")
+    #             LOG.warning(emessage)
+    #             return False, path, process_info, emessage
 
-    elif path_info['file']:
-        success, process_info = process_file(path, path_info, filedir)
+    #         process_info[path][file_] = {'encrypted': info[0],
+    #                                      'encrypted_size': info[1],
+    #                                      'compressed': info[2]}
 
-    LOG.debug(f"---- {process_info}")
+    # elif path_info['file']:
+    
+    success, path_, *info = process_file(file=path,
+                                         file_info=path_info,
+                                         filedir=filedir)
+    if path != path_:
+        emessage = ("The processing did not return the same file as "
+                    f"was input -- cannot continue delivery.")
+        LOG.warning(emessage)
+        return False, path, info, emessage
 
-    return success, process_info
+    # success, original_file, processed_file, processed_size, compressed, error
+    return success, path, info, None

@@ -422,9 +422,8 @@ class DataDeliverer():
                 if curr_path.is_file():  # Save file info to dict
                     path_base = None
                     all_files[curr_path] = \
-                        {"file": True,
-                         "directory": False,
-                         "contents": None,
+                        {"in_directory": False,
+                         "dir_name": None,
                          "path_base": path_base,
                          "directory_path": get_root_path(
                              file=curr_path,
@@ -435,24 +434,18 @@ class DataDeliverer():
                     print(f"{curr_path}: {all_files[curr_path]}")
                 elif curr_path.is_dir():  # Get info on files in folder
                     path_base = curr_path.name
-                    all_files[curr_path] = \
-                        {
-                            "file": False,
-                            "directory": True,
-                            "contents": {f: {"file": True,
-                                             "directory": False,
-                                             "contents": None,
-                                             "path_base": path_base,
-                                             "directory_path": get_root_path(
-                                                 file=f,
-                                                 path_base=path_base
-                                             ),  # path in bucket & tempfolder
-                                             "size": f.stat().st_size,
-                                             "suffixes": f.suffixes}
-                                         for f in curr_path.glob('**/*')
-                                         if f.is_file()
-                                         and "DS_Store" not in str(f)}
-                    }
+                    all_files.update({f: {"in_directory": True,
+                                          "dir_name": curr_path,
+                                          "path_base": path_base,
+                                          "directory_path": get_root_path(
+                                              file=f,
+                                              path_base=path_base
+                                          ),  # path in bucket & tempfolder
+                                          "size": f.stat().st_size,
+                                          "suffixes": f.suffixes}
+                                      for f in curr_path.glob('**/*')
+                                      if f.is_file()
+                                      and "DS_Store" not in str(f)})
 
             else:
                 if self.method == "put":
@@ -467,10 +460,9 @@ class DataDeliverer():
                         "Delivery option {self.method} not allowed. "
                         "Cancelling delivery."
                     )
-
         return all_files
 
-    def do_file_checks(self, file, file_info):
+    def do_file_checks(self, file):
         ''''''
 
         self.logger.debug(f"do file checks: {file}")
@@ -482,7 +474,7 @@ class DataDeliverer():
 
         proc_suff = ""  # Suffix after file processed
         self.logger.debug(
-            f"Original suffixes: {''.join(file_info['suffixes'])}"
+            f"Original suffixes: {''.join(self.data[file]['suffixes'])}"
         )
         if not compressed:
             # check if suffixes are in magic dict
@@ -493,7 +485,7 @@ class DataDeliverer():
             alg = ".zst"
             self.logger.debug(f"File {file.name} not compressed. "
                               f"Added file suffix: {proc_suff}")
-        elif compressed and alg not in file_info['suffixes']:
+        elif compressed and alg not in self.data[file]['suffixes']:
             self.logger.warning(f"Indications of the file '{file}' being in a "
                                 f"compressed format but extension {alg} not "
                                 "present in file extensions. Not compressing "
@@ -502,7 +494,7 @@ class DataDeliverer():
         proc_suff += ".ccp"     # chacha extension
         self.logger.debug(f"Added file suffix: {proc_suff}")
 
-        bucketfilename = str(file_info['directory_path'] /
+        bucketfilename = str(self.data[file]['directory_path'] /
                              Path(file.name + proc_suff))
         self.logger.debug(f"bucket file name: {bucketfilename}")
         # Check if file/folder exists in bucket
@@ -512,6 +504,7 @@ class DataDeliverer():
             exists = s3.file_exists_in_bucket(
                 bucketfilename
             )
+            self.logger.debug(f"Exists in bucket: {exists}")
             if exists:
                 self.logger.warning(
                     f"{file.name} already exists in bucket")
@@ -532,65 +525,101 @@ class DataDeliverer():
 
         if item.is_file():
             proceed, compressed, algorithm, new_file = \
-                self.do_file_checks(
-                    file=item, file_info=self.data[item]
-                )
+                self.do_file_checks(file=item)
             self.logger.debug(f"proceed: {proceed}, \n"
                               f"compressed: {compressed}, \n"
                               f"algorithm: {algorithm}, \n"
                               f"new_file: {new_file} \n")
             if proceed:
-                self.data[item].update({"compressed": compressed,
+                self.data[item].update({"proceed": proceed,
+                                        "compressed": compressed,
                                         "algorithm": algorithm,
                                         "new_file": new_file})
-
-        elif item.is_dir():
-            folder_file_info = {}
-
-            # Check if compressed archive first
-            '''here'''
-
-            # if not compressed archive check files
-            for file in self.data[item]['contents']:
-                proceed, compressed, algorithm, new_file = \
-                    self.do_file_checks(
-                        file=file,
-                        file_info=self.data[item]['contents'][file]
-                    )
-                self.logger.debug(f"\nfile: {file}\t compressed: {compressed}"
-                                  f"\t algorithm: {algorithm}\t"
-                                  f"new file name: {new_file}")
-                if proceed:
-                    folder_file_info[file] = {"compressed": compressed,
-                                              "algorithm": algorithm,
-                                              "new_file": new_file}
-                else:
-                    return proceed
-
-            for file in self.data[item]['contents']:
-                self.data[item]['contents'][file].update(
-                    folder_file_info[file]
+            else:
+                self.logger.warning("One or more of the file/directory "
+                                    f"{item} contents has/have already "
+                                    "been uploaded to the assigned "
+                                    "S3 project bucket. Not uploading "
+                                    "the specified path.")
+                self.data[item].update(
+                    {"proceed": proceed,
+                     "error": "The file already exists in the bucket."}
                 )
+                if self.data[item]['in_directory']:  # Failure in folder
+                    to_stop = {
+                        key: val for key, val in self.data.items()
+                        if self.data[key]['in_directory'] and
+                        (val['dir_name'] == self.data[item]['dir_name'])
+                    }
+
+                    for f in to_stop:
+                        self.data[f]['proceed'] = proceed
+
+                    # elif item.is_dir():
+                    #     folder_file_info = {}
+
+                    #     # Check if compressed archive first
+                    #     '''here'''
+
+                    #     # if not compressed archive check files
+                    #     for file in self.data[item]['contents']:
+                    #         proceed, compressed, algorithm, new_file = \
+                    #             self.do_file_checks(
+                    #                 file=file,
+                    #                 file_info=self.data[item]['contents'][file]
+                    #             )
+                    #         self.logger.debug(f"\nfile: {file}\t compressed: {compressed}"
+                    #                           f"\t algorithm: {algorithm}\t"
+                    #                           f"new file name: {new_file}")
+                    #         if proceed:
+                    #             folder_file_info[file] = {"compressed": compressed,
+                    #                                       "algorithm": algorithm,
+                    #                                       "new_file": new_file}
+                    #         else:
+                    #             return proceed
+
+                    #     for file in self.data[item]['contents']:
+                    #         self.data[item]['contents'][file].update(
+                    #             folder_file_info[file]
+                    #         )
 
         return proceed
 
-    def update_data_dict(self, info: dict):
+    def update_data_dict(self, path, pathinfo):
 
-        if self.data[info['item']]['directory']:
-            for fileinfo in info['contents']:
-                self.logger.warning(fileinfo)
-                self.data[fileinfo['item']].update({
-                    'encrypted': fileinfo['efile'],
-                    'encrypted_size': fileinfo['encrypted_size'],
-                    'compressed': fileinfo['compressed']
-                })
-        elif self.data[info['item']]['file']:
-            self.data[info['item']].update({
-                'encrypted': info['efile'],
-                'encrypted_size': info['encrypted_size'],
-                'compressed': info['compressed']
-            })
+        # self.logger.debug(f"{pathinfo}, {type(pathinfo)}")
+        # if self.data[path]['directory']:
+        #     pathinfo[path].pop('directory')
+        #     self.logger.debug(f"{pathinfo}, {type(pathinfo)}")
+        #     for file, info in pathinfo[path].items():
+        #         self.logger.debug(f"{file}, {info}")
+        #         self.data[path]['contents'][file].update(info)
 
+        proceed = pathinfo['success']
+        pathinfo.pop('success')
+        self.data[path].update(pathinfo)
+
+        if not proceed:
+            emessage = (
+                "Processing failed! -- "
+                f"Error1: {error if error is not None else ''}, "
+                f"Error2: {message if message is not None else ''}"
+            )
+            CLI_LOGGER.exception(emessage)
+            # If the processing failed, the e_size is an exception
+            self.data[path]['error'] = emessage
+
+        if self.data[path]['in_directory']:  # Failure in folder
+            to_stop = {
+                key: val for key, val in self.data.items()
+                if self.data[key]['in_directory'] and
+                (val['dir_name'] == self.data[path]['dir_name'])
+            }
+
+            for f in to_stop:
+                self.data[f]['proceed'] = proceed
+
+        self.logger.debug(self.data[path])
         return True
 
     def get_recipient_key(self, keytype="public"):
@@ -640,42 +669,47 @@ class DataDeliverer():
             spec_path:  Root folder path to file
         '''
 
-        self.logger.debug(self.data[file])
-        filepath = str(spec_path / Path(file.name))
+        filepath = self.data[file]['new_file']
         self.logger.debug(f"Path in bucket: {filepath}")
 
         # Return error if bucket doesn't exist
-        if self.s3.bucket not in self.s3.resource.buckets.all():
-            self.logger.critical("Bucket not found in S3 resource. Upload will"
-                                 " not be possible. "
-                                 f"Bucket: {self.s3.bucket.name}")
-            return orig_file, file, False, "Bucket not found in S3 resource"
+        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                as s3:
 
-        # Check if file exists (including path)
-        file_already_in_bucket = self.s3.file_exists_in_bucket(key=filepath)
-        self.logger.warning("file already in bucket: "
-                            f"{file_already_in_bucket}")
+            if s3.bucket not in s3.resource.buckets.all():
+                self.logger.critical("Bucket not found in S3 resource. "
+                                     "Upload will not be possible. "
+                                     f"Bucket: {self.s3.bucket.name}")
+                return orig_file, file, False, "Bucket not found in S3 resource"
 
-        # Upload if doesn't exist
-        if file_already_in_bucket:
-            self.logger.warning("File already exists in bucket, will not be "
-                                f"uploaded. File: {file}")
-            return orig_file, file, False, filepath, "exists"
-        else:
-            self.logger.debug(f"Beginning upload of file {file} ({orig_file})")
-            try:
-                self.s3.resource.meta.client.upload_file(
-                    str(file), self.s3.bucket.name,
-                    filepath
-                )
-            except Exception as e:   # FIX EXCEPTION
-                self.logger.exception(f"Upload failed! {e} -- file: {file} "
-                                      f"({orig_file})")
-                return orig_file, file, False, e
+            # Check if file exists (including path)
+            file_already_in_bucket = s3.file_exists_in_bucket(
+                key=filepath
+            )
+            self.logger.warning("file already in bucket: "
+                                f"{file_already_in_bucket}")
+
+            # Upload if doesn't exist
+            if file_already_in_bucket:
+                self.logger.warning("File already exists in bucket, will not be "
+                                    f"uploaded. File: {file}")
+                return orig_file, file, False, filepath, "exists"
             else:
-                self.logger.info(f"Upload completed! file: {file} "
-                                 f"({orig_file}). Bucket location: {filepath}")
-                return orig_file, file, True, filepath
+                self.logger.debug(
+                    f"Beginning upload of file {file} ({orig_file})")
+                try:
+                    s3.resource.meta.client.upload_file(
+                        str(file), self.s3.bucket.name,
+                        filepath
+                    )
+                except Exception as e:   # FIX EXCEPTION
+                    self.logger.exception(f"Upload failed! {e} -- file: {file} "
+                                          f"({orig_file})")
+                    return orig_file, file, False, e
+                else:
+                    self.logger.info(f"Upload completed! file: {file} "
+                                     f"({orig_file}). Bucket location: {filepath}")
+                    return orig_file, file, True, filepath
 
     def get(self, path: str) -> (str):
         '''Downloads specified data from S3 bucket

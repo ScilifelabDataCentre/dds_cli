@@ -114,16 +114,9 @@ def put(config: str, username: str, password: str, project: str,
 
                 proceed = delivery.get_content_info(item=path)
 
-                if not proceed:
-                    CLI_LOGGER.warning("One or more of the file/directory "
-                                       f"{path} contents has/have already "
-                                       "been uploaded to the assigned "
-                                       "S3 project bucket. Not uploading "
-                                       "the specified path.")
-                    delivery.data[path].update(
-                        {"error": "Exists"}
-                    )
-                    CLI_LOGGER.debug(f"--- {proceed}\n{delivery.data[path]}")
+                CLI_LOGGER.debug(f"Proceed to processing: {proceed}")
+                if not proceed or not delivery.data[path]['proceed']:
+                    CLI_LOGGER.debug("Moving on to next file")
                     continue
 
                 CLI_LOGGER.debug(f"proceed: {proceed} --> {path}")
@@ -147,30 +140,37 @@ def put(config: str, username: str, password: str, project: str,
                 # When the pools are finished
                 for f in concurrent.futures.as_completed(pools):
 
-                    success, info = f.result()
-                    CLI_LOGGER.debug(f"prepped: {info}")
-                    if not success:
-                        CLI_LOGGER.exception(f"Processing failed! -- {esize}")
-                        # If the processing failed, the e_size is an exception
-                        delivery.data[info['item']]["error"] = info['error']
-                        continue
+                    success, opath, (epath, esize, compressed, error), \
+                        message = f.result()
+                    CLI_LOGGER.debug(f"prepped: {success}, \n{opath}, \n"
+                                     f"{epath}, \n{esize}, \n{compressed}, "
+                                     f"\n{error}, \n{message}")
 
-                    updated = delivery.update_data_dict(info)
+                    updated = delivery.update_data_dict(
+                        path=opath,
+                        pathinfo={
+                            'success': success,
+                            'encrypted_file': epath,
+                            'encrypted_size': esize,
+                            'compressed': compressed,
+                            'error': error,
+                            'message': message
+                        }
+                    )
                     if not updated:
                         CLI_LOGGER.exception("Data info dictionary failed"
                                              " to be updated, cannot proceed"
-                                             f" with delivery of '{item}'")
+                                             f" with delivery of '{opath}'")
+                        continue
+                    if not delivery.data[opath]['proceed']:
                         continue
 
                     # begin upload
-                    item = info['item']
                     t_future = thread_exec.submit(
                         delivery.put,
-                        item
+                        opath
                     )
-                    CLI_LOGGER.debug(
-                        f"Upload of {item} started."
-                    )
+
                     upload_threads.append(t_future)
 
                 for t in concurrent.futures.as_completed(upload_threads):

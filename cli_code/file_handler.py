@@ -233,7 +233,7 @@ def process_file(file: Path, file_info: dict, filedir):
                 of.write(nonce)
     except Exception as ee:  # FIX EXCEPTION
         LOG.exception(f"Processig failed! {ee}")
-        return False, {'file': file, 'efile': outfile,
+        return False, {'item': file, 'efile': outfile,
                        'error': ee, 'compressed': False}
     else:
         LOG.info(f"Encryption of '{file}' -- completed!")
@@ -245,22 +245,22 @@ def process_file(file: Path, file_info: dict, filedir):
     e_size = outfile.stat().st_size  # Encrypted size in bytes
     LOG.info(f"Encrypted file size: {e_size} ({outfile})")
 
-    return True, {'file': file, 'efile': outfile,
+    return True, {'item': file, 'efile': outfile,
                   'encrypted_size': e_size, 'compressed': compressed}
 
 
 def process_folder(folder_contents: dict, filedir):
 
-    fileinfo = {}
+    fileinfo = []
     for file in folder_contents:
         LOG.debug(f"Processing file in folder: {file}")
         success, info = process_file(file, folder_contents[file], filedir)
-        fileinfo[file] = info
-        LOG.debug(f"{success}: {info}")
+        fileinfo.append(info)
+        LOG.debug(f"{success}: {fileinfo}")
         if not success:
-            return success, fileinfo
+            return success, fileinfo, info['error']
 
-    return success, fileinfo
+    return success, fileinfo, ""
 
 
 def prep_upload(path: Path, path_info: dict, filedir):
@@ -268,10 +268,19 @@ def prep_upload(path: Path, path_info: dict, filedir):
 
     LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
 
+    process_info = {}
     if path_info['directory']:
-        success, process_info = process_folder(path_info['contents'], filedir)
+        process_info = {'item': path, 'contents': []}
+        success, process_info['contents'], err = process_folder(
+            path_info['contents'],
+            filedir
+        )
+        if not success:
+            process_info['error'] = err
 
     elif path_info['file']:
         success, process_info = process_file(path, path_info, filedir)
 
-    return success, process_info, path
+    LOG.debug(f"---- {process_info}")
+
+    return success, process_info

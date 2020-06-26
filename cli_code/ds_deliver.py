@@ -174,69 +174,53 @@ def put(config: str, username: str, password: str, project: str,
                     upload_threads.append(t_future)
 
                 for t in concurrent.futures.as_completed(upload_threads):
-                    original_file_ = t.result()[0]
-                    uploaded_file = t.result()[1]
-                    success = t.result()[2]
-                    directory_path = t.result()[3]
-                    CLI_LOGGER.debug("Completed thread future---"
-                                     f"Original file: {original_file}, "
-                                     f"Uploaded file: {uploaded_file}, "
-                                     f"Successful? {success}, "
-                                     f"Directory path: {directory_path}")
+                    uploaded, ofile, ufile, bucketpath, error = t.result()
+                    CLI_LOGGER.debug(f"{uploaded}, {ofile}, {ufile}")
 
-                    if original_file_ not in delivery.data:
+                    if ofile not in delivery.data:
                         CLI_LOGGER.exception("File not recognized.")
+                        continue
 
-                    if delivery.data[original_file_]['encrypted'] \
-                            != uploaded_file:
-                        CLI_LOGGER.exception("Encrypted file path not recorded"
-                                             " for original, entered path.")
+                    if delivery.data[ofile]['encrypted_file'] \
+                            != ufile:
+                        emessage = (" Encrypted file path not recorded"
+                                    " for original, entered path.")
+                        CLI_LOGGER.exception(emessage)
+                        error = error + emessage
 
-                    if not isinstance(success, bool):
-                        CLI_LOGGER.exception("The upload did not return "
-                                             "boolean, cannot determine if "
-                                             "delivery successful!")
-                    if not success:
-                        CLI_LOGGER.warning("Upload failed - "
+                    delivery.update_data_dict(
+                        path=ofile,
+                        pathinfo={'success': uploaded,
+                                  'error': error}
+                    )
+
+                    if not uploaded or not delivery.data[ofile]['proceed']:
+                        CLI_LOGGER.warning("Upload failed, continuing to next file - "
                                            f"file: {original_file} "
                                            f"({uploaded_file})")
-                        # If upload failed, directory_path is an error message
-                        delivery.data[original_file_].update(
-                            {"success": False,
-                             "Error": directory_path}
-                        )
                         continue
                     else:
                         CLI_LOGGER.debug("Beginning database update. "
-                                         f"{original_file}")
+                                         f"{ofile}")
                         # update database here
                         with DatabaseConnector('project_db') as project_db:
                             _project = project_db[delivery.project_id]
-                            file_path = str(uploaded_file).partition(
-                                str(filedir))[-1]
+                            # str(ufile).partition(
+                            # str(filedir))[-1]
                             # ADD CHECK IF EXISTS IN DB - BEFORE UPLOAD?
-                            _project['files'][uploaded_file.name] = {"full_path": file_path,
-                                                                     "size": original_file_.stat().st_size,
-                                                                     "mime": "",
-                                                                     "date_uploaded": timestamp(),
-                                                                     "checksum": delivery.data[original_file_]['hash']}
+                            _project['files'][str(delivery.data[ofile]['new_file'].name)] = \
+                                {"directory_path": str(delivery.data[ofile]['directory_path']),
+                                 "size": delivery.data[ofile]['size'],
+                                 "compressed": delivery.data[ofile]['compressed'],
+                                 "date_uploaded": timestamp()}
                             project_db.save(_project)
-                        CLI_LOGGER.debug(
-                            "Database updated -- \n"
-                            f"full_path: {file_path}, "
-                            f"size: {original_file_.stat().st_size}, "
-                            f"mime: '', "
-                            f"date_uploaded: {timestamp()}, "
-                            "checksum: "
-                            f"{delivery.data[original_file_]['hash']}"
-                        )
 
                         CLI_LOGGER.info("Upload completed!"
-                                        f"{delivery.data[original_file_]}")
-                        delivery.data[original_file_]["success"] = True
+                                        f"{delivery.data[ofile]}")
+                        delivery.data[ofile]["success"] = True
                         CLI_LOGGER.debug(
                             "success: "
-                            f"{delivery.data[original_file_]['success']}"
+                            f"{delivery.data[ofile]['success']}"
                         )
 
 

@@ -602,8 +602,8 @@ class DataDeliverer():
         if not proceed:
             emessage = (
                 "Processing failed! -- "
-                f"Error1: {error if error is not None else ''}, "
-                f"Error2: {message if message is not None else ''}"
+                f"Error1: {self.data[path]['error'] if 'error' in self.data[path] and self.data[path]['error'] is not None else ''}, "
+                f"Error2: {self.data[path]['message'] if 'message' in self.data[path] and self.data[path]['message'] is not None else ''}"
             )
             CLI_LOGGER.exception(emessage)
             # If the processing failed, the e_size is an exception
@@ -669,6 +669,11 @@ class DataDeliverer():
             spec_path:  Root folder path to file
         '''
 
+        self.logger.debug(f"{file}: {self.data[file]}")
+
+        file_to_upload = self.data[file]['encrypted_file']
+        self.logger.debug(f"Encrypted, to upload: {file_to_upload}")
+
         filepath = self.data[file]['new_file']
         self.logger.debug(f"Path in bucket: {filepath}")
 
@@ -677,10 +682,12 @@ class DataDeliverer():
                 as s3:
 
             if s3.bucket not in s3.resource.buckets.all():
-                self.logger.critical("Bucket not found in S3 resource. "
-                                     "Upload will not be possible. "
-                                     f"Bucket: {self.s3.bucket.name}")
-                return orig_file, file, False, "Bucket not found in S3 resource"
+                emessage = ("Bucket not found in S3 resource. "
+                            "Upload will not be possible. "
+                            f"Bucket: {self.bucketname}")
+                self.logger.critical(emessage)
+                self.data[file]['error'] = emessage
+                return False, file, file_to_upload, filepath, emessage
 
             # Check if file exists (including path)
             file_already_in_bucket = s3.file_exists_in_bucket(
@@ -691,25 +698,29 @@ class DataDeliverer():
 
             # Upload if doesn't exist
             if file_already_in_bucket:
-                self.logger.warning("File already exists in bucket, will not be "
-                                    f"uploaded. File: {file}")
-                return orig_file, file, False, filepath, "exists"
+                emessage = ("File already exists in bucket, will not be "
+                            f"uploaded. File: {file_to_upload}")
+                self.logger.warning(emessage)
+                self.data[file]['error'] = emessage
+                return False, file, file_to_upload, filepath, emessage
             else:
                 self.logger.debug(
-                    f"Beginning upload of file {file} ({orig_file})")
+                    f"Beginning upload of file {file_to_upload} ({file})")
                 try:
                     s3.resource.meta.client.upload_file(
-                        str(file), self.s3.bucket.name,
+                        str(file_to_upload), s3.bucketname,
                         filepath
                     )
                 except Exception as e:   # FIX EXCEPTION
-                    self.logger.exception(f"Upload failed! {e} -- file: {file} "
-                                          f"({orig_file})")
-                    return orig_file, file, False, e
+                    emessage = (f"Upload failed! {e} -- file: {file_to_upload} "
+                                f"({file})")
+                    self.logger.exception(emessage)
+                    self.data[file]['error'] = emessage
+                    return False, file, file_to_upload, filepath, emessage
                 else:
-                    self.logger.info(f"Upload completed! file: {file} "
-                                     f"({orig_file}). Bucket location: {filepath}")
-                    return orig_file, file, True, filepath
+                    self.logger.info(f"Upload completed! file: {file_to_upload} "
+                                     f"({file}). Bucket location: {filepath}")
+                    return True, file, file_to_upload, filepath, None
 
     def get(self, path: str) -> (str):
         '''Downloads specified data from S3 bucket

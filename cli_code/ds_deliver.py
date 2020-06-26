@@ -208,7 +208,7 @@ def put(config: str, username: str, password: str, project: str,
                             # str(ufile).partition(
                             # str(filedir))[-1]
                             # ADD CHECK IF EXISTS IN DB - BEFORE UPLOAD?
-                            _project['files'][str(delivery.data[ofile]['new_file'].name)] = \
+                            _project['files'][str(delivery.data[ofile]['new_file'])] = \
                                 {"directory_path": str(delivery.data[ofile]['directory_path']),
                                  "size": delivery.data[ofile]['size'],
                                  "compressed": delivery.data[ofile]['compressed'],

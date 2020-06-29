@@ -126,7 +126,7 @@ magic_dict = {
     b'(\xb5/\xfd': "zst"
 }
 magic_dict
-max_len = max(len(x) for x in magic_dict)
+MAX_FMT = max(len(x) for x in magic_dict)
 
 
 def compress_file(file: Path, chunk_size: int = 65536):
@@ -136,19 +136,30 @@ def compress_file(file: Path, chunk_size: int = 65536):
             yield chunk
 
 
-def is_compressed(file: Path):
-    '''Checks for file signatures in common compression formats'''
+def is_compressed(file: Path) -> (bool, str):
+    '''Checks for file signatures in common compression formats.
 
-    with file.open(mode='rb') as f:
-        file_start = f.read(max_len)
-        LOG.debug(f"file: {file}\tfile start: {file_start}"
-                  f"\ttype: {type(file_start)}")
-        for magic, filetype in magic_dict.items():
-            # LOG.debug(f"magic: {magic}, filetype: {filetype}")
-            if file_start.startswith(magic):
-                return True, filetype
+    Args:
+        file:   Path object to be checked.
 
-    return False, ""
+    Returns:
+        tuple:      Info on if compressed format or not.
+
+            bool:   True if file is compressed format.
+            str:    Format abbreviation, empty string if not compressed.
+    '''
+
+    try:
+        with file.open(mode='rb') as f:
+            file_start = f.read(MAX_FMT)    # Read the first x bytes
+            # LOG.debug(f"file: {file}\tfile start: {file_start}")
+            for magic in magic_dict.items():
+                if file_start.startswith(magic):    # If file signature found
+                    return True                     # File is compressed
+    except Exception as e:  # EDIT EXCEPTION HERE
+        LOG.warning(e)      # Log warning, do not cancel all
+
+    return False    # File not compressed
 
 # CRYPTO ############################################################# CRYPTO #
 
@@ -286,7 +297,7 @@ def prep_upload(path: Path, path_info: dict, filedir):
     #                                      'compressed': info[2]}
 
     # elif path_info['file']:
-    
+
     success, path_, *info = process_file(file=path,
                                          file_info=path_info,
                                          filedir=filedir)

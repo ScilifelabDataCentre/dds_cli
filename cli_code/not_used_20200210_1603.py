@@ -1333,3 +1333,32 @@ if not delivery.data[path]:
                     path_base=delivery.data[path]['path_base']
                 )
                 CLI_LOGGER.debug(f"{path} -- directory path: {directory_path}")
+
+# Get content info -- if dir
+  # elif item.is_dir():
+                #     folder_file_info = {}
+
+                #     # Check if compressed archive first
+                #     '''here'''
+
+                #     # if not compressed archive check files
+                #     for file in self.data[item]['contents']:
+                #         proceed, compressed, algorithm, new_file = \
+                #             self.do_file_checks(
+                #                 file=file,
+                #                 file_info=self.data[item]['contents'][file]
+                #             )
+                #         self.logger.debug(f"\nfile: {file}\t compressed: {compressed}"
+                #                           f"\t algorithm: {algorithm}\t"
+                #                           f"new file name: {new_file}")
+                #         if proceed:
+                #             folder_file_info[file] = {"compressed": compressed,
+                #                                       "algorithm": algorithm,
+                #                                       "new_file": new_file}
+                #         else:
+                #             return proceed
+
+                #     for file in self.data[item]['contents']:
+                #         self.data[item]['contents'][file].update(
+                #             folder_file_info[file]
+                #         )

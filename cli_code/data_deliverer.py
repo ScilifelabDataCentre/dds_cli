@@ -16,7 +16,7 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import config_logger, get_root_path, \
-    process_file, process_folder, is_compressed, update_dir
+    process_file, process_folder, is_compressed, update_dir, magic_dict
 
 # CONFIG ############################################################# CONFIG #
 
@@ -462,126 +462,105 @@ class DataDeliverer():
                     )
         return all_files
 
-    def do_file_checks(self, file):
-        ''''''
+    def do_file_checks(self, file: Path) -> (bool, bool, str):
+        '''Checks if file is compressed and if it has already been delivered.
 
-        self.logger.debug(f"do file checks: {file}")
+        Args:
+            file:  Path to file
+
+        Returns:
+            tuple:  Information on if the file is compressed, whether or not
+                    to proceed with the delivery of the file, and the file path
+                    after (future) processing.
+
+                bool:   True if delivery should proceed for file
+                bool:   True if file is already compressed
+                str:    File path with new suffixes
+            '''
+
+        # self.logger.debug(f"do file checks: {file}")
         proceed = True
+        error = ""
 
         # Check if compressed and save algorithm info if yes
-        compressed, alg = is_compressed(file)
-        self.logger.debug(f"file: {file}\t compressed: {compressed} - {alg}")
+        compressed = is_compressed(file)
+        self.logger.debug(f"File: {file}\t Compressed: {compressed}")
 
+        # self.logger.debug(
+        #     f"Original suffixes: {''.join(self.data[file]['suffixes'])}"
+        # )
         proc_suff = ""  # Suffix after file processed
-        self.logger.debug(
-            f"Original suffixes: {''.join(self.data[file]['suffixes'])}"
-        )
         if not compressed:
-            # check if suffixes are in magic dict
-            '''here'''
+            # Check if suffixes are in magic dict
+            if set(self.data[file]['suffixes']).intersection(set(magic_dict)):
+                self.logger.warning(f"File '{file}' shows no indication of "
+                                    "being compressed, but has extensions "
+                                    "belonging to a compressed format. Not "
+                                    "compressing file.")
 
-            # update the future suffix
-            proc_suff += ".zst"
-            alg = ".zst"
-            self.logger.debug(f"File {file.name} not compressed. "
+            proc_suff += ".zst"     # Update the future suffix
+            self.logger.debug(f"File '{file.name}' not compressed. "
                               f"Added file suffix: {proc_suff}")
-        elif compressed and alg not in self.data[file]['suffixes']:
-            self.logger.warning(f"Indications of the file '{file}' being in a "
-                                f"compressed format but extension {alg} not "
-                                "present in file extensions. Not compressing "
-                                "the file.")
+        elif compressed:
+            self.logger.debug(f"Not compressing the file '{file.name}'.")
 
-        proc_suff += ".ccp"     # chacha extension
-        self.logger.debug(f"Added file suffix: {proc_suff}")
+        proc_suff += ".ccp"     # ChaCha20 (encryption format) extension added
+        self.logger.debug(f"File: {file}\t Added file suffix: {proc_suff}")
 
+        # Path to file in bucket and temporary directory, including file name
         bucketfilename = str(self.data[file]['directory_path'] /
                              Path(file.name + proc_suff))
-        self.logger.debug(f"bucket file name: {bucketfilename}")
-        # Check if file/folder exists in bucket
-        with S3Connector(bucketname=self.bucketname,
-                         project=self.s3project) as s3:
-            # Check if file exists in bucket already
-            exists = s3.file_exists_in_bucket(
-                bucketfilename
-            )
-            self.logger.debug(f"Exists in bucket: {exists}")
-            if exists:
-                self.logger.warning(
-                    f"{file.name} already exists in bucket")
-                proceed = False
+        self.logger.debug(f"File: {file}\t Bucket path: {bucketfilename}")
 
-        # filedir = update_dir(
-        #     self.tempdir.files,
-        #     file_info['directory_path']
-        # )
-        # self.logger.debug(f"filedir : {filedir}")
-        return proceed, compressed, alg, bucketfilename
+        try:
+            # Check if file/folder exists in bucket
+            with S3Connector(bucketname=self.bucketname,
+                             project=self.s3project) as s3:
+                # Check if file exists in bucket already
+                exists = s3.file_exists_in_bucket(bucketfilename)
+                self.logger.debug(f"File: {file}\t Exists in bucket: {exists}")
 
-    def get_content_info(self, item):
+                if exists:  # If the file is already delivered, do not proceed
+                    self.logger.warning(f"File '{file.name}' already "
+                                        "exists in bucket")
+                    proceed = False
+        except Exception as e:  # FIX EXCEPTION HERE
+            error = e
+            self.logger.warning(error)
+            proceed = False     # If check for file in bucket, do not proceed
 
-        proceed = False
+        return proceed, compressed, bucketfilename, error
 
-        self.logger.debug(f"item: {item}")
+    def get_content_info(self, item: Path) -> (bool):
+        '''Checks if file can proceed to processing. 
 
-        if item.is_file():
-            proceed, compressed, algorithm, new_file = \
-                self.do_file_checks(file=item)
-            self.logger.debug(f"proceed: {proceed}, \n"
-                              f"compressed: {compressed}, \n"
-                              f"algorithm: {algorithm}, \n"
-                              f"new_file: {new_file} \n")
-            if proceed:
-                self.data[item].update({"proceed": proceed,
-                                        "compressed": compressed,
-                                        "algorithm": algorithm,
-                                        "new_file": new_file})
-            else:
-                self.logger.warning("One or more of the file/directory "
-                                    f"{item} contents has/have already "
-                                    "been uploaded to the assigned "
-                                    "S3 project bucket. Not uploading "
-                                    "the specified path.")
-                self.data[item].update(
-                    {"proceed": proceed,
-                     "error": "The file already exists in the bucket."}
-                )
-                if self.data[item]['in_directory']:  # Failure in folder
-                    to_stop = {
-                        key: val for key, val in self.data.items()
-                        if self.data[key]['in_directory'] and
-                        (val['dir_name'] == self.data[item]['dir_name'])
-                    }
+        Args:
+            item:   Path to file
 
-                    for f in to_stop:
-                        self.data[f]['proceed'] = proceed
+        Returns:
+            bool:   True if file info saved, has not been previously delivered
+                    and does not exist in the database. 
+        '''
 
-                    # elif item.is_dir():
-                    #     folder_file_info = {}
+        proceed, compressed, new_file, error = self.do_file_checks(file=item)
+        self.logger.debug(f"File: {item}\n \t\tProceed: {proceed}, \n"
+                          f"\t\tCompressed: {compressed}, \n"
+                          f"\t\tNew_file: {new_file} \n"
+                          f"\t\tError: {error}")
 
-                    #     # Check if compressed archive first
-                    #     '''here'''
+        self.data[item].update({"proceed": proceed,
+                                "compressed": compressed,
+                                "new_file": new_file,
+                                "error": error})
 
-                    #     # if not compressed archive check files
-                    #     for file in self.data[item]['contents']:
-                    #         proceed, compressed, algorithm, new_file = \
-                    #             self.do_file_checks(
-                    #                 file=file,
-                    #                 file_info=self.data[item]['contents'][file]
-                    #             )
-                    #         self.logger.debug(f"\nfile: {file}\t compressed: {compressed}"
-                    #                           f"\t algorithm: {algorithm}\t"
-                    #                           f"new file name: {new_file}")
-                    #         if proceed:
-                    #             folder_file_info[file] = {"compressed": compressed,
-                    #                                       "algorithm": algorithm,
-                    #                                       "new_file": new_file}
-                    #         else:
-                    #             return proceed
+        if not proceed and \
+                self.data[item]['in_directory']:  # Failure in folder
+            to_stop = {key: val for key, val in self.data.items()
+                       if self.data[key]['in_directory'] and
+                       (val['dir_name'] == self.data[item]['dir_name'])}
 
-                    #     for file in self.data[item]['contents']:
-                    #         self.data[item]['contents'][file].update(
-                    #             folder_file_info[file]
-                    #         )
+            for f in to_stop:
+                self.data[f]['proceed'] = proceed
 
         return proceed
 

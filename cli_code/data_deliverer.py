@@ -5,9 +5,10 @@ import sys
 import threading
 import traceback
 import logging
-
+import textwrap
 
 from cli_code.crypt4gh.crypt4gh import lib
+from prettytable import PrettyTable
 
 from cli_code import DIRS, LOG_FILE
 from cli_code.exceptions_ds import DeliveryOptionException, \
@@ -150,36 +151,69 @@ class DataDeliverer():
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        failed = ""
-        succeeded = ""
+        succeeded = PrettyTable(['Item', 'Location'])
+        failed = PrettyTable(['Item', 'Error'])
+        suc_list = []
+        fai_list = []
+        succeeded.align['Delivered item'] = "r"
+        failed.align['Failed item'] = "r"
+        succeeded.align['Location'] = "l"
+        failed.align['Error'] = "l"
+        succeeded.padding_width = 2
+        failed.padding_width = 2
+        wrapper = textwrap.TextWrapper(width=100)
 
         for f in self.data:
             if self.data[f]["proceed"]:
-                if self.data[f]["in_directory"] and \
-                    str(self.data[f]['dir_name']) not in succeeded:
-                    succeeded += (str(self.data[f]["dir_name"]) + "\n\t\t")
-                    self.logger.debug(succeeded)
+                if self.data[f]["in_directory"]:
+                    suc = str(self.data[f]['dir_name'])
+                    loc = str(self.data[f]["directory_path"]) + "\n"
                 else:
-                    succeeded += (str(f) + "\n\t\t")
-                    self.logger.debug(succeeded)
+                    suc = str(f)
+                    loc = str(self.data[f]['directory_path']) + "\n"
+
+                if [suc, loc] not in suc_list:
+                    succeeded.add_row([suc, loc])
+                    suc_list.append([suc, loc])
 
             else:
-                if self.data[f]['in_directory'] and \
-                        str(self.data[f]['dir_name']) not in failed:
-                    failed += (str(self.data[f]['dir_name']) + "\t" + self.data[f]["error"] + "\n\t\t")
-                elif not self.data[f]['in_directory']:
-                    failed += (str(f) + "\t" + self.data[f]['error'] + "\n\t\t")
+                finalized = self.finalize(file=f)
+                # Print failed items
+                if self.data[f]['in_directory']:
+                    suc = str(self.data[f]['dir_name'])
+                    loc = '\n'.join(wrapper.wrap(self.data[f]["error"])) + "\n"
+                else:
+                    suc = str(f)
+                    loc = '\n'.join(wrapper.wrap(self.data[f]['error'])) + "\n"
 
-        if len(succeeded) > 0:
-            self.logger.info("----DELIVERY COMPLETED----\n\t"
-                             "The following items were uploaded:\n\t\t"
-                             f"{succeeded}")
-        else:
-            self.logger.error(
-                "----DELIVERY FAILED----\n\t"
-                "The following items were NOT uploaded:\n\t\t"
-                f"{failed}"
-            )
+                if [suc, loc] not in fai_list:
+                    failed.add_row([suc, loc])
+                    fai_list.append([suc, loc])
+
+        if len(suc_list) > 0:
+            self.logger.info("----DELIVERY COMPLETED----")
+            self.logger.info(f"The following items were uploaded:\n{succeeded}\n")
+        if len(fai_list) == len(suc_list) + len(fai_list): 
+            self.logger.error("----DELIVERY FAILED----")
+        if len(fai_list) > 0: 
+            self.logger.error(f"The following items were NOT uploaded:\n{failed}\n")
+
+    def finalize(self, file):
+        '''Makes sure that the file is not in bucket or db and deletes
+        if it is'''
+
+        with S3Connector(bucketname=self.bucketname,
+                         project=self.s3project) as s3:
+            if all(x in self.data[file] for x in ['new_file', 'up_ok']) \
+                    and self.data[file]['up_ok']:
+                s3.delete_item(key=self.data[file]['new_file'])
+
+        with DatabaseConnector(db_name='project_db') as prdb:
+            proj = prdb[self.project_id]
+
+            if 'new_file' in self.data[file] and self.data[file]['proceed'] \
+                    and 'db_ok' in self.data[file] and self.data[file]['db_ok']:
+                del proj['files'][self.data[file]['new_file']]
 
     def check_user_input(self, config):
         '''Checks that the correct options and credentials are entered.
@@ -606,20 +640,24 @@ class DataDeliverer():
                 # If the processing failed, the e_size is an exception
                 self.data[path]['error'] = emessage
 
-            if self.data[path]['in_directory']:  # Failure in folder > all fail
-                to_stop = {
-                    key: val for key, val in self.data.items()
-                    if self.data[key]['in_directory'] and
-                    (val['dir_name'] == self.data[path]['dir_name'])
-                }
+                if self.data[path]['in_directory']:  # Failure in folder > all fail
+                    to_stop = {
+                        key: val for key, val in self.data.items()
+                        if self.data[key]['in_directory'] and
+                        (val['dir_name'] == self.data[path]['dir_name'])
+                    }
 
-                for f in to_stop:
-                    self.data[f]['proceed'] = proceed
-                    self.data[f]['error'] = (
-                        "One or more of the items in folder "
-                        f"'{self.data[f]['dir_name']}' (at least '{path}') "
-                        "has already been delivered!"
-                    )
+                    for f in to_stop:
+                        self.data[f]['proceed'] = proceed
+                        self.data[f]['error'] = (
+                            "One or more of the items in folder "
+                            f"'{self.data[f]['dir_name']}' (at least '{path}') "
+                            "has already been delivered!"
+                        )
+                        if 'up_ok' in self.data[path]:
+                            self.data[f]['up_ok'] = self.data[path]['up_ok']
+                        if 'db_ok' in self.data[path]:
+                            self.data[f]['db_ok'] = self.data[path]['db_ok']
 
             # self.logger.debug(self.data[path])
             return True

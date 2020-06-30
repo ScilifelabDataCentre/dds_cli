@@ -118,6 +118,25 @@ class S3Connector():
             S3_LOG.debug(f"The file {key} already exists.")
             return True, ""
 
+    def delete_item(self, key: str):
+        '''Deletes specified item
+
+        Args:
+            key:    Item (e.g. file) to delete from bucket
+
+        Returns:
+            bool:   True if deletion succeeded
+        '''
+
+        try:
+            self.resource.Object(
+                self.bucket.name, key
+            ).delete()
+        except Exception as delex:
+            S3_LOG.exception(delex)
+        else:
+            S3_LOG.info(f"Item {key} deleted from bucket.")
+            
     def files_in_bucket(self, key: str):
         '''Checks if the current file already exists in the specified bucket.
         If so, the file will not be uploaded.

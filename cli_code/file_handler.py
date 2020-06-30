@@ -179,8 +179,8 @@ def is_compressed(file: Path) -> (bool, str):
     try:
         with file.open(mode='rb') as f:
             file_start = f.read(MAX_FMT)    # Read the first x bytes
-            # LOG.debug(f"file: {file}\tfile start: {file_start}")
-            for magic in magic_dict.items():
+            LOG.debug(f"file: {file}\tfile start: {file_start}")
+            for magic, _ in magic_dict.items():
                 if file_start.startswith(magic):    # If file signature found
                     return True                     # File is compressed
     except Exception as e:  # EDIT EXCEPTION HERE

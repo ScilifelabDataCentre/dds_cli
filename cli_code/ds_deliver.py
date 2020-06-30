@@ -113,7 +113,8 @@ def put(config: str, username: str, password: str, project: str,
                 CLI_LOGGER.debug(f"Beginning delivery of {path}")
 
                 # Check files in same folder as failed file
-                if 'proceed' in delivery.data[path] and not delivery.data[path]['proceed']:
+                if 'proceed' in delivery.data[path] and \
+                        not delivery.data[path]['proceed']:
                     proceed = False
                 else:
                     proceed = delivery.get_content_info(item=path)
@@ -199,7 +200,8 @@ def put(config: str, username: str, password: str, project: str,
                     upload_updated = delivery.update_data_dict(
                         path=ofile,
                         pathinfo={'proceed': uploaded,
-                                  'error': error}
+                                  'error': error,
+                                  'up_ok': uploaded}
                     )
 
                     # If data dictionary not uploaded -- failure, move on
@@ -236,10 +238,14 @@ def put(config: str, username: str, password: str, project: str,
                         emessage = f"Could not update database: {e}"
                         CLI_LOGGER.warning()
                         delivery.data[ofile].update({'error': emessage,
-                                                     'proceed': False})
+                                                     'proceed': False,
+                                                     'db_ok': False})
                     else:
                         CLI_LOGGER.info("Upload completed!"
                                         f"{delivery.data[ofile]}")
+                        delivery.data[ofile].update({'proceed': True,
+                                                     'db_ok': True})
+
                     CLI_LOGGER.debug("success: "
                                      f"{delivery.data[ofile]['proceed']}")
 

@@ -27,6 +27,7 @@ S3_LOG = config_logger(
     "%(lineno)d::%(message)s"
 )
 
+
 class S3Connector():
     '''
     Keeps information regarding the resource, project and bucket
@@ -76,14 +77,13 @@ class S3Connector():
         )
         self.bucket = self.resource.Bucket(self.bucketname)
 
-    def file_exists_in_bucket(self, key: str, put: bool = True) -> (bool):
+    def file_exists_in_bucket(self, key: str, put: bool = True) -> (bool, str):
         '''Checks if the current file already exists in the specified bucket.
         If so, the file will not be uploaded.
 
         Args:
-            s3_resource:    Boto3 S3 resource
-            bucket:         Name of bucket to check for file
-            key:            Name of file to look for
+            key:    File to check for in bucket
+            put:    True if uploading (default)
 
         Returns:
             bool:   True if the file already exists, False if it doesnt
@@ -99,23 +99,24 @@ class S3Connector():
         #             key += os.path.sep  # add path ending
         #             S3_LOG.debug(f"Folder to search for in bucket: {key}")
 
-        try:    # Check if file has been uploaded previously
+        # Check if file has been uploaded previously
+        try:
             self.resource.Object(
-                self.bucket.name, key   # swap to suff or full
+                self.bucket.name, key
             ).load()    # Calls head_object() -- retrieves meta data for object
         except botocore.exceptions.ClientError as e:
             # S3_LOG.debug(f"-------error: {e}")
-            if e.response['Error']['Code'] == "404":
+            if e.response['Error']['Code'] == "404":    # 404 --> not in bucket
                 # S3_LOG.debug("The file doesn't exist")
-                return False
-            else:
-                error_message = f"Checking for file in S3 bucket failed! " \
-                    f"Error: {e}"
+                return False, ""
+            else:   # Other eror --> error
+                error_message = (f"Checking for file in S3 bucket failed! "
+                                 f"Error: {e}")
                 S3_LOG.warning(error_message)
-                return error_message
-        else:
+                return False, error_message
+        else:   # In bucket --> no delivery of file
             S3_LOG.debug(f"The file {key} already exists.")
-            return True
+            return True, ""
 
     def files_in_bucket(self, key: str):
         '''Checks if the current file already exists in the specified bucket.

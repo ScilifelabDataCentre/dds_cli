@@ -16,7 +16,7 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import config_logger, get_root_path, \
-    process_file, process_folder, is_compressed, update_dir, magic_dict
+    process_file, is_compressed, update_dir, magic_dict
 
 # CONFIG ############################################################# CONFIG #
 
@@ -150,31 +150,36 @@ class DataDeliverer():
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        failed = {}
-        succeeded = []
+        failed = ""
+        succeeded = ""
+
         for f in self.data:
-            if "success" in self.data[f]:
-                if self.data[f]["success"]:
-                    if self.data[f]["path_base"] is not None:
-                        succeeded.append(self.data[f]["path_base"])
-                    else:
-                        succeeded.append(f)
-            elif "Error" in self.data[f]:
-                failed[f] = self.data[f]["Error"]
+            if self.data[f]["proceed"]:
+                if self.data[f]["in_directory"] and \
+                    str(self.data[f]['dir_name']) not in succeeded:
+                    succeeded += (str(self.data[f]["dir_name"]) + "\n\t\t")
+                    self.logger.debug(succeeded)
+                else:
+                    succeeded += (str(f) + "\n\t\t")
+                    self.logger.debug(succeeded)
 
-        print("\n----DELIVERY COMPLETED----")
-        if len(succeeded) != 0:
-            print("\nThe following files were uploaded: ")
-            succeeded = list(dict.fromkeys(succeeded))
-            for u in succeeded:
-                print(u)
+            else:
+                if self.data[f]['in_directory'] and \
+                        str(self.data[f]['dir_name']) not in failed:
+                    failed += (str(self.data[f]['dir_name']) + "\t" + self.data[f]["error"] + "\n\t\t")
+                elif not self.data[f]['in_directory']:
+                    failed += (str(f) + "\t" + self.data[f]['error'] + "\n\t\t")
 
-        if failed != {}:
-            print("\nThe following files were NOT uploaded: ")
-            for n_u in failed:
-                print(f"{n_u}\t -- {failed[n_u]}")
-
-        print("\n--------------------------")
+        if len(succeeded) > 0:
+            self.logger.info("----DELIVERY COMPLETED----\n\t"
+                             "The following items were uploaded:\n\t\t"
+                             f"{succeeded}")
+        else:
+            self.logger.error(
+                "----DELIVERY FAILED----\n\t"
+                "The following items were NOT uploaded:\n\t\t"
+                f"{failed}"
+            )
 
     def check_user_input(self, config):
         '''Checks that the correct options and credentials are entered.
@@ -516,7 +521,7 @@ class DataDeliverer():
         with DatabaseConnector('project_db') as project_db:
             proj = project_db[self.project_id]
             if Path(bucketfilename).name in proj['files']:
-                error = "File '{file}' already exists in the database. "
+                error = f"File '{file}' already exists in the database. "
                 self.logger.warning(error)
                 return False, compressed, bucketfilename, error
 
@@ -525,14 +530,14 @@ class DataDeliverer():
             with S3Connector(bucketname=self.bucketname,
                              project=self.s3project) as s3:
                 # Check if file exists in bucket already
-                in_bucket = s3.file_exists_in_bucket(bucketfilename)
+                in_bucket, error = s3.file_exists_in_bucket(bucketfilename)
                 self.logger.debug(
                     f"File: {file}\t Exists in bucket: {in_bucket}")
 
                 if in_bucket:  # If the file is already in bucket
-                    error = f"File '{file.name}' already exists in " + \
-                        " bucket, but does NOT exist in database. " + \
-                            "Delivery cancelled, contact support."
+                    error = (f"{error}\nFile '{file.name}' already exists in "
+                             " bucket, but does NOT exist in database. " +
+                             "Delivery cancelled, contact support.")
                     self.logger.critical(error)
                     return False, compressed, bucketfilename, error
         except Exception as e:  # FIX EXCEPTION HERE
@@ -586,7 +591,6 @@ class DataDeliverer():
 
         try:
             proceed = pathinfo['proceed']   # All ok so far --> processing
-            pathinfo.pop('proceed')
             self.data[path].update(pathinfo)    # Update file info
         except Exception as e:  # FIX EXCEPTION HERE
             self.logger.critical(e)
@@ -611,8 +615,11 @@ class DataDeliverer():
 
                 for f in to_stop:
                     self.data[f]['proceed'] = proceed
-                    self.data[f]['error'] = ("Within same directory as failed "
-                                             f"file '{path}'")
+                    self.data[f]['error'] = (
+                        "One or more of the items in folder "
+                        f"'{self.data[f]['dir_name']}' (at least '{path}') "
+                        "has already been delivered!"
+                    )
 
             # self.logger.debug(self.data[path])
             return True
@@ -656,36 +663,38 @@ class DataDeliverer():
 
                 return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
 
-    def put(self, file: str) -> (str):
+    def put(self, file: Path) -> (str):
         '''Uploads specified data to the S3 bucket.
 
         Args:
-            file:       File to be uploaded
-            spec_path:  Root folder path to file
+            file:       Path to original file
+
+        Returns: 
+
         '''
 
-        self.logger.debug(f"{file}: {self.data[file]}")
+        # self.logger.debug(f"{file}: {self.data[file]}")
 
         file_to_upload = self.data[file]['encrypted_file']
-        self.logger.debug(f"Encrypted, to upload: {file_to_upload}")
+        self.logger.debug(f"File: {file}\t"
+                          f"Encrypted, to upload: {file_to_upload}")
 
         filepath = self.data[file]['new_file']
         self.logger.debug(f"Path in bucket: {filepath}")
 
-        # Return error if bucket doesn't exist
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:
+                as s3:  # Connect to s3
 
+            # Check if bucket doesn't exist in resource
             if s3.bucket not in s3.resource.buckets.all():
                 emessage = ("Bucket not found in S3 resource. "
                             "Upload will not be possible. "
                             f"Bucket: {self.bucketname}")
                 self.logger.critical(emessage)
-                self.data[file]['error'] = emessage
                 return False, file, file_to_upload, filepath, emessage
 
             # Check if file exists (including path)
-            file_already_in_bucket = s3.file_exists_in_bucket(
+            file_already_in_bucket, error = s3.file_exists_in_bucket(
                 key=filepath
             )
             self.logger.warning("file already in bucket: "
@@ -696,7 +705,6 @@ class DataDeliverer():
                 emessage = ("File already exists in bucket, will not be "
                             f"uploaded. File: {file_to_upload}")
                 self.logger.warning(emessage)
-                self.data[file]['error'] = emessage
                 return False, file, file_to_upload, filepath, emessage
             else:
                 self.logger.debug(
@@ -706,15 +714,15 @@ class DataDeliverer():
                         str(file_to_upload), s3.bucketname,
                         filepath
                     )
-                except Exception as e:   # FIX EXCEPTION
+                except Exception as e:   # FIX EXCEPTION HERE
                     emessage = (f"Upload failed! {e} -- file: {file_to_upload} "
                                 f"({file})")
                     self.logger.exception(emessage)
-                    self.data[file]['error'] = emessage
                     return False, file, file_to_upload, filepath, emessage
                 else:
-                    self.logger.info(f"Upload completed! file: {file_to_upload} "
-                                     f"({file}). Bucket location: {filepath}")
+                    self.logger.info("Upload completed! file:"
+                                     f" {file_to_upload} ({file}). "
+                                     f"Bucket location: {filepath}")
                     return True, file, file_to_upload, filepath, None
 
     def get(self, path: str) -> (str):

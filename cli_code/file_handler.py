@@ -101,6 +101,21 @@ def get_root_path(file: Path, path_base: str = None):
         #          "--> root path is . (user specified file)")
         return Path("")
 
+
+def file_reader(file: Path, chunk_size: int = 65536) -> (bytes):
+    '''Yields the file chunk by chunk.
+
+    Args:
+        file:           Path to file
+        chunk_size:     Number of bytes to read from file at a time
+
+    Yields:
+        bytes:  Data chunk of size chunk_size
+    '''
+
+    for chunk in iter(lambda: file.read(chunk_size), b''):
+        yield chunk
+
 # COMPRESSION ################################################### COMPRESSION #
 
 
@@ -129,9 +144,21 @@ magic_dict
 MAX_FMT = max(len(x) for x in magic_dict)
 
 
-def compress_file(file: Path, chunk_size: int = 65536):
+def compress_file(file: Path, chunk_size: int = 65536) -> (bytes):
+    '''Compresses file
+
+    Args:
+        file:           Path to file
+        chunk_size:     Number of bytes to compress at a time
+
+    Yields:
+        bytes:  Compressed data chunk
+
+    '''
+
+    # Initiate a Zstandard compressor
     cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
-    with cctzx.stream_reader(file) as reader:
+    with cctzx.stream_reader(file) as reader:  # Compress while reading
         for chunk in iter(lambda: reader.read(chunk_size), b''):
             yield chunk
 
@@ -164,140 +191,152 @@ def is_compressed(file: Path) -> (bool, str):
 # CRYPTO ############################################################# CRYPTO #
 
 
-def file_reader(file: Path, chunk_size: int = 65536):
-    for chunk in iter(lambda: file.read(chunk_size), b''):
-        yield chunk
-
-
-def aead_encrypt_chacha(gen, key, iv):
+def aead_encrypt_chacha(gen, key, iv) -> (bytes, bytes):
     '''Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
-    construction described in RFC7539'''
+    construction described in RFC7539.
 
-    iv_int = int.from_bytes(iv, 'little')
+    Args:
+        gen:    Generator object, stream of file chunks
+        key:    Data encryption key
+        iv:     Initial nonce
+
+    Yields:
+        tuple:  The nonce for each data chunk and ciphertext
+
+            bytes:  Nonce -- number only used once
+            bytes:  Ciphertext
+    '''
+
+    iv_int = int.from_bytes(iv, 'little')   # Transform nonce to int
     aad = None  # Associated data, unencrypted but authenticated
-    iv_int = max_nonce + 1
     for chunk in gen:
+        # Get nonce as bytes for encryption
         nonce = (iv_int if iv_int < max_nonce
                  else iv_int % max_nonce).to_bytes(length=12,
                                                    byteorder='little')
+
+        # Encrypt and yield nonce and ciphertext
         yield nonce, crypto_aead_chacha20poly1305_ietf_encrypt(message=chunk,
                                                                aad=aad,
                                                                nonce=nonce,
                                                                key=key)
-        iv_int += 1
+
+        iv_int += 1  # Increment nonce - begin at 0 again if reaches max value
 
 
 # PREP AND FINISH ########################################### PREP AND FINISH #
 
 
-def process_file(file: Path, file_info: dict, filedir):
+def process_file(file: Path, file_info: dict, filedir: Path) \
+        -> (bool, Path, Path, int, bool, str):
+    '''Processes the files incl compression, encryption
+
+    Args:
+        file:           Path to file
+        file_info:      Info about file
+        filedir:        Temporary file directory
+
+    Returns:
+        tuple: Information about finished processing
+
+            bool:   True if processing successful -- compression+encryption
+            Path:   Original file, pre-processing
+            Path:   Path to processed file
+            int:    Size (in bytes) of processd file
+            bool:   True if compressed
+            str:    Error message, empty string if no error
+
+    '''
 
     LOG.debug(f"Processing {file}....")
     # Checking for errors first
     if not isinstance(file, Path):
         emessage = f"Wrong format! {file} is not a 'Path' object."
-        LOG.exception(emessage)
-        return False, file, None, None, False, emessage
+        raise Exception(emessage)  # Bug somewhere in code FIX EXCEPTION HERE
 
     if not file.exists():
         emessage = f"The path {file} does not exist!"
-        LOG.exception(emessage)
-        return False, file, None, None, False, emessage
+        raise Exception(emessage)  # Bug somewhere in code FIX EXCEPTION HERE
 
-    key = os.urandom(32)
-    LOG.debug(f"Data encryption key: {key}")
-
+    # Path to save processed file
     outfile = filedir / file_info['new_file']
     LOG.debug(f"Processed file will be saved in location: '{outfile}'")
 
+    # Check that temporary subdirectory exists
     new_dir = filedir / file_info['directory_path']
-    LOG.debug(f"new_dir: {new_dir}")
+    # LOG.debug(f"new_dir: {new_dir}")
     if not new_dir.exists():
-        LOG.debug(f"The temporary directory '{new_dir}' did not exist, "
-                  "creating it.")
+        LOG.debug(f"File: {file}\tThe temporary directory '{new_dir}' did "
+                  "not exist, creating it.")
         new_dir.mkdir(parents=True)
 
-    # Read file
+    # Begin processing
     try:
-        original_umask = os.umask(0)
+        original_umask = os.umask(0)  # user file-creation mode mask
         with file.open(mode='rb') as f:
+
             # Compress if not compressed
             chunk_stream = file_reader(f) if file_info['compressed'] \
                 else compress_file(f)
-            # Encrypt
+
             LOG.info(f"Beginning encryption of file '{file}'.")
+            # Begin encryption
             with outfile.open(mode='ab+') as of:
-                iv_bytes = os.urandom(12)
-                # LOG.debug(f"Initial nonce -- bytes: {iv_bytes}\n"
-                #           f"\tint: {int.from_bytes(iv_bytes, 'little')}")
+                key = os.urandom(32)     # Data encryption key
+                iv_bytes = os.urandom(12)    # Initial nonce/value
+                LOG.debug(f"Data encryption key: {key}\n"
+                          "Initial nonce: {iv_bytes}")
+
+                # Write nonce to file and save 12 bytes for last nonce
                 of.write(iv_bytes)
                 saved_bytes = (0).to_bytes(length=12, byteorder='little')
                 of.write(saved_bytes)
-                nonce = b''
+
+                nonce = b''     # Catches the nonces
                 for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
                                                              key=key,
                                                              iv=iv_bytes):
-                    # of.write(nonce)
-                    # LOG.debug(f"Nonce: {nonce}, "
-                    #           f"int: {int.from_bytes(nonce, 'little')}")
-                    of.write(ciphertext)
-                of.seek(12)
-                # LOG.debug(f"last nonce: {nonce}")
-                of.write(nonce)
-    except Exception as ee:  # FIX EXCEPTION
+                    of.write(ciphertext)    # Write the ciphertext to the file
+
+                of.seek(12)         # Find the saved bytes
+                of.write(nonce)     # Write the last nonce to file
+    except Exception as ee:  # FIX EXCEPTION HERE
         LOG.exception(f"Processig failed! {ee}")
         return False, file, outfile, 0, False, ee
     else:
-        LOG.info(f"Encryption of '{file}' -- completed!")
-        compressed = True
+        LOG.info(f"Processing of '{file}' -- completed!")
+        # Info on if delivery system compressed or not
+        ds_compressed = False if file_info['compressed'] else True
     finally:
-        os.umask(original_umask)
+        os.umask(original_umask)    # Remove mask
 
-    # Check encrypted file size
     e_size = outfile.stat().st_size  # Encrypted size in bytes
     LOG.info(f"Encrypted file size: {e_size} ({outfile})")
 
     # success, original_file, processed_file, processed_size, compressed, error
-    return True, file, outfile, e_size, compressed, None
+    return True, file, outfile, e_size, ds_compressed, None
 
 
-def process_folder(folder_contents: dict, filedir):
-    # for file in folder_contents:
-    #     LOG.debug(f"Processing file in folder: {file}")
-    #     yield process_file(file, folder_contents[file], filedir)
-    pass
+def prep_upload(path: Path, path_info: dict, filedir) \
+        -> (bool, Path, list, str):
+    '''Prepares the files for upload.
 
+    Args:
+        path:           Path to file
+        path_info:      Info on file
 
-def prep_upload(path: Path, path_info: dict, filedir):
-    '''Prepares the files for upload'''
+    Returns:
+        tuple:  Info on success and file after processing
+
+            bool:   True if processing successful
+            Path:   Path to original file
+            list:   Processed file info
+            str:    Message if paths don't match
+    '''
 
     LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
 
-    success = False
-    process_info = {}
-    # if path_info['directory']:
-    #     process_info[path] = {'directory': True}
-    #     for file in path_info['contents']:
-    #         LOG.debug(f"Processing file in folder: {file}")
-    #         success, file_, *info = process_file(
-    #             file=file,
-    #             file_info=path_info['contents'][file],
-    #             filedir=filedir
-    #         )
-    #         if not success:
-    #             return success, path, process_info, info[1]
-    #         elif file != file:
-    #             emessage = ("The processing did not return the same file as "
-    #                         f"was input -- cannot continue delivery.")
-    #             LOG.warning(emessage)
-    #             return False, path, process_info, emessage
-
-    #         process_info[path][file_] = {'encrypted': info[0],
-    #                                      'encrypted_size': info[1],
-    #                                      'compressed': info[2]}
-
-    # elif path_info['file']:
-
+    # Begin processing incl encryption
     success, path_, *info = process_file(file=path,
                                          file_info=path_info,
                                          filedir=filedir)

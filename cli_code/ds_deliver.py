@@ -144,19 +144,19 @@ def put(config: str, username: str, password: str, project: str,
                 # When the pools are finished
                 for f in concurrent.futures.as_completed(pools):
 
-                    success, opath, (epath, esize, compressed, error), \
+                    success, opath, (epath, esize, ds_compressed, error), \
                         message = f.result()
                     CLI_LOGGER.debug(f"prepped: {success}, \n{opath}, \n"
-                                     f"{epath}, \n{esize}, \n{compressed}, "
+                                     f"{epath}, \n{esize}, \n{ds_compressed}, "
                                      f"\n{error}, \n{message}")
 
                     updated = delivery.update_data_dict(
                         path=opath,
                         pathinfo={
-                            'success': success,
+                            'proceed': success,
                             'encrypted_file': epath,
                             'encrypted_size': esize,
-                            'compressed': compressed,
+                            'ds_compressed': ds_compressed,
                             'error': error,
                             'message': message
                         }
@@ -181,51 +181,67 @@ def put(config: str, username: str, password: str, project: str,
                     uploaded, ofile, ufile, bucketpath, error = t.result()
                     CLI_LOGGER.debug(f"{uploaded}, {ofile}, {ufile}")
 
-                    if ofile not in delivery.data:
+                    if ofile not in delivery.data:  # Bug in code -- FAIL
                         CLI_LOGGER.exception("File not recognized.")
-                        continue
+                        raise Exception("File not found in data dict."
+                                        " Cancelling delivery.")
+                        # FIX EXCEPTION HERE
 
+                    # Data delivery info and returned not equal
                     if delivery.data[ofile]['encrypted_file'] \
                             != ufile:
-                        emessage = (" Encrypted file path not recorded"
+                        emessage = ("Encrypted file path not recorded"
                                     " for original, entered path.")
                         CLI_LOGGER.exception(emessage)
                         error = error + emessage
 
-                    delivery.update_data_dict(
+                    # Update data dictionary
+                    upload_updated = delivery.update_data_dict(
                         path=ofile,
-                        pathinfo={'success': uploaded,
+                        pathinfo={'proceed': uploaded,
                                   'error': error}
                     )
 
-                    if not uploaded or not delivery.data[ofile]['proceed']:
-                        CLI_LOGGER.warning("Upload failed, continuing to next file - "
-                                           f"file: {original_file} "
-                                           f"({uploaded_file})")
+                    # If data dictionary not uploaded -- failure, move on
+                    if not upload_updated:
+                        CLI_LOGGER.exception("Data info dictionary failed"
+                                             " to be updated, cannot proceed"
+                                             f" with delivery of '{ofile}'")
                         continue
-                    else:
-                        CLI_LOGGER.debug("Beginning database update. "
-                                         f"{ofile}")
-                        # update database here
+
+                    # CLI_LOGGER.debug(delivery.data[ofile])
+                    if not delivery.data[ofile]['proceed']:
+                        CLI_LOGGER.warning("Upload failed, continuing to next file - "
+                                           f"file: {ofile} "
+                                           f"({ufile})")
+                        continue
+
+                    CLI_LOGGER.debug(f"Beginning database update. {ofile}\n"
+                                     f"{delivery.data[ofile]}")
+                    # update database here
+                    try:
                         with DatabaseConnector('project_db') as project_db:
                             _project = project_db[delivery.project_id]
-                            # str(ufile).partition(
-                            # str(filedir))[-1]
-                            # ADD CHECK IF EXISTS IN DB - BEFORE UPLOAD?
-                            _project['files'][str(Path(delivery.data[ofile]['new_file']).name)] = \
-                                {"directory_path": str(delivery.data[ofile]['directory_path']),
-                                 "size": delivery.data[ofile]['size'],
-                                 "compressed": delivery.data[ofile]['compressed'],
+                            keyinfo = delivery.data[ofile]
+                            key = str(keyinfo['new_file'])
+                            dir_path = str(keyinfo['directory_path'])
+
+                            _project['files'][key] = \
+                                {"directory_path": dir_path,
+                                 "size": keyinfo['size'],
+                                 "ds_compressed": keyinfo['ds_compressed'],
                                  "date_uploaded": timestamp()}
                             project_db.save(_project)
-
+                    except Exception as e:  # FIX EXCEPTION HERE
+                        emessage = f"Could not update database: {e}"
+                        CLI_LOGGER.warning()
+                        delivery.data[ofile].update({'error': emessage,
+                                                     'proceed': False})
+                    else:
                         CLI_LOGGER.info("Upload completed!"
                                         f"{delivery.data[ofile]}")
-                        delivery.data[ofile]["success"] = True
-                        CLI_LOGGER.debug(
-                            "success: "
-                            f"{delivery.data[ofile]['success']}"
-                        )
+                    CLI_LOGGER.debug("success: "
+                                     f"{delivery.data[ofile]['proceed']}")
 
 
 @cli.command()

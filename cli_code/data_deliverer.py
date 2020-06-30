@@ -479,8 +479,8 @@ class DataDeliverer():
             '''
 
         # self.logger.debug(f"do file checks: {file}")
-        proceed = True
         error = ""
+        proceed = True
 
         # Check if compressed and save algorithm info if yes
         compressed = is_compressed(file)
@@ -512,18 +512,29 @@ class DataDeliverer():
                              Path(file.name + proc_suff))
         self.logger.debug(f"File: {file}\t Bucket path: {bucketfilename}")
 
+        # Check if file exists in db
+        with DatabaseConnector('project_db') as project_db:
+            proj = project_db[self.project_id]
+            if Path(bucketfilename).name in proj['files']:
+                error = "File '{file}' already exists in the database. "
+                self.logger.warning(error)
+                return False, compressed, bucketfilename, error
+
         try:
             # Check if file/folder exists in bucket
             with S3Connector(bucketname=self.bucketname,
                              project=self.s3project) as s3:
                 # Check if file exists in bucket already
-                exists = s3.file_exists_in_bucket(bucketfilename)
-                self.logger.debug(f"File: {file}\t Exists in bucket: {exists}")
+                in_bucket = s3.file_exists_in_bucket(bucketfilename)
+                self.logger.debug(
+                    f"File: {file}\t Exists in bucket: {in_bucket}")
 
-                if exists:  # If the file is already delivered, do not proceed
-                    self.logger.warning(f"File '{file.name}' already "
-                                        "exists in bucket")
-                    proceed = False
+                if in_bucket:  # If the file is already in bucket
+                    error = f"File '{file.name}' already exists in " + \
+                        " bucket, but does NOT exist in database. " + \
+                            "Delivery cancelled, contact support."
+                    self.logger.critical(error)
+                    return False, compressed, bucketfilename, error
         except Exception as e:  # FIX EXCEPTION HERE
             error = e
             self.logger.warning(error)
@@ -548,58 +559,63 @@ class DataDeliverer():
                           f"\t\tNew_file: {new_file} \n"
                           f"\t\tError: {error}")
 
-        self.data[item].update({"proceed": proceed,
-                                "compressed": compressed,
-                                "new_file": new_file,
-                                "error": error})
+        updated = self.update_data_dict(
+            path=item,
+            pathinfo={"proceed": proceed,
+                      "compressed": compressed,
+                      "new_file": new_file,
+                      "error": error}
+        )
 
-        if not proceed and \
-                self.data[item]['in_directory']:  # Failure in folder
-            to_stop = {key: val for key, val in self.data.items()
-                       if self.data[key]['in_directory'] and
-                       (val['dir_name'] == self.data[item]['dir_name'])}
-
-            for f in to_stop:
-                self.data[f]['proceed'] = proceed
+        if not updated:
+            raise Exception("File {'item'} information couldn't be updated, "
+                            "required for delivery.")  # FIX EXCEPTION HERE
 
         return proceed
 
-    def update_data_dict(self, path, pathinfo):
+    def update_data_dict(self, path: str, pathinfo: dict) -> (bool):
+        '''Update file information in data dictionary.
 
-        # self.logger.debug(f"{pathinfo}, {type(pathinfo)}")
-        # if self.data[path]['directory']:
-        #     pathinfo[path].pop('directory')
-        #     self.logger.debug(f"{pathinfo}, {type(pathinfo)}")
-        #     for file, info in pathinfo[path].items():
-        #         self.logger.debug(f"{file}, {info}")
-        #         self.data[path]['contents'][file].update(info)
+        Args:
+            path:       Path to file
+            pathinfo:   Information about file incl. potential errors
 
-        proceed = pathinfo['success']
-        pathinfo.pop('success')
-        self.data[path].update(pathinfo)
+        Returns:
+            bool:   True if info update succeeded
+        '''
 
-        if not proceed:
-            emessage = (
-                "Processing failed! -- "
-                f"Error1: {self.data[path]['error'] if 'error' in self.data[path] and self.data[path]['error'] is not None else ''}, "
-                f"Error2: {self.data[path]['message'] if 'message' in self.data[path] and self.data[path]['message'] is not None else ''}"
-            )
-            CLI_LOGGER.exception(emessage)
-            # If the processing failed, the e_size is an exception
-            self.data[path]['error'] = emessage
+        try:
+            proceed = pathinfo['proceed']   # All ok so far --> processing
+            pathinfo.pop('proceed')
+            self.data[path].update(pathinfo)    # Update file info
+        except Exception as e:  # FIX EXCEPTION HERE
+            self.logger.critical(e)
+            return False
+        else:
+            if not proceed:     # Cancel delivery of file
+                nl = '\n'
+                emessage = (
+                    f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
+                    f"{pathinfo['message'] + nl if 'message' in pathinfo else ''}"
+                )
+                self.logger.exception(emessage)
+                # If the processing failed, the e_size is an exception
+                self.data[path]['error'] = emessage
 
-        if self.data[path]['in_directory']:  # Failure in folder
-            to_stop = {
-                key: val for key, val in self.data.items()
-                if self.data[key]['in_directory'] and
-                (val['dir_name'] == self.data[path]['dir_name'])
-            }
+            if self.data[path]['in_directory']:  # Failure in folder > all fail
+                to_stop = {
+                    key: val for key, val in self.data.items()
+                    if self.data[key]['in_directory'] and
+                    (val['dir_name'] == self.data[path]['dir_name'])
+                }
 
-            for f in to_stop:
-                self.data[f]['proceed'] = proceed
+                for f in to_stop:
+                    self.data[f]['proceed'] = proceed
+                    self.data[f]['error'] = ("Within same directory as failed "
+                                             f"file '{path}'")
 
-        self.logger.debug(self.data[path])
-        return True
+            # self.logger.debug(self.data[path])
+            return True
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""

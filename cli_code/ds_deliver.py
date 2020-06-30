@@ -112,14 +112,18 @@ def put(config: str, username: str, password: str, project: str,
 
                 CLI_LOGGER.debug(f"Beginning delivery of {path}")
 
-                proceed = delivery.get_content_info(item=path)
+                # Check files in same folder as failed file
+                if 'proceed' in delivery.data[path] and not delivery.data[path]['proceed']:
+                    proceed = False
+                else:
+                    proceed = delivery.get_content_info(item=path)
 
-                CLI_LOGGER.debug(f"Proceed to processing: {proceed}")
-                if not proceed or not delivery.data[path]['proceed']:
+                # CLI_LOGGER.debug(f"Proceed to processing: {proceed}")
+                if not proceed:
                     CLI_LOGGER.debug("Moving on to next file")
                     continue
 
-                CLI_LOGGER.debug(f"proceed: {proceed} --> {path}")
+                # CLI_LOGGER.debug(f"proceed: {proceed} --> {path}")
 
                 p_future = pool_executor.submit(
                     fh.prep_upload,
@@ -208,7 +212,7 @@ def put(config: str, username: str, password: str, project: str,
                             # str(ufile).partition(
                             # str(filedir))[-1]
                             # ADD CHECK IF EXISTS IN DB - BEFORE UPLOAD?
-                            _project['files'][str(delivery.data[ofile]['new_file'])] = \
+                            _project['files'][str(Path(delivery.data[ofile]['new_file']).name)] = \
                                 {"directory_path": str(delivery.data[ofile]['directory_path']),
                                  "size": delivery.data[ofile]['size'],
                                  "compressed": delivery.data[ofile]['compressed'],

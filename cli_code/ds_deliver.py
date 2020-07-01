@@ -103,8 +103,24 @@ def put(config: str, username: str, password: str, project: str,
         CLI_LOGGER.info(f"Data to deliver: {delivery.data}\n"
                         f"Number of items to upload: {len(delivery.data)}")
 
+        # Start multithreading ######################### Start multithreading #
+        check_executor = concurrent.futures.ThreadPoolExecutor()
+        cthreads = {
+            check_executor.submit(delivery.get_content_info, path): path
+            for path in delivery.data
+        }
+        for cfuture in concurrent.futures.as_completed(cthreads):
+            path = cthreads[cfuture]
+            try:
+                data = cfuture.result()
+            except Exception as exc:
+                print(f"{path}: {exc}")
+            else:
+                print(f"{path}: {data}")
+
+        sys.exit()
         # Create multiprocess pool
-        with concurrent.futures.ProcessPoolExecutor() as pool_executor:
+        with concurrent.futures.ProcessPoolExecutor() as pool_exec:
             CLI_LOGGER.debug("Started ProcessPoolExecutor...")
 
             pools = []                  # Ongoing pool operations

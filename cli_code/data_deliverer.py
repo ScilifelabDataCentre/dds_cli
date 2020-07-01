@@ -44,12 +44,15 @@ class DataDeliverer():
 
     Attributes:
         method (str):           Delivery method, put or get
+        user (DSUser):          Data Delivery System user
         project_id (str):       Project ID to upload to/download from
         project_owner (str):    Owner of the current project
         data (list):            Paths to files/folders
-        tempdir (list):         Paths to temporary DP folders
-        user (DSUser):          Data Delivery System user
-        s3 (S3Connector):          S3 connection object
+        bucketname (str):       Name of S3 bucket to deliver to/from
+        s3project (str):        ID of S3 project containing buckets
+        tempdir (tuple):        Paths to temporary DP folders
+        logfile (str):          Path to log file
+        logger (Logger):        Logger - keeps track of bugs, info, errors etc
 
     Raises:
         DeliverySystemException:    Required info not found or access denied
@@ -57,6 +60,9 @@ class DataDeliverer():
 
     '''
 
+    #################
+    # Magic Methods #
+    #################
     def __init__(self, config=None, username=None, password=None,
                  project_id=None, project_owner=None,
                  pathfile=None, data=None):
@@ -71,22 +77,24 @@ class DataDeliverer():
             )
 
         # Initialize attributes
-        self.method = sys._getframe().f_back.f_code.co_name  # put or get?
-        self.user = DSUser(username=username, password=password)
-        self.project_id = project_id
-        self.project_owner = project_owner  # user, not facility
-        self.data = None           # dictionary, keeps track of delivery
-        self.bucketname = ""
-        self.s3project = ""
+        self.method = sys._getframe().f_back.f_code.co_name  # put or get
+        self.user = _DSUser(username=username, password=password)
+        self.project_id = project_id        # Project ID - not S3
+        self.project_owner = project_owner  # User, not facility
+        self.data = None           # Dictionary, keeps track of delivery
+
+        # S3 related
+        self.bucketname = ""    # S3 bucket name -- to connect to S3
+        self.s3project = ""     # S3 project ID -- to connect to S3
 
         # Check if all required info is entered
-        self.check_user_input(config=config)
+        self._check_user_input(config=config)
 
         # Check if user has access to delivery system
-        ds_access_granted = self.check_ds_access()
+        ds_access_granted = self._check_ds_access()
         if ds_access_granted and self.user.id is not None:
             # Check users access to specified project
-            proj_access_granted, self.s3project = self.check_project_access()
+            proj_access_granted, self.s3project = self._check_project_access()
             if proj_access_granted and self.s3project is not None:
                 # If no data to upload, cancel
                 if not data and not pathfile:
@@ -97,8 +105,8 @@ class DataDeliverer():
                         "For help: 'ds_deliver --help'"
                     )
                 else:
-                    self.data = self.data_to_deliver(data=data,
-                                                     pathfile=pathfile)
+                    self.data = self._data_to_deliver(data=data,
+                                                      pathfile=pathfile)
             else:
                 raise DeliverySystemException(
                     f"Access to project {self.project_id} "
@@ -177,7 +185,7 @@ class DataDeliverer():
                     suc_list.append([suc, loc])
 
             else:
-                finalized = self.finalize(file=f)
+                finalized = self._finalize(file=f)
                 # Print failed items
                 if self.data[f]['in_directory']:
                     suc = str(self.data[f]['dir_name'])
@@ -192,30 +200,18 @@ class DataDeliverer():
 
         if len(suc_list) > 0:
             self.logger.info("----DELIVERY COMPLETED----")
-            self.logger.info(f"The following items were uploaded:\n{succeeded}\n")
-        if len(fai_list) == len(suc_list) + len(fai_list): 
+            self.logger.info(
+                f"The following items were uploaded:\n{succeeded}\n")
+        if len(fai_list) == len(suc_list) + len(fai_list):
             self.logger.error("----DELIVERY FAILED----")
-        if len(fai_list) > 0: 
-            self.logger.error(f"The following items were NOT uploaded:\n{failed}\n")
+        if len(fai_list) > 0:
+            self.logger.error(
+                f"The following items were NOT uploaded:\n{failed}\n")
 
-    def finalize(self, file):
-        '''Makes sure that the file is not in bucket or db and deletes
-        if it is'''
-
-        with S3Connector(bucketname=self.bucketname,
-                         project=self.s3project) as s3:
-            if all(x in self.data[file] for x in ['new_file', 'up_ok']) \
-                    and self.data[file]['up_ok']:
-                s3.delete_item(key=self.data[file]['new_file'])
-
-        with DatabaseConnector(db_name='project_db') as prdb:
-            proj = prdb[self.project_id]
-
-            if 'new_file' in self.data[file] and self.data[file]['proceed'] \
-                    and 'db_ok' in self.data[file] and self.data[file]['db_ok']:
-                del proj['files'][self.data[file]['new_file']]
-
-    def check_user_input(self, config):
+    ###################
+    # Private Methods #
+    ###################
+    def _check_user_input(self, config):
         '''Checks that the correct options and credentials are entered.
 
         Args:
@@ -279,7 +275,7 @@ class DataDeliverer():
             raise DeliveryOptionException("Project owner not specified. "
                                           "Cancelling delivery.")
 
-    def check_ds_access(self):
+    def _check_ds_access(self):
         '''Checks the users access to the delivery system
 
         Returns:
@@ -333,7 +329,7 @@ class DataDeliverer():
                 "Access to Delivery System denied."
             )
 
-    def check_project_access(self):
+    def _check_project_access(self):
         '''Checks the users access to a specific project.
 
         Returns:
@@ -424,7 +420,7 @@ class DataDeliverer():
                     "project. Cancelling delivery."
                 )
 
-    def data_to_deliver(self, data: tuple, pathfile: str) -> (list):
+    def _data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list
 
         Args:
@@ -501,7 +497,7 @@ class DataDeliverer():
                     )
         return all_files
 
-    def do_file_checks(self, file: Path) -> (bool, bool, str):
+    def _do_file_checks(self, file: Path) -> (bool, bool, str):
         '''Checks if file is compressed and if it has already been delivered.
 
         Args:
@@ -581,6 +577,43 @@ class DataDeliverer():
 
         return proceed, compressed, bucketfilename, error
 
+    def _finalize(self, file: Path) -> (bool):
+        '''Makes sure that the file is not in bucket or db and deletes
+        if it is.
+
+        Args:
+            file:   Path to file
+
+        Returns:
+            bool:   True if deletion successful
+        '''
+
+        try:
+            with S3Connector(bucketname=self.bucketname,
+                             project=self.s3project) as s3:
+                if all(x in self.data[file] for x in ['new_file', 'up_ok']) \
+                        and self.data[file]['up_ok']:
+                    s3.delete_item(key=self.data[file]['new_file'])
+        except Exception as e:  # FIX EXCEPTION HERE
+            self.logger.warning(e)
+            return False
+
+        try:
+            with DatabaseConnector(db_name='project_db') as prdb:
+                proj = prdb[self.project_id]
+
+                if 'new_file' in self.data[file] and self.data[file]['proceed'] \
+                        and 'db_ok' in self.data[file] and self.data[file]['db_ok']:
+                    del proj['files'][self.data[file]['new_file']]
+        except Exception as e:  # FIX EXCEPTION HERE
+            self.logger.warning(e)
+            return False
+
+        return True
+
+    ##################
+    # Public Methods #
+    ##################
     def get_content_info(self, item: Path) -> (bool):
         '''Checks if file can proceed to processing. 
 
@@ -592,7 +625,7 @@ class DataDeliverer():
                     and does not exist in the database. 
         '''
 
-        proceed, compressed, new_file, error = self.do_file_checks(file=item)
+        proceed, compressed, new_file, error = self._do_file_checks(file=item)
         self.logger.debug(f"File: {item}\n \t\tProceed: {proceed}, \n"
                           f"\t\tCompressed: {compressed}, \n"
                           f"\t\tNew_file: {new_file} \n"
@@ -611,56 +644,6 @@ class DataDeliverer():
                             "required for delivery.")  # FIX EXCEPTION HERE
 
         return proceed
-
-    def update_data_dict(self, path: str, pathinfo: dict) -> (bool):
-        '''Update file information in data dictionary.
-
-        Args:
-            path:       Path to file
-            pathinfo:   Information about file incl. potential errors
-
-        Returns:
-            bool:   True if info update succeeded
-        '''
-
-        try:
-            proceed = pathinfo['proceed']   # All ok so far --> processing
-            self.data[path].update(pathinfo)    # Update file info
-        except Exception as e:  # FIX EXCEPTION HERE
-            self.logger.critical(e)
-            return False
-        else:
-            if not proceed:     # Cancel delivery of file
-                nl = '\n'
-                emessage = (
-                    f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
-                    f"{pathinfo['message'] + nl if 'message' in pathinfo else ''}"
-                )
-                self.logger.exception(emessage)
-                # If the processing failed, the e_size is an exception
-                self.data[path]['error'] = emessage
-
-                if self.data[path]['in_directory']:  # Failure in folder > all fail
-                    to_stop = {
-                        key: val for key, val in self.data.items()
-                        if self.data[key]['in_directory'] and
-                        (val['dir_name'] == self.data[path]['dir_name'])
-                    }
-
-                    for f in to_stop:
-                        self.data[f]['proceed'] = proceed
-                        self.data[f]['error'] = (
-                            "One or more of the items in folder "
-                            f"'{self.data[f]['dir_name']}' (at least '{path}') "
-                            "has already been delivered!"
-                        )
-                        if 'up_ok' in self.data[path]:
-                            self.data[f]['up_ok'] = self.data[path]['up_ok']
-                        if 'db_ok' in self.data[path]:
-                            self.data[f]['db_ok'] = self.data[path]['db_ok']
-
-            # self.logger.debug(self.data[path])
-            return True
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
@@ -701,7 +684,53 @@ class DataDeliverer():
 
                 return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
 
-    def put(self, file: Path) -> (str):
+    def get(self, path: str) -> (str):
+        '''Downloads specified data from S3 bucket
+
+        Args:
+            file:           File to be downloaded
+            dl_file:        Name of downloaded file
+
+        Returns:
+            str:    Success message if download successful
+
+        '''
+        # Check if bucket exists
+        if self.s3.bucket in self.s3.resource.buckets.all():
+            # Check if path exists in bucket
+            file_in_bucket = self.s3.files_in_bucket(key=path)
+
+            for file in file_in_bucket:
+                new_path = self.tempdir.files / \
+                    Path(file.key)  # Path to downloaded
+                if not new_path.parent.exists():
+                    try:
+                        new_path.parent.mkdir(parents=True)
+                    except IOError as ioe:
+                        sys.exit("Could not create folder "
+                                 f"{new_path.parent}. Cannot"
+                                 "proceed with delivery. Cancelling: "
+                                 f"{ioe}")
+
+                if not new_path.exists():
+                    try:
+                        self.s3.resource.meta.client.download_file(
+                            self.s3.bucket.name,
+                            file.key, str(new_path))
+                    except Exception as e:
+                        self.data[path][new_path] = {"downloaded": False,
+                                                     "error": e}
+                    else:
+                        self.data[path][new_path] = {"downloaded": True}
+
+                else:
+                    print(f"File {str(new_path)} already exists. "
+                          "Not downloading.")
+            return True, path
+
+        raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
+
+    def put(self, file: Path) -> (bool, Path, list, list, str):
         '''Uploads specified data to the S3 bucket.
 
         Args:
@@ -763,56 +792,60 @@ class DataDeliverer():
                                      f"Bucket location: {filepath}")
                     return True, file, file_to_upload, filepath, None
 
-    def get(self, path: str) -> (str):
-        '''Downloads specified data from S3 bucket
+    def update_data_dict(self, path: str, pathinfo: dict) -> (bool):
+        '''Update file information in data dictionary.
 
         Args:
-            file:           File to be downloaded
-            dl_file:        Name of downloaded file
+            path:       Path to file
+            pathinfo:   Information about file incl. potential errors
 
         Returns:
-            str:    Success message if download successful
-
+            bool:   True if info update succeeded
         '''
-        # Check if bucket exists
-        if self.s3.bucket in self.s3.resource.buckets.all():
-            # Check if path exists in bucket
-            file_in_bucket = self.s3.files_in_bucket(key=path)
 
-            for file in file_in_bucket:
-                new_path = self.tempdir.files / \
-                    Path(file.key)  # Path to downloaded
-                if not new_path.parent.exists():
-                    try:
-                        new_path.parent.mkdir(parents=True)
-                    except IOError as ioe:
-                        sys.exit("Could not create folder "
-                                 f"{new_path.parent}. Cannot"
-                                 "proceed with delivery. Cancelling: "
-                                 f"{ioe}")
+        try:
+            proceed = pathinfo['proceed']   # All ok so far --> processing
+            self.data[path].update(pathinfo)    # Update file info
+        except Exception as e:  # FIX EXCEPTION HERE
+            self.logger.critical(e)
+            return False
+        else:
+            if not proceed:     # Cancel delivery of file
+                nl = '\n'
+                emessage = (
+                    f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
+                    f"{pathinfo['message'] + nl if 'message' in pathinfo else ''}"
+                )
+                self.logger.exception(emessage)
+                # If the processing failed, the e_size is an exception
+                self.data[path]['error'] = emessage
 
-                if not new_path.exists():
-                    try:
-                        self.s3.resource.meta.client.download_file(
-                            self.s3.bucket.name,
-                            file.key, str(new_path))
-                    except Exception as e:
-                        self.data[path][new_path] = {"downloaded": False,
-                                                     "error": e}
-                    else:
-                        self.data[path][new_path] = {"downloaded": True}
+                if self.data[path]['in_directory']:  # Failure in folder > all fail
+                    to_stop = {
+                        key: val for key, val in self.data.items()
+                        if self.data[key]['in_directory'] and
+                        (val['dir_name'] == self.data[path]['dir_name'])
+                    }
 
-                else:
-                    print(f"File {str(new_path)} already exists. "
-                          "Not downloading.")
-            return True, path
+                    for f in to_stop:
+                        self.data[f]['proceed'] = proceed
+                        self.data[f]['error'] = (
+                            "One or more of the items in folder "
+                            f"'{self.data[f]['dir_name']}' (at least '{path}') "
+                            "has already been delivered!"
+                        )
+                        if 'up_ok' in self.data[path]:
+                            self.data[f]['up_ok'] = self.data[path]['up_ok']
+                        if 'db_ok' in self.data[path]:
+                            self.data[f]['db_ok'] = self.data[path]['db_ok']
 
-        raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
+            # self.logger.debug(self.data[path])
+            return True
 
 # DSUSER ############################################################## DSUER #
 
 
-class DSUser():
+class _DSUser():
     '''
     A Data Delivery System user.
 

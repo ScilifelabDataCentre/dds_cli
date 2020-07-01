@@ -172,13 +172,13 @@ class DataDeliverer():
         wrapper = textwrap.TextWrapper(width=100)
 
         for f in self.data:
+            self._del_from_temp(file=f)
             if self.data[f]["proceed"]:
-                if self.data[f]["in_directory"]:
-                    suc = str(self.data[f]['dir_name'])
-                    loc = str(self.data[f]["directory_path"]) + "\n"
-                else:
-                    suc = str(f)
-                    loc = str(self.data[f]['directory_path']) + "\n"
+                suc = str(self.data[f]['dir_name']) \
+                    if self.data[f]["in_directory"] else str(f)
+                loc = str(self.data[f]["directory_path"]) + "\n" \
+                    if self.data[f]["in_directory"] \
+                    else str(self.data[f]['directory_path']) + "\n"
 
                 if suc not in suc_dict:
                     succeeded.add_row([suc, loc])
@@ -187,16 +187,15 @@ class DataDeliverer():
             else:
                 finalized = self._finalize(file=f)
                 # Print failed items
-                if self.data[f]['in_directory']:
-                    suc = str(self.data[f]['dir_name'])
-                    loc = '\n'.join(wrapper.wrap(self.data[f]["error"])) + "\n"
-                else:
-                    suc = str(f)
-                    loc = '\n'.join(wrapper.wrap(self.data[f]['error'])) + "\n"
+                fail = str(self.data[f]['dir_name']) \
+                    if self.data[f]['in_directory'] else str(f)
+                err = '\n'.join(wrapper.wrap(self.data[f]["error"])) + "\n" \
+                    if self.data[f]['in_directory'] else \
+                    '\n'.join(wrapper.wrap(self.data[f]['error'])) + "\n"
 
-                if suc not in fai_dict:
-                    failed.add_row([suc, loc])
-                    fai_dict[suc] = loc
+                if fail not in fai_dict:
+                    failed.add_row([fail, err])
+                    fai_dict[fail] = err
 
         if len(suc_dict) > 0:
             self.logger.info("----DELIVERY COMPLETED----")
@@ -497,6 +496,29 @@ class DataDeliverer():
                     )
         return all_files
 
+    def _del_from_temp(self, file: Path) -> (bool):
+        '''Deletes temporary files'''
+
+        if 'encrypted_file' in self.data[file] \
+                and self.data[file]['encrypted_file'].exists():
+            try:
+                os.remove(self.data[file]['encrypted_file'])
+            except Exception as e:  # FIX EXCEPTION HERE
+                self.logger.exception("Failed deletion of temporary file "
+                                      f"{self.data[file]['encrypted_file']}:"
+                                      f" {e}")
+                return False
+            else:
+                self.logger.info(f"File: {file}\t Encrypted temporary file"
+                                 f"{self.data[file]['encrypted_file']}"
+                                 "successfully deleted.")
+                return True
+
+        self.logger.exception("Deletion of temporary file failed - 'encrypted"
+                              "_file' not in data dictionary, OR the file "
+                              "does not exist.")
+        return False
+
     def _do_file_checks(self, file: Path) -> (bool, bool, str):
         '''Checks if file is compressed and if it has already been delivered.
 
@@ -615,14 +637,14 @@ class DataDeliverer():
     # Public Methods #
     ##################
     def get_content_info(self, item: Path) -> (bool):
-        '''Checks if file can proceed to processing. 
+        '''Checks if file can proceed to processing.
 
         Args:
             item:   Path to file
 
         Returns:
             bool:   True if file info saved, has not been previously delivered
-                    and does not exist in the database. 
+                    and does not exist in the database.
         '''
 
         proceed, compressed, new_file, error = self._do_file_checks(file=item)
@@ -736,7 +758,7 @@ class DataDeliverer():
         Args:
             file:       Path to original file
 
-        Returns: 
+        Returns:
 
         '''
 

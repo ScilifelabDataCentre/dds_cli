@@ -6,6 +6,7 @@ import threading
 import traceback
 import logging
 import textwrap
+import shutil
 
 from cli_code.crypt4gh.crypt4gh import lib
 from prettytable import PrettyTable
@@ -172,7 +173,6 @@ class DataDeliverer():
         wrapper = textwrap.TextWrapper(width=100)
 
         for f in self.data:
-            self._del_from_temp(file=f)
             if self.data[f]["proceed"]:
                 suc = str(self.data[f]['dir_name']) \
                     if self.data[f]["in_directory"] else str(f)
@@ -183,7 +183,6 @@ class DataDeliverer():
                 if suc not in suc_dict:
                     succeeded.add_row([suc, loc])
                     suc_dict[suc] = loc
-
             else:
                 finalized = self._finalize(file=f)
                 # Print failed items
@@ -196,6 +195,8 @@ class DataDeliverer():
                 if fail not in fai_dict:
                     failed.add_row([fail, err])
                     fai_dict[fail] = err
+
+        self._clear_tempdir()
 
         if len(suc_dict) > 0:
             self.logger.info("----DELIVERY COMPLETED----")
@@ -419,6 +420,16 @@ class DataDeliverer():
                     "project. Cancelling delivery."
                 )
 
+    def _clear_tempdir(self):
+        '''Remove all contents from temporary file directory'''
+
+        for d in [x for x in self.tempdir.files.iterdir() if x.is_dir()]:
+            try:
+                shutil.rmtree(d)
+            except Exception as e:  # FIX EXCEPTION HERE
+                self.logger.exception("Failed emptying the temporary folder"
+                                      f"{d}: {e}")
+
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list
 
@@ -495,29 +506,6 @@ class DataDeliverer():
                         "Cancelling delivery."
                     )
         return all_files
-
-    def _del_from_temp(self, file: Path) -> (bool):
-        '''Deletes temporary files'''
-
-        if 'encrypted_file' in self.data[file] \
-                and self.data[file]['encrypted_file'].exists():
-            try:
-                os.remove(self.data[file]['encrypted_file'])
-            except Exception as e:  # FIX EXCEPTION HERE
-                self.logger.exception("Failed deletion of temporary file "
-                                      f"{self.data[file]['encrypted_file']}:"
-                                      f" {e}")
-                return False
-            else:
-                self.logger.info(f"File: {file}\t Encrypted temporary file"
-                                 f"{self.data[file]['encrypted_file']}"
-                                 "successfully deleted.")
-                return True
-
-        self.logger.exception("Deletion of temporary file failed - 'encrypted"
-                              "_file' not in data dictionary, OR the file "
-                              "does not exist.")
-        return False
 
     def _do_file_checks(self, file: Path) -> (bool, bool, str):
         '''Checks if file is compressed and if it has already been delivered.

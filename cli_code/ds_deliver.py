@@ -218,6 +218,9 @@ def put(config: str, username: str, password: str, project: str,
                                            f"({ufile})")
                         continue
 
+                    # Delete file from temporary directory
+                    fh.del_from_temp(file=ufile)
+
                     CLI_LOGGER.debug(f"Beginning database update. {ofile}\n"
                                      f"{delivery.data[ofile]}")
                     # update database here

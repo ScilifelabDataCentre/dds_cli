@@ -89,6 +89,24 @@ LOG = config_logger(
 ###############################################################################
 
 
+def del_from_temp(file: Path) -> (bool):
+    '''Deletes temporary files'''
+
+    if file.exists():
+        try:
+            os.remove(file)
+        except Exception as e:  # FIX EXCEPTION HERE
+            LOG.exception("Failed deletion of temporary file "
+                          f"{file}: {e}")
+        else:
+            LOG.info(f"Encrypted temporary file '{file}'"
+                     "successfully deleted.")
+    else:
+        LOG.warning(f"The file '{file}' does not exist, but was recently "
+                    "uploaded to S3 -- Error in delivery system! ")
+    return
+
+
 def get_root_path(file: Path, path_base: str = None) -> (Path):
     '''Gets the path to the file, from the entered folder.
 

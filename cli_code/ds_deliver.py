@@ -102,25 +102,9 @@ def put(config: str, username: str, password: str, project: str,
         CLI_LOGGER = config_logger(LOG_FILE)
         CLI_LOGGER.info(f"Data to deliver: {delivery.data}\n"
                         f"Number of items to upload: {len(delivery.data)}")
-
-        # Start multithreading ######################### Start multithreading #
-        check_executor = concurrent.futures.ThreadPoolExecutor()
-        cthreads = {
-            check_executor.submit(delivery.get_content_info, path): path
-            for path in delivery.data
-        }
-        for cfuture in concurrent.futures.as_completed(cthreads):
-            path = cthreads[cfuture]
-            try:
-                data = cfuture.result()
-            except Exception as exc:
-                print(f"{path}: {exc}")
-            else:
-                print(f"{path}: {data}")
-
-        sys.exit()
+        
         # Create multiprocess pool
-        with concurrent.futures.ProcessPoolExecutor() as pool_exec:
+        with concurrent.futures.ProcessPoolExecutor() as pool_executor:
             CLI_LOGGER.debug("Started ProcessPoolExecutor...")
 
             pools = []                  # Ongoing pool operations
@@ -129,11 +113,7 @@ def put(config: str, username: str, password: str, project: str,
                 CLI_LOGGER.debug(f"Beginning delivery of {path}")
 
                 # Check files in same folder as failed file
-                if 'proceed' in delivery.data[path] and \
-                        not delivery.data[path]['proceed']:
-                    proceed = False
-                else:
-                    proceed = delivery.get_content_info(item=path)
+                proceed = delivery.get_content_info(item=path)
 
                 # CLI_LOGGER.debug(f"Proceed to processing: {proceed}")
                 if not proceed:

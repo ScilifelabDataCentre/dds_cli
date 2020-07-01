@@ -523,7 +523,7 @@ class DataDeliverer():
                 str:    File path with new suffixes
             '''
 
-        # self.logger.debug(f"do file checks: {file}")
+        self.logger.debug(f"do file checks: {file}")
         error = ""
         proceed = True
 
@@ -560,7 +560,8 @@ class DataDeliverer():
         # Check if file exists in db
         with DatabaseConnector('project_db') as project_db:
             proj = project_db[self.project_id]
-            if Path(bucketfilename).name in proj['files']:
+            self.logger.debug(f"Checking db for file '{bucketfilename}'")
+            if bucketfilename in proj['files']:
                 error = f"File '{file}' already exists in the database. "
                 self.logger.warning(error)
                 return False, compressed, bucketfilename, error
@@ -634,6 +635,9 @@ class DataDeliverer():
             bool:   True if file info saved, has not been previously delivered
                     and does not exist in the database.
         '''
+
+        if 'proceed' in self.data[item] and not self.data[item]['proceed']:
+            return False
 
         proceed, compressed, new_file, error = self._do_file_checks(file=item)
         self.logger.debug(f"File: {item}\n \t\tProceed: {proceed}, \n"

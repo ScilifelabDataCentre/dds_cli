@@ -161,8 +161,8 @@ class DataDeliverer():
 
         succeeded = PrettyTable(['Item', 'Location'])
         failed = PrettyTable(['Item', 'Error'])
-        suc_list = []
-        fai_list = []
+        suc_dict = {}
+        fai_dict = {}
         succeeded.align['Delivered item'] = "r"
         failed.align['Failed item'] = "r"
         succeeded.align['Location'] = "l"
@@ -180,9 +180,9 @@ class DataDeliverer():
                     suc = str(f)
                     loc = str(self.data[f]['directory_path']) + "\n"
 
-                if [suc, loc] not in suc_list:
+                if suc not in suc_dict:
                     succeeded.add_row([suc, loc])
-                    suc_list.append([suc, loc])
+                    suc_dict[suc] = loc
 
             else:
                 finalized = self._finalize(file=f)
@@ -194,17 +194,17 @@ class DataDeliverer():
                     suc = str(f)
                     loc = '\n'.join(wrapper.wrap(self.data[f]['error'])) + "\n"
 
-                if [suc, loc] not in fai_list:
+                if suc not in fai_dict:
                     failed.add_row([suc, loc])
-                    fai_list.append([suc, loc])
+                    fai_dict[suc] = loc
 
-        if len(suc_list) > 0:
+        if len(suc_dict) > 0:
             self.logger.info("----DELIVERY COMPLETED----")
             self.logger.info(
                 f"The following items were uploaded:\n{succeeded}\n")
-        if len(fai_list) == len(suc_list) + len(fai_list):
+        if len(fai_dict) == len(suc_dict) + len(fai_dict):
             self.logger.error("----DELIVERY FAILED----")
-        if len(fai_list) > 0:
+        if len(fai_dict) > 0:
             self.logger.error(
                 f"The following items were NOT uploaded:\n{failed}\n")
 

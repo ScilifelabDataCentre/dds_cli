@@ -50,7 +50,7 @@ class S3Connector():
         self.bucketname = bucketname
         self.bucket = None
         self.resource = None
-        self.connect()
+        self._connect()
 
     def __enter__(self):
         return self
@@ -63,7 +63,7 @@ class S3Connector():
             self = None
         return True
 
-    def connect(self):
+    def _connect(self):
         '''Connect to S3'''
 
         # Project access granted -- Get S3 credentials

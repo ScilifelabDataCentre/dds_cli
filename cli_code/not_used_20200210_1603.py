@@ -1362,3 +1362,69 @@ if not delivery.data[path]:
                 #         self.data[item]['contents'][file].update(
                 #             folder_file_info[file]
                 #         )
+
+####### 1ST JULY 2020
+# def update_dir(old_dir, new_dir):
+#     '''Update file directory and create folder'''
+
+#     try:
+#         original_umask = os.umask(0)
+#         updated_dir = old_dir / new_dir
+#         if not updated_dir.exists():
+#             updated_dir.mkdir(parents=True)
+#     except IOError as ioe:
+#         sys.exit(f"Could not create folder: {ioe}")
+#     finally:
+#         os.umask(original_umask)
+
+#     return updated_dir
+
+###### 1ST JULY 2020
+# def files_in_bucket(self, key: str):
+    #     '''Checks if the current file already exists in the specified bucket.
+    #     If so, the file will not be uploaded.
+
+    #     Args:
+    #         s3_resource:    Boto3 S3 resource
+    #         bucket:         Name of bucket to check for file
+    #         key:            Name of file to look for
+
+    #     Returns:
+    #         bool:   True if the file already exists, False if it doesnt
+
+    #     '''
+    #     # If extension --> file, if not --> folder (?)
+    #     folder = (len(key.split(os.extsep)) == 1)
+
+    #     if folder:
+    #         if not key.endswith(os.path.sep):  # path is a folder
+    #             key += os.path.sep
+
+    #     object_summary_iterator = self.bucket.objects.filter(Prefix=key)
+    #     return object_summary_iterator
+    #     # for o in object_summary_iterator:
+    #     #     yield o
+
+####### 1ST JULY 2020
+ # def prep_upload(self, file: str, recip_pub, filedir, path_from_base):
+    #     '''Prepares the files for upload'''
+
+    #     # hash
+    #     _, checksum = gen_hmac(file=file)
+
+    #     # encrypt
+    #     encrypted_file = filedir / Path(file.name + ".c4gh")
+    #     print("encrypting file", encrypted_file)
+    #     try:
+    #         original_umask = os.umask(0)
+    #         with file.open(mode='rb') as infile:
+    #             with encrypted_file.open(mode='ab+') as outfile:
+    #                 lib.encrypt(keys=[(0, self.seckey, recip_pub)],
+    #                             infile=infile,
+    #                             outfile=outfile)
+    #     except EncryptionError as ee:
+    #         return file, "Error", ee
+    #     finally:
+    #         os.umask(original_umask)
+
+    #     return file, encrypted_file, checksum

@@ -33,10 +33,15 @@ class S3Connector():
     Keeps information regarding the resource, project and bucket
     currently in use, and handles S3-related checks.
 
+    Args:
+        bucketname:     Name of bucket to access
+        project:        S3 project to access
+
     Attributes:
+        project:        S3 project ID
+        bucketname:     Name of bucket to access
+        bucket:         Bucket object to access
         resource:       S3 connection object
-        project (str):  S3 project ID
-        bucket:         S3 bucket object
     '''
 
     def __init__(self, bucketname, project):
@@ -59,6 +64,8 @@ class S3Connector():
         return True
 
     def connect(self):
+        '''Connect to S3'''
+
         # Project access granted -- Get S3 credentials
         s3path = Path.cwd() / Path("sensitive/s3_config.json")
         with s3path.open(mode='r') as f:
@@ -123,9 +130,6 @@ class S3Connector():
 
         Args:
             key:    Item (e.g. file) to delete from bucket
-
-        Returns:
-            bool:   True if deletion succeeded
         '''
 
         try:
@@ -136,28 +140,3 @@ class S3Connector():
             S3_LOG.exception(delex)
         else:
             S3_LOG.info(f"Item {key} deleted from bucket.")
-            
-    def files_in_bucket(self, key: str):
-        '''Checks if the current file already exists in the specified bucket.
-        If so, the file will not be uploaded.
-
-        Args:
-            s3_resource:    Boto3 S3 resource
-            bucket:         Name of bucket to check for file
-            key:            Name of file to look for
-
-        Returns:
-            bool:   True if the file already exists, False if it doesnt
-
-        '''
-        # If extension --> file, if not --> folder (?)
-        folder = (len(key.split(os.extsep)) == 1)
-
-        if folder:
-            if not key.endswith(os.path.sep):  # path is a folder
-                key += os.path.sep
-
-        object_summary_iterator = self.bucket.objects.filter(Prefix=key)
-        return object_summary_iterator
-        # for o in object_summary_iterator:
-        #     yield o

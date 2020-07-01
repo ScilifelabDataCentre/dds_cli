@@ -4,6 +4,7 @@ from pathlib import Path
 import io
 from base64 import b64decode, b64encode
 import logging
+import traceback
 
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -69,29 +70,6 @@ class Crypt4GHKey:
             return False  # uncomment to pass exception through
 
         return True
-
-    def prep_upload(self, file: str, recip_pub, filedir, path_from_base):
-        '''Prepares the files for upload'''
-
-        # hash
-        _, checksum = gen_hmac(file=file)
-
-        # encrypt
-        encrypted_file = filedir / Path(file.name + ".c4gh")
-        print("encrypting file", encrypted_file)
-        try:
-            original_umask = os.umask(0)
-            with file.open(mode='rb') as infile:
-                with encrypted_file.open(mode='ab+') as outfile:
-                    lib.encrypt(keys=[(0, self.seckey, recip_pub)],
-                                infile=infile,
-                                outfile=outfile)
-        except EncryptionError as ee:
-            return file, "Error", ee
-        finally:
-            os.umask(original_umask)
-
-        return file, encrypted_file, checksum
 
 
 def secure_password_hash(password_settings: str,

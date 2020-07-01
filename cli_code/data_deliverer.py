@@ -17,7 +17,7 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import config_logger, get_root_path, \
-    process_file, is_compressed, update_dir, magic_dict
+    is_compressed, magic_dict
 
 # CONFIG ############################################################# CONFIG #
 

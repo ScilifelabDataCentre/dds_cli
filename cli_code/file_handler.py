@@ -26,14 +26,31 @@ from cli_code import LOG_FILE, MAX_CTR
 
 max_nonce = 2**(12*8)
 
-# IO FUNCTIONS ################################################# IO FUNCTIONS #
+
+###############################################################################
+# Logging ########################################################### Logging #
+###############################################################################
 
 
 def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
                   file_setlevel=logging.WARNING, fh_format: str = "",
                   stream: bool = False, stream_setlevel=logging.WARNING,
                   sh_format: str = ""):
-    '''Creates log file '''
+    '''Creates log file
+
+    Args:
+        logger:             Logger to be configured
+        filename:           Path to wished log file
+        file:               True if to create log file
+        file_setlevel:      The lowest level of logging in log file
+        fh_format:          Format of file logs
+        stream:             True if logs to be printed in console
+        stream_setlevel:    The lowest level of logging in console
+        sh_format:          Format of console logs
+
+    Returns: 
+        Logger:     Configured logger
+    '''
 
     # Save logs to file
     if file:
@@ -53,9 +70,8 @@ def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
 
     return logger
 
-# Set up logger #
 
-
+# Set up logger
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 LOG = config_logger(
@@ -68,27 +84,21 @@ LOG = config_logger(
     "%(lineno)d::%(message)s"
 )
 
-# Set up logger #
+###############################################################################
+# IO FUNCTIONS ################################################# IO FUNCTIONS #
+###############################################################################
 
 
-def update_dir(old_dir, new_dir):
-    '''Update file directory and create folder'''
+def get_root_path(file: Path, path_base: str = None) -> (Path):
+    '''Gets the path to the file, from the entered folder.
 
-    try:
-        original_umask = os.umask(0)
-        updated_dir = old_dir / new_dir
-        if not updated_dir.exists():
-            updated_dir.mkdir(parents=True)
-    except IOError as ioe:
-        sys.exit(f"Could not create folder: {ioe}")
-    finally:
-        os.umask(original_umask)
+    Args:
+        file:       Path to file
+        path_base:  None if single file, folder name if in folder
 
-    return updated_dir
-
-
-def get_root_path(file: Path, path_base: str = None):
-    '''Gets the path to the file, from the entered folder. '''
+    Returns:
+        Path:   Path from folder to file
+    '''
 
     if path_base is not None:
         # LOG.info(f"path_base = {path_base} "
@@ -116,9 +126,12 @@ def file_reader(file: Path, chunk_size: int = 65536) -> (bytes):
     for chunk in iter(lambda: file.read(chunk_size), b''):
         yield chunk
 
+###############################################################################
 # COMPRESSION ################################################### COMPRESSION #
+###############################################################################
 
 
+# Compression formats and their file signatures
 magic_dict = {
     b'\x913HF': "hap",
     b'ustar': "tar",
@@ -140,8 +153,7 @@ magic_dict = {
     b'\x1a\x0b': "pak",
     b'(\xb5/\xfd': "zst"
 }
-magic_dict
-MAX_FMT = max(len(x) for x in magic_dict)
+MAX_FMT = max(len(x) for x in magic_dict)   # Longest signature
 
 
 def compress_file(file: Path, chunk_size: int = 65536) -> (bytes):
@@ -188,7 +200,10 @@ def is_compressed(file: Path) -> (bool, str):
 
     return False    # File not compressed
 
+
+###############################################################################
 # CRYPTO ############################################################# CRYPTO #
+###############################################################################
 
 
 def aead_encrypt_chacha(gen, key, iv) -> (bytes, bytes):
@@ -224,7 +239,9 @@ def aead_encrypt_chacha(gen, key, iv) -> (bytes, bytes):
         iv_int += 1  # Increment nonce - begin at 0 again if reaches max value
 
 
+###############################################################################
 # PREP AND FINISH ########################################### PREP AND FINISH #
+###############################################################################
 
 
 def process_file(file: Path, file_info: dict, filedir: Path) \

@@ -4,7 +4,8 @@ Command line interface for Data Delivery System
 
 # IMPORTS ########################################################### IMPORTS #
 
-import concurrent.futures
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, \
+    as_completed
 import logging
 import logging.config
 from pathlib import Path
@@ -102,9 +103,9 @@ def put(config: str, username: str, password: str, project: str,
         CLI_LOGGER = config_logger(LOG_FILE)
         CLI_LOGGER.info(f"Data to deliver: {delivery.data}\n"
                         f"Number of items to upload: {len(delivery.data)}")
-        
+
         # Create multiprocess pool
-        with concurrent.futures.ProcessPoolExecutor() as pool_executor:
+        with ProcessPoolExecutor() as pool_executor:
             CLI_LOGGER.debug("Started ProcessPoolExecutor...")
 
             pools = []                  # Ongoing pool operations
@@ -136,10 +137,10 @@ def put(config: str, username: str, password: str, project: str,
                                 f"{path}: {delivery.data[path]}")
 
             # Create multithreading pool
-            with concurrent.futures.ThreadPoolExecutor() as thread_exec:
+            with ThreadPoolExecutor() as thread_exec:
                 upload_threads = []
                 # When the pools are finished
-                for f in concurrent.futures.as_completed(pools):
+                for f in as_completed(pools):
 
                     success, opath, (epath, esize, ds_compressed, error), \
                         message = f.result()
@@ -174,7 +175,7 @@ def put(config: str, username: str, password: str, project: str,
 
                     upload_threads.append(t_future)
 
-                for t in concurrent.futures.as_completed(upload_threads):
+                for t in as_completed(upload_threads):
                     uploaded, ofile, ufile, bucketpath, error = t.result()
                     CLI_LOGGER.debug(f"{uploaded}, {ofile}, {ufile}")
 

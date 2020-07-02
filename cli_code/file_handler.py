@@ -372,14 +372,15 @@ def prep_upload(path: Path, path_info: dict, filedir) \
     LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
 
     # Begin processing incl encryption
-    success, path_, *info = process_file(file=path,
-                                         file_info=path_info,
-                                         filedir=filedir)
+    success, path_, *info, error = process_file(file=path,
+                                                file_info=path_info,
+                                                filedir=filedir)
     if path != path_:
-        emessage = ("The processing did not return the same file as "
-                    f"was input -- cannot continue delivery.")
+        emessage = (f"{error + ' ' if isinstance(error, str) else ''}"
+                    "The processing did not return the same file as "
+                    "was input -- cannot continue delivery.")
         LOG.warning(emessage)
-        return False, path, info, emessage
+        return False, info, emessage
 
     # success, original_file, processed_file, processed_size, compressed, error
-    return success, path, info, None
+    return success, info, error

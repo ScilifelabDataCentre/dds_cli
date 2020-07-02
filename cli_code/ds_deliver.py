@@ -140,17 +140,17 @@ def put(config: str, username: str, password: str, project: str,
 
                 # COMPLETED POOLS ########################### COMPLETED POOLS #
                 for pfuture in as_completed(pools):
-                    path = pools[pfuture]
+                    opath = pools[pfuture]
                     try:
-                        success, opath, (epath, esize, ds_compressed, error), \
-                            message = pfuture.result()
+                        success, (epath, esize, ds_compressed), \
+                            error = pfuture.result()
                     except Exception as exc:    # FIX EXCEPTION HERE
                         CLI_LOGGER.exception(exc)
                         continue
 
                     CLI_LOGGER.debug(f"prepped: {success}, \n{opath}, \n"
                                      f"{epath}, \n{esize}, \n{ds_compressed}, "
-                                     f"\n{error}, \n{message}")
+                                     f"\n{error}")
 
                     updated = delivery.update_data_dict(
                         path=opath,
@@ -159,8 +159,7 @@ def put(config: str, username: str, password: str, project: str,
                             'encrypted_file': epath,
                             'encrypted_size': esize,
                             'ds_compressed': ds_compressed,
-                            'error': error,
-                            'message': message
+                            'error': error
                         }
                     )
                     if not updated:
@@ -176,17 +175,17 @@ def put(config: str, username: str, password: str, project: str,
                         delivery.put,
                         opath)
                     ] = opath
-                
+
                 # COMPLETED THREADS ####################### COMPLETED THREADS #
                 for tfuture in as_completed(threads):
                     ofile = threads[tfuture]
-                    try: 
-                        uploaded, ofile, ufile, bucketpath, error = \
+                    try:
+                        uploaded, ufile, bucketpath, error = \
                             tfuture.result()
                     except Exception as exc:    # FIX EXCEPTION HERE
                         CLI_LOGGER.exception(exc)
                         continue
-                    
+
                     CLI_LOGGER.debug(f"{uploaded}, {ofile}, {ufile}")
 
                     if ofile not in delivery.data:  # Bug in code -- FAIL

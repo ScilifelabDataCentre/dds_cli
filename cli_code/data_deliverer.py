@@ -720,7 +720,6 @@ class DataDeliverer():
                 nl = '\n'
                 emessage = (
                     f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
-                    f"{pathinfo['message'] + nl if 'message' in pathinfo else ''}"
                 )
                 self.logger.exception(emessage)
                 # If the processing failed, the e_size is an exception
@@ -825,7 +824,7 @@ class DataDeliverer():
                             "Upload will not be possible. "
                             f"Bucket: {self.bucketname}")
                 self.logger.critical(emessage)
-                return False, file, file_to_upload, filepath, emessage
+                return False, file_to_upload, filepath, emessage
 
             # Check if file exists (including path)
             file_already_in_bucket, error = s3.file_exists_in_bucket(
@@ -839,7 +838,7 @@ class DataDeliverer():
                 emessage = ("File already exists in bucket, will not be "
                             f"uploaded. File: {file_to_upload}")
                 self.logger.warning(emessage)
-                return False, file, file_to_upload, filepath, emessage
+                return False, file_to_upload, filepath, emessage
             else:
                 self.logger.debug(
                     f"Beginning upload of file {file_to_upload} ({file})")
@@ -852,12 +851,12 @@ class DataDeliverer():
                     emessage = (f"Upload failed! {e} -- file: {file_to_upload} "
                                 f"({file})")
                     self.logger.exception(emessage)
-                    return False, file, file_to_upload, filepath, emessage
+                    return False, file_to_upload, filepath, emessage
                 else:
                     self.logger.info("Upload completed! file:"
                                      f" {file_to_upload} ({file}). "
                                      f"Bucket location: {filepath}")
-                    return True, file, file_to_upload, filepath, None
+                    return True, file_to_upload, filepath, None
 
 
 # DSUSER ############################################################## DSUER #

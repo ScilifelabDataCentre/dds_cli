@@ -104,11 +104,14 @@ def put(config: str, username: str, password: str, project: str,
         CLI_LOGGER.info(f"Data to deliver: {delivery.data}\n"
                         f"Number of items to upload: {len(delivery.data)}")
 
-        # Create multiprocess pool
+        # Pools and threads
+        pools = []                  # Ongoing pool operations
+        upload_threads = []
+
+        # PROCESSPOOL ########################################### PROCESSPOOL #
         with ProcessPoolExecutor() as pool_executor:
             CLI_LOGGER.debug("Started ProcessPoolExecutor...")
 
-            pools = []                  # Ongoing pool operations
             for path in delivery.data:  # Iterate through all files
 
                 CLI_LOGGER.debug(f"Beginning delivery of {path}")
@@ -136,9 +139,9 @@ def put(config: str, username: str, password: str, project: str,
                 CLI_LOGGER.info(f"Updated data dictionary. "
                                 f"{path}: {delivery.data[path]}")
 
-            # Create multithreading pool
-            with ThreadPoolExecutor() as thread_exec:
-                upload_threads = []
+            # THREADPOOL ######################################### THREADPOOL #
+            with ThreadPoolExecutor() as thread_executor:
+
                 # When the pools are finished
                 for f in as_completed(pools):
 
@@ -168,7 +171,7 @@ def put(config: str, username: str, password: str, project: str,
                         continue
 
                     # begin upload
-                    t_future = thread_exec.submit(
+                    t_future = thread_executor.submit(
                         delivery.put,
                         opath
                     )
@@ -291,12 +294,12 @@ def get(config: str, username: str, password: str, project: str,
         recip_secret = delivery.get_recipient_key(keytype="private")
 
         # Create multithreading pool
-        with concurrent.futures.ThreadPoolExecutor() as thread_exec:
+        with concurrent.futures.ThreadPoolExecutor() as thread_executor:
             download_threads = []
             for path in delivery.data:
 
                 # Download all files
-                t_future = thread_exec.submit(delivery.get, path)
+                t_future = thread_executor.submit(delivery.get, path)
                 download_threads.append(t_future)
 
             with concurrent.futures.ProcessPoolExecutor() as pool_exec:

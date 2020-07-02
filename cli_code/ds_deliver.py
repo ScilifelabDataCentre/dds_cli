@@ -90,8 +90,9 @@ def cli():
               type=click.Path(exists=True),
               multiple=True,
               help="Path to file or folder to upload.")
+@click.option('--break-on-fail', is_flag=True)
 def put(config: str, username: str, password: str, project: str,
-        owner: str, pathfile: str, data: tuple) -> (str):
+        owner: str, pathfile: str, data: tuple, break_on_fail) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
     # Create DataDeliverer to handle files and folders

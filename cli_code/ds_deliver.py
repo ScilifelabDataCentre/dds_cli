@@ -105,8 +105,8 @@ def put(config: str, username: str, password: str, project: str,
                         f"Number of items to upload: {len(delivery.data)}")
 
         # Pools and threads
-        pools = []                  # Ongoing pool operations
-        upload_threads = []
+        pools = []                
+        threads = []
 
         # PROCESSPOOL ########################################### PROCESSPOOL #
         with ProcessPoolExecutor() as pool_executor:
@@ -176,9 +176,9 @@ def put(config: str, username: str, password: str, project: str,
                         opath
                     )
 
-                    upload_threads.append(t_future)
+                    threads.append(t_future)
 
-                for t in as_completed(upload_threads):
+                for t in as_completed(threads):
                     uploaded, ofile, ufile, bucketpath, error = t.result()
                     CLI_LOGGER.debug(f"{uploaded}, {ofile}, {ufile}")
 

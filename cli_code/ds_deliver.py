@@ -105,8 +105,8 @@ def put(config: str, username: str, password: str, project: str,
                         f"Number of items to upload: {len(delivery.data)}")
 
         # Pools and threads
-        pools = []                
-        threads = []
+        pools = {}
+        threads = {}
 
         # PROCESSPOOL ########################################### PROCESSPOOL #
         with ProcessPoolExecutor() as pool_executor:
@@ -126,27 +126,28 @@ def put(config: str, username: str, password: str, project: str,
 
                 # CLI_LOGGER.debug(f"proceed: {proceed} --> {path}")
 
-                p_future = pool_executor.submit(
+                pools[pool_executor.submit(
                     fh.prep_upload,
                     path,
                     delivery.data[path],
-                    delivery.tempdir.files
-                )
+                    delivery.tempdir.files)
+                ] = path
 
                 CLI_LOGGER.info(f"Started processing {path}...")
-                # # Add to pool list and update file info
-                pools.append(p_future)
-                CLI_LOGGER.info(f"Updated data dictionary. "
-                                f"{path}: {delivery.data[path]}")
 
             # THREADPOOL ######################################### THREADPOOL #
             with ThreadPoolExecutor() as thread_executor:
 
-                # When the pools are finished
-                for f in as_completed(pools):
+                # COMPLETED POOLS ########################### COMPLETED POOLS #
+                for pfuture in as_completed(pools):
+                    path = pools[pfuture]
+                    try:
+                        success, opath, (epath, esize, ds_compressed, error), \
+                            message = pfuture.result()
+                    except Exception as exc:    # FIX EXCEPTION HERE
+                        CLI_LOGGER.exception(exc)
+                        continue
 
-                    success, opath, (epath, esize, ds_compressed, error), \
-                        message = f.result()
                     CLI_LOGGER.debug(f"prepped: {success}, \n{opath}, \n"
                                      f"{epath}, \n{esize}, \n{ds_compressed}, "
                                      f"\n{error}, \n{message}")
@@ -171,15 +172,21 @@ def put(config: str, username: str, password: str, project: str,
                         continue
 
                     # begin upload
-                    t_future = thread_executor.submit(
+                    threads[thread_executor.submit(
                         delivery.put,
-                        opath
-                    )
-
-                    threads.append(t_future)
-
-                for t in as_completed(threads):
-                    uploaded, ofile, ufile, bucketpath, error = t.result()
+                        opath)
+                    ] = opath
+                
+                # COMPLETED THREADS ####################### COMPLETED THREADS #
+                for tfuture in as_completed(threads):
+                    ofile = threads[tfuture]
+                    try: 
+                        uploaded, ofile, ufile, bucketpath, error = \
+                            tfuture.result()
+                    except Exception as exc:    # FIX EXCEPTION HERE
+                        CLI_LOGGER.exception(exc)
+                        continue
+                    
                     CLI_LOGGER.debug(f"{uploaded}, {ofile}, {ufile}")
 
                     if ofile not in delivery.data:  # Bug in code -- FAIL

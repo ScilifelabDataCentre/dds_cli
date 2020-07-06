@@ -70,12 +70,12 @@ def create_directories():
     timestamp_ = timestamp()
     temp_dir = Path.cwd() / Path(f"DataDelivery_{timestamp_}")
 
-    TemporaryDirectories = collections.namedtuple('TemporaryDirectories',
-                                                  'root files meta logs')
-    dirs = TemporaryDirectories(root=temp_dir / Path(""),
-                                files=temp_dir / Path("files/"),
-                                meta=temp_dir / Path("meta/"),
-                                logs=temp_dir / Path("logs/"))
+    # TemporaryDirectories = collections.namedtuple('TemporaryDirectories',
+    #                                               'root files meta logs')
+    dirs = (temp_dir / Path(""),
+            temp_dir / Path("files/"),
+            temp_dir / Path("meta/"),
+            temp_dir / Path("logs/"))
 
     for d_ in dirs:
         try:
@@ -107,4 +107,4 @@ if not created:
     raise OSError("Temporary directory could not be created. "
                   "Unable to continue delivery. Aborting. ")
 
-LOG_FILE = str(DIRS.logs / Path("ds.log"))
+LOG_FILE = str(DIRS[-1] / Path("ds.log"))

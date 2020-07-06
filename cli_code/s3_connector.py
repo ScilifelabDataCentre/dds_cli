@@ -6,6 +6,7 @@ import logging
 import traceback
 
 import boto3
+import boto3.session
 from boto3.s3.transfer import TransferConfig
 import botocore
 
@@ -50,6 +51,7 @@ class S3Connector():
         self.bucketname = bucketname
         self.bucket = None
         self.resource = None
+        self.session = None
         self._connect()
 
     def __enter__(self):
@@ -66,6 +68,7 @@ class S3Connector():
     def _connect(self):
         '''Connect to S3'''
 
+        self.session = boto3.session.Session()
         # Project access granted -- Get S3 credentials
         s3path = Path.cwd() / Path("sensitive/s3_config.json")
         with s3path.open(mode='r') as f:
@@ -76,7 +79,7 @@ class S3Connector():
         project_keys = s3creds['sfsp_keys'][self.project]
 
         # Start s3 connection resource
-        self.resource = boto3.resource(
+        self.resource = self.session.resource(
             service_name='s3',
             endpoint_url=endpoint_url,
             aws_access_key_id=project_keys['access_key'],

@@ -303,7 +303,7 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
     if not new_dir.exists():
         LOG.debug(f"File: {file}\tThe temporary directory '{new_dir}' did "
                   "not exist, creating it.")
-        new_dir.mkdir(parents=True)
+        new_dir.mkdir(parents=True, exist_ok=True)
 
     # Begin processing
     try:
@@ -337,7 +337,7 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
                 of.write(nonce)     # Write the last nonce to file
     except Exception as ee:  # FIX EXCEPTION HERE
         LOG.exception(f"Processig failed! {ee}")
-        return False, file, outfile, 0, False, ee
+        return False, outfile, 0, False, ee
     else:
         LOG.info(f"Processing of '{file}' -- completed!")
         # Info on if delivery system compressed or not
@@ -349,38 +349,7 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
     LOG.info(f"Encrypted file size: {e_size} ({outfile})")
 
     # success, original_file, processed_file, processed_size, compressed, error
-    return True, file, outfile, e_size, ds_compressed, None
+    return True, outfile, e_size, ds_compressed, None
 
 
-def prep_upload(path: Path, path_info: dict, filedir) \
-        -> (bool, Path, list, str):
-    '''Prepares the files for upload.
 
-    Args:
-        path:           Path to file
-        path_info:      Info on file
-
-    Returns:
-        tuple:  Info on success and file after processing
-
-            bool:   True if processing successful
-            Path:   Path to original file
-            list:   Processed file info
-            str:    Message if paths don't match
-    '''
-
-    LOG.debug(f"\nProcessing {path}, path_info: {path_info}\n")
-
-    # Begin processing incl encryption
-    success, path_, *info, error = process_file(file=path,
-                                                file_info=path_info,
-                                                filedir=filedir)
-    if path != path_:
-        emessage = (f"{error + ' ' if isinstance(error, str) else ''}"
-                    "The processing did not return the same file as "
-                    "was input -- cannot continue delivery.")
-        LOG.warning(emessage)
-        return False, info, emessage
-
-    # success, original_file, processed_file, processed_size, compressed, error
-    return success, info, error

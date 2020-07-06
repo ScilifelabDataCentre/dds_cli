@@ -18,7 +18,7 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import config_logger, get_root_path, \
-    is_compressed, magic_dict
+    is_compressed, magic_dict, process_file
 
 # CONFIG ############################################################# CONFIG #
 
@@ -66,7 +66,7 @@ class DataDeliverer():
     #################
     def __init__(self, config=None, username=None, password=None,
                  project_id=None, project_owner=None,
-                 pathfile=None, data=None):
+                 pathfile=None, data=None, break_on_fail=True):
 
         # Quit execution if none of username, password, config are set
         if all(x is None for x in [username, password, config]):
@@ -78,6 +78,7 @@ class DataDeliverer():
             )
 
         # Initialize attributes
+        self.break_on_fail = break_on_fail
         self.method = sys._getframe().f_back.f_code.co_name  # put or get
         self.user = _DSUser(username=username, password=password)
         self.project_id = project_id        # Project ID - not S3
@@ -423,7 +424,7 @@ class DataDeliverer():
     def _clear_tempdir(self):
         '''Remove all contents from temporary file directory'''
 
-        for d in [x for x in self.tempdir.files.iterdir() if x.is_dir()]:
+        for d in [x for x in self.tempdir[1].iterdir() if x.is_dir()]:
             try:
                 shutil.rmtree(d)
             except Exception as e:  # FIX EXCEPTION HERE
@@ -475,7 +476,16 @@ class DataDeliverer():
                              path_base=path_base
                          ),   # path in bucket & tempfolder
                          "size": curr_path.stat().st_size,
-                         "suffixes": curr_path.suffixes}
+                         "suffixes": curr_path.suffixes,
+                         'proceed': True,
+                         'encrypted_file': Path(""),
+                         'encrypted_size': 0,
+                         'filecheck': {'in_progress': False,
+                                       'finished': False},
+                         'processing': {'in_progress': False,
+                                        'finished': False},
+                         'upload': {'in_progress': False,
+                                    'finished': False}}
                     print(f"{curr_path}: {all_files[curr_path]}")
                 elif curr_path.is_dir():  # Get info on files in folder
                     path_base = curr_path.name
@@ -487,7 +497,16 @@ class DataDeliverer():
                                               path_base=path_base
                                           ),  # path in bucket & tempfolder
                                           "size": f.stat().st_size,
-                                          "suffixes": f.suffixes}
+                                          "suffixes": f.suffixes,
+                                          'proceed': True,
+                                          'encrypted_file': Path(""),
+                                          'encrypted_size': 0,
+                                          'filecheck': {'in_progress': False,
+                                                        'finished': False},
+                                          'processing': {'in_progress': False,
+                                                         'finished': False},
+                                          'upload': {'in_progress': False,
+                                                     'finished': False}}
                                       for f in curr_path.glob('**/*')
                                       if f.is_file()
                                       and "DS_Store" not in str(f)})
@@ -507,7 +526,7 @@ class DataDeliverer():
                     )
         return all_files
 
-    def _do_file_checks(self, file: Path) -> (bool, bool, str):
+    def _do_file_checks(self, file: Path, fileinfo: dict) -> (bool, bool, str):
         '''Checks if file is compressed and if it has already been delivered.
 
         Args:
@@ -523,6 +542,9 @@ class DataDeliverer():
                 str:    File path with new suffixes
             '''
 
+        # Set file check as in progress
+        self.set_progress(item=file, check=True, started=True)
+
         self.logger.debug(f"do file checks: {file}")
         error = ""
         proceed = True
@@ -532,12 +554,12 @@ class DataDeliverer():
         self.logger.debug(f"File: {file}\t Compressed: {compressed}")
 
         # self.logger.debug(
-        #     f"Original suffixes: {''.join(self.data[file]['suffixes'])}"
+        #     f"Original suffixes: {''.join(fileinfo[file]['suffixes'])}"
         # )
         proc_suff = ""  # Suffix after file processed
         if not compressed:
             # Check if suffixes are in magic dict
-            if set(self.data[file]['suffixes']).intersection(set(magic_dict)):
+            if set(fileinfo['suffixes']).intersection(set(magic_dict)):
                 self.logger.warning(f"File '{file}' shows no indication of "
                                     "being compressed, but has extensions "
                                     "belonging to a compressed format. Not "
@@ -553,7 +575,7 @@ class DataDeliverer():
         self.logger.debug(f"File: {file}\t Added file suffix: {proc_suff}")
 
         # Path to file in bucket and temporary directory, including file name
-        bucketfilename = str(self.data[file]['directory_path'] /
+        bucketfilename = str(fileinfo['directory_path'] /
                              Path(file.name + proc_suff))
         self.logger.debug(f"File: {file}\t Bucket path: {bucketfilename}")
 
@@ -625,7 +647,7 @@ class DataDeliverer():
     ##################
     # Public Methods #
     ##################
-    def get_content_info(self, item: Path) -> (bool):
+    def get_content_info(self, item: Path, iteminfo: dict) -> (bool):
         '''Checks if file can proceed to processing.
 
         Args:
@@ -636,28 +658,129 @@ class DataDeliverer():
                     and does not exist in the database.
         '''
 
-        if 'proceed' in self.data[item] and not self.data[item]['proceed']:
+        # Check if should proceed
+        if not iteminfo['proceed']:
             return False
 
-        proceed, compressed, new_file, error = self._do_file_checks(file=item)
-        self.logger.debug(f"File: {item}\n \t\tProceed: {proceed}, \n"
-                          f"\t\tCompressed: {compressed}, \n"
-                          f"\t\tNew_file: {new_file} \n"
-                          f"\t\tError: {error}")
+        info = self._do_file_checks(file=item)
 
-        updated = self.update_data_dict(
-            path=item,
-            pathinfo={"proceed": proceed,
-                      "compressed": compressed,
-                      "new_file": new_file,
-                      "error": error}
-        )
+        return info
 
-        if not updated:
-            raise Exception("File {'item'} information couldn't be updated, "
-                            "required for delivery.")  # FIX EXCEPTION HERE
+        ####
+        # if 'proceed' in self.data[item] and not self.data[item]['proceed']:
+        #     return False
 
-        return proceed
+        # proceed, compressed, new_file, error = self._do_file_checks(file=item)
+
+        # self.logger.debug(f"File: {item}\n \t\tProceed: {proceed}, \n"
+        #                   f"\t\tCompressed: {compressed}, \n"
+        #                   f"\t\tNew_file: {new_file} \n"
+        #                   f"\t\tError: {error}")
+
+        # updated = self.update_data_dict(
+        #     path=item,
+        #     pathinfo={})
+
+        # if not updated:
+        #     raise Exception("File {'item'} information couldn't be updated, "
+        #                     "required for delivery.")  # FIX EXCEPTION HERE
+
+        # return proceed
+
+    def prep_upload(self, path: Path, path_info: dict) \
+            -> (bool, Path, list, str):
+        '''Prepares the files for upload.
+
+        Args:
+            path:           Path to file
+            path_info:      Info on file
+
+        Returns:
+            tuple:  Info on success and file after processing
+
+                bool:   True if processing successful
+                Path:   Path to original file
+                list:   Processed file info
+                str:    Message if paths don't match
+        '''
+
+        self.logger.debug(f"\nProcessing {path}, path_info: {path_info}\n")
+
+        if not path_info['proceed']:
+            if not path_info['filecheck']['finished']:
+                self.logger.critical(f"File: '{path}' -- Content checks etc "
+                                     "not performed. Bug in code. Moving "
+                                     "on to next file.")
+            return False
+
+        self.set_progress(item=path, processing=True, started=True)
+
+        # Begin processing incl encryption
+        info = process_file(file=path,
+                            file_info=path_info,
+                            filedir=self.tempdir[1])
+
+        # if path != path_:
+        #     emessage = (f"{error + ' ' if isinstance(error, str) else ''}"
+        #                 "The processing did not return the same file as "
+        #                 "was input -- cannot continue delivery.")
+        #     LOG.warning(emessage)
+        #     return False, info, emessage
+
+        # success, original_file, processed_file, processed_size, compressed, error
+        return info
+
+    def update_delivery(self, file, updinfo):
+
+        if not updinfo['proceed']:
+
+            if self.data[file]['in_directory']:
+                if self.break_on_fail:
+                    for path, info in self.data.items():
+                        if info['dir_name'] == self.data[file]['dir_name'] \
+                                and not info['upload']['in_progress'] \
+                                and not info['upload']['finished']:
+                            self.data[path].update(
+                                {'proceed': False,
+                                 'error': f"Failed file: {file} -- "
+                                 f"{updinfo['error']}"}
+                            )
+                        self.logger.debug(f"Updating file: {path} -- {info} --> "
+                          f"\nUpdated? -- {self.data[path]}")
+                    return
+
+            upd = self.data[file].update({'proceed': False,
+                                          'error': updinfo['error']})
+            self.logger.debug(f"-------{upd}")
+            return
+
+        try:
+            upd = self.data[file].update(updinfo)
+            self.logger.debug(f"-------{upd}")
+        except Exception as exc:
+            self.logger.exception(exc)
+
+        self.logger.debug(f"Updating file: {file} -- {updinfo} --> "
+                          f"\nUpdated? -- {self.data[file]}")
+        return
+
+    def set_progress(self, item: Path, check=False, processing=False,
+                     upload=False, started=False, finished=False):
+
+        to_update = ""
+        if check:
+            to_update = 'filecheck'
+        elif processing:
+            to_update = 'processing'
+        elif upload:
+            to_update = 'upload'
+
+        if started:
+            self.data[item][to_update].update({'in_progress': started,
+                                               'finished': not started})
+        elif finished:
+            self.data[item][to_update].update({'in_progress': not finished,
+                                               'finished': finished})
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
@@ -767,7 +890,7 @@ class DataDeliverer():
             file_in_bucket = self.s3.files_in_bucket(key=path)
 
             for file in file_in_bucket:
-                new_path = self.tempdir.files / \
+                new_path = self.tempdir[1] / \
                     Path(file.key)  # Path to downloaded
                 if not new_path.parent.exists():
                     try:
@@ -796,7 +919,7 @@ class DataDeliverer():
 
         raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
 
-    def put(self, file: Path) -> (bool, Path, list, list, str):
+    def put(self, file: Path, fileinfo) -> (bool, Path, list, list, str):
         '''Uploads specified data to the S3 bucket.
 
         Args:
@@ -806,13 +929,22 @@ class DataDeliverer():
 
         '''
 
-        # self.logger.debug(f"{file}: {self.data[file]}")
+        # self.logger.debug(f"{file}: {fileinfo[file]}")
+        if not fileinfo['proceed']:
+            if not fileinfo['processing']['finished']:
+                self.logger.critical(f"File: '{file}' -- File not processed "
+                                     "(e.g. encrypted). Bug in code. Moving "
+                                     "on to next file.")
 
-        file_to_upload = self.data[file]['encrypted_file']
+            return False, "", "", ""
+
+        self.set_progress(item=file, upload=True, started=True)
+
+        file_to_upload = fileinfo['encrypted_file']
         self.logger.debug(f"File: {file}\t"
                           f"Encrypted, to upload: {file_to_upload}")
 
-        filepath = self.data[file]['new_file']
+        filepath = fileinfo['new_file']
         self.logger.debug(f"Path in bucket: {filepath}")
 
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \

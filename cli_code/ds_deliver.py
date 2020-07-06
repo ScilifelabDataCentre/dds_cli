@@ -37,7 +37,7 @@ def config_logger(logfile: str):
                             file=True, file_setlevel=logging.DEBUG,
                             fh_format="%(asctime)s::%(levelname)s::" +
                             "%(name)s::%(lineno)d::%(message)s",
-                            stream=True, stream_setlevel=logging.DEBUG,
+                            stream=True, stream_setlevel=logging.WARNING,
                             sh_format="%(levelname)s::%(name)s::" +
                             "%(lineno)d::%(message)s")
 
@@ -98,166 +98,281 @@ def put(config: str, username: str, password: str, project: str,
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
-                       pathfile=pathfile, data=data) as delivery:
+                       pathfile=pathfile, data=data, break_on_fail=True) \
+            as delivery:
 
         # Setup logging
         CLI_LOGGER = config_logger(LOG_FILE)
-        CLI_LOGGER.info(f"Data to deliver: {delivery.data}\n"
-                        f"Number of items to upload: {len(delivery.data)}")
 
         # Pools and threads
         pools = {}
-        threads = {}
+        cthreads = {}
+        uthreads = {}
 
-        # PROCESSPOOL ########################################### PROCESSPOOL #
-        with ProcessPoolExecutor() as pool_executor:
-            CLI_LOGGER.debug("Started ProcessPoolExecutor...")
+        # POOLEXECUTORS ####################################### POOLEXECUTORS #
+        pool_executor = ProcessPoolExecutor()
+        thread_executor = ThreadPoolExecutor()
 
-            for path in delivery.data:  # Iterate through all files
+        # Iterate through data
+        for path, info in delivery.data.items():
+            CLI_LOGGER.debug(f"{path}: {info}\n")  # Print out before
 
-                CLI_LOGGER.debug(f"Beginning delivery of {path}")
+            if not info['proceed']:
+                CLI_LOGGER.warning(f"File: {ppath} -- moving on to next file")
+                continue
 
-                # Check files in same folder as failed file
-                proceed = delivery.get_content_info(item=path)
+            cthreads[
+                thread_executor.submit(delivery._do_file_checks,
+                                       file=path,
+                                       fileinfo=info)
+            ] = path
 
-                # CLI_LOGGER.debug(f"Proceed to processing: {proceed}")
-                if not proceed:
-                    CLI_LOGGER.debug("Moving on to next file")
-                    continue
+        for cfuture in as_completed(cthreads):
+            cpath = cthreads[cfuture]
+            proceed, compressed, new_file, error = cfuture.result()
 
-                # CLI_LOGGER.debug(f"proceed: {proceed} --> {path}")
+            proceed = False
 
-                pools[pool_executor.submit(
-                    fh.prep_upload,
-                    path,
-                    delivery.data[path],
-                    delivery.tempdir.files)
-                ] = path
+            # Update file info
+            delivery.update_delivery(file=cpath,
+                                     updinfo={"proceed": proceed,
+                                              "compressed": compressed,
+                                              "new_file": new_file,
+                                              "error": error})
 
-                CLI_LOGGER.info(f"Started processing {path}...")
+            # Set file as finished
+            delivery.set_progress(item=cpath, check=True, finished=True)
 
-            # THREADPOOL ######################################### THREADPOOL #
-            with ThreadPoolExecutor() as thread_executor:
+            CLI_LOGGER.debug(f"File: {cpath}, Proceed: {proceed}, "
+                             f"Info: {delivery.data[cpath]}\n")
 
-                # COMPLETED POOLS ########################### COMPLETED POOLS #
-                for pfuture in as_completed(pools):
-                    opath = pools[pfuture]
-                    try:
-                        success, (epath, esize, ds_compressed), \
-                            error = pfuture.result()
-                    except Exception as exc:    # FIX EXCEPTION HERE
-                        CLI_LOGGER.exception(exc)
-                        continue
+            if not proceed:
+                CLI_LOGGER.warning(f"File: {cpath} -- moving on to next file")
+                continue
 
-                    CLI_LOGGER.debug(f"prepped: {success}, \n{opath}, \n"
-                                     f"{epath}, \n{esize}, \n{ds_compressed}, "
-                                     f"\n{error}")
+            pools[pool_executor.submit(
+                delivery.prep_upload,
+                cpath,
+                delivery.data[cpath])
+            ] = cpath
 
-                    updated = delivery.update_data_dict(
-                        path=opath,
-                        pathinfo={
-                            'proceed': success,
-                            'encrypted_file': epath,
-                            'encrypted_size': esize,
-                            'ds_compressed': ds_compressed,
-                            'error': error
-                        }
-                    )
-                    if not updated:
-                        CLI_LOGGER.exception("Data info dictionary failed"
-                                             " to be updated, cannot proceed"
-                                             f" with delivery of '{opath}'")
-                        continue
-                    if not delivery.data[opath]['proceed']:
-                        continue
+        for pfuture in as_completed(pools):
+            ppath = pools[pfuture]
+            processed, efile, esize, dp_compressed, error = pfuture.result()
 
-                    # begin upload
-                    threads[thread_executor.submit(
-                        delivery.put,
-                        opath)
-                    ] = opath
+            delivery.update_delivery(file=ppath,
+                                     updinfo={'proceed': processed,
+                                              'encrypted_file': efile,
+                                              'encrypted_size': esize,
+                                              'ds_compressed': dp_compressed,
+                                              'error': error})
 
-                # COMPLETED THREADS ####################### COMPLETED THREADS #
-                for tfuture in as_completed(threads):
-                    ofile = threads[tfuture]
-                    try:
-                        uploaded, ufile, bucketpath, error = \
-                            tfuture.result()
-                    except Exception as exc:    # FIX EXCEPTION HERE
-                        CLI_LOGGER.exception(exc)
-                        continue
+            delivery.set_progress(item=ppath, processing=True, finished=True)
 
-                    CLI_LOGGER.debug(f"{uploaded}, {ofile}, {ufile}")
+            CLI_LOGGER.debug(f"File: {ppath}, Proceed: {processed}, "
+                             f"Info: {delivery.data[ppath]}\n")
 
-                    if ofile not in delivery.data:  # Bug in code -- FAIL
-                        CLI_LOGGER.exception("File not recognized.")
-                        raise Exception("File not found in data dict."
-                                        " Cancelling delivery.")
-                        # FIX EXCEPTION HERE
+            if not processed:
+                CLI_LOGGER.warning(f"File: {ppath} -- moving on to next file")
+                continue
 
-                    # Data delivery info and returned not equal
-                    if delivery.data[ofile]['encrypted_file'] \
-                            != ufile:
-                        emessage = ("Encrypted file path not recorded"
-                                    " for original, entered path.")
-                        CLI_LOGGER.exception(emessage)
-                        error = error + emessage
+            uthreads[
+                thread_executor.submit(delivery.put,
+                                       file=ppath,
+                                       fileinfo=delivery.data[ppath])
+            ] = ppath
 
-                    # Update data dictionary
-                    upload_updated = delivery.update_data_dict(
-                        path=ofile,
-                        pathinfo={'proceed': uploaded,
-                                  'error': error,
-                                  'up_ok': uploaded}
-                    )
+        for ufuture in as_completed(uthreads):
+            upath = uthreads[ufuture]
+            uploaded, delivered_file, file_path, error = ufuture.result()
 
-                    # If data dictionary not uploaded -- failure, move on
-                    if not upload_updated:
-                        CLI_LOGGER.exception("Data info dictionary failed"
-                                             " to be updated, cannot proceed"
-                                             f" with delivery of '{ofile}'")
-                        continue
+            delivery.update_delivery(file=upath,
+                                     updinfo={'proceed': uploaded,
+                                              'encrypted_file': delivered_file,
+                                              'encrypted_size': file_path,
+                                              'error': error})
 
-                    # CLI_LOGGER.debug(delivery.data[ofile])
-                    if not delivery.data[ofile]['proceed']:
-                        CLI_LOGGER.warning("Upload failed, continuing to next file - "
-                                           f"file: {ofile} "
-                                           f"({ufile})")
-                        continue
+            delivery.set_progress(item=upath, upload=True, finished=True)
 
-                    # Delete file from temporary directory
-                    fh.del_from_temp(file=ufile)
+            CLI_LOGGER.debug(f"File: {upath}, Uploaded: {uploaded}, "
+                             f"Info: {delivery.data[upath]}\n")
 
-                    CLI_LOGGER.debug(f"Beginning database update. {ofile}\n"
-                                     f"{delivery.data[ofile]}")
-                    # update database here
-                    try:
-                        with DatabaseConnector('project_db') as project_db:
-                            _project = project_db[delivery.project_id]
-                            keyinfo = delivery.data[ofile]
-                            key = str(keyinfo['new_file'])
-                            dir_path = str(keyinfo['directory_path'])
+            if not uploaded:
+                CLI_LOGGER.warning(f"File: {upath} -- moving on to next file")
+                continue
 
-                            _project['files'][key] = \
-                                {"directory_path": dir_path,
-                                 "size": keyinfo['size'],
-                                 "ds_compressed": keyinfo['ds_compressed'],
-                                 "date_uploaded": timestamp()}
-                            project_db.save(_project)
-                    except Exception as e:  # FIX EXCEPTION HERE
-                        emessage = f"Could not update database: {e}"
-                        CLI_LOGGER.warning()
-                        delivery.data[ofile].update({'error': emessage,
-                                                     'proceed': False,
-                                                     'db_ok': False})
-                    else:
-                        CLI_LOGGER.info("Upload completed!"
-                                        f"{delivery.data[ofile]}")
-                        delivery.data[ofile].update({'proceed': True,
-                                                     'db_ok': True})
+            CLI_LOGGER.info(f"File: {upath} -- DELIVERED")
 
-                    CLI_LOGGER.debug("success: "
-                                     f"{delivery.data[ofile]['proceed']}")
+            # update database here
+            try:
+                with DatabaseConnector('project_db') as project_db:
+                    _project = project_db[delivery.project_id]
+                    keyinfo = delivery.data[upath]
+                    key = str(keyinfo['new_file'])
+                    dir_path = str(keyinfo['directory_path'])
+
+                    _project['files'][key] = \
+                        {"directory_path": dir_path,
+                            "size": keyinfo['size'],
+                            "ds_compressed": keyinfo['ds_compressed'],
+                            "date_uploaded": timestamp()}
+                    project_db.save(_project)
+            except Exception as e:  # FIX EXCEPTION HERE
+                emessage = f"Could not update database: {e}"
+                CLI_LOGGER.warning(emessage)
+            else:
+                CLI_LOGGER.info("Upload completed!"
+                                f"{delivery.data[upath]}")
+
+        # # PROCESSPOOL ########################################### PROCESSPOOL #
+        # with ProcessPoolExecutor() as pool_executor:
+        #     CLI_LOGGER.debug("Started ProcessPoolExecutor...")
+
+        #     for path in delivery.data:  # Iterate through all files
+
+        #         CLI_LOGGER.debug(f"Beginning delivery of {path}")
+
+        #         # Check files in same folder as failed file
+        #         proceed = delivery.get_content_info(item=path)
+
+        #         # CLI_LOGGER.debug(f"Proceed to processing: {proceed}")
+        #         if not proceed:
+        #             CLI_LOGGER.debug("Moving on to next file")
+        #             continue
+
+        #         # CLI_LOGGER.debug(f"proceed: {proceed} --> {path}")
+
+        #         pools[pool_executor.submit(
+        #             fh.prep_upload,
+        #             path,
+        #             delivery.data[path],
+        #             delivery.tempdir.files)
+        #         ] = path
+
+        #         CLI_LOGGER.info(f"Started processing {path}...")
+
+        #     # THREADPOOL ######################################### THREADPOOL #
+        #     with ThreadPoolExecutor() as thread_executor:
+
+        #         # COMPLETED POOLS ########################### COMPLETED POOLS #
+        #         for pfuture in as_completed(pools):
+        #             opath = pools[pfuture]
+        #             try:
+        #                 success, (epath, esize, ds_compressed), \
+        #                     error = pfuture.result()
+        #             except Exception as exc:    # FIX EXCEPTION HERE
+        #                 CLI_LOGGER.exception(exc)
+        #                 continue
+
+        #             CLI_LOGGER.debug(f"prepped: {success}, \n{opath}, \n"
+        #                              f"{epath}, \n{esize}, \n{ds_compressed}, "
+        #                              f"\n{error}")
+
+        #             updated = delivery.update_data_dict(
+        #                 path=opath,
+        #                 pathinfo={
+        #                     'proceed': success,
+        #                     'encrypted_file': epath,
+        #                     'encrypted_size': esize,
+        #                     'ds_compressed': ds_compressed,
+        #                     'error': error
+        #                 }
+        #             )
+        #             if not updated:
+        #                 CLI_LOGGER.exception("Data info dictionary failed"
+        #                                      " to be updated, cannot proceed"
+        #                                      f" with delivery of '{opath}'")
+        #                 continue
+        #             if not delivery.data[opath]['proceed']:
+        #                 continue
+
+        #             # begin upload
+        #             threads[thread_executor.submit(
+        #                 delivery.put,
+        #                 opath)
+        #             ] = opath
+
+        #         # COMPLETED THREADS ####################### COMPLETED THREADS #
+        #         for tfuture in as_completed(threads):
+        #             ofile = threads[tfuture]
+        #             try:
+        #                 uploaded, ufile, bucketpath, error = \
+        #                     tfuture.result()
+        #             except Exception as exc:    # FIX EXCEPTION HERE
+        #                 CLI_LOGGER.exception(exc)
+        #                 continue
+
+        #             CLI_LOGGER.debug(f"{uploaded}, {ofile}, {ufile}")
+
+        #             if ofile not in delivery.data:  # Bug in code -- FAIL
+        #                 CLI_LOGGER.exception("File not recognized.")
+        #                 raise Exception("File not found in data dict."
+        #                                 " Cancelling delivery.")
+        #                 # FIX EXCEPTION HERE
+
+        #             # Data delivery info and returned not equal
+        #             if delivery.data[ofile]['encrypted_file'] \
+        #                     != ufile:
+        #                 emessage = ("Encrypted file path not recorded"
+        #                             " for original, entered path.")
+        #                 CLI_LOGGER.exception(emessage)
+        #                 error = error + emessage
+
+        #             # Update data dictionary
+        #             upload_updated = delivery.update_data_dict(
+        #                 path=ofile,
+        #                 pathinfo={'proceed': uploaded,
+        #                           'error': error,
+        #                           'up_ok': uploaded}
+        #             )
+
+        #             # If data dictionary not uploaded -- failure, move on
+        #             if not upload_updated:
+        #                 CLI_LOGGER.exception("Data info dictionary failed"
+        #                                      " to be updated, cannot proceed"
+        #                                      f" with delivery of '{ofile}'")
+        #                 continue
+
+        #             # CLI_LOGGER.debug(delivery.data[ofile])
+        #             if not delivery.data[ofile]['proceed']:
+        #                 CLI_LOGGER.warning("Upload failed, continuing to next file - "
+        #                                    f"file: {ofile} "
+        #                                    f"({ufile})")
+        #                 continue
+
+        #             # Delete file from temporary directory
+        #             fh.del_from_temp(file=ufile)
+
+        #             CLI_LOGGER.debug(f"Beginning database update. {ofile}\n"
+        #                              f"{delivery.data[ofile]}")
+        #             # update database here
+        #             try:
+        #                 with DatabaseConnector('project_db') as project_db:
+        #                     _project = project_db[delivery.project_id]
+        #                     keyinfo = delivery.data[ofile]
+        #                     key = str(keyinfo['new_file'])
+        #                     dir_path = str(keyinfo['directory_path'])
+
+        #                     _project['files'][key] = \
+        #                         {"directory_path": dir_path,
+        #                          "size": keyinfo['size'],
+        #                          "ds_compressed": keyinfo['ds_compressed'],
+        #                          "date_uploaded": timestamp()}
+        #                     project_db.save(_project)
+        #             except Exception as e:  # FIX EXCEPTION HERE
+        #                 emessage = f"Could not update database: {e}"
+        #                 CLI_LOGGER.warning()
+        #                 delivery.data[ofile].update({'error': emessage,
+        #                                              'proceed': False,
+        #                                              'db_ok': False})
+        #             else:
+        #                 CLI_LOGGER.info("Upload completed!"
+        #                                 f"{delivery.data[ofile]}")
+        #                 delivery.data[ofile].update({'proceed': True,
+        #                                              'db_ok': True})
+
+        #             CLI_LOGGER.debug("success: "
+        #                              f"{delivery.data[ofile]['proceed']}")
 
 
 @cli.command()

@@ -68,65 +68,62 @@ class S3Connector():
     def _connect(self):
         '''Connect to S3'''
 
-        self.session = boto3.session.Session()
-        # Project access granted -- Get S3 credentials
-        s3path = Path.cwd() / Path("sensitive/s3_config.json")
-        with s3path.open(mode='r') as f:
-            s3creds = json.load(f)
+        try:
+            self.session = boto3.session.Session()      # --> Thread safe
 
-        # Keys and endpoint from file - this will be changed to database
-        endpoint_url = s3creds['endpoint_url']
-        project_keys = s3creds['sfsp_keys'][self.project]
+            # Get S3 credentials -- SHOULD BE CHANGED LATER
+            s3path = Path.cwd() / Path("sensitive/s3_config.json")
+            with s3path.open(mode='r') as f:
+                s3creds = json.load(f)
 
-        # Start s3 connection resource
-        self.resource = self.session.resource(
-            service_name='s3',
-            endpoint_url=endpoint_url,
-            aws_access_key_id=project_keys['access_key'],
-            aws_secret_access_key=project_keys['secret_key'],
-        )
-        self.bucket = self.resource.Bucket(self.bucketname)
+            # Keys and endpoint from file - this will be changed to database
+            endpoint_url = s3creds['endpoint_url']
+            project_keys = s3creds['sfsp_keys'][self.project]
+
+            # Start s3 connection resource
+            self.resource = self.session.resource(
+                service_name='s3',
+                endpoint_url=endpoint_url,
+                aws_access_key_id=project_keys['access_key'],
+                aws_secret_access_key=project_keys['secret_key'],
+            )
+            self.bucket = self.resource.Bucket(self.bucketname)
+        except Exception as e:
+            S3_LOG.exception(f"S3 connection failed: {e}")
+        else:
+            pass
+            S3_LOG.info("Database connection successful.")
 
     def file_exists_in_bucket(self, key: str, put: bool = True) -> (bool, str):
         '''Checks if the current file already exists in the specified bucket.
         If so, the file will not be uploaded.
 
         Args:
-            key:    File to check for in bucket
-            put:    True if uploading (default)
+            key (str):      File to check for in bucket
+            put (bool):     True if uploading (default)
 
         Returns:
             bool:   True if the file already exists, False if it doesnt
+            str:    Error message, "" if none
 
         '''
 
-        # if not put:
-        #     # If extension --> file, if not --> folder (?)
-        #     folder = (len(key.split(os.extsep)) == 1)
-
-        #     if folder:  # path is a folder
-        #         if not key.endswith(os.path.sep):
-        #             key += os.path.sep  # add path ending
-        #             S3_LOG.debug(f"Folder to search for in bucket: {key}")
-
-        # Check if file has been uploaded previously
         try:
-            self.resource.Object(
-                self.bucket.name, key
-            ).load()    # Calls head_object() -- retrieves meta data for object
+            # Retrieve meta data for object -- 404 error if not in bucket
+            self.resource.Object(self.bucket.name, key).load()
         except botocore.exceptions.ClientError as e:
-            # S3_LOG.debug(f"-------error: {e}")
-            if e.response['Error']['Code'] == "404":    # 404 --> not in bucket
-                # S3_LOG.debug("The file doesn't exist")
+            # If 404 -- OK! If other error -- NOT OK!
+            if e.response['Error']['Code'] == "404":   # 404 --> not in bucket
+                S3_LOG.info(f"File {key}: Not in bucket --> proceeding")
                 return False, ""
-            else:   # Other eror --> error
+            else:
                 error_message = (f"Checking for file in S3 bucket failed! "
                                  f"Error: {e}")
                 S3_LOG.warning(error_message)
                 return False, error_message
-        else:   # In bucket --> no delivery of file
-            S3_LOG.warning(f"The file {key} already exists.")
-            return True, ""
+
+        S3_LOG.debug(f"File {key}: In bucket.")
+        return True, ""
 
     def delete_item(self, key: str):
         '''Deletes specified item

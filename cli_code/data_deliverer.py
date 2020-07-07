@@ -18,7 +18,7 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import config_logger, get_root_path, \
-    is_compressed, magic_dict, process_file
+    is_compressed, MAGIC_DICT, process_file
 
 # CONFIG ############################################################# CONFIG #
 
@@ -527,94 +527,6 @@ class DataDeliverer():
                     )
         return all_files
 
-    def _do_file_checks(self, file: Path, fileinfo: dict) -> (bool, bool, str):
-        '''Checks if file is compressed and if it has already been delivered.
-
-        Args:
-            file:  Path to file
-
-        Returns:
-            tuple:  Information on if the file is compressed, whether or not
-                    to proceed with the delivery of the file, and the file path
-                    after (future) processing.
-
-                bool:   True if delivery should proceed for file
-                bool:   True if file is already compressed
-                str:    File path with new suffixes
-            '''
-
-        # Set file check as in progress
-        self.set_progress(item=file, check=True, started=True)
-
-        # self.LOGGER.debug(f"do file checks: {file}")
-        error = ""
-        proceed = True
-
-        # self.LOGGER.debug(proceed)
-        # Check if compressed and save algorithm info if yes
-        compressed = is_compressed(file)
-        # self.LOGGER.debug(f"File: {file}\t Compressed: {compressed}")
-
-        # self.LOGGER.debug(
-        #     f"Original suffixes: {''.join(fileinfo[file]['suffixes'])}"
-        # )
-        proc_suff = ""  # Suffix after file processed
-        if not compressed:
-            # Check if suffixes are in magic dict
-            if set(fileinfo['suffixes']).intersection(set(magic_dict)):
-                self.LOGGER.warning(f"File '{file}' shows no indication of "
-                                    "being compressed, but has extensions "
-                                    "belonging to a compressed format. Not "
-                                    "compressing file.")
-
-            proc_suff += ".zst"     # Update the future suffix
-            # self.LOGGER.debug(f"File '{file.name}' not compressed. "
-            #                   f"Added file suffix: {proc_suff}")
-        elif compressed:
-            self.LOGGER.info(f"Not compressing the file '{file.name}'.")
-
-        proc_suff += ".ccp"     # ChaCha20 (encryption format) extension added
-        # self.LOGGER.debug(f"File: {file}\t Added file suffix: {proc_suff}")
-
-        # Path to file in bucket and temporary directory, including file name
-        bucketfilename = str(fileinfo['directory_path'] /
-                             Path(file.name + proc_suff))
-        # self.LOGGER.debug(f"File: {file}\t Bucket path: {bucketfilename}")
-
-        # Check if file exists in db
-        with DatabaseConnector('project_db') as project_db:
-            proj = project_db[self.project_id]
-            # self.LOGGER.debug(f"Checking db for file '{bucketfilename}'")
-            if bucketfilename in proj['files']:
-                error = f"File '{file}' already exists in the database. "
-                self.LOGGER.warning(error)
-                return False, compressed, bucketfilename, error
-
-        try:
-            # Check if file/folder exists in bucket
-            with S3Connector(bucketname=self.bucketname,
-                             project=self.s3project) as s3:
-                # Check if file exists in bucket already
-                in_bucket, error = s3.file_exists_in_bucket(bucketfilename)
-                # self.LOGGER.debug(
-                #     f"File: {file}\t Exists in bucket: {in_bucket}"
-                # )
-
-                if in_bucket:  # If the file is already in bucket
-                    error = (f"{error}\nFile '{file.name}' already exists in "
-                             " bucket, but does NOT exist in database. " +
-                             "Delivery cancelled, contact support.")
-                    self.LOGGER.critical(error)
-                    return False, compressed, bucketfilename, error
-        except Exception as e:  # FIX EXCEPTION HERE
-            error = e
-            self.LOGGER.warning(error)
-            proceed = False     # If check for file in bucket, do not proceed
-
-        # self.LOGGER.debug(proceed)
-
-        return proceed, compressed, bucketfilename, error
-
     def _finalize(self, file: Path) -> (bool):
         '''Makes sure that the file is not in bucket or db and deletes
         if it is.
@@ -652,6 +564,86 @@ class DataDeliverer():
     ##################
     # Public Methods #
     ##################
+
+    def do_file_checks(self, file: Path, fileinfo: dict) -> (bool, bool, str):
+        '''Checks if file is compressed and if it has already been delivered.
+
+        Args:
+            file (Path):       Path to file
+            fileinfo (dict):   Info about file and delivery
+
+        Returns:
+            tuple:  Information on if the file is compressed, whether or not
+                    to proceed with the delivery of the file, and the file path
+                    after (future) processing.
+
+                bool:   True if delivery should proceed for file
+                bool:   True if file is already compressed
+                str:    Bucketfilename -- File path with new suffixes
+                str:    Error message, "" if none
+        '''
+
+        # Set file check as in progress
+        self.set_progress(item=file, check=True, started=True)
+
+        # Variables ############################################### Variables #
+        proc_suff = ""      # Saves final suffixes
+        # ------------------------------------------------------------------- #
+
+        # Check if compressed
+        compressed, error = is_compressed(file)
+        if error != "":     # If error in checking compression format quit file
+            return False, compressed, "", error
+
+        # If file not compressed -- add zst (Zstandard) suffix to final suffix
+        if not compressed:
+            # Warning if suffixes are in magic dict but file "not compressed"
+            if set(fileinfo['suffixes']).intersection(set(MAGIC_DICT)):
+                self.LOGGER.warning(f"File '{file}' has extensions belonging "
+                                    "to a compressed format but shows no "
+                                    "indication of being compressed. Not "
+                                    "compressing file.")
+
+            proc_suff += ".zst"     # Update the future suffix
+            # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
+        elif compressed:
+            self.LOGGER.warning(f"File '{file}' shows indication of being "
+                                "in a compressed format. "
+                                "Not compressing the file.")
+
+        proc_suff += ".ccp"     # ChaCha20 (encryption format) extension added
+        # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
+
+        # Path to file in temporary directory after processing, and bucket
+        # after upload, >>including file name<<
+        bucketfilename = str(fileinfo['directory_path'] /
+                             Path(file.name + proc_suff))
+        # self.LOGGER.debug(f"File: {file}\t Bucket path: {bucketfilename}")
+
+        # If file exists in DB -- cancel delivery of file
+        with DatabaseConnector('project_db') as project_db:
+            if bucketfilename in project_db[self.project_id]['files']:
+                error = f"File '{file}' already exists in the database. "
+                self.LOGGER.warning(error)
+                return False, compressed, bucketfilename, error
+
+        # If file exists in S3 bucket -- cancel delivery of file
+        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                as s3:
+            # Check if file exists in bucket already
+            in_bucket, error = s3.file_exists_in_bucket(bucketfilename)
+            # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
+
+            if in_bucket:  # If the file is already in bucket
+                error = (f"{error}\nFile '{file.name}' already exists in "
+                         "bucket, but does NOT exist in database. " +
+                         "Delivery cancelled, contact support.")
+                self.LOGGER.critical(error)
+                return False, compressed, bucketfilename, error
+
+        # Proceed with delivery and return info on file
+        return True, compressed, bucketfilename, error
+
     def get_content_info(self, item: Path, iteminfo: dict) -> (bool):
         '''Checks if file can proceed to processing.
 
@@ -736,7 +728,7 @@ class DataDeliverer():
         return info
 
     def update_delivery(self, file, updinfo):
-        
+
         # self.LOGGER.debug(f"Updating file: {file}:: {updinfo}")
         if not updinfo['proceed']:
 

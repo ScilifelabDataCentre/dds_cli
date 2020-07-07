@@ -6,23 +6,21 @@ Responsible for IO related operations, including compression, encryption, etc.
 # IMPORTS ########################################################### IMPORTS #
 
 import zstandard as zstd
-import sys
+# import sys
 import os
-import shutil
-import datetime
-import collections
+# import shutil
+# import collections
 import logging
 from pathlib import Path
-import tarfile
 
-from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+# from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
-from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
-                           crypto_aead_chacha20poly1305_ietf_decrypt)
-from nacl.exceptions import CryptoError
-from bitstring import BitArray
+from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt  # ,
+# crypto_aead_chacha20poly1305_ietf_decrypt)
+# from nacl.exceptions import CryptoError
+# from bitstring import BitArray
 
-from cli_code import LOG_FILE, MAX_CTR
+from cli_code import LOG_FILE  # , MAX_CTR
 
 max_nonce = 2**(12*8)
 
@@ -48,7 +46,7 @@ def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
         stream_setlevel:    The lowest level of logging in console
         sh_format:          Format of console logs
 
-    Returns: 
+    Returns:
         Logger:     Configured logger
     '''
 
@@ -71,7 +69,7 @@ def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
     return logger
 
 
-# Set up logger
+# Set up logger ############## Needs to be here ############### Set up logger #
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 LOG = config_logger(
@@ -83,6 +81,33 @@ LOG = config_logger(
     sh_format="%(levelname)s::%(name)s::" +
     "%(lineno)d::%(message)s"
 )
+
+###############################################################################
+# GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
+###############################################################################
+# Compression formats and their file signatures
+MAGIC_DICT = {
+    b'\x913HF': "hap",
+    b'ustar': "tar",
+    b'`\xea': "arj",
+    b"_\'\xa8\x89": "jar",
+    b'ZOO ': "zoo",
+    b'PK\x03\x04': "zip",
+    b'UFA\xc6\xd2\xc1': "ufa",
+    b'StuffIt ': "sit",
+    b'Rar!\x1a\x07\x00': "rar v4.x",
+    b'Rar!\x1a\x07\x01\x00': "rar v5",
+    b'MAr0\x00': "mar",
+    b'DMS!': "dms",
+    b'CRUSH v': "cru",
+    b'BZh': "bz2",
+    b'-lh': "lha",
+    b'(This fi': "hqx",
+    b'!\x12': "ain",
+    b'\x1a\x0b': "pak",
+    b'(\xb5/\xfd': "zst"
+}
+MAX_FMT = max(len(x) for x in MAGIC_DICT)   # Longest signature
 
 ###############################################################################
 # IO FUNCTIONS ################################################# IO FUNCTIONS #
@@ -149,31 +174,6 @@ def file_reader(file: Path, chunk_size: int = 65536) -> (bytes):
 ###############################################################################
 
 
-# Compression formats and their file signatures
-magic_dict = {
-    b'\x913HF': "hap",
-    b'ustar': "tar",
-    b'`\xea': "arj",
-    b"_\'\xa8\x89": "jar",
-    b'ZOO ': "zoo",
-    b'PK\x03\x04': "zip",
-    b'UFA\xc6\xd2\xc1': "ufa",
-    b'StuffIt ': "sit",
-    b'Rar!\x1a\x07\x00': "rar v4.x",
-    b'Rar!\x1a\x07\x01\x00': "rar v5",
-    b'MAr0\x00': "mar",
-    b'DMS!': "dms",
-    b'CRUSH v': "cru",
-    b'BZh': "bz2",
-    b'-lh': "lha",
-    b'(This fi': "hqx",
-    b'!\x12': "ain",
-    b'\x1a\x0b': "pak",
-    b'(\xb5/\xfd': "zst"
-}
-MAX_FMT = max(len(x) for x in magic_dict)   # Longest signature
-
-
 def compress_file(file: Path, chunk_size: int = 65536) -> (bytes):
     '''Compresses file
 
@@ -197,26 +197,29 @@ def is_compressed(file: Path) -> (bool, str):
     '''Checks for file signatures in common compression formats.
 
     Args:
-        file:   Path object to be checked.
+        file (Path):   Path object to be checked.
 
     Returns:
         tuple:      Info on if compressed format or not.
 
             bool:   True if file is compressed format.
-            str:    Format abbreviation, empty string if not compressed.
+            str:    Error message, "" if no error
     '''
+
+    error = ""
 
     try:
         with file.open(mode='rb') as f:
             file_start = f.read(MAX_FMT)    # Read the first x bytes
             # LOG.debug(f"file: {file}\tfile start: {file_start}")
-            for magic, _ in magic_dict.items():
+            for magic, _ in MAGIC_DICT.items():
                 if file_start.startswith(magic):    # If file signature found
-                    return True                     # File is compressed
+                    return True, error              # File is compressed
     except Exception as e:  # EDIT EXCEPTION HERE
         LOG.warning(e)      # Log warning, do not cancel all
+        error = e           # Save error message
 
-    return False    # File not compressed
+    return False, error    # File not compressed
 
 
 ###############################################################################
@@ -350,6 +353,3 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
 
     # success, original_file, processed_file, processed_size, compressed, error
     return True, outfile, e_size, ds_compressed, None
-
-
-

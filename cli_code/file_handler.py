@@ -227,14 +227,14 @@ def is_compressed(file: Path) -> (bool, str):
 ###############################################################################
 
 
-def aead_encrypt_chacha(gen, key, iv) -> (bytes, bytes):
+def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
     '''Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
     construction described in RFC7539.
 
     Args:
-        gen:    Generator object, stream of file chunks
-        key:    Data encryption key
-        iv:     Initial nonce
+        gen (Generator):    Generator object, stream of file chunks
+        key (bytes):        Data encryption key
+        iv (bytes):         Initial nonce
 
     Yields:
         tuple:  The nonce for each data chunk and ciphertext
@@ -243,10 +243,14 @@ def aead_encrypt_chacha(gen, key, iv) -> (bytes, bytes):
             bytes:  Ciphertext
     '''
 
+    # Variables ################################################### Variables #
     iv_int = int.from_bytes(iv, 'little')   # Transform nonce to int
     aad = None  # Associated data, unencrypted but authenticated
+    # ----------------------------------------------------------------------- #
+
     for chunk in gen:
-        # Get nonce as bytes for encryption
+        # Get nonce as bytes for encryption: if the nonce is larger than the
+        # max number of chunks allowed to be encrypted (safely) -- begin at 0
         nonce = (iv_int if iv_int < max_nonce
                  else iv_int % max_nonce).to_bytes(length=12,
                                                    byteorder='little')
@@ -257,7 +261,7 @@ def aead_encrypt_chacha(gen, key, iv) -> (bytes, bytes):
                                                                nonce=nonce,
                                                                key=key)
 
-        iv_int += 1  # Increment nonce - begin at 0 again if reaches max value
+        iv_int += 1  # Increment nonce
 
 
 ###############################################################################
@@ -266,19 +270,18 @@ def aead_encrypt_chacha(gen, key, iv) -> (bytes, bytes):
 
 
 def process_file(file: Path, file_info: dict, filedir: Path) \
-        -> (bool, Path, Path, int, bool, str):
+        -> (bool, Path, int, bool, str):
     '''Processes the files incl compression, encryption
 
     Args:
-        file:           Path to file
-        file_info:      Info about file
-        filedir:        Temporary file directory
+        file (Path):           Path to file
+        file_info (dict):      Info about file
+        filedir (Path):        Temporary file directory
 
     Returns:
         tuple: Information about finished processing
 
             bool:   True if processing successful -- compression+encryption
-            Path:   Original file, pre-processing
             Path:   Path to processed file
             int:    Size (in bytes) of processd file
             bool:   True if compressed
@@ -286,43 +289,46 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
 
     '''
 
-    # LOG.debug(f"Processing {file}....")
-    # Checking for errors first
+    # If file path not Path type --> quit whole exception, something wrong
     if not isinstance(file, Path):
         emessage = f"Wrong format! {file} is not a 'Path' object."
         raise Exception(emessage)  # Bug somewhere in code FIX EXCEPTION HERE
 
+    # If file doesn't exist --> quit whole exception, something wrong
     if not file.exists():
         emessage = f"The path {file} does not exist!"
         raise Exception(emessage)  # Bug somewhere in code FIX EXCEPTION HERE
 
-    # Path to save processed file
-    outfile = filedir / file_info['new_file']
-    # LOG.debug(f"Processed file will be saved in location: '{outfile}'")
+    # Variables ################################################### Variables #
+    outfile = filedir / file_info['new_file']   # Path to save processed file
+    new_dir = filedir / file_info['directory_path']     # New temp subdir
+    # ----------------------------------------------------------------------- #
+    # LOG.debug(f"Infile: {file}, Outfile: {outfile}")
 
-    # Check that temporary subdirectory exists
-    new_dir = filedir / file_info['directory_path']
-    # LOG.debug(f"new_dir: {new_dir}")
+    # If new temporary subdir doesn't exist -- create it
     if not new_dir.exists():
-        # LOG.debug(f"File: {file}\tThe temporary directory '{new_dir}' did "
-        #           "not exist, creating it.")
-        new_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            new_dir.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            error = f"File: {file} -- Creating tempdir {new_dir} failed! :: {e}"
+            LOG.exception(error)
+            return False, Path(""), 0, False, error
+        # LOG.debug(f"File: {file}, Tempdir: {new_dir}")
 
-    # Begin processing
+    # PROCESSING START ##################################### PROCESSING START #
     try:
-        original_umask = os.umask(0)  # user file-creation mode mask
+        original_umask = os.umask(0)  # User file-creation mode mask
         with file.open(mode='rb') as f:
 
-            # Compress if not compressed
+            # Compression ###### If not already compressed ###### Compression #
             chunk_stream = file_reader(f) if file_info['compressed'] \
                 else compress_file(f)
 
-            LOG.info(f"Beginning encryption of file '{file}'.")
-            # Begin encryption
+            # Encryption ######################################### Encryption #
             with outfile.open(mode='ab+') as of:
-                key = os.urandom(32)     # Data encryption key
-                iv_bytes = os.urandom(12)    # Initial nonce/value
-                # LOG.debug(f"Data encryption key: {key}\n"
+                key = os.urandom(32)            # Data encryption key
+                iv_bytes = os.urandom(12)       # Initial nonce/value
+                # LOG.debug(f"File: {file}, Data encryption key: {key},a"
                 #           "Initial nonce: {iv_bytes}")
 
                 # Write nonce to file and save 12 bytes for last nonce
@@ -339,17 +345,17 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
                 of.seek(12)         # Find the saved bytes
                 of.write(nonce)     # Write the last nonce to file
     except Exception as ee:  # FIX EXCEPTION HERE
-        LOG.exception(f"Processig failed! {ee}")
-        return False, outfile, 0, False, ee
+        error = f"Processig failed! {ee}"
+        LOG.exception(error)
+        return False, outfile, 0, False, error
     else:
-        LOG.info(f"Processing of '{file}' -- completed!")
+        LOG.info(f"File: '{file}' -- Processing completed! Encrypted file "
+                 f"saved at {outfile}")
         # Info on if delivery system compressed or not
         ds_compressed = False if file_info['compressed'] else True
     finally:
         os.umask(original_umask)    # Remove mask
 
-    e_size = outfile.stat().st_size  # Encrypted size in bytes
-    LOG.info(f"Encrypted file size: {e_size} ({outfile})")
+    # PROCESSING FINISHED ############################### PROCESSING FINISHED #
 
-    # success, original_file, processed_file, processed_size, compressed, error
-    return True, outfile, e_size, ds_compressed, None
+    return True, outfile, outfile.stat().st_size, ds_compressed, ""

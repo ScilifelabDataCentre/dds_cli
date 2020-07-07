@@ -644,72 +644,35 @@ class DataDeliverer():
         # Proceed with delivery and return info on file
         return True, compressed, bucketfilename, error
 
-    def get_content_info(self, item: Path, iteminfo: dict) -> (bool):
-        '''Checks if file can proceed to processing.
-
-        Args:
-            item:   Path to file
-
-        Returns:
-            bool:   True if file info saved, has not been previously delivered
-                    and does not exist in the database.
-        '''
-
-        # Check if should proceed
-        if not iteminfo['proceed']:
-            return False
-
-        info = self._do_file_checks(file=item)
-
-        return info
-
-        ####
-        # if 'proceed' in self.data[item] and not self.data[item]['proceed']:
-        #     return False
-
-        # proceed, compressed, new_file, error = self._do_file_checks(file=item)
-
-        # self.LOGGER.debug(f"File: {item}\n \t\tProceed: {proceed}, \n"
-        #                   f"\t\tCompressed: {compressed}, \n"
-        #                   f"\t\tNew_file: {new_file} \n"
-        #                   f"\t\tError: {error}")
-
-        # updated = self.update_data_dict(
-        #     path=item,
-        #     pathinfo={})
-
-        # if not updated:
-        #     raise Exception("File {'item'} information couldn't be updated, "
-        #                     "required for delivery.")  # FIX EXCEPTION HERE
-
-        # return proceed
-
     def prep_upload(self, path: Path, path_info: dict) \
-            -> (bool, Path, list, str):
+            -> (tuple):
         '''Prepares the files for upload.
 
         Args:
-            path:           Path to file
-            path_info:      Info on file
+            path (Path):        Path to file
+            path_info (dict):   Info on file
 
         Returns:
-            tuple:  Info on success and file after processing
+            tuple:  Info on success and info
 
                 bool:   True if processing successful
-                Path:   Path to original file
-                list:   Processed file info
-                str:    Message if paths don't match
+                Path:   Path to processed file
+                int:    Size of processed file
+                bool:   True if file compressed by the delivery system
+                str:    Error message, "" if none
         '''
 
-        # self.LOGGER.debug(f"\nProcessing {path}, path_info: {path_info}\n")
-
+        # If DS noted cancelation of file -- quit and move on
         if not path_info['proceed']:
+            # If file checks incl compression check, db check etc,
+            # not done --> quit and move on.
             if not path_info['filecheck']['finished']:
-                self.LOGGER.critical(f"File: '{path}' -- Content checks etc "
-                                     "not performed. Bug in code. Moving "
-                                     "on to next file.")
-            return False
+                error = (f"File: '{path}' -- Content checks etc not performed."
+                         " Bug in code. Moving on to next file.")
+                self.LOGGER.critical(error)
+            return False, Path(""), 0, False, error
 
+        # Set file processing as in progress
         self.set_progress(item=path, processing=True, started=True)
 
         # Begin processing incl encryption
@@ -717,14 +680,6 @@ class DataDeliverer():
                             file_info=path_info,
                             filedir=self.tempdir[1])
 
-        # if path != path_:
-        #     emessage = (f"{error + ' ' if isinstance(error, str) else ''}"
-        #                 "The processing did not return the same file as "
-        #                 "was input -- cannot continue delivery.")
-        #     LOG.warning(emessage)
-        #     return False, info, emessage
-
-        # success, original_file, processed_file, processed_size, compressed, error
         return info
 
     def update_delivery(self, file, updinfo):

@@ -199,14 +199,11 @@ def put(config: str, username: str, password: str, project: str,
         # When file upload is done -- set as finished
         for ufuture in as_completed(uthreads):
             upath = uthreads[ufuture]       # Original file path -- keep track
-            uploaded, delivered_file, \
-                file_path, error = ufuture.result()     # Get info
+            uploaded, error = ufuture.result()     # Get info
 
             # Update file info
             delivery.update_delivery(file=upath,
                                      updinfo={'proceed': uploaded,
-                                              'encrypted_file': delivered_file,
-                                              'encrypted_size': file_path,
                                               'error': error})
             # Set file upload as finished
             delivery.set_progress(item=upath, upload=True, finished=True)

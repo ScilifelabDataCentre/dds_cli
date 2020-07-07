@@ -664,12 +664,14 @@ class DataDeliverer():
 
         # If DS noted cancelation of file -- quit and move on
         if not path_info['proceed']:
+            error = ""
             # If file checks incl compression check, db check etc,
             # not done --> quit and move on.
             if not path_info['filecheck']['finished']:
                 error = (f"File: '{path}' -- Content checks etc not performed."
                          " Bug in code. Moving on to next file.")
                 self.LOGGER.critical(error)
+
             return False, Path(""), 0, False, error
 
         # Set file processing as in progress
@@ -873,77 +875,60 @@ class DataDeliverer():
 
         raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
 
-    def put(self, file: Path, fileinfo) -> (bool, Path, list, list, str):
+    def put(self, file: Path, fileinfo: dict) -> (bool, Path, list, list, str):
         '''Uploads specified data to the S3 bucket.
 
         Args:
-            file:       Path to original file
+            file (Path):       Path to original file
+            fileinfo (dict):   Info on file
 
         Returns:
+            tuple:
+
+                bool:   True if upload successful
+                str:    Encrypted file, to upload
+                str:    Remote path, path in bucket
+                str:    Error message, "" if none
 
         '''
 
-        # self.LOGGER.debug(f"{file}: {fileinfo[file]}")
+        # If DS noted cancelation of file -- quit and move on
         if not fileinfo['proceed']:
+            error = ""
+            # If processing not performed --> quit and move on
             if not fileinfo['processing']['finished']:
-                self.LOGGER.critical(f"File: '{file}' -- File not processed "
-                                     "(e.g. encrypted). Bug in code. Moving "
-                                     "on to next file.")
+                error = (f"File: '{file}' -- File not processed (e.g. "
+                         "encrypted). Bug in code. Moving on to next file.")
+                self.LOGGER.critical(error)
 
-            return False, "", "", ""
+            return False, error
 
+        # Set delivery as in progress
         self.set_progress(item=file, upload=True, started=True)
 
-        file_to_upload = fileinfo['encrypted_file']
-        # self.LOGGER.debug(f"File: {file}\t"
-        #                   f"Encrypted, to upload: {file_to_upload}")
-
-        filepath = fileinfo['new_file']
-        # self.LOGGER.debug(f"Path in bucket: {filepath}")
-
+        # UPLOAD START ######################################### UPLOAD START #
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:  # Connect to s3
+                as s3:
 
-            # Check if bucket doesn't exist in resource
-            if s3.bucket not in s3.resource.buckets.all():
-                emessage = ("Bucket not found in S3 resource. "
-                            "Upload will not be possible. "
-                            f"Bucket: {self.bucketname}")
-                self.LOGGER.critical(emessage)
-                return False, file_to_upload, filepath, emessage
-
-            # Check if file exists (including path)
-            file_already_in_bucket, error = s3.file_exists_in_bucket(
-                key=filepath
-            )
-            self.LOGGER.warning("file already in bucket: "
-                                f"{file_already_in_bucket}")
-
-            # Upload if doesn't exist
-            if file_already_in_bucket:
-                emessage = ("File already exists in bucket, will not be "
-                            f"uploaded. File: {file_to_upload}")
-                self.LOGGER.warning(emessage)
-                return False, file_to_upload, filepath, emessage
+            try:
+                # Upload file
+                s3.resource.meta.client.upload_file(
+                    Filename=str(fileinfo['encrypted_file']),
+                    Bucket=s3.bucketname,
+                    Key=fileinfo['new_file']
+                )
+            except Exception as e:   # FIX EXCEPTION HERE
+                # Upload failed -- return error message and move on
+                error = (f"File: {file}, Uploaded: "
+                         f"{fileinfo['encrypted_file']} -- "
+                         f"Upload failed! -- {e}")
+                self.LOGGER.exception(error)
+                return False, error
             else:
-                # self.LOGGER.debug(
-                #     f"Beginning upload of file {file_to_upload} ({file})"
-                # )
-                try:
-                    s3.resource.meta.client.upload_file(
-                        str(file_to_upload), s3.bucketname,
-                        filepath
-                    )
-                except Exception as e:   # FIX EXCEPTION HERE
-                    emessage = (f"Upload failed! {e} -- file: {file_to_upload} "
-                                f"({file})")
-                    self.LOGGER.exception(emessage)
-                    return False, file_to_upload, filepath, emessage
-                else:
-                    self.LOGGER.info("Upload completed! file:"
-                                     f" {file_to_upload} ({file}). "
-                                     f"Bucket location: {filepath}")
-                    return True, file_to_upload, filepath, None
+                # Upload successful
+                self.LOGGER.info("File uploaded: {fileinfo['encrypted_file']},"
+                                 f"Bucket location: {fileinfo['new_file']}")
+                return True, ""
 
 
 # DSUSER ############################################################## DSUER #

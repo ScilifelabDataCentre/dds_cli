@@ -9,6 +9,7 @@ import boto3
 import boto3.session
 from boto3.s3.transfer import TransferConfig
 import botocore
+from botocore.client import ClientError
 
 
 from cli_code.exceptions_ds import *
@@ -87,7 +88,16 @@ class S3Connector():
                 aws_access_key_id=project_keys['access_key'],
                 aws_secret_access_key=project_keys['secret_key'],
             )
-            self.bucket = self.resource.Bucket(self.bucketname)
+
+            try:
+                self.resource.meta.client.head_bucket(Bucket=self.bucketname)
+            except ClientError as ce:
+                error = ("Bucket: {self.bucketname} -- Bucket not found in "
+                         "S3 resource. Upload will not be possible. ")
+                S3_LOG.critical(emessage)
+                sys.exit(error)
+            else:
+                self.bucket = self.resource.Bucket(self.bucketname)
         except Exception as e:
             S3_LOG.exception(f"S3 connection failed: {e}")
         else:

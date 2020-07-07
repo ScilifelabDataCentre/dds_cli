@@ -209,7 +209,7 @@ def is_compressed(file: Path) -> (bool, str):
     try:
         with file.open(mode='rb') as f:
             file_start = f.read(MAX_FMT)    # Read the first x bytes
-            LOG.debug(f"file: {file}\tfile start: {file_start}")
+            # LOG.debug(f"file: {file}\tfile start: {file_start}")
             for magic, _ in magic_dict.items():
                 if file_start.startswith(magic):    # If file signature found
                     return True                     # File is compressed
@@ -283,7 +283,7 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
 
     '''
 
-    LOG.debug(f"Processing {file}....")
+    # LOG.debug(f"Processing {file}....")
     # Checking for errors first
     if not isinstance(file, Path):
         emessage = f"Wrong format! {file} is not a 'Path' object."
@@ -295,14 +295,14 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
 
     # Path to save processed file
     outfile = filedir / file_info['new_file']
-    LOG.debug(f"Processed file will be saved in location: '{outfile}'")
+    # LOG.debug(f"Processed file will be saved in location: '{outfile}'")
 
     # Check that temporary subdirectory exists
     new_dir = filedir / file_info['directory_path']
     # LOG.debug(f"new_dir: {new_dir}")
     if not new_dir.exists():
-        LOG.debug(f"File: {file}\tThe temporary directory '{new_dir}' did "
-                  "not exist, creating it.")
+        # LOG.debug(f"File: {file}\tThe temporary directory '{new_dir}' did "
+        #           "not exist, creating it.")
         new_dir.mkdir(parents=True, exist_ok=True)
 
     # Begin processing
@@ -319,8 +319,8 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
             with outfile.open(mode='ab+') as of:
                 key = os.urandom(32)     # Data encryption key
                 iv_bytes = os.urandom(12)    # Initial nonce/value
-                LOG.debug(f"Data encryption key: {key}\n"
-                          "Initial nonce: {iv_bytes}")
+                # LOG.debug(f"Data encryption key: {key}\n"
+                #           "Initial nonce: {iv_bytes}")
 
                 # Write nonce to file and save 12 bytes for last nonce
                 of.write(iv_bytes)

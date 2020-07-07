@@ -26,7 +26,7 @@ class DatabaseConnector():
         '''Initializes the db connection'''
 
         self.db_name = db_name
-        DB_LOG.debug(f"Connecting to database {self.db_name}")
+        # DB_LOG.debug(f"Connecting to database {self.db_name}")
         try:
             self.conn = couchdb.Server(
                 f'http://delport:delport@localhost:5984/'
@@ -34,14 +34,15 @@ class DatabaseConnector():
         except CouchDBException as cdbe:
             DB_LOG.exception(f"Database login failed. {cdbe}")
         else:
-            DB_LOG.debug("Database connection successful.")
+            pass
+            # DB_LOG.info("Database connection successful.")
 
     def __enter__(self):
         '''Connects to database.
         Currently hard-coded. '''
 
         if self.db_name is None:
-            DB_LOG.debug("Connecting to CouchDB. No specific DB name.")
+            # DB_LOG.debug("Connecting to CouchDB. No specific DB name.")
             return self.conn
 
         if self.db_name not in self.conn:
@@ -60,6 +61,6 @@ class DatabaseConnector():
             return False  # uncomment to pass exception through
         else:
             self.conn = None
-            DB_LOG.debug(f"DatabaseConnector teared down: {self.conn == None}")
+            # DB_LOG.debug(f"DatabaseConnector teared down: {self.conn == None}")
 
         return True

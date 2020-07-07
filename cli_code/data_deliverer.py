@@ -123,10 +123,10 @@ class DataDeliverer():
 
             # Initialize logger
             self.logfile = LOG_FILE
-            self.logger = logging.getLogger(__name__)
-            self.logger.setLevel(logging.DEBUG)
-            self.logger = config_logger(
-                logger=self.logger, filename=self.logfile,
+            self.LOGGER = logging.getLogger(__name__)
+            self.LOGGER.setLevel(logging.DEBUG)
+            self.LOGGER = config_logger(
+                logger=self.LOGGER, filename=self.logfile,
                 file=True, file_setlevel=logging.DEBUG,
                 fh_format="%(asctime)s::%(levelname)s::" +
                 "%(name)s::%(lineno)d::%(message)s",
@@ -134,7 +134,7 @@ class DataDeliverer():
                 sh_format="%(levelname)s::%(name)s::" +
                 "%(lineno)d::%(message)s"
             )
-            # self.logger.debug(f"-- Login successful -- \n"
+            # self.LOGGER.debug(f"-- Login successful -- \n"
             #                   f"\t\tmethod: {self.method}, \n"
             #                   f"\t\tusername: {self.user.username}, \n"
             #                   f"\t\tpassword: {self.user.password}, \n"
@@ -143,9 +143,9 @@ class DataDeliverer():
             #                   f"\t\tdata: {self.data} \n")
 
             self.bucketname = f"project_{self.project_id}"
-            # self.logger.debug(f"S3 bucket: {self.bucketname}")
+            # self.LOGGER.debug(f"S3 bucket: {self.bucketname}")
 
-            self.logger.info("Delivery initialization successful.")
+            self.LOGGER.info("Delivery initialization successful.")
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -174,7 +174,7 @@ class DataDeliverer():
         wrapper = textwrap.TextWrapper(width=100)
 
         for f in self.data:
-            if self.data[f]["proceed"]:
+            if self.data[f]["proceed"] and self.data[f]['upload']['finished']:
                 suc = str(self.data[f]['dir_name']) \
                     if self.data[f]["in_directory"] else str(f)
                 loc = str(self.data[f]["directory_path"]) + "\n" \
@@ -200,13 +200,13 @@ class DataDeliverer():
         self._clear_tempdir()
 
         if len(suc_dict) > 0:
-            self.logger.info("----DELIVERY COMPLETED----")
-            self.logger.info(
+            self.LOGGER.info("----DELIVERY COMPLETED----")
+            self.LOGGER.info(
                 f"The following items were uploaded:\n{succeeded}\n")
         if len(fai_dict) == len(suc_dict) + len(fai_dict):
-            self.logger.error("----DELIVERY FAILED----")
+            self.LOGGER.error("----DELIVERY FAILED----")
         if len(fai_dict) > 0:
-            self.logger.error(
+            self.LOGGER.error(
                 f"The following items were NOT uploaded:\n{failed}\n")
 
     ###################
@@ -428,8 +428,9 @@ class DataDeliverer():
             try:
                 shutil.rmtree(d)
             except Exception as e:  # FIX EXCEPTION HERE
-                self.logger.exception("Failed emptying the temporary folder"
-                                      f"{d}: {e}")
+                self.LOGGER.exception(
+                    f"Failed emptying the temporary folder {d}: {e}"
+                )
 
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list
@@ -486,7 +487,6 @@ class DataDeliverer():
                                         'finished': False},
                          'upload': {'in_progress': False,
                                     'finished': False}}
-                    print(f"{curr_path}: {all_files[curr_path]}")
                 elif curr_path.is_dir():  # Get info on files in folder
                     path_base = curr_path.name
                     all_files.update({f: {"in_directory": True,
@@ -516,7 +516,8 @@ class DataDeliverer():
                     error_message = "Trying to deliver a non-existing " \
                         f"file/folder: {d} -- Delivery not possible."
                     LOG.fatal(error_message)
-                    all_files[d] = {"error": error_message}
+                    all_files[d] = {'proceed': False,
+                                    'error': error_message}
                 elif self.method == "get":
                     all_files[d] = {}
                 else:
@@ -545,47 +546,48 @@ class DataDeliverer():
         # Set file check as in progress
         self.set_progress(item=file, check=True, started=True)
 
-        self.logger.debug(f"do file checks: {file}")
+        # self.LOGGER.debug(f"do file checks: {file}")
         error = ""
         proceed = True
 
+        # self.LOGGER.debug(proceed)
         # Check if compressed and save algorithm info if yes
         compressed = is_compressed(file)
-        self.logger.debug(f"File: {file}\t Compressed: {compressed}")
+        # self.LOGGER.debug(f"File: {file}\t Compressed: {compressed}")
 
-        # self.logger.debug(
+        # self.LOGGER.debug(
         #     f"Original suffixes: {''.join(fileinfo[file]['suffixes'])}"
         # )
         proc_suff = ""  # Suffix after file processed
         if not compressed:
             # Check if suffixes are in magic dict
             if set(fileinfo['suffixes']).intersection(set(magic_dict)):
-                self.logger.warning(f"File '{file}' shows no indication of "
+                self.LOGGER.warning(f"File '{file}' shows no indication of "
                                     "being compressed, but has extensions "
                                     "belonging to a compressed format. Not "
                                     "compressing file.")
 
             proc_suff += ".zst"     # Update the future suffix
-            self.logger.debug(f"File '{file.name}' not compressed. "
-                              f"Added file suffix: {proc_suff}")
+            # self.LOGGER.debug(f"File '{file.name}' not compressed. "
+            #                   f"Added file suffix: {proc_suff}")
         elif compressed:
-            self.logger.debug(f"Not compressing the file '{file.name}'.")
+            self.LOGGER.info(f"Not compressing the file '{file.name}'.")
 
         proc_suff += ".ccp"     # ChaCha20 (encryption format) extension added
-        self.logger.debug(f"File: {file}\t Added file suffix: {proc_suff}")
+        # self.LOGGER.debug(f"File: {file}\t Added file suffix: {proc_suff}")
 
         # Path to file in bucket and temporary directory, including file name
         bucketfilename = str(fileinfo['directory_path'] /
                              Path(file.name + proc_suff))
-        self.logger.debug(f"File: {file}\t Bucket path: {bucketfilename}")
+        # self.LOGGER.debug(f"File: {file}\t Bucket path: {bucketfilename}")
 
         # Check if file exists in db
         with DatabaseConnector('project_db') as project_db:
             proj = project_db[self.project_id]
-            self.logger.debug(f"Checking db for file '{bucketfilename}'")
+            # self.LOGGER.debug(f"Checking db for file '{bucketfilename}'")
             if bucketfilename in proj['files']:
                 error = f"File '{file}' already exists in the database. "
-                self.logger.warning(error)
+                self.LOGGER.warning(error)
                 return False, compressed, bucketfilename, error
 
         try:
@@ -594,19 +596,22 @@ class DataDeliverer():
                              project=self.s3project) as s3:
                 # Check if file exists in bucket already
                 in_bucket, error = s3.file_exists_in_bucket(bucketfilename)
-                self.logger.debug(
-                    f"File: {file}\t Exists in bucket: {in_bucket}")
+                # self.LOGGER.debug(
+                #     f"File: {file}\t Exists in bucket: {in_bucket}"
+                # )
 
                 if in_bucket:  # If the file is already in bucket
                     error = (f"{error}\nFile '{file.name}' already exists in "
                              " bucket, but does NOT exist in database. " +
                              "Delivery cancelled, contact support.")
-                    self.logger.critical(error)
+                    self.LOGGER.critical(error)
                     return False, compressed, bucketfilename, error
         except Exception as e:  # FIX EXCEPTION HERE
             error = e
-            self.logger.warning(error)
+            self.LOGGER.warning(error)
             proceed = False     # If check for file in bucket, do not proceed
+
+        # self.LOGGER.debug(proceed)
 
         return proceed, compressed, bucketfilename, error
 
@@ -628,7 +633,7 @@ class DataDeliverer():
                         and self.data[file]['up_ok']:
                     s3.delete_item(key=self.data[file]['new_file'])
         except Exception as e:  # FIX EXCEPTION HERE
-            self.logger.warning(e)
+            self.LOGGER.warning(e)
             return False
 
         try:
@@ -639,7 +644,7 @@ class DataDeliverer():
                         and 'db_ok' in self.data[file] and self.data[file]['db_ok']:
                     del proj['files'][self.data[file]['new_file']]
         except Exception as e:  # FIX EXCEPTION HERE
-            self.logger.warning(e)
+            self.LOGGER.warning(e)
             return False
 
         return True
@@ -672,7 +677,7 @@ class DataDeliverer():
 
         # proceed, compressed, new_file, error = self._do_file_checks(file=item)
 
-        # self.logger.debug(f"File: {item}\n \t\tProceed: {proceed}, \n"
+        # self.LOGGER.debug(f"File: {item}\n \t\tProceed: {proceed}, \n"
         #                   f"\t\tCompressed: {compressed}, \n"
         #                   f"\t\tNew_file: {new_file} \n"
         #                   f"\t\tError: {error}")
@@ -704,11 +709,11 @@ class DataDeliverer():
                 str:    Message if paths don't match
         '''
 
-        self.logger.debug(f"\nProcessing {path}, path_info: {path_info}\n")
+        # self.LOGGER.debug(f"\nProcessing {path}, path_info: {path_info}\n")
 
         if not path_info['proceed']:
             if not path_info['filecheck']['finished']:
-                self.logger.critical(f"File: '{path}' -- Content checks etc "
+                self.LOGGER.critical(f"File: '{path}' -- Content checks etc "
                                      "not performed. Bug in code. Moving "
                                      "on to next file.")
             return False
@@ -731,10 +736,12 @@ class DataDeliverer():
         return info
 
     def update_delivery(self, file, updinfo):
-
+        
+        # self.LOGGER.debug(f"Updating file: {file}:: {updinfo}")
         if not updinfo['proceed']:
 
             if self.data[file]['in_directory']:
+                # self.LOGGER.debug(f"File {file} in directory")
                 if self.break_on_fail:
                     for path, info in self.data.items():
                         if info['dir_name'] == self.data[file]['dir_name'] \
@@ -745,23 +752,23 @@ class DataDeliverer():
                                  'error': f"Failed file: {file} -- "
                                  f"{updinfo['error']}"}
                             )
-                        self.logger.debug(f"Updating file: {path} -- {info} --> "
-                          f"\nUpdated? -- {self.data[path]}")
+                        # self.LOGGER.debug(f"Updating file: {path} -- {info} --> "
+                        #                   f"\nUpdated? -- {self.data[path]}")
                     return
 
             upd = self.data[file].update({'proceed': False,
                                           'error': updinfo['error']})
-            self.logger.debug(f"-------{upd}")
+            # self.LOGGER.debug(f"-------{upd}")
             return
 
         try:
             upd = self.data[file].update(updinfo)
-            self.logger.debug(f"-------{upd}")
+            # self.LOGGER.debug(f"-------{upd}")
         except Exception as exc:
-            self.logger.exception(exc)
+            self.LOGGER.exception(exc)
 
-        self.logger.debug(f"Updating file: {file} -- {updinfo} --> "
-                          f"\nUpdated? -- {self.data[file]}")
+        # self.LOGGER.debug(f"Updating file: {file} -- {updinfo} --> "
+        #                   f"\nUpdated? -- {self.data[file]}")
         return
 
     def set_progress(self, item: Path, check=False, processing=False,
@@ -836,7 +843,7 @@ class DataDeliverer():
             proceed = pathinfo['proceed']   # All ok so far --> processing
             self.data[path].update(pathinfo)    # Update file info
         except Exception as e:  # FIX EXCEPTION HERE
-            self.logger.critical(e)
+            self.LOGGER.critical(e)
             return False
         else:
             if not proceed:     # Cancel delivery of file
@@ -844,7 +851,7 @@ class DataDeliverer():
                 emessage = (
                     f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
                 )
-                self.logger.exception(emessage)
+                self.LOGGER.exception(emessage)
                 # If the processing failed, the e_size is an exception
                 self.data[path]['error'] = emessage
 
@@ -867,7 +874,7 @@ class DataDeliverer():
                         if 'db_ok' in self.data[path]:
                             self.data[f]['db_ok'] = self.data[path]['db_ok']
 
-            # self.logger.debug(self.data[path])
+            # self.LOGGER.debug(self.data[path])
             return True
 
     ################
@@ -929,10 +936,10 @@ class DataDeliverer():
 
         '''
 
-        # self.logger.debug(f"{file}: {fileinfo[file]}")
+        # self.LOGGER.debug(f"{file}: {fileinfo[file]}")
         if not fileinfo['proceed']:
             if not fileinfo['processing']['finished']:
-                self.logger.critical(f"File: '{file}' -- File not processed "
+                self.LOGGER.critical(f"File: '{file}' -- File not processed "
                                      "(e.g. encrypted). Bug in code. Moving "
                                      "on to next file.")
 
@@ -941,11 +948,11 @@ class DataDeliverer():
         self.set_progress(item=file, upload=True, started=True)
 
         file_to_upload = fileinfo['encrypted_file']
-        self.logger.debug(f"File: {file}\t"
-                          f"Encrypted, to upload: {file_to_upload}")
+        # self.LOGGER.debug(f"File: {file}\t"
+        #                   f"Encrypted, to upload: {file_to_upload}")
 
         filepath = fileinfo['new_file']
-        self.logger.debug(f"Path in bucket: {filepath}")
+        # self.LOGGER.debug(f"Path in bucket: {filepath}")
 
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
                 as s3:  # Connect to s3
@@ -955,25 +962,26 @@ class DataDeliverer():
                 emessage = ("Bucket not found in S3 resource. "
                             "Upload will not be possible. "
                             f"Bucket: {self.bucketname}")
-                self.logger.critical(emessage)
+                self.LOGGER.critical(emessage)
                 return False, file_to_upload, filepath, emessage
 
             # Check if file exists (including path)
             file_already_in_bucket, error = s3.file_exists_in_bucket(
                 key=filepath
             )
-            self.logger.warning("file already in bucket: "
+            self.LOGGER.warning("file already in bucket: "
                                 f"{file_already_in_bucket}")
 
             # Upload if doesn't exist
             if file_already_in_bucket:
                 emessage = ("File already exists in bucket, will not be "
                             f"uploaded. File: {file_to_upload}")
-                self.logger.warning(emessage)
+                self.LOGGER.warning(emessage)
                 return False, file_to_upload, filepath, emessage
             else:
-                self.logger.debug(
-                    f"Beginning upload of file {file_to_upload} ({file})")
+                # self.LOGGER.debug(
+                #     f"Beginning upload of file {file_to_upload} ({file})"
+                # )
                 try:
                     s3.resource.meta.client.upload_file(
                         str(file_to_upload), s3.bucketname,
@@ -982,10 +990,10 @@ class DataDeliverer():
                 except Exception as e:   # FIX EXCEPTION HERE
                     emessage = (f"Upload failed! {e} -- file: {file_to_upload} "
                                 f"({file})")
-                    self.logger.exception(emessage)
+                    self.LOGGER.exception(emessage)
                     return False, file_to_upload, filepath, emessage
                 else:
-                    self.logger.info("Upload completed! file:"
+                    self.LOGGER.info("Upload completed! file:"
                                      f" {file_to_upload} ({file}). "
                                      f"Bucket location: {filepath}")
                     return True, file_to_upload, filepath, None

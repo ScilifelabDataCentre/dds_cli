@@ -125,7 +125,7 @@ class S3Connector():
                 S3_LOG.warning(error_message)
                 return False, error_message
         else:   # In bucket --> no delivery of file
-            S3_LOG.debug(f"The file {key} already exists.")
+            S3_LOG.warning(f"The file {key} already exists.")
             return True, ""
 
     def delete_item(self, key: str):

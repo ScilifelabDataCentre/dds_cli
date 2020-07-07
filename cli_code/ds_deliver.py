@@ -37,7 +37,7 @@ def config_logger(logfile: str):
                             file=True, file_setlevel=logging.DEBUG,
                             fh_format="%(asctime)s::%(levelname)s::" +
                             "%(name)s::%(lineno)d::%(message)s",
-                            stream=True, stream_setlevel=logging.WARNING,
+                            stream=True, stream_setlevel=logging.DEBUG,
                             sh_format="%(levelname)s::%(name)s::" +
                             "%(lineno)d::%(message)s")
 
@@ -104,34 +104,40 @@ def put(config: str, username: str, password: str, project: str,
         # Setup logging
         CLI_LOGGER = config_logger(LOG_FILE)
 
-        # Pools and threads
-        pools = {}
-        cthreads = {}
-        uthreads = {}
+        # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
+        pool_executor = ProcessPoolExecutor()       # Processing
+        thread_executor = ThreadPoolExecutor()      # IO related tasks
 
-        # POOLEXECUTORS ####################################### POOLEXECUTORS #
-        pool_executor = ProcessPoolExecutor()
-        thread_executor = ThreadPoolExecutor()
+        # Futures -- Pools and threads
+        pools = {}      # Processing e.g. compression, encryption etc
+        cthreads = {}   # Initial checking e.g. file formats etc
+        uthreads = {}   # Upload to S3
 
-        # Iterate through data
+        # BEGIN DELIVERY -- ITERATE THROUGH ALL FILES
         for path, info in delivery.data.items():
-            CLI_LOGGER.debug(f"{path}: {info}\n")  # Print out before
+            # CLI_LOGGER.debug(f"Beginning...{path}: {info}\n")  # Print out before
 
+            # If DS noted cancelation for file -- quit and move on
             if not info['proceed']:
-                CLI_LOGGER.warning(f"File: {ppath} -- moving on to next file")
+                CLI_LOGGER.warning(f"File: '{ppath}' -- cancelled "
+                                   "-- moving on to next file")
                 continue
 
+            # Start initial file checks and save future to dict
             cthreads[
                 thread_executor.submit(delivery._do_file_checks,
                                        file=path,
                                        fileinfo=info)
             ] = path
 
+        # PROCESS FILES -- COMPRESSION, ENCRYPTION, ETC.
+        # When initial check for a file is done -- move on to processing
         for cfuture in as_completed(cthreads):
-            cpath = cthreads[cfuture]
-            proceed, compressed, new_file, error = cfuture.result()
-
-            proceed = False
+            cpath = cthreads[cfuture]       # Original file path -- keep track
+            proceed, compressed, new_file, error = cfuture.result()  # Get info
+            # CLI_LOGGER.debug(f"file: {cpath}\t proceed: {proceed}\t"
+            #                  f"compressed: {compressed}\t new_file: "
+            #                  f"{new_file}\t error: {error}")
 
             # Update file info
             delivery.update_delivery(file=cpath,
@@ -139,71 +145,80 @@ def put(config: str, username: str, password: str, project: str,
                                               "compressed": compressed,
                                               "new_file": new_file,
                                               "error": error})
-
-            # Set file as finished
+            # Set file check as finished
             delivery.set_progress(item=cpath, check=True, finished=True)
+            # CLI_LOGGER.debug(f"File: {cpath}, Info: {delivery.data[cpath]}")
 
-            CLI_LOGGER.debug(f"File: {cpath}, Proceed: {proceed}, "
-                             f"Info: {delivery.data[cpath]}\n")
-
+            # If DS noted cancelation for file -- quit and move on
             if not proceed:
-                CLI_LOGGER.warning(f"File: {cpath} -- moving on to next file")
+                CLI_LOGGER.warning(f"File: '{cpath}' -- cancelled "
+                                   "-- moving on to next file")
                 continue
 
+            # Start file processing -- compression, encryption, etc.
             pools[pool_executor.submit(
                 delivery.prep_upload,
                 cpath,
                 delivery.data[cpath])
             ] = cpath
 
+        # DELIVER FILES -- UPLOAD TO S3
+        # When file processing is done -- move on to upload
         for pfuture in as_completed(pools):
-            ppath = pools[pfuture]
-            processed, efile, esize, dp_compressed, error = pfuture.result()
+            ppath = pools[pfuture]      # Original file path -- keep track
+            processed, efile, esize, \
+                ds_compressed, error = pfuture.result()     # Get info
 
+            # Update file info
             delivery.update_delivery(file=ppath,
                                      updinfo={'proceed': processed,
                                               'encrypted_file': efile,
                                               'encrypted_size': esize,
-                                              'ds_compressed': dp_compressed,
+                                              'ds_compressed': ds_compressed,
                                               'error': error})
-
+            # Set file processing as finished
             delivery.set_progress(item=ppath, processing=True, finished=True)
+            # CLI_LOGGER.debug(f"File: {ppath}, Info: {delivery.data[ppath]}")
 
-            CLI_LOGGER.debug(f"File: {ppath}, Proceed: {processed}, "
-                             f"Info: {delivery.data[ppath]}\n")
-
+            # If DS noted cancelation for file -- quit and move on
             if not processed:
-                CLI_LOGGER.warning(f"File: {ppath} -- moving on to next file")
+                CLI_LOGGER.warning(f"File: '{ppath}' -- cancelled "
+                                   "-- moving on to next file")
                 continue
 
+            # Start file delivery -- upload to S3
             uthreads[
                 thread_executor.submit(delivery.put,
                                        file=ppath,
                                        fileinfo=delivery.data[ppath])
             ] = ppath
 
+        # FINISH DELIVERY
+        # When file upload is done -- set as finished
         for ufuture in as_completed(uthreads):
-            upath = uthreads[ufuture]
-            uploaded, delivered_file, file_path, error = ufuture.result()
+            upath = uthreads[ufuture]       # Original file path -- keep track
+            uploaded, delivered_file, \
+                file_path, error = ufuture.result()     # Get info
 
+            # Update file info
             delivery.update_delivery(file=upath,
                                      updinfo={'proceed': uploaded,
                                               'encrypted_file': delivered_file,
                                               'encrypted_size': file_path,
                                               'error': error})
-
+            # Set file upload as finished
             delivery.set_progress(item=upath, upload=True, finished=True)
+            # CLI_LOGGER.debug(f"File: {upath}, Info: {delivery.data[upath]}")
 
-            CLI_LOGGER.debug(f"File: {upath}, Uploaded: {uploaded}, "
-                             f"Info: {delivery.data[upath]}\n")
-
+            # If DS noted cancelation for file -- quit and move on
             if not uploaded:
-                CLI_LOGGER.warning(f"File: {upath} -- moving on to next file")
+                CLI_LOGGER.warning(f"File: '{upath}' -- cancelled "
+                                   "-- moving on to next file")
                 continue
-
             CLI_LOGGER.info(f"File: {upath} -- DELIVERED")
 
-            # update database here
+            # DATABASE UPDATE TO BE THREADED LATER
+            # CURRENTLY PROBLEMS WITH COUCHDB 
             try:
                 with DatabaseConnector('project_db') as project_db:
                     _project = project_db[delivery.project_id]
@@ -223,6 +238,10 @@ def put(config: str, username: str, password: str, project: str,
             else:
                 CLI_LOGGER.info("Upload completed!"
                                 f"{delivery.data[upath]}")
+
+        # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
+        pool_executor.shutdown(wait=True)
+        thread_executor.shutdown(wait=True)
 
         # # PROCESSPOOL ########################################### PROCESSPOOL #
         # with ProcessPoolExecutor() as pool_executor:

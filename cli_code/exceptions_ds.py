@@ -5,6 +5,30 @@
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 # CLASSES ############################################################ CLASSES #
 
+# DataDeliverer ############################################### DataDeliverer #
+
+
+class DeliveryOptionException(Exception):
+    """Custom exception class. Handles errors regarding data delivery 
+    options (s3 delivery) etc."""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+
+
+class DeliverySystemException(Exception):
+    """Custom exception class. Handles errors regarding Delivery Portal 
+    access etc"""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+
+
+# ----
+
+
 class AuthenticationError(Exception):
     """Custom exception class. Handles errors regarding delivery portal authentications."""
 
@@ -36,26 +60,9 @@ class DataException(Exception):
 
     def __init__(self, msg: str):
         """Passes message from exception call to the base class __init__"""
-        
+
         super().__init__(msg)
 
-class DeliverySystemException(Exception):
-    """Custom exception class. Handles errors regarding Delivery Portal 
-    access etc"""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
-
-
-class DeliveryOptionException(Exception):
-    """Custom exception class. Handles errors regarding data delivery 
-    options (s3 delivery) etc."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
-        
 
 class EncryptionError(Exception):
     """Handles errors regarding data encryption."""
@@ -71,7 +78,7 @@ class HashException(Exception):
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""
         super().__init__(msg)
-        
+
 
 class SecurePasswordException(Exception):
     """Custom exception class. Handles errors regarding password retrieval and handling."""
@@ -87,6 +94,7 @@ class StreamingError(Exception):
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""
         super().__init__(msg)
+
 
 class S3Error(Exception):
     """Handles errors regarding S3 storage, e.g. upload, download, 

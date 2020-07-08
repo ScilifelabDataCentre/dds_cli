@@ -86,11 +86,13 @@ def secure_password_hash(password_settings: str,
             str:    The derived hash from the user-specified password.
 
     '''
-
+    
+    # Split scrypt settings into parts
     settings = password_settings.split("$")
     for i in [1, 2, 3, 4]:
-        settings[i] = int(settings[i])
+        settings[i] = int(settings[i])  # Set settings as int, not str
 
+    # Create cryptographically secure password hash
     kdf = Scrypt(salt=bytes.fromhex(settings[0]),
                  length=settings[1],
                  n=2**settings[2],

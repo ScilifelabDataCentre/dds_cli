@@ -23,7 +23,12 @@ DB_LOG = config_logger(
 class DatabaseConnector():
 
     def __init__(self, db_name=None):
-        '''Initializes the db connection'''
+        '''Initializes the db connection.
+
+        Args:
+            db_name (str):  Name of database to connect to. If None connect
+                            to entire instance.
+        '''
 
         self.db_name = db_name
         # DB_LOG.debug(f"Connecting to database {self.db_name}")
@@ -38,8 +43,7 @@ class DatabaseConnector():
             # DB_LOG.info("Database connection successful.")
 
     def __enter__(self):
-        '''Connects to database.
-        Currently hard-coded. '''
+        '''Connects to database. '''
 
         if self.db_name is None:
             # DB_LOG.debug("Connecting to CouchDB. No specific DB name.")

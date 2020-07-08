@@ -216,6 +216,7 @@ def put(config: str, username: str, password: str, project: str,
                 continue
             CLI_LOGGER.info(f"File: {upath} -- DELIVERED")
 
+            delivery.set_progress(item=upath, db=True, started=True)
             # DATABASE UPDATE TO BE THREADED LATER
             # CURRENTLY PROBLEMS WITH COUCHDB
             try:
@@ -237,6 +238,7 @@ def put(config: str, username: str, password: str, project: str,
             else:
                 CLI_LOGGER.info("Upload completed!"
                                 f"{delivery.data[upath]}")
+            delivery.set_progress(item=upath, db=True, finished=True)
 
         # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
         pool_executor.shutdown(wait=True)

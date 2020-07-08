@@ -223,6 +223,7 @@ class DataDeliverer():
         Raises:
             OSError:                    Config file not found or opened
             DeliveryOptionException:    Required information not found
+
         '''
 
         # If config file not entered use loose credentials
@@ -258,8 +259,8 @@ class DataDeliverer():
             sys.exit(f"Could not open path-file {config}: {ose}")
 
         # Check that all credentials are entered and quit if not
-        if not all(c in credentials
-                   for c in ['username', 'password', 'project']):
+        if not all(c in credentials for c
+                   in ['username', 'password', 'project']):
             raise DeliveryOptionException(
                 "The config file does not contain all required information."
             )
@@ -288,6 +289,7 @@ class DataDeliverer():
         Raises:
             CouchDBException:           Database connection failure or
                                         user not found
+            DeliveryOptionException:    Invalid method option
             DeliverySystemException:    Wrong password
         '''
 
@@ -342,9 +344,10 @@ class DataDeliverer():
         Raises:
             CouchDBException:           Database connection failure
                                         or missing project information
-            DeliverySystemException:    Access denied
             DeliveryOptionException:    S3 delivery option not available
                                         or incorrect project owner
+            DeliverySystemException:    Access denied
+            
         '''
 
         with DatabaseConnector() as couch:
@@ -506,7 +509,9 @@ class DataDeliverer():
                                           'processing': {'in_progress': False,
                                                          'finished': False},
                                           'upload': {'in_progress': False,
-                                                     'finished': False}}
+                                                     'finished': False},
+                                          'database': {'in_progress': False,
+                                                       'finished': False}}
                                       for f in curr_path.glob('**/*')
                                       if f.is_file()
                                       and "DS_Store" not in str(f)})
@@ -720,8 +725,21 @@ class DataDeliverer():
         #                   f"\nUpdated? -- {self.data[file]}")
         return
 
-    def set_progress(self, item: Path, check=False, processing=False,
-                     upload=False, started=False, finished=False):
+    def set_progress(self, item: Path, check: bool = False,
+                     processing: bool = False, upload: bool = False,
+                     db: bool = False, started: bool = False,
+                     finished: bool = False):
+        '''Set progress of file to in progress or finished, regarding
+        the file checks, processing, upload or database.
+
+        Args:
+            item (Path):        Path to file being handled
+            check (bool):       True if file checking in progress or finished
+            processing (bool):  True if processing in progress or finished
+            upload (bool):      True if upload in progress or finshed
+            db (bool):          True if database update in progress or finished
+
+        '''
 
         to_update = ""
         if check:
@@ -730,6 +748,8 @@ class DataDeliverer():
             to_update = 'processing'
         elif upload:
             to_update = 'upload'
+        elif db:
+            to_update = 'database'
 
         if started:
             self.data[item][to_update].update({'in_progress': started,

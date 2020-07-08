@@ -98,11 +98,10 @@ class S3Connector():
                 sys.exit(error)
             else:
                 self.bucket = self.resource.Bucket(self.bucketname)
-        except Exception as e:
+        except ClientError as e:
             S3_LOG.exception(f"S3 connection failed: {e}")
-        else:
-            pass
-            S3_LOG.info("Database connection successful.")
+
+        # S3_LOG.info("S3 connection successful.")
 
     def file_exists_in_bucket(self, key: str, put: bool = True) -> (bool, str):
         '''Checks if the current file already exists in the specified bucket.

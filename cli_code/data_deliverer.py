@@ -107,9 +107,6 @@ class DataDeliverer():
                         "more times, or the --pathfile/-f. "
                         "For help: 'ds_deliver --help'"
                     )
-                else:
-                    self.data = self._data_to_deliver(data=data,
-                                                      pathfile=pathfile)
             else:
                 raise DeliverySystemException(
                     f"Access to project {self.project_id} "
@@ -119,34 +116,36 @@ class DataDeliverer():
             raise DeliverySystemException("Delivery System access denied! "
                                           "Delivery cancelled.")
 
-        if self.data is not None:
-            self.tempdir = DIRS
+        self.tempdir = DIRS
 
-            # Initialize logger
-            self.logfile = LOG_FILE
-            self.LOGGER = logging.getLogger(__name__)
-            self.LOGGER.setLevel(logging.DEBUG)
-            self.LOGGER = config_logger(
-                logger=self.LOGGER, filename=self.logfile,
-                file=True, file_setlevel=logging.DEBUG,
-                fh_format="%(asctime)s::%(levelname)s::" +
-                "%(name)s::%(lineno)d::%(message)s",
-                stream=True, stream_setlevel=logging.DEBUG,
-                sh_format="%(levelname)s::%(name)s::" +
-                "%(lineno)d::%(message)s"
-            )
-            # self.LOGGER.debug(f"-- Login successful -- \n"
-            #                   f"\t\tmethod: {self.method}, \n"
-            #                   f"\t\tusername: {self.user.username}, \n"
-            #                   f"\t\tpassword: {self.user.password}, \n"
-            #                   f"\t\tproject ID: {self.project_id}, \n"
-            #                   f"\t\tproject owner: {self.project_owner}, \n"
-            #                   f"\t\tdata: {self.data} \n")
+        # Initialize logger
+        self.logfile = LOG_FILE
+        self.LOGGER = logging.getLogger(__name__)
+        self.LOGGER.setLevel(logging.DEBUG)
+        self.LOGGER = config_logger(
+            logger=self.LOGGER, filename=self.logfile,
+            file=True, file_setlevel=logging.DEBUG,
+            fh_format="%(asctime)s::%(levelname)s::" +
+            "%(name)s::%(lineno)d::%(message)s",
+            stream=True, stream_setlevel=logging.DEBUG,
+            sh_format="%(levelname)s::%(name)s::" +
+            "%(lineno)d::%(message)s"
+        )
+        self.bucketname = f"project_{self.project_id}"
 
-            self.bucketname = f"project_{self.project_id}"
-            # self.LOGGER.debug(f"S3 bucket: {self.bucketname}")
+        self.data, self.failed = self._data_to_deliver(data=data,
+                                                       pathfile=pathfile)
+        # self.LOGGER.debug(f"-- Login successful -- \n"
+        #                   f"\t\tmethod: {self.method}, \n"
+        #                   f"\t\tusername: {self.user.username}, \n"
+        #                   f"\t\tpassword: {self.user.password}, \n"
+        #                   f"\t\tproject ID: {self.project_id}, \n"
+        #                   f"\t\tproject owner: {self.project_owner}, \n"
+        #                   f"\t\tdata: {self.data} \n")
 
-            self.LOGGER.info("Delivery initialization successful.")
+        # self.LOGGER.debug(f"S3 bucket: {self.bucketname}")
+
+        self.LOGGER.info("Delivery initialization successful.")
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -442,6 +441,101 @@ class DataDeliverer():
                     f"Failed emptying the temporary folder {d}: {e}"
                 )
 
+    def get_file_info(self, file: Path, in_dir: bool, dir_name: Path = Path("")) -> (dict):
+
+        proceed = True
+        path_base = dir_name.name if in_dir else None
+        directory_path = get_root_path(file=file, path_base=path_base)
+        suffixes = file.suffixes
+
+        compressed, error = is_compressed(file=file)
+        if error != "":     # If error in checking compression format quit file
+            return {'proceed': False, 'error': error}
+
+        proc_suff = ""      # Saves final suffixes
+        # If file not compressed -- add zst (Zstandard) suffix to final suffix
+        if not compressed:
+            # Warning if suffixes are in magic dict but file "not compressed"
+            if set(suffixes).intersection(set(MAGIC_DICT)):
+                self.LOGGER.warning(f"File '{file}' has extensions belonging "
+                                    "to a compressed format but shows no "
+                                    "indication of being compressed. Not "
+                                    "compressing file.")
+
+            proc_suff += ".zst"     # Update the future suffix
+            # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
+        elif compressed:
+            self.LOGGER.info(f"File '{file}' shows indication of being "
+                             "in a compressed format. "
+                             "Not compressing the file.")
+
+        proc_suff += ".ccp"     # ChaCha20 (encryption format) extension added
+        # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
+
+        # Path to file in temporary directory after processing, and bucket
+        # after upload, >>including file name<<
+        bucketfilename = str(directory_path /
+                             Path(file.name + proc_suff))
+
+        # If file exists in DB -- cancel delivery of file
+        with DatabaseConnector('project_db') as project_db:
+            if bucketfilename in project_db[self.project_id]['files']:
+                error = f"File '{file}' already exists in the database. "
+                self.LOGGER.warning(error)
+                return {'proceed': False, 'error': error}
+
+        # If file exists in S3 bucket -- cancel delivery of file
+        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                as s3:
+            # Check if file exists in bucket already
+            in_bucket, error = s3.file_exists_in_bucket(bucketfilename)
+            # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
+
+            if in_bucket:  # If the file is already in bucket
+                error = (f"{error}\nFile '{file.name}' already exists in "
+                         "bucket, but does NOT exist in database. " +
+                         "Delivery cancelled, contact support.")
+                self.LOGGER.critical(error)
+                return {'proceed': False, 'error': error}
+
+        return {'in_directory': in_dir,
+                'dir_name': dir_name if in_dir else None,
+                'path_base': path_base,
+                'directory_path': directory_path,
+                'size': file.stat().st_size,
+                'suffixes': suffixes,
+                'proceed': proceed,
+                'compressed': compressed,
+                'new_file': bucketfilename,
+                'error': error,
+                'encrypted_file': Path(""),
+                'encrypted_size': 0,
+                'filecheck': {'in_progress': False,
+                              'finished': False},
+                'processing': {'in_progress': False,
+                               'finished': False},
+                'upload': {'in_progress': False,
+                           'finished': False},
+                'database': {'in_progress': False,
+                             'finished': False}}
+
+    def get_dir_info(self, folder: Path):
+        dir_info = {}
+        dir_fail = {}
+        # count = 0
+        for f in folder.glob('**/*'):
+            if f.is_file() and "DS_Store" not in str(f):
+                file_info = self.get_file_info(file=f,
+                                               in_dir=True,
+                                               dir_name=folder)
+                if not file_info['proceed']:
+                    dir_fail[f] = file_info
+                else:
+                    dir_info[f] = file_info
+            # count += 1
+
+        return dir_info, dir_fail
+
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list
 
@@ -460,12 +554,17 @@ class DataDeliverer():
 
         all_files = dict()
         data_list = list(data)
+        initial_fail = dict()
 
         # Get all paths from pathfile
         if pathfile is not None and Path(pathfile).exists():
             with Path(pathfile).resolve().open(mode='r') as file:
                 data_list += [line.strip() for line in file]
-
+        if self.method not in ["get", "put"]:
+            raise DeliveryOptionException(
+                "Delivery option {self.method} not allowed. "
+                "Cancelling delivery."
+            )
         for d in data_list:
             # Throw error if there are duplicate files
             if d in all_files or Path(d).resolve() in all_files:
@@ -474,72 +573,30 @@ class DataDeliverer():
                     "please remove path dublicates."
                 )
 
-            if Path(d).exists():     # Should always be valid for put
-                curr_path = Path(d).resolve()
-                if curr_path.is_file():  # Save file info to dict
-                    path_base = None
-                    all_files[curr_path] = \
-                        {"in_directory": False,
-                         "dir_name": None,
-                         "path_base": path_base,
-                         "directory_path": get_root_path(
-                             file=curr_path,
-                             path_base=path_base
-                         ),   # path in bucket & tempfolder
-                         "size": curr_path.stat().st_size,
-                         "suffixes": curr_path.suffixes,
-                         'proceed': True,
-                         'encrypted_file': Path(""),
-                         'encrypted_size': 0,
-                         'filecheck': {'in_progress': False,
-                                       'finished': False},
-                         'processing': {'in_progress': False,
-                                        'finished': False},
-                         'upload': {'in_progress': False,
-                                    'finished': False},
-                         'database': {'in_progress': False,
-                                      'finished': False}}
-                elif curr_path.is_dir():  # Get info on files in folder
-                    path_base = curr_path.name
-                    all_files.update({f: {"in_directory": True,
-                                          "dir_name": curr_path,
-                                          "path_base": path_base,
-                                          "directory_path": get_root_path(
-                                              file=f,
-                                              path_base=path_base
-                                          ),  # path in bucket & tempfolder
-                                          "size": f.stat().st_size,
-                                          "suffixes": f.suffixes,
-                                          'proceed': True,
-                                          'encrypted_file': Path(""),
-                                          'encrypted_size': 0,
-                                          'filecheck': {'in_progress': False,
-                                                        'finished': False},
-                                          'processing': {'in_progress': False,
-                                                         'finished': False},
-                                          'upload': {'in_progress': False,
-                                                     'finished': False},
-                                          'database': {'in_progress': False,
-                                                       'finished': False}}
-                                      for f in curr_path.glob('**/*')
-                                      if f.is_file()
-                                      and "DS_Store" not in str(f)})
+            if self.method == "get":
+                all_files[d] = {}
 
-            else:
-                if self.method == "put":
-                    error_message = "Trying to deliver a non-existing " \
-                        f"file/folder: {d} -- Delivery not possible."
-                    LOG.fatal(error_message)
-                    all_files[d] = {'proceed': False,
-                                    'error': error_message}
-                elif self.method == "get":
-                    all_files[d] = {}
+            elif self.method == "put":
+                if not Path(d).exists():
+                    raise OSError("Trying to deliver a non-existing file/"
+                                  f"folder: {d} -- Delivery not possible.")
+
+                curr_path = Path(d).resolve()
+                if curr_path.is_dir():  # Get info on files in folder
+                    dir_info, dir_fail = self.get_dir_info(folder=curr_path)
+                    initial_fail.update(dir_fail)
+                    all_files.update(dir_info)
+                    continue
+
+                file_info = self.get_file_info(file=curr_path,
+                                               in_dir=False)
+                if not file_info['proceed']:
+                    initial_fail[curr_path] = file_info
+
                 else:
-                    raise DeliveryOptionException(
-                        "Delivery option {self.method} not allowed. "
-                        "Cancelling delivery."
-                    )
-        return all_files
+                    all_files[curr_path] = file_info
+
+        return all_files, initial_fail
 
     def _finalize(self, file: Path, info: dict) -> (bool):
         '''Makes sure that the file is not in bucket or db and deletes
@@ -581,13 +638,12 @@ class DataDeliverer():
     # Public Methods #
     ##################
 
-    def do_file_checks(self, file: Path, fileinfo: dict) -> \
+    def do_file_checks(self, file: Path, directory_path, suffixes) -> \
             (bool, bool, str, str):
         '''Checks if file is compressed and if it has already been delivered.
 
         Args:
             file (Path):       Path to file
-            fileinfo (dict):   Info about file and delivery
 
         Returns:
             tuple:  Information on if the file is compressed, whether or not
@@ -601,7 +657,7 @@ class DataDeliverer():
         '''
 
         # Set file check as in progress
-        self.set_progress(item=file, check=True, started=True)
+        # self.set_progress(item=file, check=True, started=True)
 
         # Variables ############################################### Variables #
         proc_suff = ""      # Saves final suffixes
@@ -609,13 +665,13 @@ class DataDeliverer():
 
         # Check if compressed
         compressed, error = is_compressed(file)
-        if error != "":     # If error in checking compression format quit file
+        if error != "":
             return False, compressed, "", error
 
         # If file not compressed -- add zst (Zstandard) suffix to final suffix
         if not compressed:
             # Warning if suffixes are in magic dict but file "not compressed"
-            if set(fileinfo['suffixes']).intersection(set(MAGIC_DICT)):
+            if set(suffixes).intersection(set(MAGIC_DICT)):
                 self.LOGGER.warning(f"File '{file}' has extensions belonging "
                                     "to a compressed format but shows no "
                                     "indication of being compressed. Not "
@@ -633,7 +689,7 @@ class DataDeliverer():
 
         # Path to file in temporary directory after processing, and bucket
         # after upload, >>including file name<<
-        bucketfilename = str(fileinfo['directory_path'] /
+        bucketfilename = str(directory_path /
                              Path(file.name + proc_suff))
         # self.LOGGER.debug(f"File: {file}\t Bucket path: {bucketfilename}")
 
@@ -680,15 +736,14 @@ class DataDeliverer():
 
         # If DS noted cancelation of file -- quit and move on
         if not path_info['proceed']:
-            error = ""
-            # If file checks incl compression check, db check etc,
-            # not done --> quit and move on.
-            if not path_info['filecheck']['finished']:
-                error = (f"File: '{path}' -- Content checks etc not performed."
-                         " Bug in code. Moving on to next file.")
-                self.LOGGER.critical(error)
-
-            return False, Path(""), 0, False, error
+            # error = ""
+            # # If file checks incl compression check, db check etc,
+            # # not done --> quit and move on.
+            # if not path_info['filecheck']['finished']:
+            #     error = (f"File: '{path}' -- Content checks etc not performed."
+            #              " Bug in code. Moving on to next file.")
+            #     self.LOGGER.critical(error)
+            return False, Path(""), 0, False, ""
 
         # Set file processing as in progress
         self.set_progress(item=path, processing=True, started=True)

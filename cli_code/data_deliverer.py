@@ -67,54 +67,8 @@ class DataDeliverer():
     #################
     def __init__(self, config=None, username=None, password=None,
                  project_id=None, project_owner=None,
-                 pathfile=None, data=None, break_on_fail=True):
-
-        # Quit execution if none of username, password, config are set
-        if all(x is None for x in [username, password, config]):
-            raise DeliverySystemException(
-                "Delivery System login credentials not specified. "
-                "Enter: \n--username/-u AND --password/-pw,"
-                " or --config/-c\n --owner/-o\n"
-                "For help: 'ds_deliver --help'."
-            )
-
-        # Initialize attributes
-        self.break_on_fail = break_on_fail
-        self.method = sys._getframe().f_back.f_code.co_name  # put or get
-        self.user = _DSUser(username=username, password=password)
-        self.project_id = project_id        # Project ID - not S3
-        self.project_owner = project_owner  # User, not facility
-        self.data = None           # Dictionary, keeps track of delivery
-
-        # S3 related
-        self.bucketname = ""    # S3 bucket name -- to connect to S3
-        self.s3project = ""     # S3 project ID -- to connect to S3
-
-        # Check if all required info is entered
-        self._check_user_input(config=config)
-
-        # Check if user has access to delivery system
-        ds_access_granted = self._check_ds_access()
-        if ds_access_granted and self.user.id is not None:
-            # Check users access to specified project
-            proj_access_granted, self.s3project = self._check_project_access()
-            if proj_access_granted and self.s3project is not None:
-                # If no data to upload, cancel
-                if not data and not pathfile:
-                    raise DeliverySystemException(
-                        "No data to be uploaded. Specify individual "
-                        "files/folders using the --data/-d option one or "
-                        "more times, or the --pathfile/-f. "
-                        "For help: 'ds_deliver --help'"
-                    )
-            else:
-                raise DeliverySystemException(
-                    f"Access to project {self.project_id} "
-                    "denied. Delivery cancelled."
-                )
-        else:
-            raise DeliverySystemException("Delivery System access denied! "
-                                          "Delivery cancelled.")
+                 pathfile=None, data=None, break_on_fail=True,
+                 overwrite=False):
 
         self.tempdir = DIRS
 
@@ -131,19 +85,59 @@ class DataDeliverer():
             sh_format="%(levelname)s::%(name)s::" +
             "%(lineno)d::%(message)s"
         )
+
+        # Quit execution if none of username, password, config are set
+        if all(x is None for x in [username, password, config]):
+            raise DeliverySystemException(
+                "Delivery System login credentials not specified. "
+                "Enter: \n--username/-u AND --password/-pw,"
+                " or --config/-c\n --owner/-o\n"
+                "For help: 'ds_deliver --help'."
+            )
+
+        # Initialize attributes
+        self.break_on_fail = break_on_fail
+        self.overwrite = overwrite
+        self.method = sys._getframe().f_back.f_code.co_name  # put or get
+        self.user = _DSUser(username=username, password=password)
+        self.project_id = project_id        # Project ID - not S3
+        self.project_owner = project_owner  # User, not facility
+        self.data = None           # Dictionary, keeps track of delivery
+
+        # S3 related
+        self.bucketname = ""    # S3 bucket name -- to connect to S3
+        self.s3project = ""     # S3 project ID -- to connect to S3
+
+        # Check if all required info is entered
+        self._check_user_input(config=config)
+
+        # If user has access to delivery system check project access
+        ds_access_granted = self._check_ds_access()
+        if not ds_access_granted or self.user.id is None:
+            raise DeliverySystemException(
+                "Delivery System access denied! "
+                "Delivery cancelled."
+            )
+
+        proj_access_granted, self.s3project = self._check_project_access()
+        if not proj_access_granted:
+            raise DeliverySystemException(
+                f"Access to project {self.project_id} "
+                "denied. Delivery cancelled."
+            )
+
+        if not data and not pathfile:
+            raise DeliverySystemException(
+                "No data to be uploaded. Specify individual "
+                "files/folders using the --data/-d option one or "
+                "more times, or the --pathfile/-f. "
+                "For help: 'ds_deliver --help'"
+            )
+
         self.bucketname = f"project_{self.project_id}"
 
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
-        # self.LOGGER.debug(f"-- Login successful -- \n"
-        #                   f"\t\tmethod: {self.method}, \n"
-        #                   f"\t\tusername: {self.user.username}, \n"
-        #                   f"\t\tpassword: {self.user.password}, \n"
-        #                   f"\t\tproject ID: {self.project_id}, \n"
-        #                   f"\t\tproject owner: {self.project_owner}, \n"
-        #                   f"\t\tdata: {self.data} \n")
-
-        # self.LOGGER.debug(f"S3 bucket: {self.bucketname}")
 
         self.LOGGER.info("Delivery initialization successful.")
 
@@ -173,9 +167,14 @@ class DataDeliverer():
         failed.padding_width = 2
         wrapper = textwrap.TextWrapper(width=100)
 
-        for f in self.data:
+        for f, info in self.data.items():
             if self.data[f]["proceed"] and self.data[f]['upload']['finished'] \
                     and self.data[f]['database']['finished']:
+                if f in self.failed:
+                    raise DeliverySystemException(f"File: {f} -- Recorded as "
+                                                  "delivered, but also as "
+                                                  "failed. Bug. ")
+                                                  
                 suc = str(self.data[f]['dir_name']) \
                     if self.data[f]["in_directory"] else str(f)
                 loc = str(self.data[f]["directory_path"]) + "\n" \
@@ -442,6 +441,17 @@ class DataDeliverer():
                 )
 
     def get_file_info(self, file: Path, in_dir: bool, dir_name: Path = Path("")) -> (dict):
+        '''Get info on file and check if already delivered
+
+        Args:
+            file (Path):        Path to file
+            in_dir (bool):      True if in directory specified by user
+            dir_name (Path):    Directory name, "" if not in folder
+
+        Returns:
+            dict:   Information about file e.g. format
+
+        '''
 
         proceed = True
         path_base = dir_name.name if in_dir else None
@@ -478,11 +488,16 @@ class DataDeliverer():
                              Path(file.name + proc_suff))
 
         # If file exists in DB -- cancel delivery of file
+        in_db = False
+        error = ""
         with DatabaseConnector('project_db') as project_db:
             if bucketfilename in project_db[self.project_id]['files']:
                 error = f"File '{file}' already exists in the database. "
                 self.LOGGER.warning(error)
-                return {'proceed': False, 'error': error}
+                if not self.overwrite:
+                    return {'proceed': False, 'error': error}
+
+                in_db = True
 
         # If file exists in S3 bucket -- cancel delivery of file
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
@@ -492,11 +507,16 @@ class DataDeliverer():
             # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
 
             if in_bucket:  # If the file is already in bucket
-                error = (f"{error}\nFile '{file.name}' already exists in "
-                         "bucket, but does NOT exist in database. " +
-                         "Delivery cancelled, contact support.")
-                self.LOGGER.critical(error)
-                return {'proceed': False, 'error': error}
+                if not in_db:
+                    error = (f"{error}\nFile '{file.name}' already exists in "
+                             "bucket, but does NOT exist in database. " +
+                             "Delivery cancelled, contact support.")
+                    self.LOGGER.critical(error)
+                    return {'proceed': False, 'error': error}
+
+                # If --overwrite option -> deliver again, otherwise fail
+                if not self.overwrite:
+                    return {'proceed': False, 'error': error}
 
         return {'in_directory': in_dir,
                 'dir_name': dir_name if in_dir else None,
@@ -510,8 +530,6 @@ class DataDeliverer():
                 'error': error,
                 'encrypted_file': Path(""),
                 'encrypted_size': 0,
-                'filecheck': {'in_progress': False,
-                              'finished': False},
                 'processing': {'in_progress': False,
                                'finished': False},
                 'upload': {'in_progress': False,
@@ -519,24 +537,32 @@ class DataDeliverer():
                 'database': {'in_progress': False,
                              'finished': False}}
 
-    def get_dir_info(self, folder: Path):
-        dir_info = {}
-        dir_fail = {}
-        count = 0
+    def get_dir_info(self, folder: Path) -> (dict, dict):
+        '''Iterate through folder contents and get file info
+
+        Args:
+            folder (Path):  Path to folder
+
+        Returns:
+            dict:   Files to deliver
+            dict:   Files which failed -- not to deliver
+        '''
+
+        dir_info = {}   # Files to deliver
+        dir_fail = {}   # Failed files
+
+        # Iterate through folder contents and get file info
         for f in folder.glob('**/*'):
             if f.is_file() and "DS_Store" not in str(f):
                 file_info = self.get_file_info(file=f,
                                                in_dir=True,
                                                dir_name=folder)
-                if count == 2:
-                    file_info['proceed'] = False
 
                 if not file_info['proceed']:
                     dir_fail[f] = file_info
                     self.LOGGER.debug(f"{f} FAILED")
                 else:
                     dir_info[f] = file_info
-            count += 1
 
         return dir_info, dir_fail
 
@@ -740,13 +766,6 @@ class DataDeliverer():
 
         # If DS noted cancelation of file -- quit and move on
         if not path_info['proceed']:
-            # error = ""
-            # # If file checks incl compression check, db check etc,
-            # # not done --> quit and move on.
-            # if not path_info['filecheck']['finished']:
-            #     error = (f"File: '{path}' -- Content checks etc not performed."
-            #              " Bug in code. Moving on to next file.")
-            #     self.LOGGER.critical(error)
             return False, Path(""), 0, False, ""
 
         # Set file processing as in progress
@@ -777,6 +796,9 @@ class DataDeliverer():
         # If delivery cancelled by DS update dictionary to fail file
         if not updinfo['proceed']:
             if self.data[file]['in_directory']:
+                if self.data[file]['dir_name'] not in self.failed:
+                    self.failed[self.data[file]['dir_name']] = {}
+
                 # If file in specified directory and '--break-on-fail' flag
                 # chosen -- cancel all files in directory not currently
                 # being delivered or finished
@@ -790,12 +812,20 @@ class DataDeliverer():
                                  'error': f"Failed file: {file} -- "
                                  f"{updinfo['error']}"}
                             )
+                            self.failed[info['dir_name']].update(
+                                {path: {'error': (f"Failed file: {file} -- "
+                                                  f"{updinfo['error']}")}})
                     return
+
+                self.failed[self.data[file]['dir_name']][file] = {
+                    'error': updinfo['error']
+                }
 
             # If individual file or '--break-on-fail' not chosen, cancel
             # this specific file only
             self.data[file].update({'proceed': False,
                                     'error': updinfo['error']})
+            self.failed[file] = {'error': updinfo['error']}
             return
 
         # If file to proceed, update file info
@@ -828,9 +858,7 @@ class DataDeliverer():
         '''
 
         to_update = ""
-        if check:
-            to_update = 'filecheck'
-        elif processing:
+        if processing:
             to_update = 'processing'
         elif upload:
             to_update = 'upload'
@@ -1036,8 +1064,8 @@ class DataDeliverer():
                 return False, error
             else:
                 # Upload successful
-                self.LOGGER.info("File uploaded: {fileinfo['encrypted_file']},"
-                                 f"Bucket location: {fileinfo['new_file']}")
+                self.LOGGER.info(f"File uploaded: {fileinfo['encrypted_file']}"
+                                 f", Bucket location: {fileinfo['new_file']}")
                 return True, ""
 
 

@@ -93,14 +93,17 @@ def cli():
               multiple=True,
               help="Path to file or folder to upload.")
 @click.option('--break-on-fail', is_flag=True)
+@click.option('--overwrite', is_flag=True)
 def put(config: str, username: str, password: str, project: str,
-        owner: str, pathfile: str, data: tuple, break_on_fail) -> (str):
+        owner: str, pathfile: str, data: tuple, break_on_fail=True,
+        overwrite=False) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
-                       pathfile=pathfile, data=data, break_on_fail=True) \
+                       pathfile=pathfile, data=data, break_on_fail=True, 
+                       overwrite=overwrite) \
             as delivery:
 
         # Setup logging
@@ -116,7 +119,6 @@ def put(config: str, username: str, password: str, project: str,
 
         # Futures -- Pools and threads
         pools = {}      # Processing e.g. compression, encryption etc
-        # cthreads = {}   # Initial checking e.g. file formats etc
         uthreads = {}   # Upload to S3
 
         # BEGIN DELIVERY -- ITERATE THROUGH ALL FILES
@@ -128,41 +130,6 @@ def put(config: str, username: str, password: str, project: str,
                 CLI_LOGGER.warning(f"File: '{path}' -- cancelled "
                                    "-- moving on to next file")
                 continue
-
-        # Start initial file checks and save future to dict
-        # checked_file, proceed = delivery.do_file_checks(file=path,
-        #                                                 fileinfo=info)
-                            
-
-        # PROCESS FILES -- COMPRESSION, ENCRYPTION, ETC.
-        # When initial check for a file is done -- move on to processing
-        # for cfuture in as_completed(cthreads):
-        #     cpath = cthreads[cfuture]   # Original file path -- keep track
-        #     try:
-        #         # Get info
-        #         proceed, compressed, new_file, error = cfuture.result()
-        #         # CLI_LOGGER.debug(f"file: {cpath}\t proceed: {proceed}\t"
-        #         #                  f"compressed: {compressed}\t new_file: "
-        #         #                  f"{new_file}\t error: {error}")
-        #     except PoolExecutorError:
-        #         sys.exit(f"{cfuture.exception()}")
-        #         break
-        #     else:
-        #         # Update file info
-        #         delivery.update_delivery(file=cpath,
-        #                                  updinfo={"proceed": proceed,
-        #                                           "compressed": compressed,
-        #                                           "new_file": new_file,
-        #                                           "error": error})
-        #         # Set file check as finished
-        #         delivery.set_progress(item=cpath, check=True, finished=True)
-                # CLI_LOGGER.debug(f"File: {cpath}, Info: {delivery.data[cpath]}")
-
-            # # If DS noted cancelation for file -- quit and move on
-            # if not proceed:
-            #     CLI_LOGGER.warning(f"File: '{cpath}' -- cancelled "
-            #                         "-- moving on to next file")
-            #     continue
 
             # Start file processing -- compression, encryption, etc.
             pools[pool_executor.submit(

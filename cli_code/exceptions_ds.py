@@ -5,12 +5,32 @@
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 # CLASSES ############################################################ CLASSES #
 
+# Database ######################################################### Database #
+
+
+class CouchDBException(Exception):
+    """Errors in database operations."""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to the base class __init__."""
+
+        super().__init__(msg)
+
+
 # DataDeliverer ############################################### DataDeliverer #
 
 
+class DataException(Exception):
+    """Errors related to the data entered as an option"""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to the base class __init__"""
+
+        super().__init__(msg)
+
+
 class DeliveryOptionException(Exception):
-    """Custom exception class. Handles errors regarding data delivery 
-    options (s3 delivery) etc."""
+    """Errors regarding data delivery options (s3 delivery) etc."""
 
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""
@@ -18,11 +38,42 @@ class DeliveryOptionException(Exception):
 
 
 class DeliverySystemException(Exception):
-    """Custom exception class. Handles errors regarding Delivery Portal 
-    access etc"""
+    """Errors regarding Delivery Portal access etc"""
 
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+
+
+# Logging ########################################################### Logging #
+
+class LoggingError(Exception):
+    """Errors regarding logging"""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+
+
+# Main -- CLI ################################################### Main -- CLI #
+
+
+class PoolExecutorError(Exception):
+    """Errors relating to ThreadPoolExecutors and ProcessPoolExecutors"""
+
+    def __init__(self, msg: str):
+        """Passes message from exception call to base class __init__."""
+        super().__init__(msg)
+
+
+# S3 ##################################################################### S3 #
+
+
+class S3Error(Exception):
+    """Errors regarding S3 storage, e.g. upload, download,
+    buckets, resources, etc. """
+
+    def __init__(self, msg: str):
         super().__init__(msg)
 
 
@@ -37,29 +88,11 @@ class AuthenticationError(Exception):
         super().__init__(msg)
 
 
-class CouchDBException(Exception):
-    """Custom exception class. Handles errors in database operations."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to the base class __init__."""
-
-        super().__init__(msg)
-
-
 class CompressionError(Exception):
     """Errors related to compression operations."""
 
     def __init__(self, msg: str):
         """Passes message from exception call to the base class __init__."""
-
-        super().__init__(msg)
-
-
-class DataException(Exception):
-    """Errors related to the data entered as an option"""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to the base class __init__"""
 
         super().__init__(msg)
 
@@ -93,12 +126,4 @@ class StreamingError(Exception):
 
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
-
-
-class S3Error(Exception):
-    """Handles errors regarding S3 storage, e.g. upload, download, 
-    buckets, resources, etc. """
-
-    def __init__(self, msg: str):
         super().__init__(msg)

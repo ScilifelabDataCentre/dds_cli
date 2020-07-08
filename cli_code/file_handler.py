@@ -6,7 +6,7 @@ Responsible for IO related operations, including compression, encryption, etc.
 # IMPORTS ########################################################### IMPORTS #
 
 import zstandard as zstd
-# import sys
+import sys
 import os
 # import shutil
 # import collections
@@ -21,6 +21,7 @@ from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt  # ,
 # from bitstring import BitArray
 
 from cli_code import LOG_FILE  # , MAX_CTR
+from cli_code.exceptions_ds import DeliverySystemException, LoggingError
 
 max_nonce = 2**(12*8)
 
@@ -48,23 +49,32 @@ def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
 
     Returns:
         Logger:     Configured logger
+
+    Raises: 
+        LoggingError:   Logging to file or console failed
     '''
 
     # Save logs to file
-    if file:
-        file_handler = logging.FileHandler(filename=filename)
-        file_handler.setLevel(file_setlevel)
-        fh_formatter = logging.Formatter(fh_format)
-        file_handler.setFormatter(fh_formatter)
-        logger.addHandler(file_handler)
+    try:
+        if file:
+            file_handler = logging.FileHandler(filename=filename)
+            file_handler.setLevel(file_setlevel)
+            fh_formatter = logging.Formatter(fh_format)
+            file_handler.setFormatter(fh_formatter)
+            logger.addHandler(file_handler)
+    except LoggingError as le:
+        sys.exit(f"Logging to file failed: {le}")
 
     # Display logs in console
-    if stream:
-        stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(stream_setlevel)
-        sh_formatter = logging.Formatter(sh_format)
-        stream_handler.setFormatter(sh_formatter)
-        logger.addHandler(stream_handler)
+    try:
+        if stream:
+            stream_handler = logging.StreamHandler()
+            stream_handler.setLevel(stream_setlevel)
+            sh_formatter = logging.Formatter(sh_format)
+            stream_handler.setFormatter(sh_formatter)
+            logger.addHandler(stream_handler)
+    except LoggingError as le:
+        sys.exit(f"Logging to console failed: {le}")
 
     return logger
 
@@ -215,7 +225,7 @@ def is_compressed(file: Path) -> (bool, str):
             for magic, _ in MAGIC_DICT.items():
                 if file_start.startswith(magic):    # If file signature found
                     return True, error              # File is compressed
-    except Exception as e:  # EDIT EXCEPTION HERE
+    except OSError as e:
         LOG.warning(e)      # Log warning, do not cancel all
         error = e           # Save error message
 
@@ -287,17 +297,21 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
             bool:   True if compressed
             str:    Error message, empty string if no error
 
+    Raises:
+        DeliverySystemException:    Failed processing or wrong argument format
+        OSError:                    File not found or could not create tempdir
+
     '''
 
     # If file path not Path type --> quit whole exception, something wrong
     if not isinstance(file, Path):
         emessage = f"Wrong format! {file} is not a 'Path' object."
-        raise Exception(emessage)  # Bug somewhere in code FIX EXCEPTION HERE
+        raise DeliverySystemException(emessage)   # Bug somewhere in code
 
     # If file doesn't exist --> quit whole exception, something wrong
     if not file.exists():
         emessage = f"The path {file} does not exist!"
-        raise Exception(emessage)  # Bug somewhere in code FIX EXCEPTION HERE
+        raise OSError(emessage)  # Bug somewhere in code
 
     # Variables ################################################### Variables #
     outfile = filedir / file_info['new_file']   # Path to save processed file
@@ -309,7 +323,7 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
     if not new_dir.exists():
         try:
             new_dir.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
+        except OSError as e:
             error = f"File: {file} -- Creating tempdir {new_dir} failed! :: {e}"
             LOG.exception(error)
             return False, Path(""), 0, False, error
@@ -344,7 +358,7 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
 
                 of.seek(12)         # Find the saved bytes
                 of.write(nonce)     # Write the last nonce to file
-    except Exception as ee:  # FIX EXCEPTION HERE
+    except DeliverySystemException as ee:  # FIX EXCEPTION HERE
         error = f"Processig failed! {ee}"
         LOG.exception(error)
         return False, outfile, 0, False, error
@@ -357,5 +371,5 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
         os.umask(original_umask)    # Remove mask
 
     # PROCESSING FINISHED ############################### PROCESSING FINISHED #
-
+    
     return True, outfile, outfile.stat().st_size, ds_compressed, ""

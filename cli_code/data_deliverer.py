@@ -10,9 +10,10 @@ import shutil
 
 from cli_code.crypt4gh.crypt4gh import lib
 from prettytable import PrettyTable
+from botocore.client import ClientError
 
 from cli_code import DIRS, LOG_FILE
-from cli_code.exceptions_ds import DeliveryOptionException, \
+from cli_code.exceptions_ds import DataException, DeliveryOptionException, \
     DeliverySystemException, CouchDBException, S3Error
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
@@ -174,7 +175,8 @@ class DataDeliverer():
         wrapper = textwrap.TextWrapper(width=100)
 
         for f in self.data:
-            if self.data[f]["proceed"] and self.data[f]['upload']['finished']:
+            if self.data[f]["proceed"] and self.data[f]['upload']['finished'] \
+                    and self.data[f]['database']['finished']:
                 suc = str(self.data[f]['dir_name']) \
                     if self.data[f]["in_directory"] else str(f)
                 loc = str(self.data[f]["directory_path"]) + "\n" \
@@ -185,7 +187,7 @@ class DataDeliverer():
                     succeeded.add_row([suc, loc])
                     suc_dict[suc] = loc
             else:
-                finalized = self._finalize(file=f)
+                finalized = self._finalize(file=f, info=self.data[f])
                 # Print failed items
                 fail = str(self.data[f]['dir_name']) \
                     if self.data[f]['in_directory'] else str(f)
@@ -347,7 +349,7 @@ class DataDeliverer():
             DeliveryOptionException:    S3 delivery option not available
                                         or incorrect project owner
             DeliverySystemException:    Access denied
-            
+
         '''
 
         with DatabaseConnector() as couch:
@@ -425,12 +427,17 @@ class DataDeliverer():
                 )
 
     def _clear_tempdir(self):
-        '''Remove all contents from temporary file directory'''
+        '''Remove all contents from temporary file directory
+
+        Raises:
+            DeliverySystemException:    Deletion of temporary folder failed
+
+        '''
 
         for d in [x for x in self.tempdir[1].iterdir() if x.is_dir()]:
             try:
                 shutil.rmtree(d)
-            except Exception as e:  # FIX EXCEPTION HERE
+            except DeliverySystemException as e:
                 self.LOGGER.exception(
                     f"Failed emptying the temporary folder {d}: {e}"
                 )
@@ -489,7 +496,9 @@ class DataDeliverer():
                          'processing': {'in_progress': False,
                                         'finished': False},
                          'upload': {'in_progress': False,
-                                    'finished': False}}
+                                    'finished': False},
+                         'database': {'in_progress': False,
+                                      'finished': False}}
                 elif curr_path.is_dir():  # Get info on files in folder
                     path_base = curr_path.name
                     all_files.update({f: {"in_directory": True,
@@ -532,37 +541,39 @@ class DataDeliverer():
                     )
         return all_files
 
-    def _finalize(self, file: Path) -> (bool):
+    def _finalize(self, file: Path, info: dict) -> (bool):
         '''Makes sure that the file is not in bucket or db and deletes
         if it is.
 
         Args:
-            file:   Path to file
+            file (Path):    Path to file
+            info (dict):    Info about file --> don't use around with real dict
 
         Returns:
             bool:   True if deletion successful
+
         '''
 
-        try:
-            with S3Connector(bucketname=self.bucketname,
-                             project=self.s3project) as s3:
-                if all(x in self.data[file] for x in ['new_file', 'up_ok']) \
-                        and self.data[file]['up_ok']:
-                    s3.delete_item(key=self.data[file]['new_file'])
-        except Exception as e:  # FIX EXCEPTION HERE
-            self.LOGGER.warning(e)
-            return False
+        with S3Connector(bucketname=self.bucketname,
+                         project=self.s3project) as s3:
+            if info['upload']['finished'] and \
+                    not info['database']['finished']:
+                try:
+                    s3.delete_item(key=info['new_file'])
+                except ClientError as e:
+                    self.LOGGER.warning(e)
+                    return False
 
-        try:
-            with DatabaseConnector(db_name='project_db') as prdb:
+        with DatabaseConnector(db_name='project_db') as prdb:
+
+            try:
                 proj = prdb[self.project_id]
-
-                if 'new_file' in self.data[file] and self.data[file]['proceed'] \
-                        and 'db_ok' in self.data[file] and self.data[file]['db_ok']:
-                    del proj['files'][self.data[file]['new_file']]
-        except Exception as e:  # FIX EXCEPTION HERE
-            self.LOGGER.warning(e)
-            return False
+                if info['database']['finished'] and \
+                        not info['upload']['finished']:
+                    del proj['files'][info['new_file']]
+            except CouchDBException as e:
+                self.LOGGER.warning(e)
+                return False
 
         return True
 
@@ -570,7 +581,8 @@ class DataDeliverer():
     # Public Methods #
     ##################
 
-    def do_file_checks(self, file: Path, fileinfo: dict) -> (bool, bool, str):
+    def do_file_checks(self, file: Path, fileinfo: dict) -> \
+            (bool, bool, str, str):
         '''Checks if file is compressed and if it has already been delivered.
 
         Args:
@@ -649,8 +661,7 @@ class DataDeliverer():
         # Proceed with delivery and return info on file
         return True, compressed, bucketfilename, error
 
-    def prep_upload(self, path: Path, path_info: dict) \
-            -> (tuple):
+    def prep_upload(self, path: Path, path_info: dict) -> (tuple):
         '''Prepares the files for upload.
 
         Args:
@@ -689,13 +700,27 @@ class DataDeliverer():
 
         return info
 
-    def update_delivery(self, file, updinfo):
+    def update_delivery(self, file: Path, updinfo: dict):
+        '''Updates data delivery information dictionary
 
-        # self.LOGGER.debug(f"Updating file: {file}:: {updinfo}")
+        Args:
+            file (Path):        The files info to be updated
+            updinfo (dict):     The dictionary to update the info with
+
+        Returns:
+            None
+
+        Raises:
+            DataException:  Data dictionary update failed
+
+        '''
+
+        # If delivery cancelled by DS update dictionary to fail file
         if not updinfo['proceed']:
-
             if self.data[file]['in_directory']:
-                # self.LOGGER.debug(f"File {file} in directory")
+                # If file in specified directory and '--break-on-fail' flag
+                # chosen -- cancel all files in directory not currently
+                # being delivered or finished
                 if self.break_on_fail:
                     for path, info in self.data.items():
                         if info['dir_name'] == self.data[file]['dir_name'] \
@@ -706,24 +731,20 @@ class DataDeliverer():
                                  'error': f"Failed file: {file} -- "
                                  f"{updinfo['error']}"}
                             )
-                        # self.LOGGER.debug(f"Updating file: {path} -- {info} --> "
-                        #                   f"\nUpdated? -- {self.data[path]}")
                     return
 
-            upd = self.data[file].update({'proceed': False,
-                                          'error': updinfo['error']})
-            # self.LOGGER.debug(f"-------{upd}")
+            # If individual file or '--break-on-fail' not chosen, cancel
+            # this specific file only
+            self.data[file].update({'proceed': False,
+                                    'error': updinfo['error']})
             return
 
+        # If file to proceed, update file info
         try:
-            upd = self.data[file].update(updinfo)
-            # self.LOGGER.debug(f"-------{upd}")
-        except Exception as exc:
-            self.LOGGER.exception(exc)
-
-        # self.LOGGER.debug(f"Updating file: {file} -- {updinfo} --> "
-        #                   f"\nUpdated? -- {self.data[file]}")
-        return
+            self.data[file].update(updinfo)
+        except DataException as dex:
+            self.LOGGER.exception(f"Data delivery information failed to "
+                                  f"update: {dex}")
 
     def set_progress(self, item: Path, check: bool = False,
                      processing: bool = False, upload: bool = False,
@@ -739,6 +760,12 @@ class DataDeliverer():
             upload (bool):      True if upload in progress or finshed
             db (bool):          True if database update in progress or finished
 
+        Returns:
+            None
+
+        Raises:
+            DataException:  Data dictionary update failed
+
         '''
 
         to_update = ""
@@ -751,12 +778,16 @@ class DataDeliverer():
         elif db:
             to_update = 'database'
 
-        if started:
-            self.data[item][to_update].update({'in_progress': started,
-                                               'finished': not started})
-        elif finished:
-            self.data[item][to_update].update({'in_progress': not finished,
-                                               'finished': finished})
+        try:
+            if started:
+                self.data[item][to_update].update({'in_progress': started,
+                                                   'finished': not started})
+            elif finished:
+                self.data[item][to_update].update({'in_progress': not finished,
+                                                   'finished': finished})
+        except DataException as dex:
+            self.LOGGER.exception(f"Data delivery information failed to "
+                                  f"update: {dex}")
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""

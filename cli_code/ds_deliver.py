@@ -4,8 +4,8 @@ Command line interface for Data Delivery System
 
 # IMPORTS ########################################################### IMPORTS #
 
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, \
-    as_completed
+from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
+                                as_completed)
 import logging
 import logging.config
 from pathlib import Path
@@ -17,10 +17,10 @@ import click
 from cli_code.crypt4gh.crypt4gh import lib, header, keys
 
 from cli_code import LOG_FILE, timestamp
-from cli_code.data_deliverer import DataDeliverer, finish_download
+from cli_code.data_deliverer import (DataDeliverer, finish_download)
 from cli_code.crypto_ds import Crypt4GHKey
 from cli_code.database_connector import DatabaseConnector
-from cli_code.exceptions_ds import DataException
+from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError)
 import cli_code.file_handler as fh
 from cli_code.s3_connector import S3Connector
 
@@ -50,7 +50,7 @@ def config_logger(logfile: str):
 
 @click.group()
 def cli():
-    global COMPRESSED_FORMATS
+    pass
 
 ###############################################################################
 # PUT ################################################################### PUT #
@@ -135,110 +135,124 @@ def put(config: str, username: str, password: str, project: str,
         # PROCESS FILES -- COMPRESSION, ENCRYPTION, ETC.
         # When initial check for a file is done -- move on to processing
         for cfuture in as_completed(cthreads):
-            cpath = cthreads[cfuture]       # Original file path -- keep track
-            proceed, compressed, new_file, error = cfuture.result()  # Get info
-            # CLI_LOGGER.debug(f"file: {cpath}\t proceed: {proceed}\t"
-            #                  f"compressed: {compressed}\t new_file: "
-            #                  f"{new_file}\t error: {error}")
+            cpath = cthreads[cfuture]   # Original file path -- keep track
+            try:
+                # Get info
+                proceed, compressed, new_file, error = cfuture.result()
+                # CLI_LOGGER.debug(f"file: {cpath}\t proceed: {proceed}\t"
+                #                  f"compressed: {compressed}\t new_file: "
+                #                  f"{new_file}\t error: {error}")
+            except PoolExecutorError:
+                sys.exit(f"{cfuture.exception()}")
+                break
+            else:
+                # Update file info
+                delivery.update_delivery(file=cpath,
+                                         updinfo={"proceed": proceed,
+                                                  "compressed": compressed,
+                                                  "new_file": new_file,
+                                                  "error": error})
+                # Set file check as finished
+                delivery.set_progress(item=cpath, check=True, finished=True)
+                # CLI_LOGGER.debug(f"File: {cpath}, Info: {delivery.data[cpath]}")
 
-            # Update file info
-            delivery.update_delivery(file=cpath,
-                                     updinfo={"proceed": proceed,
-                                              "compressed": compressed,
-                                              "new_file": new_file,
-                                              "error": error})
-            # Set file check as finished
-            delivery.set_progress(item=cpath, check=True, finished=True)
-            # CLI_LOGGER.debug(f"File: {cpath}, Info: {delivery.data[cpath]}")
+                # If DS noted cancelation for file -- quit and move on
+                if not proceed:
+                    CLI_LOGGER.warning(f"File: '{cpath}' -- cancelled "
+                                       "-- moving on to next file")
+                    continue
 
-            # If DS noted cancelation for file -- quit and move on
-            if not proceed:
-                CLI_LOGGER.warning(f"File: '{cpath}' -- cancelled "
-                                   "-- moving on to next file")
-                continue
-
-            # Start file processing -- compression, encryption, etc.
-            pools[pool_executor.submit(
-                delivery.prep_upload,
-                cpath,
-                delivery.data[cpath])
-            ] = cpath
+                # Start file processing -- compression, encryption, etc.
+                pools[pool_executor.submit(
+                    delivery.prep_upload,
+                    cpath,
+                    delivery.data[cpath])
+                ] = cpath
 
         # DELIVER FILES -- UPLOAD TO S3
         # When file processing is done -- move on to upload
         for pfuture in as_completed(pools):
             ppath = pools[pfuture]      # Original file path -- keep track
-            processed, efile, esize, \
-                ds_compressed, error = pfuture.result()     # Get info
+            try:
+                processed, efile, esize, \
+                    ds_compressed, error = pfuture.result()     # Get info
+            except PoolExecutorError:
+                sys.exit(f"{pfuture.exception()}")
+                break
+            else:
+                # Update file info
+                delivery.update_delivery(file=ppath,
+                                         updinfo={'proceed': processed,
+                                                  'encrypted_file': efile,
+                                                  'encrypted_size': esize,
+                                                  'ds_compressed': ds_compressed,
+                                                  'error': error})
+                # Set file processing as finished
+                delivery.set_progress(
+                    item=ppath, processing=True, finished=True)
+                # CLI_LOGGER.debug(f"File: {ppath}, Info: {delivery.data[ppath]}")
 
-            # Update file info
-            delivery.update_delivery(file=ppath,
-                                     updinfo={'proceed': processed,
-                                              'encrypted_file': efile,
-                                              'encrypted_size': esize,
-                                              'ds_compressed': ds_compressed,
-                                              'error': error})
-            # Set file processing as finished
-            delivery.set_progress(item=ppath, processing=True, finished=True)
-            # CLI_LOGGER.debug(f"File: {ppath}, Info: {delivery.data[ppath]}")
+                # If DS noted cancelation for file -- quit and move on
+                if not processed:
+                    CLI_LOGGER.warning(f"File: '{ppath}' -- cancelled "
+                                       "-- moving on to next file")
+                    continue
 
-            # If DS noted cancelation for file -- quit and move on
-            if not processed:
-                CLI_LOGGER.warning(f"File: '{ppath}' -- cancelled "
-                                   "-- moving on to next file")
-                continue
-
-            # Start file delivery -- upload to S3
-            uthreads[
-                thread_executor.submit(delivery.put,
-                                       file=ppath,
-                                       fileinfo=delivery.data[ppath])
-            ] = ppath
+                # Start file delivery -- upload to S3
+                uthreads[
+                    thread_executor.submit(delivery.put,
+                                           file=ppath,
+                                           fileinfo=delivery.data[ppath])
+                ] = ppath
 
         # FINISH DELIVERY
         # When file upload is done -- set as finished
         for ufuture in as_completed(uthreads):
             upath = uthreads[ufuture]       # Original file path -- keep track
-            uploaded, error = ufuture.result()     # Get info
-
-            # Update file info
-            delivery.update_delivery(file=upath,
-                                     updinfo={'proceed': uploaded,
-                                              'error': error})
-            # Set file upload as finished
-            delivery.set_progress(item=upath, upload=True, finished=True)
-            # CLI_LOGGER.debug(f"File: {upath}, Info: {delivery.data[upath]}")
-
-            # If DS noted cancelation for file -- quit and move on
-            if not uploaded:
-                CLI_LOGGER.warning(f"File: '{upath}' -- cancelled "
-                                   "-- moving on to next file")
-                continue
-            CLI_LOGGER.info(f"File: {upath} -- DELIVERED")
-
-            delivery.set_progress(item=upath, db=True, started=True)
-            # DATABASE UPDATE TO BE THREADED LATER
-            # CURRENTLY PROBLEMS WITH COUCHDB
             try:
-                with DatabaseConnector('project_db') as project_db:
-                    _project = project_db[delivery.project_id]
-                    keyinfo = delivery.data[upath]
-                    key = str(keyinfo['new_file'])
-                    dir_path = str(keyinfo['directory_path'])
-
-                    _project['files'][key] = \
-                        {"directory_path": dir_path,
-                            "size": keyinfo['size'],
-                            "ds_compressed": keyinfo['ds_compressed'],
-                            "date_uploaded": timestamp()}
-                    project_db.save(_project)
-            except Exception as e:  # FIX EXCEPTION HERE
-                emessage = f"Could not update database: {e}"
-                CLI_LOGGER.warning(emessage)
+                uploaded, error = ufuture.result()     # Get info
+            except PoolExecutorError:
+                sys.exit(f"{ufuture.exception()}")
+                break
             else:
-                CLI_LOGGER.info("Upload completed!"
-                                f"{delivery.data[upath]}")
-            delivery.set_progress(item=upath, db=True, finished=True)
+                # Update file info
+                delivery.update_delivery(file=upath,
+                                         updinfo={'proceed': uploaded,
+                                                  'error': error})
+                # Set file upload as finished
+                delivery.set_progress(item=upath, upload=True, finished=True)
+                # CLI_LOGGER.debug(f"File: {upath}, Info: {delivery.data[upath]}")
+
+                # If DS noted cancelation for file -- quit and move on
+                if not uploaded:
+                    CLI_LOGGER.warning(f"File: '{upath}' -- cancelled "
+                                       "-- moving on to next file")
+                    continue
+                CLI_LOGGER.info(f"File: {upath} -- DELIVERED")
+
+                delivery.set_progress(item=upath, db=True, started=True)
+                # DATABASE UPDATE TO BE THREADED LATER
+                # CURRENTLY PROBLEMS WITH COUCHDB
+                try:
+                    with DatabaseConnector('project_db') as project_db:
+                        _project = project_db[delivery.project_id]
+                        keyinfo = delivery.data[upath]
+                        key = str(keyinfo['new_file'])
+                        dir_path = str(keyinfo['directory_path'])
+
+                        _project['files'][key] = \
+                            {"directory_path": dir_path,
+                                "size": keyinfo['size'],
+                                "ds_compressed": keyinfo['ds_compressed'],
+                                "date_uploaded": timestamp()}
+                        project_db.save(_project)
+                except CouchDBException as e:  # FIX EXCEPTION HERE
+                    emessage = f"Could not update database: {e}"
+                    CLI_LOGGER.warning(emessage)
+                else:
+                    CLI_LOGGER.info("Upload completed!"
+                                    f"{delivery.data[upath]}")
+                delivery.set_progress(item=upath, db=True, finished=True)
 
         # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
         pool_executor.shutdown(wait=True)

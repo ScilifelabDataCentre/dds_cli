@@ -116,6 +116,9 @@ class S3Connector():
             bool:   True if the file already exists, False if it doesnt
             str:    Error message, "" if none
 
+        Raises:
+            botocore.exceptions.ClientError:    Error in searching bucket
+
         '''
 
         try:
@@ -132,7 +135,7 @@ class S3Connector():
                 S3_LOG.warning(error_message)
                 return False, error_message
 
-        S3_LOG.debug(f"File {key}: In bucket.")
+        # S3_LOG.debug(f"File {key}: In bucket.")
         return True, ""
 
     def delete_item(self, key: str):

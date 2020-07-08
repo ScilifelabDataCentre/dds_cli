@@ -522,17 +522,21 @@ class DataDeliverer():
     def get_dir_info(self, folder: Path):
         dir_info = {}
         dir_fail = {}
-        # count = 0
+        count = 0
         for f in folder.glob('**/*'):
             if f.is_file() and "DS_Store" not in str(f):
                 file_info = self.get_file_info(file=f,
                                                in_dir=True,
                                                dir_name=folder)
+                if count == 2:
+                    file_info['proceed'] = False
+
                 if not file_info['proceed']:
                     dir_fail[f] = file_info
+                    self.LOGGER.debug(f"{f} FAILED")
                 else:
                     dir_info[f] = file_info
-            # count += 1
+            count += 1
 
         return dir_info, dir_fail
 

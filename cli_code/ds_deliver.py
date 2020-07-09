@@ -14,9 +14,9 @@ import os
 import itertools
 
 import click
-from cli_code.crypt4gh.crypt4gh import lib, header, keys
+from cli_code.crypt4gh.crypt4gh import (lib, header, keys)
 
-from cli_code import LOG_FILE, timestamp, DIRS
+from cli_code import (LOG_FILE, timestamp, DIRS)
 from cli_code.data_deliverer import (DataDeliverer, finish_download)
 from cli_code.crypto_ds import Crypt4GHKey
 from cli_code.database_connector import DatabaseConnector
@@ -102,7 +102,7 @@ def put(config: str, username: str, password: str, project: str,
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,
-                       pathfile=pathfile, data=data, break_on_fail=True, 
+                       pathfile=pathfile, data=data, break_on_fail=True,
                        overwrite=overwrite) \
             as delivery:
 
@@ -110,8 +110,8 @@ def put(config: str, username: str, password: str, project: str,
         CLI_LOGGER = config_logger(LOG_FILE)
 
         # Print out files
-        for x, y in delivery.data.items():
-            CLI_LOGGER.debug(f"{x}: {y}")
+        # for x, y in delivery.data.items():
+        # CLI_LOGGER.debug(f"\n{x}: {y}\n")
 
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
         pool_executor = ProcessPoolExecutor()       # Processing
@@ -150,12 +150,14 @@ def put(config: str, username: str, password: str, project: str,
                 break
             else:
                 # Update file info
-                delivery.update_delivery(file=ppath,
-                                         updinfo={'proceed': processed,
-                                                  'encrypted_file': efile,
-                                                  'encrypted_size': esize,
-                                                  'ds_compressed': ds_compressed,
-                                                  'error': error})
+                delivery.update_delivery(
+                    file=ppath,
+                    updinfo={'proceed': processed,
+                             'encrypted_file': efile,
+                             'encrypted_size': esize,
+                             'ds_compressed': ds_compressed,
+                             'error': error}
+                )
                 # Set file processing as finished
                 delivery.set_progress(
                     item=ppath, processing=True, finished=True)

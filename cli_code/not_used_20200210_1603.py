@@ -1428,3 +1428,83 @@ if not delivery.data[path]:
     #         os.umask(original_umask)
 
     #     return file, encrypted_file, checksum
+
+    # DATA DELIVERER - 20200709!!
+    # def do_file_checks(self, file: Path, directory_path, suffixes) -> \
+    #         (bool, bool, str, str):
+    #     '''Checks if file is compressed and if it has already been delivered.
+
+    #     Args:
+    #         file (Path):       Path to file
+
+    #     Returns:
+    #         tuple:  Information on if the file is compressed, whether or not
+    #                 to proceed with the delivery of the file, and the file path
+    #                 after (future) processing.
+
+    #             bool:   True if delivery should proceed for file
+    #             bool:   True if file is already compressed
+    #             str:    Bucketfilename -- File path with new suffixes
+    #             str:    Error message, "" if none
+    #     '''
+
+    #     # Set file check as in progress
+    #     # self.set_progress(item=file, check=True, started=True)
+
+    #     # Variables ############################################### Variables #
+    #     proc_suff = ""      # Saves final suffixes
+    #     # ------------------------------------------------------------------- #
+
+    #     # Check if compressed
+    #     compressed, error = is_compressed(file)
+    #     if error != "":
+    #         return False, compressed, "", error
+
+    #     # If file not compressed -- add zst (Zstandard) suffix to final suffix
+    #     if not compressed:
+    #         # Warning if suffixes are in magic dict but file "not compressed"
+    #         if set(suffixes).intersection(set(MAGIC_DICT)):
+    #             self.LOGGER.warning(f"File '{file}' has extensions belonging "
+    #                                 "to a compressed format but shows no "
+    #                                 "indication of being compressed. Not "
+    #                                 "compressing file.")
+
+    #         proc_suff += ".zst"     # Update the future suffix
+    #         # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
+    #     elif compressed:
+    #         self.LOGGER.warning(f"File '{file}' shows indication of being "
+    #                             "in a compressed format. "
+    #                             "Not compressing the file.")
+
+    #     proc_suff += ".ccp"     # ChaCha20 (encryption format) extension added
+    #     # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
+
+    #     # Path to file in temporary directory after processing, and bucket
+    #     # after upload, >>including file name<<
+    #     bucketfilename = str(directory_path /
+    #                          Path(file.name + proc_suff))
+    #     # self.LOGGER.debug(f"File: {file}\t Bucket path: {bucketfilename}")
+
+    #     # If file exists in DB -- cancel delivery of file
+    #     with DatabaseConnector('project_db') as project_db:
+    #         if bucketfilename in project_db[self.project_id]['files']:
+    #             error = f"File '{file}' already exists in the database. "
+    #             self.LOGGER.warning(error)
+    #             return False, compressed, bucketfilename, error
+
+    #     # If file exists in S3 bucket -- cancel delivery of file
+    #     with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+    #             as s3:
+    #         # Check if file exists in bucket already
+    #         in_bucket, error = s3.file_exists_in_bucket(bucketfilename)
+    #         # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
+
+    #         if in_bucket:  # If the file is already in bucket
+    #             error = (f"{error}\nFile '{file.name}' already exists in "
+    #                      "bucket, but does NOT exist in database. " +
+    #                      "Delivery cancelled, contact support.")
+    #             self.LOGGER.critical(error)
+    #             return False, compressed, bucketfilename, error
+
+    #     # Proceed with delivery and return info on file
+    #     return True, compressed, bucketfilename, error

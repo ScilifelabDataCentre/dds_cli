@@ -12,14 +12,15 @@ from cli_code.crypt4gh.crypt4gh import lib
 from prettytable import PrettyTable
 from botocore.client import ClientError
 
-from cli_code import DIRS, LOG_FILE
-from cli_code.exceptions_ds import DataException, DeliveryOptionException, \
-    DeliverySystemException, CouchDBException, S3Error
+from cli_code import (DIRS, LOG_FILE)
+from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
+                                    DeliverySystemException, CouchDBException,
+                                    S3Error)
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
-from cli_code.file_handler import config_logger, get_root_path, \
-    is_compressed, MAGIC_DICT, process_file
+from cli_code.file_handler import (config_logger, get_root_path,
+                                   is_compressed, MAGIC_DICT, process_file)
 
 # CONFIG ############################################################# CONFIG #
 
@@ -713,85 +714,6 @@ class DataDeliverer():
     # Public Methods #
     ##################
 
-    def do_file_checks(self, file: Path, directory_path, suffixes) -> \
-            (bool, bool, str, str):
-        '''Checks if file is compressed and if it has already been delivered.
-
-        Args:
-            file (Path):       Path to file
-
-        Returns:
-            tuple:  Information on if the file is compressed, whether or not
-                    to proceed with the delivery of the file, and the file path
-                    after (future) processing.
-
-                bool:   True if delivery should proceed for file
-                bool:   True if file is already compressed
-                str:    Bucketfilename -- File path with new suffixes
-                str:    Error message, "" if none
-        '''
-
-        # Set file check as in progress
-        # self.set_progress(item=file, check=True, started=True)
-
-        # Variables ############################################### Variables #
-        proc_suff = ""      # Saves final suffixes
-        # ------------------------------------------------------------------- #
-
-        # Check if compressed
-        compressed, error = is_compressed(file)
-        if error != "":
-            return False, compressed, "", error
-
-        # If file not compressed -- add zst (Zstandard) suffix to final suffix
-        if not compressed:
-            # Warning if suffixes are in magic dict but file "not compressed"
-            if set(suffixes).intersection(set(MAGIC_DICT)):
-                self.LOGGER.warning(f"File '{file}' has extensions belonging "
-                                    "to a compressed format but shows no "
-                                    "indication of being compressed. Not "
-                                    "compressing file.")
-
-            proc_suff += ".zst"     # Update the future suffix
-            # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
-        elif compressed:
-            self.LOGGER.warning(f"File '{file}' shows indication of being "
-                                "in a compressed format. "
-                                "Not compressing the file.")
-
-        proc_suff += ".ccp"     # ChaCha20 (encryption format) extension added
-        # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
-
-        # Path to file in temporary directory after processing, and bucket
-        # after upload, >>including file name<<
-        bucketfilename = str(directory_path /
-                             Path(file.name + proc_suff))
-        # self.LOGGER.debug(f"File: {file}\t Bucket path: {bucketfilename}")
-
-        # If file exists in DB -- cancel delivery of file
-        with DatabaseConnector('project_db') as project_db:
-            if bucketfilename in project_db[self.project_id]['files']:
-                error = f"File '{file}' already exists in the database. "
-                self.LOGGER.warning(error)
-                return False, compressed, bucketfilename, error
-
-        # If file exists in S3 bucket -- cancel delivery of file
-        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:
-            # Check if file exists in bucket already
-            in_bucket, error = s3.file_exists_in_bucket(bucketfilename)
-            # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
-
-            if in_bucket:  # If the file is already in bucket
-                error = (f"{error}\nFile '{file.name}' already exists in "
-                         "bucket, but does NOT exist in database. " +
-                         "Delivery cancelled, contact support.")
-                self.LOGGER.critical(error)
-                return False, compressed, bucketfilename, error
-
-        # Proceed with delivery and return info on file
-        return True, compressed, bucketfilename, error
-
     def prep_upload(self, path: Path, path_info: dict) -> (tuple):
         '''Prepares the files for upload.
 
@@ -818,67 +740,9 @@ class DataDeliverer():
 
         # Begin processing incl encryption
         info = process_file(file=path,
-                            file_info=path_info,
-                            filedir=self.tempdir[1])
+                            file_info=path_info)
 
         return info
-
-    def update_delivery(self, file: Path, updinfo: dict):
-        '''Updates data delivery information dictionary
-
-        Args:
-            file (Path):        The files info to be updated
-            updinfo (dict):     The dictionary to update the info with
-
-        Returns:
-            None
-
-        Raises:
-            DataException:  Data dictionary update failed
-
-        '''
-
-        # If delivery cancelled by DS update dictionary to fail file
-        if not updinfo['proceed']:
-            if self.data[file]['in_directory']:
-                if self.data[file]['dir_name'] not in self.failed:
-                    self.failed[self.data[file]['dir_name']] = {}
-
-                # If file in specified directory and '--break-on-fail' flag
-                # chosen -- cancel all files in directory not currently
-                # being delivered or finished
-                if self.break_on_fail:
-                    for path, info in self.data.items():
-                        if info['dir_name'] == self.data[file]['dir_name'] \
-                                and not info['upload']['in_progress'] \
-                                and not info['upload']['finished']:
-                            self.data[path].update(
-                                {'proceed': False,
-                                 'error': f"Failed file: {file} -- "
-                                 f"{updinfo['error']}"}
-                            )
-                            self.failed[info['dir_name']].update(
-                                {path: {'error': (f"Failed file: {file} -- "
-                                                  f"{updinfo['error']}")}})
-                    return
-
-                self.failed[self.data[file]['dir_name']][file] = {
-                    'error': updinfo['error']
-                }
-
-            # If individual file or '--break-on-fail' not chosen, cancel
-            # this specific file only
-            self.data[file].update({'proceed': False,
-                                    'error': updinfo['error']})
-            self.failed[file] = {'error': updinfo['error']}
-            return
-
-        # If file to proceed, update file info
-        try:
-            self.data[file].update(updinfo)
-        except DataException as dex:
-            self.LOGGER.exception(f"Data delivery information failed to "
-                                  f"update: {dex}")
 
     def set_progress(self, item: Path, check: bool = False,
                      processing: bool = False, upload: bool = False,
@@ -917,6 +781,75 @@ class DataDeliverer():
             elif finished:
                 self.data[item][to_update].update({'in_progress': not finished,
                                                    'finished': finished})
+        except DataException as dex:
+            self.LOGGER.exception(f"Data delivery information failed to "
+                                  f"update: {dex}")
+
+    def update_delivery(self, file: Path, updinfo: dict):
+        '''Updates data delivery information dictionary
+
+        Args:
+            file (Path):        The files info to be updated
+            updinfo (dict):     The dictionary to update the info with
+
+        Returns:
+            None
+
+        Raises:
+            DataException:  Data dictionary update failed
+
+        '''
+
+        all_info = self.data[file]  # All info on file
+
+        # If cancelled by another file set as not proceed and add error message
+        if not all_info['proceed']:
+            updinfo.update({'proceed': all_info['proceed'],
+                            'error': all_info['error']})
+
+        # Fail file if delivery cancelled by DS update dictionary
+        if not updinfo['proceed']:
+            # If failed file in directory, check if to fail all files or not
+            if all_info['in_directory']:
+                dir_name = all_info['dir_name']
+                # Add directory to failed dict if first failed file in dir
+                if dir_name not in self.failed:
+                    self.failed[dir_name] = {}
+
+                # If break-on-fail flag --> fail all files in directory
+                if self.break_on_fail:
+                    for path, info in self.data.items():
+                        # If within shared folder and upload not in progress or
+                        # finished -- set current file error and cancel
+                        if info['dir_name'] == dir_name \
+                                and not all([info['upload']['in_progress'],
+                                             info['upload']['finished']]):
+                            self.data[path].update(
+                                {'proceed': False,
+                                 'error': f"Failed file: {file} -- "
+                                 f"{updinfo['error']}"}
+                            )
+                            self.failed[dir_name].update(
+                                {path: {'error': (f"Failed file: {file} -- "
+                                                  f"{updinfo['error']}")}}
+                            )
+                    return
+
+                # If not break-on-fail flag --> only fail this file in dir
+                self.failed[dir_name][file] = {
+                    'error': updinfo['error']
+                }
+                return
+
+            # If individual file -- cancel this specific file only
+            self.data[file].update({'proceed': False,
+                                    'error': updinfo['error']})
+            self.failed[file] = {'error': updinfo['error']}
+            return
+
+        # If file to proceed, update file info
+        try:
+            self.data[file].update(updinfo)
         except DataException as dex:
             self.LOGGER.exception(f"Data delivery information failed to "
                                   f"update: {dex}")

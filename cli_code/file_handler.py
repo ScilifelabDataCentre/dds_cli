@@ -20,10 +20,12 @@ from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt  # ,
 # from nacl.exceptions import CryptoError
 # from bitstring import BitArray
 
-from cli_code import LOG_FILE, DIRS  # , MAX_CTR
-from cli_code.exceptions_ds import DeliverySystemException, LoggingError
+from cli_code import (LOG_FILE, DIRS)  # , MAX_CTR
+from cli_code.exceptions_ds import (DeliverySystemException, LoggingError)
 
-max_nonce = 2**(12*8)
+# VARIABLES ####################################################### VARIABLES #
+
+MAX_NONCE = 2**(12*8)
 
 
 ###############################################################################
@@ -262,8 +264,8 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
     for chunk in gen:
         # Get nonce as bytes for encryption: if the nonce is larger than the
         # max number of chunks allowed to be encrypted (safely) -- begin at 0
-        nonce = (iv_int if iv_int < max_nonce
-                 else iv_int % max_nonce).to_bytes(length=12,
+        nonce = (iv_int if iv_int < MAX_NONCE
+                 else iv_int % MAX_NONCE).to_bytes(length=12,
                                                    byteorder='little')
 
         # Encrypt and yield nonce and ciphertext
@@ -280,14 +282,13 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
 ###############################################################################
 
 
-def process_file(file: Path, file_info: dict, filedir: Path) \
+def process_file(file: Path, file_info: dict) \
         -> (bool, Path, int, bool, str):
     '''Processes the files incl compression, encryption
 
     Args:
         file (Path):           Path to file
         file_info (dict):      Info about file
-        filedir (Path):        Temporary file directory
 
     Returns:
         tuple: Information about finished processing
@@ -315,8 +316,8 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
         raise OSError(emessage)  # Bug somewhere in code
 
     # Variables ################################################### Variables #
-    outfile = filedir / file_info['new_file']   # Path to save processed file
-    new_dir = filedir / file_info['directory_path']     # New temp subdir
+    outfile = DIRS[1] / file_info['new_file']   # Path to save processed file
+    new_dir = DIRS[1] / file_info['directory_path']     # New temp subdir
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {file}, Outfile: {outfile}")
 
@@ -372,5 +373,5 @@ def process_file(file: Path, file_info: dict, filedir: Path) \
         os.umask(original_umask)    # Remove mask
 
     # PROCESSING FINISHED ############################### PROCESSING FINISHED #
-    
+
     return True, outfile, outfile.stat().st_size, ds_compressed, ""

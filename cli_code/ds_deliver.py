@@ -150,7 +150,7 @@ def put(config: str, username: str, password: str, project: str,
                 break
             else:
                 # Update file info
-                delivery.update_delivery(
+                proceed = delivery.update_delivery(
                     file=ppath,
                     updinfo={'proceed': processed,
                              'encrypted_file': efile,
@@ -164,7 +164,7 @@ def put(config: str, username: str, password: str, project: str,
                 # CLI_LOGGER.debug(f"File: {ppath}, Info: {delivery.data[ppath]}")
 
                 # If DS noted cancelation for file -- quit and move on
-                if not processed:
+                if not proceed:
                     CLI_LOGGER.warning(f"File: '{ppath}' -- cancelled "
                                        "-- moving on to next file")
                     continue
@@ -187,15 +187,17 @@ def put(config: str, username: str, password: str, project: str,
                 break
             else:
                 # Update file info
-                delivery.update_delivery(file=upath,
-                                         updinfo={'proceed': uploaded,
-                                                  'error': error})
+                proceed = delivery.update_delivery(
+                    file=upath,
+                    updinfo={'proceed': uploaded,
+                             'error': error}
+                )
                 # Set file upload as finished
                 delivery.set_progress(item=upath, upload=True, finished=True)
                 # CLI_LOGGER.debug(f"File: {upath}, Info: {delivery.data[upath]}")
 
                 # If DS noted cancelation for file -- quit and move on
-                if not uploaded:
+                if not proceed:
                     CLI_LOGGER.warning(f"File: '{upath}' -- cancelled "
                                        "-- moving on to next file")
                     continue
@@ -217,9 +219,14 @@ def put(config: str, username: str, password: str, project: str,
                                 "ds_compressed": keyinfo['ds_compressed'],
                                 "date_uploaded": timestamp()}
                         project_db.save(_project)
-                except CouchDBException as e:  # FIX EXCEPTION HERE
+                except CouchDBException as e:
                     emessage = f"Could not update database: {e}"
                     CLI_LOGGER.warning(emessage)
+                    # If database update failed delete from S3
+                    with S3Connector(bucketname=delivery.bucketname,
+                                     project=delivery.s3project) as s3:
+                        s3.delete_item(key=key)
+
                 else:
                     CLI_LOGGER.info("Upload completed!"
                                     f"{delivery.data[upath]}")

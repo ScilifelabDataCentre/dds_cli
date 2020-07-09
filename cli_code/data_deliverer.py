@@ -165,63 +165,148 @@ class DataDeliverer():
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        succeeded = PrettyTable(['Item', 'Location'])
-        failed = PrettyTable(['Item', 'Error'])
-        suc_dict = {}
-        fai_dict = {}
-        succeeded.align['Delivered item'] = "r"
-        failed.align['Failed item'] = "r"
-        succeeded.align['Location'] = "l"
-        failed.align['Error'] = "l"
-        succeeded.padding_width = 2
-        failed.padding_width = 2
+        folders_table = PrettyTable(
+            ['Directory', 'File', 'Success/Failed', 'Error']
+        )
+        files_table = PrettyTable(
+            ['File', 'Success/Failed', 'Error']
+        )
+
         wrapper = textwrap.TextWrapper(width=100)
 
-        for f, info in self.data.items():
-            if self.data[f]["proceed"] and self.data[f]['upload']['finished'] \
-                    and self.data[f]['database']['finished']:
-                if f in self.failed:
-                    raise DeliverySystemException(f"File: {f} -- Recorded as "
-                                                  "delivered, but also as "
-                                                  "failed. Bug. ")
+        folders = {}
+        files = {}
 
-                suc = str(self.data[f]['dir_name']) \
-                    if self.data[f]["in_directory"] else str(f)
-                loc = str(self.data[f]["directory_path"]) + "\n" \
-                    if self.data[f]["in_directory"] \
-                    else str(self.data[f]['directory_path']) + "\n"
+        for file, info in self.data.items():
+            if info['in_directory'] and info['dir_name'] not in folders:
+                folders[info['dir_name']] = {
+                    f: val for f, val in self.data.items()
+                    if val['in_directory'] and
+                    val['dir_name'] == info['dir_name']
+                }
+                folders_table.add_row(
+                    [info['dir_name'], "", "", ""]
+                )
+                for f, v in folders[info['dir_name']].items():
+                    folders_table.add_row(
+                        ["",
+                         '\n'.join(wrapper.wrap(
+                             str(v['directory_path'] / f.name))),
+                         u'\u2714'
+                         if all([v['proceed'], v['upload']['finished'],
+                                 v['database']['finished']]) else u'\u274C',
+                         '\n'.join(wrapper.wrap(v["error"])) + "\n"]
+                    )
 
-                if suc not in suc_dict:
-                    succeeded.add_row([suc, loc])
-                    suc_dict[suc] = loc
-            else:
-                finalized = self._finalize(file=f, info=self.data[f])
-                # Print failed items
-                fail = str(self.data[f]['dir_name']) \
-                    if self.data[f]['in_directory'] else str(f)
-                err = '\n'.join(wrapper.wrap(self.data[f]["error"])) + "\n" \
-                    if self.data[f]['in_directory'] else \
-                    '\n'.join(wrapper.wrap(self.data[f]['error'])) + "\n"
+            elif not info['in_directory']:
+                files_table.add_row(
+                    ['\n'.join(wrapper.wrap(str(file))),
+                     u'\u2714'
+                     if all([info['proceed'], info['upload']['finished'],
+                             info['database']['finished']]) else u'\u274C',
+                     '\n'.join(wrapper.wrap(info["error"]))])
 
-                if fail not in fai_dict:
-                    failed.add_row([fail, err])
-                    fai_dict[fail] = err
+        print(folders_table)
+        print(files_table)
+        # suc_dict = {}
+        # succeeded.align['Delivered item'] = "r"
+        # succeeded.align['Location'] = "l"
+        # succeeded.padding_width = 2
 
-        self._clear_tempdir()
+        # succeeded = PrettyTable(['Delivered item', 'Location'])
+        # suc_dict = {}
+        # succeeded.align['Delivered item'] = "r"
+        # succeeded.align['Location'] = "l"
+        # succeeded.padding_width = 2
 
-        if len(suc_dict) > 0:
-            self.LOGGER.info("----DELIVERY COMPLETED----")
-            self.LOGGER.info(
-                f"The following items were uploaded:\n{succeeded}\n")
-        if len(fai_dict) == len(suc_dict) + len(fai_dict):
-            self.LOGGER.error("----DELIVERY FAILED----")
-        if len(fai_dict) > 0:
-            self.LOGGER.error(
-                f"The following items were NOT uploaded:\n{failed}\n")
+        # partial = PrettyTable(['Partially delivered folder', 'Failed item', 'Error'])
+        # partial_dict = {}
+        # partial.align['Partially delivered folder', ''] = "r"
+        # partial.align['Failed item'] = "r"
+        # partial.align['Error'] = "l"
+        # partial.padding_width = 2
+
+        # failed = PrettyTable(['Failed item', 'Error'])
+        # fai_dict = {}
+        # failed.align['Failed item'] = "r"
+        # failed.align['Error'] = "l"
+        # failed.padding_width = 2
+
+        # for f, info in self.data.items():
+
+        #     # If file
+        #     if f in self.failed:
+        #         if info['proceed'] or info['upload']['finished'] or \
+        #                 info['database']['finished']:
+        #             raise DeliverySystemException(
+        #                 f"File {f} marked as both failed and delivered. "
+        #                 "Bug in code."
+        #             )
+        #         if f not in fai_dict:
+        #             failed.add_row([f, info['error']])
+        #             fai_dict[f] = info['error']
+
+        #     # If in folder
+        #     elif info['in_directory'] and info['dir_name'] in self.failed:
+        #         if info['proceed'] or info['upload']['finished'] or \
+        #                 info['database']['finished']:
+        #             raise DeliverySystemException(
+        #                 f"File {f} marked as both failed and delivered. "
+        #                 "Bug in code."
+        #             )
+
+        #         if
+        #         if info['dir_name'] not in fai_dict:
+        #             failed.add_row([info['dir_name'], f, info['error']])
+        #             fai_dict[f]
+
+        #     if info["proceed"] and info['upload']['finished'] \
+        #             and info['database']['finished']:
+        #         if (info['in_directory'] and info['dir_name'] in self.failed
+        #             and f in self.failed[info['dir_name']]) or \
+        #                 (not info['in_directory'] and f in self.failed):
+        #             raise DeliverySystemException(f"File: {f} -- Recorded as "
+        #                                           "delivered, but also as "
+        #                                           "failed. Bug. ")
+
+        #         suc = str(info['dir_name']) \
+        #             if info["in_directory"] else str(f)
+        #         loc = str(info["directory_path"]) + "\n" \
+        #             if info["in_directory"] \
+        #             else str(info['directory_path']) + "\n"
+
+        #         if suc not in suc_dict:
+        #             succeeded.add_row([suc, loc])
+        #             suc_dict[suc] = loc
+        #     else:
+        #         finalized = self._finalize(file=f, info=info)
+        #         # Print failed items
+        #         fail = str(info['dir_name']) \
+        #             if info['in_directory'] else str(f)
+        #         err = '\n'.join(wrapper.wrap(info["error"])) + "\n" \
+        #             if info['in_directory'] else \
+        #             '\n'.join(wrapper.wrap(info['error'])) + "\n"
+
+        #         if fail not in fai_dict:
+        #             failed.add_row([fail, err])
+        #             fai_dict[fail] = err
+
+        # self._clear_tempdir()
+
+        # if len(suc_dict) > 0:
+        #     self.LOGGER.info("----DELIVERY COMPLETED----")
+        #     self.LOGGER.info(
+        #         f"The following items were uploaded:\n{succeeded}\n")
+        # if len(fai_dict) == len(suc_dict) + len(fai_dict):
+        #     self.LOGGER.error("----DELIVERY FAILED----")
+        # if len(fai_dict) > 0:
+        #     self.LOGGER.error(
+        #         f"The following items were NOT uploaded:\n{failed}\n")
 
     ###################
     # Private Methods #
     ###################
+
     def _check_ds_access(self):
         '''Checks the users access to the delivery system
 
@@ -447,7 +532,7 @@ class DataDeliverer():
 
         '''
 
-        for d in [x for x in self.tempdir[1].iterdir() if x.is_dir()]:
+        for d in [x for x in DIRS[1].iterdir() if x.is_dir()]:
             try:
                 shutil.rmtree(d)
             except DeliverySystemException as e:
@@ -735,6 +820,15 @@ class DataDeliverer():
         if not path_info['proceed']:
             return False, Path(""), 0, False, ""
 
+        # If marked as failed but 'proceed' true -- error
+        if (path_info['in_directory'] and path_info['dir_name']
+            in self.failed and path in self.failed[path_info['dir_name']]) or \
+                (not path_info['in_directory'] and path in self.failed):
+            raise DeliverySystemException(f"File '{path}' labelled to proceed "
+                                          "in delivery, but is also marked as "
+                                          "failed. Bug in code. Cancelling "
+                                          "delivery.")
+
         # Set file processing as in progress
         self.set_progress(item=path, processing=True, started=True)
 
@@ -785,7 +879,7 @@ class DataDeliverer():
             self.LOGGER.exception(f"Data delivery information failed to "
                                   f"update: {dex}")
 
-    def update_delivery(self, file: Path, updinfo: dict):
+    def update_delivery(self, file: Path, updinfo: dict) -> (bool):
         '''Updates data delivery information dictionary
 
         Args:
@@ -793,7 +887,7 @@ class DataDeliverer():
             updinfo (dict):     The dictionary to update the info with
 
         Returns:
-            None
+            bool:   True if to continue with delivery
 
         Raises:
             DataException:  Data dictionary update failed
@@ -815,6 +909,7 @@ class DataDeliverer():
                 # Add directory to failed dict if first failed file in dir
                 if dir_name not in self.failed:
                     self.failed[dir_name] = {}
+                    # self.LOGGER.debug(self.failed)
 
                 # If break-on-fail flag --> fail all files in directory
                 if self.break_on_fail:
@@ -833,19 +928,20 @@ class DataDeliverer():
                                 {path: {'error': (f"Failed file: {file} -- "
                                                   f"{updinfo['error']}")}}
                             )
-                    return
+                            # self.LOGGER.debug(self.failed)
+                    return False
 
                 # If not break-on-fail flag --> only fail this file in dir
                 self.failed[dir_name][file] = {
                     'error': updinfo['error']
                 }
-                return
+                return False
 
             # If individual file -- cancel this specific file only
             self.data[file].update({'proceed': False,
                                     'error': updinfo['error']})
             self.failed[file] = {'error': updinfo['error']}
-            return
+            return False
 
         # If file to proceed, update file info
         try:
@@ -853,6 +949,8 @@ class DataDeliverer():
         except DataException as dex:
             self.LOGGER.exception(f"Data delivery information failed to "
                                   f"update: {dex}")
+
+        return True
 
     def get_recipient_key(self, keytype="public"):
         """Retrieves the recipient public key from the database."""
@@ -962,7 +1060,7 @@ class DataDeliverer():
             file_in_bucket = self.s3.files_in_bucket(key=path)
 
             for file in file_in_bucket:
-                new_path = self.tempdir[1] / \
+                new_path = DIRS[1] / \
                     Path(file.key)  # Path to downloaded
                 if not new_path.parent.exists():
                     try:
@@ -1018,6 +1116,15 @@ class DataDeliverer():
                 self.LOGGER.critical(error)
 
             return False, error
+
+        # If marked as failed but 'proceed' true -- error
+        if (fileinfo['in_directory'] and fileinfo['dir_name'] in self.failed
+            and file in self.failed[fileinfo['dir_name']]) or \
+                (not fileinfo['in_directory'] and file in self.failed):
+            raise DeliverySystemException(f"File '{file}' labelled to proceed "
+                                          "in delivery, but is also marked as "
+                                          "failed. Bug in code. Cancelling "
+                                          "delivery.")
 
         # Set delivery as in progress
         self.set_progress(item=file, upload=True, started=True)

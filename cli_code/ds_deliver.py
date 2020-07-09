@@ -144,7 +144,7 @@ def put(config: str, username: str, password: str, project: str,
             ppath = pools[pfuture]      # Original file path -- keep track
             try:
                 processed, efile, esize, \
-                    ds_compressed, error = pfuture.result()     # Get info
+                    ds_compressed, error, key = pfuture.result()     # Get info
             except PoolExecutorError:
                 sys.exit(f"{pfuture.exception()}")
                 break
@@ -156,7 +156,8 @@ def put(config: str, username: str, password: str, project: str,
                              'encrypted_file': efile,
                              'encrypted_size': esize,
                              'ds_compressed': ds_compressed,
-                             'error': error}
+                             'error': error, 
+                             'key': key}
                 )
                 # Set file processing as finished
                 delivery.set_progress(
@@ -217,7 +218,8 @@ def put(config: str, username: str, password: str, project: str,
                             {"directory_path": dir_path,
                                 "size": keyinfo['size'],
                                 "ds_compressed": keyinfo['ds_compressed'],
-                                "date_uploaded": timestamp()}
+                                "date_uploaded": timestamp(), 
+                                "key": keyinfo['key']}
                         project_db.save(_project)
                 except CouchDBException as e:
                     emessage = f"Could not update database: {e}"

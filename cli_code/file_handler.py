@@ -374,4 +374,4 @@ def process_file(file: Path, file_info: dict) \
 
     # PROCESSING FINISHED ############################### PROCESSING FINISHED #
 
-    return True, outfile, outfile.stat().st_size, ds_compressed, ""
+    return True, outfile, outfile.stat().st_size, ds_compressed, "", key.hex()

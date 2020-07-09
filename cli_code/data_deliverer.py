@@ -166,19 +166,57 @@ class DataDeliverer():
             return False  # uncomment to pass exception through
 
         folders_table = PrettyTable(
-            ['Directory', 'File', 'Success/Failed', 'Error']
+            ['Directory', 'File', 'Delivered', 'Error']
         )
+        folders_table.padding_width = 2
+        folders_table.align['File'] = "r"
+        folders_table.align['Error'] = "l"
+
         files_table = PrettyTable(
-            ['File', 'Success/Failed', 'Error']
+            ['File', 'Delivered', 'Error']
         )
+        files_table.align['File'] = "r"
+        files_table.align['Error'] = "l"
 
         wrapper = textwrap.TextWrapper(width=100)
 
         folders = {}
         files = {}
 
+        are_folders = False
+        are_files = False
+
+        for file, info in self.failed.items():
+            if info['in_directory'] and info['dir_name'] not in folders:
+                are_folders = True
+                folders[info['dir_name']] = {
+                    f: val for f, val in self.failed.items()
+                    if val['in_directory'] and
+                    val['dir_name'] == info['dir_name']
+                }
+                print(f"--- {folders}")
+                folders_table.add_row(
+                    [str(info['dir_name']) + "\n", "", "", ""]
+                )
+                for f, v in folders[info['dir_name']].items():
+                    folders_table.add_row(
+                        ["",
+                         (v['directory_path'] if 'directory_path' in v
+                             else get_root_path(file=f, path_base=v['dir_name'].name)) / f.name,
+                         "NO",
+                         '\n'.join(wrapper.wrap(v["error"])) + '\n']
+                    )
+
+            elif not info['in_directory']:
+                are_files = True
+                files_table.add_row(
+                    [file,
+                     "NO",
+                     '\n'.join(wrapper.wrap(info["error"])) + '\n'])
+
         for file, info in self.data.items():
             if info['in_directory'] and info['dir_name'] not in folders:
+                are_folders = True
                 folders[info['dir_name']] = {
                     f: val for f, val in self.data.items()
                     if val['in_directory'] and
@@ -190,28 +228,33 @@ class DataDeliverer():
                 for f, v in folders[info['dir_name']].items():
                     folders_table.add_row(
                         ["",
-                         '\n'.join(wrapper.wrap(
-                             str(v['directory_path'] / f.name))),
-                         u'\u2714'
+                         str(v['directory_path'] / f.name),
+                         "YES"
                          if all([v['proceed'], v['upload']['finished'],
-                                 v['database']['finished']]) else u'\u274C',
-                         '\n'.join(wrapper.wrap(v["error"])) + "\n"]
+                                 v['database']['finished']]) else "NO",
+                         '\n'.join(wrapper.wrap(v["error"])) + '\n']
                     )
 
             elif not info['in_directory']:
+                are_files = True
+                self.LOGGER.debug(are_files)
                 files_table.add_row(
-                    ['\n'.join(wrapper.wrap(str(file))),
-                     u'\u2714'
+                    [str(file),
+                     "YES"
                      if all([info['proceed'], info['upload']['finished'],
-                             info['database']['finished']]) else u'\u274C',
-                     '\n'.join(wrapper.wrap(info["error"]))])
+                             info['database']['finished']]) else "NO",
+                     '\n'.join(wrapper.wrap(info["error"])) + '\n'])
 
-        print(folders_table)
-        print(files_table)
+        self.LOGGER.info("DELIVERY COMPLETED!")
+        self.LOGGER.info(
+            f"\n#################### FOLDERS DELIVERED ####################"
+            f"\n{folders_table}\n" if are_folders else "\n")
+        self.LOGGER.info(
+            f"\n##################### FILES DELIVERED #####################"
+            f"\n{files_table}\n" if are_files else "\n")
         # suc_dict = {}
         # succeeded.align['Delivered item'] = "r"
         # succeeded.align['Location'] = "l"
-        # succeeded.padding_width = 2
 
         # succeeded = PrettyTable(['Delivered item', 'Location'])
         # suc_dict = {}
@@ -608,7 +651,7 @@ class DataDeliverer():
                 file_info = self._get_file_info(file=curr_path, in_dir=False)
                 if not file_info['proceed']:
                     # Don't deliver --> save error message
-                    initial_fail[curr_path] = {'error': file_info['error']}
+                    initial_fail[curr_path] = file_info
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
@@ -666,19 +709,18 @@ class DataDeliverer():
         dir_info = {}   # Files to deliver
         dir_fail = {}   # Failed files
         # -----------------------------------------------#
-
+        
         # Iterate through folder contents and get file info
         for f in folder.glob('**/*'):
             if f.is_file() and "DS_Store" not in str(f):    # CHANGE LATER
                 file_info = self._get_file_info(file=f,
                                                 in_dir=True,
                                                 dir_name=folder)
-
+                self.LOGGER.debug(file_info)                      
                 # If file check failed in some way - do not deliver file
                 # Otherwise deliver file -- no cancellation of folder here
                 if not file_info['proceed']:
                     dir_fail[f] = file_info
-                    self.LOGGER.debug(f"{f} FAILED")
                 else:
                     dir_info[f] = file_info     # Deliver file
 
@@ -706,12 +748,13 @@ class DataDeliverer():
         suffixes = file.suffixes    # File suffixes
         proc_suff = ""              # Saves final suffixes
         error = ""                  # Error message
+        dir_info = {'in_directory': in_dir, 'dir_name': dir_name}
         # ------------------------------------------------ #
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=file)
         if error != "":
-            return {'proceed': False, 'error': error}
+            return {'proceed': False, 'error': error, **dir_info}
 
         # If file not compressed -- add zst (Zstandard) suffix to final suffix
         # If compressed -- info that DS will not compress
@@ -746,7 +789,7 @@ class DataDeliverer():
                 self.LOGGER.warning(error)
                 # If --overwrite flag not specified cancel upload of file
                 if not self.overwrite:
-                    return {'proceed': False, 'error': error}
+                    return {'proceed': False, 'error': error, **dir_info}
 
                 # If --overwrite flag specified -- do not cancel
                 in_db = True
@@ -760,7 +803,7 @@ class DataDeliverer():
 
             if s3error != "":
                 error += s3error
-
+            
             # If the file exists in bucket, but not in the database -- error
             if in_bucket:
                 if not in_db:
@@ -768,13 +811,13 @@ class DataDeliverer():
                              "bucket, but does NOT exist in database. " +
                              "Delivery cancelled, contact support.")
                     self.LOGGER.critical(error)
-                    return {'proceed': False, 'error': error}
+                    return {'proceed': False, 'error': error, **dir_info}
 
                 # If file exists in bucket and in database and...
                 # --overwrite flag not specified --> cancel file delivery
                 # --overwrite flag --> deliver again, overwrite file
                 if not self.overwrite:
-                    return {'proceed': False, 'error': error}
+                    return {'proceed': False, 'error': error, **dir_info}
 
         return {'in_directory': in_dir,
                 'dir_name': dir_name if in_dir else None,

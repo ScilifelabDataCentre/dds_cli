@@ -70,9 +70,11 @@ class DataDeliverer():
                  pathfile=None, data=None, break_on_fail=True,
                  overwrite=False):
 
-        self.tempdir = DIRS
+        # Flags ------------------------------------------------------- Flags #
+        self.break_on_fail = break_on_fail
+        self.overwrite = overwrite
 
-        # Initialize logger
+        # Initialize logger ------------------------------- Initialize logger #
         self.logfile = LOG_FILE
         self.LOGGER = logging.getLogger(__name__)
         self.LOGGER.setLevel(logging.DEBUG)
@@ -85,7 +87,7 @@ class DataDeliverer():
             sh_format="%(levelname)s::%(name)s::" +
             "%(lineno)d::%(message)s"
         )
-
+        # --------------------------------------------------------------------#
         # Quit execution if none of username, password, config are set
         if all(x is None for x in [username, password, config]):
             raise DeliverySystemException(
@@ -95,9 +97,8 @@ class DataDeliverer():
                 "For help: 'ds_deliver --help'."
             )
 
-        # Initialize attributes
-        self.break_on_fail = break_on_fail
-        self.overwrite = overwrite
+        # Main attributes ----------------------------------- Main attributes #
+        # General
         self.method = sys._getframe().f_back.f_code.co_name  # put or get
         self.user = _DSUser(username=username, password=password)
         self.project_id = project_id        # Project ID - not S3
@@ -108,10 +109,13 @@ class DataDeliverer():
         self.bucketname = ""    # S3 bucket name -- to connect to S3
         self.s3project = ""     # S3 project ID -- to connect to S3
 
+        # Checks ----------------------------------------------------- Checks #
         # Check if all required info is entered
+        # Sets: self.project_owner, self.user.username, self.user.password,
+        #       self.project_id
         self._check_user_input(config=config)
 
-        # If user has access to delivery system check project access
+        # Check access to delivery system
         ds_access_granted = self._check_ds_access()
         if not ds_access_granted or self.user.id is None:
             raise DeliverySystemException(
@@ -119,6 +123,7 @@ class DataDeliverer():
                 "Delivery cancelled."
             )
 
+        # If access to delivery system, check project access
         proj_access_granted, self.s3project = self._check_project_access()
         if not proj_access_granted:
             raise DeliverySystemException(
@@ -126,6 +131,7 @@ class DataDeliverer():
                 "denied. Delivery cancelled."
             )
 
+        # If access to project, check that some data is specified
         if not data and not pathfile:
             raise DeliverySystemException(
                 "No data to be uploaded. Specify individual "
@@ -134,11 +140,14 @@ class DataDeliverer():
                 "For help: 'ds_deliver --help'"
             )
 
+        # If everything ok, set bucket name -- CHANGE LATER
         self.bucketname = f"project_{self.project_id}"
 
+        # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
 
+        # Success message
         self.LOGGER.info("Delivery initialization successful.")
 
     def __enter__(self):
@@ -174,7 +183,7 @@ class DataDeliverer():
                     raise DeliverySystemException(f"File: {f} -- Recorded as "
                                                   "delivered, but also as "
                                                   "failed. Bug. ")
-                                                  
+
                 suc = str(self.data[f]['dir_name']) \
                     if self.data[f]["in_directory"] else str(f)
                 loc = str(self.data[f]["directory_path"]) + "\n" \
@@ -212,71 +221,6 @@ class DataDeliverer():
     ###################
     # Private Methods #
     ###################
-    def _check_user_input(self, config):
-        '''Checks that the correct options and credentials are entered.
-
-        Args:
-            config:     File containing the users DP username and password,
-                        and the project relating to the upload/download.
-                        Can be used instead of inputing the creds separately.
-
-        Raises:
-            OSError:                    Config file not found or opened
-            DeliveryOptionException:    Required information not found
-
-        '''
-
-        # If config file not entered use loose credentials
-        if config is None:
-            # If username or password not specified cancel delivery
-            if not all([self.user.username, self.user.password]):
-                raise DeliveryOptionException(
-                    "Delivery System login credentials not specified. "
-                    "Enter --username/-u AND --password/-pw, or --config/-c."
-                    "For help: 'ds_deliver --help'."
-                )
-
-            # If project_id not specified cancel delivery
-            if self.project_id is None:
-                raise DeliveryOptionException(
-                    "Project not specified. Enter project ID using "
-                    "--project option or add to config file using "
-                    "--config/-c option."
-                )
-
-            # If no owner is set assume current user is owner
-            if self.project_owner is None:
-                self.project_owner = self.user.username
-                return
-
-        # If config file specified move on to check credentials in it
-        user_config = Path(config).resolve()
-        try:
-            # Get info from credentials file
-            with user_config.open(mode='r') as cf:
-                credentials = json.load(cf)
-        except OSError as ose:
-            sys.exit(f"Could not open path-file {config}: {ose}")
-
-        # Check that all credentials are entered and quit if not
-        if not all(c in credentials for c
-                   in ['username', 'password', 'project']):
-            raise DeliveryOptionException(
-                "The config file does not contain all required information."
-            )
-
-        # Save username, password and project_id from credentials file
-        self.user.username = credentials['username']
-        self.user.password = credentials['password']
-        self.project_id = credentials['project']
-        if 'owner' in credentials:
-            self.project_owner = credentials['owner']
-            return
-
-        if self.project_owner is None and self.method == 'put':
-            raise DeliveryOptionException("Project owner not specified. "
-                                          "Cancelling delivery.")
-
     def _check_ds_access(self):
         '''Checks the users access to the delivery system
 
@@ -299,12 +243,11 @@ class DataDeliverer():
                 # If found, create secure password hash
                 if self.user.username == user_db[id_]['username']:
                     password_settings = user_db[id_]['password']['settings']
-                    password_hash = \
-                        secure_password_hash(
-                            password_settings=password_settings,
-                            password_entered=self.user.password
-                        )
-                    # Compare to correct password
+                    password_hash = secure_password_hash(
+                        password_settings=password_settings,
+                        password_entered=self.user.password
+                    )
+                    # Compare to correct password, error if no match
                     if user_db[id_]['password']['hash'] != password_hash:
                         raise DeliverySystemException(
                             "Wrong password. Access to Delivery System denied."
@@ -313,12 +256,15 @@ class DataDeliverer():
                     # Check that facility putting or researcher getting
                     self.user.role = user_db[id_]['role']
                     if (self.user.role == 'facility'and self.method == 'put') \
-                            or (self.user.role == 'researcher' and self.method == 'get'):
+                            or (self.user.role == 'researcher' and
+                                self.method == 'get'):
                         self.user.id = id_  # User granted access to put or get
 
-                        if (self.user.role == 'researcher' and self.method == 'get'
-                                and (self.project_owner is None or
-                                     self.project_owner == self.user.username)):
+                        # If role allowed to get
+                        if (self.user.role == 'researcher' and
+                            self.method == 'get' and
+                            (self.project_owner is None or
+                             self.project_owner == self.user.username)):
                             self.project_owner = self.user.id
                         return True  # Access granted
                     else:
@@ -424,6 +370,74 @@ class DataDeliverer():
                     "project. Cancelling delivery."
                 )
 
+    def _check_user_input(self, config):
+        '''Checks that the correct options and credentials are entered.
+
+        Args:
+            config:     File containing the users DP username and password,
+                        and the project relating to the upload/download.
+                        Can be used instead of inputing the creds separately.
+
+        Raises:
+            OSError:                    Config file not found or opened
+            DeliveryOptionException:    Required information not found
+
+        '''
+
+        # No config file --------- loose credentials --------- No config file #
+        if config is None:
+            # If username or password not specified cancel delivery
+            if not all([self.user.username, self.user.password]):
+                raise DeliveryOptionException(
+                    "Delivery System login credentials not specified. "
+                    "Enter --username/-u AND --password/-pw, or --config/-c."
+                    "For help: 'ds_deliver --help'."
+                )
+
+            # If project_id not specified cancel delivery
+            if self.project_id is None:
+                raise DeliveryOptionException(
+                    "Project not specified. Enter project ID using "
+                    "--project option or add to config file using "
+                    "--config/-c option."
+                )
+
+            # If no owner is set assume current user is owner
+            if self.project_owner is None:
+                self.project_owner = self.user.username
+                return
+
+        # Config file ------------ credentials in it ------------ Config file #
+        user_config = Path(config).resolve()
+        try:
+            # Get info from credentials file
+            with user_config.open(mode='r') as cf:
+                credentials = json.load(cf)
+        except OSError as ose:
+            sys.exit(f"Could not open path-file {config}: {ose}")
+
+        # Check that all credentials are entered and quit if not
+        if not all(c in credentials for c
+                   in ['username', 'password', 'project']):
+            raise DeliveryOptionException(
+                "The config file does not contain all required information."
+            )
+
+        # Save username, password and project_id from credentials file
+        self.user.username = credentials['username']
+        self.user.password = credentials['password']
+        self.project_id = credentials['project']
+
+        # If owner specified - ok
+        if 'owner' in credentials:
+            self.project_owner = credentials['owner']
+            return
+
+        # If owner not specified and trying to out -- error
+        if self.project_owner is None and self.method == 'put':
+            raise DeliveryOptionException("Project owner not specified. "
+                                          "Cancelling delivery.")
+
     def _clear_tempdir(self):
         '''Remove all contents from temporary file directory
 
@@ -439,132 +453,6 @@ class DataDeliverer():
                 self.LOGGER.exception(
                     f"Failed emptying the temporary folder {d}: {e}"
                 )
-
-    def get_file_info(self, file: Path, in_dir: bool, dir_name: Path = Path("")) -> (dict):
-        '''Get info on file and check if already delivered
-
-        Args:
-            file (Path):        Path to file
-            in_dir (bool):      True if in directory specified by user
-            dir_name (Path):    Directory name, "" if not in folder
-
-        Returns:
-            dict:   Information about file e.g. format
-
-        '''
-
-        proceed = True
-        path_base = dir_name.name if in_dir else None
-        directory_path = get_root_path(file=file, path_base=path_base)
-        suffixes = file.suffixes
-
-        compressed, error = is_compressed(file=file)
-        if error != "":     # If error in checking compression format quit file
-            return {'proceed': False, 'error': error}
-
-        proc_suff = ""      # Saves final suffixes
-        # If file not compressed -- add zst (Zstandard) suffix to final suffix
-        if not compressed:
-            # Warning if suffixes are in magic dict but file "not compressed"
-            if set(suffixes).intersection(set(MAGIC_DICT)):
-                self.LOGGER.warning(f"File '{file}' has extensions belonging "
-                                    "to a compressed format but shows no "
-                                    "indication of being compressed. Not "
-                                    "compressing file.")
-
-            proc_suff += ".zst"     # Update the future suffix
-            # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
-        elif compressed:
-            self.LOGGER.info(f"File '{file}' shows indication of being "
-                             "in a compressed format. "
-                             "Not compressing the file.")
-
-        proc_suff += ".ccp"     # ChaCha20 (encryption format) extension added
-        # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
-
-        # Path to file in temporary directory after processing, and bucket
-        # after upload, >>including file name<<
-        bucketfilename = str(directory_path /
-                             Path(file.name + proc_suff))
-
-        # If file exists in DB -- cancel delivery of file
-        in_db = False
-        error = ""
-        with DatabaseConnector('project_db') as project_db:
-            if bucketfilename in project_db[self.project_id]['files']:
-                error = f"File '{file}' already exists in the database. "
-                self.LOGGER.warning(error)
-                if not self.overwrite:
-                    return {'proceed': False, 'error': error}
-
-                in_db = True
-
-        # If file exists in S3 bucket -- cancel delivery of file
-        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:
-            # Check if file exists in bucket already
-            in_bucket, error = s3.file_exists_in_bucket(bucketfilename)
-            # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
-
-            if in_bucket:  # If the file is already in bucket
-                if not in_db:
-                    error = (f"{error}\nFile '{file.name}' already exists in "
-                             "bucket, but does NOT exist in database. " +
-                             "Delivery cancelled, contact support.")
-                    self.LOGGER.critical(error)
-                    return {'proceed': False, 'error': error}
-
-                # If --overwrite option -> deliver again, otherwise fail
-                if not self.overwrite:
-                    return {'proceed': False, 'error': error}
-
-        return {'in_directory': in_dir,
-                'dir_name': dir_name if in_dir else None,
-                'path_base': path_base,
-                'directory_path': directory_path,
-                'size': file.stat().st_size,
-                'suffixes': suffixes,
-                'proceed': proceed,
-                'compressed': compressed,
-                'new_file': bucketfilename,
-                'error': error,
-                'encrypted_file': Path(""),
-                'encrypted_size': 0,
-                'processing': {'in_progress': False,
-                               'finished': False},
-                'upload': {'in_progress': False,
-                           'finished': False},
-                'database': {'in_progress': False,
-                             'finished': False}}
-
-    def get_dir_info(self, folder: Path) -> (dict, dict):
-        '''Iterate through folder contents and get file info
-
-        Args:
-            folder (Path):  Path to folder
-
-        Returns:
-            dict:   Files to deliver
-            dict:   Files which failed -- not to deliver
-        '''
-
-        dir_info = {}   # Files to deliver
-        dir_fail = {}   # Failed files
-
-        # Iterate through folder contents and get file info
-        for f in folder.glob('**/*'):
-            if f.is_file() and "DS_Store" not in str(f):
-                file_info = self.get_file_info(file=f,
-                                               in_dir=True,
-                                               dir_name=folder)
-
-                if not file_info['proceed']:
-                    dir_fail[f] = file_info
-                    self.LOGGER.debug(f"{f} FAILED")
-                else:
-                    dir_info[f] = file_info
-
-        return dir_info, dir_fail
 
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list
@@ -582,19 +470,27 @@ class DataDeliverer():
                                         false delivery method
         '''
 
+        # Variables ##################################### Variables #
         all_files = dict()
-        data_list = list(data)
         initial_fail = dict()
+
+        data_list = list(data)
+        # ----------------------------------------------------------#
 
         # Get all paths from pathfile
         if pathfile is not None and Path(pathfile).exists():
             with Path(pathfile).resolve().open(mode='r') as file:
                 data_list += [line.strip() for line in file]
+
+        # If not a correct method fail delivery
         if self.method not in ["get", "put"]:
             raise DeliveryOptionException(
                 "Delivery option {self.method} not allowed. "
                 "Cancelling delivery."
             )
+
+        # Gather data info ####################### Gather data info #
+        # Iterate through all user specified paths
         for d in data_list:
             # Throw error if there are duplicate files
             if d in all_files or Path(d).resolve() in all_files:
@@ -603,27 +499,32 @@ class DataDeliverer():
                     "please remove path dublicates."
                 )
 
+            # If downloading - empty dict for file info
+            # If uploading - check file contents
             if self.method == "get":
                 all_files[d] = {}
 
             elif self.method == "put":
+                # Error if path doesn't exist -- should be checked by click
                 if not Path(d).exists():
                     raise OSError("Trying to deliver a non-existing file/"
                                   f"folder: {d} -- Delivery not possible.")
 
-                curr_path = Path(d).resolve()
+                # Get file for files within folder
+                curr_path = Path(d).resolve()   # Full path to data
                 if curr_path.is_dir():  # Get info on files in folder
-                    dir_info, dir_fail = self.get_dir_info(folder=curr_path)
-                    initial_fail.update(dir_fail)
-                    all_files.update(dir_info)
+                    dir_info, dir_fail = self._get_dir_info(folder=curr_path)
+                    initial_fail.update(dir_fail)   # Not to be delivered
+                    all_files.update(dir_info)      # To be delivered
                     continue
 
-                file_info = self.get_file_info(file=curr_path,
-                                               in_dir=False)
+                # Get info for individual files
+                file_info = self._get_file_info(file=curr_path, in_dir=False)
                 if not file_info['proceed']:
-                    initial_fail[curr_path] = file_info
-
+                    # Don't deliver --> save error message
+                    initial_fail[curr_path] = {'error': file_info['error']}
                 else:
+                    # Deliver --> save info
                     all_files[curr_path] = file_info
 
         return all_files, initial_fail
@@ -663,6 +564,150 @@ class DataDeliverer():
                 return False
 
         return True
+
+    def _get_dir_info(self, folder: Path) -> (dict, dict):
+        '''Iterate through folder contents and get file info
+
+        Args:
+            folder (Path):  Path to folder
+
+        Returns:
+            dict:   Files to deliver
+            dict:   Files which failed -- not to deliver
+        '''
+
+        # Variables ########################## Variables #
+        dir_info = {}   # Files to deliver
+        dir_fail = {}   # Failed files
+        # -----------------------------------------------#
+
+        # Iterate through folder contents and get file info
+        for f in folder.glob('**/*'):
+            if f.is_file() and "DS_Store" not in str(f):    # CHANGE LATER
+                file_info = self._get_file_info(file=f,
+                                                in_dir=True,
+                                                dir_name=folder)
+
+                # If file check failed in some way - do not deliver file
+                # Otherwise deliver file -- no cancellation of folder here
+                if not file_info['proceed']:
+                    dir_fail[f] = file_info
+                    self.LOGGER.debug(f"{f} FAILED")
+                else:
+                    dir_info[f] = file_info     # Deliver file
+
+        return dir_info, dir_fail
+
+    def _get_file_info(self, file: Path, in_dir: bool,
+                       dir_name: Path = Path("")) -> (dict):
+        '''Get info on file and check if already delivered
+
+        Args:
+            file (Path):        Path to file
+            in_dir (bool):      True if in directory specified by user
+            dir_name (Path):    Directory name, "" if not in folder
+
+        Returns:
+            dict:   Information about file e.g. format
+
+        '''
+
+        # Variables ############################ Variables #
+        proceed = True  # If proceed with file delivery
+        path_base = dir_name.name if in_dir else None   # Folder name if in dir
+        directory_path = get_root_path(file=file, path_base=path_base) \
+            if path_base is not None else Path("")  # Path to file in folder
+        suffixes = file.suffixes    # File suffixes
+        proc_suff = ""              # Saves final suffixes
+        error = ""                  # Error message
+        # ------------------------------------------------ #
+
+        # Check if file is compressed and fail delivery on error
+        compressed, error = is_compressed(file=file)
+        if error != "":
+            return {'proceed': False, 'error': error}
+
+        # If file not compressed -- add zst (Zstandard) suffix to final suffix
+        # If compressed -- info that DS will not compress
+        if not compressed:
+            # Warning if suffixes are in magic dict but file "not compressed"
+            if set(suffixes).intersection(set(MAGIC_DICT)):
+                self.LOGGER.warning(f"File '{file}' has extensions belonging "
+                                    "to a compressed format but shows no "
+                                    "indication of being compressed. Not "
+                                    "compressing file.")
+
+            proc_suff += ".zst"     # Update the future suffix
+            # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
+        elif compressed:
+            self.LOGGER.info(f"File '{file}' shows indication of being "
+                             "in a compressed format. "
+                             "Not compressing the file.")
+
+        # Add (own) encryption format extension
+        proc_suff += ".ccp"     # ChaCha20-Poly1305
+        # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
+
+        # Path to file in temporary directory after processing, and bucket
+        # after upload, >>including file name<<
+        bucketfilename = str(directory_path / Path(file.name + proc_suff))
+
+        # Check if file exists in database
+        in_db = False
+        with DatabaseConnector('project_db') as project_db:
+            if bucketfilename in project_db[self.project_id]['files']:
+                error = f"File '{file}' already exists in the database. "
+                self.LOGGER.warning(error)
+                # If --overwrite flag not specified cancel upload of file
+                if not self.overwrite:
+                    return {'proceed': False, 'error': error}
+
+                # If --overwrite flag specified -- do not cancel
+                in_db = True
+
+        # Check if file exists in S3 bucket
+        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                as s3:
+            # Check if file exists in bucket already
+            in_bucket, s3error = s3.file_exists_in_bucket(bucketfilename)
+            # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
+
+            if s3error != "":
+                error += s3error
+
+            # If the file exists in bucket, but not in the database -- error
+            if in_bucket:
+                if not in_db:
+                    error = (f"{error}\nFile '{file.name}' already exists in "
+                             "bucket, but does NOT exist in database. " +
+                             "Delivery cancelled, contact support.")
+                    self.LOGGER.critical(error)
+                    return {'proceed': False, 'error': error}
+
+                # If file exists in bucket and in database and...
+                # --overwrite flag not specified --> cancel file delivery
+                # --overwrite flag --> deliver again, overwrite file
+                if not self.overwrite:
+                    return {'proceed': False, 'error': error}
+
+        return {'in_directory': in_dir,
+                'dir_name': dir_name if in_dir else None,
+                'path_base': path_base,
+                'directory_path': directory_path,
+                'size': file.stat().st_size,
+                'suffixes': suffixes,
+                'proceed': proceed,
+                'compressed': compressed,
+                'new_file': bucketfilename,
+                'error': error,
+                'encrypted_file': Path(""),
+                'encrypted_size': 0,
+                'processing': {'in_progress': False,
+                               'finished': False},
+                'upload': {'in_progress': False,
+                           'finished': False},
+                'database': {'in_progress': False,
+                             'finished': False}}
 
     ##################
     # Public Methods #

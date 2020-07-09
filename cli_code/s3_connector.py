@@ -13,7 +13,7 @@ from botocore.client import ClientError
 
 
 from cli_code.exceptions_ds import *
-from cli_code import LOG_FILE
+from cli_code import LOG_FILE, DIRS
 from cli_code.file_handler import config_logger
 
 S3_LOG = logging.getLogger(__name__)

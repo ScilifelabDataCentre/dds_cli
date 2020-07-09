@@ -16,7 +16,7 @@ import itertools
 import click
 from cli_code.crypt4gh.crypt4gh import lib, header, keys
 
-from cli_code import LOG_FILE, timestamp
+from cli_code import LOG_FILE, timestamp, DIRS
 from cli_code.data_deliverer import (DataDeliverer, finish_download)
 from cli_code.crypto_ds import Crypt4GHKey
 from cli_code.database_connector import DatabaseConnector

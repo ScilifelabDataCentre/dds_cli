@@ -20,7 +20,7 @@ from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt  # ,
 # from nacl.exceptions import CryptoError
 # from bitstring import BitArray
 
-from cli_code import LOG_FILE  # , MAX_CTR
+from cli_code import LOG_FILE, DIRS  # , MAX_CTR
 from cli_code.exceptions_ds import DeliverySystemException, LoggingError
 
 max_nonce = 2**(12*8)
@@ -216,9 +216,10 @@ def is_compressed(file: Path) -> (bool, str):
             str:    Error message, "" if no error
     '''
 
-    error = ""
+    error = ""  # Error message
 
     try:
+        # Check for file signature in beginning of file
         with file.open(mode='rb') as f:
             file_start = f.read(MAX_FMT)    # Read the first x bytes
             # LOG.debug(f"file: {file}\tfile start: {file_start}")

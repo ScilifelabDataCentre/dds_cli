@@ -19,8 +19,9 @@ from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
-from cli_code.file_handler import (config_logger, get_root_path,
-                                   is_compressed, MAGIC_DICT, process_file)
+from cli_code.file_handler import (config_logger, get_root_path, is_compressed,
+                                   MAGIC_DICT, process_file,
+                                   reverse_processing)
 
 # CONFIG ############################################################# CONFIG #
 
@@ -539,7 +540,22 @@ class DataDeliverer():
             # If downloading - empty dict for file info
             # If uploading - check file contents
             if self.method == "get":
-                all_files[d] = self._get_download_info(item=d)
+                iteminfo = self._get_download_info(item=d)
+                # If folder info returned -- did not find contents of folder
+                # or it doesn't exist
+                if len(iteminfo) == 1 and d in iteminfo:
+                    if not iteminfo[d]['proceed']:
+                        initial_fail.update(iteminfo)
+                        continue
+
+                    all_files.update(iteminfo)
+                else:
+                    for f in iteminfo:
+                        if not iteminfo[f]['proceed']:
+                            initial_fail[f] = iteminfo[f]
+                            continue
+
+                        all_files[f] = iteminfo[f]
 
             elif self.method == "put":
                 # Error if path doesn't exist -- should be checked by click
@@ -651,63 +667,72 @@ class DataDeliverer():
         in_db = False       # If item in db or not
         none_in_bucket = True   # If none of the items are in the s3 bucket
         to_download = {}    # Files to download
+        error = ""          # Error message
+
+        # Info about steps
+        gen_finfo = {'download': {'in_progress': False,
+                                  'finished': False},
+                     'decryption': {'in_progress': False,
+                                    'finished': False},
+                     'database': {'in_progress': False,
+                                  'finished': False}}
         # ----------------------------------------------------- #
 
+        # Check if file or folder exists in database
         with DatabaseConnector(db_name='project_db') as project_db:
             # self.LOGGER.debug(project_db[self.project_id]['files'])
             for file in project_db[self.project_id]['files']:
+                # If path matches items in database, get info on file
                 if file.startswith(item):
-                    to_download[file] = \
-                        project_db[self.project_id]['files'][file]
+                    to_download[file] = {
+                        **project_db[self.project_id]['files'][file],
+                        **gen_finfo
+                    }
                     # self.LOGGER.debug(f"{to_download[file]}")
                     in_db = True
 
+                    in_directory = to_download[file]['directory_path'] != "."
+                    to_download[file].update({
+                        'new_file': DIRS[1] / Path(file),
+                        'in_directory': in_directory,
+                        'dir_name': item if in_directory else None,
+                        'proceed': proceed,
+                        'error': error
+                    })
+
+            # If the file doesn't exist in the database -- no delivery
             if not in_db:
                 error = f"Item: {item} -- not in database"
                 self.LOGGER.warning(error)
-                return {'proceed': False, 'error': error}
+                return {item: {'proceed': False, 'error': error}}
 
+        # If item in database, check S3 bucket for item(s)
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
                 as s3:
 
+            # If folder - can contain more than one
             for file in to_download:
                 in_bucket, s3error = s3.file_exists_in_bucket(key=file,
                                                               put=False)
-                self.LOGGER.debug(f"Item: {item}, File: {file}, "
-                                  f"In bucket: {in_bucket}, Error: {s3error}")
+                # self.LOGGER.debug(f"Item: {item}, File: {file}, "
+                #                   f"In bucket: {in_bucket}, Error: {s3error}")
 
+                # If not in bucket then error
                 if not in_bucket:
+                    error = (f"File '{file}' in database but NOT in S3 bucket."
+                             f"Error in delivery system! {s3error}")
                     to_download[file].update({'proceed': False,
-                                              'error': s3error})
+                                              'error': error})
                 else:
                     none_in_bucket = False
 
+            # If none of the files were in S3 bucket then error
             if none_in_bucket:
                 error = (f"Item: {item} -- not in S3 bucket, but in database "
                          f"-- Error in delivery system!")
                 self.LOGGER.warning(error)
-                return {'proceed': False, 'error': error}
-            
-            
+                return {item: {'proceed': False, 'error': error}}
 
-            # {'in_directory': in_dir,
-            #  'dir_name': dir_name if in_dir else None,
-            #  'path_base': path_base,
-            #  'directory_path': directory_path,
-            #  'size': file.stat().st_size,
-            #  'suffixes': suffixes,
-            #  'proceed': proceed,
-            #  'compressed': compressed,
-            #  'new_file': bucketfilename,
-            #  'error': error,
-            #  'encrypted_file': Path(""),
-            #  'encrypted_size': 0,
-            #  'processing': {'in_progress': False,
-            #                 'finished': False},
-            #  'upload': {'in_progress': False,
-            #             'finished': False},
-            #  'database': {'in_progress': False,
-            #               'finished': False}}
         return to_download
 
     def _get_file_info(self, file: Path, in_dir: bool,
@@ -826,6 +851,19 @@ class DataDeliverer():
     # Public Methods #
     ##################
 
+    def finalize_delivery(self, file: str, fileinfo: dict):
+        '''Finalizes delivery after download from s3'''
+
+        # If DS noted cancelation of file -- quit and move on
+        if not fileinfo['proceed']:
+            return False, ""
+
+        # Set file processing as in progress
+        self.set_progress(item=file, decryption=True, started=True)
+
+        stuff = reverse_processing(file=file, file_info=fileinfo)
+        return stuff, ""
+
     def prep_upload(self, path: Path, path_info: dict) -> (tuple):
         '''Prepares the files for upload.
 
@@ -858,6 +896,7 @@ class DataDeliverer():
 
     def set_progress(self, item: Path, check: bool = False,
                      processing: bool = False, upload: bool = False,
+                     download: bool = False, decryption: bool = False,
                      db: bool = False, started: bool = False,
                      finished: bool = False):
         '''Set progress of file to in progress or finished, regarding
@@ -879,12 +918,25 @@ class DataDeliverer():
         '''
 
         to_update = ""
-        if processing:
-            to_update = 'processing'
-        elif upload:
-            to_update = 'upload'
-        elif db:
-            to_update = 'database'
+
+        if self.method == "put":
+            if processing:
+                to_update = 'processing'
+            elif upload:
+                to_update = 'upload'
+            elif db:
+                to_update = 'database'
+        elif self.method == "get":
+            if download:
+                to_update = 'download'
+            elif decryption:
+                to_update = 'decryption'
+            elif db:
+                to_update = 'database'
+
+        if to_update == "":
+            raise DeliverySystemException("Trying to update progress on "
+                                          "forbidden process.")
 
         try:
             if started:
@@ -912,6 +964,7 @@ class DataDeliverer():
 
         '''
 
+        critical_op = 'upload' if self.method == "put" else 'download'
         all_info = self.data[file]  # All info on file
 
         # If cancelled by another file set as not proceed and add error message
@@ -936,8 +989,8 @@ class DataDeliverer():
                         # finished -- set current file error and cancel
                         if path != file and info['proceed'] and \
                             info['dir_name'] == dir_name \
-                                and not all([info['upload']['in_progress'],
-                                             info['upload']['finished']]):
+                                and not all([info[critical_op]['in_progress'],
+                                             info[critical_op]['finished']]):
 
                             self.data[path].update({
                                 'proceed': False,
@@ -1052,7 +1105,7 @@ class DataDeliverer():
     ################
     # Main Methods #
     ################
-    def get(self, path: str) -> (str):
+    def get(self, path: str, path_info: dict) -> (str):
         '''Downloads specified data from S3 bucket
 
         Args:
@@ -1064,14 +1117,48 @@ class DataDeliverer():
 
         '''
 
+        # If DS noted cancelation of file -- quit and move on
+        if not path_info['proceed']:
+            return False, ""
+
+        # Set file processing as in progress
+        self.set_progress(item=path, download=True, started=True)
+
+        new_dir = DIRS[1] / Path(path_info['directory_path'])
+        # If new temporary subdir doesn't exist -- create it
+        if not new_dir.exists():
+            try:
+                new_dir.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                error = (f"File: {path} -- Creating tempdir "
+                         f"{new_dir} failed! :: {e}")
+                LOG.exception(error)
+                return False, error
+        # self.LOGGER.debug(f"new_dir: {new_dir}")
+
+        # UPLOAD START ######################################### UPLOAD START #
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
                 as s3:
 
-            # Check if path exists in bucket
-            file_in_bucket = s3.file_exists_in_bucket(
-                key=path + "/", put=False)
-
-            print(f"item {path} in bucket : {file_in_bucket}")
+            try:
+                # Upload file
+                s3.resource.meta.client.download_file(
+                    Bucket=s3.bucketname,
+                    Key=path,
+                    Filename=str(path_info['new_file'])
+                )
+            except Exception as e:   # FIX EXCEPTION HERE
+                # Upload failed -- return error message and move on
+                error = (f"File: {path}, Downloaded: "
+                         f"{path_info['new_file']} -- "
+                         f"Download failed! -- {e}")
+                self.LOGGER.exception(error)
+                return False, error
+            else:
+                # Upload successful
+                self.LOGGER.info(f"File downloaded: {path}"
+                                 f", File location: {path_info['new_file']}")
+                return True, ""
 
         #     for file in file_in_bucket:
         #         new_path = DIRS[1] / \

@@ -289,18 +289,64 @@ def get(config: str, username: str, password: str, project: str,
 
         # Futures -- Pools and threads
         pools = {}      # Finalizing e.g. decompression, decryption etc
-        uthreads = {}   # Download from S3
+        dthreads = {}   # Download from S3
 
         for path, info in delivery.data.items():
             CLI_LOGGER.debug(f"{path}: {info}")
-            # uthreads[
-            #     thread_executor.submit(
-            #         delivery.get, path=path
-            #     )
-            # ] = path
 
-        # for dfuture in as_completed(uthreads):
-        #     CLI_LOGGER.debug(dfuture.result())
+            # If DS noted cancelation for file -- quit and move on
+            if not info['proceed']:
+                CLI_LOGGER.warning(f"File: '{path}' -- cancelled "
+                                   "-- moving on to next file")
+                continue
+
+            dthreads[
+                thread_executor.submit(
+                    delivery.get, path=path, path_info=info
+                )
+            ] = path
+
+        for dfuture in as_completed(dthreads):
+            dpath = dthreads[dfuture]
+            try:
+                downloaded, error = dfuture.result()
+            except PoolExecutorError:
+                sys.exit(f"{dfuture.exception()}")
+                break
+            else:
+                # Update file info
+                proceed = delivery.update_delivery(
+                    file=dpath,
+                    updinfo={'proceed': downloaded,
+                             'error': error}
+                )
+
+                # Set file upload as finished
+                delivery.set_progress(item=dpath, download=True, finished=True)
+                # CLI_LOGGER.debug(f"File: {upath}, Info: {delivery.data[upath]}")
+
+                # If DS noted cancelation for file -- quit and move on
+                if not proceed:
+                    CLI_LOGGER.warning(f"File: '{dpath}' -- cancelled "
+                                       "-- moving on to next file")
+                    continue
+
+                CLI_LOGGER.debug(f"{dpath}: {delivery.data[dpath]}")
+
+                # Start file processing -- compression, encryption, etc.
+                pools[pool_executor.submit(
+                    delivery.finalize_delivery,
+                    dpath,
+                    delivery.data[dpath])
+                ] = dpath
+
+        for rfuture in as_completed(pools):
+            rpath = pools[rfuture]
+            try:
+                rev, error = rfuture.result()
+            except PoolExecutorError:
+                sys.exit(f"{rfuture.exception()}")
+                break
 
         # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
         pool_executor.shutdown(wait=True)

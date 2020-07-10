@@ -281,6 +281,61 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
 # PREP AND FINISH ########################################### PREP AND FINISH #
 ###############################################################################
 
+def reverse_processing(file: str, file_info: dict):
+    '''Decrypts and decompresses file'''
+
+    LOG.debug(f"\n{file}: {file_info}\n")
+
+    # Variables ################################################### Variables #
+    infile = file_info['new_file']  # Downloaded file
+    outfile = Path("")              # Decrypted and decompressed file
+    # ----------------------------------------------------------------------- #
+    # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
+
+    # START ##################################### START #
+    try:
+        original_umask = os.umask(0)  # User file-creation mode mask
+        with file.open(mode='rb') as f:
+
+            # Compression ###### If not already compressed ###### Compression #
+            chunk_stream = file_reader(f) if file_info['compressed'] \
+                else compress_file(f)
+
+            # Encryption ######################################### Encryption #
+            with outfile.open(mode='ab+') as of:
+                key = os.urandom(32)            # Data encryption key
+                iv_bytes = os.urandom(12)       # Initial nonce/value
+                # LOG.debug(f"File: {file}, Data encryption key: {key},a"
+                #           "Initial nonce: {iv_bytes}")
+
+                # Write nonce to file and save 12 bytes for last nonce
+                of.write(iv_bytes)
+                saved_bytes = (0).to_bytes(length=12, byteorder='little')
+                of.write(saved_bytes)
+
+                nonce = b''     # Catches the nonces
+                for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
+                                                             key=key,
+                                                             iv=iv_bytes):
+                    of.write(ciphertext)    # Write the ciphertext to the file
+
+                of.seek(12)         # Find the saved bytes
+                of.write(nonce)     # Write the last nonce to file
+    except DeliverySystemException as ee:  # FIX EXCEPTION HERE
+        error = f"Processig failed! {ee}"
+        LOG.exception(error)
+        return False, outfile, 0, False, error
+    else:
+        LOG.info(f"File: '{file}' -- Processing completed! Encrypted file "
+                 f"saved at {outfile}")
+        # Info on if delivery system compressed or not
+        ds_compressed = False if file_info['compressed'] else True
+    finally:
+        os.umask(original_umask)    # Remove mask
+
+    # FINISHED ############################### FINISHED #
+    return ""
+
 
 def process_file(file: Path, file_info: dict) \
         -> (bool, Path, int, bool, str):

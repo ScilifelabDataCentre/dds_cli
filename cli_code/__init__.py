@@ -29,6 +29,7 @@ LOG = logging.getLogger(__name__)
 
 VERSION = 1
 SEGMENT_SIZE = 65536
+CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + 28
 MAX_CTR = (2**48) - 1
 
 

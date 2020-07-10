@@ -861,8 +861,8 @@ class DataDeliverer():
         # Set file processing as in progress
         self.set_progress(item=file, decryption=True, started=True)
 
-        stuff = reverse_processing(file=file, file_info=fileinfo)
-        return stuff, ""
+        decrypted, error = reverse_processing(file=file, file_info=fileinfo)
+        return decrypted, error
 
     def prep_upload(self, path: Path, path_info: dict) -> (tuple):
         '''Prepares the files for upload.

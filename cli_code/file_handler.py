@@ -15,12 +15,13 @@ from pathlib import Path
 
 # from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
-from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt  # ,
-# crypto_aead_chacha20poly1305_ietf_decrypt)
+from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
+                           crypto_aead_chacha20poly1305_ietf_decrypt)
 # from nacl.exceptions import CryptoError
 # from bitstring import BitArray
 
-from cli_code import (LOG_FILE, DIRS)  # , MAX_CTR
+from cli_code import (LOG_FILE, DIRS, SEGMENT_SIZE,
+                      CIPHER_SEGMENT_SIZE)  # , MAX_CTR
 from cli_code.exceptions_ds import (DeliverySystemException, LoggingError)
 
 # VARIABLES ####################################################### VARIABLES #
@@ -167,7 +168,7 @@ def get_root_path(file: Path, path_base: str = None) -> (Path):
         return Path("")
 
 
-def file_reader(file: Path, chunk_size: int = 65536) -> (bytes):
+def file_reader(file, chunk_size: int = SEGMENT_SIZE) -> (bytes):
     '''Yields the file chunk by chunk.
 
     Args:
@@ -186,7 +187,7 @@ def file_reader(file: Path, chunk_size: int = 65536) -> (bytes):
 ###############################################################################
 
 
-def compress_file(file: Path, chunk_size: int = 65536) -> (bytes):
+def compress_file(file: Path, chunk_size: int = SEGMENT_SIZE) -> (bytes):
     '''Compresses file
 
     Args:
@@ -240,6 +241,37 @@ def is_compressed(file: Path) -> (bool, str):
 ###############################################################################
 
 
+def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
+    '''Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+    construction described in RFC7539.
+
+    '''
+
+    if file.tell() != 24:
+        raise DeliverySystemException(f"Reading encrypted file {file.name} "
+                                      "failed! - Error with nonces etc.")
+
+    # Variables ################################################### Variables #
+    iv_int = int.from_bytes(iv, 'little')   # Transform nonce to int
+    aad = None  # Associated data, unencrypted but authenticated
+    # ----------------------------------------------------------------------- #
+
+    for enc_chunk in iter(lambda: file.read(CIPHER_SEGMENT_SIZE), b''):
+        # Get nonce as bytes for decryption: if the nonce is larger than the
+        # max number of chunks allowed to be encrypted (safely) -- begin at 0
+        nonce = (iv_int if iv_int < MAX_NONCE
+                 else iv_int % MAX_NONCE).to_bytes(length=12,
+                                                   byteorder='little')
+
+        # Encrypt and yield nonce and ciphertext
+        yield crypto_aead_chacha20poly1305_ietf_decrypt(ciphertext=enc_chunk,
+                                                        aad=aad,
+                                                        nonce=nonce,
+                                                        key=key)
+
+        iv_int += 1  # Increment nonce
+
+
 def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
     '''Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
     construction described in RFC7539.
@@ -288,53 +320,62 @@ def reverse_processing(file: str, file_info: dict):
 
     # Variables ################################################### Variables #
     infile = file_info['new_file']  # Downloaded file
-    outfile = Path("")              # Decrypted and decompressed file
+    outfile = infile.parent / Path(infile.stem).stem              # Decrypted and decompressed file
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
 
     # START ##################################### START #
     try:
         original_umask = os.umask(0)  # User file-creation mode mask
-        with file.open(mode='rb') as f:
+        with infile.open(mode='rb') as f:
+            first_nonce = f.read(12)
+            last_nonce = f.read(12)
 
-            # Compression ###### If not already compressed ###### Compression #
-            chunk_stream = file_reader(f) if file_info['compressed'] \
-                else compress_file(f)
+            key = bytes.fromhex(file_info['key'])
+
+            chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
+
+            with outfile.open(mode='ab+') as of:
+                for plain_chunk in chunk_stream:
+                    of.write(plain_chunk)
 
             # Encryption ######################################### Encryption #
-            with outfile.open(mode='ab+') as of:
-                key = os.urandom(32)            # Data encryption key
-                iv_bytes = os.urandom(12)       # Initial nonce/value
-                # LOG.debug(f"File: {file}, Data encryption key: {key},a"
-                #           "Initial nonce: {iv_bytes}")
+            # with outfile.open(mode='ab+') as of:
+            #     key = os.urandom(32)            # Data encryption key
+            #     iv_bytes = os.urandom(12)       # Initial nonce/value
+            #     # LOG.debug(f"File: {file}, Data encryption key: {key},a"
+            #     #           "Initial nonce: {iv_bytes}")
 
-                # Write nonce to file and save 12 bytes for last nonce
-                of.write(iv_bytes)
-                saved_bytes = (0).to_bytes(length=12, byteorder='little')
-                of.write(saved_bytes)
+            #     # Write nonce to file and save 12 bytes for last nonce
+            #     of.write(iv_bytes)
+            #     saved_bytes = (0).to_bytes(length=12, byteorder='little')
+            #     of.write(saved_bytes)
 
-                nonce = b''     # Catches the nonces
-                for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
-                                                             key=key,
-                                                             iv=iv_bytes):
-                    of.write(ciphertext)    # Write the ciphertext to the file
+            #     nonce = b''     # Catches the nonces
+            #     for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
+            #                                                  key=key,
+            #                                                  iv=iv_bytes):
+            #         of.write(ciphertext)    # Write the ciphertext to the file
 
-                of.seek(12)         # Find the saved bytes
-                of.write(nonce)     # Write the last nonce to file
+            #     of.seek(12)         # Find the saved bytes
+            #     of.write(nonce)     # Write the last nonce to file
     except DeliverySystemException as ee:  # FIX EXCEPTION HERE
-        error = f"Processig failed! {ee}"
-        LOG.exception(error)
-        return False, outfile, 0, False, error
+        pass
+        LOG.exception(ee)
+        # error = f"Processig failed! {ee}"
+        # LOG.exception(error)
+        # return False, outfile, 0, False, error
     else:
-        LOG.info(f"File: '{file}' -- Processing completed! Encrypted file "
-                 f"saved at {outfile}")
-        # Info on if delivery system compressed or not
-        ds_compressed = False if file_info['compressed'] else True
+        pass
+        # LOG.info(f"File: '{file}' -- Processing completed! Encrypted file "
+        #          f"saved at {outfile}")
+        # # Info on if delivery system compressed or not
+        # ds_compressed = False if file_info['compressed'] else True
     finally:
         os.umask(original_umask)    # Remove mask
 
-    # FINISHED ############################### FINISHED #
-    return ""
+        # FINISHED ############################### FINISHED #
+    return True, ""
 
 
 def process_file(file: Path, file_info: dict) \

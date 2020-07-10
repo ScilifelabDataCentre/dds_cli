@@ -165,93 +165,94 @@ class DataDeliverer():
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        folders_table = PrettyTable(
-            ['Directory', 'File', 'Delivered', 'Error']
-        )
-        folders_table.padding_width = 2
-        folders_table.align['File'] = "r"
-        folders_table.align['Error'] = "l"
+        if self.method == "put":
+            folders_table = PrettyTable(
+                ['Directory', 'File', 'Delivered', 'Error']
+            )
+            folders_table.padding_width = 2
+            folders_table.align['File'] = "r"
+            folders_table.align['Error'] = "l"
 
-        files_table = PrettyTable(
-            ['File', 'Delivered', 'Error']
-        )
-        files_table.align['File'] = "r"
-        files_table.align['Error'] = "l"
+            files_table = PrettyTable(
+                ['File', 'Delivered', 'Error']
+            )
+            files_table.align['File'] = "r"
+            files_table.align['Error'] = "l"
 
-        wrapper = textwrap.TextWrapper(width=100)
+            wrapper = textwrap.TextWrapper(width=100)
 
-        folders = {}
-        files = {}
+            folders = {}
+            files = {}
 
-        are_folders = False
-        are_files = False
+            are_folders = False
+            are_files = False
 
-        for file, info in self.failed.items():
-            if info['in_directory'] and info['dir_name'] not in folders:
-                are_folders = True
-                folders[info['dir_name']] = {
-                    f: val for f, val in self.failed.items()
-                    if val['in_directory'] and
-                    val['dir_name'] == info['dir_name']
-                }
-                print(f"--- {folders}")
-                folders_table.add_row(
-                    [str(info['dir_name']) + "\n", "", "", ""]
-                )
-                for f, v in folders[info['dir_name']].items():
+            for file, info in self.failed.items():
+                if info['in_directory'] and info['dir_name'] not in folders:
+                    are_folders = True
+                    folders[info['dir_name']] = {
+                        f: val for f, val in self.failed.items()
+                        if val['in_directory'] and
+                        val['dir_name'] == info['dir_name']
+                    }
+                    print(f"--- {folders}")
                     folders_table.add_row(
-                        ["",
-                         (v['directory_path'] if 'directory_path' in v
-                             else get_root_path(file=f, path_base=v['dir_name'].name)) / f.name,
+                        [str(info['dir_name']) + "\n", "", "", ""]
+                    )
+                    for f, v in folders[info['dir_name']].items():
+                        folders_table.add_row(
+                            ["",
+                             (v['directory_path'] if 'directory_path' in v
+                              else get_root_path(file=f, path_base=v['dir_name'].name)) / f.name,
+                             "NO",
+                             '\n'.join(wrapper.wrap(v["error"])) + '\n']
+                        )
+
+                elif not info['in_directory']:
+                    are_files = True
+                    files_table.add_row(
+                        [file,
                          "NO",
-                         '\n'.join(wrapper.wrap(v["error"])) + '\n']
-                    )
+                         '\n'.join(wrapper.wrap(info["error"])) + '\n'])
 
-            elif not info['in_directory']:
-                are_files = True
-                files_table.add_row(
-                    [file,
-                     "NO",
-                     '\n'.join(wrapper.wrap(info["error"])) + '\n'])
-
-        for file, info in self.data.items():
-            if info['in_directory'] and info['dir_name'] not in folders:
-                are_folders = True
-                folders[info['dir_name']] = {
-                    f: val for f, val in self.data.items()
-                    if val['in_directory'] and
-                    val['dir_name'] == info['dir_name']
-                }
-                folders_table.add_row(
-                    [info['dir_name'], "", "", ""]
-                )
-                for f, v in folders[info['dir_name']].items():
+            for file, info in self.data.items():
+                if info['in_directory'] and info['dir_name'] not in folders:
+                    are_folders = True
+                    folders[info['dir_name']] = {
+                        f: val for f, val in self.data.items()
+                        if val['in_directory'] and
+                        val['dir_name'] == info['dir_name']
+                    }
                     folders_table.add_row(
-                        ["",
-                         str(v['directory_path'] / f.name),
-                         "YES"
-                         if all([v['proceed'], v['upload']['finished'],
-                                 v['database']['finished']]) else "NO",
-                         '\n'.join(wrapper.wrap(v["error"])) + '\n']
+                        [info['dir_name'], "", "", ""]
                     )
+                    for f, v in folders[info['dir_name']].items():
+                        folders_table.add_row(
+                            ["",
+                             str(v['directory_path'] / f.name),
+                             "YES"
+                             if all([v['proceed'], v['upload']['finished'],
+                                     v['database']['finished']]) else "NO",
+                             '\n'.join(wrapper.wrap(v["error"])) + '\n']
+                        )
 
-            elif not info['in_directory']:
-                are_files = True
-                self.LOGGER.debug(are_files)
-                files_table.add_row(
-                    [str(file),
-                     "YES"
-                     if all([info['proceed'], info['upload']['finished'],
-                             info['database']['finished']]) else "NO",
-                     '\n'.join(wrapper.wrap(info["error"])) + '\n'])
+                elif not info['in_directory']:
+                    are_files = True
+                    self.LOGGER.debug(are_files)
+                    files_table.add_row(
+                        [str(file),
+                         "YES"
+                         if all([info['proceed'], info['upload']['finished'],
+                                 info['database']['finished']]) else "NO",
+                         '\n'.join(wrapper.wrap(info["error"])) + '\n'])
 
-        self.LOGGER.info("DELIVERY COMPLETED!")
-        self.LOGGER.info(
-            f"\n#################### FOLDERS DELIVERED ####################"
-            f"\n{folders_table}\n" if are_folders else "\n")
-        self.LOGGER.info(
-            f"\n##################### FILES DELIVERED #####################"
-            f"\n{files_table}\n" if are_files else "\n")
+            self.LOGGER.info("DELIVERY COMPLETED!")
+            self.LOGGER.info(
+                f"\n#################### FOLDERS DELIVERED ####################"
+                f"\n{folders_table}\n" if are_folders else "\n")
+            self.LOGGER.info(
+                f"\n##################### FILES DELIVERED #####################"
+                f"\n{files_table}\n" if are_files else "\n")
 
     ###################
     # Private Methods #
@@ -538,7 +539,7 @@ class DataDeliverer():
             # If downloading - empty dict for file info
             # If uploading - check file contents
             if self.method == "get":
-                all_files[d] = {}
+                all_files[d] = self._get_download_info(item=d)
 
             elif self.method == "put":
                 # Error if path doesn't exist -- should be checked by click
@@ -633,6 +634,82 @@ class DataDeliverer():
 
         return dir_info, dir_fail
 
+    def _get_download_info(self, item: str) -> (dict):
+        '''Gets info on file in database and checks if
+        item exists in S3 bucket.
+
+        Args:
+            item (str):   File or folder to download
+
+        Returns:
+            dict: Information on if file can be downloaded or not
+
+        '''
+
+        # Variables ################################# Variables #
+        proceed = True      # To proceed with download or not
+        in_db = False       # If item in db or not
+        none_in_bucket = True   # If none of the items are in the s3 bucket
+        to_download = {}    # Files to download
+        # ----------------------------------------------------- #
+
+        with DatabaseConnector(db_name='project_db') as project_db:
+            # self.LOGGER.debug(project_db[self.project_id]['files'])
+            for file in project_db[self.project_id]['files']:
+                if file.startswith(item):
+                    to_download[file] = \
+                        project_db[self.project_id]['files'][file]
+                    # self.LOGGER.debug(f"{to_download[file]}")
+                    in_db = True
+
+            if not in_db:
+                error = f"Item: {item} -- not in database"
+                self.LOGGER.warning(error)
+                return {'proceed': False, 'error': error}
+
+        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                as s3:
+
+            for file in to_download:
+                in_bucket, s3error = s3.file_exists_in_bucket(key=file,
+                                                              put=False)
+                self.LOGGER.debug(f"Item: {item}, File: {file}, "
+                                  f"In bucket: {in_bucket}, Error: {s3error}")
+
+                if not in_bucket:
+                    to_download[file].update({'proceed': False,
+                                              'error': s3error})
+                else:
+                    none_in_bucket = False
+
+            if none_in_bucket:
+                error = (f"Item: {item} -- not in S3 bucket, but in database "
+                         f"-- Error in delivery system!")
+                self.LOGGER.warning(error)
+                return {'proceed': False, 'error': error}
+            
+            
+
+            # {'in_directory': in_dir,
+            #  'dir_name': dir_name if in_dir else None,
+            #  'path_base': path_base,
+            #  'directory_path': directory_path,
+            #  'size': file.stat().st_size,
+            #  'suffixes': suffixes,
+            #  'proceed': proceed,
+            #  'compressed': compressed,
+            #  'new_file': bucketfilename,
+            #  'error': error,
+            #  'encrypted_file': Path(""),
+            #  'encrypted_size': 0,
+            #  'processing': {'in_progress': False,
+            #                 'finished': False},
+            #  'upload': {'in_progress': False,
+            #             'finished': False},
+            #  'database': {'in_progress': False,
+            #               'finished': False}}
+        return to_download
+
     def _get_file_info(self, file: Path, in_dir: bool,
                        dir_name: Path = Path("")) -> (dict):
         '''Get info on file and check if already delivered
@@ -647,7 +724,7 @@ class DataDeliverer():
 
         '''
 
-        # Variables ############################ Variables #
+        # Variables ###################################### Variables #
         proceed = True  # If proceed with file delivery
         path_base = dir_name.name if in_dir else None   # Folder name if in dir
         directory_path = get_root_path(file=file, path_base=path_base) \
@@ -986,40 +1063,45 @@ class DataDeliverer():
             str:    Success message if download successful
 
         '''
-        # Check if bucket exists
-        if self.s3.bucket in self.s3.resource.buckets.all():
+
+        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                as s3:
+
             # Check if path exists in bucket
-            file_in_bucket = self.s3.files_in_bucket(key=path)
+            file_in_bucket = s3.file_exists_in_bucket(
+                key=path + "/", put=False)
 
-            for file in file_in_bucket:
-                new_path = DIRS[1] / \
-                    Path(file.key)  # Path to downloaded
-                if not new_path.parent.exists():
-                    try:
-                        new_path.parent.mkdir(parents=True)
-                    except IOError as ioe:
-                        sys.exit("Could not create folder "
-                                 f"{new_path.parent}. Cannot"
-                                 "proceed with delivery. Cancelling: "
-                                 f"{ioe}")
+            print(f"item {path} in bucket : {file_in_bucket}")
 
-                if not new_path.exists():
-                    try:
-                        self.s3.resource.meta.client.download_file(
-                            self.s3.bucket.name,
-                            file.key, str(new_path))
-                    except Exception as e:
-                        self.data[path][new_path] = {"downloaded": False,
-                                                     "error": e}
-                    else:
-                        self.data[path][new_path] = {"downloaded": True}
+        #     for file in file_in_bucket:
+        #         new_path = DIRS[1] / \
+        #             Path(file.key)  # Path to downloaded
+        #         if not new_path.parent.exists():
+        #             try:
+        #                 new_path.parent.mkdir(parents=True)
+        #             except IOError as ioe:
+        #                 sys.exit("Could not create folder "
+        #                          f"{new_path.parent}. Cannot"
+        #                          "proceed with delivery. Cancelling: "
+        #                          f"{ioe}")
 
-                else:
-                    print(f"File {str(new_path)} already exists. "
-                          "Not downloading.")
-            return True, path
+        #         if not new_path.exists():
+        #             try:
+        #                 self.s3.resource.meta.client.download_file(
+        #                     self.s3.bucket.name,
+        #                     file.key, str(new_path))
+        #             except Exception as e:
+        #                 self.data[path][new_path] = {"downloaded": False,
+        #                                              "error": e}
+        #             else:
+        #                 self.data[path][new_path] = {"downloaded": True}
 
-        raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
+        #         else:
+        #             print(f"File {str(new_path)} already exists. "
+        #                   "Not downloading.")
+        #     return True, path
+
+        # raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
 
     def put(self, file: Path, fileinfo: dict) -> (bool, Path, list, list, str):
         '''Uploads specified data to the S3 bucket.

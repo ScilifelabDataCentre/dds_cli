@@ -156,7 +156,7 @@ def put(config: str, username: str, password: str, project: str,
                              'encrypted_file': efile,
                              'encrypted_size': esize,
                              'ds_compressed': ds_compressed,
-                             'error': error, 
+                             'error': error,
                              'key': key}
                 )
                 # Set file processing as finished
@@ -218,7 +218,7 @@ def put(config: str, username: str, password: str, project: str,
                             {"directory_path": dir_path,
                                 "size": keyinfo['size'],
                                 "ds_compressed": keyinfo['ds_compressed'],
-                                "date_uploaded": timestamp(), 
+                                "date_uploaded": timestamp(),
                                 "key": keyinfo['key']}
                         project_db.save(_project)
                 except CouchDBException as e:
@@ -280,33 +280,56 @@ def get(config: str, username: str, password: str, project: str,
                        project_id=project, pathfile=pathfile, data=data) \
             as delivery:
 
-        recip_pub = delivery.get_recipient_key(keytype="public")
-        recip_secret = delivery.get_recipient_key(keytype="private")
+        # Setup logging
+        CLI_LOGGER = config_logger(LOG_FILE)
 
-        # Create multithreading pool
-        with concurrent.futures.ThreadPoolExecutor() as thread_executor:
-            download_threads = []
-            for path in delivery.data:
+        # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
+        pool_executor = ProcessPoolExecutor()       # Processing
+        thread_executor = ThreadPoolExecutor()      # IO related tasks
 
-                # Download all files
-                t_future = thread_executor.submit(delivery.get, path)
-                download_threads.append(t_future)
+        # Futures -- Pools and threads
+        pools = {}      # Finalizing e.g. decompression, decryption etc
+        uthreads = {}   # Download from S3
 
-            with concurrent.futures.ProcessPoolExecutor() as pool_exec:
-                pools = []
-                for f in concurrent.futures.as_completed(download_threads):
-                    downloaded = f.result()[0]
-                    down_path = f.result()[1]
+        for path, info in delivery.data.items():
+            CLI_LOGGER.debug(f"{path}: {info}")
+            # uthreads[
+            #     thread_executor.submit(
+            #         delivery.get, path=path
+            #     )
+            # ] = path
 
-                    for p in delivery.data[down_path]:
-                        sender_pub = delivery.get_recipient_key(
-                            keytype="fac_public")
-                        p_future = pool_exec.submit(finish_download,
-                                                    p, recip_secret, sender_pub)
+        # for dfuture in as_completed(uthreads):
+        #     CLI_LOGGER.debug(dfuture.result())
 
-                        pools.append(p_future)
-                        # p_future = pool_exec.submit(gen_hmac, p)
-                        # pools.append(p_future)
+        # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
+        pool_executor.shutdown(wait=True)
+        thread_executor.shutdown(wait=True)
 
-                    for p in concurrent.futures.as_completed(pools):
-                        print(p.result())
+        # # Create multithreading pool
+        # with concurrent.futures.ThreadPoolExecutor() as thread_executor:
+        #     download_threads = []
+        #     for path in delivery.data:
+
+        #         # Download all files
+        #         t_future = thread_executor.submit(delivery.get, path)
+        #         download_threads.append(t_future)
+
+        #     with concurrent.futures.ProcessPoolExecutor() as pool_exec:
+        #         pools = []
+        #         for f in concurrent.futures.as_completed(download_threads):
+        #             downloaded = f.result()[0]
+        #             down_path = f.result()[1]
+
+        #             for p in delivery.data[down_path]:
+        #                 sender_pub = delivery.get_recipient_key(
+        #                     keytype="fac_public")
+        #                 p_future = pool_exec.submit(finish_download,
+        #                                             p, recip_secret, sender_pub)
+
+        #                 pools.append(p_future)
+        #                 # p_future = pool_exec.submit(gen_hmac, p)
+        #                 # pools.append(p_future)
+
+        #             for p in concurrent.futures.as_completed(pools):
+        #                 print(p.result())

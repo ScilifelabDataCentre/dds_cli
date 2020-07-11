@@ -144,7 +144,7 @@ def put(config: str, username: str, password: str, project: str,
             ppath = pools[pfuture]      # Original file path -- keep track
             try:
                 processed, efile, esize, \
-                    ds_compressed, error, key = pfuture.result()     # Get info
+                    ds_compressed, key, checksum, error = pfuture.result()     # Get info
             except PoolExecutorError:
                 sys.exit(f"{pfuture.exception()}")
                 break
@@ -157,7 +157,8 @@ def put(config: str, username: str, password: str, project: str,
                              'encrypted_size': esize,
                              'ds_compressed': ds_compressed,
                              'error': error,
-                             'key': key}
+                             'key': key, 
+                             'checksum': checksum}
                 )
                 # Set file processing as finished
                 delivery.set_progress(

@@ -12,6 +12,7 @@ import os
 # import collections
 import logging
 from pathlib import Path
+import hashlib
 
 # from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 
@@ -23,6 +24,7 @@ from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
 from cli_code import (LOG_FILE, DIRS, SEGMENT_SIZE,
                       CIPHER_SEGMENT_SIZE)  # , MAX_CTR
 from cli_code.exceptions_ds import (DeliverySystemException, LoggingError)
+# from cli_code.crypto_ds import gen_md5
 
 # VARIABLES ####################################################### VARIABLES #
 
@@ -223,7 +225,7 @@ def decompress_file(filehandler, gen) -> (bytes):
     with dctx.stream_writer(filehandler) as decompressor:  # Decompress while writing
         for chunk in gen:
             decompressor.write(chunk)
-    
+
     return True
 
 
@@ -350,19 +352,31 @@ def reverse_processing(file: str, file_info: dict):
     # START ##################################### START #
     try:
         original_umask = os.umask(0)  # User file-creation mode mask
-        with infile.open(mode='rb') as f:
-            first_nonce = f.read(12)
-            LOG.debug(f"\nfirst nonce:\t{first_nonce}\n")
+        with infile.open(mode='rb+') as f:
+            f.seek(-12, os.SEEK_END)
+            # LOG.debug(f"position: {f.tell()}")
             last_nonce = f.read(12)
-            LOG.debug(f"\last nonce:\t{last_nonce}\n")
+            # LOG.debug(f"position: {f.tell()}")
+            # LOG.debug(f"{last_nonce}, {len(last_nonce)}")
+            # LOG.debug(f"{f.read()}")
+            f.seek(-12, os.SEEK_END)
+            f.truncate()
+            # LOG.debug(f"position: {f.tell()}")
+            # LOG.debug(f"{f.read()}")
+            f.seek(0)
+            # LOG.debug(f"position: {f.tell()}")
+            first_nonce = f.read(12)
+            # LOG.debug(f"\nfirst nonce:\t{first_nonce}\n")
+            # last_nonce = f.read(12)
+            # LOG.debug(f"\last nonce:\t{last_nonce}\n")
 
             key = bytes.fromhex(file_info['key'])
 
             chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
-            
-            with outfile.open(mode='ab+') as of:
-                decompressed = decompress_file(filehandler=of, gen=chunk_stream)
 
+            with outfile.open(mode='ab+') as of:
+                decompressed = decompress_file(
+                    filehandler=of, gen=chunk_stream)
 
             # Encryption ######################################### Encryption #
             # with outfile.open(mode='ab+') as of:
@@ -439,8 +453,13 @@ def process_file(file: Path, file_info: dict) \
     # Variables ################################################### Variables #
     outfile = DIRS[1] / file_info['new_file']   # Path to save processed file
     new_dir = DIRS[1] / file_info['directory_path']     # New temp subdir
+    checksum = ""
+    key = b''
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {file}, Outfile: {outfile}")
+
+    # Hasher
+    enc_file_hash = hashlib.md5()
 
     # If new temporary subdir doesn't exist -- create it
     if not new_dir.exists():
@@ -449,7 +468,7 @@ def process_file(file: Path, file_info: dict) \
         except OSError as e:
             error = f"File: {file} -- Creating tempdir {new_dir} failed! :: {e}"
             LOG.exception(error)
-            return False, Path(""), 0, False, error
+            return False, Path(""), 0, False, "", "", error
         # LOG.debug(f"File: {file}, Tempdir: {new_dir}")
 
     # PROCESSING START ##################################### PROCESSING START #
@@ -470,9 +489,10 @@ def process_file(file: Path, file_info: dict) \
 
                 # Write nonce to file and save 12 bytes for last nonce
                 of.write(iv_bytes)
-                saved_bytes = (0).to_bytes(length=12, byteorder='little')
-                LOG.debug(f"saved bytes: {saved_bytes}")
-                of.write(saved_bytes)
+                enc_file_hash.update(iv_bytes)
+                # saved_bytes = (0).to_bytes(length=12, byteorder='little')
+                # LOG.debug(f"saved bytes: {saved_bytes}")
+                # of.write(saved_bytes)
 
                 nonce = b''     # Catches the nonces
                 for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
@@ -481,17 +501,18 @@ def process_file(file: Path, file_info: dict) \
                     LOG.debug(
                         f"\nnonce: {nonce}, \nciphertext: {ciphertext[0:100]}\n")
                     of.write(ciphertext)    # Write the ciphertext to the file
+                    enc_file_hash.update(ciphertext)
 
                 LOG.debug(f"\nlast nonce:\t{nonce}\n")
-                of.seek(12)
-                LOG.debug(f"\nposition (12):\t{of.tell()}\n")
+                # of.seek(12)
+                # LOG.debug(f"\nposition (12):\t{of.tell()}\n")
                 of.write(nonce)
-
+                enc_file_hash.update(nonce)
 
     except DeliverySystemException as ee:  # FIX EXCEPTION HERE
         error = f"Processig failed! {ee}"
         LOG.exception(error)
-        return False, outfile, 0, False, error
+        return False, outfile, 0, False, "", "", error
     else:
         LOG.info(f"File: '{file}' -- Processing completed! Encrypted file "
                  f"saved at {outfile}")
@@ -502,5 +523,5 @@ def process_file(file: Path, file_info: dict) \
 
     # PROCESSING FINISHED ############################### PROCESSING FINISHED #
     LOG.debug(f"\nlast nonce:\t{nonce}\n")
-    return (True, outfile, outfile.stat().st_size, ds_compressed, "",
-            key.hex())
+    return (True, outfile, outfile.stat().st_size, ds_compressed,
+            key.hex(), enc_file_hash.hexdigest(), "")

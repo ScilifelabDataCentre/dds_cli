@@ -5,6 +5,7 @@ import io
 from base64 import b64decode, b64encode
 import logging
 import traceback
+import hashlib
 
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt

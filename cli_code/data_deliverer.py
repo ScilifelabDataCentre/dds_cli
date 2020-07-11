@@ -840,7 +840,8 @@ class DataDeliverer():
                 'error': error,
                 'encrypted_file': Path(""),
                 'encrypted_size': 0,
-                'key': "", 
+                'key': "",
+                'checksum': "",
                 'processing': {'in_progress': False,
                                'finished': False},
                 'upload': {'in_progress': False,
@@ -1240,11 +1241,30 @@ class DataDeliverer():
                          f"Upload failed! -- {e}")
                 self.LOGGER.exception(error)
                 return False, error
-            else:
-                # Upload successful
-                self.LOGGER.info(f"File uploaded: {fileinfo['encrypted_file']}"
-                                 f", Bucket location: {fileinfo['new_file']}")
-                return True, ""
+
+            # Upload successful
+            self.LOGGER.info(f"File uploaded: {fileinfo['encrypted_file']}"
+                             f", Bucket location: {fileinfo['new_file']}")
+            self.LOGGER.info("Verifying checksum...")
+
+            try:
+                s3_resp = s3.resource.meta.client.head_object(
+                    Bucket=s3.bucketname,
+                    Key=fileinfo['new_file']
+                )
+                self.LOGGER.debug(f"{s3_resp}")
+            except Exception as e: 
+                self.LOGGER.exception(e)
+            
+            tag = s3_resp['ETag'].strip('"')
+            checksum = fileinfo['checksum']
+            self.LOGGER.debug(f"tag: {tag}, checksum: {checksum}")
+            if tag != checksum: 
+                self.LOGGER.fatal("Not a matching checksum!")
+            else: 
+                self.LOGGER.info("Checksums match!")
+
+            return True, ""
 
 
 # DSUSER ############################################################## DSUER #

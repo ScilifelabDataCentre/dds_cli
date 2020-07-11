@@ -863,8 +863,9 @@ class DataDeliverer():
         # Set file processing as in progress
         self.set_progress(item=file, decryption=True, started=True)
 
-        decrypted, error = reverse_processing(file=file, file_info=fileinfo)
-        return decrypted, error
+        info = reverse_processing(file=file, file_info=fileinfo)
+
+        return info
 
     def prep_upload(self, path: Path, path_info: dict) -> (tuple):
         '''Prepares the files for upload.
@@ -1253,15 +1254,15 @@ class DataDeliverer():
                     Key=fileinfo['new_file']
                 )
                 self.LOGGER.debug(f"{s3_resp}")
-            except Exception as e: 
+            except Exception as e:
                 self.LOGGER.exception(e)
-            
+
             tag = s3_resp['ETag'].strip('"')
             checksum = fileinfo['checksum']
             self.LOGGER.debug(f"tag: {tag}, checksum: {checksum}")
-            if tag != checksum: 
+            if tag != checksum:
                 self.LOGGER.fatal("Not a matching checksum!")
-            else: 
+            else:
                 self.LOGGER.info("Checksums match!")
 
             return True, ""

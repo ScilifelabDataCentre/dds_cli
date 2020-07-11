@@ -55,7 +55,7 @@ def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
     Returns:
         Logger:     Configured logger
 
-    Raises: 
+    Raises:
         LoggingError:   Logging to file or console failed
     '''
 
@@ -184,6 +184,37 @@ def file_reader(file, chunk_size: int = SEGMENT_SIZE) -> (bytes):
     for chunk in iter(lambda: file.read(chunk_size), b''):
         yield chunk
 
+
+def file_writer(filehandler, gen, last_nonce):
+
+    nonce = b''
+
+    for nonce, chunk in gen:
+        filehandler.write(chunk)
+
+    if nonce != last_nonce:
+        error = f"File {filehandler.name} -- file is missing chunks!"
+        LOG.exception(error)
+        return False, error
+
+    return True, ""
+
+
+def file_deleter(file):
+    try:
+        file.unlink()
+    except OSError as ose:
+        LOG.warning(f"Failed deleting file {file}: {ose}.\nTrying again.")
+        try:
+            os.remove(file)
+        except OSError as ose:
+            LOG.warning(f"Failed deleting file {file}: {ose}.")
+        else:
+            LOG.info(f"Deleted file {file}")
+    else:
+        LOG.info(f"Deleted file {file}")
+
+
 ###############################################################################
 # COMPRESSION ################################################### COMPRESSION #
 ###############################################################################
@@ -208,7 +239,7 @@ def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
             yield chunk
 
 
-def decompress_file(filehandler, gen) -> (bytes):
+def decompress_file(filehandler, gen, last_nonce) -> (bytes):
     '''Compresses file
 
     Args:
@@ -220,13 +251,21 @@ def decompress_file(filehandler, gen) -> (bytes):
 
     '''
 
+    nonce = b''
+
     # Initiate a Zstandard compressor
     dctx = zstd.ZstdDecompressor()
-    with dctx.stream_writer(filehandler) as decompressor:  # Decompress while writing
-        for chunk in gen:
+    with dctx.stream_writer(filehandler) as decompressor:
+        for nonce, chunk in gen:
+
             decompressor.write(chunk)
 
-    return True
+    if nonce != last_nonce:
+        error = f"File {filehandler.name} -- file is missing chunks!"
+        LOG.exception(error)
+        return False, error
+
+    return True, ""
 
 
 def is_compressed(file: Path) -> (bool, str):
@@ -270,7 +309,7 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
 
     '''
 
-    if file.tell() != 24:
+    if file.tell() != 12:
         raise DeliverySystemException(f"Reading encrypted file {file.name} "
                                       "failed! - Error with nonces etc.")
 
@@ -289,10 +328,10 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
         iv_int += 1  # Increment nonce
 
         # Encrypt and yield nonce and ciphertext
-        yield crypto_aead_chacha20poly1305_ietf_decrypt(ciphertext=enc_chunk,
-                                                        aad=aad,
-                                                        nonce=nonce,
-                                                        key=key)
+        yield nonce, crypto_aead_chacha20poly1305_ietf_decrypt(ciphertext=enc_chunk,
+                                                               aad=aad,
+                                                               nonce=nonce,
+                                                               key=key)
 
 
 def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
@@ -346,6 +385,8 @@ def reverse_processing(file: str, file_info: dict):
     infile = file_info['new_file']  # Downloaded file
     # Decrypted and decompressed file
     outfile = infile.parent / Path(infile.stem).stem
+    nonce = b''
+    error = ""
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
 
@@ -372,11 +413,20 @@ def reverse_processing(file: str, file_info: dict):
 
             key = bytes.fromhex(file_info['key'])
 
-            chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
+            chunk_stream = aead_decrypt_chacha(
+                file=f, key=key, iv=first_nonce)
 
             with outfile.open(mode='ab+') as of:
-                decompressed = decompress_file(
-                    filehandler=of, gen=chunk_stream)
+                saved, error = decompress_file(filehandler=of,
+                                               gen=chunk_stream,
+                                               last_nonce=last_nonce) \
+                    if file_info['ds_compressed'] \
+                    else file_writer(filehandler=of,
+                                     gen=chunk_stream,
+                                     last_nonce=last_nonce)
+
+                if not saved:
+                    return False, outfile, error
 
             # Encryption ######################################### Encryption #
             # with outfile.open(mode='ab+') as of:
@@ -399,22 +449,17 @@ def reverse_processing(file: str, file_info: dict):
             #     of.seek(12)         # Find the saved bytes
             #     of.write(nonce)     # Write the last nonce to file
     except DeliverySystemException as ee:  # FIX EXCEPTION HERE
-        pass
-        LOG.exception(ee)
-        # error = f"Processig failed! {ee}"
-        # LOG.exception(error)
-        # return False, outfile, 0, False, error
+        error = f"Finalizing of file failed! {ee}"
+        LOG.exception(error)
+        return False, outfile, error
     else:
-        pass
-        # LOG.info(f"File: '{file}' -- Processing completed! Encrypted file "
-        #          f"saved at {outfile}")
-        # # Info on if delivery system compressed or not
-        # ds_compressed = False if file_info['compressed'] else True
+        LOG.info(f"File: '{file}' -- Finalizing completed! Decrypted file "
+                 f"saved at {outfile}")
     finally:
         os.umask(original_umask)    # Remove mask
 
-        # FINISHED ############################### FINISHED #
-    return True, ""
+    # FINISHED ############################### FINISHED #
+    return True, outfile, ""
 
 
 def process_file(file: Path, file_info: dict) \

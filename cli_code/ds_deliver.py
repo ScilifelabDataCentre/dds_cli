@@ -157,7 +157,7 @@ def put(config: str, username: str, password: str, project: str,
                              'encrypted_size': esize,
                              'ds_compressed': ds_compressed,
                              'error': error,
-                             'key': key, 
+                             'key': key,
                              'checksum': checksum}
                 )
                 # Set file processing as finished
@@ -341,13 +341,47 @@ def get(config: str, username: str, password: str, project: str,
                     delivery.data[dpath])
                 ] = dpath
 
-        for rfuture in as_completed(pools):
-            rpath = pools[rfuture]
+        for ffuture in as_completed(pools):
+            fpath = pools[ffuture]
             try:
-                rev, error = rfuture.result()
+                decrypted, decrypted_file, error = ffuture.result()
             except PoolExecutorError:
-                sys.exit(f"{rfuture.exception()}")
+                sys.exit(f"{ffuture.exception()}")
                 break
+            else:
+                proceed = delivery.update_delivery(
+                    file=fpath,
+                    updinfo={'proceed': decrypted,
+                             'decrypted_file': decrypted_file,
+                             'error': error}
+                )
+                delivery.set_progress(item=fpath, decryption=True, finished=True)
+
+                # If DS noted cancelation for file -- quit and move on
+                if not proceed:
+                    CLI_LOGGER.warning(f"File: '{fpath}' -- cancelled "
+                                       "-- moving on to next file")
+                    continue
+                CLI_LOGGER.info(f"File: {fpath} -- DELIVERED")
+
+                delivery.set_progress(item=fpath, db=True, started=True)
+                # DATABASE UPDATE TO BE THREADED LATER
+                # CURRENTLY PROBLEMS WITH COUCHDB
+                try:
+                    with DatabaseConnector('project_db') as project_db:
+                        _project = project_db[delivery.project_id]
+                        keyinfo = delivery.data[fpath]
+
+                        _project['files'][fpath] = \
+                            {"date_downloaded": timestamp()}
+                        project_db.save(_project)
+                except CouchDBException as e:
+                    emessage = f"Could not update database: {e}"
+                    CLI_LOGGER.warning(emessage)
+                else:
+                    CLI_LOGGER.info("Upload completed!"
+                                    f"{delivery.data[fpath]}")
+                    delivery.set_progress(item=fpath, db=True, finished=True)
 
         # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
         pool_executor.shutdown(wait=True)

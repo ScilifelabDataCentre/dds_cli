@@ -187,7 +187,7 @@ def file_reader(file, chunk_size: int = SEGMENT_SIZE) -> (bytes):
 ###############################################################################
 
 
-def compress_file(file: Path, chunk_size: int = SEGMENT_SIZE) -> (bytes):
+def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
     '''Compresses file
 
     Args:
@@ -201,9 +201,30 @@ def compress_file(file: Path, chunk_size: int = SEGMENT_SIZE) -> (bytes):
 
     # Initiate a Zstandard compressor
     cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
-    with cctzx.stream_reader(file) as reader:  # Compress while reading
-        for chunk in iter(lambda: reader.read(chunk_size), b''):
+    with cctzx.stream_reader(filehandler) as compressor:  # Compress while reading
+        for chunk in iter(lambda: compressor.read(chunk_size), b''):
             yield chunk
+
+
+def decompress_file(filehandler, gen) -> (bytes):
+    '''Compresses file
+
+    Args:
+        file:           Path to file
+        chunk_size:     Number of bytes to compress at a time
+
+    Yields:
+        bytes:  Compressed data chunk
+
+    '''
+
+    # Initiate a Zstandard compressor
+    dctx = zstd.ZstdDecompressor()
+    with dctx.stream_writer(filehandler) as decompressor:  # Decompress while writing
+        for chunk in gen:
+            decompressor.write(chunk)
+    
+    return True
 
 
 def is_compressed(file: Path) -> (bool, str):
@@ -263,13 +284,13 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
                  else iv_int % MAX_NONCE).to_bytes(length=12,
                                                    byteorder='little')
 
+        iv_int += 1  # Increment nonce
+
         # Encrypt and yield nonce and ciphertext
         yield crypto_aead_chacha20poly1305_ietf_decrypt(ciphertext=enc_chunk,
                                                         aad=aad,
                                                         nonce=nonce,
                                                         key=key)
-
-        iv_int += 1  # Increment nonce
 
 
 def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
@@ -299,14 +320,15 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
         nonce = (iv_int if iv_int < MAX_NONCE
                  else iv_int % MAX_NONCE).to_bytes(length=12,
                                                    byteorder='little')
+        LOG.debug(f"\nnonce in encryption: \t{nonce}\n")
+
+        iv_int += 1  # Increment nonce
 
         # Encrypt and yield nonce and ciphertext
         yield nonce, crypto_aead_chacha20poly1305_ietf_encrypt(message=chunk,
                                                                aad=aad,
                                                                nonce=nonce,
                                                                key=key)
-
-        iv_int += 1  # Increment nonce
 
 
 ###############################################################################
@@ -320,7 +342,8 @@ def reverse_processing(file: str, file_info: dict):
 
     # Variables ################################################### Variables #
     infile = file_info['new_file']  # Downloaded file
-    outfile = infile.parent / Path(infile.stem).stem              # Decrypted and decompressed file
+    # Decrypted and decompressed file
+    outfile = infile.parent / Path(infile.stem).stem
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
 
@@ -329,15 +352,17 @@ def reverse_processing(file: str, file_info: dict):
         original_umask = os.umask(0)  # User file-creation mode mask
         with infile.open(mode='rb') as f:
             first_nonce = f.read(12)
+            LOG.debug(f"\nfirst nonce:\t{first_nonce}\n")
             last_nonce = f.read(12)
+            LOG.debug(f"\last nonce:\t{last_nonce}\n")
 
             key = bytes.fromhex(file_info['key'])
 
             chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
-
+            
             with outfile.open(mode='ab+') as of:
-                for plain_chunk in chunk_stream:
-                    of.write(plain_chunk)
+                decompressed = decompress_file(filehandler=of, gen=chunk_stream)
+
 
             # Encryption ######################################### Encryption #
             # with outfile.open(mode='ab+') as of:
@@ -437,25 +462,32 @@ def process_file(file: Path, file_info: dict) \
                 else compress_file(f)
 
             # Encryption ######################################### Encryption #
-            with outfile.open(mode='ab+') as of:
+            with outfile.open(mode='wb+') as of:
                 key = os.urandom(32)            # Data encryption key
                 iv_bytes = os.urandom(12)       # Initial nonce/value
-                # LOG.debug(f"File: {file}, Data encryption key: {key},a"
-                #           "Initial nonce: {iv_bytes}")
+                LOG.debug(f"File: {file}, Data encryption key: {key},a"
+                          f"Initial nonce: {iv_bytes}")
 
                 # Write nonce to file and save 12 bytes for last nonce
                 of.write(iv_bytes)
                 saved_bytes = (0).to_bytes(length=12, byteorder='little')
+                LOG.debug(f"saved bytes: {saved_bytes}")
                 of.write(saved_bytes)
 
                 nonce = b''     # Catches the nonces
                 for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
                                                              key=key,
                                                              iv=iv_bytes):
+                    LOG.debug(
+                        f"\nnonce: {nonce}, \nciphertext: {ciphertext[0:100]}\n")
                     of.write(ciphertext)    # Write the ciphertext to the file
 
-                of.seek(12)         # Find the saved bytes
-                of.write(nonce)     # Write the last nonce to file
+                LOG.debug(f"\nlast nonce:\t{nonce}\n")
+                of.seek(12)
+                LOG.debug(f"\nposition (12):\t{of.tell()}\n")
+                of.write(nonce)
+
+
     except DeliverySystemException as ee:  # FIX EXCEPTION HERE
         error = f"Processig failed! {ee}"
         LOG.exception(error)
@@ -469,5 +501,6 @@ def process_file(file: Path, file_info: dict) \
         os.umask(original_umask)    # Remove mask
 
     # PROCESSING FINISHED ############################### PROCESSING FINISHED #
-
-    return True, outfile, outfile.stat().st_size, ds_compressed, "", key.hex()
+    LOG.debug(f"\nlast nonce:\t{nonce}\n")
+    return (True, outfile, outfile.stat().st_size, ds_compressed, "",
+            key.hex())

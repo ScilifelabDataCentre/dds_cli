@@ -840,6 +840,7 @@ class DataDeliverer():
                 'error': error,
                 'encrypted_file': Path(""),
                 'encrypted_size': 0,
+                'key': "", 
                 'processing': {'in_progress': False,
                                'finished': False},
                 'upload': {'in_progress': False,

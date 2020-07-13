@@ -32,6 +32,9 @@ SEGMENT_SIZE = 65536
 CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + 16
 MAX_CTR = (2**48) - 1
 
+PRINT_ERR_S = "\nx x x x x x x x x x x x x x x x x x x x x x x x\n\n"
+PRINT_ERR_E = "\n\nx x x x x x x x x x x x x x x x x x x x x x x x\n"
+PRINT_ATT = "\n* * * * * * * * * * * * * * * * * * * * * * * *\n"
 
 def timestamp() -> (str):
     '''Gets the current time. Formats timestamp.

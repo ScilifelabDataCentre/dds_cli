@@ -2,6 +2,7 @@
 """Exceptions"""
 
 # IMPORTS ############################################################ IMPORTS #
+from cli_code import PRINT_ERR_S, PRINT_ERR_E
 # GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
 # CLASSES ############################################################ CLASSES #
 
@@ -127,3 +128,10 @@ class StreamingError(Exception):
     def __init__(self, msg: str):
         """Passes message from exception call to base class __init__."""
         super().__init__(msg)
+
+
+def printout_error(message):
+
+    return ("\nx x x x x x x x x x x x x x x x x x x x x x x x\n\n"
+            + message +
+            "\n\nx x x x x x x x x x x x x x x x x x x x x x x x\n")

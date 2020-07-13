@@ -355,7 +355,8 @@ def get(config: str, username: str, password: str, project: str,
                              'decrypted_file': decrypted_file,
                              'error': error}
                 )
-                delivery.set_progress(item=fpath, decryption=True, finished=True)
+                delivery.set_progress(
+                    item=fpath, decryption=True, finished=True)
 
                 # If DS noted cancelation for file -- quit and move on
                 if not proceed:
@@ -372,8 +373,7 @@ def get(config: str, username: str, password: str, project: str,
                         _project = project_db[delivery.project_id]
                         keyinfo = delivery.data[fpath]
 
-                        _project['files'][fpath] = \
-                            {"date_downloaded": timestamp()}
+                        _project['files'][fpath]["date_downloaded"] = timestamp()
                         project_db.save(_project)
                 except CouchDBException as e:
                     emessage = f"Could not update database: {e}"

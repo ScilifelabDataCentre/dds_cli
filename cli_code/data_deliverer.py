@@ -12,10 +12,10 @@ from cli_code.crypt4gh.crypt4gh import lib
 from prettytable import PrettyTable
 from botocore.client import ClientError
 
-from cli_code import (DIRS, LOG_FILE)
+from cli_code import (DIRS, LOG_FILE, PRINT_ATT, PRINT_ERR_S, PRINT_ERR_E)
 from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
                                     DeliverySystemException, CouchDBException,
-                                    S3Error)
+                                    S3Error, printout_error)
 from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
@@ -92,12 +92,13 @@ class DataDeliverer():
         # --------------------------------------------------------------------#
         # Quit execution if none of username, password, config are set
         if all(x is None for x in [username, password, config]):
-            raise DeliverySystemException(
-                "Delivery System login credentials not specified. "
-                "Enter: \n--username/-u AND --password/-pw,"
-                " or --config/-c\n --owner/-o\n"
+            sys.exit(printout_error(
+                "Delivery System login credentials not specified.\n\n"
+                "Enter: \n"
+                "--username/-u AND --password/-pw, or --config/-c\n"
+                "--owner/-o\n\n"
                 "For help: 'ds_deliver --help'."
-            )
+            ))
 
         # Main attributes ----------------------------------- Main attributes #
         # General
@@ -120,26 +121,26 @@ class DataDeliverer():
         # Check access to delivery system
         ds_access_granted = self._check_ds_access()
         if not ds_access_granted or self.user.id is None:
-            raise DeliverySystemException(
-                "Delivery System access denied! "
-                "Delivery cancelled."
+            sys.exit(
+                printout_error("Delivery System access denied! "
+                               "Delivery cancelled.")
             )
 
         # If access to delivery system, check project access
         proj_access_granted, self.s3project = self._check_project_access()
         if not proj_access_granted:
-            raise DeliverySystemException(
-                f"Access to project {self.project_id} "
-                "denied. Delivery cancelled."
+            sys.exit(
+                printout_error(f"Access to project {self.project_id} "
+                               "denied. Delivery cancelled.")
             )
 
         # If access to project, check that some data is specified
         if not data and not pathfile:
-            raise DeliverySystemException(
-                "No data to be uploaded. Specify individual "
-                "files/folders using the --data/-d option one or "
-                "more times, or the --pathfile/-f. "
-                "For help: 'ds_deliver --help'"
+            sys.exit(
+                printout_error("No data to be uploaded. Specify individual "
+                               "files/folders using the --data/-d option one "
+                               "or more times, or the --pathfile/-f. \n\n"
+                               "For help: 'ds_deliver --help'")
             )
 
         # If everything ok, set bucket name -- CHANGE LATER
@@ -287,8 +288,9 @@ class DataDeliverer():
                     )
                     # Compare to correct password, error if no match
                     if user_db[id_]['password']['hash'] != password_hash:
-                        raise DeliverySystemException(
-                            "Wrong password. Access to Delivery System denied."
+                        sys.exit(
+                            printout_error("Wrong password. "
+                                           "Access to Delivery System denied.")
                         )
 
                     # Check that facility putting or researcher getting
@@ -306,15 +308,14 @@ class DataDeliverer():
                             self.project_owner = self.user.id
                         return True  # Access granted
                     else:
-                        raise DeliveryOptionException(
-                            "Method error. Facilities can only use 'put' "
-                            "and Researchers can only use 'get'."
+                        sys.exit(
+                            printout_error(
+                                "Method error. Facilities can only use 'put' "
+                                "and Researchers can only use 'get'.")
                         )
 
-            raise CouchDBException(
-                "Username not found in database. "
-                "Access to Delivery System denied."
-            )
+            sys.exit(printout_error("Username not found in database. "
+                                    "Access to Delivery System denied."))
 
     def _check_project_access(self):
         '''Checks the users access to a specific project.
@@ -342,15 +343,17 @@ class DataDeliverer():
 
             # Check if project doesn't exists in project database -> quit
             if self.project_id not in couch['project_db']:
-                raise CouchDBException(
-                    f"The project {self.project_id} does not exist."
+                sys.exit(
+                    printout_error(f"The project {self.project_id} "
+                                   "does not exist.")
                 )
 
             # If project exists, check if user has access to the project->quit
             if self.project_id not in user_projects:
-                raise DeliverySystemException(
-                    "You do not have access to the specified project "
-                    f"{self.project_id}. Aborting delivery."
+                sys.exit(
+                    printout_error("You do not have access to the specified "
+                                   f"project {self.project_id}. \n\n"
+                                   "Aborting delivery.")
                 )
 
             # If user has access, get current project
@@ -365,9 +368,10 @@ class DataDeliverer():
             # If project info exists, check if owner info exists.
             # If not -> quit
             if 'owner' not in current_project['project_info']:
-                raise CouchDBException(
-                    "An owner of the data has not been specified. "
-                    "Cannot guarantee data security. Cancelling delivery."
+                sys.exit(
+                    printout_error("An owner of the data has not been "
+                                   "specified. Cannot guarantee data "
+                                   "security. \n\nCancelling delivery.")
                 )
 
             # If owner info exists, find owner of project
@@ -387,25 +391,26 @@ class DataDeliverer():
 
                 # If delivery option exists, check if S3. If not -> quit
                 if current_project['project_info']['delivery_option'] != "S3":
-                    raise DeliveryOptionException(
-                        "The specified project does not "
-                        "have access to S3 delivery."
+                    sys.exit(
+                        printout_error("The specified project does not "
+                                       "have access to S3 delivery.")
                     )
 
                 # If S3 option specified, return S3 project ID
                 try:
                     s3_project = user_db[self.user.id]['s3_project']['name']
                 except DeliverySystemException as dpe:
-                    sys.exit(
+                    raise DeliverySystemException(
                         "Could not get Safespring S3 project name from "
                         f"database: {dpe}. \nDelivery aborted."
                     )
                 else:
                     return True, s3_project
             else:
-                raise DeliveryOptionException(
-                    "Incorrect data owner! You do not have access to this "
-                    "project. Cancelling delivery."
+                sys.exit(
+                    printout_error("Incorrect data owner! You do not have "
+                                   "access to this project. \n\n"
+                                   "Cancelling delivery.")
                 )
 
     def _check_user_input(self, config):
@@ -426,18 +431,21 @@ class DataDeliverer():
         if config is None:
             # If username or password not specified cancel delivery
             if not all([self.user.username, self.user.password]):
-                raise DeliveryOptionException(
-                    "Delivery System login credentials not specified. "
-                    "Enter --username/-u AND --password/-pw, or --config/-c."
-                    "For help: 'ds_deliver --help'."
+                sys.exit(
+                    printout_error("Delivery System login credentials not "
+                                   "specified.\n "
+                                   "Enter --username/-u AND --password/-pw, "
+                                   "or --config/-c.\n"
+                                   "\nFor help: 'ds_deliver --help'.")
                 )
 
             # If project_id not specified cancel delivery
             if self.project_id is None:
-                raise DeliveryOptionException(
-                    "Project not specified. Enter project ID using "
-                    "--project option or add to config file using "
-                    "--config/-c option."
+                sys.exit(
+                    printout_error("Project not specified.\n"
+                                   "Enter project ID using --project option\n"
+                                   "or add to config file using --config/-c "
+                                   "option.")
                 )
 
             # If no owner is set assume current user is owner
@@ -452,13 +460,16 @@ class DataDeliverer():
             with user_config.open(mode='r') as cf:
                 credentials = json.load(cf)
         except OSError as ose:
-            sys.exit(f"Could not open path-file {config}: {ose}")
+            sys.exit(
+                printout_error(f"Could not open path-file {config}: {ose}")
+            )
 
         # Check that all credentials are entered and quit if not
         if not all(c in credentials for c
                    in ['username', 'password', 'project']):
-            raise DeliveryOptionException(
-                "The config file does not contain all required information."
+            sys.exit(
+                printout_error("The config file does not contain all required"
+                               " information.")
             )
 
         # Save username, password and project_id from credentials file
@@ -473,8 +484,10 @@ class DataDeliverer():
 
         # If owner not specified and trying to out -- error
         if self.project_owner is None and self.method == 'put':
-            raise DeliveryOptionException("Project owner not specified. "
-                                          "Cancelling delivery.")
+            sys.exit(
+                printout_error("Project owner not specified. "
+                               "Cancelling delivery.")
+            )
 
     def _clear_tempdir(self):
         '''Remove all contents from temporary file directory
@@ -522,9 +535,9 @@ class DataDeliverer():
 
         # If not a correct method fail delivery
         if self.method not in ["get", "put"]:
-            raise DeliveryOptionException(
-                "Delivery option {self.method} not allowed. "
-                "Cancelling delivery."
+            sys.exit(
+                printout_error("Delivery option {self.method} not allowed.\n\n"
+                               "Cancelling delivery.")
             )
 
         # Gather data info ####################### Gather data info #
@@ -532,9 +545,9 @@ class DataDeliverer():
         for d in data_list:
             # Throw error if there are duplicate files
             if d in all_files or Path(d).resolve() in all_files:
-                raise DeliveryOptionException(
-                    f"The path to file {d} is listed multiple times, "
-                    "please remove path dublicates."
+                sys.exit(
+                    printout_error(f"The path to file {d} is listed multiple "
+                                   "times, please remove path dublicates.")
                 )
 
             # If downloading - empty dict for file info
@@ -560,8 +573,11 @@ class DataDeliverer():
             elif self.method == "put":
                 # Error if path doesn't exist -- should be checked by click
                 if not Path(d).exists():
-                    raise OSError("Trying to deliver a non-existing file/"
-                                  f"folder: {d} -- Delivery not possible.")
+                    sys.exit(
+                        printout_error("Trying to deliver a non-existing "
+                                       f"file/folder: {d}. Delivery not "
+                                       "possible.")
+                    )
 
                 # Get file for files within folder
                 curr_path = Path(d).resolve()   # Full path to data
@@ -680,24 +696,40 @@ class DataDeliverer():
 
         # Check if file or folder exists in database
         with DatabaseConnector(db_name='project_db') as project_db:
-            # self.LOGGER.debug(project_db[self.project_id]['files'])
+            # If project doesn't exist in database or no file info on
+            # project - error in DS
+            if self.project_id not in project_db or \
+                    'files' not in project_db[self.project_id]:
+                raise CouchDBException("Project not in database or no file "
+                                       "info about project -- error in "
+                                       "delivery system!")
+
+            # If no suffixes assuming folder and adding trailing slash
+            if not Path(item).suffixes:
+                item = os.path.join(item, '')
+
+            # Check for file starting with the file/folder name
             for file in project_db[self.project_id]['files']:
+                self.LOGGER.debug(f"{file}: {project_db[self.project_id]['files'][file]}")
                 # If path matches items in database, get info on file
                 if file.startswith(item):
                     to_download[file] = {
                         **project_db[self.project_id]['files'][file],
                         **gen_finfo
                     }
-                    # self.LOGGER.debug(f"{to_download[file]}")
+                    self.LOGGER.debug(f"{to_download[file]}")
                     in_db = True
 
+                    # Check if the file was uploaded as a part of a directory
                     in_directory = to_download[file]['directory_path'] != "."
+
+                    # Save file info
                     to_download[file].update({
-                        'new_file': DIRS[1] / Path(file),
-                        'in_directory': in_directory,
+                        'new_file': DIRS[1] / Path(file),   # Path in tempdir
+                        'in_directory': in_directory,       # If in dir
                         'dir_name': item if in_directory else None,
-                        'proceed': proceed,
-                        'error': error
+                        'proceed': proceed,     # If ok to proceed with deliv
+                        'error': error          # Error message, "" if none
                     })
 
             # If the file doesn't exist in the database -- no delivery
@@ -793,6 +825,14 @@ class DataDeliverer():
         # Check if file exists in database
         in_db = False
         with DatabaseConnector('project_db') as project_db:
+            # If project doesn't exist in database or no file info on
+            # project - error in DS
+            if self.project_id not in project_db or \
+                    'files' not in project_db[self.project_id]:
+                raise CouchDBException("Project not in database or no file "
+                                       "info about project -- error in "
+                                       "delivery system!")
+
             if bucketfilename in project_db[self.project_id]['files']:
                 error = f"File '{file}' already exists in the database. "
                 self.LOGGER.warning(error)

@@ -19,6 +19,7 @@ import textwrap
 from prettytable import PrettyTable
 from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
+from nacl.public import PrivateKey
 # from nacl.exceptions import CryptoError
 # from bitstring import BitArray
 
@@ -522,6 +523,9 @@ def process_file(file: Path, file_info: dict) \
 
             # Encryption ######################################### Encryption #
             with outfile.open(mode='wb+') as of:
+                keypair = PrivateKey.generate()
+                
+
                 key = os.urandom(32)            # Data encryption key
                 iv_bytes = os.urandom(12)       # Initial nonce/value
                 LOG.debug(f"File: {file}, Data encryption key: {key},a"

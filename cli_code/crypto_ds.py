@@ -22,6 +22,7 @@ from cli_code.crypt4gh.crypt4gh import lib
 from cli_code.exceptions_ds import HashException, EncryptionError
 from cli_code import LOG_FILE
 from cli_code.file_handler import config_logger
+from cli_code.database_connector import DatabaseConnector
 
 SEGMENT_SIZE = 65536
 MAGIC_NUMBER = b'crypt4gh'
@@ -44,15 +45,33 @@ CRYPTO_LOG = config_logger(
 
 
 class Encryptor():
-    pass
+    
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_value, tb):
+        '''Allows for implementation using "with" statement.
+        Tear it down. Delete class.'''
+
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+            return False  # uncomment to pass exception through
+
+        return True
+    
+    
 
 
-class Crypt4GHKey:
+class ECDHKey:
 
     def __init__(self):
         '''Generate public key pair'''
 
         sk = PrivateKey.generate()
+        CRYPTO_LOG.log(sk)
         self.seckey = bytes(sk)
         self.pubkey = bytes(sk.public_key)
 
@@ -72,6 +91,9 @@ class Crypt4GHKey:
 
         return True
 
+def get_project_key(proj_id):
+    with DatabaseConnector('project_db') as project_db:
+        return bytes.fromhex(project_db[proj_id]['project_keys']['public'])
 
 def secure_password_hash(password_settings: str,
                          password_entered: str) -> (str):

@@ -17,7 +17,7 @@ from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
                                     DeliverySystemException, CouchDBException,
                                     S3Error, printout_error)
 from cli_code.s3_connector import S3Connector
-from cli_code.crypto_ds import secure_password_hash
+from cli_code.crypto_ds import secure_password_hash, get_project_key
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import (config_logger, get_root_path, is_compressed,
                                    MAGIC_DICT, process_file, file_deleter,
@@ -150,6 +150,7 @@ class DataDeliverer():
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
 
+        self.public = get_project_key()
         # Success message
         self.LOGGER.info("Delivery initialization successful.")
 

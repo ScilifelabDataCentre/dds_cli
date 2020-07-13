@@ -13,9 +13,10 @@ import os
 import logging
 from pathlib import Path
 import hashlib
+import textwrap
 
 # from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-
+from prettytable import PrettyTable
 from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
 # from nacl.exceptions import CryptoError
@@ -23,7 +24,8 @@ from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
 
 from cli_code import (LOG_FILE, DIRS, SEGMENT_SIZE,
                       CIPHER_SEGMENT_SIZE)  # , MAX_CTR
-from cli_code.exceptions_ds import (DeliverySystemException, LoggingError)
+from cli_code.exceptions_ds import (DeliverySystemException, LoggingError,
+                                    CompressionError)
 # from cli_code.crypto_ds import gen_md5
 
 # VARIABLES ####################################################### VARIABLES #
@@ -189,18 +191,22 @@ def file_writer(filehandler, gen, last_nonce):
 
     nonce = b''
 
+    # Save chunks to file
     for nonce, chunk in gen:
         filehandler.write(chunk)
 
-    if nonce != last_nonce:
-        error = f"File {filehandler.name} -- file is missing chunks!"
-        LOG.exception(error)
-        return False, error
+    # If reached end of file but nonces don't match - the entire file has not
+    # been delivered
+    nonce_ok, error = check_last_nonce(filehandler.name, last_nonce, nonce)
 
-    return True, ""
+    return nonce_ok, error
 
 
 def file_deleter(file):
+
+    if not file.exists():
+        return
+
     try:
         file.unlink()
     except OSError as ose:
@@ -213,7 +219,6 @@ def file_deleter(file):
             LOG.info(f"Deleted file {file}")
     else:
         LOG.info(f"Deleted file {file}")
-
 
 ###############################################################################
 # COMPRESSION ################################################### COMPRESSION #
@@ -240,7 +245,7 @@ def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
 
 
 def decompress_file(filehandler, gen, last_nonce) -> (bytes):
-    '''Compresses file
+    '''Decompresses file
 
     Args:
         file:           Path to file
@@ -253,19 +258,17 @@ def decompress_file(filehandler, gen, last_nonce) -> (bytes):
 
     nonce = b''
 
-    # Initiate a Zstandard compressor
+    # Initiate a Zstandard decompressor
     dctx = zstd.ZstdDecompressor()
     with dctx.stream_writer(filehandler) as decompressor:
         for nonce, chunk in gen:
+            decompressor.write(chunk)   # Write decompressed chunks to file
 
-            decompressor.write(chunk)
+    # If reached end of file but nonces don't match - the entire file has not
+    # been delivered
+    nonce_ok, error = check_last_nonce(filehandler.name, last_nonce, nonce)
 
-    if nonce != last_nonce:
-        error = f"File {filehandler.name} -- file is missing chunks!"
-        LOG.exception(error)
-        return False, error
-
-    return True, ""
+    return nonce_ok, error
 
 
 def is_compressed(file: Path) -> (bool, str):
@@ -309,9 +312,10 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
 
     '''
 
+    # If position not directly after first nonce, then error - fail
     if file.tell() != 12:
         raise DeliverySystemException(f"Reading encrypted file {file.name} "
-                                      "failed! - Error with nonces etc.")
+                                      "failed!")
 
     # Variables ################################################### Variables #
     iv_int = int.from_bytes(iv, 'little')   # Transform nonce to int
@@ -372,9 +376,22 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
                                                                key=key)
 
 
+def check_last_nonce(filename, last_nonce, nonce) -> (bool, str):
+
+    # If reached end of file but nonces don't match - the entire file has not
+    # been delivered
+    if nonce != last_nonce:
+        error = f"File {filename} is missing chunks!"
+        LOG.exception(error)
+        return False, error
+    else:
+        return True, ""
+
+
 ###############################################################################
 # PREP AND FINISH ########################################### PREP AND FINISH #
 ###############################################################################
+
 
 def reverse_processing(file: str, file_info: dict):
     '''Decrypts and decompresses file'''
@@ -394,29 +411,27 @@ def reverse_processing(file: str, file_info: dict):
     try:
         original_umask = os.umask(0)  # User file-creation mode mask
         with infile.open(mode='rb+') as f:
+            # Get last nonce
             f.seek(-12, os.SEEK_END)
-            # LOG.debug(f"position: {f.tell()}")
             last_nonce = f.read(12)
-            # LOG.debug(f"position: {f.tell()}")
-            # LOG.debug(f"{last_nonce}, {len(last_nonce)}")
-            # LOG.debug(f"{f.read()}")
+
+            # Remove last nonce from file
             f.seek(-12, os.SEEK_END)
             f.truncate()
-            # LOG.debug(f"position: {f.tell()}")
-            # LOG.debug(f"{f.read()}")
-            f.seek(0)
-            # LOG.debug(f"position: {f.tell()}")
-            first_nonce = f.read(12)
-            # LOG.debug(f"\nfirst nonce:\t{first_nonce}\n")
-            # last_nonce = f.read(12)
-            # LOG.debug(f"\last nonce:\t{last_nonce}\n")
 
+            # Jump back to beginning and get first nonce
+            f.seek(0)
+            first_nonce = f.read(12)
+
+            # Get key for decryption
             key = bytes.fromhex(file_info['key'])
 
-            chunk_stream = aead_decrypt_chacha(
-                file=f, key=key, iv=first_nonce)
+            # Decrypt file
+            chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
 
+            # Save decrypted file
             with outfile.open(mode='ab+') as of:
+                # Decompress and save if compressed by DS, otherwise just save
                 saved, error = decompress_file(filehandler=of,
                                                gen=chunk_stream,
                                                last_nonce=last_nonce) \
@@ -428,27 +443,7 @@ def reverse_processing(file: str, file_info: dict):
                 if not saved:
                     return False, outfile, error
 
-            # Encryption ######################################### Encryption #
-            # with outfile.open(mode='ab+') as of:
-            #     key = os.urandom(32)            # Data encryption key
-            #     iv_bytes = os.urandom(12)       # Initial nonce/value
-            #     # LOG.debug(f"File: {file}, Data encryption key: {key},a"
-            #     #           "Initial nonce: {iv_bytes}")
-
-            #     # Write nonce to file and save 12 bytes for last nonce
-            #     of.write(iv_bytes)
-            #     saved_bytes = (0).to_bytes(length=12, byteorder='little')
-            #     of.write(saved_bytes)
-
-            #     nonce = b''     # Catches the nonces
-            #     for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
-            #                                                  key=key,
-            #                                                  iv=iv_bytes):
-            #         of.write(ciphertext)    # Write the ciphertext to the file
-
-            #     of.seek(12)         # Find the saved bytes
-            #     of.write(nonce)     # Write the last nonce to file
-    except DeliverySystemException as ee:  # FIX EXCEPTION HERE
+    except DeliverySystemException as ee:
         error = f"Finalizing of file failed! {ee}"
         LOG.exception(error)
         return False, outfile, error

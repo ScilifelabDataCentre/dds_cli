@@ -292,6 +292,7 @@ def get(config: str, username: str, password: str, project: str,
         pools = {}      # Finalizing e.g. decompression, decryption etc
         dthreads = {}   # Download from S3
 
+        # Go through all files
         for path, info in delivery.data.items():
             CLI_LOGGER.debug(f"{path}: {info}")
 
@@ -301,6 +302,7 @@ def get(config: str, username: str, password: str, project: str,
                                    "-- moving on to next file")
                 continue
 
+            # Start download from S3
             dthreads[
                 thread_executor.submit(
                     delivery.get, path=path, path_info=info
@@ -331,7 +333,6 @@ def get(config: str, username: str, password: str, project: str,
                     CLI_LOGGER.warning(f"File: '{dpath}' -- cancelled "
                                        "-- moving on to next file")
                     continue
-
                 CLI_LOGGER.debug(f"{dpath}: {delivery.data[dpath]}")
 
                 # Start file processing -- compression, encryption, etc.
@@ -349,22 +350,25 @@ def get(config: str, username: str, password: str, project: str,
                 sys.exit(f"{ffuture.exception()}")
                 break
             else:
+                # Update file info
                 proceed = delivery.update_delivery(
                     file=fpath,
                     updinfo={'proceed': decrypted,
                              'decrypted_file': decrypted_file,
                              'error': error}
                 )
-                delivery.set_progress(
-                    item=fpath, decryption=True, finished=True)
+                # Set file finalizing as finished
+                delivery.set_progress(item=fpath,
+                                      decryption=True,
+                                      finished=True)
 
                 # If DS noted cancelation for file -- quit and move on
                 if not proceed:
                     CLI_LOGGER.warning(f"File: '{fpath}' -- cancelled "
                                        "-- moving on to next file")
                     continue
-                CLI_LOGGER.info(f"File: {fpath} -- DELIVERED")
 
+                # Set file db update to in progress
                 delivery.set_progress(item=fpath, db=True, started=True)
                 # DATABASE UPDATE TO BE THREADED LATER
                 # CURRENTLY PROBLEMS WITH COUCHDB
@@ -373,44 +377,19 @@ def get(config: str, username: str, password: str, project: str,
                         _project = project_db[delivery.project_id]
                         keyinfo = delivery.data[fpath]
 
-                        _project['files'][fpath]["date_downloaded"] = timestamp()
+                        # Add info on when downloaded
+                        _project['files'][fpath]["date_downloaded"] = \
+                            timestamp()
                         project_db.save(_project)
                 except CouchDBException as e:
                     emessage = f"Could not update database: {e}"
                     CLI_LOGGER.warning(emessage)
                 else:
+                    delivery.set_progress(item=fpath, db=True, finished=True)
                     CLI_LOGGER.info("Upload completed!"
                                     f"{delivery.data[fpath]}")
-                    delivery.set_progress(item=fpath, db=True, finished=True)
 
         # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
         pool_executor.shutdown(wait=True)
         thread_executor.shutdown(wait=True)
-
-        # # Create multithreading pool
-        # with concurrent.futures.ThreadPoolExecutor() as thread_executor:
-        #     download_threads = []
-        #     for path in delivery.data:
-
-        #         # Download all files
-        #         t_future = thread_executor.submit(delivery.get, path)
-        #         download_threads.append(t_future)
-
-        #     with concurrent.futures.ProcessPoolExecutor() as pool_exec:
-        #         pools = []
-        #         for f in concurrent.futures.as_completed(download_threads):
-        #             downloaded = f.result()[0]
-        #             down_path = f.result()[1]
-
-        #             for p in delivery.data[down_path]:
-        #                 sender_pub = delivery.get_recipient_key(
-        #                     keytype="fac_public")
-        #                 p_future = pool_exec.submit(finish_download,
-        #                                             p, recip_secret, sender_pub)
-
-        #                 pools.append(p_future)
-        #                 # p_future = pool_exec.submit(gen_hmac, p)
-        #                 # pools.append(p_future)
-
-        #             for p in concurrent.futures.as_completed(pools):
-        #                 print(p.result())
+        

@@ -20,7 +20,7 @@ from cli_code.s3_connector import S3Connector
 from cli_code.crypto_ds import secure_password_hash
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import (config_logger, get_root_path, is_compressed,
-                                   MAGIC_DICT, process_file,
+                                   MAGIC_DICT, process_file, file_deleter,
                                    reverse_processing)
 
 # CONFIG ############################################################# CONFIG #
@@ -167,94 +167,120 @@ class DataDeliverer():
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        if self.method == "put":
-            folders_table = PrettyTable(
-                ['Directory', 'File', 'Delivered', 'Error']
-            )
-            folders_table.padding_width = 2
-            folders_table.align['File'] = "r"
-            folders_table.align['Error'] = "l"
+        # Delivered folders
+        folders_table = PrettyTable(
+            ['Directory', 'File', 'Delivered', 'Error']
+        )
+        folders_table.padding_width = 2
+        folders_table.align['File'] = "r"
+        folders_table.align['Error'] = "l"
 
-            files_table = PrettyTable(
-                ['File', 'Delivered', 'Error']
-            )
-            files_table.align['File'] = "r"
-            files_table.align['Error'] = "l"
+        # Delivered files
+        files_table = PrettyTable(
+            ['File', 'Delivered', 'Error']
+        )
+        files_table.align['File'] = "r"
+        files_table.align['Error'] = "l"
 
-            wrapper = textwrap.TextWrapper(width=100)
+        # Reduces the text width and wraps in column
+        wrapper = textwrap.TextWrapper(width=80)
 
-            folders = {}
-            files = {}
+        folders = {}
 
-            are_folders = False
-            are_files = False
+        are_folders = False
+        are_files = False
 
-            for file, info in self.failed.items():
-                if info['in_directory'] and info['dir_name'] not in folders:
-                    are_folders = True
-                    folders[info['dir_name']] = {
-                        f: val for f, val in self.failed.items()
-                        if val['in_directory'] and
-                        val['dir_name'] == info['dir_name']
-                    }
-                    print(f"--- {folders}")
+        # Check if uploaded or downloaded successfully
+        critical_op = 'upload' if self.method == "put" else 'download'
+
+        # Iterate through failed items
+        for file, info in self.failed.items():
+            # Remove encrypted files
+            self._finalize(file=file, info=info)
+
+            if info['in_directory'] and info['dir_name'] not in folders:
+                are_folders = True  # Note that folders have been delivered
+
+                # Get all failed files in folder
+                folders[info['dir_name']] = {
+                    f: val for f, val in self.failed.items()
+                    if val['in_directory'] and
+                    val['dir_name'] == info['dir_name']
+                }
+                # Add folder name to table
+                folders_table.add_row(
+                    [str(info['dir_name']) + "\n", "", "", ""]
+                )
+                # Add files in folder to table
+                for f, v in folders[info['dir_name']].items():
+                    file_loc = \
+                        (v['directory_path'] if 'directory_path' in v
+                         else get_root_path(file=f,
+                                            path_base=v['dir_name'].name)) \
+                        / Path(Path(f).name)
                     folders_table.add_row(
-                        [str(info['dir_name']) + "\n", "", "", ""]
-                    )
-                    for f, v in folders[info['dir_name']].items():
-                        folders_table.add_row(
-                            ["",
-                             (v['directory_path'] if 'directory_path' in v
-                              else get_root_path(file=f, path_base=v['dir_name'].name)) / f.name,
-                             "NO",
-                             '\n'.join(wrapper.wrap(v["error"])) + '\n']
-                        )
-
-                elif not info['in_directory']:
-                    are_files = True
-                    files_table.add_row(
-                        [file,
+                        ["",
+                         file_loc,
                          "NO",
-                         '\n'.join(wrapper.wrap(info["error"])) + '\n'])
-
-            for file, info in self.data.items():
-                if info['in_directory'] and info['dir_name'] not in folders:
-                    are_folders = True
-                    folders[info['dir_name']] = {
-                        f: val for f, val in self.data.items()
-                        if val['in_directory'] and
-                        val['dir_name'] == info['dir_name']
-                    }
-                    folders_table.add_row(
-                        [info['dir_name'], "", "", ""]
+                         '\n'.join(wrapper.wrap(v["error"])) + '\n']
                     )
-                    for f, v in folders[info['dir_name']].items():
-                        folders_table.add_row(
-                            ["",
-                             str(v['directory_path'] / f.name),
-                             "YES"
-                             if all([v['proceed'], v['upload']['finished'],
-                                     v['database']['finished']]) else "NO",
-                             '\n'.join(wrapper.wrap(v["error"])) + '\n']
-                        )
 
-                elif not info['in_directory']:
-                    are_files = True
-                    self.LOGGER.debug(are_files)
-                    files_table.add_row(
-                        [str(file),
-                         "YES"
-                         if all([info['proceed'], info['upload']['finished'],
-                                 info['database']['finished']]) else "NO",
-                         '\n'.join(wrapper.wrap(info["error"])) + '\n'])
+            elif not info['in_directory']:
+                are_files = True    # Note that files have been delivered
+                # Add file to table
+                files_table.add_row(
+                    [file,
+                     "NO",
+                     '\n'.join(wrapper.wrap(info["error"])) + '\n']
+                )
 
-            self.LOGGER.info("DELIVERY COMPLETED!")
-            self.LOGGER.info(
-                f"\n#################### FOLDERS DELIVERED ####################"
-                f"\n{folders_table}\n" if are_folders else "\n")
-            self.LOGGER.info(
-                f"\n##################### FILES DELIVERED #####################"
-                f"\n{files_table}\n" if are_files else "\n")
+        for file, info in self.data.items():
+            # Remove encrypted files
+            self._finalize(file=file, info=info)
+
+            # Get all files in folder
+            if info['in_directory'] and info['dir_name'] not in folders:
+                are_folders = True
+                folders[info['dir_name']] = {
+                    f: val for f, val in self.data.items()
+                    if val['in_directory'] and
+                    val['dir_name'] == info['dir_name']
+                }
+                # Add folder name to table
+                folders_table.add_row(
+                    [info['dir_name'], "", "", ""]
+                )
+                # Add files in folder to table
+                for f, v in folders[info['dir_name']].items():
+                    folders_table.add_row(
+                        ["",
+                            str(v['directory_path'] / Path(Path(f).name)),
+                            "YES"
+                            if all([v['proceed'], v[critical_op]['finished'],
+                                    v['database']['finished']]) else "NO",
+                            '\n'.join(wrapper.wrap(v["error"])) + '\n']
+                    )
+
+            elif not info['in_directory']:
+                are_files = True
+                self.LOGGER.debug(are_files)
+                # Add file to table
+                files_table.add_row(
+                    [str(file),
+                        "YES"
+                        if all([info['proceed'], info[critical_op]['finished'],
+                                info['database']['finished']]) else "NO",
+                        '\n'.join(wrapper.wrap(info["error"])) + '\n'])
+
+        self.LOGGER.info("DELIVERY COMPLETED!")
+        self.LOGGER.info(
+            f"\n################### FOLDERS DELIVERED ###################"
+            f"\n{folders_table}\n" if are_folders else "\n"
+        )
+        self.LOGGER.info(
+            f"\n#################### FILES DELIVERED ####################"
+            f"\n{files_table}\n" if are_files else "\n"
+        )
 
     ###################
     # Private Methods #
@@ -611,28 +637,32 @@ class DataDeliverer():
 
         '''
 
-        with S3Connector(bucketname=self.bucketname,
-                         project=self.s3project) as s3:
-            if info['upload']['finished'] and \
-                    not info['database']['finished']:
+        if self.method == 'get':
+            if 'new_file' in info:
+                file_deleter(file=info['new_file'])
+
+        elif self.method == 'put':
+            if 'encrypted_file' in info:
+                file_deleter(file=info['encrypted_file'])
+
+            with S3Connector(bucketname=self.bucketname,
+                             project=self.s3project) as s3:
+                if 'upload' in info and info['upload']['finished'] \
+                        and 'database' in info and not info['database']['finished']:
+                    try:
+                        s3.delete_item(key=info['new_file'])
+                    except ClientError as e:
+                        self.LOGGER.warning(e)
+
+            with DatabaseConnector(db_name='project_db') as prdb:
+
                 try:
-                    s3.delete_item(key=info['new_file'])
-                except ClientError as e:
+                    proj = prdb[self.project_id]
+                    if 'database' in info and info['database']['finished'] \
+                            and 'upload' in info and not info['upload']['finished']:
+                        del proj['files'][info['new_file']]
+                except CouchDBException as e:
                     self.LOGGER.warning(e)
-                    return False
-
-        with DatabaseConnector(db_name='project_db') as prdb:
-
-            try:
-                proj = prdb[self.project_id]
-                if info['database']['finished'] and \
-                        not info['upload']['finished']:
-                    del proj['files'][info['new_file']]
-            except CouchDBException as e:
-                self.LOGGER.warning(e)
-                return False
-
-        return True
 
     def _get_dir_info(self, folder: Path) -> (dict, dict):
         '''Iterate through folder contents and get file info
@@ -710,7 +740,8 @@ class DataDeliverer():
 
             # Check for file starting with the file/folder name
             for file in project_db[self.project_id]['files']:
-                self.LOGGER.debug(f"{file}: {project_db[self.project_id]['files'][file]}")
+                self.LOGGER.debug(
+                    f"{file}: {project_db[self.project_id]['files'][file]}")
                 # If path matches items in database, get info on file
                 if file.startswith(item):
                     to_download[file] = {
@@ -1167,30 +1198,32 @@ class DataDeliverer():
         # Set file processing as in progress
         self.set_progress(item=path, download=True, started=True)
 
+        # New temporary sub directory
         new_dir = DIRS[1] / Path(path_info['directory_path'])
         # If new temporary subdir doesn't exist -- create it
         if not new_dir.exists():
             try:
                 new_dir.mkdir(parents=True, exist_ok=True)
             except OSError as e:
+                # If failed to create -- cancel file
                 error = (f"File: {path} -- Creating tempdir "
                          f"{new_dir} failed! :: {e}")
                 LOG.exception(error)
                 return False, error
         # self.LOGGER.debug(f"new_dir: {new_dir}")
 
-        # UPLOAD START ######################################### UPLOAD START #
+        # DOWNLOAD START ##################################### DOWNLOAD START #
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
                 as s3:
 
+            # Download file from S3
             try:
-                # Upload file
                 s3.resource.meta.client.download_file(
                     Bucket=s3.bucketname,
                     Key=path,
                     Filename=str(path_info['new_file'])
                 )
-            except Exception as e:   # FIX EXCEPTION HERE
+            except S3Error as e:
                 # Upload failed -- return error message and move on
                 error = (f"File: {path}, Downloaded: "
                          f"{path_info['new_file']} -- "
@@ -1202,36 +1235,6 @@ class DataDeliverer():
                 self.LOGGER.info(f"File downloaded: {path}"
                                  f", File location: {path_info['new_file']}")
                 return True, ""
-
-        #     for file in file_in_bucket:
-        #         new_path = DIRS[1] / \
-        #             Path(file.key)  # Path to downloaded
-        #         if not new_path.parent.exists():
-        #             try:
-        #                 new_path.parent.mkdir(parents=True)
-        #             except IOError as ioe:
-        #                 sys.exit("Could not create folder "
-        #                          f"{new_path.parent}. Cannot"
-        #                          "proceed with delivery. Cancelling: "
-        #                          f"{ioe}")
-
-        #         if not new_path.exists():
-        #             try:
-        #                 self.s3.resource.meta.client.download_file(
-        #                     self.s3.bucket.name,
-        #                     file.key, str(new_path))
-        #             except Exception as e:
-        #                 self.data[path][new_path] = {"downloaded": False,
-        #                                              "error": e}
-        #             else:
-        #                 self.data[path][new_path] = {"downloaded": True}
-
-        #         else:
-        #             print(f"File {str(new_path)} already exists. "
-        #                   "Not downloading.")
-        #     return True, path
-
-        # raise S3Error(f"Bucket {self.s3.bucket.name} does not exist.")
 
     def put(self, file: Path, fileinfo: dict) -> (bool, Path, list, list, str):
         '''Uploads specified data to the S3 bucket.

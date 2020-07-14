@@ -18,7 +18,7 @@ from cli_code.crypt4gh.crypt4gh import (lib, header, keys)
 
 from cli_code import (LOG_FILE, timestamp, DIRS)
 from cli_code.data_deliverer import (DataDeliverer, finish_download)
-from cli_code.crypto_ds import Crypt4GHKey
+from cli_code.crypto_ds import ECDHKey
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError)
 import cli_code.file_handler as fh
@@ -130,12 +130,17 @@ def put(config: str, username: str, password: str, project: str,
                 CLI_LOGGER.warning(f"File: '{path}' -- cancelled "
                                    "-- moving on to next file")
                 continue
+            
+            keypair = ECDHKey(peer_public=delivery.public)
+            CLI_LOGGER.debug(type(keypair.derived))
+            key = keypair.derived
 
             # Start file processing -- compression, encryption, etc.
             pools[pool_executor.submit(
                 delivery.prep_upload,
                 path,
-                delivery.data[path])
+                delivery.data[path],
+                key)
             ] = path
 
         # DELIVER FILES -- UPLOAD TO S3
@@ -392,4 +397,3 @@ def get(config: str, username: str, password: str, project: str,
         # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
         pool_executor.shutdown(wait=True)
         thread_executor.shutdown(wait=True)
-        

@@ -17,7 +17,7 @@ from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
                                     DeliverySystemException, CouchDBException,
                                     S3Error, printout_error)
 from cli_code.s3_connector import S3Connector
-from cli_code.crypto_ds import secure_password_hash, get_project_key
+from cli_code.crypto_ds import (ECDHKey, secure_password_hash, get_project_key)
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import (config_logger, get_root_path, is_compressed,
                                    MAGIC_DICT, process_file, file_deleter,
@@ -150,7 +150,7 @@ class DataDeliverer():
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
 
-        self.public = get_project_key()
+        self.public = get_project_key(self.project_id)
         # Success message
         self.LOGGER.info("Delivery initialization successful.")
 
@@ -939,7 +939,7 @@ class DataDeliverer():
 
         return info
 
-    def prep_upload(self, path: Path, path_info: dict) -> (tuple):
+    def prep_upload(self, path: Path, path_info: dict, key) -> (tuple):
         '''Prepares the files for upload.
 
         Args:
@@ -965,7 +965,8 @@ class DataDeliverer():
 
         # Begin processing incl encryption
         info = process_file(file=path,
-                            file_info=path_info)
+                            file_info=path_info, 
+                            key=key)
 
         return info
 
@@ -1287,27 +1288,27 @@ class DataDeliverer():
                 self.LOGGER.exception(error)
                 return False, error
 
-            # Upload successful
-            self.LOGGER.info(f"File uploaded: {fileinfo['encrypted_file']}"
-                             f", Bucket location: {fileinfo['new_file']}")
-            self.LOGGER.info("Verifying checksum...")
+            # # Upload successful
+            # self.LOGGER.info(f"File uploaded: {fileinfo['encrypted_file']}"
+            #                  f", Bucket location: {fileinfo['new_file']}")
+            # self.LOGGER.info("Verifying checksum...")
 
-            try:
-                s3_resp = s3.resource.meta.client.head_object(
-                    Bucket=s3.bucketname,
-                    Key=fileinfo['new_file']
-                )
-                self.LOGGER.debug(f"{s3_resp}")
-            except Exception as e:
-                self.LOGGER.exception(e)
+            # try:
+            #     s3_resp = s3.resource.meta.client.head_object(
+            #         Bucket=s3.bucketname,
+            #         Key=fileinfo['new_file']
+            #     )
+            #     self.LOGGER.debug(f"{s3_resp}")
+            # except Exception as e:
+            #     self.LOGGER.exception(e)
 
-            tag = s3_resp['ETag'].strip('"')
-            checksum = fileinfo['checksum']
-            self.LOGGER.debug(f"tag: {tag}, checksum: {checksum}")
-            if tag != checksum:
-                self.LOGGER.fatal("Not a matching checksum!")
-            else:
-                self.LOGGER.info("Checksums match!")
+            # tag = s3_resp['ETag'].strip('"')
+            # checksum = fileinfo['checksum']
+            # self.LOGGER.debug(f"tag: {tag}, checksum: {checksum}")
+            # if tag != checksum:
+            #     self.LOGGER.fatal("Not a matching checksum!")
+            # else:
+            #     self.LOGGER.info("Checksums match!")
 
             return True, ""
 

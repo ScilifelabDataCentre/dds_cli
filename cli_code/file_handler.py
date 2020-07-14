@@ -27,7 +27,7 @@ from cli_code import (LOG_FILE, DIRS, SEGMENT_SIZE,
                       CIPHER_SEGMENT_SIZE)  # , MAX_CTR
 from cli_code.exceptions_ds import (DeliverySystemException, LoggingError,
                                     CompressionError)
-# from cli_code.crypto_ds import gen_md5
+from cli_code.crypto_ds import ECDHKey
 
 # VARIABLES ####################################################### VARIABLES #
 
@@ -366,7 +366,7 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
         nonce = (iv_int if iv_int < MAX_NONCE
                  else iv_int % MAX_NONCE).to_bytes(length=12,
                                                    byteorder='little')
-        LOG.debug(f"\nnonce in encryption: \t{nonce}\n")
+        # LOG.debug(f"\nnonce in encryption: \t{nonce}\n")
 
         iv_int += 1  # Increment nonce
 
@@ -458,7 +458,7 @@ def reverse_processing(file: str, file_info: dict):
     return True, outfile, ""
 
 
-def process_file(file: Path, file_info: dict) \
+def process_file(file: Path, file_info: dict, key) \
         -> (bool, Path, int, bool, str):
     '''Processes the files incl compression, encryption
 
@@ -523,13 +523,12 @@ def process_file(file: Path, file_info: dict) \
 
             # Encryption ######################################### Encryption #
             with outfile.open(mode='wb+') as of:
-                keypair = PrivateKey.generate()
-                
 
-                key = os.urandom(32)            # Data encryption key
+                # key = os.urandom(32)            # Data encryption key
+                key = key
                 iv_bytes = os.urandom(12)       # Initial nonce/value
-                LOG.debug(f"File: {file}, Data encryption key: {key},a"
-                          f"Initial nonce: {iv_bytes}")
+                # LOG.debug(f"File: {file}, Data encryption key: {key},a"
+                #           f"Initial nonce: {iv_bytes}")
 
                 # Write nonce to file and save 12 bytes for last nonce
                 of.write(iv_bytes)
@@ -542,12 +541,12 @@ def process_file(file: Path, file_info: dict) \
                 for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
                                                              key=key,
                                                              iv=iv_bytes):
-                    LOG.debug(
-                        f"\nnonce: {nonce}, \nciphertext: {ciphertext[0:100]}\n")
+                    # LOG.debug(
+                    #     f"\nnonce: {nonce}, \nciphertext: {ciphertext[0:100]}\n")
                     of.write(ciphertext)    # Write the ciphertext to the file
                     enc_file_hash.update(ciphertext)
 
-                LOG.debug(f"\nlast nonce:\t{nonce}\n")
+                # LOG.debug(f"\nlast nonce:\t{nonce}\n")
                 # of.seek(12)
                 # LOG.debug(f"\nposition (12):\t{of.tell()}\n")
                 of.write(nonce)
@@ -566,6 +565,6 @@ def process_file(file: Path, file_info: dict) \
         os.umask(original_umask)    # Remove mask
 
     # PROCESSING FINISHED ############################### PROCESSING FINISHED #
-    LOG.debug(f"\nlast nonce:\t{nonce}\n")
+    # LOG.debug(f"\nlast nonce:\t{nonce}\n")
     return (True, outfile, outfile.stat().st_size, ds_compressed,
             key.hex(), enc_file_hash.hexdigest(), "")

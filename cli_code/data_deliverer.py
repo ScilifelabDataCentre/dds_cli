@@ -939,7 +939,7 @@ class DataDeliverer():
 
         return info
 
-    def prep_upload(self, path: Path, path_info: dict, key) -> (tuple):
+    def prep_upload(self, path: Path, path_info: dict) -> (tuple):
         '''Prepares the files for upload.
 
         Args:
@@ -966,7 +966,7 @@ class DataDeliverer():
         # Begin processing incl encryption
         info = process_file(file=path,
                             file_info=path_info, 
-                            key=key)
+                            peer_public=self.public)
 
         return info
 

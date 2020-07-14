@@ -67,7 +67,7 @@ class Encryptor():
 
 class ECDHKey:
 
-    def __init__(self, peer_public):
+    def __init__(self):
         '''Generate public key pair'''
 
         # Generate private key
@@ -89,10 +89,10 @@ class ECDHKey:
         # self.public = public_bytes.hex().upper()
 
         # Save peer public key
-        self.peerpub = peer_public
+        # self.peerpub = peer_public
 
         # Get shared, derived key
-        self.derived = self._generate_encryption_key()
+        # self.derived = self._generate_encryption_key()
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -110,28 +110,42 @@ class ECDHKey:
 
         return True
 
-    def _generate_encryption_key(self):
-        # Generate shared key
-        shared = (self.private).exchange(peer_public_key=self.peerpub)
+    # def generate_ecdh_keypair(self):
+    #     private = X25519PrivateKey.generate()
+    #     public = private.public_key()
+    #     return private, public
 
+    def public_to_hex(self):
+        return self.public.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw
+        ).hex().upper()
+
+    def generate_encryption_key(self, peer_public):
+        loaded_peer_pub = X25519PublicKey.from_public_bytes(peer_public)
+
+        # Generate shared key
+        shared = (self.private).exchange(peer_public_key=loaded_peer_pub)
+
+        salt = os.urandom(16)
         # Generate derived key - used for data encryption
         derived_key = HKDF(
             algorithm=hashes.SHA256(),
             length=32,
-            salt=None,
+            salt=salt,
             info=b'handshake data',
             backend=default_backend()
         ).derive(shared)
 
-        return derived_key
+        return derived_key, salt
 
 
 def get_project_key(proj_id):
     from cli_code.database_connector import DatabaseConnector
     with DatabaseConnector('project_db') as project_db:
-        public_bytes = bytes.fromhex(
+        return bytes.fromhex(
             project_db[proj_id]['project_keys']['public'])
-        return X25519PublicKey.from_public_bytes(public_bytes)
+        # return X25519PublicKey.from_public_bytes(public_bytes)
 
 
 def secure_password_hash(password_settings: str,

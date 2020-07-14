@@ -130,17 +130,13 @@ def put(config: str, username: str, password: str, project: str,
                 CLI_LOGGER.warning(f"File: '{path}' -- cancelled "
                                    "-- moving on to next file")
                 continue
-            
-            keypair = ECDHKey(peer_public=delivery.public)
-            CLI_LOGGER.debug(type(keypair.derived))
-            key = keypair.derived
 
             # Start file processing -- compression, encryption, etc.
             pools[pool_executor.submit(
                 delivery.prep_upload,
                 path,
-                delivery.data[path],
-                key)
+                delivery.data[path]
+            )
             ] = path
 
         # DELIVER FILES -- UPLOAD TO S3
@@ -149,7 +145,7 @@ def put(config: str, username: str, password: str, project: str,
             ppath = pools[pfuture]      # Original file path -- keep track
             try:
                 processed, efile, esize, \
-                    ds_compressed, key, checksum, error = pfuture.result()     # Get info
+                    ds_compressed, key, salt, error = pfuture.result()     # Get info
             except PoolExecutorError:
                 sys.exit(f"{pfuture.exception()}")
                 break
@@ -163,7 +159,7 @@ def put(config: str, username: str, password: str, project: str,
                              'ds_compressed': ds_compressed,
                              'error': error,
                              'key': key,
-                             'checksum': checksum}
+                             'salt': salt}
                 )
                 # Set file processing as finished
                 delivery.set_progress(
@@ -222,10 +218,11 @@ def put(config: str, username: str, password: str, project: str,
 
                         _project['files'][key] = \
                             {"directory_path": dir_path,
-                                "size": keyinfo['size'],
-                                "ds_compressed": keyinfo['ds_compressed'],
-                                "date_uploaded": timestamp(),
-                                "key": keyinfo['key']}
+                             "size": keyinfo['size'],
+                             "ds_compressed": keyinfo['ds_compressed'],
+                             "date_uploaded": timestamp(),
+                             "key": keyinfo['key'],
+                             "salt": keyinfo['salt']}
                         project_db.save(_project)
                 except CouchDBException as e:
                     emessage = f"Could not update database: {e}"

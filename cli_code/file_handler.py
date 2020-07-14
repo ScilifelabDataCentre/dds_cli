@@ -22,6 +22,7 @@ from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
 from nacl.public import PrivateKey
 # from nacl.exceptions import CryptoError
 # from bitstring import BitArray
+from cryptography.hazmat.primitives import serialization
 
 from cli_code import (LOG_FILE, DIRS, SEGMENT_SIZE,
                       CIPHER_SEGMENT_SIZE)  # , MAX_CTR
@@ -389,6 +390,8 @@ def check_last_nonce(filename, last_nonce, nonce) -> (bool, str):
         return True, ""
 
 
+def get_file_key():
+    return "private", "public"
 ###############################################################################
 # PREP AND FINISH ########################################### PREP AND FINISH #
 ###############################################################################
@@ -458,7 +461,7 @@ def reverse_processing(file: str, file_info: dict):
     return True, outfile, ""
 
 
-def process_file(file: Path, file_info: dict, key) \
+def process_file(file: Path, file_info: dict, peer_public) \
         -> (bool, Path, int, bool, str):
     '''Processes the files incl compression, encryption
 
@@ -499,8 +502,15 @@ def process_file(file: Path, file_info: dict, key) \
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {file}, Outfile: {outfile}")
 
-    # Hasher
-    enc_file_hash = hashlib.md5()
+    # Encryption key ######################################### Encryption key #
+    keypair = ECDHKey()
+    LOG.debug(type(peer_public))
+    key, salt = keypair.generate_encryption_key(peer_public)
+    LOG.debug(f"private: {keypair.private}, "
+              f"public: {keypair.public} ({type(keypair.public)}), "
+              f"derived: {key} ({len(key)})")
+    # key = os.urandom(32)            # Data encryption key
+    # ----------------------------------------------------------------------- #
 
     # If new temporary subdir doesn't exist -- create it
     if not new_dir.exists():
@@ -523,16 +533,12 @@ def process_file(file: Path, file_info: dict, key) \
 
             # Encryption ######################################### Encryption #
             with outfile.open(mode='wb+') as of:
-
-                # key = os.urandom(32)            # Data encryption key
-                key = key
                 iv_bytes = os.urandom(12)       # Initial nonce/value
                 # LOG.debug(f"File: {file}, Data encryption key: {key},a"
                 #           f"Initial nonce: {iv_bytes}")
 
                 # Write nonce to file and save 12 bytes for last nonce
                 of.write(iv_bytes)
-                enc_file_hash.update(iv_bytes)
                 # saved_bytes = (0).to_bytes(length=12, byteorder='little')
                 # LOG.debug(f"saved bytes: {saved_bytes}")
                 # of.write(saved_bytes)
@@ -544,13 +550,11 @@ def process_file(file: Path, file_info: dict, key) \
                     # LOG.debug(
                     #     f"\nnonce: {nonce}, \nciphertext: {ciphertext[0:100]}\n")
                     of.write(ciphertext)    # Write the ciphertext to the file
-                    enc_file_hash.update(ciphertext)
 
                 # LOG.debug(f"\nlast nonce:\t{nonce}\n")
                 # of.seek(12)
                 # LOG.debug(f"\nposition (12):\t{of.tell()}\n")
                 of.write(nonce)
-                enc_file_hash.update(nonce)
 
     except DeliverySystemException as ee:  # FIX EXCEPTION HERE
         error = f"Processig failed! {ee}"
@@ -567,4 +571,4 @@ def process_file(file: Path, file_info: dict, key) \
     # PROCESSING FINISHED ############################### PROCESSING FINISHED #
     # LOG.debug(f"\nlast nonce:\t{nonce}\n")
     return (True, outfile, outfile.stat().st_size, ds_compressed,
-            key.hex(), enc_file_hash.hexdigest(), "")
+            keypair.public_to_hex(), salt.hex().upper(), "")

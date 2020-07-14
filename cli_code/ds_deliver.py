@@ -6,6 +6,7 @@ Command line interface for Data Delivery System
 
 from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
                                 as_completed)
+from multiprocessing import Queue
 import logging
 import logging.config
 from pathlib import Path
@@ -39,7 +40,7 @@ def config_logger(logfile: str):
                             file=True, file_setlevel=logging.DEBUG,
                             fh_format="%(asctime)s::%(levelname)s::" +
                             "%(name)s::%(lineno)d::%(message)s",
-                            stream=True, stream_setlevel=logging.DEBUG,
+                            stream=True, stream_setlevel=logging.CRITICAL,
                             sh_format="%(levelname)s::%(name)s::" +
                             "%(lineno)d::%(message)s")
 
@@ -120,7 +121,7 @@ def put(config: str, username: str, password: str, project: str,
         # Futures -- Pools and threads
         pools = {}      # Processing e.g. compression, encryption etc
         uthreads = {}   # Upload to S3
-
+        
         # BEGIN DELIVERY -- ITERATE THROUGH ALL FILES
         for path, info in delivery.data.items():
             # CLI_LOGGER.debug(f"Beginning...{path}: {info}\n")  # Print out before

@@ -85,7 +85,7 @@ class DataDeliverer():
             file=True, file_setlevel=logging.DEBUG,
             fh_format="%(asctime)s::%(levelname)s::" +
             "%(name)s::%(lineno)d::%(message)s",
-            stream=True, stream_setlevel=logging.DEBUG,
+            stream=True, stream_setlevel=logging.CRITICAL,
             sh_format="%(levelname)s::%(name)s::" +
             "%(lineno)d::%(message)s"
         )
@@ -955,7 +955,6 @@ class DataDeliverer():
                 bool:   True if file compressed by the delivery system
                 str:    Error message, "" if none
         '''
-
         # If DS noted cancelation of file -- quit and move on
         if not path_info['proceed']:
             return False, Path(""), 0, False, "", b''

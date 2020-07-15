@@ -48,9 +48,9 @@ def config_logger(logfile: str):
                             "%(lineno)d::%(message)s")
 
 
-STATUS_DICT = {'ns': "Not started", 'p': "Processing...",
-               'pf': "Processing finished", 'u': 'Uploading...',
-               'd': "Dowloading...", 'f': u'\u2705', 'e': u'\u274C'}
+STATUS_DICT = {'ns': "Not started", 'f': u'\u2705', 'e': u'\u274C',
+               'enc': "Encrypting...", 'dec': "Decrypting",
+               'u': 'Uploading...', 'd': "Dowloading...", }
 
 
 DATA_ORDERED = collections.OrderedDict()
@@ -177,6 +177,7 @@ def put(config: str, username: str, password: str, project: str,
         # Setup logging
         CLI_LOGGER = config_logger(LOG_FILE)
 
+        # Progress printout
         delivery_table = create_output(delivery.data)
 
         # Print out files
@@ -203,9 +204,10 @@ def put(config: str, username: str, password: str, project: str,
             if not info['proceed']:
                 CLI_LOGGER.warning(f"File: '{path}' -- cancelled "
                                    "-- moving on to next file")
+                update_output(file=path, status='e')
                 continue
 
-            update_output(file=path, status='p')
+            update_output(file=path, status='enc')
             # Start file processing -- compression, encryption, etc.
             pools[pool_executor.submit(
                 delivery.prep_upload,
@@ -224,6 +226,7 @@ def put(config: str, username: str, password: str, project: str,
                     ds_compressed, key, salt, error = pfuture.result()     # Get info
             except PoolExecutorError:
                 sys.exit(f"{pfuture.exception()}")
+                update_output(file=path, status='e')
                 break
             else:
                 # Update file info
@@ -267,6 +270,7 @@ def put(config: str, username: str, password: str, project: str,
                 uploaded, error = ufuture.result()     # Get info
             except PoolExecutorError:
                 sys.exit(f"{ufuture.exception()}")
+                update_output(file=path, status='e')
                 break
             else:
                 # Update file info
@@ -285,6 +289,7 @@ def put(config: str, username: str, password: str, project: str,
                                        "-- moving on to next file")
                     update_output(file=upath, status='e')
                     continue
+
                 CLI_LOGGER.info(f"File: {upath} -- DELIVERED")
 
                 delivery.set_progress(item=upath, db=True, started=True)
@@ -371,6 +376,9 @@ def get(config: str, username: str, password: str, project: str,
         # Setup logging
         CLI_LOGGER = config_logger(LOG_FILE)
 
+        # Progress printout
+        delivery_table = create_output(delivery.data)
+
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
         pool_executor = ProcessPoolExecutor()       # Processing
         thread_executor = ThreadPoolExecutor()      # IO related tasks
@@ -387,7 +395,10 @@ def get(config: str, username: str, password: str, project: str,
             if not info['proceed']:
                 CLI_LOGGER.warning(f"File: '{path}' -- cancelled "
                                    "-- moving on to next file")
+                update_output(file=path, status='e')
                 continue
+
+            update_output(file=path, status='d')
 
             # Start download from S3
             dthreads[
@@ -402,6 +413,7 @@ def get(config: str, username: str, password: str, project: str,
                 downloaded, error = dfuture.result()
             except PoolExecutorError:
                 sys.exit(f"{dfuture.exception()}")
+                update_output(file=dpath, status='e')
                 break
             else:
                 # Update file info
@@ -419,8 +431,11 @@ def get(config: str, username: str, password: str, project: str,
                 if not proceed:
                     CLI_LOGGER.warning(f"File: '{dpath}' -- cancelled "
                                        "-- moving on to next file")
+                    update_output(file=dpath, status='e')
                     continue
                 CLI_LOGGER.debug(f"{dpath}: {delivery.data[dpath]}")
+
+                update_output(file=dpath, status='dec')
 
                 # Start file processing -- compression, encryption, etc.
                 pools[pool_executor.submit(
@@ -435,6 +450,7 @@ def get(config: str, username: str, password: str, project: str,
                 decrypted, decrypted_file, error = ffuture.result()
             except PoolExecutorError:
                 sys.exit(f"{ffuture.exception()}")
+                update_output(file=fpath, status='e')
                 break
             else:
                 # Update file info
@@ -453,6 +469,7 @@ def get(config: str, username: str, password: str, project: str,
                 if not proceed:
                     CLI_LOGGER.warning(f"File: '{fpath}' -- cancelled "
                                        "-- moving on to next file")
+                    update_output(file=fpath, status='e')
                     continue
 
                 # Set file db update to in progress
@@ -470,11 +487,13 @@ def get(config: str, username: str, password: str, project: str,
                         project_db.save(_project)
                 except CouchDBException as e:
                     emessage = f"Could not update database: {e}"
+                    update_output(file=fpath, status='e')
                     CLI_LOGGER.warning(emessage)
                 else:
                     delivery.set_progress(item=fpath, db=True, finished=True)
                     CLI_LOGGER.info("Upload completed!"
                                     f"{delivery.data[fpath]}")
+                    update_output(file=fpath, status='f')
 
         # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
         pool_executor.shutdown(wait=True)

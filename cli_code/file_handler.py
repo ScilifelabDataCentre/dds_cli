@@ -96,7 +96,7 @@ LOG = config_logger(
     file=True, file_setlevel=logging.DEBUG,
     fh_format="%(asctime)s::%(levelname)s::" +
     "%(name)s::%(lineno)d::%(message)s",
-    stream=True, stream_setlevel=logging.CRITICAL,
+    stream=True, stream_setlevel=logging.DEBUG,
     sh_format="%(levelname)s::%(name)s::" +
     "%(lineno)d::%(message)s"
 )
@@ -397,7 +397,7 @@ def get_file_key():
 ###############################################################################
 
 
-def reverse_processing(file: str, file_info: dict):
+def reverse_processing(file: str, file_info: dict, keys: tuple):
     '''Decrypts and decompresses file'''
 
     LOG.debug(f"\n{file}: {file_info}\n")
@@ -411,6 +411,16 @@ def reverse_processing(file: str, file_info: dict):
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
 
+    # Encryption key ######################################### Encryption key #
+    peer_public = bytes.fromhex(file_info['key'])  # Files public enc key
+    salt = file_info['salt']        # Salt to generate same shared key
+
+    keypair = ECDHKey(keys=keys)
+    key, _ = keypair.generate_encryption_key(peer_public=peer_public,
+                                             salt_=salt)
+    keypair.del_priv_key()
+    LOG.debug(key)
+    # ----------------------------------------------------------------------- #
     # START ##################################### START #
     try:
         original_umask = os.umask(0)  # User file-creation mode mask
@@ -426,9 +436,6 @@ def reverse_processing(file: str, file_info: dict):
             # Jump back to beginning and get first nonce
             f.seek(0)
             first_nonce = f.read(12)
-
-            # Get key for decryption
-            key = bytes.fromhex(file_info['key'])
 
             # Decrypt file
             chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
@@ -503,9 +510,11 @@ def process_file(file: Path, file_info: dict, peer_public) \
     # LOG.debug(f"Infile: {file}, Outfile: {outfile}")
 
     # Encryption key ######################################### Encryption key #
-    keypair = ECDHKey()
+    keypair = ECDHKey()    # Create new ECDH key pair
     LOG.debug(type(peer_public))
-    key, salt = keypair.generate_encryption_key(peer_public)
+
+    # Generate shared symmetric encryption key from peer_public + pub + priv
+    key, salt = keypair.generate_encryption_key(peer_public=peer_public)
     LOG.debug(f"private: {keypair.private}, "
               f"public: {keypair.public} ({type(keypair.public)}), "
               f"derived: {key} ({len(key)})")

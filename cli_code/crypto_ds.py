@@ -67,32 +67,24 @@ class Encryptor():
 
 class ECDHKey:
 
-    def __init__(self):
+    def __init__(self, keys=()):
         '''Generate public key pair'''
 
-        # Generate private key
-        self.private = X25519PrivateKey.generate()
-        # CRYPTO_LOG.log(private_key)
-        # self.private = private_key.private_bytes(
-        #     encoding=serialization.Encoding.Raw,
-        #     format=serialization.PrivateFormat.Raw,
-        #     encryption_algorithm=serialization.NoEncryption()
-        # )
-        # self.private = private_bytes.hex().upper()
+        # If put -> keys will be empty tuple -> Generate new key pair
+        # If get -> keys will be project public & private from db
+        if not keys:
+            # Generate private key
+            self.private = X25519PrivateKey.generate()
 
-        # Generate public
-        self.public = self.private.public_key()
-        # self.public = public_key.public_bytes(
-        #     encoding=serialization.Encoding.Raw,
-        #     format=serialization.PublicFormat.Raw
-        # )
-        # self.public = public_bytes.hex().upper()
+            # Generate public
+            self.public = self.private.public_key()
+        else:
+            public, private = keys
+            # X25519PrivateKey from project private key
+            self.private = X25519PrivateKey.from_private_bytes(private)
 
-        # Save peer public key
-        # self.peerpub = peer_public
-
-        # Get shared, derived key
-        # self.derived = self._generate_encryption_key()
+            # X25519PublicKey from project public key
+            self.public = X25519PublicKey.from_public_bytes(public)
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -121,14 +113,22 @@ class ECDHKey:
             format=serialization.PublicFormat.Raw
         ).hex().upper()
 
-    def generate_encryption_key(self, peer_public):
+    def generate_encryption_key(self, peer_public: bytes, salt_=""):
+        '''Generate shared symmetric encryption key using peer public key
+        and own public and private key'''
+
+        # Put -> salt will be empty string -> generate new salt
+        # Get -> salt will be hex string from db -> get as bytes
+        salt = os.urandom(16) if salt_ == "" else bytes.fromhex(salt_)
+
+        # X25519PublicKey from peer public key (from db)
         loaded_peer_pub = X25519PublicKey.from_public_bytes(peer_public)
 
         # Generate shared key
         shared = (self.private).exchange(peer_public_key=loaded_peer_pub)
 
-        salt = os.urandom(16)
-        # Generate derived key - used for data encryption
+        # Generate derived key from shared key - used for data encryption
+        # Guarantees enough entropy in key
         derived_key = HKDF(
             algorithm=hashes.SHA256(),
             length=32,
@@ -139,13 +139,89 @@ class ECDHKey:
 
         return derived_key, salt
 
+    def del_priv_key(self):
+        self.private = None
 
-def get_project_key(proj_id):
+
+def get_project_private(proj_id, method, user):
+    '''Gets the project private key from the database'''
+
     from cli_code.database_connector import DatabaseConnector
+
+    if method == "put":
+        return b''
+
+    with DatabaseConnector() as couch:
+        user_db = couch['user_db']
+        key_salt = bytes.fromhex(user_db[user.id]['password']['key_salt'])
+        print(f"key encryption salt ---- {key_salt}")
+
+        kdf = Scrypt(salt=key_salt, length=32, n=2**14,
+                     r=8, p=1, backend=default_backend())
+        print(f"user name ---- {user.username}")
+        key = kdf.derive(user.password.encode('utf-8'))
+        print(f"key encryption key ---- {key}")
+
+        user_db = None
+
+        project_db = couch['project_db']
+        encrypted_key = bytes.fromhex(
+            project_db[proj_id]['project_keys']['secret']
+        )
+        nonce = bytes.fromhex(project_db[proj_id]['project_keys']['nonce'])
+
+        decrypted_key = crypto_aead_chacha20poly1305_ietf_decrypt(
+            ciphertext=encrypted_key, aad=None, nonce=nonce, key=key
+        )
+
+        # read 2 bytes -> length of magic id
+        start=0
+        to_read= 2
+        magic_id_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
+        print(f"len of magic: {magic_id_len}")
+
+        # read magic_id_len bytes -> magic id
+        start += to_read
+        to_read = magic_id_len
+        magic_id = decrypted_key[start:start+to_read]
+        print(f"magic: {magic_id}")
+
+        # read 2 bytes -> length of project id
+        start += to_read
+        to_read = 2
+        proj_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
+        print(f"proj_len: {proj_len}")
+
+        # read proj_len bytes -> project id 
+        start += to_read
+        to_read = proj_len
+        proj_id = decrypted_key[start:start+to_read]
+        print(f"proj_id: {proj_id}")
+
+        # read 2 bytes -> len of key
+        start += to_read
+        to_read = 2
+        key_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
+        print(f"key len: {key_len}")
+
+        # read key_len bytes -> key
+        start += to_read
+        to_read = key_len
+        key = decrypted_key[start:start+to_read]
+        print(f"key: {key}")
+
+        print(f"whats left: {decrypted_key[start+to_read::]}")
+        return key
+
+
+def get_project_public(proj_id) -> (bytes):
+    '''Gets the projects public key from the database'''
+
+    from cli_code.database_connector import DatabaseConnector
+
+    # Get project public key - same for both put and get
     with DatabaseConnector('project_db') as project_db:
-        return bytes.fromhex(
-            project_db[proj_id]['project_keys']['public'])
-        # return X25519PublicKey.from_public_bytes(public_bytes)
+        return bytes.fromhex(project_db[proj_id]['project_keys']['public'])
 
 
 def secure_password_hash(password_settings: str,

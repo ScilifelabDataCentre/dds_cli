@@ -17,7 +17,8 @@ from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
                                     DeliverySystemException, CouchDBException,
                                     S3Error, printout_error)
 from cli_code.s3_connector import S3Connector
-from cli_code.crypto_ds import (ECDHKey, secure_password_hash, get_project_key)
+from cli_code.crypto_ds import (ECDHKey, secure_password_hash,
+                                get_project_public, get_project_private)
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import (config_logger, get_root_path, is_compressed,
                                    MAGIC_DICT, process_file, file_deleter,
@@ -85,7 +86,7 @@ class DataDeliverer():
             file=True, file_setlevel=logging.DEBUG,
             fh_format="%(asctime)s::%(levelname)s::" +
             "%(name)s::%(lineno)d::%(message)s",
-            stream=True, stream_setlevel=logging.CRITICAL,
+            stream=True, stream_setlevel=logging.DEBUG,
             sh_format="%(levelname)s::%(name)s::" +
             "%(lineno)d::%(message)s"
         )
@@ -149,8 +150,13 @@ class DataDeliverer():
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
+        # Get project public key
+        self.public = get_project_public(self.project_id)
 
-        self.public = get_project_key(self.project_id)
+        # If get - need private key too
+        self.private = get_project_private(self.project_id, self.method, self.user)
+        self.LOGGER.critical(self.private)
+
         # Success message
         self.LOGGER.info("Delivery initialization successful.")
 
@@ -935,7 +941,8 @@ class DataDeliverer():
         # Set file processing as in progress
         self.set_progress(item=file, decryption=True, started=True)
 
-        info = reverse_processing(file=file, file_info=fileinfo)
+        info = reverse_processing(file=file, file_info=fileinfo,
+                                  keys=(self.public, self.private))
 
         return info
 
@@ -964,7 +971,7 @@ class DataDeliverer():
 
         # Begin processing incl encryption
         info = process_file(file=path,
-                            file_info=path_info, 
+                            file_info=path_info,
                             peer_public=self.public)
 
         return info

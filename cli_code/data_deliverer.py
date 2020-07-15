@@ -11,6 +11,7 @@ import shutil
 from cli_code.crypt4gh.crypt4gh import lib
 from prettytable import PrettyTable
 from botocore.client import ClientError
+from progressbar import ProgressBar
 
 from cli_code import (DIRS, LOG_FILE, PRINT_ATT, PRINT_ERR_S, PRINT_ERR_E)
 from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
@@ -86,7 +87,7 @@ class DataDeliverer():
             file=True, file_setlevel=logging.DEBUG,
             fh_format="%(asctime)s::%(levelname)s::" +
             "%(name)s::%(lineno)d::%(message)s",
-            stream=True, stream_setlevel=logging.DEBUG,
+            stream=True, stream_setlevel=logging.CRITICAL,
             sh_format="%(levelname)s::%(name)s::" +
             "%(lineno)d::%(message)s"
         )
@@ -148,14 +149,16 @@ class DataDeliverer():
         self.bucketname = f"project_{self.project_id}"
 
         # Get all data to be delivered
-        self.data, self.failed = self._data_to_deliver(data=data,
-                                                       pathfile=pathfile)
+        self.data, self.failed, self.totsize = \
+            self._data_to_deliver(data=data, pathfile=pathfile)
+
         # Get project public key
         self.public = get_project_public(self.project_id)
 
         # If get - need private key too
-        self.private = get_project_private(self.project_id, self.method, self.user)
-        self.LOGGER.critical(self.private)
+        self.private = get_project_private(
+            self.project_id, self.method, self.user)
+        # self.LOGGER.critical(self.private)
 
         # Success message
         self.LOGGER.info("Delivery initialization successful.")
@@ -559,6 +562,8 @@ class DataDeliverer():
         initial_fail = dict()
 
         data_list = list(data)
+
+        data_amount = 0
         # ----------------------------------------------------------#
 
         # Get all paths from pathfile
@@ -615,9 +620,11 @@ class DataDeliverer():
                 # Get file for files within folder
                 curr_path = Path(d).resolve()   # Full path to data
                 if curr_path.is_dir():  # Get info on files in folder
-                    dir_info, dir_fail = self._get_dir_info(folder=curr_path)
+                    dir_info, dir_fail, fsize = self._get_dir_info(
+                        folder=curr_path)
                     initial_fail.update(dir_fail)   # Not to be delivered
                     all_files.update(dir_info)      # To be delivered
+                    data_amount += fsize
                     continue
 
                 # Get info for individual files
@@ -628,8 +635,9 @@ class DataDeliverer():
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
+                    data_amount += file_info['size']
 
-        return all_files, initial_fail
+        return all_files, initial_fail, data_amount
 
     def _finalize(self, file: Path, info: dict) -> (bool):
         '''Makes sure that the file is not in bucket or db and deletes
@@ -687,6 +695,8 @@ class DataDeliverer():
         dir_fail = {}   # Failed files
         # -----------------------------------------------#
 
+        tot_size = 0
+
         # Iterate through folder contents and get file info
         for f in folder.glob('**/*'):
             if f.is_file() and "DS_Store" not in str(f):    # CHANGE LATER
@@ -700,8 +710,9 @@ class DataDeliverer():
                     dir_fail[f] = file_info
                 else:
                     dir_info[f] = file_info     # Deliver file
+                    tot_size += file_info['size']
 
-        return dir_info, dir_fail
+        return dir_info, dir_fail, tot_size
 
     def _get_download_info(self, item: str) -> (dict):
         '''Gets info on file in database and checks if
@@ -1349,19 +1360,25 @@ class _DSUser():
 class ProgressPercentage(object):
 
     def __init__(self, filename, filesize):
+        # sys.stdout.write("\n")
         self._filename = filename
         self._size = filesize
         self._seen_so_far = 0
+        self.progressbar = ProgressBar(filesize).start()
+        
         self._lock = threading.Lock()
+        # pbar = ProgressBar(delivery.totsize)
+        #         pbar.update(delivery.data[ppath]['size'])
 
     def __call__(self, bytes_amount):
         # To simplify, assume this is hooked up to a single filename
         with self._lock:
             self._seen_so_far += bytes_amount
-            percentage = (self._seen_so_far / self._size) * 100
-            sys.stdout.write(f"\r{self._filename}  {self._seen_so_far} / "
-                             f"{self._size}  ({percentage:.2f}%)")
-            sys.stdout.flush()
+            self.progressbar.update(self._seen_so_far)
+            # percentage = (self._seen_so_far / self._size) * 100
+            # sys.stdout.write(f"\r{self._filename}  {self._seen_so_far} / "
+            #                  f"{self._size}  ({percentage:.2f}%)")
+            # sys.stdout.flush()
 
 # FUNCTIONS ####################################################### FUNCTIONS #
 

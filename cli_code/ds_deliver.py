@@ -13,9 +13,12 @@ from pathlib import Path
 import sys
 import os
 import itertools
+import collections
 
 import click
 from cli_code.crypt4gh.crypt4gh import (lib, header, keys)
+from progressbar import ProgressBar
+from prettytable import PrettyTable
 
 from cli_code import (LOG_FILE, timestamp, DIRS)
 from cli_code.data_deliverer import (DataDeliverer, finish_download)
@@ -43,6 +46,70 @@ def config_logger(logfile: str):
                             stream=True, stream_setlevel=logging.CRITICAL,
                             sh_format="%(levelname)s::%(name)s::" +
                             "%(lineno)d::%(message)s")
+
+
+STATUS_DICT = {'ns': "Not started", 'p': "Processing...",
+               'pf': "Processing finished", 'u': 'Uploading...',
+               'd': "Dowloading...", 'f': u'\u2705', 'e': u'\u274C'}
+
+
+DATA_ORDERED = collections.OrderedDict()
+FCOLSIZE = 0
+SCOLSIZE = 0
+TO_PRINT = ""
+
+
+def create_output(order_tuple):
+    sys.stdout.write("\n")
+    global DATA_ORDERED, FCOLSIZE, SCOLSIZE, TO_PRINT
+
+    max_status = max(len(x) for y, x in STATUS_DICT.items())
+
+    # global SCOLSIZE, FCOLSIZE
+    SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
+    # print(f"max status: {max_status}")
+    FCOLSIZE = max(len(str(x)) for x in order_tuple)
+    sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+                     " File "
+                     f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+                     " "
+                     f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
+                     " Progress "
+                     f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
+
+    for x in order_tuple:
+        file = str(x)
+        DATA_ORDERED[file] = \
+            {'status': STATUS_DICT['ns'],
+             'line': (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
+                      f"{int(SCOLSIZE/2-len(STATUS_DICT['ns'])/2)*' '}"
+                      f"{STATUS_DICT['ns']}\n")}
+        TO_PRINT += DATA_ORDERED[file]['line']
+
+    sys.stdout.write(TO_PRINT)
+
+
+def update_output(file, status):
+    global DATA_ORDERED, FCOLSIZE, SCOLSIZE, TO_PRINT
+
+    file = str(file)
+
+    DATA_ORDERED[file]['status'] = STATUS_DICT[status]
+
+    index = TO_PRINT.find(DATA_ORDERED[file]['line'])
+    line_len = len(DATA_ORDERED[file]['line'])
+
+    new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
+                f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
+                f"{2*' '}{STATUS_DICT[status]}")
+    diff = abs(len(DATA_ORDERED[file]['line']) - len(new_line))
+    new_line += diff*" " + "\n"
+    TO_PRINT = TO_PRINT.replace(DATA_ORDERED[file]['line'], new_line)
+    DATA_ORDERED[file]['line'] = new_line
+
+    sys.stdout.write("\033[A"*len(DATA_ORDERED))
+
+    sys.stdout.write(TO_PRINT)
 
 ###############################################################################
 # MAIN ################################################################# MAIN #
@@ -110,6 +177,8 @@ def put(config: str, username: str, password: str, project: str,
         # Setup logging
         CLI_LOGGER = config_logger(LOG_FILE)
 
+        delivery_table = create_output(delivery.data)
+
         # Print out files
         # for x, y in delivery.data.items():
         # CLI_LOGGER.debug(f"\n{x}: {y}\n")
@@ -121,17 +190,22 @@ def put(config: str, username: str, password: str, project: str,
         # Futures -- Pools and threads
         pools = {}      # Processing e.g. compression, encryption etc
         uthreads = {}   # Upload to S3
-        
+
+        # update_output(
+        #     file='/Users/inaod568/repos/Data-Delivery-System/files/js/flow.js', status='p')
+
         # BEGIN DELIVERY -- ITERATE THROUGH ALL FILES
         for path, info in delivery.data.items():
-            # CLI_LOGGER.debug(f"Beginning...{path}: {info}\n")  # Print out before
 
+            # CLI_LOGGER.debug(f"Beginning...{path}: {info}\n")  # Print out before
+            # update_output(path)
             # If DS noted cancelation for file -- quit and move on
             if not info['proceed']:
                 CLI_LOGGER.warning(f"File: '{path}' -- cancelled "
                                    "-- moving on to next file")
                 continue
 
+            update_output(file=path, status='p')
             # Start file processing -- compression, encryption, etc.
             pools[pool_executor.submit(
                 delivery.prep_upload,
@@ -140,6 +214,7 @@ def put(config: str, username: str, password: str, project: str,
             )
             ] = path
 
+        # pbar.start()
         # DELIVER FILES -- UPLOAD TO S3
         # When file processing is done -- move on to upload
         for pfuture in as_completed(pools):
@@ -165,20 +240,24 @@ def put(config: str, username: str, password: str, project: str,
                 # Set file processing as finished
                 delivery.set_progress(
                     item=ppath, processing=True, finished=True)
+
                 # CLI_LOGGER.debug(f"File: {ppath}, Info: {delivery.data[ppath]}")
 
                 # If DS noted cancelation for file -- quit and move on
                 if not proceed:
                     CLI_LOGGER.warning(f"File: '{ppath}' -- cancelled "
                                        "-- moving on to next file")
+                    update_output(file=ppath, status='e')
                     continue
 
+                update_output(file=ppath, status='u')
                 # Start file delivery -- upload to S3
                 uthreads[
                     thread_executor.submit(delivery.put,
                                            file=ppath,
                                            fileinfo=delivery.data[ppath])
                 ] = ppath
+        # pbar.finish()
 
         # FINISH DELIVERY
         # When file upload is done -- set as finished
@@ -204,10 +283,12 @@ def put(config: str, username: str, password: str, project: str,
                 if not proceed:
                     CLI_LOGGER.warning(f"File: '{upath}' -- cancelled "
                                        "-- moving on to next file")
+                    update_output(file=upath, status='e')
                     continue
                 CLI_LOGGER.info(f"File: {upath} -- DELIVERED")
 
                 delivery.set_progress(item=upath, db=True, started=True)
+
                 # DATABASE UPDATE TO BE THREADED LATER
                 # CURRENTLY PROBLEMS WITH COUCHDB
                 try:
@@ -232,15 +313,18 @@ def put(config: str, username: str, password: str, project: str,
                     with S3Connector(bucketname=delivery.bucketname,
                                      project=delivery.s3project) as s3:
                         s3.delete_item(key=key)
+                    update_output(file=upath, status='e')
 
                 else:
                     CLI_LOGGER.info("Upload completed!"
                                     f"{delivery.data[upath]}")
                     delivery.set_progress(item=upath, db=True, finished=True)
+                    update_output(file=upath, status='f')
 
         # POOLEXECUTORS STOPPED ####################### POOLEXECUTORS STOPPED #
         pool_executor.shutdown(wait=True)
         thread_executor.shutdown(wait=True)
+        sys.stdout.write("\n")
 
 ###############################################################################
 # GET ################################################################### GET #

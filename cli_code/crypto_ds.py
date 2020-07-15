@@ -144,7 +144,11 @@ class ECDHKey:
 
 
 def get_project_private(proj_id, method, user):
-    '''Gets the project private key from the database'''
+    '''Gets the project private key from the database
+
+    format in database:
+    len(magic) + magic + len(projID) + projID + len(privateKey) + privateKey
+    '''
 
     from cli_code.database_connector import DatabaseConnector
 
@@ -175,9 +179,10 @@ def get_project_private(proj_id, method, user):
         )
 
         # read 2 bytes -> length of magic id
-        start=0
-        to_read= 2
-        magic_id_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
+        start = 0
+        to_read = 2
+        magic_id_len = int.from_bytes(
+            decrypted_key[start:start+to_read], 'big')
         print(f"len of magic: {magic_id_len}")
 
         # read magic_id_len bytes -> magic id
@@ -192,7 +197,7 @@ def get_project_private(proj_id, method, user):
         proj_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
         print(f"proj_len: {proj_len}")
 
-        # read proj_len bytes -> project id 
+        # read proj_len bytes -> project id
         start += to_read
         to_read = proj_len
         proj_id = decrypted_key[start:start+to_read]

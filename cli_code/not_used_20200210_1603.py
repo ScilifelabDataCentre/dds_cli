@@ -1566,3 +1566,53 @@ if not delivery.data[path]:
                     )
 
                 return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
+
+# 20200716 -- update data dict
+def update_data_dict(self, path: str, pathinfo: dict) -> (bool):
+        '''Update file information in data dictionary.
+
+        Args:
+            path:       Path to file
+            pathinfo:   Information about file incl. potential errors
+
+        Returns:
+            bool:   True if info update succeeded
+        '''
+
+        try:
+            proceed = pathinfo['proceed']   # All ok so far --> processing
+            self.data[path].update(pathinfo)    # Update file info
+        except Exception as e:  # FIX EXCEPTION HERE
+            self.LOGGER.critical(e)
+            return False
+        else:
+            if not proceed:     # Cancel delivery of file
+                nl = '\n'
+                emessage = (
+                    f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
+                )
+                self.LOGGER.exception(emessage)
+                # If the processing failed, the e_size is an exception
+                self.data[path]['error'] = emessage
+
+                if self.data[path]['in_directory']:  # Failure in folder > all fail
+                    to_stop = {
+                        key: val for key, val in self.data.items()
+                        if self.data[key]['in_directory'] and
+                        (val['dir_name'] == self.data[path]['dir_name'])
+                    }
+
+                    for f in to_stop:
+                        self.data[f]['proceed'] = proceed
+                        self.data[f]['error'] = (
+                            "One or more of the items in folder "
+                            f"'{self.data[f]['dir_name']}' (at least '{path}') "
+                            "has already been delivered!"
+                        )
+                        if 'up_ok' in self.data[path]:
+                            self.data[f]['up_ok'] = self.data[path]['up_ok']
+                        if 'db_ok' in self.data[path]:
+                            self.data[f]['db_ok'] = self.data[path]['db_ok']
+
+            # self.LOGGER.debug(self.data[path])
+            return True

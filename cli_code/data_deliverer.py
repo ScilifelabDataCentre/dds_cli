@@ -1078,14 +1078,12 @@ class DataDeliverer():
             upload (bool):      True if upload in progress or finshed
             db (bool):          True if database update in progress or finished
 
-        Returns:
-            None
-
         Raises:
             DataException:  Data dictionary update failed
 
         '''
 
+        # Which process to update
         to_update = ""
 
         if self.method == "put":
@@ -1103,10 +1101,12 @@ class DataDeliverer():
             elif db:
                 to_update = 'database'
 
+        # Exit if trying to update something else
         if to_update == "":
             raise DeliverySystemException("Trying to update progress on "
                                           "forbidden process.")
 
+        # Update the progress
         try:
             if started:
                 self.data[item][to_update].update({'in_progress': started,
@@ -1117,55 +1117,6 @@ class DataDeliverer():
         except DataException as dex:
             self.LOGGER.exception(f"Data delivery information failed to "
                                   f"update: {dex}")
-
-    def update_data_dict(self, path: str, pathinfo: dict) -> (bool):
-        '''Update file information in data dictionary.
-
-        Args:
-            path:       Path to file
-            pathinfo:   Information about file incl. potential errors
-
-        Returns:
-            bool:   True if info update succeeded
-        '''
-
-        try:
-            proceed = pathinfo['proceed']   # All ok so far --> processing
-            self.data[path].update(pathinfo)    # Update file info
-        except Exception as e:  # FIX EXCEPTION HERE
-            self.LOGGER.critical(e)
-            return False
-        else:
-            if not proceed:     # Cancel delivery of file
-                nl = '\n'
-                emessage = (
-                    f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
-                )
-                self.LOGGER.exception(emessage)
-                # If the processing failed, the e_size is an exception
-                self.data[path]['error'] = emessage
-
-                if self.data[path]['in_directory']:  # Failure in folder > all fail
-                    to_stop = {
-                        key: val for key, val in self.data.items()
-                        if self.data[key]['in_directory'] and
-                        (val['dir_name'] == self.data[path]['dir_name'])
-                    }
-
-                    for f in to_stop:
-                        self.data[f]['proceed'] = proceed
-                        self.data[f]['error'] = (
-                            "One or more of the items in folder "
-                            f"'{self.data[f]['dir_name']}' (at least '{path}') "
-                            "has already been delivered!"
-                        )
-                        if 'up_ok' in self.data[path]:
-                            self.data[f]['up_ok'] = self.data[path]['up_ok']
-                        if 'db_ok' in self.data[path]:
-                            self.data[f]['db_ok'] = self.data[path]['db_ok']
-
-            # self.LOGGER.debug(self.data[path])
-            return True
 
     def update_delivery(self, file: Path, updinfo: dict) -> (bool):
         '''Updates data delivery information dictionary
@@ -1182,8 +1133,10 @@ class DataDeliverer():
 
         '''
 
+        # Variables ############################################### Variables #
         critical_op = 'upload' if self.method == "put" else 'download'
         all_info = self.data[file]  # All info on file
+        # ------------------------------------------------------------------- #
 
         # If cancelled by another file set as not proceed and add error message
         if not all_info['proceed']:
@@ -1215,7 +1168,6 @@ class DataDeliverer():
                                 'error': ("break-on-fail chosen --"
                                           f"{updinfo['error']}")
                             })
-                            # self.LOGGER.debug(self.failed)
                     return False
 
             # If individual file -- cancel this specific file only

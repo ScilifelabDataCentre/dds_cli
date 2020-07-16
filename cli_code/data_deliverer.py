@@ -1044,8 +1044,11 @@ class DataDeliverer():
                 Path:   Path to processed file
                 int:    Size of processed file
                 bool:   True if file compressed by the delivery system
+                bytes:  Public key needed for file decryption
+                bytes:  Salt needed for shared key derivation
                 str:    Error message, "" if none
         '''
+
         # If DS noted cancelation of file -- quit and move on
         if not path_info['proceed']:
             return False, Path(""), 0, False, "", b''
@@ -1115,6 +1118,55 @@ class DataDeliverer():
             self.LOGGER.exception(f"Data delivery information failed to "
                                   f"update: {dex}")
 
+    def update_data_dict(self, path: str, pathinfo: dict) -> (bool):
+        '''Update file information in data dictionary.
+
+        Args:
+            path:       Path to file
+            pathinfo:   Information about file incl. potential errors
+
+        Returns:
+            bool:   True if info update succeeded
+        '''
+
+        try:
+            proceed = pathinfo['proceed']   # All ok so far --> processing
+            self.data[path].update(pathinfo)    # Update file info
+        except Exception as e:  # FIX EXCEPTION HERE
+            self.LOGGER.critical(e)
+            return False
+        else:
+            if not proceed:     # Cancel delivery of file
+                nl = '\n'
+                emessage = (
+                    f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
+                )
+                self.LOGGER.exception(emessage)
+                # If the processing failed, the e_size is an exception
+                self.data[path]['error'] = emessage
+
+                if self.data[path]['in_directory']:  # Failure in folder > all fail
+                    to_stop = {
+                        key: val for key, val in self.data.items()
+                        if self.data[key]['in_directory'] and
+                        (val['dir_name'] == self.data[path]['dir_name'])
+                    }
+
+                    for f in to_stop:
+                        self.data[f]['proceed'] = proceed
+                        self.data[f]['error'] = (
+                            "One or more of the items in folder "
+                            f"'{self.data[f]['dir_name']}' (at least '{path}') "
+                            "has already been delivered!"
+                        )
+                        if 'up_ok' in self.data[path]:
+                            self.data[f]['up_ok'] = self.data[path]['up_ok']
+                        if 'db_ok' in self.data[path]:
+                            self.data[f]['db_ok'] = self.data[path]['db_ok']
+
+            # self.LOGGER.debug(self.data[path])
+            return True
+
     def update_delivery(self, file: Path, updinfo: dict) -> (bool):
         '''Updates data delivery information dictionary
 
@@ -1180,113 +1232,37 @@ class DataDeliverer():
 
         return True
 
-    def get_recipient_key(self, keytype="public"):
-        """Retrieves the recipient public key from the database."""
-
-        with DatabaseConnector() as dbconnection:
-            try:
-                project_db = dbconnection['project_db']
-            except CouchDBException as cdbe2:
-                sys.exit(f"Could not connect to the user database: {cdbe2}")
-            else:
-                if self.project_id not in project_db:
-                    raise CouchDBException(f"The project {self.project_id} "
-                                           "does not exist.")
-
-                if 'project_info' not in project_db[self.project_id]:
-                    raise CouchDBException("There is no project information"
-                                           "registered for the specified "
-                                           "project.")
-
-                if 'owner' not in project_db[self.project_id]['project_info']:
-                    raise CouchDBException("The specified project does not "
-                                           "have a recorded owner.")
-
-                if self.project_owner != project_db[self.project_id]['project_info']['owner']:
-                    raise CouchDBException(f"The user {self.project_owner} "
-                                           "does not exist.")
-
-                if 'project_keys' not in project_db[self.project_id]:
-                    raise CouchDBException("Could not find any projects for "
-                                           f"the user {self.project_owner}.")
-
-                if keytype not in project_db[self.project_id]['project_keys']:
-                    raise CouchDBException(
-                        "There is no public key recorded for "
-                        f"user {self.project_owner} and "
-                        f"project {self.project_id}."
-                    )
-
-                return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])
-
-    def update_data_dict(self, path: str, pathinfo: dict) -> (bool):
-        '''Update file information in data dictionary.
+    def update_progress(self, file, status: str):
+        '''Update the status of the file - Waiting, Encrypting, Uploading, etc.
 
         Args:
-            path:       Path to file
-            pathinfo:   Information about file incl. potential errors
+            file:             File to update progress on
+            status (str):     Which stage the delivery is on
 
-        Returns:
-            bool:   True if info update succeeded
         '''
 
-        try:
-            proceed = pathinfo['proceed']   # All ok so far --> processing
-            self.data[path].update(pathinfo)    # Update file info
-        except Exception as e:  # FIX EXCEPTION HERE
-            self.LOGGER.critical(e)
-            return False
-        else:
-            if not proceed:     # Cancel delivery of file
-                nl = '\n'
-                emessage = (
-                    f"{pathinfo['error'] + nl if 'error' in pathinfo else ''}"
-                )
-                self.LOGGER.exception(emessage)
-                # If the processing failed, the e_size is an exception
-                self.data[path]['error'] = emessage
+        file = str(file)    # For printing and len() purposes
 
-                if self.data[path]['in_directory']:  # Failure in folder > all fail
-                    to_stop = {
-                        key: val for key, val in self.data.items()
-                        if self.data[key]['in_directory'] and
-                        (val['dir_name'] == self.data[path]['dir_name'])
-                    }
-
-                    for f in to_stop:
-                        self.data[f]['proceed'] = proceed
-                        self.data[f]['error'] = (
-                            "One or more of the items in folder "
-                            f"'{self.data[f]['dir_name']}' (at least '{path}') "
-                            "has already been delivered!"
-                        )
-                        if 'up_ok' in self.data[path]:
-                            self.data[f]['up_ok'] = self.data[path]['up_ok']
-                        if 'db_ok' in self.data[path]:
-                            self.data[f]['db_ok'] = self.data[path]['db_ok']
-
-            # self.LOGGER.debug(self.data[path])
-            return True
-
-    def update_progress(self, file, status):
-
-        file = str(file)
-
+        # Change the status
         self.PROGRESS[file]['status'] = STATUS_DICT[status]
 
+        # Line to update to in progress output
         new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
                     f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
                     f"{2*' '}{STATUS_DICT[status]}")
+
+        # If shorter line than before -> cover up previous text
         diff = abs(len(self.PROGRESS[file]['line']) - len(new_line))
         new_line += diff*" " + "\n"
 
-        self.TO_PRINT = self.TO_PRINT.replace(
-            self.PROGRESS[file]['line'], new_line)
+        # Replace the printout and progress dict with the update
+        self.TO_PRINT = self.TO_PRINT.replace(self.PROGRESS[file]['line'],
+                                              new_line)
         self.PROGRESS[file]['line'] = new_line
 
-        sys.stdout.write("\033[A"*len(self.PROGRESS))
-
-        sys.stdout.write(self.TO_PRINT)
+        # Print the status
+        sys.stdout.write("\033[A"*len(self.PROGRESS))   # Jump up to cover prev
+        sys.stdout.write(self.TO_PRINT)                 # Print new for all
 
     ################
     # Main Methods #

@@ -114,7 +114,8 @@ class ECDHKey:
             format=serialization.PublicFormat.Raw
         ).hex().upper()
 
-    def generate_encryption_key(self, peer_public: bytes, salt_=""):
+    def generate_encryption_key(self, peer_public: bytes, salt_="") \
+            -> (bytes, bytes):
         '''Generate shared symmetric encryption key using peer public key
         and own public and private key'''
 
@@ -238,7 +239,7 @@ def get_project_private(proj_id: str, user):
             sys.exit(printout_error("Error in private key! Extra bytes after"
                                     "key -- parsing failed or key corrupted!"))
         # --------------------------------------------------------------------#
-        
+
         return key
 
 

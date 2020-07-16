@@ -217,11 +217,14 @@ def file_deleter(file: Path):
         try:
             os.remove(file)
         except OSError as ose:
-            LOG.warning(f"Failed deleting file {file}: {ose}.")
+            error = f"Failed deleting file {file}: {ose}."
+            LOG.warning(error)
+            return True, error
         else:
             LOG.info(f"Deleted file {file}")
     else:
         LOG.info(f"Deleted file {file}")
+        return True, ""
 
 ###############################################################################
 # COMPRESSION ################################################### COMPRESSION #
@@ -470,7 +473,7 @@ def reverse_processing(file: str, file_info: dict, keys: tuple):
 
 
 def process_file(file: Path, file_info: dict, peer_public) \
-        -> (bool, Path, int, bool, str):
+        -> (bool, Path, int, bool, bytes, bytes, str):
     '''Processes the files incl compression, encryption
 
     Args:
@@ -480,11 +483,13 @@ def process_file(file: Path, file_info: dict, peer_public) \
     Returns:
         tuple: Information about finished processing
 
-            bool:   True if processing successful -- compression+encryption
+            bool:   True if processing successful
             Path:   Path to processed file
-            int:    Size (in bytes) of processd file
-            bool:   True if compressed
-            str:    Error message, empty string if no error
+            int:    Size of processed file
+            bool:   True if file compressed by the delivery system
+            bytes:  Public key needed for file decryption
+            bytes:  Salt needed for shared key derivation
+            str:    'Error message, "" if none
 
     Raises:
         DeliverySystemException:    Failed processing or wrong argument format
@@ -492,12 +497,12 @@ def process_file(file: Path, file_info: dict, peer_public) \
 
     '''
 
-    # If file path not Path type --> quit whole exception, something wrong
+    # If file path not Path type --> quit whole execution, something wrong
     if not isinstance(file, Path):
         emessage = f"Wrong format! {file} is not a 'Path' object."
         raise DeliverySystemException(emessage)   # Bug somewhere in code
 
-    # If file doesn't exist --> quit whole exception, something wrong
+    # If file doesn't exist --> quit whole execution, something wrong
     if not file.exists():
         emessage = f"The path {file} does not exist!"
         raise OSError(emessage)  # Bug somewhere in code
@@ -505,32 +510,28 @@ def process_file(file: Path, file_info: dict, peer_public) \
     # Variables ################################################### Variables #
     outfile = DIRS[1] / file_info['new_file']   # Path to save processed file
     new_dir = DIRS[1] / file_info['directory_path']     # New temp subdir
-    checksum = ""
     key = b''
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {file}, Outfile: {outfile}")
 
     # Encryption key ######################################### Encryption key #
     keypair = ECDHKey()    # Create new ECDH key pair
-    LOG.debug(type(peer_public))
 
     # Generate shared symmetric encryption key from peer_public + pub + priv
     key, salt = keypair.generate_encryption_key(peer_public=peer_public)
-    LOG.debug(f"private: {keypair.private}, "
-              f"public: {keypair.public} ({type(keypair.public)}), "
-              f"derived: {key} ({len(key)})")
-    # key = os.urandom(32)            # Data encryption key
+    # LOG.debug(f"private: {keypair.private}, "
+    #           f"public: {keypair.public} ({type(keypair.public)}), "
+    #           f"derived: {key} ({len(key)})")
     # ----------------------------------------------------------------------- #
 
-    # If new temporary subdir doesn't exist -- create it
+    # Create new temporary subdir if doesn't exist
     if not new_dir.exists():
         try:
             new_dir.mkdir(parents=True, exist_ok=True)
         except OSError as e:
-            error = f"File: {file} -- Creating tempdir {new_dir} failed! :: {e}"
+            error = f"File: {file} - Failed creating tempdir '{new_dir}': {e}"
             LOG.exception(error)
             return False, Path(""), 0, False, "", "", error
-        # LOG.debug(f"File: {file}, Tempdir: {new_dir}")
 
     # PROCESSING START ##################################### PROCESSING START #
     try:
@@ -543,42 +544,35 @@ def process_file(file: Path, file_info: dict, peer_public) \
 
             # Encryption ######################################### Encryption #
             with outfile.open(mode='wb+') as of:
-                iv_bytes = os.urandom(12)       # Initial nonce/value
-                # LOG.debug(f"File: {file}, Data encryption key: {key},a"
-                #           f"Initial nonce: {iv_bytes}")
-
-                # Write nonce to file and save 12 bytes for last nonce
+                # Generate initial nonce and save to file
+                iv_bytes = os.urandom(12)
                 of.write(iv_bytes)
-                # saved_bytes = (0).to_bytes(length=12, byteorder='little')
-                # LOG.debug(f"saved bytes: {saved_bytes}")
-                # of.write(saved_bytes)
+                # LOG.debug(f"File: {file} IV: {iv_bytes}")
 
+                # Encrypt and save ciphertext (not nonces) to file
                 nonce = b''     # Catches the nonces
                 for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
                                                              key=key,
                                                              iv=iv_bytes):
-                    # LOG.debug(
-                    #     f"\nnonce: {nonce}, \nciphertext: {ciphertext[0:100]}\n")
-                    of.write(ciphertext)    # Write the ciphertext to the file
+                    of.write(ciphertext)
 
-                # LOG.debug(f"\nlast nonce:\t{nonce}\n")
-                # of.seek(12)
-                # LOG.debug(f"\nposition (12):\t{of.tell()}\n")
+                # Save last nonce to end of file
                 of.write(nonce)
+                # LOG.debug(f"File: {file}, last nonce:\t{nonce}\n")
 
-    except DeliverySystemException as ee:  # FIX EXCEPTION HERE
-        error = f"Processig failed! {ee}"
+    except DeliverySystemException as ee:
+        error = f"File: {file}, Processig failed! {ee}"
         LOG.exception(error)
         return False, outfile, 0, False, "", "", error
     else:
-        LOG.info(f"File: '{file}' -- Processing completed! Encrypted file "
-                 f"saved at {outfile}")
+        LOG.info(f"File: '{file}', Processing successful! "
+                 f"Encrypted file saved at {outfile}")
         # Info on if delivery system compressed or not
         ds_compressed = False if file_info['compressed'] else True
     finally:
         os.umask(original_umask)    # Remove mask
 
-    # PROCESSING FINISHED ############################### PROCESSING FINISHED #
-    # LOG.debug(f"\nlast nonce:\t{nonce}\n")
+    # PROCESSING FINISHED ------------------------------- PROCESSING FINISHED #
+
     return (True, outfile, outfile.stat().st_size, ds_compressed,
             keypair.public_to_hex(), salt.hex().upper(), "")

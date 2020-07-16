@@ -1526,3 +1526,43 @@ if not delivery.data[path]:
                 self.LOGGER.exception(
                     f"Failed emptying the temporary folder {d}: {e}"
                 )
+
+# 20200716 -- get recipient key
+  def get_recipient_key(self, keytype="public"):
+        """Retrieves the recipient public key from the database."""
+
+        with DatabaseConnector() as dbconnection:
+            try:
+                project_db = dbconnection['project_db']
+            except CouchDBException as cdbe2:
+                sys.exit(f"Could not connect to the user database: {cdbe2}")
+            else:
+                if self.project_id not in project_db:
+                    raise CouchDBException(f"The project {self.project_id} "
+                                           "does not exist.")
+
+                if 'project_info' not in project_db[self.project_id]:
+                    raise CouchDBException("There is no project information"
+                                           "registered for the specified "
+                                           "project.")
+
+                if 'owner' not in project_db[self.project_id]['project_info']:
+                    raise CouchDBException("The specified project does not "
+                                           "have a recorded owner.")
+
+                if self.project_owner != project_db[self.project_id]['project_info']['owner']:
+                    raise CouchDBException(f"The user {self.project_owner} "
+                                           "does not exist.")
+
+                if 'project_keys' not in project_db[self.project_id]:
+                    raise CouchDBException("Could not find any projects for "
+                                           f"the user {self.project_owner}.")
+
+                if keytype not in project_db[self.project_id]['project_keys']:
+                    raise CouchDBException(
+                        "There is no public key recorded for "
+                        f"user {self.project_owner} and "
+                        f"project {self.project_id}."
+                    )
+
+                return bytes.fromhex(project_db[self.project_id]['project_keys'][keytype])

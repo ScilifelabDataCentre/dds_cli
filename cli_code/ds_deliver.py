@@ -29,6 +29,22 @@ import cli_code.file_handler as fh
 from cli_code.s3_connector import S3Connector
 
 ###############################################################################
+# Global variables ######################################### Global variables #
+###############################################################################
+
+# ns: not started, f: finished, e: error, 
+# enc: encrypting, dec: decrypting
+# u: uploading, d: downloading
+STATUS_DICT = {'ns': "Not started", 'f': u'\u2705', 'e': u'\u274C',
+               'enc': "Encrypting...", 'dec': "Decrypting",
+               'u': 'Uploading...', 'd': "Dowloading...", }
+
+DATA_ORDERED = collections.OrderedDict()
+FCOLSIZE = 0
+SCOLSIZE = 0
+TO_PRINT = ""
+
+###############################################################################
 # Logging ########################################################### Logging #
 ###############################################################################
 
@@ -47,16 +63,9 @@ def config_logger(logfile: str):
                             sh_format="%(levelname)s::%(name)s::" +
                             "%(lineno)d::%(message)s")
 
-
-STATUS_DICT = {'ns': "Not started", 'f': u'\u2705', 'e': u'\u274C',
-               'enc': "Encrypting...", 'dec': "Decrypting",
-               'u': 'Uploading...', 'd': "Dowloading...", }
-
-
-DATA_ORDERED = collections.OrderedDict()
-FCOLSIZE = 0
-SCOLSIZE = 0
-TO_PRINT = ""
+###############################################################################
+# Progress printout ####################################### Progress printout #
+###############################################################################
 
 
 def create_output(order_tuple):
@@ -96,9 +105,6 @@ def update_output(file, status):
 
     DATA_ORDERED[file]['status'] = STATUS_DICT[status]
 
-    index = TO_PRINT.find(DATA_ORDERED[file]['line'])
-    line_len = len(DATA_ORDERED[file]['line'])
-
     new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
                 f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
                 f"{2*' '}{STATUS_DICT[status]}")
@@ -118,13 +124,17 @@ def update_output(file, status):
 
 @click.group()
 def cli():
-    pass
+
+    # Setup logging
+    global CLI_LOGGER
+    CLI_LOGGER = config_logger(LOG_FILE)
 
 ###############################################################################
 # PUT ################################################################### PUT #
 ###############################################################################
 
-
+# "'put' is too complex" -- this warning disappears when the database update
+# at end of delivery is moved to other place/changed (couchdb -> mariadb)
 @cli.command()
 @click.option('--config', '-c',
               required=False,
@@ -173,9 +183,6 @@ def put(config: str, username: str, password: str, project: str,
                        pathfile=pathfile, data=data, break_on_fail=True,
                        overwrite=overwrite) \
             as delivery:
-
-        # Setup logging
-        CLI_LOGGER = config_logger(LOG_FILE)
 
         # Progress printout
         delivery_table = create_output(delivery.data)
@@ -372,9 +379,6 @@ def get(config: str, username: str, password: str, project: str,
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, pathfile=pathfile, data=data) \
             as delivery:
-
-        # Setup logging
-        CLI_LOGGER = config_logger(LOG_FILE)
 
         # Progress printout
         delivery_table = create_output(delivery.data)

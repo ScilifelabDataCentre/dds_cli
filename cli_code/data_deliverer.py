@@ -205,13 +205,17 @@ class DataDeliverer():
 
     def __exit__(self, exc_type, exc_value, tb):
         '''Allows for implementation using "with" statement.
-        Tear it down. Delete class.'''
+        Tear it down. Delete class.
+
+        Prints out which files are delivered and not.'''
+        # NOTE: Remove this and just update the progress instead?
 
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        # Delivered folders
+        # Tables ##################################################### Tables #
+        # Folders
         folders_table = PrettyTable(
             ['Directory', 'File', 'Delivered', 'Error']
         )
@@ -219,25 +223,28 @@ class DataDeliverer():
         folders_table.align['File'] = "r"
         folders_table.align['Error'] = "l"
 
-        # Delivered files
+        # Files
         files_table = PrettyTable(
             ['File', 'Delivered', 'Error']
         )
         files_table.align['File'] = "r"
         files_table.align['Error'] = "l"
 
-        # Reduces the text width and wraps in column
+        # Reduce the text width and wraps in column
         wrapper = textwrap.TextWrapper(width=80)
+        # ------------------------------------------------------------------- #
 
-        folders = {}
-
-        are_folders = False
-        are_files = False
+        # Variables ############################################### Variables #
+        folders = {}            # Already checked folders
+        are_folders = False     # True if folders have been delivered/failed
+        are_files = False       # True if files have been delivered/failed
 
         # Check if uploaded or downloaded successfully
         critical_op = 'upload' if self.method == "put" else 'download'
+        # ------------------------------------------------------------------- #
 
-        # Iterate through failed items
+        # Iterate through items ####################### Iterate through items #
+        # Failed items - on initial check
         for file, info in self.failed.items():
             # Remove encrypted files
             self._finalize(file=file, info=info)
@@ -278,6 +285,7 @@ class DataDeliverer():
                      '\n'.join(wrapper.wrap(info["error"])) + '\n']
                 )
 
+        # Items passing the initial check - successfully delivered AND failed
         for file, info in self.data.items():
             # Remove encrypted files
             self._finalize(file=file, info=info)
@@ -315,13 +323,15 @@ class DataDeliverer():
                         if all([info['proceed'], info[critical_op]['finished'],
                                 info['database']['finished']]) else "NO",
                         '\n'.join(wrapper.wrap(info["error"])) + '\n'])
+        # ------------------------------------------------------------------- #
 
-        self.LOGGER.info("DELIVERY COMPLETED!")
-        self.LOGGER.info(
+        # FINAL MESSAGE ####################################### FINAL MESSAGE #
+        print("* * * * * * * * * * DELIVERY COMPLETED! * * * * * * * * * *")
+        print(
             f"\n################### FOLDERS DELIVERED ###################"
             f"\n{folders_table}\n" if are_folders else "\n"
         )
-        self.LOGGER.info(
+        print(
             f"\n#################### FILES DELIVERED ####################"
             f"\n{files_table}\n" if are_files else "\n"
         )

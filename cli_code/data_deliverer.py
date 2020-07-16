@@ -195,7 +195,7 @@ class DataDeliverer():
                                            self.user)   # b'' if uploading
 
         # Start progress info printout
-        self.TO_PRINT, self.PROGRESS = self.create_progress_output()
+        self.TO_PRINT, self.PROGRESS = self._create_progress_output()
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -394,7 +394,7 @@ class DataDeliverer():
                                     "Access to Delivery System denied."))
 
     # NOTE: CouchDB -> MariaDB and optimize
-    def _check_project_access(self):
+    def _check_project_access(self) -> (bool, str):
         '''Checks the users access to a specific project.
 
         Returns:
@@ -588,7 +588,7 @@ class DataDeliverer():
                     f"Failed emptying the temporary folder {d}: {e}"
                 )
 
-    def create_progress_output(self):
+    def _create_progress_output(self):
         sys.stdout.write("\n")
 
         global SCOLSIZE, FCOLSIZE

@@ -28,21 +28,6 @@ from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError)
 import cli_code.file_handler as fh
 from cli_code.s3_connector import S3Connector
 
-###############################################################################
-# Global variables ######################################### Global variables #
-###############################################################################
-
-# ns: not started, f: finished, e: error, 
-# enc: encrypting, dec: decrypting
-# u: uploading, d: downloading
-STATUS_DICT = {'ns': "Not started", 'f': u'\u2705', 'e': u'\u274C',
-               'enc': "Encrypting...", 'dec': "Decrypting",
-               'u': 'Uploading...', 'd': "Dowloading...", }
-
-DATA_ORDERED = collections.OrderedDict()
-FCOLSIZE = 0
-SCOLSIZE = 0
-TO_PRINT = ""
 
 ###############################################################################
 # Logging ########################################################### Logging #
@@ -68,34 +53,29 @@ def config_logger(logfile: str):
 ###############################################################################
 
 
-def create_output(order_tuple):
-    sys.stdout.write("\n")
-    global DATA_ORDERED, FCOLSIZE, SCOLSIZE, TO_PRINT
+# def create_output(order_tuple):
+#     sys.stdout.write("\n")
+#     global DATA_ORDERED, FCOLSIZE, SCOLSIZE, TO_PRINT
 
-    max_status = max(len(x) for y, x in STATUS_DICT.items())
+    
+#     sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+#                      " File "
+#                      f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+#                      " "
+#                      f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
+#                      " Progress "
+#                      f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
 
-    # global SCOLSIZE, FCOLSIZE
-    SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
-    # print(f"max status: {max_status}")
-    FCOLSIZE = max(len(str(x)) for x in order_tuple)
-    sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
-                     " File "
-                     f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
-                     " "
-                     f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
-                     " Progress "
-                     f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
+#     for x in order_tuple:
+#         file = str(x)
+#         DATA_ORDERED[file] = \
+#             {'status': STATUS_DICT['ns'],
+#              'line': (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
+#                       f"{int(SCOLSIZE/2-len(STATUS_DICT['ns'])/2)*' '}"
+#                       f"{STATUS_DICT['ns']}\n")}
+#         TO_PRINT += DATA_ORDERED[file]['line']
 
-    for x in order_tuple:
-        file = str(x)
-        DATA_ORDERED[file] = \
-            {'status': STATUS_DICT['ns'],
-             'line': (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
-                      f"{int(SCOLSIZE/2-len(STATUS_DICT['ns'])/2)*' '}"
-                      f"{STATUS_DICT['ns']}\n")}
-        TO_PRINT += DATA_ORDERED[file]['line']
-
-    sys.stdout.write(TO_PRINT)
+#     sys.stdout.write(TO_PRINT)
 
 
 def update_output(file, status):

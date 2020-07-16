@@ -30,6 +30,21 @@ from cli_code.file_handler import (config_logger, get_root_path, is_compressed,
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
+# Global variables ######################################### Global variables #
+
+# ns: not started, f: finished, e: error,
+# enc: encrypting, dec: decrypting
+# u: uploading, d: downloading
+STATUS_DICT = {'ns': "Not started", 'f': u'\u2705', 'e': u'\u274C',
+               'enc': "Encrypting...", 'dec': "Decrypting",
+               'u': 'Uploading...', 'd': "Dowloading...", }
+
+DATA_ORDERED = collections.OrderedDict()
+max_status = max(len(x) for y, x in STATUS_DICT.items())
+SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
+FCOLSIZE = 0
+TO_PRINT = ""
+
 # DATA DELIVERER ############################################# DATA DELIVERER #
 
 
@@ -149,7 +164,7 @@ class DataDeliverer():
         self.bucketname = f"project_{self.project_id}"
 
         # Get all data to be delivered
-        self.data, self.failed, self.totsize = \
+        self.data, self.failed = \
             self._data_to_deliver(data=data, pathfile=pathfile)
 
         # Get project public key
@@ -162,6 +177,19 @@ class DataDeliverer():
 
         # Success message
         self.LOGGER.info("Delivery initialization successful.")
+
+        global FCOLSIZE
+        FCOLSIZE = max(len(x) for x in DATA_ORDERED)
+        self.TO_PRINT = TO_PRINT
+        TO_PRINT = ""
+        sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+                         " File "
+                         f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+                         " "
+                         f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
+                         " Progress "
+                         f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
+        sys.stdout.write(self.TO_PRINT)
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -562,8 +590,6 @@ class DataDeliverer():
         initial_fail = dict()
 
         data_list = list(data)
-
-        data_amount = 0
         # ----------------------------------------------------------#
 
         # Get all paths from pathfile
@@ -624,7 +650,6 @@ class DataDeliverer():
                         folder=curr_path)
                     initial_fail.update(dir_fail)   # Not to be delivered
                     all_files.update(dir_info)      # To be delivered
-                    data_amount += fsize
                     continue
 
                 # Get info for individual files
@@ -635,9 +660,8 @@ class DataDeliverer():
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
-                    data_amount += file_info['size']
 
-        return all_files, initial_fail, data_amount
+        return all_files, initial_fail
 
     def _finalize(self, file: Path, info: dict) -> (bool):
         '''Makes sure that the file is not in bucket or db and deletes
@@ -916,6 +940,15 @@ class DataDeliverer():
                 # --overwrite flag --> deliver again, overwrite file
                 if not self.overwrite:
                     return {'proceed': False, 'error': error, **dir_info}
+
+        global TO_PRINT, DATA_ORDERED
+        f = str(file)
+        DATA_ORDERED[f] = \
+            {'status': STATUS_DICT['ns'],
+             'line': (f"{f}{int(FCOLSIZE-len(f)+1)*' '} "
+                      f"{int(SCOLSIZE/2-len(STATUS_DICT['ns'])/2)*' '}"
+                      f"{STATUS_DICT['ns']}\n")}
+        TO_PRINT += DATA_ORDERED[f]['line']
 
         return {'in_directory': in_dir,
                 'dir_name': dir_name if in_dir else None,
@@ -1365,7 +1398,7 @@ class ProgressPercentage(object):
         self._size = filesize
         self._seen_so_far = 0
         self.progressbar = ProgressBar(filesize).start()
-        
+
         self._lock = threading.Lock()
         # pbar = ProgressBar(delivery.totsize)
         #         pbar.update(delivery.data[ppath]['size'])

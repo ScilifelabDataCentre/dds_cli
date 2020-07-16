@@ -1015,7 +1015,7 @@ class DataDeliverer():
     # Public Methods #
     ##################
 
-    def finalize_delivery(self, file: str, fileinfo: dict):
+    def finalize_delivery(self, file: str, fileinfo: dict) -> (tuple):
         '''Finalizes delivery after download from s3:
         Decrypts, decompresses (if compressed in DS), and checks integrity.
 

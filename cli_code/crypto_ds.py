@@ -102,11 +102,6 @@ class ECDHKey:
 
         return True
 
-    # def generate_ecdh_keypair(self):
-    #     private = X25519PrivateKey.generate()
-    #     public = private.public_key()
-    #     return private, public
-
     def public_to_hex(self):
         return self.public.public_bytes(
             encoding=serialization.Encoding.Raw,

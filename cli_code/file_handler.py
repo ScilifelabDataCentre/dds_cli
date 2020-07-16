@@ -183,16 +183,32 @@ def file_reader(file, chunk_size: int = SEGMENT_SIZE) -> (bytes):
 
 
 def file_writer(filehandler, gen, last_nonce):
+    '''Writes decrypted chunks to file. Checks if last nonces match. 
 
-    nonce = b''
+    Args:
+        filehandler:            Filehandler to save decompressed chunks to/with
+        gen:                    Generator - all decrypted chunks streamed
+        last_nonce (bytes):     Last nonce found from file
+
+    Returns:
+        tuple:  Info on saved file, decryption and decompression
+
+            bool:   True if file saved and last nonce is correct
+            str:    Error message, "" if none
+
+    '''
+
+    nonce = b''  # Catches last nonce while decompressing decrypted chunk
 
     # Save chunks to file
     for nonce, chunk in gen:
         filehandler.write(chunk)
 
     # If reached end of file but nonces don't match - the entire file has not
-    # been delivered
-    nonce_ok, error = check_last_nonce(filehandler.name, last_nonce, nonce)
+    # been delivered -- error
+    nonce_ok, error = check_last_nonce(filename=filehandler.name,
+                                       last_nonce=last_nonce,
+                                       nonce=nonce)
 
     return nonce_ok, error
 
@@ -250,29 +266,35 @@ def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
             yield chunk
 
 
-def decompress_file(filehandler, gen, last_nonce) -> (bytes):
+def decompress_file(filehandler, gen, last_nonce: bytes) -> (bool, str):
     '''Decompresses file
 
     Args:
-        file:           Path to file
-        chunk_size:     Number of bytes to compress at a time
+        filehandler:            Filehandler to save decompressed chunks to/with
+        gen:                    Generator - all decrypted chunks streamed
+        last_nonce (bytes):     Last nonce found from file
 
-    Yields:
-        bytes:  Compressed data chunk
+    Returns:
+        tuple:  Info on saved file, decryption and decompression
+
+            bool:   True if file saved and last nonce is correct
+            str:    Error message, "" if none
 
     '''
 
-    nonce = b''
+    nonce = b''     # Catches last nonce while decompressing decrypted chunk
 
-    # Initiate a Zstandard decompressor
-    dctx = zstd.ZstdDecompressor()
+    # Decompress chunks and save to file
+    dctx = zstd.ZstdDecompressor()  # Initiate a Zstandard decompressor
     with dctx.stream_writer(filehandler) as decompressor:
         for nonce, chunk in gen:
             decompressor.write(chunk)   # Write decompressed chunks to file
 
     # If reached end of file but nonces don't match - the entire file has not
-    # been delivered
-    nonce_ok, error = check_last_nonce(filehandler.name, last_nonce, nonce)
+    # been delivered -- error
+    nonce_ok, error = check_last_nonce(filename=filehandler.name,
+                                       last_nonce=last_nonce,
+                                       nonce=nonce)
 
     return nonce_ok, error
 
@@ -316,16 +338,31 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
     '''Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
     construction described in RFC7539.
 
+    Args:
+        file:           Filehandler to read from
+        key (bytes):    Derived, shared key
+        iv (bytes):     First used for encryption/decryption
+
+    Yields:
+        tuple:  Nonce and plaintext
+
+            bytes:  Nonce used for each chunk
+            bytes:  Plaintext chunk
+
+    Raises:
+        DeliverySystemException:    Failed reading of nonces
+
     '''
 
+    # NOTE: Fix return error here?
     # If position not directly after first nonce, then error - fail
     if file.tell() != 12:
         raise DeliverySystemException(f"Reading encrypted file {file.name} "
                                       "failed!")
 
     # Variables ################################################### Variables #
-    iv_int = int.from_bytes(iv, 'little')   # Transform nonce to int
-    aad = None  # Associated data, unencrypted but authenticated
+    iv_int = int.from_bytes(iv, 'little')           # Transform nonce to int
+    aad = None              # Associated data, unencrypted but authenticated
     # ----------------------------------------------------------------------- #
 
     for enc_chunk in iter(lambda: file.read(CIPHER_SEGMENT_SIZE), b''):
@@ -382,12 +419,28 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
                                                                key=key)
 
 
-def check_last_nonce(filename, last_nonce, nonce) -> (bool, str):
+def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
+        -> (bool, str):
+    '''Check if the nonces match and give error if they don't.
+
+    Args:
+        filename (str):     File name
+        last_nonce (bytes):     Last nonce (read from end of encrypted file)
+        nonce (bytes):          Nonce which decryption/decompression ended on
+
+    Returns:
+        tuple:  Info on delivery ok or not
+
+            bool:   True if the nonces match
+            str:    Error message, "" if none
+
+    '''
 
     # If reached end of file but nonces don't match - the entire file has not
-    # been delivered
+    # been delivered -- error
     if nonce != last_nonce:
-        error = f"File {filename} is missing chunks!"
+        error = (f"File: {filename}. Nonces don't match! "
+                 "File integrity compromised!")
         LOG.exception(error)
         return False, error
     else:
@@ -401,29 +454,47 @@ def get_file_key():
 ###############################################################################
 
 
-def reverse_processing(file: str, file_info: dict, keys: tuple):
-    '''Decrypts and decompresses file'''
+def reverse_processing(file: str, file_info: dict, keys: tuple) \
+        -> (bool, str, str):
+    '''Decrypts and decompresses file (if DS compressed)
+
+    Args:
+        file (str):         Path to file
+        file_info (dict):   Info on file
+        keys (tuple):       Project specific ECDH keys required for decryption
+                            Format: (public, private)
+
+    Returns:
+        tuple:  Info on finalizing delivery
+
+            bool:   True if decryption etc successful
+            str:    Decrypted file
+            str:    Error message, "" if none
+
+    '''
 
     # Variables ################################################### Variables #
-    infile = file_info['new_file']  # Downloaded file
-    # Decrypted and decompressed file
-    outfile = infile.parent / Path(infile.stem).stem
-    nonce = b''
+    infile = file_info['new_file']                      # Downloaded file
+    outfile = infile.parent / Path(infile.stem).stem    # Finalized file path
     error = ""
     # ----------------------------------------------------------------------- #
     # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
 
     # Encryption key ######################################### Encryption key #
-    peer_public = bytes.fromhex(file_info['key'])  # Files public enc key
-    salt = file_info['salt']        # Salt to generate same shared key
+    # Get keys for decryption
+    peer_public = bytes.fromhex(file_info['key'])   # File public enc key
+    keypair = ECDHKey(keys=keys)                    # Project specific key pair
 
-    keypair = ECDHKey(keys=keys)
+    # Derive shared symmetric key
+    salt = file_info['salt']                # Salt to generate same shared key
     key, _ = keypair.generate_encryption_key(peer_public=peer_public,
                                              salt_=salt)
+
+    # "Delete" private key
     keypair.del_priv_key()
-    LOG.debug(key)
     # ----------------------------------------------------------------------- #
-    # START ##################################### START #
+
+    # START ########################################################### START #
     try:
         original_umask = os.umask(0)  # User file-creation mode mask
         with infile.open(mode='rb+') as f:
@@ -444,14 +515,12 @@ def reverse_processing(file: str, file_info: dict, keys: tuple):
 
             # Save decrypted file
             with outfile.open(mode='ab+') as of:
-                # Decompress and save if compressed by DS, otherwise just save
-                saved, error = decompress_file(filehandler=of,
-                                               gen=chunk_stream,
-                                               last_nonce=last_nonce) \
-                    if file_info['ds_compressed'] \
-                    else file_writer(filehandler=of,
-                                     gen=chunk_stream,
-                                     last_nonce=last_nonce)
+                # Decompress if DS compressed, otherwise save chunks
+                func = decompress_file if file_info['ds_compressed'] \
+                    else file_writer
+                saved, error = func(filehandler=of,
+                                    gen=chunk_stream,
+                                    last_nonce=last_nonce)
 
                 if not saved:
                     return False, outfile, error
@@ -466,7 +535,8 @@ def reverse_processing(file: str, file_info: dict, keys: tuple):
     finally:
         os.umask(original_umask)    # Remove mask
 
-    # FINISHED ############################### FINISHED #
+    # FINISHED ----------------------------------------------------- FINISHED #
+
     return True, outfile, ""
 
 

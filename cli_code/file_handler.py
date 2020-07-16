@@ -162,16 +162,9 @@ def get_root_path(file: Path, path_base: str = None) -> (Path):
         Path:   Path from folder to file
     '''
 
-    if path_base is not None:
-        # LOG.info(f"path_base = {path_base} "
-        #          "--> root path is from chosen folder.")
-        fileparts = file.parts
-        start_ind = fileparts.index(path_base)
-        return Path(*fileparts[start_ind:-1])
-    else:
-        # LOG.info(f"path_base = {path_base} "
-        #          "--> root path is . (user specified file)")
-        return Path("")
+    fileparts = file.parts
+    start_ind = fileparts.index(path_base)
+    return Path(*fileparts[start_ind:-1])
 
 
 def file_reader(file, chunk_size: int = SEGMENT_SIZE) -> (bytes):

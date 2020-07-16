@@ -410,9 +410,9 @@ class DataDeliverer():
 
         '''
 
-        # Variables ############################################### Variables #
+        # Variables ########################################## Variables #
         user_projects = dict()
-        # ------------------------------------------------------------------- #
+        # -------------------------------------------------------------- #
 
         with DatabaseConnector() as couch:
             user_db = couch['user_db']
@@ -510,7 +510,7 @@ class DataDeliverer():
 
         '''
 
-        # No config file --------- loose credentials --------- No config file #
+        # No config file -------- loose credentials -------- No config file #
         if config is None:
             # Cancel delivery if username or password not specified
             if not all([self.user.username, self.user.password]):
@@ -536,7 +536,7 @@ class DataDeliverer():
                 self.project_owner = self.user.username
                 return
 
-        # Config file ------------ credentials in it ------------ Config file #
+        # Config file ----------- credentials in it ----------- Config file #
         user_config = Path(config).resolve()
         try:
             # Get info from credentials file
@@ -619,42 +619,41 @@ class DataDeliverer():
 
         return TO_PRINT, PROGRESS_DICT
 
-    def _data_to_deliver(self, data: tuple, pathfile: str) -> (list):
+    def _data_to_deliver(self, data: tuple, pathfile: str) -> (dict, dict):
         '''Puts all entered paths into one list
 
         Args:
-            data:       Tuple containing paths
-            pathfile:   Path to file containing paths
+            data (tuple):       Tuple containing paths
+            pathfile (str):   Path to file containing paths
 
         Returns:
-            list:   List of all paths entered in data and pathfile option
+            tuple:  Info on user specified files
 
-        Raises:
-            IOError:                    Pathfile not found
-            DeliveryOptionException:    Multiple identical files or
-                                        false delivery method
+                dict:   Info on all files to be delivered
+                dict:   Info on files which failed initial check
+
         '''
 
-        # Variables ##################################### Variables #
+        # Variables ######################################### Variables #
         all_files = dict()
         initial_fail = dict()
 
         data_list = list(data)
-        # ----------------------------------------------------------#
+        # --------------------------------------------------------------#
 
-        # Get all paths from pathfile
+        # Add data included in pathfile to data dict
         if pathfile is not None and Path(pathfile).exists():
             with Path(pathfile).resolve().open(mode='r') as file:
                 data_list += [line.strip() for line in file]
 
-        # If not a correct method fail delivery
+        # Fail delivery if not a correct method
         if self.method not in ["get", "put"]:
             sys.exit(
                 printout_error("Delivery option {self.method} not allowed.\n\n"
                                "Cancelling delivery.")
             )
 
-        # Gather data info ####################### Gather data info #
+        # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths
         for d in data_list:
             # Throw error if there are duplicate files
@@ -664,19 +663,18 @@ class DataDeliverer():
                                    "times, please remove path dublicates.")
                 )
 
-            # If downloading - empty dict for file info
-            # If uploading - check file contents
+            # Get file info ############################# Get file info #
             if self.method == "get":
                 iteminfo = self._get_download_info(item=d)
-                # If folder info returned -- did not find contents of folder
-                # or it doesn't exist
-                if len(iteminfo) == 1 and d in iteminfo:
+
+                # Save to failed dict or delivery dict
+                if len(iteminfo) == 1 and d in iteminfo:    # File
                     if not iteminfo[d]['proceed']:
                         initial_fail.update(iteminfo)
                         continue
 
                     all_files.update(iteminfo)
-                else:
+                else:                                       # Folder
                     for f in iteminfo:
                         if not iteminfo[f]['proceed']:
                             initial_fail[f] = iteminfo[f]
@@ -685,7 +683,8 @@ class DataDeliverer():
                         all_files[f] = iteminfo[f]
 
             elif self.method == "put":
-                # Error if path doesn't exist -- should be checked by click
+                # Error if path doesn't exist
+                # NOTE: Keep this or remove? Should have been checked by click
                 if not Path(d).exists():
                     sys.exit(
                         printout_error("Trying to deliver a non-existing "
@@ -693,11 +692,11 @@ class DataDeliverer():
                                        "possible.")
                     )
 
-                # Get file for files within folder
                 curr_path = Path(d).resolve()   # Full path to data
-                if curr_path.is_dir():  # Get info on files in folder
-                    dir_info, dir_fail, fsize = self._get_dir_info(
-                        folder=curr_path)
+
+                # Get info on files within folder
+                if curr_path.is_dir():
+                    dir_info, dir_fail = self._get_dir_info(folder=curr_path)
                     initial_fail.update(dir_fail)   # Not to be delivered
                     all_files.update(dir_info)      # To be delivered
                     continue
@@ -710,6 +709,8 @@ class DataDeliverer():
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
+
+            # --------------------------------------------------------- #
 
         return all_files, initial_fail
 
@@ -764,12 +765,10 @@ class DataDeliverer():
             dict:   Files which failed -- not to deliver
         '''
 
-        # Variables ########################## Variables #
+        # Variables ############################ Variables #
         dir_info = {}   # Files to deliver
         dir_fail = {}   # Failed files
-        # -----------------------------------------------#
-
-        tot_size = 0
+        # -------------------------------------------------#
 
         # Iterate through folder contents and get file info
         for f in folder.glob('**/*'):
@@ -777,16 +776,15 @@ class DataDeliverer():
                 file_info = self._get_file_info(file=f,
                                                 in_dir=True,
                                                 dir_name=folder)
-                self.LOGGER.debug(file_info)
+
                 # If file check failed in some way - do not deliver file
                 # Otherwise deliver file -- no cancellation of folder here
                 if not file_info['proceed']:
                     dir_fail[f] = file_info
                 else:
-                    dir_info[f] = file_info     # Deliver file
-                    tot_size += file_info['size']
+                    dir_info[f] = file_info
 
-        return dir_info, dir_fail, tot_size
+        return dir_info, dir_fail
 
     def _get_download_info(self, item: str) -> (dict):
         '''Gets info on file in database and checks if
@@ -801,6 +799,7 @@ class DataDeliverer():
         '''
 
         # Variables ################################# Variables #
+        # General
         proceed = True      # To proceed with download or not
         in_db = False       # If item in db or not
         none_in_bucket = True   # If none of the items are in the s3 bucket
@@ -818,8 +817,7 @@ class DataDeliverer():
 
         # Check if file or folder exists in database
         with DatabaseConnector(db_name='project_db') as project_db:
-            # If project doesn't exist in database or no file info on
-            # project - error in DS
+            # Error in DS if project doesn't exist in database or no file info
             if self.project_id not in project_db or \
                     'files' not in project_db[self.project_id]:
                 raise CouchDBException("Project not in database or no file "
@@ -832,15 +830,12 @@ class DataDeliverer():
 
             # Check for file starting with the file/folder name
             for file in project_db[self.project_id]['files']:
-                self.LOGGER.debug(
-                    f"{file}: {project_db[self.project_id]['files'][file]}")
-                # If path matches items in database, get info on file
+                # Get info on file
                 if file.startswith(item):
                     to_download[file] = {
                         **project_db[self.project_id]['files'][file],
                         **gen_finfo
                     }
-                    self.LOGGER.debug(f"{to_download[file]}")
                     in_db = True
 
                     # Check if the file was uploaded as a part of a directory
@@ -855,13 +850,13 @@ class DataDeliverer():
                         'error': error          # Error message, "" if none
                     })
 
-            # If the file doesn't exist in the database -- no delivery
+            # No delivery if the item doesn't exist in the database
             if not in_db:
                 error = f"Item: {item} -- not in database"
                 self.LOGGER.warning(error)
                 return {item: {'proceed': False, 'error': error}}
 
-        # If item in database, check S3 bucket for item(s)
+        # Check S3 bucket for item(s)
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
                 as s3:
 
@@ -869,19 +864,17 @@ class DataDeliverer():
             for file in to_download:
                 in_bucket, s3error = s3.file_exists_in_bucket(key=file,
                                                               put=False)
-                # self.LOGGER.debug(f"Item: {item}, File: {file}, "
-                #                   f"In bucket: {in_bucket}, Error: {s3error}")
 
-                # If not in bucket then error
                 if not in_bucket:
                     error = (f"File '{file}' in database but NOT in S3 bucket."
                              f"Error in delivery system! {s3error}")
+                    self.LOGGER.warning(error)
                     to_download[file].update({'proceed': False,
                                               'error': error})
                 else:
-                    none_in_bucket = False
+                    none_in_bucket = False   # There are files in the bucket
 
-            # If none of the files were in S3 bucket then error
+            # Error if none of the files were in S3 bucket
             if none_in_bucket:
                 error = (f"Item: {item} -- not in S3 bucket, but in database "
                          f"-- Error in delivery system!")
@@ -906,14 +899,15 @@ class DataDeliverer():
 
         # Variables ###################################### Variables #
         proceed = True  # If proceed with file delivery
+        in_db = False   # True if file in database
         path_base = dir_name.name if in_dir else None   # Folder name if in dir
         directory_path = get_root_path(file=file, path_base=path_base) \
-            if path_base is not None else Path("")  # Path to file in folder
+            if path_base is not None else Path("")  # Path to file IN folder
         suffixes = file.suffixes    # File suffixes
         proc_suff = ""              # Saves final suffixes
         error = ""                  # Error message
         dir_info = {'in_directory': in_dir, 'dir_name': dir_name}
-        # ------------------------------------------------ #
+        # ---------------------------------------------------------- #
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=file)
@@ -931,7 +925,6 @@ class DataDeliverer():
                                     "compressing file.")
 
             proc_suff += ".zst"     # Update the future suffix
-            # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
         elif compressed:
             self.LOGGER.info(f"File '{file}' shows indication of being "
                              "in a compressed format. "
@@ -939,17 +932,15 @@ class DataDeliverer():
 
         # Add (own) encryption format extension
         proc_suff += ".ccp"     # ChaCha20-Poly1305
-        # self.LOGGER.debug(f"File: {file} -- Added suffix: {proc_suff}")
 
         # Path to file in temporary directory after processing, and bucket
         # after upload, >>including file name<<
         bucketfilename = str(directory_path / Path(file.name + proc_suff))
 
+        # NOTE: Similar (but different order) to _get_download_info - "merge"?
         # Check if file exists in database
-        in_db = False
         with DatabaseConnector('project_db') as project_db:
-            # If project doesn't exist in database or no file info on
-            # project - error in DS
+            # Error in DS if project doesn't exist in database or no file info
             if self.project_id not in project_db or \
                     'files' not in project_db[self.project_id]:
                 raise CouchDBException("Project not in database or no file "
@@ -959,11 +950,11 @@ class DataDeliverer():
             if bucketfilename in project_db[self.project_id]['files']:
                 error = f"File '{file}' already exists in the database. "
                 self.LOGGER.warning(error)
-                # If --overwrite flag not specified cancel upload of file
+                # Cancel upload of file if --overwrite flag not specified
                 if not self.overwrite:
                     return {'proceed': False, 'error': error, **dir_info}
 
-                # If --overwrite flag specified -- do not cancel
+                # Do not cancel if --overwrite flag specified
                 in_db = True
 
         # Check if file exists in S3 bucket
@@ -974,9 +965,9 @@ class DataDeliverer():
             # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
 
             if s3error != "":
-                error += s3error
+                error += s3error    # Add s3error to error message
 
-            # If the file exists in bucket, but not in the database -- error
+            # Error if the file exists in bucket, but not in the database
             if in_bucket:
                 if not in_db:
                     error = (f"{error}\nFile '{file.name}' already exists in "
@@ -1004,7 +995,6 @@ class DataDeliverer():
                 'encrypted_file': Path(""),
                 'encrypted_size': 0,
                 'key': "",
-                'checksum': "",
                 'processing': {'in_progress': False,
                                'finished': False},
                 'upload': {'in_progress': False,

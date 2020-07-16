@@ -164,7 +164,7 @@ class DataDeliverer():
                                "Delivery cancelled.")
             )
 
-        # If access to delivery system, check project access
+        # Check project access if access to delivery system
         proj_access_granted, self.s3project = self._check_project_access()
         if not proj_access_granted:
             sys.exit(
@@ -172,7 +172,7 @@ class DataDeliverer():
                                "denied. Delivery cancelled.")
             )
 
-        # If access to project, check that some data is specified - else fail
+        # Fail if no data specified
         if not data and not pathfile:
             sys.exit(
                 printout_error("No data to be uploaded. Specify individual "
@@ -393,6 +393,7 @@ class DataDeliverer():
             sys.exit(printout_error("Username not found in database. "
                                     "Access to Delivery System denied."))
 
+    # NOTE: CouchDB -> MariaDB and optimize
     def _check_project_access(self):
         '''Checks the users access to a specific project.
 
@@ -405,26 +406,35 @@ class DataDeliverer():
         Raises:
             CouchDBException:           Database connection failure
                                         or missing project information
-            DeliveryOptionException:    S3 delivery option not available
-                                        or incorrect project owner
-            DeliverySystemException:    Access denied
+            DeliverySystemException:    Error in retrieving important info
 
         '''
+
+        # Variables ############################################### Variables #
+        user_projects = dict()
+        # ------------------------------------------------------------------- #
 
         with DatabaseConnector() as couch:
             user_db = couch['user_db']
 
+            # Quit if necessary user project info not in database
+            if self.user.id not in user_db or \
+                    'projects' not in user_db[self.user.id]:
+                sys.exit(printout_error(
+                    "Could not get user projects from db."
+                ))
+
             # Get the projects registered to the user
             user_projects = user_db[self.user.id]['projects']
 
-            # Check if project doesn't exists in project database -> quit
+            # Quit if project doesn't exists in project database
             if self.project_id not in couch['project_db']:
                 sys.exit(
                     printout_error(f"The project {self.project_id} "
                                    "does not exist.")
                 )
 
-            # If project exists, check if user has access to the project->quit
+            # Quit if user doesn't have access to the project
             if self.project_id not in user_projects:
                 sys.exit(
                     printout_error("You do not have access to the specified "
@@ -432,17 +442,17 @@ class DataDeliverer():
                                    "Aborting delivery.")
                 )
 
-            # If user has access, get current project
+            # Get current project info
             current_project = couch['project_db'][self.project_id]
-            # If project information doesn't exist -> quit
+
+            # Quit if project information doesn't exist
             if 'project_info' not in current_project:
                 raise CouchDBException(
                     "There is no 'project_info' recorded for the specified "
                     "project. Aborting delivery."
                 )
 
-            # If project info exists, check if owner info exists.
-            # If not -> quit
+            # Quit if owner info doesn't exist
             if 'owner' not in current_project['project_info']:
                 sys.exit(
                     printout_error("An owner of the data has not been "
@@ -458,7 +468,7 @@ class DataDeliverer():
                 and correct_owner == self.project_owner != self.user.id) \
                 or (self.method == 'get'
                     and correct_owner == self.project_owner == self.user.id):
-                # If delivery_option not recorded in database -> quit
+                # Quit if delivery_option not recorded in database
                 if 'delivery_option' not in current_project['project_info']:
                     raise CouchDBException(
                         "A delivery option has not been "

@@ -37,7 +37,7 @@ LOG.setLevel(logging.DEBUG)
 # ns: not started, f: finished, e: error,
 # enc: encrypting, dec: decrypting
 # u: uploading, d: downloading
-STATUS_DICT = {'ns': "Waiting to start...", 'f': u'\u2705', 'e': u'\u274C',
+STATUS_DICT = {'w': "Waiting to start...", 'f': u'\u2705', 'e': u'\u274C',
                'enc': "Encrypting...", 'dec': "Decrypting...",
                'u': 'Uploading...', 'd': "Dowloading...", }
 
@@ -587,16 +587,37 @@ class DataDeliverer():
                     f"Failed emptying the temporary folder {d}: {e}"
                 )
 
-    def _create_progress_output(self):
-        sys.stdout.write("\n")
+    def _create_progress_output(self) -> (str, dict):
+        '''Create list of files and the individual delivery progress.
 
-        global SCOLSIZE, FCOLSIZE
-        TO_PRINT = ""
-        PROGRESS_DICT = collections.OrderedDict()
+        Returns:
+            tuple:  Information on start status for all files
+
+                str:    Progressinfo (all files) to print to console
+                dict:   Files and their current delivery statuses
+
+        '''
+
+        sys.stdout.write("\n")  # Space between command and any output
+
+        # Variables ############################################### Variables #
+        global SCOLSIZE, FCOLSIZE   # -- can edit their value
+
+        # Find appropriate size of progress table
+        # Max length of status info
         max_status = max(len(x) for y, x in STATUS_DICT.items())
+        # Width of status "column"
         SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
+        # Width of file "column"
         FCOLSIZE = max(len(str(x)) for x in self.data)
 
+        # To return
+        TO_PRINT = ""
+        PROGRESS_DICT = collections.OrderedDict()
+        # ------------------------------------------------------------------- #
+
+        # Header of progress info, eg:
+        # -------------- File -------------- ------ Status ------
         sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
                          " File "
                          f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
@@ -605,15 +626,17 @@ class DataDeliverer():
                          " Progress "
                          f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
 
+        # Set initial status for all files to 'Waiting to start...'
         for x in self.data:
             file = str(x)
             PROGRESS_DICT[file] = \
-                {'status': STATUS_DICT['ns'],
+                {'status': STATUS_DICT['w'],
                     'line': (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
-                             f"{int(SCOLSIZE/2-len(STATUS_DICT['ns'])/2)*' '}"
-                             f"{STATUS_DICT['ns']}\n")}
+                             f"{int(SCOLSIZE/2-len(STATUS_DICT['w'])/2)*' '}"
+                             f"{STATUS_DICT['w']}\n")}
             TO_PRINT += PROGRESS_DICT[file]['line']
 
+        # Print all file statuses
         sys.stdout.write(TO_PRINT)
 
         return TO_PRINT, PROGRESS_DICT

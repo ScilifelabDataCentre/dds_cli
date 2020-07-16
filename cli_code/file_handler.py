@@ -197,11 +197,19 @@ def file_writer(filehandler, gen, last_nonce):
     return nonce_ok, error
 
 
-def file_deleter(file):
+def file_deleter(file: Path):
+    '''Delete file
+
+    Args:
+        file (Path):    Path to file
+
+    '''
 
     if not file.exists():
         return
 
+    # Try file.unlink() first (pathlib) and then os.remove(file) (os) if failed
+    # Log warning - don't quit if deletion not possible
     try:
         file.unlink()
     except OSError as ose:

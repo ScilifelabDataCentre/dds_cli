@@ -1508,3 +1508,21 @@ if not delivery.data[path]:
 
     #     # Proceed with delivery and return info on file
     #     return True, compressed, bucketfilename, error
+
+
+    # 20200716 -- remove tempdir contents
+    def _clear_tempdir(self):
+        '''Remove all contents from temporary file directory
+
+        Raises:
+            DeliverySystemException:    Deletion of temporary folder failed
+
+        '''
+
+        for d in [x for x in DIRS[1].iterdir() if x.is_dir()]:
+            try:
+                shutil.rmtree(d)
+            except DeliverySystemException as e:
+                self.LOGGER.exception(
+                    f"Failed emptying the temporary folder {d}: {e}"
+                )

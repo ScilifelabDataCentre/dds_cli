@@ -188,6 +188,7 @@ class DataDeliverer():
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
 
+        # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
         self.public = get_project_public(self.project_id)   # Always
         self.private = b'' if self.method == 'put' else \
@@ -208,6 +209,7 @@ class DataDeliverer():
 
         Prints out which files are delivered and not.'''
         # NOTE: Remove this and just update the progress instead?
+        # Also, definitely needs to be checked and simplified
 
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
@@ -264,9 +266,8 @@ class DataDeliverer():
                 # Add files in folder to table
                 for f, v in folders[info['dir_name']].items():
                     file_loc = \
-                        (v['directory_path'] if 'directory_path' in v
-                         else get_root_path(file=f,
-                                            path_base=v['dir_name'].name)) \
+                        (v['directory_path'] if 'directory_path' in v else
+                         get_root_path(file=f, path_base=v['dir_name'].name)) \
                         / Path(Path(f).name)
                     folders_table.add_row(
                         ["",
@@ -571,22 +572,6 @@ class DataDeliverer():
                                "Cancelling delivery.")
             )
 
-    def _clear_tempdir(self):
-        '''Remove all contents from temporary file directory
-
-        Raises:
-            DeliverySystemException:    Deletion of temporary folder failed
-
-        '''
-
-        for d in [x for x in DIRS[1].iterdir() if x.is_dir()]:
-            try:
-                shutil.rmtree(d)
-            except DeliverySystemException as e:
-                self.LOGGER.exception(
-                    f"Failed emptying the temporary folder {d}: {e}"
-                )
-
     def _create_progress_output(self) -> (str, dict):
         '''Create list of files and the individual delivery progress.
 
@@ -736,7 +721,7 @@ class DataDeliverer():
 
         return all_files, initial_fail
 
-    def _finalize(self, file: Path, info: dict) -> (bool):
+    def _finalize(self, file: Path, info: dict):
         '''Makes sure that the file is not in bucket or db and deletes
         if it is.
 
@@ -744,37 +729,39 @@ class DataDeliverer():
             file (Path):    Path to file
             info (dict):    Info about file --> don't use around with real dict
 
-        Returns:
-            bool:   True if deletion successful
-
         '''
 
+        # Downloading ############## Delete local ############### Downloading #
         if self.method == 'get':
             if 'new_file' in info:
                 file_deleter(file=info['new_file'])
+                return
 
-        elif self.method == 'put':
-            if 'encrypted_file' in info:
-                file_deleter(file=info['encrypted_file'])
+        # Uploading ########### Delete local and remote ########### Uploading #
+        # Delete local encrypted
+        if 'encrypted_file' in info:
+            file_deleter(file=info['encrypted_file'])
 
-            with S3Connector(bucketname=self.bucketname,
-                             project=self.s3project) as s3:
-                if 'upload' in info and info['upload']['finished'] \
-                        and 'database' in info and not info['database']['finished']:
-                    try:
-                        s3.delete_item(key=info['new_file'])
-                    except ClientError as e:
-                        self.LOGGER.warning(e)
-
-            with DatabaseConnector(db_name='project_db') as prdb:
-
+        # NOTE: Add check here for if actually uploaded etc?
+        # Delete from S3 if uploaded but not in database
+        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                as s3:
+            if 'upload' in info and info['upload']['finished'] \
+                    and 'database' in info and not info['database']['finished']:
                 try:
-                    proj = prdb[self.project_id]
-                    if 'database' in info and info['database']['finished'] \
-                            and 'upload' in info and not info['upload']['finished']:
-                        del proj['files'][info['new_file']]
-                except CouchDBException as e:
+                    s3.delete_item(key=info['new_file'])
+                except ClientError as e:
                     self.LOGGER.warning(e)
+
+        # Delete from database if in database but not uploaded
+        with DatabaseConnector(db_name='project_db') as prdb:
+            try:
+                proj = prdb[self.project_id]
+                if 'database' in info and info['database']['finished'] \
+                        and 'upload' in info and not info['upload']['finished']:
+                    del proj['files'][info['new_file']]
+            except CouchDBException as e:
+                self.LOGGER.warning(e)
 
     def _get_dir_info(self, folder: Path) -> (dict, dict):
         '''Iterate through folder contents and get file info

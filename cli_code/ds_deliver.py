@@ -29,7 +29,6 @@ import cli_code.file_handler as fh
 from cli_code.s3_connector import S3Connector
 
 
-
 ###############################################################################
 # Logging ########################################################### Logging #
 ###############################################################################
@@ -50,16 +49,6 @@ def config_logger(logfile: str):
                             "%(lineno)d::%(message)s")
 
 ###############################################################################
-# Progress printout ####################################### Progress printout #
-###############################################################################
-
-
-
-
-
-
-
-###############################################################################
 # MAIN ################################################################# MAIN #
 ###############################################################################
 
@@ -70,6 +59,7 @@ def cli():
     # Setup logging
     global CLI_LOGGER
     CLI_LOGGER = config_logger(LOG_FILE)
+
 
 ###############################################################################
 # PUT ################################################################### PUT #
@@ -126,13 +116,6 @@ def put(config: str, username: str, password: str, project: str,
                        overwrite=overwrite) \
             as delivery:
 
-        # Progress printout
-        # delivery_table = create_output(delivery.data)
-
-        # Print out files
-        # for x, y in delivery.data.items():
-        # CLI_LOGGER.debug(f"\n{x}: {y}\n")
-
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
         pool_executor = ProcessPoolExecutor()       # Processing
         thread_executor = ThreadPoolExecutor()      # IO related tasks
@@ -140,9 +123,6 @@ def put(config: str, username: str, password: str, project: str,
         # Futures -- Pools and threads
         pools = {}      # Processing e.g. compression, encryption etc
         uthreads = {}   # Upload to S3
-
-        # delivery.update_progress(
-        #     file='/Users/inaod568/repos/Data-Delivery-System/files/js/flow.js', status='p')
 
         # BEGIN DELIVERY -- ITERATE THROUGH ALL FILES
         for path, info in delivery.data.items():
@@ -165,7 +145,6 @@ def put(config: str, username: str, password: str, project: str,
             )
             ] = path
 
-        # pbar.start()
         # DELIVER FILES -- UPLOAD TO S3
         # When file processing is done -- move on to upload
         for pfuture in as_completed(pools):
@@ -209,7 +188,6 @@ def put(config: str, username: str, password: str, project: str,
                                            file=ppath,
                                            fileinfo=delivery.data[ppath])
                 ] = ppath
-        # pbar.finish()
 
         # FINISH DELIVERY
         # When file upload is done -- set as finished
@@ -321,9 +299,6 @@ def get(config: str, username: str, password: str, project: str,
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, pathfile=pathfile, data=data) \
             as delivery:
-
-        # Progress printout
-        # delivery_table = create_output(delivery.data)
 
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
         pool_executor = ProcessPoolExecutor()       # Processing

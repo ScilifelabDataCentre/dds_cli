@@ -33,14 +33,14 @@ LOG.setLevel(logging.DEBUG)
 
 # Global variables ######################################### Global variables #
 
-# ns: not started, f: finished, e: error, 
+# NOTE: There may be issues with unicode and Windows - test and fix
+# ns: not started, f: finished, e: error,
 # enc: encrypting, dec: decrypting
 # u: uploading, d: downloading
 STATUS_DICT = {'ns': "Waiting to start...", 'f': u'\u2705', 'e': u'\u274C',
                'enc': "Encrypting...", 'dec': "Decrypting...",
                'u': 'Uploading...', 'd': "Dowloading...", }
 
-# DATA_ORDERED = collections.OrderedDict()
 FCOLSIZE = 0
 SCOLSIZE = 0
 
@@ -61,18 +61,28 @@ class DataDeliverer():
         project_owner (str):    User spec. project owner, None if config used
         pathfile (str):         Path to file containing file paths
         data (tuple):           All paths to be uploaded/downloaded
+        break_on_fail (bool):   True if folder delivery should be cancelled on
+                                file fail
+        overwrite (bool):       True if deliver again - overwrite delivered
+                                files
 
     Attributes:
+        break_on_fail (bool):   Cancel delivery on fail or not
+        overwrite (bool):       Overwrite already delivered files or not
+        logfile (str):          Path to log file
+        LOGGER (Logger):        Logger - keeps track of bugs, info, errors etc
         method (str):           Delivery method, put or get
         user (DSUser):          Data Delivery System user
         project_id (str):       Project ID to upload to/download from
         project_owner (str):    Owner of the current project
-        data (list):            Paths to files/folders
+        data (dict):            Paths and info to files
+        failed (dict):          Paths and info to failed files
         bucketname (str):       Name of S3 bucket to deliver to/from
         s3project (str):        ID of S3 project containing buckets
-        tempdir (tuple):        Paths to temporary DP folders
-        logfile (str):          Path to log file
-        logger (Logger):        Logger - keeps track of bugs, info, errors etc
+        public (bytes):         Project public key
+        private (bytes):        Project private key, b'' if uploading
+        TO_PRINT (str):         Progress printout
+        PROGRESS (dict):        Progress info on files  # NOTE: put in data??
 
     Raises:
         DeliverySystemException:    Required info not found or access denied
@@ -87,6 +97,7 @@ class DataDeliverer():
                  project_id=None, project_owner=None,
                  pathfile=None, data=None, break_on_fail=True,
                  overwrite=False):
+        # NOTE: Restructure __init__?
 
         # Flags ------------------------------------------------------- Flags #
         self.break_on_fail = break_on_fail
@@ -106,6 +117,7 @@ class DataDeliverer():
             "%(lineno)d::%(message)s"
         )
         # --------------------------------------------------------------------#
+
         # Quit execution if none of username, password, config are set
         if all(x is None for x in [username, password, config]):
             sys.exit(printout_error(
@@ -122,11 +134,20 @@ class DataDeliverer():
         self.user = _DSUser(username=username, password=password)
         self.project_id = project_id        # Project ID - not S3
         self.project_owner = project_owner  # User, not facility
-        self.data = None           # Dictionary, keeps track of delivery
+        self.data = None            # Dictionary, keeps track of delivery
+        self.failed = None          # Dictionary, saves intially failed files
 
         # S3 related
         self.bucketname = ""    # S3 bucket name -- to connect to S3
         self.s3project = ""     # S3 project ID -- to connect to S3
+
+        # Cryptography related
+        self.public = b''
+        self.private = b''
+
+        # Progress related
+        self.TO_PRINT = ""
+        self.PROGRESS = None
 
         # Checks ----------------------------------------------------- Checks #
         # Check if all required info is entered
@@ -135,6 +156,7 @@ class DataDeliverer():
         self._check_user_input(config=config)
 
         # Check access to delivery system
+        # Sets: self.user.id, self.project_owner
         ds_access_granted = self._check_ds_access()
         if not ds_access_granted or self.user.id is None:
             sys.exit(
@@ -150,7 +172,7 @@ class DataDeliverer():
                                "denied. Delivery cancelled.")
             )
 
-        # If access to project, check that some data is specified
+        # If access to project, check that some data is specified - else fail
         if not data and not pathfile:
             sys.exit(
                 printout_error("No data to be uploaded. Specify individual "
@@ -159,24 +181,20 @@ class DataDeliverer():
                                "For help: 'ds_deliver --help'")
             )
 
-        # If everything ok, set bucket name -- CHANGE LATER
+        # If everything ok, set bucket name -- TODO: CHANGE LATER
         self.bucketname = f"project_{self.project_id}"
 
         # Get all data to be delivered
-        self.data, self.failed = \
-            self._data_to_deliver(data=data, pathfile=pathfile)
+        self.data, self.failed = self._data_to_deliver(data=data,
+                                                       pathfile=pathfile)
 
-        # Get project public key
-        self.public = get_project_public(self.project_id)
+        # Get project keys
+        self.public = get_project_public(self.project_id)   # Always
+        self.private = get_project_private(self.project_id,
+                                           self.method,
+                                           self.user)   # b'' if uploading
 
-        # If get - need private key too
-        self.private = get_project_private(
-            self.project_id, self.method, self.user)
-        # self.LOGGER.critical(self.private)
-
-        # Success message
-        self.LOGGER.info("Delivery initialization successful.")
-
+        # Start progress info printout
         self.TO_PRINT, self.PROGRESS = self.create_progress_output()
 
     def __enter__(self):
@@ -559,14 +577,14 @@ class DataDeliverer():
 
     def create_progress_output(self):
         sys.stdout.write("\n")
-        
+
         global SCOLSIZE, FCOLSIZE
         TO_PRINT = ""
         PROGRESS_DICT = collections.OrderedDict()
         max_status = max(len(x) for y, x in STATUS_DICT.items())
         SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
         FCOLSIZE = max(len(str(x)) for x in self.data)
-        
+
         sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
                          " File "
                          f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
@@ -1250,7 +1268,8 @@ class DataDeliverer():
         diff = abs(len(self.PROGRESS[file]['line']) - len(new_line))
         new_line += diff*" " + "\n"
 
-        self.TO_PRINT = self.TO_PRINT.replace(self.PROGRESS[file]['line'], new_line)
+        self.TO_PRINT = self.TO_PRINT.replace(
+            self.PROGRESS[file]['line'], new_line)
         self.PROGRESS[file]['line'] = new_line
 
         sys.stdout.write("\033[A"*len(self.PROGRESS))

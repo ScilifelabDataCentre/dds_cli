@@ -72,9 +72,11 @@ class S3Connector():
         '''Connect to S3'''
 
         try:
+            # Start S3 session
             self.session = boto3.session.Session()      # --> Thread safe
 
-            # Get S3 credentials -- SHOULD BE CHANGED LATER
+            # TODO: SHOULD BE CHANGED LATER - Get from DB etc.
+            # Get S3 credentials
             s3path = Path.cwd() / Path("sensitive/s3_config.json")
             with s3path.open(mode='r') as f:
                 s3creds = json.load(f)
@@ -91,13 +93,14 @@ class S3Connector():
                 aws_secret_access_key=project_keys['secret_key'],
             )
 
+            # Connect to bucket
             try:
                 self.resource.meta.client.head_bucket(Bucket=self.bucketname)
             except ClientError as ce:
-                error = ("Bucket: {self.bucketname} -- Bucket not found in "
-                         "S3 resource. Upload will not be possible. ")
-                S3_LOG.critical(emessage)
-                sys.exit(error)
+                error = (f"Bucket: {self.bucketname} - Bucket not found in "
+                         f"S3 resource. Error: {ce}")
+                S3_LOG.critical(error)
+                sys.exit(error)     # Fatal -> ds will not work
             else:
                 self.bucket = self.resource.Bucket(self.bucketname)
         except ClientError as e:

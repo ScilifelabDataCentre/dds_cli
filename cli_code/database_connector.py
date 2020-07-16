@@ -46,17 +46,25 @@ class DatabaseConnector():
         # DB_LOG.info("Database connection successful.")
 
     def __enter__(self):
-        '''Connects to database. '''
+        '''Connects to database.
 
-        if self.db_name is None:    # If none connect to entire instance
+        Returns:
+            Connection to database - entire instance or specific db
+
+        '''
+
+        # Connect to entire instance
+        if self.db_name is None:
             # DB_LOG.debug("Connecting to CouchDB. No specific DB name.")
             return self.conn
 
-        if self.db_name not in self.conn:   # Error if db doesn't exist
+        # Error if db doesn't exist
+        if self.db_name not in self.conn:
             raise CouchDBException(f"The database {self.db_name} does "
                                    "not exist in the couchDB instance.")
 
-        return self.conn[self.db_name]  # Return connection to db
+        # Connect to specific DB
+        return self.conn[self.db_name]
 
     def __exit__(self, exc_type, exc_value, tb):
         '''Allows for implementation using "with" statement.

@@ -250,7 +250,7 @@ def put(config: str, username: str, password: str, project: str,
             delivery.update_progress(file=upath, status='f')
             encrypted_file = delivery.data[upath]['encrypted_file']
 
-            # Delete encrypted files
+            # Delete encrypted files as soon as success
             final_threads[
                 thread_executor.submit(fh.file_deleter,
                                        file=encrypted_file)

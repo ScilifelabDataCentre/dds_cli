@@ -7,6 +7,7 @@ import traceback
 import logging
 import textwrap
 import shutil
+import collections
 
 from cli_code.crypt4gh.crypt4gh import lib
 from prettytable import PrettyTable
@@ -32,18 +33,16 @@ LOG.setLevel(logging.DEBUG)
 
 # Global variables ######################################### Global variables #
 
-# ns: not started, f: finished, e: error,
+# ns: not started, f: finished, e: error, 
 # enc: encrypting, dec: decrypting
 # u: uploading, d: downloading
 STATUS_DICT = {'ns': "Not started", 'f': u'\u2705', 'e': u'\u274C',
                'enc': "Encrypting...", 'dec': "Decrypting",
                'u': 'Uploading...', 'd': "Dowloading...", }
 
-DATA_ORDERED = collections.OrderedDict()
-max_status = max(len(x) for y, x in STATUS_DICT.items())
-SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
+# DATA_ORDERED = collections.OrderedDict()
 FCOLSIZE = 0
-TO_PRINT = ""
+SCOLSIZE = 0
 
 # DATA DELIVERER ############################################# DATA DELIVERER #
 
@@ -178,18 +177,7 @@ class DataDeliverer():
         # Success message
         self.LOGGER.info("Delivery initialization successful.")
 
-        global FCOLSIZE
-        FCOLSIZE = max(len(x) for x in DATA_ORDERED)
-        self.TO_PRINT = TO_PRINT
-        TO_PRINT = ""
-        sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
-                         " File "
-                         f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
-                         " "
-                         f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
-                         " Progress "
-                         f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
-        sys.stdout.write(self.TO_PRINT)
+        self.TO_PRINT, self.PROGRESS = self.create_progress_output()
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -569,6 +557,37 @@ class DataDeliverer():
                     f"Failed emptying the temporary folder {d}: {e}"
                 )
 
+    def create_progress_output(self):
+        sys.stdout.write("\n")
+        
+        global SCOLSIZE, FCOLSIZE
+        TO_PRINT = ""
+        PROGRESS_DICT = collections.OrderedDict()
+        max_status = max(len(x) for y, x in STATUS_DICT.items())
+        SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
+        FCOLSIZE = max(len(str(x)) for x in self.data)
+        
+        sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+                         " File "
+                         f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+                         " "
+                         f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
+                         " Progress "
+                         f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
+
+        for x in self.data:
+            file = str(x)
+            PROGRESS_DICT[file] = \
+                {'status': STATUS_DICT['ns'],
+                    'line': (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
+                             f"{int(SCOLSIZE/2-len(STATUS_DICT['ns'])/2)*' '}"
+                             f"{STATUS_DICT['ns']}\n")}
+            TO_PRINT += PROGRESS_DICT[file]['line']
+
+        sys.stdout.write(TO_PRINT)
+
+        return TO_PRINT, PROGRESS_DICT
+
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (list):
         '''Puts all entered paths into one list
 
@@ -941,15 +960,6 @@ class DataDeliverer():
                 if not self.overwrite:
                     return {'proceed': False, 'error': error, **dir_info}
 
-        global TO_PRINT, DATA_ORDERED
-        f = str(file)
-        DATA_ORDERED[f] = \
-            {'status': STATUS_DICT['ns'],
-             'line': (f"{f}{int(FCOLSIZE-len(f)+1)*' '} "
-                      f"{int(SCOLSIZE/2-len(STATUS_DICT['ns'])/2)*' '}"
-                      f"{STATUS_DICT['ns']}\n")}
-        TO_PRINT += DATA_ORDERED[f]['line']
-
         return {'in_directory': in_dir,
                 'dir_name': dir_name if in_dir else None,
                 'path_base': path_base,
@@ -1227,6 +1237,25 @@ class DataDeliverer():
 
             # self.LOGGER.debug(self.data[path])
             return True
+
+    def update_progress(self, file, status):
+
+        file = str(file)
+
+        self.PROGRESS[file]['status'] = STATUS_DICT[status]
+
+        new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
+                    f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
+                    f"{2*' '}{STATUS_DICT[status]}")
+        diff = abs(len(self.PROGRESS[file]['line']) - len(new_line))
+        new_line += diff*" " + "\n"
+        
+        self.TO_PRINT = self.TO_PRINT.replace(self.PROGRESS[file]['line'], new_line)
+        self.PROGRESS[file]['line'] = new_line
+
+        sys.stdout.write("\033[A"*len(self.PROGRESS))
+
+        sys.stdout.write(self.TO_PRINT)
 
     ################
     # Main Methods #

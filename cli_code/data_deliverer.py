@@ -340,26 +340,22 @@ class DataDeliverer():
     # Private Methods #
     ###################
 
-    def _check_ds_access(self):
+    # NOTE: CouchDB -> MariaDB and optimize
+    def _check_ds_access(self) -> (bool):
         '''Checks the users access to the delivery system
 
         Returns:
-            tuple:  Granted access and user ID
+            bool:   True if user login successful
 
-                bool:   True if user login successful
-                str:    User ID
+        Sets:
+            self.user.id (str):    User ID
 
-        Raises:
-            CouchDBException:           Database connection failure or
-                                        user not found
-            DeliveryOptionException:    Invalid method option
-            DeliverySystemException:    Wrong password
         '''
 
+        # Search the database for the user
         with DatabaseConnector('user_db') as user_db:
-            # Search the database for the user
             for id_ in user_db:
-                # If found, create secure password hash
+                # Create secure password hash if user fond
                 if self.user.username == user_db[id_]['username']:
                     password_settings = user_db[id_]['password']['settings']
                     password_hash = secure_password_hash(
@@ -493,6 +489,7 @@ class DataDeliverer():
                                    "Cancelling delivery.")
                 )
 
+    # NOTE: CouchDB -> MariaDB and optimize
     def _check_user_input(self, config):
         '''Checks that the correct options and credentials are entered.
 

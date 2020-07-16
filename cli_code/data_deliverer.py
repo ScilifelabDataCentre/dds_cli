@@ -190,9 +190,8 @@ class DataDeliverer():
 
         # Get project keys
         self.public = get_project_public(self.project_id)   # Always
-        self.private = get_project_private(self.project_id,
-                                           self.method,
-                                           self.user)   # b'' if uploading
+        self.private = b'' if self.method == 'put' else \
+            get_project_private(self.project_id, self.user)
 
         # Start progress info printout
         self.TO_PRINT, self.PROGRESS = self._create_progress_output()

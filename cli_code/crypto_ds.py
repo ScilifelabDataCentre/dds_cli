@@ -24,7 +24,8 @@ from nacl.public import PrivateKey
 
 from cli_code.crypt4gh.crypt4gh import lib
 from cli_code.exceptions_ds import HashException, EncryptionError
-from cli_code import LOG_FILE
+from cli_code import LOG_FILE, DS_MAGIC
+from cli_code.exceptions_ds import DeliverySystemException, printout_error
 # from cli_code.file_handler import config_logger
 # from cli_code.database_connector import DatabaseConnector
 
@@ -143,90 +144,130 @@ class ECDHKey:
         self.private = None
 
 
-def get_project_private(proj_id, method, user):
-    '''Gets the project private key from the database
+def get_project_private(proj_id: str, user):
+    '''Gets the project private key from the database - only while downloading.
 
-    format in database:
+    -------------------------Format in database:-------------------------------
     len(magic) + magic + len(projID) + projID + len(privateKey) + privateKey
+    ---------------------------------------------------------------------------
+
+    Args:
+        proj_id (str):      Project ID
+        user (_DSUser):     User object with info on username, password, etc
+
+    Returns:
+        bytes:  Private key belonging to current project
+
     '''
 
+    # NOTE: Solution to import issue?
+    # Import here due to import issues.
     from cli_code.database_connector import DatabaseConnector
 
-    if method == "put":
-        return b''
-
     with DatabaseConnector() as couch:
+        # User DB specific ################################# User DB specific #
         user_db = couch['user_db']
-        key_salt = bytes.fromhex(user_db[user.id]['password']['key_salt'])
-        print(f"key encryption salt ---- {key_salt}")
 
+        # Salt for deriving key used to encrypt/decrypt secret key
+        key_salt = bytes.fromhex(user_db[user.id]['password']['key_salt'])
+
+        # Derive key-encryption-key
         kdf = Scrypt(salt=key_salt, length=32, n=2**14,
                      r=8, p=1, backend=default_backend())
-        print(f"user name ---- {user.username}")
         key = kdf.derive(user.password.encode('utf-8'))
-        print(f"key encryption key ---- {key}")
 
-        user_db = None
+        user_db = None  # "Remove" user_db --> save space
+        # --------------------------------------------------------------------#
 
+        # Project DB specific ########################### Project DB specific #
         project_db = couch['project_db']
+
+        # Get encrypted private key and nonce from DB
         encrypted_key = bytes.fromhex(
             project_db[proj_id]['project_keys']['secret']
         )
         nonce = bytes.fromhex(project_db[proj_id]['project_keys']['nonce'])
 
+        # Decrypt key
         decrypted_key = crypto_aead_chacha20poly1305_ietf_decrypt(
             ciphertext=encrypted_key, aad=None, nonce=nonce, key=key
         )
+        project_db = None   # "Remove" project_db --> save space
+        # --------------------------------------------------------------------#
 
-        # read 2 bytes -> length of magic id
+        # Verify key ############################################# Verify key #
+        # Get length of magic id
         start = 0
         to_read = 2
         magic_id_len = int.from_bytes(
             decrypted_key[start:start+to_read], 'big')
-        print(f"len of magic: {magic_id_len}")
 
-        # read magic_id_len bytes -> magic id
+        # Read magic_id_len bytes -> magic id - should be b'DelSys'
         start += to_read
         to_read = magic_id_len
         magic_id = decrypted_key[start:start+to_read]
-        print(f"magic: {magic_id}")
+        if magic_id != DS_MAGIC:
+            sys.exit(printout_error("Error in private key! Signature should be"
+                                    f"{DS_MAGIC} but found {magic_id}"))
 
-        # read 2 bytes -> length of project id
+        # Get length of project id
         start += to_read
         to_read = 2
         proj_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
-        print(f"proj_len: {proj_len}")
 
-        # read proj_len bytes -> project id
+        # Read proj_len bytes -> project id - should be equal to current proj
         start += to_read
         to_read = proj_len
-        proj_id = decrypted_key[start:start+to_read]
-        print(f"proj_id: {proj_id}")
+        project_id = decrypted_key[start:start+to_read]
+        if project_id != bytes(proj_id, encoding='utf-8'):
+            sys.exit(printout_error("Error in private key! "
+                                    "Project ID incorrect!"))
 
-        # read 2 bytes -> len of key
+        # Get length of private key
         start += to_read
         to_read = 2
         key_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
-        print(f"key len: {key_len}")
 
-        # read key_len bytes -> key
+        # Read key_len bytes -> key
         start += to_read
         to_read = key_len
         key = decrypted_key[start:start+to_read]
-        print(f"key: {key}")
 
-        print(f"whats left: {decrypted_key[start+to_read::]}")
+        # Error if there are bytes left after read key
+        if decrypted_key[start+to_read::] != b'':
+            sys.exit(printout_error("Error in private key! Extra bytes after"
+                                    "key -- parsing failed or key corrupted!"))
+        # --------------------------------------------------------------------#
+        
         return key
 
 
 def get_project_public(proj_id) -> (bytes):
-    '''Gets the projects public key from the database'''
+    '''Gets the projects public key from the database
 
+    Args:
+        proj_id (str):  Project ID
+
+    Returns:
+        bytes:  ECDH Public key belonging to specific project.
+
+    '''
+
+    # NOTE: Solution to import issue?
+    # Import here due to import issues.
     from cli_code.database_connector import DatabaseConnector
 
-    # Get project public key - same for both put and get
-    with DatabaseConnector('project_db') as project_db:
-        return bytes.fromhex(project_db[proj_id]['project_keys']['public'])
+    try:
+        # Get project public key - same for both put and get
+        # and convert to bytes
+        with DatabaseConnector('project_db') as project_db:
+            public_key = bytes.fromhex(
+                project_db[proj_id]['project_keys']['public']
+            )
+    except DeliverySystemException as dse:
+        sys.exit(printout_error(dse))
+    else:
+        return public_key
 
 
 def secure_password_hash(password_settings: str,

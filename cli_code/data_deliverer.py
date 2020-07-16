@@ -9,7 +9,6 @@ import textwrap
 import shutil
 import collections
 
-from cli_code.crypt4gh.crypt4gh import lib
 from prettytable import PrettyTable
 from botocore.client import ClientError
 from progressbar import ProgressBar
@@ -1017,7 +1016,21 @@ class DataDeliverer():
     ##################
 
     def finalize_delivery(self, file: str, fileinfo: dict):
-        '''Finalizes delivery after download from s3'''
+        '''Finalizes delivery after download from s3:
+        Decrypts, decompresses (if compressed in DS), and checks integrity.
+
+        Args:
+            file (str):         Path to file
+            fileinfo (dict):    Information on file
+
+        Return:
+            tuple:   Info on finalized file
+
+                bool:   True if decryption etc successful
+                str:    Path to new, delivered and decrypted file
+                str:    Error message, "" if none
+
+        '''
 
         # If DS noted cancelation of file -- quit and move on
         if not fileinfo['proceed']:
@@ -1026,6 +1039,7 @@ class DataDeliverer():
         # Set file processing as in progress
         self.set_progress(item=file, decryption=True, started=True)
 
+        # Decrypt etc
         info = reverse_processing(file=file, file_info=fileinfo,
                                   keys=(self.public, self.private))
 
@@ -1220,19 +1234,26 @@ class DataDeliverer():
     ################
     # Main Methods #
     ################
-    def get(self, path: str, path_info: dict) -> (str):
+    def get(self, path: str, path_info: dict) -> (bool, str):
         '''Downloads specified data from S3 bucket
 
         Args:
-            file:           File to be downloaded
-            dl_file:        Name of downloaded file
+            path (str):         File to be downloaded
+            path_info (dict):   Name of downloaded file
 
         Returns:
-            str:    Success message if download successful
+            tuple:  Info on download success
+
+                bool:   True if downloaded
+                str:    Error message, "" if none
+
+        Raises:
+            OSError:                        Creating directory failed
+            botocore.client.ClientError:    Failed download
 
         '''
 
-        # If DS noted cancelation of file -- quit and move on
+        # Quit and move on if DS noted cancelation of file
         if not path_info['proceed']:
             return False, ""
 
@@ -1241,14 +1262,15 @@ class DataDeliverer():
 
         # New temporary sub directory
         new_dir = DIRS[1] / Path(path_info['directory_path'])
-        # If new temporary subdir doesn't exist -- create it
+
+        # Create new temporary subdir if doesn't exist
         if not new_dir.exists():
             try:
                 new_dir.mkdir(parents=True, exist_ok=True)
             except OSError as e:
                 # If failed to create -- cancel file
-                error = (f"File: {path} -- Creating tempdir "
-                         f"{new_dir} failed! :: {e}")
+                error = (f"File: {path}. Creating tempdir failed: {new_dir}. "
+                         f"Error: {e}")
                 LOG.exception(error)
                 return False, error
         # self.LOGGER.debug(f"new_dir: {new_dir}")
@@ -1264,17 +1286,15 @@ class DataDeliverer():
                     Key=path,
                     Filename=str(path_info['new_file'])
                 )
-            except S3Error as e:
+            except ClientError as e:
                 # Upload failed -- return error message and move on
-                error = (f"File: {path}, Downloaded: "
-                         f"{path_info['new_file']} -- "
-                         f"Download failed! -- {e}")
+                error = (f"File: {path}. Download failed: {e}")
                 self.LOGGER.exception(error)
                 return False, error
             else:
                 # Upload successful
-                self.LOGGER.info(f"File downloaded: {path}"
-                                 f", File location: {path_info['new_file']}")
+                self.LOGGER.info(f"File: {path}. Download successful! "
+                                 f"File location: {path_info['new_file']}")
                 return True, ""
 
     def put(self, file: Path, fileinfo: dict) -> (bool, str):
@@ -1355,31 +1375,6 @@ class _DSUser():
         self.id = None
         self.role = None
 
-# PROGRESS BAR ################################################# PROGRESS BAR #
-
-
-class ProgressPercentage(object):
-
-    def __init__(self, filename, filesize):
-        # sys.stdout.write("\n")
-        self._filename = filename
-        self._size = filesize
-        self._seen_so_far = 0
-        self.progressbar = ProgressBar(filesize).start()
-
-        self._lock = threading.Lock()
-        # pbar = ProgressBar(delivery.totsize)
-        #         pbar.update(delivery.data[ppath]['size'])
-
-    def __call__(self, bytes_amount):
-        # To simplify, assume this is hooked up to a single filename
-        with self._lock:
-            self._seen_so_far += bytes_amount
-            self.progressbar.update(self._seen_so_far)
-            # percentage = (self._seen_so_far / self._size) * 100
-            # sys.stdout.write(f"\r{self._filename}  {self._seen_so_far} / "
-            #                  f"{self._size}  ({percentage:.2f}%)")
-            # sys.stdout.flush()
 
 # FUNCTIONS ####################################################### FUNCTIONS #
 

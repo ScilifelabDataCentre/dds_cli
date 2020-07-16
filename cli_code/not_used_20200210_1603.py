@@ -1616,3 +1616,28 @@ def update_data_dict(self, path: str, pathinfo: dict) -> (bool):
 
             # self.LOGGER.debug(self.data[path])
             return True
+
+# 20200716 - Progress percentage
+# PROGRESS BAR ################################################# PROGRESS BAR #
+class ProgressPercentage(object):
+
+    def __init__(self, filename, filesize):
+        # sys.stdout.write("\n")
+        self._filename = filename
+        self._size = filesize
+        self._seen_so_far = 0
+        self.progressbar = ProgressBar(filesize).start()
+
+        self._lock = threading.Lock()
+        # pbar = ProgressBar(delivery.totsize)
+        #         pbar.update(delivery.data[ppath]['size'])
+
+    def __call__(self, bytes_amount):
+        # To simplify, assume this is hooked up to a single filename
+        with self._lock:
+            self._seen_so_far += bytes_amount
+            self.progressbar.update(self._seen_so_far)
+            # percentage = (self._seen_so_far / self._size) * 100
+            # sys.stdout.write(f"\r{self._filename}  {self._seen_so_far} / "
+            #                  f"{self._size}  ({percentage:.2f}%)")
+            # sys.stdout.flush()

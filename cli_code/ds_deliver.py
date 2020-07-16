@@ -16,7 +16,6 @@ import itertools
 import collections
 
 import click
-from cli_code.crypt4gh.crypt4gh import (lib, header, keys)
 from progressbar import ProgressBar
 from prettytable import PrettyTable
 
@@ -368,10 +367,12 @@ def get(config: str, username: str, password: str, project: str,
 
             # Quit and move on if DS noted cancelation for file
             if not proceed:
-                CLI_LOGGER.warning(f"File: '{dpath}' -- cancelled "
-                                   "-- moving on to next file")
+                CLI_LOGGER.warning(f"Cancelled: '{dpath}'")
                 delivery.update_progress(file=dpath, status='e')  # -> X-symbol
                 continue
+
+            CLI_LOGGER.info(f"DOWNLOAD COMPLETED: {dpath} "
+                            f" -> {delivery.data[dpath]['new_file']}")
 
             # Display progress = "Decrypting..."
             delivery.update_progress(file=dpath, status='dec')
@@ -431,7 +432,7 @@ def get(config: str, username: str, password: str, project: str,
                 emessage = f"File: {fpath}. Database update failed: {e}"
                 delivery.update_progress(file=fpath, status='e')  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
-            
+
             CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {fpath}")
 
             # Set delivery as finished and display progress = check mark

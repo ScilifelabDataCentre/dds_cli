@@ -404,8 +404,6 @@ def get_file_key():
 def reverse_processing(file: str, file_info: dict, keys: tuple):
     '''Decrypts and decompresses file'''
 
-    LOG.debug(f"\n{file}: {file_info}\n")
-
     # Variables ################################################### Variables #
     infile = file_info['new_file']  # Downloaded file
     # Decrypted and decompressed file

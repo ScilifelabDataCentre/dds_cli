@@ -22,7 +22,6 @@ from nacl.bindings import (crypto_kx_client_session_keys,
                            crypto_aead_chacha20poly1305_ietf_decrypt)
 from nacl.public import PrivateKey
 
-from cli_code.crypt4gh.crypt4gh import lib
 from cli_code.exceptions_ds import HashException, EncryptionError
 from cli_code import LOG_FILE, DS_MAGIC
 from cli_code.exceptions_ds import DeliverySystemException, printout_error

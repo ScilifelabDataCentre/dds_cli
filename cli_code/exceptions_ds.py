@@ -137,7 +137,7 @@ def printout_error(message: str = "") -> (str):
         message (str): Error message
 
     Returns:
-        Padded error message for console printout
+        str: Padded error message for console printout
 
     '''
 

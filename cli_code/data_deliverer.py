@@ -501,15 +501,11 @@ class DataDeliverer():
                         and the project relating to the upload/download.
                         Can be used instead of inputing the creds separately.
 
-        Raises:
-            OSError:                    Config file not found or opened
-            DeliveryOptionException:    Required information not found
-
         '''
 
         # No config file --------- loose credentials --------- No config file #
         if config is None:
-            # If username or password not specified cancel delivery
+            # Cancel delivery if username or password not specified
             if not all([self.user.username, self.user.password]):
                 sys.exit(
                     printout_error("Delivery System login credentials not "
@@ -519,7 +515,7 @@ class DataDeliverer():
                                    "\nFor help: 'ds_deliver --help'.")
                 )
 
-            # If project_id not specified cancel delivery
+            # Cancel delivery if project_id not specified
             if self.project_id is None:
                 sys.exit(
                     printout_error("Project not specified.\n"
@@ -528,7 +524,7 @@ class DataDeliverer():
                                    "option.")
                 )
 
-            # If no owner is set assume current user is owner
+            # Assume current user is owner if no owner is set
             if self.project_owner is None:
                 self.project_owner = self.user.username
                 return
@@ -544,7 +540,7 @@ class DataDeliverer():
                 printout_error(f"Could not open path-file {config}: {ose}")
             )
 
-        # Check that all credentials are entered and quit if not
+        # Quit if not all credentials are entered
         if not all(c in credentials for c
                    in ['username', 'password', 'project']):
             sys.exit(
@@ -552,17 +548,17 @@ class DataDeliverer():
                                " information.")
             )
 
-        # Save username, password and project_id from credentials file
+        # Save info from credentials file
         self.user.username = credentials['username']
         self.user.password = credentials['password']
         self.project_id = credentials['project']
 
-        # If owner specified - ok
+        # OK if owner specified
         if 'owner' in credentials:
             self.project_owner = credentials['owner']
             return
 
-        # If owner not specified and trying to out -- error
+        # Error if owner not specified and trying to put
         if self.project_owner is None and self.method == 'put':
             sys.exit(
                 printout_error("Project owner not specified. "

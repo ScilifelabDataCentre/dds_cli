@@ -1438,6 +1438,7 @@ class _DSUser():
         id (str):       User ID
         role (str):     Facility or researcher
     '''
+    # NOTE: Remove user class?
 
     def __init__(self, username=None, password=None):
         self.username = username

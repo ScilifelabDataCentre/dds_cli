@@ -130,7 +130,16 @@ class StreamingError(Exception):
         super().__init__(msg)
 
 
-def printout_error(message):
+def printout_error(message: str = "") -> (str):
+    '''Adds "padding" to error messages -> more attention.
+
+    Args:
+        message (str): Error message
+
+    Returns:
+        Padded error message for console printout
+
+    '''
 
     return ("\nx x x x x x x x x x x x x x x x x x x x x x x x\n\n"
             + message +

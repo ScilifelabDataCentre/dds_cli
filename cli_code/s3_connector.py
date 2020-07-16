@@ -12,7 +12,7 @@ import botocore
 from botocore.client import ClientError
 
 
-from cli_code.exceptions_ds import *
+from cli_code.exceptions_ds import S3Error
 from cli_code import LOG_FILE, DIRS
 from cli_code.file_handler import config_logger
 
@@ -44,6 +44,8 @@ class S3Connector():
         bucketname:     Name of bucket to access
         bucket:         Bucket object to access
         resource:       S3 connection object
+        session:        Session - needed for multithreading/processing
+
     '''
 
     def __init__(self, bucketname, project):
@@ -105,7 +107,7 @@ class S3Connector():
 
     def file_exists_in_bucket(self, key: str, put: bool = True) -> (bool, str):
         '''Checks if the current file already exists in the specified bucket.
-        If so, the file will not be uploaded.
+        If so, the file will not be uploaded (put), or will be downloaded (get)
 
         Args:
             key (str):      File to check for in bucket
@@ -116,7 +118,8 @@ class S3Connector():
             str:    Error message, "" if none
 
         Raises:
-            botocore.exceptions.ClientError:    Error in searching bucket
+            botocore.exceptions.ClientError:    Error in searching bucket.
+                                                404 -> OK, not 404 -> not OK
 
         '''
 
@@ -134,21 +137,24 @@ class S3Connector():
                 S3_LOG.warning(error_message)
                 return False, error_message
 
-        # S3_LOG.debug(f"File {key}: In bucket.")
+        S3_LOG.info(f"File {key}: In bucket.")
         return True, ""
 
     def delete_item(self, key: str):
-        '''Deletes specified item
+        '''Deletes specified item from S3 bucket
 
         Args:
-            key:    Item (e.g. file) to delete from bucket
+            key (str):    Item (e.g. file) to delete from bucket
+
+        Raises:
+            S3Error:    Error while deleting object
         '''
 
         try:
             self.resource.Object(
                 self.bucket.name, key
             ).delete()
-        except Exception as delex:
+        except S3Error as delex:
             S3_LOG.exception(delex)
         else:
             S3_LOG.info(f"Item {key} deleted from bucket.")

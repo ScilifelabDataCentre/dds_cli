@@ -13,6 +13,7 @@ from cli_code.crypt4gh.crypt4gh import lib
 from prettytable import PrettyTable
 from botocore.client import ClientError
 from progressbar import ProgressBar
+from botocore.client import ClientError
 
 from cli_code import (DIRS, LOG_FILE, PRINT_ATT, PRINT_ERR_S, PRINT_ERR_E)
 from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
@@ -1276,7 +1277,7 @@ class DataDeliverer():
                                  f", File location: {path_info['new_file']}")
                 return True, ""
 
-    def put(self, file: Path, fileinfo: dict) -> (bool, Path, list, list, str):
+    def put(self, file: Path, fileinfo: dict) -> (bool, str):
         '''Uploads specified data to the S3 bucket.
 
         Args:
@@ -1293,10 +1294,10 @@ class DataDeliverer():
 
         '''
 
-        # If DS noted cancelation of file -- quit and move on
+        # Quit and move on if DS noted cancelation of file
         if not fileinfo['proceed']:
             error = ""
-            # If processing not performed --> quit and move on
+            # Quit and move on if processing not performed
             if not fileinfo['processing']['finished']:
                 error = (f"File: '{file}' -- File not processed (e.g. "
                          "encrypted). Bug in code. Moving on to next file.")
@@ -1311,42 +1312,20 @@ class DataDeliverer():
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
                 as s3:
 
+            # Upload file
             try:
-                # Upload file
                 s3.resource.meta.client.upload_file(
                     Filename=str(fileinfo['encrypted_file']),
                     Bucket=s3.bucketname,
                     Key=fileinfo['new_file']
                 )
-            except Exception as e:   # FIX EXCEPTION HERE
+            except ClientError as e:
                 # Upload failed -- return error message and move on
                 error = (f"File: {file}, Uploaded: "
                          f"{fileinfo['encrypted_file']} -- "
                          f"Upload failed! -- {e}")
                 self.LOGGER.exception(error)
                 return False, error
-
-            # # Upload successful
-            # self.LOGGER.info(f"File uploaded: {fileinfo['encrypted_file']}"
-            #                  f", Bucket location: {fileinfo['new_file']}")
-            # self.LOGGER.info("Verifying checksum...")
-
-            # try:
-            #     s3_resp = s3.resource.meta.client.head_object(
-            #         Bucket=s3.bucketname,
-            #         Key=fileinfo['new_file']
-            #     )
-            #     self.LOGGER.debug(f"{s3_resp}")
-            # except Exception as e:
-            #     self.LOGGER.exception(e)
-
-            # tag = s3_resp['ETag'].strip('"')
-            # checksum = fileinfo['checksum']
-            # self.LOGGER.debug(f"tag: {tag}, checksum: {checksum}")
-            # if tag != checksum:
-            #     self.LOGGER.fatal("Not a matching checksum!")
-            # else:
-            #     self.LOGGER.info("Checksums match!")
 
             return True, ""
 

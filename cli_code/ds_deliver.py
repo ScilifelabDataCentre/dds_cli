@@ -323,7 +323,7 @@ def get(config: str, username: str, password: str, project: str,
             as delivery:
 
         # Progress printout
-        delivery_table = create_output(delivery.data)
+        # delivery_table = create_output(delivery.data)
 
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
         pool_executor = ProcessPoolExecutor()       # Processing

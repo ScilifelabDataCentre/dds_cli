@@ -36,8 +36,8 @@ LOG.setLevel(logging.DEBUG)
 # ns: not started, f: finished, e: error, 
 # enc: encrypting, dec: decrypting
 # u: uploading, d: downloading
-STATUS_DICT = {'ns': "Not started", 'f': u'\u2705', 'e': u'\u274C',
-               'enc': "Encrypting...", 'dec': "Decrypting",
+STATUS_DICT = {'ns': "Waiting to start...", 'f': u'\u2705', 'e': u'\u274C',
+               'enc': "Encrypting...", 'dec': "Decrypting...",
                'u': 'Uploading...', 'd': "Dowloading...", }
 
 # DATA_ORDERED = collections.OrderedDict()
@@ -1249,7 +1249,7 @@ class DataDeliverer():
                     f"{2*' '}{STATUS_DICT[status]}")
         diff = abs(len(self.PROGRESS[file]['line']) - len(new_line))
         new_line += diff*" " + "\n"
-        
+
         self.TO_PRINT = self.TO_PRINT.replace(self.PROGRESS[file]['line'], new_line)
         self.PROGRESS[file]['line'] = new_line
 

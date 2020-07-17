@@ -176,7 +176,7 @@ def file_reader(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
 
 # NOTE: Merge this with decompress_file?
 def file_writer(filehandler, gen, last_nonce):
-    '''Writes decrypted chunks to file. Checks if last nonces match. 
+    '''Writes decrypted chunks to file. Checks if last nonces match.
 
     Args:
         filehandler:            Filehandler to save decompressed chunks to/with

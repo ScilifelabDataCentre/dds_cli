@@ -1,5 +1,5 @@
 """
-S3 Connector. 
+S3 Connector
 
 Communicates with and handles operations related to Safespring S3
 """
@@ -82,8 +82,7 @@ class S3Connector():
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
-        else:
-            self = None
+
         return True
 
     def _connect(self):

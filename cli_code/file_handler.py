@@ -182,6 +182,7 @@ def file_reader(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
         yield chunk
 
 
+# NOTE: Merge this with decompress_file?
 def file_writer(filehandler, gen, last_nonce):
     '''Writes decrypted chunks to file. Checks if last nonces match. 
 
@@ -268,6 +269,7 @@ def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
             yield chunk
 
 
+# NOTE: Merge this with file_writer?
 def decompress_file(filehandler, gen, last_nonce: bytes) -> (bool, str):
     '''Decompresses file
 
@@ -376,11 +378,12 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
 
         iv_int += 1  # Increment nonce
 
-        # Encrypt and yield nonce and ciphertext
-        yield nonce, crypto_aead_chacha20poly1305_ietf_decrypt(ciphertext=enc_chunk,
-                                                               aad=aad,
-                                                               nonce=nonce,
-                                                               key=key)
+        # Decrypt and yield nonce and plaintext
+        yield (nonce,
+               crypto_aead_chacha20poly1305_ietf_decrypt(ciphertext=enc_chunk,
+                                                         aad=aad,
+                                                         nonce=nonce,
+                                                         key=key))
 
 
 def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
@@ -517,6 +520,7 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
 
             # Save decrypted file
             with outfile.open(mode='ab+') as of:
+
                 # Decompress if DS compressed, otherwise save chunks
                 func = decompress_file if file_info['ds_compressed'] \
                     else file_writer

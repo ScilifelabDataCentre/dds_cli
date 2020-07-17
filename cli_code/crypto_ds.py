@@ -1,11 +1,7 @@
 import sys
 import os
 from pathlib import Path
-import io
-from base64 import b64decode, b64encode
-import logging
 import traceback
-import hashlib
 
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -13,22 +9,19 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.x25519 import (X25519PrivateKey,
                                                               X25519PublicKey)
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
-from nacl.bindings import (crypto_kx_client_session_keys,
-                           crypto_kx_server_session_keys,
-                           crypto_aead_chacha20poly1305_ietf_encrypt,
-                           crypto_aead_chacha20poly1305_ietf_decrypt)
-from nacl.public import PrivateKey
+from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_decrypt)
 
-from cli_code.exceptions_ds import HashException, EncryptionError
-from cli_code import LOG_FILE, DS_MAGIC
+from cli_code.exceptions_ds import HashException
+from cli_code import DS_MAGIC
 from cli_code.exceptions_ds import DeliverySystemException, printout_error
 
 SEGMENT_SIZE = 65536
 MAGIC_NUMBER = b'crypt4gh'
 VERSION = 1
+
+# TODO: Add logging
 
 
 class Encryptor():

@@ -2,29 +2,26 @@
 Command line interface for Data Delivery System
 """
 
+###############################################################################
 # IMPORTS ########################################################### IMPORTS #
+###############################################################################
 
-from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
-                                as_completed)
-from multiprocessing import Queue
+# Standard library
 import logging
 import logging.config
-from pathlib import Path
 import sys
-import os
-import itertools
-import collections
+from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
+                                as_completed)
 
+# Installed
 import click
-from progressbar import ProgressBar
-from prettytable import PrettyTable
 
-from cli_code import (LOG_FILE, timestamp, DIRS)
-from cli_code.data_deliverer import (DataDeliverer, finish_download)
-from cli_code.crypto_ds import ECDHKey
+# Own modules
+import cli_code.file_handler as fh
+from cli_code import (LOG_FILE, timestamp)
+from cli_code.data_deliverer import (DataDeliverer)
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError)
-import cli_code.file_handler as fh
 from cli_code.s3_connector import S3Connector
 
 
@@ -63,6 +60,7 @@ def cli():
 ###############################################################################
 # PUT ################################################################### PUT #
 ###############################################################################
+
 
 # "'put' is too complex" -- this warning disappears when the database update
 # at end of delivery is moved to other place/changed (couchdb -> mariadb)
@@ -280,6 +278,7 @@ def put(config: str, username: str, password: str, project: str,
         thread_executor.shutdown(wait=True)
         sys.stdout.write("\n")
 
+
 ###############################################################################
 # GET ################################################################### GET #
 ###############################################################################
@@ -422,7 +421,6 @@ def get(config: str, username: str, password: str, project: str,
             try:
                 with DatabaseConnector('project_db') as project_db:
                     _project = project_db[delivery.project_id]
-                    keyinfo = delivery.data[fpath]
 
                     # Add info on when downloaded
                     _project['files'][fpath]["date_downloaded"] = \

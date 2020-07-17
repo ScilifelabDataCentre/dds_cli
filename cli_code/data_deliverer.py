@@ -195,7 +195,8 @@ class DataDeliverer():
             get_project_private(self.project_id, self.user)
 
         # Start progress info printout
-        self.TO_PRINT, self.PROGRESS = self._create_progress_output()
+        if self.data:
+            self.TO_PRINT, self.PROGRESS = self._create_progress_output()
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -210,6 +211,8 @@ class DataDeliverer():
         Prints out which files are delivered and not.'''
         # NOTE: Remove this and just update the progress instead?
         # Also, definitely needs to be checked and simplified
+        # TODO: Add check for if uploaded - single file uploaded among failed
+        #       folder is not added to final printout
 
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
@@ -590,11 +593,12 @@ class DataDeliverer():
 
         # Find appropriate size of progress table
         # Max length of status info
-        max_status = max(len(x) for y, x in STATUS_DICT.items())
+        max_status = max(list(len(y) for x, y in STATUS_DICT.items()))
         # Width of status "column"
         SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
+
         # Width of file "column"
-        FCOLSIZE = max(len(str(x)) for x in self.data)
+        FCOLSIZE = max(list(len(str(x)) for x in self.data))
 
         # To return
         TO_PRINT = ""

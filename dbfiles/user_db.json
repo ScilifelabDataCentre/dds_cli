@@ -27,7 +27,7 @@
                     "phone": "0700000000"
                 },
                 "s3_project": {
-                    "name": "intra1.scilifelab.se",
+                    "name": "s3projectnamehere",
                     "size": 0,
                     "order": "MB"
                 },
@@ -44,17 +44,18 @@
             "id": "1116e4785a1877d84c7c7e6e86008c1c",
             "key": "1116e4785a1877d84c7c7e6e86008c1c",
             "value": {
-                "rev": "1-c80c124f8998add2a67f39344ba12769"
+                "rev": "2-08030f37afa0c65a393eafbaa94def90"
             },
             "doc": {
                 "_id": "1116e4785a1877d84c7c7e6e86008c1c",
-                "_rev": "1-c80c124f8998add2a67f39344ba12769",
+                "_rev": "2-08030f37afa0c65a393eafbaa94def90",
                 "role": "researcher",
                 "name": "Researcher 1",
                 "username": "researcher1",
                 "password": {
                     "hash": "d6bcf8c97947b374b0b6ffa399b6b02a20d1fb247550f5acdd44c5d2ad75c469",
-                    "settings": "cc0d61202e611bac6a8d6fd756c2c332$32$14$8$1"
+                    "settings": "cc0d61202e611bac6a8d6fd756c2c332$32$14$8$1",
+                    "key_salt": "CCEFF22F8814874DDC8660E767D9CACB"
                 },
                 "contact_info": {
                     "address": {

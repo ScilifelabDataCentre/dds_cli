@@ -94,6 +94,15 @@ class S3Connector():
 
             # TODO: SHOULD BE CHANGED LATER - Get from DB etc.
             # Get S3 credentials
+            # Structure in file: {
+            # 	                    "endpoint_url": "endpointurl",
+            # 	                    "sfsp_keys": {
+            # 		                    "s3projectname": {
+            # 			                    "access_key": "accesskey",
+            # 			                    "secret_key": "secretkey"
+            # 		                    }
+            # 	                    }
+            #                   }
             s3path = Path.cwd() / Path("sensitive/s3_config.json")
             with s3path.open(mode='r') as f:
                 s3creds = json.load(f)

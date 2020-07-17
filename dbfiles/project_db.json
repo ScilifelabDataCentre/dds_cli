@@ -6,11 +6,11 @@
             "id": "0372838e2cf1f4a2b869974723002bb7",
             "key": "0372838e2cf1f4a2b869974723002bb7",
             "value": {
-                "rev": "14-995dc2a468ac83167d7a16a243577f4b"
+                "rev": "1475-8d31169380d471359efcb152e8fe32f9"
             },
             "doc": {
                 "_id": "0372838e2cf1f4a2b869974723002bb7",
-                "_rev": "14-995dc2a468ac83167d7a16a243577f4b",
+                "_rev": "1475-8d31169380d471359efcb152e8fe32f9",
                 "project_info": {
                     "title": "Project number one",
                     "category": "Category 1",
@@ -24,30 +24,66 @@
                     "delivery_option": "S3"
                 },
                 "project_keys": {
-                    "public": "321bd5ecbeba06c6ac4ba4ec6eccea4a9df405edf56db713b99a7416d6ecdc05",
-                    "private": "86d40fa263e21aaa0a81cac9a29b845ad789559e095094a74bdd9fb0128f0882",
-                    "fac_public": "73a95d91db96db74d76182b985ce68455995e11209a65f9e4a21e6361b60b932"
+                    "public": "8F88EAA7B72DB95BE36D6B1EA83064C3F5F8B5306ACB7457B1E49659FF60142C",
+                    "secret": "0BC7BAF32D997B8985039ACEAA9403E53E40E11FF3C98C0E50B4F958A9E28C1680EC04864A1CECFA2FB04BA27651C3DED5E9B871ED962A7AD674309E13D0E533DA759BB6A2993B4F93C714FF3E51CFC9DC95E2E72535FAD70D162FD9",
+                    "nonce": "60B7C3AEA202EAB801E92696"
                 },
                 "invoice": {},
                 "comment": "",
                 "files": {
-                    "js": {
-                        "size": 41355,
-                        "mime": "",
-                        "date_uploaded": "2020-06-02_14-10-09",
-                        "checksum": "af3b5fe550322eabf60576acda27601531f93b2075a5f8e406e96194069b51ba"
-                    },
-                    "js/subfolder": {
-                        "size": 21,
-                        "mime": "",
-                        "date_uploaded": "2020-06-02_14-10-09",
-                        "checksum": "66f98b349040f6ff7790ede1fc25cff9f2eba6ed2bf8bf33b979b436d1240b69"
-                    },
-                    ".": {
+                    "testfile_05.fna.zst.ccp": {
+                        "directory_path": ".",
                         "size": 532557,
-                        "mime": "",
-                        "date_uploaded": "2020-06-02_14-10-09",
-                        "checksum": "a255a94e1ec8309aff7321cc63f74c5f8a72a372a29fb3a70a3befcd84e95214"
+                        "ds_compressed": true,
+                        "date_uploaded": "2020-07-15_15-01-07",
+                        "key": "93AF7E5219731B4EA80C0FF25026E9C780AD81FA6AFF9EF32DEAF663B61F6771",
+                        "salt": "AADBB860D6A14990659F7E5E5244BE9E",
+                        "date_downloaded": "2020-07-15_19-24-39"
+                    },
+                    "js/subfolder/subfolder_file.txt.zst.ccp": {
+                        "directory_path": "js/subfolder",
+                        "size": 21,
+                        "ds_compressed": true,
+                        "date_uploaded": "2020-07-17_10-53-29",
+                        "key": "8C49531E5C40117BAC6113AEE845EC23671A9BF978E56AB92E8C05B264AE5879",
+                        "salt": "D7475536FC7FF57D7B2445012982B68A",
+                        "date_downloaded": "2020-07-17_10-53-47"
+                    },
+                    "js/flow.js.zst.ccp": {
+                        "directory_path": "js",
+                        "size": 45162,
+                        "ds_compressed": true,
+                        "date_uploaded": "2020-07-17_10-53-29",
+                        "key": "7C76BDAA0D161B06DA98C6D8DBDD1941DF90E5E628203D7097133A9AB70BC04A",
+                        "salt": "0A2ED671B73507DB1C02470C27E13806",
+                        "date_downloaded": "2020-07-17_10-53-47"
+                    },
+                    "js/resumable.js.zst.ccp": {
+                        "directory_path": "js",
+                        "size": 41355,
+                        "ds_compressed": true,
+                        "date_uploaded": "2020-07-17_10-53-29",
+                        "key": "E3E33DF5DF42115C21DE6B96B84B3A773A8FBDAA41869E0E2D530A5D07D3707C",
+                        "salt": "3E7DE2CF0057EA0F34F4DB79A8CD7724",
+                        "date_downloaded": "2020-07-17_10-53-47"
+                    },
+                    "testfile_109.fna.zst.ccp": {
+                        "directory_path": ".",
+                        "size": 109247544,
+                        "ds_compressed": true,
+                        "date_uploaded": "2020-07-17_10-53-34",
+                        "key": "A51B1A9DDD908DF96452E513B96595C2796787C086ED5B747734A3F341CB7F6A",
+                        "salt": "3007A205D26FC4A3977019D9F29A2EC9",
+                        "date_downloaded": "2020-07-17_10-53-48"
+                    },
+                    "js/flow.min.js.zst.ccp": {
+                        "directory_path": "js",
+                        "size": 15159,
+                        "ds_compressed": true,
+                        "date_uploaded": "2020-07-17_10-53-29",
+                        "key": "D0E46BE5619F35BEBEA267FD102D0C405F68F4DD89645614C39A19065472516C",
+                        "salt": "EB3F662258E9C8FD79A96CED07F88A18",
+                        "date_downloaded": "2020-07-17_10-53-47"
                     }
                 },
                 "users": {

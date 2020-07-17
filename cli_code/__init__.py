@@ -1,21 +1,43 @@
-import collections
+"""Data Delivery System
+
+This package allows SciLifeLab facilities to deliver data to their users in
+a secure way.
+
+Any type of file or folder can be delivered. Compressed files or archives will
+not be compressed, all other files will (with Zstandard). All files (if not
+--no-encryption flag used) will be encrypted with ChaCha20-Poly1305.
+
+"""
+# TODO: Add --no-encryption flag
+
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
+# Standard library
 import datetime
 import logging
 import shutil
 import sys
-
 from pathlib import Path
+
+###############################################################################
+# PROJECT SPEC ################################################# PROJECT SPEC #
+###############################################################################
 
 __title__ = 'SciLifeLab Data Delivery System'
 __version__ = '0.1'
 __author__ = 'Ina Odén Österbo'
 __author_email__ = 'ina.oden.osterbo@scilifelab.uu.se'
 __license__ = 'MIT'
-__all__ = ['DIRS', 'LOG_FILE']
+__all__ = ['DIRS', 'LOG_FILE']  # TODO: Add things here and add to modules
 
 PROG = 'ds_deliver'
 
-LOG = logging.getLogger(__name__)
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
 # DEBUG     -- Detailed information, typically of interest only when diagnosing
 #              problems.
 # INFO      -- Confirmation that things are working as expected.
@@ -26,17 +48,20 @@ LOG = logging.getLogger(__name__)
 #              perform some function.
 # CRITICAL  -- A serious error, indicating that the program itself may be
 #           -- unable to continue running.
+LOG = logging.getLogger(__name__)
 
-VERSION = 1
-SEGMENT_SIZE = 65536
-CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + 16
-MAX_CTR = (2**48) - 1
+###############################################################################
+# GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
+###############################################################################
 
-DS_MAGIC = b'DelSys'
+SEGMENT_SIZE = 65536                        # Chunk size while reading file
+CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + 16     # Chunk to read from encrypted file
+DS_MAGIC = b'DelSys'                        # DS signature in encrypted key
 
-PRINT_ERR_S = "\nx x x x x x x x x x x x x x x x x x x x x x x x\n\n"
-PRINT_ERR_E = "\n\nx x x x x x x x x x x x x x x x x x x x x x x x\n"
-PRINT_ATT = "\n* * * * * * * * * * * * * * * * * * * * * * * *\n"
+###############################################################################
+# FUNCTIONS ####################################################### FUNCTIONS #
+###############################################################################
+
 
 def timestamp() -> (str):
     '''Gets the current time. Formats timestamp.
@@ -108,9 +133,14 @@ def create_directories():
     return True, dirs
 
 
+###############################################################################
+# START - CREATE ############################################# START - CREATE #
+###############################################################################
+
+
 created, DIRS = create_directories()
 if not created:
     raise OSError("Temporary directory could not be created. "
                   "Unable to continue delivery. Aborting. ")
 
-LOG_FILE = str(DIRS[-1] / Path("ds.log"))
+LOG_FILE = str(DIRS[-1] / Path("ds.log"))   # Get log file name

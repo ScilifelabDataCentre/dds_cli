@@ -27,8 +27,8 @@ from pathlib import Path
 
 __title__ = 'SciLifeLab Data Delivery System'
 __version__ = '0.1'
-__author__ = 'Ina Odén Österbo'
-__author_email__ = 'ina.oden.osterbo@scilifelab.uu.se'
+__author__ = 'SciLifeLab Data Centre'
+__author_email__ = ''
 __license__ = 'MIT'
 __all__ = ['DIRS', 'LOG_FILE']  # TODO: Add things here and add to modules
 

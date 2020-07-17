@@ -1,4 +1,4 @@
-# dp_api
+# DS_CLI
 API to access Scilifelab Data Centre's delivery portal. Built to handle data upload/download to/from Safespring S3.
 
 **WIP** 
@@ -6,7 +6,7 @@ API to access Scilifelab Data Centre's delivery portal. Built to handle data upl
 ---
 ## Usage
 ```bash
-dp_cli --file "/directory/of/file/to/upload.xxx"
+ds_deliver --file "/directory/of/file/to/upload.xxx"
 ```
 ## Setup
 ### CLI setup

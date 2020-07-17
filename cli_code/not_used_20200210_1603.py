@@ -1641,3 +1641,74 @@ class ProgressPercentage(object):
             # sys.stdout.write(f"\r{self._filename}  {self._seen_so_far} / "
             #                  f"{self._size}  ({percentage:.2f}%)")
             # sys.stdout.flush()
+
+# 20200717 - hmac
+
+def gen_hmac(file) -> (Path, str):
+    '''Generates a HMAC for a file
+
+    Args:
+        file: Path to hash
+
+    Returns:
+        tuple: File and path
+
+            Path:   Path to file
+            str:    HMAC generated for file
+    '''
+
+    file_hash = hmac.HMAC(key=b'SuperSecureChecksumKey',
+                          algorithm=hashes.SHA256(),
+                          backend=default_backend())
+    try:
+        with file.open(mode='rb') as f:
+            for chunk in iter(lambda: f.read(8388608), b''):
+                file_hash.update(chunk)
+    except HashException as he:
+        sys.exit(f"HMAC for file {str(file)} could not be generated: {he}")
+    else:
+        return file, file_hash.finalize().hex()
+
+def gen_hmac_streamed(file) -> (Path, str):
+    '''Generates a HMAC for a file
+
+    Args:
+        file: Path to hash
+
+    Returns:
+        tuple: File and path
+
+            Path:   Path to file
+            str:    HMAC generated for file
+    '''
+
+    try:
+        with file.open(mode='rb') as f:
+            for chunk in iter(lambda: f.read(8388608), b''):
+                file_hash.update(chunk)
+    except HashException as he:
+        sys.exit(f"HMAC for file {str(file)} could not be generated: {he}")
+    else:
+        return file, file_hash.finalize().hex()
+
+# 20200717 - finish downlaod 
+def finish_download(file, recipient_sec, sender_pub):
+    '''Finishes file download, including decryption and
+    checksum generation'''
+
+    if isinstance(file, Path):
+        try:
+            dec_file = Path(str(file).split(
+                file.name)[0]) / Path(file.stem)
+        except Exception:   # FIX EXCEPTION
+            sys.exit("FEL")
+        finally:
+            original_umask = os.umask(0)
+            with file.open(mode='rb') as infile:
+                with dec_file.open(mode='ab+') as outfile:
+                    lib.decrypt(keys=[(0, recipient_sec, sender_pub)],
+                                infile=infile,
+                                outfile=outfile)
+            os.umask(original_umask)
+
+    return file

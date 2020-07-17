@@ -1,3 +1,11 @@
+"""
+Cryptography-related functions required for the Data Delivery System
+"""
+
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
 import sys
 import os
 from pathlib import Path
@@ -17,34 +25,43 @@ from cli_code.exceptions_ds import HashException
 from cli_code import DS_MAGIC
 from cli_code.exceptions_ds import DeliverySystemException, printout_error
 
+###############################################################################
+# LOGGING ########################################################### LOGGING #
+###############################################################################
+
+# TODO: Add logging
+
+###############################################################################
+# GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
+###############################################################################
+
 SEGMENT_SIZE = 65536
 MAGIC_NUMBER = b'crypt4gh'
 VERSION = 1
 
-# TODO: Add logging
-
-
-class Encryptor():
-
-    def __init__(self):
-        pass
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, tb):
-        '''Allows for implementation using "with" statement.
-        Tear it down. Delete class.'''
-
-        if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
-            return False  # uncomment to pass exception through
-
-        return True
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
 
 
 class ECDHKey:
+    '''
+    Elliptic-Curve Diffie-Hellman key pair
 
+    Attributes:
+        private:    Private component
+        public:     Public component, generated from private
+
+    Methods:
+        del_priv_key:               Deletes private key
+        generate_encryption_key:    Derives shared data encryption key
+        public_to_hex:              Converts public key to hex-string
+
+    '''
+
+    #################
+    # Magic Methods #
+    #################
     def __init__(self, keys=()):
         '''Generate public key pair'''
 
@@ -80,16 +97,32 @@ class ECDHKey:
 
         return True
 
-    def public_to_hex(self):
-        return self.public.public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
-        ).hex().upper()
+    ##################
+    # Public Methods #
+    ##################
 
-    def generate_encryption_key(self, peer_public: bytes, salt_="") \
+    def del_priv_key(self):
+        '''Sets private key to None - important that it's kept secret'''
+
+        self.private = None
+
+    def generate_encryption_key(self, peer_public: bytes, salt_: str = "") \
             -> (bytes, bytes):
         '''Generate shared symmetric encryption key using peer public key
-        and own public and private key'''
+        and own public and private key
+
+        Args:
+            peer_public (bytes):    Public component of peer ECDH key pair
+            salt_ (str):            Salt used for deriving shared key.
+                                    "" if 'put' (default)
+
+        Returns:
+            tuple:  Derived key and salt
+
+                bool:   Derived shared key
+                bool:   Salt
+
+        '''
 
         # Put -> salt will be empty string -> generate new salt
         # Get -> salt will be hex string from db -> get as bytes
@@ -113,9 +146,23 @@ class ECDHKey:
 
         return derived_key, salt
 
-    def del_priv_key(self):
-        self.private = None
+    def public_to_hex(self) -> (str):
+        '''Converts public key to hex-string
 
+        Returns:
+            str:    Hex representation of public key
+
+        '''
+
+        return self.public.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw
+        ).hex().upper()
+
+
+###############################################################################
+# FUNCTIONS ####################################################### FUNCTIONS #
+###############################################################################
 
 def get_project_private(proj_id: str, user):
     '''Gets the project private key from the database - only while downloading.
@@ -272,52 +319,3 @@ def secure_password_hash(password_settings: str,
                  backend=default_backend())
 
     return (kdf.derive(password_entered.encode('utf-8'))).hex()
-
-
-def gen_hmac(file) -> (Path, str):
-    '''Generates a HMAC for a file
-
-    Args:
-        file: Path to hash
-
-    Returns:
-        tuple: File and path
-
-            Path:   Path to file
-            str:    HMAC generated for file
-    '''
-
-    file_hash = hmac.HMAC(key=b'SuperSecureChecksumKey',
-                          algorithm=hashes.SHA256(),
-                          backend=default_backend())
-    try:
-        with file.open(mode='rb') as f:
-            for chunk in iter(lambda: f.read(8388608), b''):
-                file_hash.update(chunk)
-    except HashException as he:
-        sys.exit(f"HMAC for file {str(file)} could not be generated: {he}")
-    else:
-        return file, file_hash.finalize().hex()
-
-
-def gen_hmac_streamed(file) -> (Path, str):
-    '''Generates a HMAC for a file
-
-    Args:
-        file: Path to hash
-
-    Returns:
-        tuple: File and path
-
-            Path:   Path to file
-            str:    HMAC generated for file
-    '''
-
-    try:
-        with file.open(mode='rb') as f:
-            for chunk in iter(lambda: f.read(8388608), b''):
-                file_hash.update(chunk)
-    except HashException as he:
-        sys.exit(f"HMAC for file {str(file)} could not be generated: {he}")
-    else:
-        return file, file_hash.finalize().hex()

@@ -1378,28 +1378,3 @@ class _DSUser():
         self.password = password
         self.id = None
         self.role = None
-
-
-# FUNCTIONS ####################################################### FUNCTIONS #
-
-
-def finish_download(file, recipient_sec, sender_pub):
-    '''Finishes file download, including decryption and
-    checksum generation'''
-
-    if isinstance(file, Path):
-        try:
-            dec_file = Path(str(file).split(
-                file.name)[0]) / Path(file.stem)
-        except Exception:   # FIX EXCEPTION
-            sys.exit("FEL")
-        finally:
-            original_umask = os.umask(0)
-            with file.open(mode='rb') as infile:
-                with dec_file.open(mode='ab+') as outfile:
-                    lib.decrypt(keys=[(0, recipient_sec, sender_pub)],
-                                infile=infile,
-                                outfile=outfile)
-            os.umask(original_umask)
-
-    return file

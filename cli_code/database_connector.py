@@ -1,10 +1,25 @@
-import couchdb
-import logging
-import traceback
+"""
+Establishes database connection for Data Delivery System
+"""
 
-from cli_code import LOG_FILE, DIRS
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
+# Standard library
+import logging
+
+# Installed
+import couchdb
+
+# Own modules
+from cli_code import LOG_FILE
 from cli_code.file_handler import config_logger
 from cli_code.exceptions_ds import CouchDBException
+
+###############################################################################
+# LOGGING ########################################################### LOGGING #
+###############################################################################
 
 DB_LOG = logging.getLogger(__name__)
 DB_LOG.setLevel(logging.DEBUG)
@@ -19,18 +34,30 @@ DB_LOG = config_logger(
     "%(lineno)d::%(message)s"
 )
 
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
+
 
 class DatabaseConnector():
+    '''Performs database-related operations
+
+    Args:
+            db_name (str):  Name of database to connect to. If None connect
+                            to entire instance.
+
+    Attributes:
+        db_name:    DB connected to
+
+    Raises:
+        CouchDBException:   Database login failed
+
+    '''
 
     def __init__(self, db_name=None):
         '''Initializes the db connection.
 
-        Args:
-            db_name (str):  Name of database to connect to. If None connect
-                            to entire instance.
 
-        Raises:
-            CouchDBException:   Database login failed
         '''
 
         self.db_name = db_name  # DB name to connect to

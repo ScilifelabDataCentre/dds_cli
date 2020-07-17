@@ -1,20 +1,34 @@
-from pathlib import Path
-import os
-import sys
+"""
+S3 Connector. 
+
+Communicates with and handles operations related to Safespring S3
+"""
+
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
+# Standard library
 import json
 import logging
+import sys
 import traceback
+from pathlib import Path
 
+# Installed
 import boto3
 import boto3.session
-from boto3.s3.transfer import TransferConfig
 import botocore
 from botocore.client import ClientError
 
-
+# Own modules
+from cli_code import LOG_FILE
 from cli_code.exceptions_ds import S3Error
-from cli_code import LOG_FILE, DIRS
 from cli_code.file_handler import config_logger
+
+###############################################################################
+# LOGGING ########################################################### LOGGING #
+###############################################################################
 
 S3_LOG = logging.getLogger(__name__)
 S3_LOG.setLevel(logging.DEBUG)
@@ -28,6 +42,10 @@ S3_LOG = config_logger(
     sh_format="%(levelname)s::%(name)s::" +
     "%(lineno)d::%(message)s"
 )
+
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
 
 
 class S3Connector():

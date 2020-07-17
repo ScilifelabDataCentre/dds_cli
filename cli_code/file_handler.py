@@ -3,37 +3,56 @@ File handler.
 Responsible for IO related operations, including compression, encryption, etc.
 """
 
+###############################################################################
 # IMPORTS ########################################################### IMPORTS #
+###############################################################################
 
-import zstandard as zstd
-import sys
-import os
-# import shutil
-# import collections
+# Standard library
 import logging
+import os
+import sys
+import zstandard as zstd
 from pathlib import Path
-import hashlib
-import textwrap
 
-# from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
-from prettytable import PrettyTable
-from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_encrypt,
-                           crypto_aead_chacha20poly1305_ietf_decrypt)
-from nacl.public import PrivateKey
-# from nacl.exceptions import CryptoError
-# from bitstring import BitArray
-from cryptography.hazmat.primitives import serialization
+# Installed
+from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_decrypt,
+                           crypto_aead_chacha20poly1305_ietf_encrypt)
 
-from cli_code import (LOG_FILE, DIRS, SEGMENT_SIZE,
-                      CIPHER_SEGMENT_SIZE)  # , MAX_CTR
-from cli_code.exceptions_ds import (DeliverySystemException, LoggingError,
-                                    CompressionError)
+# Own modules
+from cli_code import (CIPHER_SEGMENT_SIZE, DIRS, LOG_FILE, SEGMENT_SIZE)
 from cli_code.crypto_ds import ECDHKey
+from cli_code.exceptions_ds import (DeliverySystemException, LoggingError)
 
-# VARIABLES ####################################################### VARIABLES #
+###############################################################################
+# GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
+###############################################################################
+# NOTE: Move these to other module?
 
-MAX_NONCE = 2**(12*8)
+# Compression formats and their file signatures
+MAGIC_DICT = {
+    b'\x913HF': "hap",
+    b'ustar': "tar",
+    b'`\xea': "arj",
+    b"_\'\xa8\x89": "jar",
+    b'ZOO ': "zoo",
+    b'PK\x03\x04': "zip",
+    b'UFA\xc6\xd2\xc1': "ufa",
+    b'StuffIt ': "sit",
+    b'Rar!\x1a\x07\x00': "rar v4.x",
+    b'Rar!\x1a\x07\x01\x00': "rar v5",
+    b'MAr0\x00': "mar",
+    b'DMS!': "dms",
+    b'CRUSH v': "cru",
+    b'BZh': "bz2",
+    b'-lh': "lha",
+    b'(This fi': "hqx",
+    b'!\x12': "ain",
+    b'\x1a\x0b': "pak",
+    b'(\xb5/\xfd': "zst"
+}
+MAX_FMT = max(len(x) for x in MAGIC_DICT)   # Longest signature
 
+MAX_NONCE = 2**(12*8)   # Max mumber of nonces
 
 ###############################################################################
 # Logging ########################################################### Logging #
@@ -100,33 +119,6 @@ LOG = config_logger(
     sh_format="%(levelname)s::%(name)s::" +
     "%(lineno)d::%(message)s"
 )
-
-###############################################################################
-# GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
-###############################################################################
-# Compression formats and their file signatures
-MAGIC_DICT = {
-    b'\x913HF': "hap",
-    b'ustar': "tar",
-    b'`\xea': "arj",
-    b"_\'\xa8\x89": "jar",
-    b'ZOO ': "zoo",
-    b'PK\x03\x04': "zip",
-    b'UFA\xc6\xd2\xc1': "ufa",
-    b'StuffIt ': "sit",
-    b'Rar!\x1a\x07\x00': "rar v4.x",
-    b'Rar!\x1a\x07\x01\x00': "rar v5",
-    b'MAr0\x00': "mar",
-    b'DMS!': "dms",
-    b'CRUSH v': "cru",
-    b'BZh': "bz2",
-    b'-lh': "lha",
-    b'(This fi': "hqx",
-    b'!\x12': "ain",
-    b'\x1a\x0b': "pak",
-    b'(\xb5/\xfd': "zst"
-}
-MAX_FMT = max(len(x) for x in MAGIC_DICT)   # Longest signature
 
 ###############################################################################
 # IO FUNCTIONS ################################################# IO FUNCTIONS #
@@ -246,6 +238,7 @@ def file_deleter(file: Path):
 ###############################################################################
 # COMPRESSION ################################################### COMPRESSION #
 ###############################################################################
+# NOTE: Move to own module/class?
 
 
 def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
@@ -336,6 +329,7 @@ def is_compressed(file: Path) -> (bool, str):
 ###############################################################################
 # CRYPTO ############################################################# CRYPTO #
 ###############################################################################
+# NOTE: Move to own module/class?
 
 
 def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
@@ -454,6 +448,8 @@ def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
 
 def get_file_key():
     return "private", "public"
+
+
 ###############################################################################
 # PREP AND FINISH ########################################### PREP AND FINISH #
 ###############################################################################

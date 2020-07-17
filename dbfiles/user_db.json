@@ -66,7 +66,7 @@
                     "phone": "0700000001"
                 },
                 "s3_project": {
-                    "name": "intra1.scilifelab.se",
+                    "name": "s3projectnamehere",
                     "size": 0,
                     "order": "MB"
                 },

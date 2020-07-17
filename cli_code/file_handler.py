@@ -143,20 +143,34 @@ def del_from_temp(file: Path) -> (bool):
     return
 
 
-def get_root_path(file: Path, path_base: str = None) -> (Path):
-    '''Gets the path to the file, from the entered folder.
+def file_deleter(file: Path):
+    '''Delete file
 
     Args:
-        file:       Path to file
-        path_base:  None if single file, folder name if in folder
+        file (Path):    Path to file
 
-    Returns:
-        Path:   Path from folder to file
     '''
 
-    fileparts = file.parts
-    start_ind = fileparts.index(path_base)
-    return Path(*fileparts[start_ind:-1])
+    if not file.exists():
+        return
+
+    # Try file.unlink() first (pathlib) and then os.remove(file) (os) if failed
+    # Log warning - don't quit if deletion not possible
+    try:
+        file.unlink()
+    except OSError as ose:
+        LOG.warning(f"Failed deleting file {file}: {ose}.\nTrying again.")
+        try:
+            os.remove(file)
+        except OSError as ose:
+            error = f"Failed deleting file {file}: {ose}."
+            LOG.warning(error)
+            return True, error
+        else:
+            LOG.info(f"Deleted file {file}")
+    else:
+        LOG.info(f"Deleted file {file}")
+        return True, ""
 
 
 def file_reader(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
@@ -206,34 +220,21 @@ def file_writer(filehandler, gen, last_nonce):
     return nonce_ok, error
 
 
-def file_deleter(file: Path):
-    '''Delete file
+def get_root_path(file: Path, path_base: str = None) -> (Path):
+    '''Gets the path to the file, from the entered folder.
 
     Args:
-        file (Path):    Path to file
+        file:       Path to file
+        path_base:  None if single file, folder name if in folder
 
+    Returns:
+        Path:   Path from folder to file
     '''
 
-    if not file.exists():
-        return
+    fileparts = file.parts
+    start_ind = fileparts.index(path_base)
+    return Path(*fileparts[start_ind:-1])
 
-    # Try file.unlink() first (pathlib) and then os.remove(file) (os) if failed
-    # Log warning - don't quit if deletion not possible
-    try:
-        file.unlink()
-    except OSError as ose:
-        LOG.warning(f"Failed deleting file {file}: {ose}.\nTrying again.")
-        try:
-            os.remove(file)
-        except OSError as ose:
-            error = f"Failed deleting file {file}: {ose}."
-            LOG.warning(error)
-            return True, error
-        else:
-            LOG.info(f"Deleted file {file}")
-    else:
-        LOG.info(f"Deleted file {file}")
-        return True, ""
 
 ###############################################################################
 # COMPRESSION ################################################### COMPRESSION #
@@ -455,93 +456,6 @@ def get_file_key():
 ###############################################################################
 
 
-def reverse_processing(file: str, file_info: dict, keys: tuple) \
-        -> (bool, str, str):
-    '''Decrypts and decompresses file (if DS compressed)
-
-    Args:
-        file (str):         Path to file
-        file_info (dict):   Info on file
-        keys (tuple):       Project specific ECDH keys required for decryption
-                            Format: (public, private)
-
-    Returns:
-        tuple:  Info on finalizing delivery
-
-            bool:   True if decryption etc successful
-            str:    Decrypted file
-            str:    Error message, "" if none
-
-    '''
-
-    # Variables ################################################### Variables #
-    infile = file_info['new_file']                      # Downloaded file
-    outfile = infile.parent / Path(infile.stem).stem    # Finalized file path
-    error = ""
-    # ----------------------------------------------------------------------- #
-    # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
-
-    # Encryption key ######################################### Encryption key #
-    # Get keys for decryption
-    peer_public = bytes.fromhex(file_info['key'])   # File public enc key
-    keypair = ECDHKey(keys=keys)                    # Project specific key pair
-
-    # Derive shared symmetric key
-    salt = file_info['salt']                # Salt to generate same shared key
-    key, _ = keypair.generate_encryption_key(peer_public=peer_public,
-                                             salt_=salt)
-
-    # "Delete" private key
-    keypair.del_priv_key()
-    # ----------------------------------------------------------------------- #
-
-    # START ########################################################### START #
-    try:
-        original_umask = os.umask(0)  # User file-creation mode mask
-        with infile.open(mode='rb+') as f:
-            # Get last nonce
-            f.seek(-12, os.SEEK_END)
-            last_nonce = f.read(12)
-
-            # Remove last nonce from file
-            f.seek(-12, os.SEEK_END)
-            f.truncate()
-
-            # Jump back to beginning and get first nonce
-            f.seek(0)
-            first_nonce = f.read(12)
-
-            # Decrypt file
-            chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
-
-            # Save decrypted file
-            with outfile.open(mode='ab+') as of:
-
-                # Decompress if DS compressed, otherwise save chunks
-                func = decompress_file if file_info['ds_compressed'] \
-                    else file_writer
-                saved, error = func(filehandler=of,
-                                    gen=chunk_stream,
-                                    last_nonce=last_nonce)
-
-                if not saved:
-                    return False, outfile, error
-
-    except DeliverySystemException as ee:
-        error = f"Finalizing of file failed! {ee}"
-        LOG.exception(error)
-        return False, outfile, error
-    else:
-        LOG.info(f"File: '{file}' -- Finalizing completed! Decrypted file "
-                 f"saved at {outfile}")
-    finally:
-        os.umask(original_umask)    # Remove mask
-
-    # FINISHED ----------------------------------------------------- FINISHED #
-
-    return True, outfile, ""
-
-
 def process_file(file: Path, file_info: dict, peer_public) \
         -> (bool, Path, int, bool, bytes, bytes, str):
     '''Processes the files incl compression, encryption
@@ -648,3 +562,90 @@ def process_file(file: Path, file_info: dict, peer_public) \
 
     return (True, outfile, outfile.stat().st_size, ds_compressed,
             keypair.public_to_hex(), salt.hex().upper(), "")
+
+
+def reverse_processing(file: str, file_info: dict, keys: tuple) \
+        -> (bool, str, str):
+    '''Decrypts and decompresses file (if DS compressed)
+
+    Args:
+        file (str):         Path to file
+        file_info (dict):   Info on file
+        keys (tuple):       Project specific ECDH keys required for decryption
+                            Format: (public, private)
+
+    Returns:
+        tuple:  Info on finalizing delivery
+
+            bool:   True if decryption etc successful
+            str:    Decrypted file
+            str:    Error message, "" if none
+
+    '''
+
+    # Variables ################################################### Variables #
+    infile = file_info['new_file']                      # Downloaded file
+    outfile = infile.parent / Path(infile.stem).stem    # Finalized file path
+    error = ""
+    # ----------------------------------------------------------------------- #
+    # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
+
+    # Encryption key ######################################### Encryption key #
+    # Get keys for decryption
+    peer_public = bytes.fromhex(file_info['key'])   # File public enc key
+    keypair = ECDHKey(keys=keys)                    # Project specific key pair
+
+    # Derive shared symmetric key
+    salt = file_info['salt']                # Salt to generate same shared key
+    key, _ = keypair.generate_encryption_key(peer_public=peer_public,
+                                             salt_=salt)
+
+    # "Delete" private key
+    keypair.del_priv_key()
+    # ----------------------------------------------------------------------- #
+
+    # START ########################################################### START #
+    try:
+        original_umask = os.umask(0)  # User file-creation mode mask
+        with infile.open(mode='rb+') as f:
+            # Get last nonce
+            f.seek(-12, os.SEEK_END)
+            last_nonce = f.read(12)
+
+            # Remove last nonce from file
+            f.seek(-12, os.SEEK_END)
+            f.truncate()
+
+            # Jump back to beginning and get first nonce
+            f.seek(0)
+            first_nonce = f.read(12)
+
+            # Decrypt file
+            chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
+
+            # Save decrypted file
+            with outfile.open(mode='ab+') as of:
+
+                # Decompress if DS compressed, otherwise save chunks
+                func = decompress_file if file_info['ds_compressed'] \
+                    else file_writer
+                saved, error = func(filehandler=of,
+                                    gen=chunk_stream,
+                                    last_nonce=last_nonce)
+
+                if not saved:
+                    return False, outfile, error
+
+    except DeliverySystemException as ee:
+        error = f"Finalizing of file failed! {ee}"
+        LOG.exception(error)
+        return False, outfile, error
+    else:
+        LOG.info(f"File: '{file}' -- Finalizing completed! Decrypted file "
+                 f"saved at {outfile}")
+    finally:
+        os.umask(original_umask)    # Remove mask
+
+    # FINISHED ----------------------------------------------------- FINISHED #
+
+    return True, outfile, ""

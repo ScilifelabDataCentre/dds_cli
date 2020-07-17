@@ -125,6 +125,25 @@ class S3Connector():
 
         # S3_LOG.info("S3 connection successful.")
 
+    def delete_item(self, key: str):
+        '''Deletes specified item from S3 bucket
+
+        Args:
+            key (str):    Item (e.g. file) to delete from bucket
+
+        Raises:
+            S3Error:    Error while deleting object
+        '''
+
+        try:
+            self.resource.Object(
+                self.bucket.name, key
+            ).delete()
+        except S3Error as delex:
+            S3_LOG.exception(delex)
+        else:
+            S3_LOG.info(f"Item {key} deleted from bucket.")
+
     def file_exists_in_bucket(self, key: str, put: bool = True) -> (bool, str):
         '''Checks if the current file already exists in the specified bucket.
         If so, the file will not be uploaded (put), or will be downloaded (get)
@@ -159,22 +178,3 @@ class S3Connector():
 
         S3_LOG.info(f"File {key}: In bucket.")
         return True, ""
-
-    def delete_item(self, key: str):
-        '''Deletes specified item from S3 bucket
-
-        Args:
-            key (str):    Item (e.g. file) to delete from bucket
-
-        Raises:
-            S3Error:    Error while deleting object
-        '''
-
-        try:
-            self.resource.Object(
-                self.bucket.name, key
-            ).delete()
-        except S3Error as delex:
-            S3_LOG.exception(delex)
-        else:
-            S3_LOG.info(f"Item {key} deleted from bucket.")

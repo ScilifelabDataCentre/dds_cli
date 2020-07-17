@@ -1,14 +1,13 @@
-#!/usr/bin/env python3
-"""Exceptions"""
+"""
+Custom xceptions related to the Data Delivery System
+"""
 
-# IMPORTS ############################################################ IMPORTS #
-from cli_code import PRINT_ERR_S, PRINT_ERR_E
-# GLOBAL VARIABLES ########################################## GLOBAL VARIABLES #
-# CLASSES ############################################################ CLASSES #
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
+
 
 # Database ######################################################### Database #
-
-
 class CouchDBException(Exception):
     """Errors in database operations."""
 
@@ -19,8 +18,6 @@ class CouchDBException(Exception):
 
 
 # DataDeliverer ############################################### DataDeliverer #
-
-
 class DataException(Exception):
     """Errors related to the data entered as an option"""
 
@@ -47,7 +44,6 @@ class DeliverySystemException(Exception):
 
 
 # Logging ########################################################### Logging #
-
 class LoggingError(Exception):
     """Errors regarding logging"""
 
@@ -57,8 +53,6 @@ class LoggingError(Exception):
 
 
 # Main -- CLI ################################################### Main -- CLI #
-
-
 class PoolExecutorError(Exception):
     """Errors relating to ThreadPoolExecutors and ProcessPoolExecutors"""
 
@@ -68,8 +62,6 @@ class PoolExecutorError(Exception):
 
 
 # S3 ##################################################################### S3 #
-
-
 class S3Error(Exception):
     """Errors regarding S3 storage, e.g. upload, download,
     buckets, resources, etc. """
@@ -78,17 +70,7 @@ class S3Error(Exception):
         super().__init__(msg)
 
 
-# ----
-
-
-class AuthenticationError(Exception):
-    """Custom exception class. Handles errors regarding delivery portal authentications."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
-
-
+# File handling ############################################### File handling #
 class CompressionError(Exception):
     """Errors related to compression operations."""
 
@@ -98,36 +80,9 @@ class CompressionError(Exception):
         super().__init__(msg)
 
 
-class EncryptionError(Exception):
-    """Handles errors regarding data encryption."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
-
-
-class HashException(Exception):
-    """Handles errors regarding checksum generation."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
-
-
-class SecurePasswordException(Exception):
-    """Custom exception class. Handles errors regarding password retrieval and handling."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
-
-
-class StreamingError(Exception):
-    """Custom exception class. Handles errors regarding streaming file contents."""
-
-    def __init__(self, msg: str):
-        """Passes message from exception call to base class __init__."""
-        super().__init__(msg)
+###############################################################################
+# FUNCTIONS ####################################################### FUNCTIONS #
+###############################################################################
 
 
 def printout_error(message: str = "") -> (str):

@@ -1,25 +1,27 @@
+"""
+Main class - Data Deliverer
+
+Handles login of user, keeps track of data, uploads/downloads etc. 
+"""
+
 import json
 import os
 from pathlib import Path
 import sys
-import threading
 import traceback
 import logging
 import textwrap
-import shutil
 import collections
 
 from prettytable import PrettyTable
 from botocore.client import ClientError
-from progressbar import ProgressBar
-from botocore.client import ClientError
 
-from cli_code import (DIRS, LOG_FILE, PRINT_ATT, PRINT_ERR_S, PRINT_ERR_E)
-from cli_code.exceptions_ds import (DataException, DeliveryOptionException,
-                                    DeliverySystemException, CouchDBException,
-                                    S3Error, printout_error)
+from cli_code import (DIRS, LOG_FILE)
+from cli_code.exceptions_ds import (DataException, 
+                                    DeliverySystemException, CouchDBException, 
+                                    printout_error)
 from cli_code.s3_connector import S3Connector
-from cli_code.crypto_ds import (ECDHKey, secure_password_hash,
+from cli_code.crypto_ds import (secure_password_hash,
                                 get_project_public, get_project_private)
 from cli_code.database_connector import DatabaseConnector
 from cli_code.file_handler import (config_logger, get_root_path, is_compressed,

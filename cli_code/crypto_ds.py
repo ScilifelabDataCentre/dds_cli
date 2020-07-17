@@ -6,22 +6,22 @@ Cryptography-related functions required for the Data Delivery System
 # IMPORTS ########################################################### IMPORTS #
 ###############################################################################
 
+# Standard library
 import sys
 import os
-from pathlib import Path
 import traceback
 
-from cryptography.hazmat.primitives import hashes, hmac
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+# Installed
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric.x25519 import (X25519PrivateKey,
                                                               X25519PublicKey)
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_decrypt)
 
-from cli_code.exceptions_ds import HashException
+# Own modules
 from cli_code import DS_MAGIC
 from cli_code.exceptions_ds import DeliverySystemException, printout_error
 

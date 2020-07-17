@@ -18,8 +18,8 @@ import click
 
 # Own modules
 import cli_code.file_handler as fh
-from cli_code import (LOG_FILE, timestamp)
-from cli_code.data_deliverer import (DataDeliverer)
+from cli_code import LOG_FILE, timestamp
+from cli_code.data_deliverer import DataDeliverer
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError)
 from cli_code.s3_connector import S3Connector

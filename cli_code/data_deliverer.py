@@ -1,39 +1,49 @@
 """
 Main class - Data Deliverer
 
-Handles login of user, keeps track of data, uploads/downloads etc. 
+Handles login of user, keeps track of data, uploads/downloads etc
 """
 
-import json
-import os
-from pathlib import Path
-import sys
-import traceback
-import logging
-import textwrap
-import collections
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
 
+# Standard library
+import collections
+import json
+import logging
+import os
+import sys
+import textwrap
+import traceback
+from pathlib import Path
+
+# Installed
 from prettytable import PrettyTable
 from botocore.client import ClientError
 
+# Own modules
 from cli_code import (DIRS, LOG_FILE)
-from cli_code.exceptions_ds import (DataException, 
-                                    DeliverySystemException, CouchDBException, 
-                                    printout_error)
-from cli_code.s3_connector import S3Connector
-from cli_code.crypto_ds import (secure_password_hash,
-                                get_project_public, get_project_private)
+from cli_code.crypto_ds import (get_project_public, get_project_private,
+                                secure_password_hash)
 from cli_code.database_connector import DatabaseConnector
-from cli_code.file_handler import (config_logger, get_root_path, is_compressed,
-                                   MAGIC_DICT, process_file, file_deleter,
-                                   reverse_processing)
+from cli_code.exceptions_ds import (CouchDBException, DataException,
+                                    DeliverySystemException, printout_error)
+from cli_code.file_handler import (config_logger, file_deleter, get_root_path,
+                                   is_compressed, MAGIC_DICT,
+                                   process_file, reverse_processing)
+from cli_code.s3_connector import S3Connector
 
-# CONFIG ############################################################# CONFIG #
+###############################################################################
+# START LOGGING CONFIG ################################# START LOGGING CONFIG #
+###############################################################################
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
-# Global variables ######################################### Global variables #
+###############################################################################
+# GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
+###############################################################################
 
 # NOTE: There may be issues with unicode and Windows - test and fix
 # ns: not started, f: finished, e: error,
@@ -46,7 +56,9 @@ STATUS_DICT = {'w': "Waiting to start...", 'f': u'\u2705', 'e': u'\u274C',
 FCOLSIZE = 0
 SCOLSIZE = 0
 
-# DATA DELIVERER ############################################# DATA DELIVERER #
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
 
 
 class DataDeliverer():

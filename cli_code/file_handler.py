@@ -167,7 +167,7 @@ def get_root_path(file: Path, path_base: str = None) -> (Path):
     return Path(*fileparts[start_ind:-1])
 
 
-def file_reader(file, chunk_size: int = SEGMENT_SIZE) -> (bytes):
+def file_reader(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
     '''Yields the file chunk by chunk.
 
     Args:
@@ -178,7 +178,7 @@ def file_reader(file, chunk_size: int = SEGMENT_SIZE) -> (bytes):
         bytes:  Data chunk of size chunk_size
     '''
 
-    for chunk in iter(lambda: file.read(chunk_size), b''):
+    for chunk in iter(lambda: filehandler.read(chunk_size), b''):
         yield chunk
 
 
@@ -261,7 +261,9 @@ def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
 
     # Initiate a Zstandard compressor
     cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
-    with cctzx.stream_reader(filehandler) as compressor:  # Compress while reading
+
+    # Compress file chunk by chunk while reading
+    with cctzx.stream_reader(filehandler) as compressor:
         for chunk in iter(lambda: compressor.read(chunk_size), b''):
             yield chunk
 
@@ -606,9 +608,11 @@ def process_file(file: Path, file_info: dict, peer_public) \
         original_umask = os.umask(0)  # User file-creation mode mask
         with file.open(mode='rb') as f:
 
+            # Check if to compress or read
+            func = file_reader if file_info['compressed'] else compress_file
+
             # Compression ###### If not already compressed ###### Compression #
-            chunk_stream = file_reader(f) if file_info['compressed'] \
-                else compress_file(f)
+            chunk_stream = func(filehandler=f)
 
             # Encryption ######################################### Encryption #
             with outfile.open(mode='wb+') as of:

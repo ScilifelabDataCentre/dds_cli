@@ -25,25 +25,10 @@ from nacl.public import PrivateKey
 from cli_code.exceptions_ds import HashException, EncryptionError
 from cli_code import LOG_FILE, DS_MAGIC
 from cli_code.exceptions_ds import DeliverySystemException, printout_error
-# from cli_code.file_handler import config_logger
-# from cli_code.database_connector import DatabaseConnector
 
 SEGMENT_SIZE = 65536
 MAGIC_NUMBER = b'crypt4gh'
 VERSION = 1
-
-# CRYPTO_LOG = logging.getLogger(__name__)
-# CRYPTO_LOG.setLevel(logging.DEBUG)
-
-# CRYPTO_LOG = config_logger(
-#     logger=CRYPTO_LOG, filename=LOG_FILE,
-#     file=True, file_setlevel=logging.DEBUG,
-#     fh_format="%(asctime)s::%(levelname)s::" +
-#     "%(name)s::%(lineno)d::%(message)s",
-#     stream=True, stream_setlevel=logging.DEBUG,
-#     sh_format="%(levelname)s::%(name)s::" +
-#     "%(lineno)d::%(message)s"
-# )
 
 
 class Encryptor():

@@ -764,8 +764,9 @@ class DataDeliverer():
         # Delete from S3 if uploaded but not in database
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
                 as s3:
-            if 'upload' in info and info['upload']['finished'] \
-                    and 'database' in info and not info['database']['finished']:
+            if ('upload' in info and info['upload']['finished']
+                    and 'database' in info
+                    and not info['database']['finished']):
                 try:
                     s3.delete_item(key=info['new_file'])
                 except ClientError as e:
@@ -775,8 +776,9 @@ class DataDeliverer():
         with DatabaseConnector(db_name='project_db') as prdb:
             try:
                 proj = prdb[self.project_id]
-                if 'database' in info and info['database']['finished'] \
-                        and 'upload' in info and not info['upload']['finished']:
+                if ('database' in info and info['database']['finished']
+                        and 'upload' in info
+                        and not info['upload']['finished']):
                     del proj['files'][info['new_file']]
             except CouchDBException as e:
                 self.LOGGER.warning(e)

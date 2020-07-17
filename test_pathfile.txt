@@ -1,4 +1,0 @@
-/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_05.fna
-/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_109.fna
-/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_1200.fna
-/Users/inaod568/repos/Data-Delivery-Portal/files/testfolder/testfile_33000.fna

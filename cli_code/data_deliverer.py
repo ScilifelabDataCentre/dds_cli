@@ -111,7 +111,8 @@ class DataDeliverer():
                  project_id=None, project_owner=None,
                  pathfile=None, data=None, break_on_fail=True,
                  overwrite=False):
-        # NOTE: Restructure __init__?
+        # NOTE: Restructure __init__? 
+        # NOTE: Change to args/kwargs? 
 
         # Flags ------------------------------------------------------- Flags #
         self.break_on_fail = break_on_fail
@@ -1142,16 +1143,17 @@ class DataDeliverer():
                                           "forbidden process.")
 
         # Update the progress
-        try:
-            if started:
-                self.data[item][to_update].update({'in_progress': started,
-                                                   'finished': not started})
-            elif finished:
-                self.data[item][to_update].update({'in_progress': not finished,
-                                                   'finished': finished})
-        except DataException as dex:
-            self.LOGGER.exception(f"Data delivery information failed to "
-                                  f"update: {dex}")
+        if started:
+            self.data[item][to_update].update({'in_progress': started,
+                                               'finished': not started})
+            return
+        elif finished:
+            self.data[item][to_update].update({'in_progress': not finished,
+                                               'finished': finished})
+            return
+
+        self.LOGGER.exception(f"Data delivery information failed to "
+                              f"update: {dex}")
 
     def update_delivery(self, file: Path, updinfo: dict) -> (bool):
         '''Updates data delivery information dictionary

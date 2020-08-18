@@ -8,7 +8,6 @@ not be compressed, all other files will (with Zstandard). All files (if not
 --no-encryption flag used) will be encrypted with ChaCha20-Poly1305.
 
 """
-# TODO: Add --no-encryption flag
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #

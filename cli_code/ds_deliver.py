@@ -108,8 +108,6 @@ def put(config: str, username: str, password: str, project: str,
         overwrite=False, encrypt=True) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
-    print(
-        f"break_on_fail: {break_on_fail},\noverwrite: {overwrite},\nencrypt: {encrypt}")
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(config=config, username=username, password=password,
                        project_id=project, project_owner=owner,

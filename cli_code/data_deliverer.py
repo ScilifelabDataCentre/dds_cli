@@ -110,13 +110,14 @@ class DataDeliverer():
     def __init__(self, config=None, username=None, password=None,
                  project_id=None, project_owner=None,
                  pathfile=None, data=None, break_on_fail=True,
-                 overwrite=False):
+                 overwrite=False, encrypt=True):
         # NOTE: Restructure __init__? 
         # NOTE: Change to args/kwargs? 
 
         # Flags ------------------------------------------------------- Flags #
         self.break_on_fail = break_on_fail
         self.overwrite = overwrite
+        self.encrypt = encrypt
 
         # Initialize logger ------------------------------- Initialize logger #
         self.logfile = LOG_FILE

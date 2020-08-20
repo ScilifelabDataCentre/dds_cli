@@ -111,8 +111,8 @@ class DataDeliverer():
                  project_id=None, project_owner=None,
                  pathfile=None, data=None, break_on_fail=True,
                  overwrite=False, encrypt=True):
-        # NOTE: Restructure __init__? 
-        # NOTE: Change to args/kwargs? 
+        # NOTE: Restructure __init__?
+        # NOTE: Change to args/kwargs?
 
         # Flags ------------------------------------------------------- Flags #
         self.break_on_fail = break_on_fail

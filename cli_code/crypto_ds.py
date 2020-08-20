@@ -7,8 +7,9 @@ Cryptography-related functions required for the Data Delivery System
 ###############################################################################
 
 # Standard library
-import sys
+import logging
 import os
+import sys
 import traceback
 
 # Installed
@@ -29,7 +30,8 @@ from cli_code.exceptions_ds import DeliverySystemException, printout_error
 # LOGGING ########################################################### LOGGING #
 ###############################################################################
 
-# TODO: Add logging
+CRYPTO_LOG = logging.getLogger(__name__)
+CRYPTO_LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #

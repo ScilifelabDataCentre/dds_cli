@@ -132,6 +132,45 @@ def create_directories():
     return True, dirs
 
 
+def config_logger(filename: str):
+    '''Creates log file
+
+    Args:
+        filename:           Path to wished log file
+
+    Returns:
+        Logger:     Configured logger
+
+    Raises:
+        Exception:   Logging to file or console failed
+    '''
+
+    logger = logging.getLogger(__name__)
+
+    # Config file logger
+    try:
+        file_handler = logging.FileHandler(filename=filename)
+        file_handler.setLevel(logging.DEBUG)
+        fh_formatter = logging.Formatter("%(asctime)s::%(levelname)s::" +
+                                         "%(name)s::%(lineno)d::%(message)s")
+        file_handler.setFormatter(fh_formatter)
+        logger.addHandler(file_handler)
+    except Exception as ex:
+        sys.exit(f"Logging to file failed: {ex}")
+
+    # Config file logger
+    try:
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(logging.CRITICAL)
+        sh_formatter = logging.Formatter("%(levelname)s::%(name)s::" +
+                                         "%(lineno)d::%(message)s")
+        stream_handler.setFormatter(sh_formatter)
+        logger.addHandler(stream_handler)
+    except Exception as ex:
+        sys.exit(f"Logging to console failed: {ex}")
+
+    return logger
+
 ###############################################################################
 # START - CREATE ############################################# START - CREATE #
 ###############################################################################
@@ -143,3 +182,4 @@ if not created:
                   "Unable to continue delivery. Aborting. ")
 
 LOG_FILE = str(DIRS[-1] / Path("ds.log"))   # Get log file name
+LOG = config_logger(filename=LOG_FILE)

@@ -23,13 +23,13 @@ from prettytable import PrettyTable
 from botocore.client import ClientError
 
 # Own modules
-from cli_code import (DIRS, LOG_FILE)
+from cli_code import DIRS
 from cli_code.crypto_ds import (get_project_public, get_project_private,
                                 secure_password_hash)
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, DataException,
                                     DeliverySystemException, printout_error)
-from cli_code.file_handler import (config_logger, file_deleter, get_root_path,
+from cli_code.file_handler import (file_deleter, get_root_path,
                                    is_compressed, MAGIC_DICT,
                                    process_file, reverse_processing)
 from cli_code.s3_connector import S3Connector
@@ -119,19 +119,6 @@ class DataDeliverer():
         self.overwrite = overwrite
         self.encrypt = encrypt
 
-        # Initialize logger ------------------------------- Initialize logger #
-        self.logfile = LOG_FILE
-        self.LOGGER = logging.getLogger(__name__)
-        self.LOGGER.setLevel(logging.DEBUG)
-        self.LOGGER = config_logger(
-            logger=self.LOGGER, filename=self.logfile,
-            file=True, file_setlevel=logging.DEBUG,
-            fh_format="%(asctime)s::%(levelname)s::" +
-            "%(name)s::%(lineno)d::%(message)s",
-            stream=True, stream_setlevel=logging.CRITICAL,
-            sh_format="%(levelname)s::%(name)s::" +
-            "%(lineno)d::%(message)s"
-        )
         # --------------------------------------------------------------------#
 
         # Quit execution if none of username, password, config are set
@@ -334,7 +321,7 @@ class DataDeliverer():
 
             elif not info['in_directory']:
                 are_files = True
-                self.LOGGER.debug(are_files)
+                LOG.debug(are_files)
                 # Add file to table
                 files_table.add_row(
                     [str(file),
@@ -772,7 +759,7 @@ class DataDeliverer():
                 try:
                     s3.delete_item(key=info['new_file'])
                 except ClientError as e:
-                    self.LOGGER.warning(e)
+                    LOG.warning(e)
 
         # Delete from database if in database but not uploaded
         with DatabaseConnector(db_name='project_db') as prdb:
@@ -783,7 +770,7 @@ class DataDeliverer():
                         and not info['upload']['finished']):
                     del proj['files'][info['new_file']]
             except CouchDBException as e:
-                self.LOGGER.warning(e)
+                LOG.warning(e)
 
     def _get_dir_info(self, folder: Path) -> (dict, dict):
         '''Iterate through folder contents and get file info
@@ -884,7 +871,7 @@ class DataDeliverer():
             # No delivery if the item doesn't exist in the database
             if not in_db:
                 error = f"Item: {item} -- not in database"
-                self.LOGGER.warning(error)
+                LOG.warning(error)
                 return {item: {'proceed': False, 'error': error}}
 
         # Check S3 bucket for item(s)
@@ -899,7 +886,7 @@ class DataDeliverer():
                 if not in_bucket:
                     error = (f"File '{file}' in database but NOT in S3 bucket."
                              f"Error in delivery system! {s3error}")
-                    self.LOGGER.warning(error)
+                    LOG.warning(error)
                     to_download[file].update({'proceed': False,
                                               'error': error})
                 else:
@@ -909,7 +896,7 @@ class DataDeliverer():
             if none_in_bucket:
                 error = (f"Item: {item} -- not in S3 bucket, but in database "
                          f"-- Error in delivery system!")
-                self.LOGGER.warning(error)
+                LOG.warning(error)
                 return {item: {'proceed': False, 'error': error}}
 
         return to_download
@@ -950,14 +937,14 @@ class DataDeliverer():
         if not compressed:
             # Warning if suffixes are in magic dict but file "not compressed"
             if set(suffixes).intersection(set(MAGIC_DICT)):
-                self.LOGGER.warning(f"File '{file}' has extensions belonging "
+                LOG.warning(f"File '{file}' has extensions belonging "
                                     "to a compressed format but shows no "
                                     "indication of being compressed. Not "
                                     "compressing file.")
 
             proc_suff += ".zst"     # Update the future suffix
         elif compressed:
-            self.LOGGER.info(f"File '{file}' shows indication of being "
+            LOG.info(f"File '{file}' shows indication of being "
                              "in a compressed format. "
                              "Not compressing the file.")
 
@@ -980,7 +967,7 @@ class DataDeliverer():
 
             if bucketfilename in project_db[self.project_id]['files']:
                 error = f"File '{file}' already exists in the database. "
-                self.LOGGER.warning(error)
+                LOG.warning(error)
                 # Cancel upload of file if --overwrite flag not specified
                 if not self.overwrite:
                     return {'proceed': False, 'error': error, **dir_info}
@@ -993,7 +980,7 @@ class DataDeliverer():
                 as s3:
             # Check if file exists in bucket already
             in_bucket, s3error = s3.file_exists_in_bucket(bucketfilename)
-            # self.LOGGER.debug(f"File: {file}\t In bucket: {in_bucket}")
+            # LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
 
             if s3error != "":
                 error += s3error    # Add s3error to error message
@@ -1004,7 +991,7 @@ class DataDeliverer():
                     error = (f"{error}\nFile '{file.name}' already exists in "
                              "bucket, but does NOT exist in database. " +
                              "Delivery cancelled, contact support.")
-                    self.LOGGER.critical(error)
+                    LOG.critical(error)
                     return {'proceed': False, 'error': error, **dir_info}
 
                 # If file exists in bucket and in database and...
@@ -1153,7 +1140,7 @@ class DataDeliverer():
                                                'finished': finished})
             return
 
-        self.LOGGER.exception(f"Data delivery information failed to "
+        LOG.exception(f"Data delivery information failed to "
                               f"update: {dex}")
 
     def update_delivery(self, file: Path, updinfo: dict) -> (bool):
@@ -1217,7 +1204,7 @@ class DataDeliverer():
         try:
             self.data[file].update(updinfo)
         except DataException as dex:
-            self.LOGGER.exception(f"Data delivery information failed to "
+            LOG.exception(f"Data delivery information failed to "
                                   f"update: {dex}")
 
         return True
@@ -1296,7 +1283,7 @@ class DataDeliverer():
                          f"Error: {e}")
                 LOG.exception(error)
                 return False, error
-        # self.LOGGER.debug(f"new_dir: {new_dir}")
+        # LOG.debug(f"new_dir: {new_dir}")
 
         # DOWNLOAD START ##################################### DOWNLOAD START #
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \
@@ -1312,11 +1299,11 @@ class DataDeliverer():
             except ClientError as e:
                 # Upload failed -- return error message and move on
                 error = (f"File: {path}. Download failed: {e}")
-                self.LOGGER.exception(error)
+                LOG.exception(error)
                 return False, error
             else:
                 # Upload successful
-                self.LOGGER.info(f"File: {path}. Download successful! "
+                LOG.info(f"File: {path}. Download successful! "
                                  f"File location: {path_info['new_file']}")
                 return True, ""
 
@@ -1344,7 +1331,7 @@ class DataDeliverer():
             if not fileinfo['processing']['finished']:
                 error = (f"File: '{file}' -- File not processed (e.g. "
                          "encrypted). Bug in code. Moving on to next file.")
-                self.LOGGER.critical(error)
+                LOG.critical(error)
 
             return False, error
 
@@ -1367,7 +1354,7 @@ class DataDeliverer():
                 error = (f"File: {file}, Uploaded: "
                          f"{fileinfo['encrypted_file']} -- "
                          f"Upload failed! -- {e}")
-                self.LOGGER.exception(error)
+                LOG.exception(error)
                 return False, error
 
             return True, ""

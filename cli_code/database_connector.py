@@ -13,9 +13,7 @@ import logging
 import couchdb
 
 # Own modules
-from cli_code import LOG_FILE
 from cli_code.exceptions_ds import CouchDBException
-from cli_code.file_handler import config_logger
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -23,16 +21,6 @@ from cli_code.file_handler import config_logger
 
 DB_LOG = logging.getLogger(__name__)
 DB_LOG.setLevel(logging.DEBUG)
-
-DB_LOG = config_logger(
-    logger=DB_LOG, filename=LOG_FILE,
-    file=True, file_setlevel=logging.DEBUG,
-    fh_format="%(asctime)s::%(levelname)s::" +
-    "%(name)s::%(lineno)d::%(message)s",
-    stream=True, stream_setlevel=logging.CRITICAL,
-    sh_format="%(levelname)s::%(name)s::" +
-    "%(lineno)d::%(message)s"
-)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

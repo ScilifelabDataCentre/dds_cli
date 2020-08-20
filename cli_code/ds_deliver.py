@@ -18,31 +18,12 @@ import click
 
 # Own modules
 import cli_code.file_handler as fh
-from cli_code import LOG_FILE, timestamp
+from cli_code import timestamp
 from cli_code.data_deliverer import DataDeliverer
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError)
 from cli_code.s3_connector import S3Connector
 
-
-###############################################################################
-# Logging ########################################################### Logging #
-###############################################################################
-
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
-
-
-def config_logger(logfile: str):
-    '''Creates log file '''
-
-    return fh.config_logger(logger=LOG, filename=logfile,
-                            file=True, file_setlevel=logging.DEBUG,
-                            fh_format="%(asctime)s::%(levelname)s::" +
-                            "%(name)s::%(lineno)d::%(message)s",
-                            stream=True, stream_setlevel=logging.CRITICAL,
-                            sh_format="%(levelname)s::%(name)s::" +
-                            "%(lineno)d::%(message)s")
 
 ###############################################################################
 # MAIN ################################################################# MAIN #
@@ -54,7 +35,8 @@ def cli():
 
     # Setup logging
     global CLI_LOGGER
-    CLI_LOGGER = config_logger(LOG_FILE)
+    CLI_LOGGER = logging.getLogger(__name__)
+    CLI_LOGGER.setLevel(logging.DEBUG)
 
 
 ###############################################################################

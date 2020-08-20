@@ -19,9 +19,9 @@ from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_decrypt,
                            crypto_aead_chacha20poly1305_ietf_encrypt)
 
 # Own modules
-from cli_code import (CIPHER_SEGMENT_SIZE, DIRS, LOG_FILE, SEGMENT_SIZE)
+from cli_code import (CIPHER_SEGMENT_SIZE, DIRS, SEGMENT_SIZE)
 from cli_code.crypto_ds import ECDHKey
-from cli_code.exceptions_ds import (DeliverySystemException, LoggingError)
+from cli_code.exceptions_ds import DeliverySystemException
 
 ###############################################################################
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
@@ -58,67 +58,8 @@ MAX_NONCE = 2**(12*8)   # Max mumber of nonces
 # Logging ########################################################### Logging #
 ###############################################################################
 
-
-def config_logger(logger, filename: str = LOG_FILE, file: bool = False,
-                  file_setlevel=logging.WARNING, fh_format: str = "",
-                  stream: bool = False, stream_setlevel=logging.WARNING,
-                  sh_format: str = ""):
-    '''Creates log file
-
-    Args:
-        logger:             Logger to be configured
-        filename:           Path to wished log file
-        file:               True if to create log file
-        file_setlevel:      The lowest level of logging in log file
-        fh_format:          Format of file logs
-        stream:             True if logs to be printed in console
-        stream_setlevel:    The lowest level of logging in console
-        sh_format:          Format of console logs
-
-    Returns:
-        Logger:     Configured logger
-
-    Raises:
-        LoggingError:   Logging to file or console failed
-    '''
-
-    # Save logs to file
-    try:
-        if file:
-            file_handler = logging.FileHandler(filename=filename)
-            file_handler.setLevel(file_setlevel)
-            fh_formatter = logging.Formatter(fh_format)
-            file_handler.setFormatter(fh_formatter)
-            logger.addHandler(file_handler)
-    except LoggingError as le:
-        sys.exit(f"Logging to file failed: {le}")
-
-    # Display logs in console
-    try:
-        if stream:
-            stream_handler = logging.StreamHandler()
-            stream_handler.setLevel(stream_setlevel)
-            sh_formatter = logging.Formatter(sh_format)
-            stream_handler.setFormatter(sh_formatter)
-            logger.addHandler(stream_handler)
-    except LoggingError as le:
-        sys.exit(f"Logging to console failed: {le}")
-
-    return logger
-
-
-# Set up logger ############## Needs to be here ############### Set up logger #
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
-LOG = config_logger(
-    logger=LOG, filename=LOG_FILE,
-    file=True, file_setlevel=logging.DEBUG,
-    fh_format="%(asctime)s::%(levelname)s::" +
-    "%(name)s::%(lineno)d::%(message)s",
-    stream=True, stream_setlevel=logging.CRITICAL,
-    sh_format="%(levelname)s::%(name)s::" +
-    "%(lineno)d::%(message)s"
-)
 
 ###############################################################################
 # IO FUNCTIONS ################################################# IO FUNCTIONS #

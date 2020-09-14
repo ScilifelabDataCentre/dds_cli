@@ -17,13 +17,14 @@ import sys
 import textwrap
 import traceback
 from pathlib import Path
+import requests
 
 # Installed
 from prettytable import PrettyTable
 from botocore.client import ClientError
 
 # Own modules
-from cli_code import DIRS
+from cli_code import DIRS, API_BASE
 from cli_code.crypto_ds import (get_project_public, get_project_private,
                                 secure_password_hash)
 from cli_code.database_connector import DatabaseConnector
@@ -158,16 +159,28 @@ class DataDeliverer():
         #       self.project_id
         self._check_user_input(config=config)
 
+        LOGIN_BASE = API_BASE + "/fac/login"
+        response = requests.get(LOGIN_BASE +
+                                f"/{self.user.username}${self.user.password}$"
+                                f"{self.project_id}${self.project_owner}")
+        try:
+            json_response = response.json()
+        except: 
+            pass
+        else:
+            if not json_response['access']:
+                sys.exit(
+                    printout_error("Delivery System access denied! "
+                                   "Delivery cancelled.")
+                )
+            
+        sys.exit()
         # Check access to delivery system
         # Sets: self.user.id, self.project_owner
         ds_access_granted = self._check_ds_access()
         if not ds_access_granted or self.user.id is None:
-            sys.exit(
-                printout_error("Delivery System access denied! "
-                               "Delivery cancelled.")
-            )
 
-        # Check project access if access to delivery system
+            # Check project access if access to delivery system
         proj_access_granted, self.s3project = self._check_project_access()
         if not proj_access_granted:
             sys.exit(
@@ -938,15 +951,15 @@ class DataDeliverer():
             # Warning if suffixes are in magic dict but file "not compressed"
             if set(suffixes).intersection(set(MAGIC_DICT)):
                 LOG.warning(f"File '{file}' has extensions belonging "
-                                    "to a compressed format but shows no "
-                                    "indication of being compressed. Not "
-                                    "compressing file.")
+                            "to a compressed format but shows no "
+                            "indication of being compressed. Not "
+                            "compressing file.")
 
             proc_suff += ".zst"     # Update the future suffix
         elif compressed:
             LOG.info(f"File '{file}' shows indication of being "
-                             "in a compressed format. "
-                             "Not compressing the file.")
+                     "in a compressed format. "
+                     "Not compressing the file.")
 
         # Add (own) encryption format extension
         proc_suff += ".ccp"     # ChaCha20-Poly1305
@@ -1141,7 +1154,7 @@ class DataDeliverer():
             return
 
         LOG.exception(f"Data delivery information failed to "
-                              f"update: {dex}")
+                      f"update: {dex}")
 
     def update_delivery(self, file: Path, updinfo: dict) -> (bool):
         '''Updates data delivery information dictionary
@@ -1205,7 +1218,7 @@ class DataDeliverer():
             self.data[file].update(updinfo)
         except DataException as dex:
             LOG.exception(f"Data delivery information failed to "
-                                  f"update: {dex}")
+                          f"update: {dex}")
 
         return True
 
@@ -1304,7 +1317,7 @@ class DataDeliverer():
             else:
                 # Upload successful
                 LOG.info(f"File: {path}. Download successful! "
-                                 f"File location: {path_info['new_file']}")
+                         f"File location: {path_info['new_file']}")
                 return True, ""
 
     def put(self, file: Path, fileinfo: dict) -> (bool, str):

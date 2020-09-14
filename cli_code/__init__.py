@@ -183,3 +183,5 @@ if not created:
 
 LOG_FILE = str(DIRS[-1] / Path("ds.log"))   # Get log file name
 LOG = config_logger(filename=LOG_FILE)
+
+API_BASE = "http://127.0.0.1:5000/api/v1"

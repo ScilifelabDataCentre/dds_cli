@@ -173,9 +173,9 @@ class DataDeliverer():
                     printout_error("Delivery System access denied! "
                                    "Delivery cancelled.")
                 )
-            self.user.id = json_response['id']
-        
-        print("ID: ", self.user.id)
+            # self.user.id = json_response['id']
+        print(json_response)
+        # print("ID: ", self.user.id)
         sys.exit()
         # Check access to delivery system
         # Sets: self.user.id, self.project_owner

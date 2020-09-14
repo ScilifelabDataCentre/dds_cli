@@ -377,7 +377,7 @@ class DataDeliverer():
 
                     # Check that facility putting or researcher getting
                     self.user.role = user_db[id_]['role']
-                    if (self.user.role == 'facility'and self.method == 'put') \
+                    if (self.user.role == 'facility' and self.method == 'put') \
                             or (self.user.role == 'researcher' and
                                 self.method == 'get'):
                         self.user.id = id_  # User granted access to put or get

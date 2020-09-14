@@ -173,14 +173,17 @@ class DataDeliverer():
                     printout_error("Delivery System access denied! "
                                    "Delivery cancelled.")
                 )
-            
+            self.user.id = json_response['id']
+        
+        print("ID: ", self.user.id)
         sys.exit()
         # Check access to delivery system
         # Sets: self.user.id, self.project_owner
         ds_access_granted = self._check_ds_access()
         if not ds_access_granted or self.user.id is None:
-
-            # Check project access if access to delivery system
+            pass
+        
+        # Check project access if access to delivery system
         proj_access_granted, self.s3project = self._check_project_access()
         if not proj_access_granted:
             sys.exit(

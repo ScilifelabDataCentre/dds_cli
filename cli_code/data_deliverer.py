@@ -142,7 +142,7 @@ class DataDeliverer():
 
         # S3 related
         self.bucketname = ""    # S3 bucket name -- to connect to S3
-        self.s3project = ""     # S3 project ID -- to connect to S3
+        self.s3project = "intra1.scilifelab.se"     # S3 project ID -- to connect to S3
 
         # Cryptography related
         self.public = b''
@@ -198,7 +198,7 @@ class DataDeliverer():
 
         # If everything ok, set bucket name -- TODO: CHANGE LATER
         self.bucketname = json_response['s3_id']
-        self.public = json_response['public_key']
+        self.public = bytes.fromhex(json_response['public_key'])
 
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
@@ -741,25 +741,41 @@ class DataDeliverer():
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
-        
-        print(f"\nall dict values: {all_files.values()}\n")
 
         # Get project files in database
         FILE_BASE = API_BASE + "/project/listfiles"
         req = FILE_BASE + f"/{self.project_id}"
-        print(f"request : {req}")
         response = requests.get(req)
         files_in_db = response.json()
 
-        for file, info in all_files.items():
+        for file, info in list(all_files.items()):
             if info['new_file'] in files_in_db:
-                print("Exists: Yes")
-            else: 
-                print("Exists: No")
-        
-        sys.exit()
+                initial_fail[file] = {
+                    **all_files.pop(file),
+                    'error': "File already exists in database"
+                }
+            else:
+                with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                        as s3:
+                    # Check if file exists in bucket already
+                    in_bucket, s3error = s3.file_exists_in_bucket(
+                        info['new_file']
+                    )
+                    # LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
 
-            # --------------------------------------------------------- #
+                    # if s3error != "":
+                    #     error = s3error    # Add s3error to error message
+
+                    # Error if the file exists in bucket, but not in the database
+                    if in_bucket:
+                        initial_fail[file] = {
+                            **all_files.pop(file),
+                            'error': ("File '{file.name}' already exists in "
+                                      "bucket, but does NOT exist in database. "
+                                      "Delivery cancelled, contact support.")
+                        }
+
+        # --------------------------------------------------------- #
 
         return all_files, initial_fail
 
@@ -796,16 +812,16 @@ class DataDeliverer():
                 except ClientError as e:
                     LOG.warning(e)
 
-        # Delete from database if in database but not uploaded
-        with DatabaseConnector(db_name='project_db') as prdb:
-            try:
-                proj = prdb[self.project_id]
-                if ('database' in info and info['database']['finished']
-                        and 'upload' in info
-                        and not info['upload']['finished']):
-                    del proj['files'][info['new_file']]
-            except CouchDBException as e:
-                LOG.warning(e)
+        # # Delete from database if in database but not uploaded
+        # with DatabaseConnector(db_name='project_db') as prdb:
+        #     try:
+        #         proj = prdb[self.project_id]
+        #         if ('database' in info and info['database']['finished']
+        #                 and 'upload' in info
+        #                 and not info['upload']['finished']):
+        #             del proj['files'][info['new_file']]
+        #     except CouchDBException as e:
+        #         LOG.warning(e)
 
     def _get_dir_info(self, folder: Path) -> (dict, dict):
         '''Iterate through folder contents and get file info

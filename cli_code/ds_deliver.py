@@ -201,31 +201,48 @@ def put(config: str, username: str, password: str, project: str,
 
             # TODO: COUCHDB -> MARIADB
             # TODO: DATABASE UPDATE TO BE THREADED - PROBLEMS WITH COUCHDB ATM
-            try:
-                with DatabaseConnector('project_db') as project_db:
-                    _project = project_db[delivery.project_id]
-                    keyinfo = delivery.data[upath]
-                    key = str(keyinfo['new_file'])
-                    dir_path = str(keyinfo['directory_path'])
+            req_args = {
+                'project': delivery.project_id,
+                'file': delivery.data[upath]['new_file'],
+                'directory_path': delivery.data[upath]['directory_path'],
+                'size': delivery.data[upath]['size'],
+                'ds_compressed': delivery.data[upath]['ds_compressed'],
+                'date_uploaded': timestamp(),
+                'key': delivery.data[upath]['key'],
+                'salt': delivery.data[upath]['salt']
+            }
+            from cli_code import API_BASE
+            import requests
+            UPDATE_BASE = API_BASE + "/project/updatefile"
+            response = requests.post(UPDATE_BASE, req_args)
 
-                    _project['files'][key] = {
-                        "directory_path": dir_path,
-                        "size": keyinfo['size'],
-                        "ds_compressed": keyinfo['ds_compressed'],
-                        "date_uploaded": timestamp(),
-                        "key": keyinfo['key'],
-                        "salt": keyinfo['salt']
-                    }
-                    project_db.save(_project)
-            except CouchDBException as e:
-                emessage = f"Database update failed: {e}"
-                CLI_LOGGER.warning(emessage)
-                # Delete from S3 if database update failed
-                with S3Connector(bucketname=delivery.bucketname,
-                                 project=delivery.s3project) as s3:
-                    s3.delete_item(key=key)
-                delivery.update_progress(file=upath, status='e')
-                continue
+            print(f"\nResponse ---- {response}\n")
+            sys.exit()
+            # try:
+            #     with DatabaseConnector('project_db') as project_db:
+            #         _project = project_db[delivery.project_id]
+            #         keyinfo = delivery.data[upath]
+            #         key = str(keyinfo['new_file'])
+            #         dir_path = str(keyinfo['directory_path'])
+
+            #         _project['files'][key] = {
+            #             "directory_path": dir_path,
+            #             "size": keyinfo['size'],
+            #             "ds_compressed": keyinfo['ds_compressed'],
+            #             "date_uploaded": timestamp(),
+            #             "key": keyinfo['key'],
+            #             "salt": keyinfo['salt']
+            #         }
+            #         project_db.save(_project)
+            # except CouchDBException as e:
+            #     emessage = f"Database update failed: {e}"
+            #     CLI_LOGGER.warning(emessage)
+            #     # Delete from S3 if database update failed
+            #     with S3Connector(bucketname=delivery.bucketname,
+            #                      project=delivery.s3project) as s3:
+            #         s3.delete_item(key=key)
+            #     delivery.update_progress(file=upath, status='e')
+            #     continue
 
             CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {upath}")
 

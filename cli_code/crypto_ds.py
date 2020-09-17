@@ -264,32 +264,32 @@ def get_project_private(proj_id: str, user):
         return key
 
 
-def get_project_public(proj_id) -> (bytes):
-    '''Gets the projects public key from the database
+# def get_project_public(proj_id) -> (bytes):
+#     '''Gets the projects public key from the database
 
-    Args:
-        proj_id (str):  Project ID
+#     Args:
+#         proj_id (str):  Project ID
 
-    Returns:
-        bytes:  ECDH Public key belonging to specific project.
+#     Returns:
+#         bytes:  ECDH Public key belonging to specific project.
 
-    '''
+#     '''
 
-    # NOTE: Solution to import issue?
-    # Import here due to import issues.
-    from cli_code.database_connector import DatabaseConnector
+#     # NOTE: Solution to import issue?
+#     # Import here due to import issues.
+#     from cli_code.database_connector import DatabaseConnector
 
-    try:
-        # Get project public key - same for both put and get
-        # and convert to bytes
-        with DatabaseConnector('project_db') as project_db:
-            public_key = bytes.fromhex(
-                project_db[proj_id]['project_keys']['public']
-            )
-    except DeliverySystemException as dse:
-        sys.exit(printout_error(dse))
-    else:
-        return public_key
+#     try:
+#         # Get project public key - same for both put and get
+#         # and convert to bytes
+#         with DatabaseConnector('project_db') as project_db:
+#             public_key = bytes.fromhex(
+#                 project_db[proj_id]['project_keys']['public']
+#             )
+#     except DeliverySystemException as dse:
+#         sys.exit(printout_error(dse))
+#     else:
+#         return public_key
 
 
 def secure_password_hash(password_settings: str,

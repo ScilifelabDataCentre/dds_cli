@@ -25,7 +25,7 @@ from botocore.client import ClientError
 
 # Own modules
 from cli_code import DIRS, API_BASE
-from cli_code.crypto_ds import (get_project_public, get_project_private,
+from cli_code.crypto_ds import (get_project_private,
                                 secure_password_hash)
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, DataException,
@@ -175,10 +175,17 @@ class DataDeliverer():
             if not json_response['access']:
                 sys.exit(
                     printout_error("Delivery System access denied! "
-                                   "Delivery cancelled.")
+                                   "Delivery cancelled. "
+                                   f"{json_response['error']}")
                 )
         print(json_response)
-        sys.exit()
+
+        self.user.id = json_response['user_id']
+        if json_response['project_id'] != self.project_id:
+            sys.exit(
+                printout_error("Incorrect project ID. System error. "
+                               "Cancelling delivery.")
+            )
 
         # Fail if no data specified
         if not data and not pathfile:
@@ -190,7 +197,8 @@ class DataDeliverer():
             )
 
         # If everything ok, set bucket name -- TODO: CHANGE LATER
-        self.bucketname = f"project_{self.project_id}"
+        self.bucketname = json_response['s3_id']
+        self.public = json_response['public_key']
 
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
@@ -198,7 +206,7 @@ class DataDeliverer():
 
         # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
-        self.public = get_project_public(self.project_id)   # Always
+        # self.public = get_project_public(self.project_id)   # Always
         self.private = b'' if self.method == 'put' else \
             get_project_private(self.project_id, self.user)
 
@@ -676,6 +684,10 @@ class DataDeliverer():
         # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths
         for d in data_list:
+            # 1. Check if compressed etc
+            # 2. Get all files in project
+            # 3. Check if files exist in db
+
             # Throw error if there are duplicate files
             if d in all_files or Path(d).resolve() in all_files:
                 sys.exit(
@@ -684,23 +696,23 @@ class DataDeliverer():
                 )
 
             # Get file info ############################# Get file info #
-            if self.method == "get":
-                iteminfo = self._get_download_info(item=d)
+            # if self.method == "get":
+            #     iteminfo = self._get_download_info(item=d)
 
-                # Save to failed dict or delivery dict
-                if len(iteminfo) == 1 and d in iteminfo:    # File
-                    if not iteminfo[d]['proceed']:
-                        initial_fail.update(iteminfo)
-                        continue
+            #     # Save to failed dict or delivery dict
+            #     if len(iteminfo) == 1 and d in iteminfo:    # File
+            #         if not iteminfo[d]['proceed']:
+            #             initial_fail.update(iteminfo)
+            #             continue
 
-                    all_files.update(iteminfo)
-                else:                                       # Folder
-                    for f in iteminfo:
-                        if not iteminfo[f]['proceed']:
-                            initial_fail[f] = iteminfo[f]
-                            continue
+            #         all_files.update(iteminfo)
+            #     else:                                       # Folder
+            #         for f in iteminfo:
+            #             if not iteminfo[f]['proceed']:
+            #                 initial_fail[f] = iteminfo[f]
+            #                 continue
 
-                        all_files[f] = iteminfo[f]
+            #             all_files[f] = iteminfo[f]
 
             elif self.method == "put":
                 # Error if path doesn't exist
@@ -729,6 +741,14 @@ class DataDeliverer():
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
+        
+        # Get project files in database
+        FILE_BASE = API_BASE + "/project/listfiles"
+        req = FILE_BASE + f"/{self.project_id}"
+        print(f"request : {req}")
+        response = requests.get(req)
+        print(response.json())
+        sys.exit()
 
             # --------------------------------------------------------- #
 
@@ -839,7 +859,6 @@ class DataDeliverer():
                                   'finished': False}}
         # ----------------------------------------------------- #
 
-        # Check if file or folder exists in database
         with DatabaseConnector(db_name='project_db') as project_db:
             # Error in DS if project doesn't exist in database or no file info
             if self.project_id not in project_db or \
@@ -961,50 +980,50 @@ class DataDeliverer():
         # after upload, >>including file name<<
         bucketfilename = str(directory_path / Path(file.name + proc_suff))
 
-        # NOTE: Similar (but different order) to _get_download_info - "merge"?
-        # Check if file exists in database
-        with DatabaseConnector('project_db') as project_db:
-            # Error in DS if project doesn't exist in database or no file info
-            if self.project_id not in project_db or \
-                    'files' not in project_db[self.project_id]:
-                raise CouchDBException("Project not in database or no file "
-                                       "info about project -- error in "
-                                       "delivery system!")
+        # # NOTE: Similar (but different order) to _get_download_info - "merge"?
+        # # Check if file exists in database
+        # with DatabaseConnector('project_db') as project_db:
+        #     # Error in DS if project doesn't exist in database or no file info
+        #     if self.project_id not in project_db or \
+        #             'files' not in project_db[self.project_id]:
+        #         raise CouchDBException("Project not in database or no file "
+        #                                "info about project -- error in "
+        #                                "delivery system!")
 
-            if bucketfilename in project_db[self.project_id]['files']:
-                error = f"File '{file}' already exists in the database. "
-                LOG.warning(error)
-                # Cancel upload of file if --overwrite flag not specified
-                if not self.overwrite:
-                    return {'proceed': False, 'error': error, **dir_info}
+        #     if bucketfilename in project_db[self.project_id]['files']:
+        #         error = f"File '{file}' already exists in the database. "
+        #         LOG.warning(error)
+        #         # Cancel upload of file if --overwrite flag not specified
+        #         if not self.overwrite:
+        #             return {'proceed': False, 'error': error, **dir_info}
 
-                # Do not cancel if --overwrite flag specified
-                in_db = True
+        #         # Do not cancel if --overwrite flag specified
+        #         in_db = True
 
-        # Check if file exists in S3 bucket
-        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:
-            # Check if file exists in bucket already
-            in_bucket, s3error = s3.file_exists_in_bucket(bucketfilename)
-            # LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
+        # # Check if file exists in S3 bucket
+        # with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+        #         as s3:
+        #     # Check if file exists in bucket already
+        #     in_bucket, s3error = s3.file_exists_in_bucket(bucketfilename)
+        #     # LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
 
-            if s3error != "":
-                error += s3error    # Add s3error to error message
+        #     if s3error != "":
+        #         error += s3error    # Add s3error to error message
 
-            # Error if the file exists in bucket, but not in the database
-            if in_bucket:
-                if not in_db:
-                    error = (f"{error}\nFile '{file.name}' already exists in "
-                             "bucket, but does NOT exist in database. " +
-                             "Delivery cancelled, contact support.")
-                    LOG.critical(error)
-                    return {'proceed': False, 'error': error, **dir_info}
+        #     # Error if the file exists in bucket, but not in the database
+        #     if in_bucket:
+        #         if not in_db:
+        #             error = (f"{error}\nFile '{file.name}' already exists in "
+        #                      "bucket, but does NOT exist in database. " +
+        #                      "Delivery cancelled, contact support.")
+        #             LOG.critical(error)
+        #             return {'proceed': False, 'error': error, **dir_info}
 
-                # If file exists in bucket and in database and...
-                # --overwrite flag not specified --> cancel file delivery
-                # --overwrite flag --> deliver again, overwrite file
-                if not self.overwrite:
-                    return {'proceed': False, 'error': error, **dir_info}
+        #         # If file exists in bucket and in database and...
+        #         # --overwrite flag not specified --> cancel file delivery
+        #         # --overwrite flag --> deliver again, overwrite file
+        #         if not self.overwrite:
+        #             return {'proceed': False, 'error': error, **dir_info}
 
         return {'in_directory': in_dir,
                 'dir_name': dir_name if in_dir else None,

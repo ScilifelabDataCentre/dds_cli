@@ -742,12 +742,21 @@ class DataDeliverer():
                     # Deliver --> save info
                     all_files[curr_path] = file_info
         
+        print(f"\nall dict values: {all_files.values()}\n")
+
         # Get project files in database
         FILE_BASE = API_BASE + "/project/listfiles"
         req = FILE_BASE + f"/{self.project_id}"
         print(f"request : {req}")
         response = requests.get(req)
-        print(response.json())
+        files_in_db = response.json()
+
+        for file, info in all_files.items():
+            if info['new_file'] in files_in_db:
+                print("Exists: Yes")
+            else: 
+                print("Exists: No")
+        
         sys.exit()
 
             # --------------------------------------------------------- #

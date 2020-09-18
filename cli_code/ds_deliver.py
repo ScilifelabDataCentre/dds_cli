@@ -207,7 +207,6 @@ def put(config: str, username: str, password: str, project: str,
                 'directory_path': delivery.data[upath]['directory_path'],
                 'size': delivery.data[upath]['size'],
                 'ds_compressed': delivery.data[upath]['ds_compressed'],
-                'date_uploaded': timestamp(),
                 'key': delivery.data[upath]['key'],
                 'salt': delivery.data[upath]['salt']
             }

@@ -350,85 +350,67 @@ class DataDeliverer():
 
         '''
 
-        # Get password settings
-        PW_BASE = API_BASE + "/pw_settings"
-        req = PW_BASE + f"/{self.user.username}"
-        response = requests.get(req)
+        # Get secure password settings
+        PW_BASE = API_BASE + "/pw_settings"         # Endpoint
+        req = PW_BASE + f"/{self.user.username}"    # Endpoint variable
 
+        response = requests.get(req)                # Request
+        if response.status_code != 200:     # TODO: ? chagnge to response.ok ?
+            sys.exit(
+                printout_error(
+                    """Did not get password settings. Something went wrong."""
+                )
+            )
         pw_info = response.json()
-        sec_pw = secure_password_hash(password_settings=pw_info['pw_settings'],
+
+        # Quit if the user doesn't exist in database
+        if not pw_info['exists']:
+            sys.exit(
+                printout_error(
+                    f"""{pw_info['error'] if pw_info['error'] != '' else
+                    'The user does not exist'}"""
+                )
+            )
+
+        # Get password info in response and
+        # calculate secure password hash with Scrypt
+        sec_pw = secure_password_hash(password_settings=pw_info['settings'],
                                       password_entered=self.user.password)
 
-        print(sec_pw)
-
-        # Get access to delivery system
+        # Get access to delivery system - check if derived pw hash valid
         LOGIN_BASE = API_BASE + "/fac/login"
         req = LOGIN_BASE + f"/{self.user.username}${sec_pw}$" \
             f"{self.project_id}${self.project_owner}"
 
-        response = requests.get(req)
-        try:
-            json_response = response.json()
-        except:
-            pass
-        else:
-            if not json_response['access']:
-                sys.exit(
-                    printout_error("Delivery System access denied! "
-                                   "Delivery cancelled. "
-                                   f"{json_response['error']}")
+        response = requests.get(req)    # Request to get access
+        if response.status_code != 200:
+            sys.exit(
+                printout_error(
+                    """Something wrong. Login failed. Delivery cancelled."""
                 )
-        print(json_response)
+            )
+        json_response = response.json()
 
-        # self.user.id = json_response['user_id']
+        # Quit if user not granted Delivery System access
+        if not json_response['access']:
+            sys.exit(
+                printout_error(
+                    f"""Delivery System access denied!
+                       Delivery cancelled. {json_response['error']}"""
+                )
+            )
+
+        # Quit if project ID not matching
         if json_response['project_id'] != self.project_id:
             sys.exit(
-                printout_error("Incorrect project ID. System error. "
-                               "Cancelling delivery.")
+                printout_error(
+                    """Incorrect project ID. System error.
+                    Cancelling delivery."""
+                )
             )
 
         return json_response
-        
-        # # Search the database for the user
-        # with DatabaseConnector('user_db') as user_db:
-        #     for id_ in user_db:
-        #         # Create secure password hash if user fond
-        #         if self.user.username == user_db[id_]['username']:
-        #             password_settings = user_db[id_]['password']['settings']
-        #             password_hash = secure_password_hash(
-        #                 password_settings=password_settings,
-        #                 password_entered=self.user.password
-        #             )
-        #             # Compare to correct password, error if no match
-        #             if user_db[id_]['password']['hash'] != password_hash:
-        #                 sys.exit(
-        #                     printout_error("Wrong password. "
-        #                                    "Access to Delivery System denied.")
-        #                 )
 
-        #             # Check that facility putting or researcher getting
-        #             self.user.role = user_db[id_]['role']
-        #             if (self.user.role == 'facility' and self.method == 'put') \
-        #                     or (self.user.role == 'researcher' and
-        #                         self.method == 'get'):
-        #                 self.user.id = id_  # User granted access to put or get
-
-        #                 # If role allowed to get
-        #                 if (self.user.role == 'researcher' and
-        #                     self.method == 'get' and
-        #                     (self.project_owner is None or
-        #                      self.project_owner == self.user.username)):
-        #                     self.project_owner = self.user.id
-        #                 return True  # Access granted
-        #             else:
-        #                 sys.exit(
-        #                     printout_error(
-        #                         "Method error. Facilities can only use 'put' "
-        #                         "and Researchers can only use 'get'.")
-        #                 )
-
-        #     sys.exit(printout_error("Username not found in database. "
-        #                             "Access to Delivery System denied."))
 
     # # NOTE: CouchDB -> MariaDB and optimize
     # def _check_project_access(self) -> (bool, str):

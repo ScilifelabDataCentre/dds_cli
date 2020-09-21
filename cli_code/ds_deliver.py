@@ -215,8 +215,7 @@ def put(config: str, username: str, password: str, project: str,
             UPDATE_BASE = API_BASE + "/project/updatefile"
             response = requests.post(UPDATE_BASE, req_args)
 
-            print(f"\nResponse ---- {response}\n")
-            sys.exit()
+            # print(f"\nResponse ---- {response.json()}\n")
             # try:
             #     with DatabaseConnector('project_db') as project_db:
             #         _project = project_db[delivery.project_id]
@@ -243,12 +242,13 @@ def put(config: str, username: str, password: str, project: str,
             #     delivery.update_progress(file=upath, status='e')
             #     continue
 
-            CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {upath}")
+            if response.json():
+                CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {upath}")
 
-            # Set delivery as finished and display progress = check mark
-            delivery.set_progress(item=upath, db=True, finished=True)
-            delivery.update_progress(file=upath, status='f')
-            encrypted_file = delivery.data[upath]['encrypted_file']
+                # Set delivery as finished and display progress = check mark
+                delivery.set_progress(item=upath, db=True, finished=True)
+                delivery.update_progress(file=upath, status='f')
+                encrypted_file = delivery.data[upath]['encrypted_file']
 
             # Delete encrypted files as soon as success
             final_threads[

@@ -153,7 +153,7 @@ class DataDeliverer():
         self.PROGRESS = None
 
         # Checks ----------------------------------------------------- Checks #
-        # Check if all required info is entered
+        # Check if all required info is entered and get user info
         self.user = _DSUser()
         self.user.username, self.user.password, self.project_id, \
             self.project_owner = self._check_user_input(
@@ -163,29 +163,8 @@ class DataDeliverer():
 
         # Get access to DS -- returns json format with access, user_id,
         # project_id, s3_id, and error.
-        LOGIN_BASE = API_BASE + "/fac/login"
-        req = LOGIN_BASE + f"/{self.user.username}${self.user.password}$" \
-            f"{self.project_id}${self.project_owner}"
-        response = requests.get(req)
-        try:
-            json_response = response.json()
-        except:
-            pass
-        else:
-            if not json_response['access']:
-                sys.exit(
-                    printout_error("Delivery System access denied! "
-                                   "Delivery cancelled. "
-                                   f"{json_response['error']}")
-                )
-        print(json_response)
-
-        self.user.id = json_response['user_id']
-        if json_response['project_id'] != self.project_id:
-            sys.exit(
-                printout_error("Incorrect project ID. System error. "
-                               "Cancelling delivery.")
-            )
+        delivery_info = self._check_ds_access()
+        self.user.id = delivery_info['user_id']
 
         # Fail if no data specified
         if not data and not pathfile:
@@ -196,9 +175,9 @@ class DataDeliverer():
                                "For help: 'ds_deliver --help'")
             )
 
-        # If everything ok, set bucket name -- TODO: CHANGE LATER
-        self.bucketname = json_response['s3_id']
-        self.public = bytes.fromhex(json_response['public_key'])
+        # If everything ok, set bucket name
+        self.bucketname = delivery_info['s3_id']
+        self.public = bytes.fromhex(delivery_info['public_key'])
 
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
@@ -359,58 +338,97 @@ class DataDeliverer():
     # Private Methods #
     ###################
 
-    # # NOTE: CouchDB -> MariaDB and optimize
-    # def _check_ds_access(self) -> (bool):
-    #     '''Checks the users access to the delivery system
+    # NOTE: CouchDB -> MariaDB and optimize
+    def _check_ds_access(self) -> (bool):
+        '''Checks the users access to the delivery system
 
-    #     Returns:
-    #         bool:   True if user login successful
+        Returns:
+            bool:   True if user login successful
 
-    #     Sets:
-    #         self.user.id (str):    User ID
+        Sets:
+            self.user.id (str):    User ID
 
-    #     '''
+        '''
 
-    #     # Search the database for the user
-    #     with DatabaseConnector('user_db') as user_db:
-    #         for id_ in user_db:
-    #             # Create secure password hash if user fond
-    #             if self.user.username == user_db[id_]['username']:
-    #                 password_settings = user_db[id_]['password']['settings']
-    #                 password_hash = secure_password_hash(
-    #                     password_settings=password_settings,
-    #                     password_entered=self.user.password
-    #                 )
-    #                 # Compare to correct password, error if no match
-    #                 if user_db[id_]['password']['hash'] != password_hash:
-    #                     sys.exit(
-    #                         printout_error("Wrong password. "
-    #                                        "Access to Delivery System denied.")
-    #                     )
+        # Get password settings
+        PW_BASE = API_BASE + "/pw_settings"
+        req = PW_BASE + f"/{self.user.username}"
+        response = requests.get(req)
 
-    #                 # Check that facility putting or researcher getting
-    #                 self.user.role = user_db[id_]['role']
-    #                 if (self.user.role == 'facility' and self.method == 'put') \
-    #                         or (self.user.role == 'researcher' and
-    #                             self.method == 'get'):
-    #                     self.user.id = id_  # User granted access to put or get
+        pw_info = response.json()
+        sec_pw = secure_password_hash(password_settings=pw_info['pw_settings'],
+                                      password_entered=self.user.password)
 
-    #                     # If role allowed to get
-    #                     if (self.user.role == 'researcher' and
-    #                         self.method == 'get' and
-    #                         (self.project_owner is None or
-    #                          self.project_owner == self.user.username)):
-    #                         self.project_owner = self.user.id
-    #                     return True  # Access granted
-    #                 else:
-    #                     sys.exit(
-    #                         printout_error(
-    #                             "Method error. Facilities can only use 'put' "
-    #                             "and Researchers can only use 'get'.")
-    #                     )
+        print(sec_pw)
 
-    #         sys.exit(printout_error("Username not found in database. "
-    #                                 "Access to Delivery System denied."))
+        # Get access to delivery system
+        LOGIN_BASE = API_BASE + "/fac/login"
+        req = LOGIN_BASE + f"/{self.user.username}${sec_pw}$" \
+            f"{self.project_id}${self.project_owner}"
+
+        response = requests.get(req)
+        try:
+            json_response = response.json()
+        except:
+            pass
+        else:
+            if not json_response['access']:
+                sys.exit(
+                    printout_error("Delivery System access denied! "
+                                   "Delivery cancelled. "
+                                   f"{json_response['error']}")
+                )
+        print(json_response)
+
+        # self.user.id = json_response['user_id']
+        if json_response['project_id'] != self.project_id:
+            sys.exit(
+                printout_error("Incorrect project ID. System error. "
+                               "Cancelling delivery.")
+            )
+
+        return json_response
+        
+        # # Search the database for the user
+        # with DatabaseConnector('user_db') as user_db:
+        #     for id_ in user_db:
+        #         # Create secure password hash if user fond
+        #         if self.user.username == user_db[id_]['username']:
+        #             password_settings = user_db[id_]['password']['settings']
+        #             password_hash = secure_password_hash(
+        #                 password_settings=password_settings,
+        #                 password_entered=self.user.password
+        #             )
+        #             # Compare to correct password, error if no match
+        #             if user_db[id_]['password']['hash'] != password_hash:
+        #                 sys.exit(
+        #                     printout_error("Wrong password. "
+        #                                    "Access to Delivery System denied.")
+        #                 )
+
+        #             # Check that facility putting or researcher getting
+        #             self.user.role = user_db[id_]['role']
+        #             if (self.user.role == 'facility' and self.method == 'put') \
+        #                     or (self.user.role == 'researcher' and
+        #                         self.method == 'get'):
+        #                 self.user.id = id_  # User granted access to put or get
+
+        #                 # If role allowed to get
+        #                 if (self.user.role == 'researcher' and
+        #                     self.method == 'get' and
+        #                     (self.project_owner is None or
+        #                      self.project_owner == self.user.username)):
+        #                     self.project_owner = self.user.id
+        #                 return True  # Access granted
+        #             else:
+        #                 sys.exit(
+        #                     printout_error(
+        #                         "Method error. Facilities can only use 'put' "
+        #                         "and Researchers can only use 'get'.")
+        #                 )
+
+        #     sys.exit(printout_error("Username not found in database. "
+        #                             "Access to Delivery System denied."))
 
     # # NOTE: CouchDB -> MariaDB and optimize
     # def _check_project_access(self) -> (bool, str):
@@ -519,7 +537,7 @@ class DataDeliverer():
         # )
 
     # NOTE: CouchDB -> MariaDB and optimize
-    def _check_user_input(self, config, usercreds=()):
+    def _check_user_input(self, config, usercreds=(None, None)):
         '''Checks that the correct options and credentials are entered.
 
         Args:
@@ -529,33 +547,36 @@ class DataDeliverer():
 
         '''
 
-        # Variables to return
+        # Variables to return - unpack
         username, password = usercreds
 
         # No config file -------- loose credentials -------- No config file #
         if config is None:
             # Cancel delivery if username or password not specified
-            if not all(usercreds):
+            if None in usercreds:
                 sys.exit(
-                    printout_error("Delivery System login credentials not "
-                                   "specified.\n "
-                                   "Enter --username/-u AND --password/-pw, "
-                                   "or --config/-c.\n"
-                                   "\nFor help: 'ds_deliver --help'.")
+                    printout_error(
+                        """Delivery System login credentials not specified.
+                           Enter --username/-u AND --password/-pw,
+                           or --config/-c.
+                           For help: 'ds_deliver --help'."""
+                    )
                 )
 
             # Cancel delivery if project_id not specified
             if self.project_id is None:
                 sys.exit(
-                    printout_error("Project not specified.\n"
-                                   "Enter project ID using --project option\n"
-                                   "or add to config file using --config/-c "
-                                   "option.")
+                    printout_error(
+                        """Project not specified. Enter project ID using
+                           --project option or add to config file using
+                           --config/-c option."""
+                    )
                 )
 
             # Assume current user is owner if no owner is set
             if self.project_owner is None:
-                return username, password, username
+                # username, password, owner
+                return username, password, self.project_id, username
 
         # Config file ----------- credentials in it ----------- Config file #
         user_config = Path(config).resolve()
@@ -565,15 +586,17 @@ class DataDeliverer():
                 credentials = json.load(cf)
         except OSError as ose:
             sys.exit(
-                printout_error(f"Could not open path-file {config}: {ose}")
+                printout_error(f"""Could not open path-file {config}: {ose}""")
             )
 
         # Quit if not all credentials are entered
         if not all(c in credentials for c
                    in ['username', 'password', 'project']):
             sys.exit(
-                printout_error("The config file does not contain all required"
-                               " information.")
+                printout_error(
+                    """The config file does not contain all required
+                       information."""
+                )
             )
 
         # Save info from credentials file
@@ -588,8 +611,9 @@ class DataDeliverer():
         # Error if owner not specified and trying to put
         if self.project_owner is None and self.method == 'put':
             sys.exit(
-                printout_error("Project owner not specified. "
-                               "Cancelling delivery.")
+                printout_error(
+                    """Project owner not specified. Cancelling delivery."""
+                )
             )
 
     def _create_progress_output(self) -> (str, dict):
@@ -747,6 +771,7 @@ class DataDeliverer():
         req = FILE_BASE + f"/{self.project_id}"
         response = requests.get(req)
         files_in_db = response.json()
+        print(f"listing files: {response}")
 
         for file, info in list(all_files.items()):
             if info['new_file'] in files_in_db:

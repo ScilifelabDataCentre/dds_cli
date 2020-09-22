@@ -158,7 +158,8 @@ class DataDeliverer():
         self.user.username, self.user.password, self.project_id, \
             self.project_owner = self._check_user_input(
                 config=config,
-                usercreds=(username, password)
+                username=username,
+                password=password
             )
 
         # Get access to DS -- returns json format with access, user_id,
@@ -352,7 +353,9 @@ class DataDeliverer():
 
         # Get secure password settings
         PW_BASE = API_BASE + "/pw_settings"         # Endpoint
-        req = PW_BASE + f"/{self.user.username}"    # Endpoint variable
+        # Endpoint variable
+        req = PW_BASE + \
+            f"/{'user' if self.method == 'get' else 'fac'}/{self.user.username}"
 
         response = requests.get(req)                # Request
         if response.status_code != 200:     # TODO: ? chagnge to response.ok ?
@@ -523,7 +526,7 @@ class DataDeliverer():
 
     # NOTE: CouchDB -> MariaDB and optimize
 
-    def _check_user_input(self, config, usercreds=(None, None)):
+    def _check_user_input(self, config, username, password):
         '''Checks that the correct options and credentials are entered.
 
         Args:
@@ -532,9 +535,6 @@ class DataDeliverer():
                         Can be used instead of inputing the creds separately.
 
         '''
-
-        # Variables to return - unpack
-        username, password = usercreds
 
         # No config file -------- loose credentials -------- No config file #
         if config is None:
@@ -601,6 +601,8 @@ class DataDeliverer():
                     """Project owner not specified. Cancelling delivery."""
                 )
             )
+
+        return username, password, project_id, username
 
     def _create_progress_output(self) -> (str, dict):
         '''Create list of files and the individual delivery progress.

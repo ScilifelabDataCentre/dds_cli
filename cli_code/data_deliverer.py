@@ -379,11 +379,15 @@ class DataDeliverer():
 
         # Get access to delivery system - check if derived pw hash valid
         LOGIN_BASE = API_BASE + "/fac/login"
-        req = LOGIN_BASE + f"/{self.user.username}${sec_pw}$" \
-            f"{self.project_id}${self.project_owner}"
+        args = {'username': self.user.username,
+                'password': sec_pw,
+                'project': self.project_id,
+                'owner': self.project_owner}
 
-        response = requests.get(req)    # Request to get access
-        if response.status_code != 200:
+        # Request to get access
+        response = requests.post(LOGIN_BASE, params=args)
+        print(response)
+        if not response.ok:
             sys.exit(
                 printout_error(
                     """Something wrong. Login failed. Delivery cancelled."""
@@ -410,7 +414,6 @@ class DataDeliverer():
             )
 
         return json_response
-
 
     # # NOTE: CouchDB -> MariaDB and optimize
     # def _check_project_access(self) -> (bool, str):
@@ -519,6 +522,7 @@ class DataDeliverer():
         # )
 
     # NOTE: CouchDB -> MariaDB and optimize
+
     def _check_user_input(self, config, usercreds=(None, None)):
         '''Checks that the correct options and credentials are entered.
 

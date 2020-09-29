@@ -25,8 +25,7 @@ from botocore.client import ClientError
 
 # Own modules
 from cli_code import DIRS, API_BASE
-from cli_code.crypto_ds import (get_project_private,
-                                secure_password_hash)
+from cli_code.crypto_ds import (get_project_private)
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, DataException,
                                     DeliverySystemException, printout_error)
@@ -351,53 +350,22 @@ class DataDeliverer():
 
         '''
 
-        # Get secure password settings
-        PW_BASE = API_BASE + "/pw_settings"         # Endpoint
-        req = ""
-        if self.method == 'get':
-            req = PW_BASE + f"/user/{self.user.username}"
-        elif self.method == 'put':
-            req = PW_BASE + f"/fac/{self.user.username}"
-
-        response = requests.get(req)                # Request
-        if not response.ok:
-            sys.exit(
-                printout_error(
-                    """Did not get password settings. Something went wrong."""
-                )
-            )
-        pw_info = response.json()
-
-        # Quit if the user doesn't exist in database
-        if not pw_info['exists']:
-            sys.exit(
-                printout_error(
-                    f"""{pw_info['error'] if pw_info['error'] != '' else
-                    'The user does not exist'}"""
-                )
-            )
-
-        # Get password info in response and
-        # calculate secure password hash with Scrypt
-        sec_pw = secure_password_hash(password_settings=pw_info['settings'],
-                                      password_entered=self.user.password)
-
         # Get access to delivery system - check if derived pw hash valid
         LOGIN_BASE = API_BASE + "/fac/login"
         args = {'username': self.user.username,
-                'password': sec_pw,
+                'password': self.user.password,
                 'project': self.project_id,
                 'owner': self.project_owner}
 
         # Request to get access
         response = requests.post(LOGIN_BASE, params=args)
-        print(response)
         if not response.ok:
             sys.exit(
                 printout_error(
                     """Something wrong. Login failed. Delivery cancelled."""
                 )
             )
+            
         json_response = response.json()
         print(json_response)
         # Quit if user not granted Delivery System access

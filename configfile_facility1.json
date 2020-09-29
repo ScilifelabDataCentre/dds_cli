@@ -1,6 +1,6 @@
 {
     "username": "fac1_username",
     "password": "fac1_password",
-    "project": "prj1",
+    "project": 1,
     "owner": "0001"
 }

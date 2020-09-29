@@ -353,12 +353,14 @@ class DataDeliverer():
 
         # Get secure password settings
         PW_BASE = API_BASE + "/pw_settings"         # Endpoint
-        # Endpoint variable
-        req = PW_BASE + \
-            f"/{'user' if self.method == 'get' else 'fac'}/{self.user.username}"
+        req = ""
+        if self.method == 'get':
+            req = PW_BASE + f"/user/{self.user.username}"
+        elif self.method == 'put':
+            req = PW_BASE + f"/fac/{self.user.username}"
 
         response = requests.get(req)                # Request
-        if response.status_code != 200:     # TODO: ? chagnge to response.ok ?
+        if not response.ok:
             sys.exit(
                 printout_error(
                     """Did not get password settings. Something went wrong."""
@@ -397,7 +399,7 @@ class DataDeliverer():
                 )
             )
         json_response = response.json()
-
+        print(json_response)
         # Quit if user not granted Delivery System access
         if not json_response['access']:
             sys.exit(
@@ -408,7 +410,7 @@ class DataDeliverer():
             )
 
         # Quit if project ID not matching
-        if json_response['project_id'] != self.project_id:
+        if int(json_response['project_id']) != self.project_id:
             sys.exit(
                 printout_error(
                     """Incorrect project ID. System error.
@@ -417,114 +419,6 @@ class DataDeliverer():
             )
 
         return json_response
-
-    # # NOTE: CouchDB -> MariaDB and optimize
-    # def _check_project_access(self) -> (bool, str):
-    #     '''Checks the users access to a specific project.
-
-    #     Returns:
-    #         tuple:  Project access and S3 project ID
-
-    #             bool:   True if project access granted
-    #             str:    S3 project to upload to/download from
-
-    #     Raises:
-    #         CouchDBException:           Database connection failure
-    #                                     or missing project information
-    #         DeliverySystemException:    Error in retrieving important info
-
-    #     '''
-
-    #     # Variables ########################################## Variables #
-    #     user_projects = dict()
-    #     # -------------------------------------------------------------- #
-
-    #     with DatabaseConnector() as couch:
-    #         user_db = couch['user_db']
-
-    #         # Quit if necessary user project info not in database
-    #         if self.user.id not in user_db or \
-    #                 'projects' not in user_db[self.user.id]:
-    #             sys.exit(printout_error(
-    #                 "Could not get user projects from db."
-    #             ))
-
-    #         # Get the projects registered to the user
-    #         user_projects = user_db[self.user.id]['projects']
-
-    #         # Quit if project doesn't exists in project database
-    #         if self.project_id not in couch['project_db']:
-    #             sys.exit(
-    #                 printout_error(f"The project {self.project_id} "
-    #                                "does not exist.")
-    #             )
-
-    #         # Quit if user doesn't have access to the project
-    #         if self.project_id not in user_projects:
-    #             sys.exit(
-    #                 printout_error("You do not have access to the specified "
-    #                                f"project {self.project_id}. \n\n"
-    #                                "Aborting delivery.")
-    #             )
-
-    #         # Get current project info
-    #         current_project = couch['project_db'][self.project_id]
-
-    #         # Quit if project information doesn't exist
-    #         if 'project_info' not in current_project:
-    #             raise CouchDBException(
-    #                 "There is no 'project_info' recorded for the specified "
-    #                 "project. Aborting delivery."
-    #             )
-
-    #         # Quit if owner info doesn't exist
-    #         if 'owner' not in current_project['project_info']:
-    #             sys.exit(
-    #                 printout_error("An owner of the data has not been "
-    #                                "specified. Cannot guarantee data "
-    #                                "security. \n\nCancelling delivery.")
-    #             )
-
-    #         # If owner info exists, find owner of project
-    #         # and check if specified owner matches. If not -> quit
-    #         correct_owner = current_project['project_info']['owner']
-    #         # If facility specified correct user or researcher is owner
-    #         if (self.method == 'put'
-    #             and correct_owner == self.project_owner != self.user.id) \
-    #             or (self.method == 'get'
-    #                 and correct_owner == self.project_owner == self.user.id):
-    #             # Quit if delivery_option not recorded in database
-    #             if 'delivery_option' not in current_project['project_info']:
-    #                 raise CouchDBException(
-    #                     "A delivery option has not been "
-    #                     "specified for this project."
-    #                 )
-
-    #             # If delivery option exists, check if S3. If not -> quit
-    #             if current_project['project_info']['delivery_option'] != "S3":
-    #                 sys.exit(
-    #                     printout_error("The specified project does not "
-    #                                    "have access to S3 delivery.")
-    #                 )
-
-    #             # If S3 option specified, return S3 project ID
-    #             try:
-    #                 s3_project = user_db[self.user.id]['s3_project']['name']
-    #             except DeliverySystemException as dpe:
-    #                 raise DeliverySystemException(
-    #                     "Could not get Safespring S3 project name from "
-    #                     f"database: {dpe}. \nDelivery aborted."
-    #                 )
-    #             else:
-    #                 return True, s3_project
-    #         else:
-    #             sys.exit(
-    #                 printout_error("Incorrect data owner! You do not have "
-    #                                "access to this project. \n\n"
-    #                                "Cancelling delivery.")
-        # )
-
-    # NOTE: CouchDB -> MariaDB and optimize
 
     def _check_user_input(self, config, username, password):
         '''Checks that the correct options and credentials are entered.
@@ -539,7 +433,7 @@ class DataDeliverer():
         # No config file -------- loose credentials -------- No config file #
         if config is None:
             # Cancel delivery if username or password not specified
-            if None in usercreds:
+            if None in [username, password]:
                 sys.exit(
                     printout_error(
                         """Delivery System login credentials not specified.
@@ -759,7 +653,7 @@ class DataDeliverer():
         req = FILE_BASE + f"/{self.project_id}"
         response = requests.get(req)
         files_in_db = response.json()
-        print(f"listing files: {response}")
+        print(f"listing files: {files_in_db}")
 
         for file, info in list(all_files.items()):
             if info['new_file'] in files_in_db:
@@ -1020,6 +914,8 @@ class DataDeliverer():
 
         # # NOTE: Similar (but different order) to _get_download_info - "merge"?
         # # Check if file exists in database
+
+
         # with DatabaseConnector('project_db') as project_db:
         #     # Error in DS if project doesn't exist in database or no file info
         #     if self.project_id not in project_db or \

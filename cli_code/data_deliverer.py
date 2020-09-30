@@ -350,12 +350,21 @@ class DataDeliverer():
 
         '''
 
-        # Get access to delivery system - check if derived pw hash valid
-        LOGIN_BASE = API_BASE + "/fac/login"
-        args = {'username': self.user.username,
-                'password': self.user.password,
-                'project': self.project_id,
-                'owner': self.project_owner}
+        LOGIN_BASE = ""
+        args = {}
+        if self.method == 'put':
+            # Get access to delivery system - check if derived pw hash valid
+            LOGIN_BASE = API_BASE + "/fac/login"
+            args = {'username': self.user.username,
+                    'password': self.user.password,
+                    'project': self.project_id,
+                    'owner': self.project_owner}
+        elif self.method == 'get':
+            # Get access to delivery system - check if derived pw hash valid
+            LOGIN_BASE = API_BASE + "/user/login"
+            args = {'username': self.user.username,
+                    'password': self.user.password,
+                    'project': self.project_id}
 
         # Request to get access
         response = requests.post(LOGIN_BASE, params=args)

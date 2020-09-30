@@ -21,7 +21,8 @@ import cli_code.file_handler as fh
 from cli_code import timestamp
 from cli_code.data_deliverer import DataDeliverer
 from cli_code.database_connector import DatabaseConnector
-from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError)
+from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError,
+                                    printout_error)
 from cli_code.s3_connector import S3Connector
 
 
@@ -215,36 +216,6 @@ def put(config: str, username: str, password: str, project: str,
             UPDATE_BASE = API_BASE + "/project/updatefile"
             response = requests.post(UPDATE_BASE, params=req_args)
 
-            # print(f"\nResponse ---- {response.json()}\n")
-            # try:
-            #     with DatabaseConnector('project_db') as project_db:
-            #         _project = project_db[delivery.project_id]
-            #         keyinfo = delivery.data[upath]
-            #         key = str(keyinfo['new_file'])
-            #         dir_path = str(keyinfo['directory_path'])
-
-            #         _project['files'][key] = {
-            #             "directory_path": dir_path,
-            #             "size": keyinfo['size'],
-            #             "ds_compressed": keyinfo['ds_compressed'],
-            #             "date_uploaded": timestamp(),
-            #             "key": keyinfo['key'],
-            #             "salt": keyinfo['salt']
-            #         }
-            #         project_db.save(_project)
-            # except CouchDBException as e:
-            #     emessage = f"Database update failed: {e}"
-            #     CLI_LOGGER.warning(emessage)
-            #     # Delete from S3 if database update failed
-            #     with S3Connector(bucketname=delivery.bucketname,
-            #                      project=delivery.s3project) as s3:
-            #         s3.delete_item(key=key)
-            #     delivery.update_progress(file=upath, status='e')
-            #     continue
-
-            print(response)
-            from cli_code.exceptions_ds import (CouchDBException, DataException,
-                                                DeliverySystemException, printout_error)
             if not response.ok:
                 sys.exit(printout_error(
                     "Could not update database."
@@ -252,7 +223,13 @@ def put(config: str, username: str, password: str, project: str,
 
             db_response = response.json()
             if not db_response['updated']:
-                pass  # something should happen here
+                emessage = f"Database update failed: {db_response['message']}"
+                CLI_LOGGER.warning(emessage)
+                with S3Connector(bucketname=delivery.bucketname,
+                                 project=delivery.s3project) as s3:
+                    s3.delete_item(key=key)
+                delivery.update_progress(file=upath, status='e')
+                continue
 
             CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {upath}")
 

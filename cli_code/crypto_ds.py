@@ -23,7 +23,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_decrypt)
 
 # Own modules
-from cli_code import DS_MAGIC
+from cli_code import DS_MAGIC, API_BASE
 from cli_code.exceptions_ds import DeliverySystemException, printout_error
 
 ###############################################################################
@@ -181,6 +181,10 @@ def get_project_private(proj_id: str, user):
         bytes:  Private key belonging to current project
 
     '''
+
+    # 1. Get file key salt 
+    # 2. Calculcate kdf
+    # 3. get project private key 
 
     # NOTE: Solution to import issue?
     # Import here due to import issues.

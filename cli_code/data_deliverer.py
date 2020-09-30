@@ -183,6 +183,7 @@ class DataDeliverer():
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
 
+        print(f"DATA -- {self.data}")
         # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
         # self.public = get_project_public(self.project_id)   # Always
@@ -242,6 +243,7 @@ class DataDeliverer():
         critical_op = 'upload' if self.method == "put" else 'download'
         # ------------------------------------------------------------------- #
 
+        print(f"Failed: {self.failed}")
         # Iterate through items ####################### Iterate through items #
         # Failed items - on initial check
         for file, info in self.failed.items():
@@ -563,6 +565,14 @@ class DataDeliverer():
                                "Cancelling delivery.")
             )
 
+        # Get all project files in db
+        # Get project files in database
+        FILE_BASE = API_BASE + "/project/listfiles"
+        req = FILE_BASE + f"/{self.project_id}"
+        response = requests.get(req)
+        files_in_db = response.json()
+        print(f"files: {files_in_db}")
+
         # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths
         for d in data_list:
@@ -578,23 +588,26 @@ class DataDeliverer():
                 )
 
             # Get file info ############################# Get file info #
-            # if self.method == "get":
-            #     iteminfo = self._get_download_info(item=d)
+            if self.method == "get":
+                iteminfo = self._get_download_info(
+                    item=d,
+                    files_in_db=files_in_db['files']
+                )
 
-            #     # Save to failed dict or delivery dict
-            #     if len(iteminfo) == 1 and d in iteminfo:    # File
-            #         if not iteminfo[d]['proceed']:
-            #             initial_fail.update(iteminfo)
-            #             continue
+                # Save to failed dict or delivery dict
+                if len(iteminfo) == 1 and d in iteminfo:    # File
+                    if not iteminfo[d]['proceed']:
+                        initial_fail.update(iteminfo)
+                        continue
 
-            #         all_files.update(iteminfo)
-            #     else:                                       # Folder
-            #         for f in iteminfo:
-            #             if not iteminfo[f]['proceed']:
-            #                 initial_fail[f] = iteminfo[f]
-            #                 continue
+                    all_files.update(iteminfo)
+                else:                                       # Folder
+                    for f in iteminfo:
+                        if not iteminfo[f]['proceed']:
+                            initial_fail[f] = iteminfo[f]
+                            continue
 
-            #             all_files[f] = iteminfo[f]
+                        all_files[f] = iteminfo[f]
 
             elif self.method == "put":
                 # Error if path doesn't exist
@@ -625,41 +638,41 @@ class DataDeliverer():
                     all_files[curr_path] = file_info
 
                 print(f"File info: {file_info}")
-        
-        # Get project files in database
-        FILE_BASE = API_BASE + "/project/listfiles"
-        req = FILE_BASE + f"/{self.project_id}"
-        response = requests.get(req)
-        files_in_db = response.json()
 
-        print(f"Files in database: {files_in_db}")
-        for file, info in list(all_files.items()):
-            if info['new_file'] in files_in_db['files']:
-                LOG.info(f"{file} already exists in database")
-                initial_fail[file] = {
-                    **all_files.pop(file),
-                    'error': "File already exists in database"
-                }
-            else:
-                with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                        as s3:
-                    # Check if file exists in bucket already
-                    in_bucket, s3error = s3.file_exists_in_bucket(
-                        info['new_file']
-                    )
-                    # LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
+                # Get project files in database
+                # FILE_BASE = API_BASE + "/project/listfiles"
+                # req = FILE_BASE + f"/{self.project_id}"
+                # response = requests.get(req)
+                # files_in_db = response.json()
 
-                    # if s3error != "":
-                    #     error = s3error    # Add s3error to error message
-
-                    # Error if the file exists in bucket, but not in the database
-                    if in_bucket:
+                print(f"Files in database: {files_in_db}")
+                for file, info in list(all_files.items()):
+                    if info['new_file'] in files_in_db['files']:
+                        LOG.info(f"{file} already exists in database")
                         initial_fail[file] = {
                             **all_files.pop(file),
-                            'error': (f"File '{file.name}' already exists in "
-                                      "bucket, but does NOT exist in database. "
-                                      "Delivery cancelled, contact support.")
+                            'error': "File already exists in database"
                         }
+                    else:
+                        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
+                                as s3:
+                            # Check if file exists in bucket already
+                            in_bucket, s3error = s3.file_exists_in_bucket(
+                                info['new_file']
+                            )
+                            # LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
+
+                            # if s3error != "":
+                            #     error = s3error    # Add s3error to error message
+
+                            # Error if the file exists in bucket, but not in the database
+                            if in_bucket:
+                                initial_fail[file] = {
+                                    **all_files.pop(file),
+                                    'error': (f"File '{file.name}' already exists in "
+                                            "bucket, but does NOT exist in database. "
+                                            "Delivery cancelled, contact support.")
+                                }
 
         # --------------------------------------------------------- #
 
@@ -741,7 +754,7 @@ class DataDeliverer():
 
         return dir_info, dir_fail
 
-    def _get_download_info(self, item: str) -> (dict):
+    def _get_download_info(self, item: str, files_in_db: dict) -> (dict):
         '''Gets info on file in database and checks if
         item exists in S3 bucket.
 
@@ -770,45 +783,49 @@ class DataDeliverer():
                                   'finished': False}}
         # ----------------------------------------------------- #
 
-        with DatabaseConnector(db_name='project_db') as project_db:
-            # Error in DS if project doesn't exist in database or no file info
-            if self.project_id not in project_db or \
-                    'files' not in project_db[self.project_id]:
-                raise CouchDBException("Project not in database or no file "
-                                       "info about project -- error in "
-                                       "delivery system!")
+        # with DatabaseConnector(db_name='project_db') as project_db:
+        # Error in DS if project doesn't exist in database or no file info
+        # if self.project_id not in project_db or \
+        # 'files' not in project_db[self.project_id]:
+        # raise CouchDBException("Project not in database or no file "
+        #    "info about project -- error in "
+        #    "delivery system!")
+        in_directory = False
+        # If no suffixes assuming folder and adding trailing slash
+        if not Path(item).suffixes:
+            item = os.path.join(item, '')
+            in_directory = True
 
-            # If no suffixes assuming folder and adding trailing slash
-            if not Path(item).suffixes:
-                item = os.path.join(item, '')
+        # Check for file starting with the file/folder name
+        for file in files_in_db:
+            # Get info on file
+            if file.startswith(item):
+                to_download[file] = {
+                    **files_in_db[file],
+                    **gen_finfo
+                }
+                in_db = True
 
-            # Check for file starting with the file/folder name
-            for file in project_db[self.project_id]['files']:
-                # Get info on file
-                if file.startswith(item):
-                    to_download[file] = {
-                        **project_db[self.project_id]['files'][file],
-                        **gen_finfo
-                    }
-                    in_db = True
+                # Check if the file was uploaded as a part of a directory
+                in_directory = to_download[file]['directory_path'] != "."
 
-                    # Check if the file was uploaded as a part of a directory
-                    in_directory = to_download[file]['directory_path'] != "."
+                # Save file info
+                to_download[file].update({
+                    'new_file': DIRS[1] / Path(file),   # Path in tempdir
+                    'in_directory': in_directory,       # If in dir
+                    'dir_name': item if in_directory else None,
+                    'proceed': proceed,     # If ok to proceed with deliv
+                    'error': error,          # Error message, "" if none
+                    'salt': files_in_db[file]['salt']
+                })
 
-                    # Save file info
-                    to_download[file].update({
-                        'new_file': DIRS[1] / Path(file),   # Path in tempdir
-                        'in_directory': in_directory,       # If in dir
-                        'dir_name': item if in_directory else None,
-                        'proceed': proceed,     # If ok to proceed with deliv
-                        'error': error          # Error message, "" if none
-                    })
-
-            # No delivery if the item doesn't exist in the database
-            if not in_db:
-                error = f"Item: {item} -- not in database"
-                LOG.warning(error)
-                return {item: {'proceed': False, 'error': error}}
+        # No delivery if the item doesn't exist in the database
+        if not in_db:
+            error = f"Item: {item} -- not in database"
+            LOG.warning(error)
+            return {item: {'proceed': False, 'error': error,
+                           'in_directory': in_directory,
+                           'dir_name': item if in_directory else None}}
 
         # Check S3 bucket for item(s)
         with S3Connector(bucketname=self.bucketname, project=self.s3project) \

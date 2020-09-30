@@ -213,7 +213,7 @@ def put(config: str, username: str, password: str, project: str,
             from cli_code import API_BASE
             import requests
             UPDATE_BASE = API_BASE + "/project/updatefile"
-            response = requests.post(UPDATE_BASE, req_args)
+            response = requests.post(UPDATE_BASE, params=req_args)
 
             # print(f"\nResponse ---- {response.json()}\n")
             # try:
@@ -242,13 +242,24 @@ def put(config: str, username: str, password: str, project: str,
             #     delivery.update_progress(file=upath, status='e')
             #     continue
 
-            if response.json():
-                CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {upath}")
+            print(response)
+            from cli_code.exceptions_ds import (CouchDBException, DataException,
+                                                DeliverySystemException, printout_error)
+            if not response.ok:
+                sys.exit(printout_error(
+                    "Could not update database."
+                ))
 
-                # Set delivery as finished and display progress = check mark
-                delivery.set_progress(item=upath, db=True, finished=True)
-                delivery.update_progress(file=upath, status='f')
-                encrypted_file = delivery.data[upath]['encrypted_file']
+            db_response = response.json()
+            if not db_response['updated']:
+                pass  # something should happen here
+
+            CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {upath}")
+
+            # Set delivery as finished and display progress = check mark
+            delivery.set_progress(item=upath, db=True, finished=True)
+            delivery.update_progress(file=upath, status='f')
+            encrypted_file = delivery.data[upath]['encrypted_file']
 
             # Delete encrypted files as soon as success
             final_threads[

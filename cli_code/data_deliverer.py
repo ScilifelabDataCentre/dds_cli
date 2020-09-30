@@ -365,9 +365,8 @@ class DataDeliverer():
                     """Something wrong. Login failed. Delivery cancelled."""
                 )
             )
-            
+
         json_response = response.json()
-        print(json_response)
         # Quit if user not granted Delivery System access
         if not json_response['access']:
             sys.exit(
@@ -551,7 +550,7 @@ class DataDeliverer():
         # Fail delivery if not a correct method
         if self.method not in ["get", "put"]:
             sys.exit(
-                printout_error("Delivery option {self.method} not allowed.\n\n"
+                printout_error(f"Delivery option {self.method} not allowed.\n\n"
                                "Cancelling delivery.")
             )
 
@@ -616,15 +615,18 @@ class DataDeliverer():
                     # Deliver --> save info
                     all_files[curr_path] = file_info
 
+                print(f"File info: {file_info}")
+        
         # Get project files in database
         FILE_BASE = API_BASE + "/project/listfiles"
         req = FILE_BASE + f"/{self.project_id}"
         response = requests.get(req)
         files_in_db = response.json()
-        print(f"listing files: {files_in_db}")
 
+        print(f"Files in database: {files_in_db}")
         for file, info in list(all_files.items()):
-            if info['new_file'] in files_in_db:
+            if info['new_file'] in files_in_db['files']:
+                LOG.info(f"{file} already exists in database")
                 initial_fail[file] = {
                     **all_files.pop(file),
                     'error': "File already exists in database"
@@ -645,7 +647,7 @@ class DataDeliverer():
                     if in_bucket:
                         initial_fail[file] = {
                             **all_files.pop(file),
-                            'error': ("File '{file.name}' already exists in "
+                            'error': (f"File '{file.name}' already exists in "
                                       "bucket, but does NOT exist in database. "
                                       "Delivery cancelled, contact support.")
                         }
@@ -882,7 +884,6 @@ class DataDeliverer():
 
         # # NOTE: Similar (but different order) to _get_download_info - "merge"?
         # # Check if file exists in database
-
 
         # with DatabaseConnector('project_db') as project_db:
         #     # Error in DS if project doesn't exist in database or no file info

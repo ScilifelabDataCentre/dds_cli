@@ -406,20 +406,31 @@ def get(config: str, username: str, password: str, project: str,
             # Set file db update to in progress
             delivery.set_progress(item=fpath, db=True, started=True)
 
+            from cli_code import API_BASE
+            import requests
+
+            print(delivery.data[fpath])
+            FINAL_BASE = API_BASE + "/delivery/date/"
+            print(f"\n{delivery.data[fpath]['id']}")
+            args = {'file_id': delivery.data[fpath]['id']}
+            response = requests.post(FINAL_BASE, params=args)
+            print(response)
+
             # TODO: COUCHDB -> MARIADB
             # TODO: DATABASE UPDATE TO BE THREADED - PROBLEMS WITH COUCHDB ATM
-            try:
-                with DatabaseConnector('project_db') as project_db:
-                    _project = project_db[delivery.project_id]
+            # try:
 
-                    # Add info on when downloaded
-                    _project['files'][fpath]["date_downloaded"] = \
-                        timestamp()
-                    project_db.save(_project)
-            except CouchDBException as e:
-                emessage = f"File: {fpath}. Database update failed: {e}"
-                delivery.update_progress(file=fpath, status='e')  # -> X-symbol
-                CLI_LOGGER.warning(emessage)
+            #     # with DatabaseConnector('project_db') as project_db:
+            #     #     _project = project_db[delivery.project_id]
+
+            #     #     # Add info on when downloaded
+            #     #     _project['files'][fpath]["date_downloaded"] = \
+            #     #         timestamp()
+            #     #     project_db.save(_project)
+            # except CouchDBException as e:
+            #     emessage = f"File: {fpath}. Database update failed: {e}"
+            #     delivery.update_progress(file=fpath, status='e')  # -> X-symbol
+            #     CLI_LOGGER.warning(emessage)
 
             CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {fpath}")
 

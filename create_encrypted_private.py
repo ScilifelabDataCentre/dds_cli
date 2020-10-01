@@ -108,8 +108,11 @@ encrypted_key = crypto_aead_chacha20poly1305_ietf_encrypt(
 print(f"encrypted key: {encrypted_key}")
 
 hex_private_encrypted = encrypted_key.hex().upper()
-print(f"to add to db: {hex_private_encrypted}")
-print(f"salt: {salt.hex().upper()}")
-print(f"nonce: {nonce.hex().upper()}")
+public_key = public.public_bytes(encoding=serialization.Encoding.Raw,
+                                 format=serialization.PublicFormat.Raw)
+print(f"\nPRIVATE KEY: {hex_private_encrypted}")
+print(f"\nPUBLIC KEY: {public_key.hex().upper()}")
+print(f"SALT: {salt.hex().upper()}")
+print(f"NONCE: {nonce.hex().upper()}")
 
 # decrypted_key = crypto_aead_chacha20poly1305_ietf_decrypt(ciphertext=encrypted_key, aad=None, nonce=nonce, key=)

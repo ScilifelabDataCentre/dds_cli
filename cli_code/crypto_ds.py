@@ -75,6 +75,7 @@ class ECDHKey:
 
             # Generate public
             self.public = self.private.public_key()
+            # print(f"file public key: {self.public.public_bytes()}")
         else:
             public, private = keys
             # X25519PrivateKey from project private key
@@ -129,13 +130,17 @@ class ECDHKey:
         # Put -> salt will be empty string -> generate new salt
         # Get -> salt will be hex string from db -> get as bytes
         salt = os.urandom(16) if salt_ == "" else bytes.fromhex(salt_)
+        print(f"\nsalt:{salt}\t{salt.hex().upper()}\n")
 
         # X25519PublicKey from peer public key (from db)
         loaded_peer_pub = X25519PublicKey.from_public_bytes(peer_public)
+        print(f"\npeer public key: {peer_public}\n")
+        print(f"\nprivate key: {self.private.private_bytes(encoding=serialization.Encoding.Raw,format=serialization.PrivateFormat.Raw,encryption_algorithm=serialization.NoEncryption())}\n")
+    
 
         # Generate shared key
         shared = (self.private).exchange(peer_public_key=loaded_peer_pub)
-
+        # print(f"\nshared:{shared}\t{shared.hex().upper()}\n")
         # Generate derived key from shared key - used for data encryption
         # Guarantees enough entropy in key
         derived_key = HKDF(
@@ -146,6 +151,7 @@ class ECDHKey:
             backend=default_backend()
         ).derive(shared)
 
+        # print(f"DERIVED: {derived_key}")
         return derived_key, salt
 
     def public_to_hex(self) -> (str):
@@ -184,9 +190,10 @@ def get_project_private(proj_id: str, user):
     import requests
     KEY_BASE = API_BASE + f"/project/{proj_id}/key"
     response = requests.get(KEY_BASE)
-    print(response)
+    # print(response)
 
     key_info = response.json()
+    # print(f"private key info: {key_info}")
 
     # NOTE: Solution to import issue?
     # Import here due to import issues.
@@ -198,16 +205,16 @@ def get_project_private(proj_id: str, user):
 
     # Salt for deriving key used to encrypt/decrypt secret key
     key_salt = bytes.fromhex(key_info['salt'])
-    print(f"salt in hex: {key_info['salt']}")
-    print(f"salt: {key_salt}")
+    # print(f"salt in hex: {key_info['salt']}")
+    # print(f"salt: {key_salt}")
 
     # Derive key-encryption-key
     kdf = Scrypt(salt=key_salt, length=32, n=2**14,
                  r=8, p=1, backend=default_backend())
 
-    print(f"password: {user.password}")
-    key = kdf.derive(user.password.encode('utf-8'))
-    print(f"key: {key}")
+    # print(f"password: {user.password}")
+    key_enc_key = kdf.derive(user.password.encode('utf-8'))
+    # print(f"key: {key_enc_key}")
 
     # user_db = None  # "Remove" user_db --> save space
     # --------------------------------------------------------------------#
@@ -215,19 +222,19 @@ def get_project_private(proj_id: str, user):
     # Project DB specific ########################### Project DB specific #
     # project_db = couch['project_db']
     
-    print(f"encrypted key in hex: {key_info['encrypted_key']}")
+    # print(f"encrypted key in hex: {key_info['encrypted_key']}")
     # Get encrypted private key and nonce from DB
     encrypted_key = bytes.fromhex(
         key_info['encrypted_key']
     )
-    print(f"encrypted key bytes: {encrypted_key}")
+    print(f"\nencrypted key in db: {encrypted_key}\n")
     nonce = bytes.fromhex(key_info['nonce'])
-    print(f"nonce in hex: {key_info['nonce']}")
-    print(f"nonce in hex: {nonce}")
+    # print(f"nonce in hex: {key_info['nonce']}")
+    # print(f"nonce in hex: {nonce}")
 
     # Decrypt key
     decrypted_key = crypto_aead_chacha20poly1305_ietf_decrypt(
-        ciphertext=encrypted_key, aad=None, nonce=nonce, key=key
+        ciphertext=encrypted_key, aad=None, nonce=nonce, key=key_enc_key
     )
     # project_db = None   # "Remove" project_db --> save space
     # --------------------------------------------------------------------#
@@ -275,7 +282,7 @@ def get_project_private(proj_id: str, user):
         sys.exit(printout_error("Error in private key! Extra bytes after"
                                 "key -- parsing failed or key corrupted!"))
     # --------------------------------------------------------------------#
-    print("key successfully decrypted")
+    print(f"key successfully decrypted: {key}")
     return key
 
 

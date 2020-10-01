@@ -150,6 +150,7 @@ def put(config: str, username: str, password: str, project: str,
                          'key': key,
                          'salt': salt}
             )
+            print(f"PUBLIC KEY: {key}")
 
             # Set processing as finished
             delivery.set_progress(item=ppath, processing=True, finished=True)

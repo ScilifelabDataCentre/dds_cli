@@ -441,9 +441,13 @@ def process_file(file: Path, file_info: dict, peer_public) \
 
     # Encryption key ######################################### Encryption key #
     keypair = ECDHKey()    # Create new ECDH key pair
+    print(f"\npublic key for file {file}: -- {keypair.public.public_bytes()}\n")
 
     # Generate shared symmetric encryption key from peer_public + pub + priv
+    # print(f"file public key: {peer_public}")
     key, salt = keypair.generate_encryption_key(peer_public=peer_public)
+    print(f"\nshared symmetric: {key}\n")
+    # print()
     # LOG.debug(f"private: {keypair.private}, "
     #           f"public: {keypair.public} ({type(keypair.public)}), "
     #           f"derived: {key} ({len(key)})")
@@ -533,18 +537,22 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
 
     # Encryption key ######################################### Encryption key #
     # Get keys for decryption
-    peer_public = bytes.fromhex(file_info['key'])   # File public enc key
+    peer_public = bytes.fromhex(file_info['public_key'])   # File public enc key
     keypair = ECDHKey(keys=keys)                    # Project specific key pair
 
     # Derive shared symmetric key
     salt = file_info['salt']                # Salt to generate same shared key
+    # print(f"public key peer: {peer_public}")
+    # print(f"public key peer: {peer_public.hex().upper()}")
     key, _ = keypair.generate_encryption_key(peer_public=peer_public,
                                              salt_=salt)
+    print(f"\nshared symmetric: {key}\n")
 
     # "Delete" private key
     keypair.del_priv_key()
     # ----------------------------------------------------------------------- #
 
+    # sys.exit()
     # START ########################################################### START #
     try:
         original_umask = os.umask(0)  # User file-creation mode mask
@@ -568,7 +576,7 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
             with outfile.open(mode='ab+') as of:
 
                 # Decompress if DS compressed, otherwise save chunks
-                func = decompress_file if file_info['ds_compressed'] \
+                func = decompress_file if file_info['compressed'] \
                     else file_writer
                 saved, error = func(filehandler=of,
                                     gen=chunk_stream,

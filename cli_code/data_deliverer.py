@@ -178,12 +178,17 @@ class DataDeliverer():
         # If everything ok, set bucket name
         self.bucketname = delivery_info['s3_id']
         self.public = bytes.fromhex(delivery_info['public_key'])
+        print(f"\nproject public key: {self.public}\n")
+        # print(f"project public key: {self.public}")
 
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
 
-        print(f"DATA -- {self.data}")
+        # print(f"\nData to deliver: {self.data}\n")
+        if self.method == 'get':
+            for x in self.data:
+                print(f"\npublic key for file {x}: -- {self.data[x]['public_key']}\n")
         # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
         # self.public = get_project_public(self.project_id)   # Always
@@ -571,7 +576,7 @@ class DataDeliverer():
         req = FILE_BASE + f"/{self.project_id}"
         response = requests.get(req)
         files_in_db = response.json()
-        print(f"files: {files_in_db}")
+        # print(f"files: {files_in_db}")
 
         # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths

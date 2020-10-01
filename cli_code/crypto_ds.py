@@ -181,91 +181,102 @@ def get_project_private(proj_id: str, user):
         bytes:  Private key belonging to current project
 
     '''
+    import requests
+    KEY_BASE = API_BASE + f"/project/{proj_id}/key"
+    response = requests.get(KEY_BASE)
+    print(response)
 
-    # 1. Get file key salt 
-    # 2. Calculcate kdf
-    # 3. get project private key 
+    key_info = response.json()
 
     # NOTE: Solution to import issue?
     # Import here due to import issues.
-    from cli_code.database_connector import DatabaseConnector
+    # from cli_code.database_connector import DatabaseConnector
 
-    with DatabaseConnector() as couch:
-        # User DB specific ################################# User DB specific #
-        user_db = couch['user_db']
+    # with DatabaseConnector() as couch:
+    # User DB specific ################################# User DB specific #
+    # user_db = couch['user_db']
 
-        # Salt for deriving key used to encrypt/decrypt secret key
-        key_salt = bytes.fromhex(user_db[user.id]['password']['key_salt'])
+    # Salt for deriving key used to encrypt/decrypt secret key
+    key_salt = bytes.fromhex(key_info['salt'])
+    print(f"salt in hex: {key_info['salt']}")
+    print(f"salt: {key_salt}")
 
-        # Derive key-encryption-key
-        kdf = Scrypt(salt=key_salt, length=32, n=2**14,
-                     r=8, p=1, backend=default_backend())
-        key = kdf.derive(user.password.encode('utf-8'))
+    # Derive key-encryption-key
+    kdf = Scrypt(salt=key_salt, length=32, n=2**14,
+                 r=8, p=1, backend=default_backend())
 
-        user_db = None  # "Remove" user_db --> save space
-        # --------------------------------------------------------------------#
+    print(f"password: {user.password}")
+    key = kdf.derive(user.password.encode('utf-8'))
+    print(f"key: {key}")
 
-        # Project DB specific ########################### Project DB specific #
-        project_db = couch['project_db']
+    # user_db = None  # "Remove" user_db --> save space
+    # --------------------------------------------------------------------#
 
-        # Get encrypted private key and nonce from DB
-        encrypted_key = bytes.fromhex(
-            project_db[proj_id]['project_keys']['secret']
-        )
-        nonce = bytes.fromhex(project_db[proj_id]['project_keys']['nonce'])
+    # Project DB specific ########################### Project DB specific #
+    # project_db = couch['project_db']
+    
+    print(f"encrypted key in hex: {key_info['encrypted_key']}")
+    # Get encrypted private key and nonce from DB
+    encrypted_key = bytes.fromhex(
+        key_info['encrypted_key']
+    )
+    print(f"encrypted key bytes: {encrypted_key}")
+    nonce = bytes.fromhex(key_info['nonce'])
+    print(f"nonce in hex: {key_info['nonce']}")
+    print(f"nonce in hex: {nonce}")
 
-        # Decrypt key
-        decrypted_key = crypto_aead_chacha20poly1305_ietf_decrypt(
-            ciphertext=encrypted_key, aad=None, nonce=nonce, key=key
-        )
-        project_db = None   # "Remove" project_db --> save space
-        # --------------------------------------------------------------------#
+    # Decrypt key
+    decrypted_key = crypto_aead_chacha20poly1305_ietf_decrypt(
+        ciphertext=encrypted_key, aad=None, nonce=nonce, key=key
+    )
+    # project_db = None   # "Remove" project_db --> save space
+    # --------------------------------------------------------------------#
 
-        # Verify key ############################################# Verify key #
-        # Get length of magic id
-        start = 0
-        to_read = 2
-        magic_id_len = int.from_bytes(
-            decrypted_key[start:start+to_read], 'big')
+    # Verify key ############################################# Verify key #
+    # Get length of magic id
+    start = 0
+    to_read = 2
+    magic_id_len = int.from_bytes(
+        decrypted_key[start:start+to_read], 'big')
 
-        # Read magic_id_len bytes -> magic id - should be b'DelSys'
-        start += to_read
-        to_read = magic_id_len
-        magic_id = decrypted_key[start:start+to_read]
-        if magic_id != DS_MAGIC:
-            sys.exit(printout_error("Error in private key! Signature should be"
-                                    f"{DS_MAGIC} but found {magic_id}"))
+    # Read magic_id_len bytes -> magic id - should be b'DelSys'
+    start += to_read
+    to_read = magic_id_len
+    magic_id = decrypted_key[start:start+to_read]
+    if magic_id != DS_MAGIC:
+        sys.exit(printout_error("Error in private key! Signature should be"
+                                f"{DS_MAGIC} but found {magic_id}"))
 
-        # Get length of project id
-        start += to_read
-        to_read = 2
-        proj_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
+    # Get length of project id
+    start += to_read
+    to_read = 2
+    proj_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
 
-        # Read proj_len bytes -> project id - should be equal to current proj
-        start += to_read
-        to_read = proj_len
-        project_id = decrypted_key[start:start+to_read]
-        if project_id != bytes(proj_id, encoding='utf-8'):
-            sys.exit(printout_error("Error in private key! "
-                                    "Project ID incorrect!"))
+    # Read proj_len bytes -> project id - should be equal to current proj
+    start += to_read
+    to_read = proj_len
+    project_id = decrypted_key[start:start+to_read]
+    if project_id != (proj_id).to_bytes(2, byteorder='big'):
+        sys.exit(printout_error("Error in private key! "
+                                "Project ID incorrect!"))
 
-        # Get length of private key
-        start += to_read
-        to_read = 2
-        key_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
+    # Get length of private key
+    start += to_read
+    to_read = 2
+    key_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
 
-        # Read key_len bytes -> key
-        start += to_read
-        to_read = key_len
-        key = decrypted_key[start:start+to_read]
+    # Read key_len bytes -> key
+    start += to_read
+    to_read = key_len
+    key = decrypted_key[start:start+to_read]
 
-        # Error if there are bytes left after read key
-        if decrypted_key[start+to_read::] != b'':
-            sys.exit(printout_error("Error in private key! Extra bytes after"
-                                    "key -- parsing failed or key corrupted!"))
-        # --------------------------------------------------------------------#
-
-        return key
+    # Error if there are bytes left after read key
+    if decrypted_key[start+to_read::] != b'':
+        sys.exit(printout_error("Error in private key! Extra bytes after"
+                                "key -- parsing failed or key corrupted!"))
+    # --------------------------------------------------------------------#
+    print("key successfully decrypted")
+    return key
 
 
 # def get_project_public(proj_id) -> (bytes):

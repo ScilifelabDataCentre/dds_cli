@@ -815,8 +815,7 @@ class DataDeliverer():
                     'in_directory': in_directory,       # If in dir
                     'dir_name': item if in_directory else None,
                     'proceed': proceed,     # If ok to proceed with deliv
-                    'error': error,          # Error message, "" if none
-                    'salt': files_in_db[file]['salt']
+                    'error': error          # Error message, "" if none
                 })
 
         # No delivery if the item doesn't exist in the database

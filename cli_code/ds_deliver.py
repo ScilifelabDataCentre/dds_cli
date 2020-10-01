@@ -15,10 +15,11 @@ from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
 
 # Installed
 import click
+import requests
 
 # Own modules
 import cli_code.file_handler as fh
-from cli_code import timestamp
+from cli_code import timestamp, API_BASE
 from cli_code.data_deliverer import DataDeliverer
 from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError,
@@ -406,9 +407,6 @@ def get(config: str, username: str, password: str, project: str,
             # Set file db update to in progress
             delivery.set_progress(item=fpath, db=True, started=True)
 
-            from cli_code import API_BASE
-            import requests
-
             print(delivery.data[fpath])
             FINAL_BASE = API_BASE + "/delivery/date/"
             print(f"\n{delivery.data[fpath]['id']}")
@@ -416,27 +414,16 @@ def get(config: str, username: str, password: str, project: str,
             response = requests.post(FINAL_BASE, params=args)
             print(response)
 
-            # TODO: COUCHDB -> MARIADB
-            # TODO: DATABASE UPDATE TO BE THREADED - PROBLEMS WITH COUCHDB ATM
-            # try:
+            if not response.ok:
+                emessage = f"File: {fpath}. Database update failed: {e}"
+                delivery.update_progress(file=fpath, status='e')  # -> X-symbol
+                CLI_LOGGER.warning(emessage)
+            else: 
+                CLI_LOGGER.info(f"DATABASE UPDATE SUCCESSFUL: {fpath}")
 
-            #     # with DatabaseConnector('project_db') as project_db:
-            #     #     _project = project_db[delivery.project_id]
-
-            #     #     # Add info on when downloaded
-            #     #     _project['files'][fpath]["date_downloaded"] = \
-            #     #         timestamp()
-            #     #     project_db.save(_project)
-            # except CouchDBException as e:
-            #     emessage = f"File: {fpath}. Database update failed: {e}"
-            #     delivery.update_progress(file=fpath, status='e')  # -> X-symbol
-            #     CLI_LOGGER.warning(emessage)
-
-            CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {fpath}")
-
-            # Set delivery as finished and display progress = check mark
-            delivery.set_progress(item=fpath, db=True, finished=True)
-            delivery.update_progress(file=fpath, status='f')
+                # Set delivery as finished and display progress = check mark
+                delivery.set_progress(item=fpath, db=True, finished=True)
+                delivery.update_progress(file=fpath, status='f')
 
         # DELIVERY FINISHED ------------------------------- DELIVERY FINISHED #
 

@@ -38,7 +38,7 @@ def cli():
     # Setup logging
     global CLI_LOGGER
     CLI_LOGGER = logging.getLogger(__name__)
-    CLI_LOGGER.setLevel(logging.DEBUG)
+    CLI_LOGGER.setLevel(logging.WARNING)
 
 
 ###############################################################################

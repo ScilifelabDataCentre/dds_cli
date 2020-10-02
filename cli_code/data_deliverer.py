@@ -26,7 +26,6 @@ from botocore.client import ClientError
 # Own modules
 from cli_code import DIRS, API_BASE, ENDPOINTS
 from cli_code.crypto_ds import (get_project_private)
-from cli_code.database_connector import DatabaseConnector
 from cli_code.exceptions_ds import (CouchDBException, DataException,
                                     DeliverySystemException, printout_error)
 from cli_code.file_handler import (file_deleter, get_root_path,

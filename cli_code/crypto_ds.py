@@ -74,7 +74,7 @@ class ECDHKey:
 
             # Generate public
             self.public = self.private.public_key()
-            # print(f"file public key: {self.public.public_bytes()}")
+            # CRYPTO_LOG.debug(f"file public key: {self.public.public_bytes()}")
         else:
             public, private = keys
             # X25519PrivateKey from project private key

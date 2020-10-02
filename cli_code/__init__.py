@@ -57,6 +57,19 @@ SEGMENT_SIZE = 65536                        # Chunk size while reading file
 CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + 16     # Chunk to read from encrypted file
 DS_MAGIC = b'DelSys'                        # DS signature in encrypted key
 
+API_BASE = "http://127.0.0.1:5000/api/v1"
+ENDPOINTS = {'f_login': API_BASE + "/fac/login",
+             'u_login': API_BASE + "/user/login",
+             'list_users': API_BASE + "/listusers",
+             'list_facts': API_BASE + "/listfacs",
+             'project_files': API_BASE + "/project/listfiles",
+             'list_files': API_BASE + "/listfiles",
+             'list_s3': API_BASE + "/lists3",
+             'update_file': API_BASE + "/project/updatefile",
+             'file_salt': API_BASE + "/file/salt",
+             'key': API_BASE + "/project/",
+             'delivery_date': API_BASE + "/delivery/date/"}
+
 ###############################################################################
 # FUNCTIONS ####################################################### FUNCTIONS #
 ###############################################################################
@@ -183,5 +196,3 @@ if not created:
 
 LOG_FILE = str(DIRS[-1] / Path("ds.log"))   # Get log file name
 LOG = config_logger(filename=LOG_FILE)
-
-API_BASE = "http://127.0.0.1:5000/api/v1"

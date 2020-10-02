@@ -437,20 +437,18 @@ def process_file(file: Path, file_info: dict, peer_public) \
     new_dir = DIRS[1] / file_info['directory_path']     # New temp subdir
     key = b''
     # ----------------------------------------------------------------------- #
-    # LOG.debug(f"Infile: {file}, Outfile: {outfile}")
+    LOG.debug(f"Infile: {file}, Outfile: {outfile}")
 
     # Encryption key ######################################### Encryption key #
     keypair = ECDHKey()    # Create new ECDH key pair
-    print(f"\npublic key for file {file}: -- {keypair.public.public_bytes()}\n")
+    LOG.debug(f"\npublic key for file {file}: -- "
+              "{keypair.public.public_bytes()}\n")
 
     # Generate shared symmetric encryption key from peer_public + pub + priv
-    # print(f"file public key: {peer_public}")
     key, salt = keypair.generate_encryption_key(peer_public=peer_public)
-    print(f"\nshared symmetric: {key}\n")
-    # print()
-    # LOG.debug(f"private: {keypair.private}, "
-    #           f"public: {keypair.public} ({type(keypair.public)}), "
-    #           f"derived: {key} ({len(key)})")
+    LOG.debug(f"file: {file}\n\tprivate: {keypair.private}, "
+              f"\tpublic: {keypair.public} ({type(keypair.public)}), "
+              f"\tderived, shared symmetric: {key} ({len(key)})")
     # ----------------------------------------------------------------------- #
 
     # Create new temporary subdir if doesn't exist
@@ -478,7 +476,7 @@ def process_file(file: Path, file_info: dict, peer_public) \
                 # Generate initial nonce and save to file
                 iv_bytes = os.urandom(12)
                 of.write(iv_bytes)
-                # LOG.debug(f"File: {file} IV: {iv_bytes}")
+                LOG.debug(f"File: {file} IV: {iv_bytes}")
 
                 # Encrypt and save ciphertext (not nonces) to file
                 nonce = b''     # Catches the nonces
@@ -489,7 +487,7 @@ def process_file(file: Path, file_info: dict, peer_public) \
 
                 # Save last nonce to end of file
                 of.write(nonce)
-                # LOG.debug(f"File: {file}, last nonce:\t{nonce}\n")
+                LOG.debug(f"File: {file}, last nonce:\t{nonce}\n")
 
     except DeliverySystemException as ee:
         error = f"File: {file}, Processig failed! {ee}"
@@ -533,26 +531,27 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
     outfile = infile.parent / Path(infile.stem).stem    # Finalized file path
     error = ""
     # ----------------------------------------------------------------------- #
-    # LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
+    LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
 
     # Encryption key ######################################### Encryption key #
     # Get keys for decryption
-    peer_public = bytes.fromhex(file_info['public_key'])   # File public enc key
+    peer_public = bytes.fromhex(file_info['public_key'])  # File public enc key
     keypair = ECDHKey(keys=keys)                    # Project specific key pair
+    LOG.debug(f"public key peer: {peer_public}\n"
+              f"public key peer: {peer_public.hex().upper()}")
 
     # Derive shared symmetric key
     salt = file_info['salt']                # Salt to generate same shared key
-    # print(f"public key peer: {peer_public}")
-    # print(f"public key peer: {peer_public.hex().upper()}")
     key, _ = keypair.generate_encryption_key(peer_public=peer_public,
                                              salt_=salt)
-    print(f"\nshared symmetric: {key}\n")
+    LOG.debug(f"file: {file}\n\tprivate: {keypair.private}, "
+              f"\tpublic: {keypair.public} ({type(keypair.public)}), "
+              f"\tderived, shared symmetric: {key} ({len(key)})")
 
     # "Delete" private key
     keypair.del_priv_key()
     # ----------------------------------------------------------------------- #
 
-    # sys.exit()
     # START ########################################################### START #
     try:
         original_umask = os.umask(0)  # User file-creation mode mask

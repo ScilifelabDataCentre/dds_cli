@@ -21,10 +21,11 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_decrypt)
+import requests
 
 # Own modules
-from cli_code import DS_MAGIC, API_BASE
-from cli_code.exceptions_ds import DeliverySystemException, printout_error
+from cli_code import DS_MAGIC, ENDPOINTS
+from cli_code.exceptions_ds import printout_error
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -38,8 +39,6 @@ CRYPTO_LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 SEGMENT_SIZE = 65536
-MAGIC_NUMBER = b'crypt4gh'
-VERSION = 1
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -130,17 +129,18 @@ class ECDHKey:
         # Put -> salt will be empty string -> generate new salt
         # Get -> salt will be hex string from db -> get as bytes
         salt = os.urandom(16) if salt_ == "" else bytes.fromhex(salt_)
-        print(f"\nsalt:{salt}\t{salt.hex().upper()}\n")
+        CRYPTO_LOG.debug(f"\nsalt:{salt}\t{salt.hex().upper()}\n")
 
         # X25519PublicKey from peer public key (from db)
         loaded_peer_pub = X25519PublicKey.from_public_bytes(peer_public)
-        print(f"\npeer public key: {peer_public}\n")
-        print(f"\nprivate key: {self.private.private_bytes(encoding=serialization.Encoding.Raw,format=serialization.PrivateFormat.Raw,encryption_algorithm=serialization.NoEncryption())}\n")
-    
+        CRYPTO_LOG.debug(f"\npeer public key: {peer_public}\n")
+        CRYPTO_LOG.debug(
+            f"\nprivate key: {self.private.private_bytes(encoding=serialization.Encoding.Raw,format=serialization.PrivateFormat.Raw,encryption_algorithm=serialization.NoEncryption())}\n")
 
         # Generate shared key
         shared = (self.private).exchange(peer_public_key=loaded_peer_pub)
-        # print(f"\nshared:{shared}\t{shared.hex().upper()}\n")
+        CRYPTO_LOG.debug(f"\nshared:{shared}\t{shared.hex().upper()}\n")
+
         # Generate derived key from shared key - used for data encryption
         # Guarantees enough entropy in key
         derived_key = HKDF(
@@ -151,7 +151,7 @@ class ECDHKey:
             backend=default_backend()
         ).derive(shared)
 
-        # print(f"DERIVED: {derived_key}")
+        CRYPTO_LOG.debug(f"DERIVED: {derived_key}")
         return derived_key, salt
 
     def public_to_hex(self) -> (str):
@@ -187,57 +187,45 @@ def get_project_private(proj_id: str, user):
         bytes:  Private key belonging to current project
 
     '''
-    import requests
-    KEY_BASE = API_BASE + f"/project/{proj_id}/key"
-    response = requests.get(KEY_BASE)
-    # print(response)
+
+    req = ENDPOINTS['key'] + f"{proj_id}/key"
+    response = requests.get(req)
+    if not response.ok:
+        sys.exit(
+            printout_error(
+                f"""{response.status_code} - {response.reason}: \n{req}"""
+            )
+        )
 
     key_info = response.json()
-    # print(f"private key info: {key_info}")
-
-    # NOTE: Solution to import issue?
-    # Import here due to import issues.
-    # from cli_code.database_connector import DatabaseConnector
-
-    # with DatabaseConnector() as couch:
-    # User DB specific ################################# User DB specific #
-    # user_db = couch['user_db']
+    CRYPTO_LOG.debug(f"private key info: {key_info}")
 
     # Salt for deriving key used to encrypt/decrypt secret key
     key_salt = bytes.fromhex(key_info['salt'])
-    # print(f"salt in hex: {key_info['salt']}")
-    # print(f"salt: {key_salt}")
+    CRYPTO_LOG.debug(f"salt in hex: {key_info['salt']}")
+    CRYPTO_LOG.debug(f"salt: {key_salt}")
 
     # Derive key-encryption-key
     kdf = Scrypt(salt=key_salt, length=32, n=2**14,
                  r=8, p=1, backend=default_backend())
 
-    # print(f"password: {user.password}")
+    CRYPTO_LOG.debug(f"password: {user.password}")
     key_enc_key = kdf.derive(user.password.encode('utf-8'))
-    # print(f"key: {key_enc_key}")
+    CRYPTO_LOG.debug(f"key: {key_enc_key}")
 
-    # user_db = None  # "Remove" user_db --> save space
-    # --------------------------------------------------------------------#
+    CRYPTO_LOG.debug(f"encrypted key in hex: {key_info['encrypted_key']}")
 
-    # Project DB specific ########################### Project DB specific #
-    # project_db = couch['project_db']
-    
-    # print(f"encrypted key in hex: {key_info['encrypted_key']}")
     # Get encrypted private key and nonce from DB
-    encrypted_key = bytes.fromhex(
-        key_info['encrypted_key']
-    )
-    print(f"\nencrypted key in db: {encrypted_key}\n")
+    encrypted_key = bytes.fromhex(key_info['encrypted_key'])
+    CRYPTO_LOG.debug(f"\nencrypted key in db: {encrypted_key}\n")
+
     nonce = bytes.fromhex(key_info['nonce'])
-    # print(f"nonce in hex: {key_info['nonce']}")
-    # print(f"nonce in hex: {nonce}")
+    CRYPTO_LOG.debug(f"nonce: {nonce} --  in hex: {key_info['nonce']}")
 
     # Decrypt key
     decrypted_key = crypto_aead_chacha20poly1305_ietf_decrypt(
         ciphertext=encrypted_key, aad=None, nonce=nonce, key=key_enc_key
     )
-    # project_db = None   # "Remove" project_db --> save space
-    # --------------------------------------------------------------------#
 
     # Verify key ############################################# Verify key #
     # Get length of magic id
@@ -282,64 +270,5 @@ def get_project_private(proj_id: str, user):
         sys.exit(printout_error("Error in private key! Extra bytes after"
                                 "key -- parsing failed or key corrupted!"))
     # --------------------------------------------------------------------#
-    print(f"key successfully decrypted: {key}")
+    CRYPTO_LOG.info(f"key successfully decrypted: {key}")
     return key
-
-
-# def get_project_public(proj_id) -> (bytes):
-#     '''Gets the projects public key from the database
-
-#     Args:
-#         proj_id (str):  Project ID
-
-#     Returns:
-#         bytes:  ECDH Public key belonging to specific project.
-
-#     '''
-
-#     # NOTE: Solution to import issue?
-#     # Import here due to import issues.
-#     from cli_code.database_connector import DatabaseConnector
-
-#     try:
-#         # Get project public key - same for both put and get
-#         # and convert to bytes
-#         with DatabaseConnector('project_db') as project_db:
-#             public_key = bytes.fromhex(
-#                 project_db[proj_id]['project_keys']['public']
-#             )
-#     except DeliverySystemException as dse:
-#         sys.exit(printout_error(dse))
-#     else:
-#         return public_key
-
-
-# def secure_password_hash(password_settings: str,
-#                          password_entered: str) -> (str):
-#     '''Generates secure password hash.
-
-#     Args:
-#             password_settings:  String containing the salt, length of hash,
-#                                 n-exponential, r and p variables.
-#                                 Taken from database. Separated by '$'.
-#             password_entered:   The user-specified password.
-
-#     Returns:
-#             str:    The derived hash from the user-specified password.
-
-#     '''
-
-#     # Split scrypt settings into parts
-#     settings = password_settings.split("$")
-#     for i in [1, 2, 3, 4]:
-#         settings[i] = int(settings[i])  # Set settings as int, not str
-
-#     # Create cryptographically secure password hash
-#     kdf = Scrypt(salt=bytes.fromhex(settings[0]),
-#                  length=settings[1],
-#                  n=2**settings[2],
-#                  r=settings[3],
-#                  p=settings[4],
-#                  backend=default_backend())
-
-#     return (kdf.derive(password_entered.encode('utf-8'))).hex()

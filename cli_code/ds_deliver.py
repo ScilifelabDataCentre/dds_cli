@@ -21,7 +21,7 @@ import requests
 
 # Own modules
 import cli_code.file_handler as fh
-from cli_code import API_BASE
+from cli_code import API_BASE, ENDPOINTS
 from cli_code.data_deliverer import DataDeliverer
 from cli_code.exceptions_ds import (PoolExecutorError, printout_error)
 from cli_code.s3_connector import S3Connector
@@ -97,7 +97,6 @@ def put(config: str, username: str, password: str, project: str,
                        break_on_fail=break_on_fail, overwrite=overwrite,
                        encrypt=encrypt) \
             as delivery:
-        # TODO: Merge update_progress and set_progress
 
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
         pool_executor = ProcessPoolExecutor()       # Processing
@@ -149,7 +148,7 @@ def put(config: str, username: str, password: str, project: str,
                          'key': key,
                          'salt': salt}
             )
-            print(f"PUBLIC KEY: {key}")
+            CLI_LOGGER.debug(f"PUBLIC KEY for file {ppath}: {key}")
 
             # Set processing as finished
             delivery.set_progress(item=ppath, processing=True, finished=True)
@@ -211,10 +210,9 @@ def put(config: str, username: str, password: str, project: str,
                 'key': delivery.data[upath]['key'],
                 'salt': delivery.data[upath]['salt']
             }
-            from cli_code import API_BASE
-            import requests
-            UPDATE_BASE = API_BASE + "/project/updatefile"
-            response = requests.post(UPDATE_BASE, params=req_args)
+
+            req = ENDPOINTS['update_file']
+            response = requests.post(req, params=req_args)
 
             if not response.ok:
                 sys.exit(printout_error(
@@ -405,15 +403,12 @@ def get(config: str, username: str, password: str, project: str,
             # Set file db update to in progress
             delivery.set_progress(item=fpath, db=True, started=True)
 
-            print(delivery.data[fpath])
-            FINAL_BASE = API_BASE + "/delivery/date/"
-            print(f"\n{delivery.data[fpath]['id']}")
+            req = ENDPOINTS['delivery_date']
             args = {'file_id': delivery.data[fpath]['id']}
-            response = requests.post(FINAL_BASE, params=args)
-            print(response)
+            response = requests.post(req, params=args)
 
             if not response.ok:
-                emessage = f"File: {fpath}. Database update failed: {e}"
+                emessage = f"File: {fpath}. Database update failed."
                 delivery.update_progress(file=fpath, status='e')  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
             else:

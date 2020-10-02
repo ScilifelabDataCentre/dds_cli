@@ -188,7 +188,8 @@ class DataDeliverer():
         # print(f"\nData to deliver: {self.data}\n")
         if self.method == 'get':
             for x in self.data:
-                print(f"\npublic key for file {x}: -- {self.data[x]['public_key']}\n")
+                print(
+                    f"\npublic key for file {x}: -- {self.data[x]['public_key']}\n")
         # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
         # self.public = get_project_public(self.project_id)   # Always
@@ -403,14 +404,24 @@ class DataDeliverer():
 
         return json_response
 
-    def _check_user_input(self, config, username, password):
+    def _check_user_input(self, config, username, password) -> \
+            (str, str, int, int):
         '''Checks that the correct options and credentials are entered.
 
         Args:
             config:     File containing the users DP username and password,
                         and the project relating to the upload/download.
                         Can be used instead of inputing the creds separately.
+            username:   Username
+            password:   Password
 
+        Returns:
+            tuple:  Info about user if all credentials specified
+
+                username    (str):     Username
+                password    (str):     Password
+                project_id  (int):     Project ID
+                owner_id    (int):     Owner ID
         '''
 
         # No config file -------- loose credentials -------- No config file #
@@ -438,7 +449,7 @@ class DataDeliverer():
 
             # Assume current user is owner if no owner is set
             if self.project_owner is None:
-                # username, password, owner
+                # username, password, id, owner
                 return username, password, self.project_id, username
 
         # Config file ----------- credentials in it ----------- Config file #
@@ -675,8 +686,8 @@ class DataDeliverer():
                                 initial_fail[file] = {
                                     **all_files.pop(file),
                                     'error': (f"File '{file.name}' already exists in "
-                                            "bucket, but does NOT exist in database. "
-                                            "Delivery cancelled, contact support.")
+                                              "bucket, but does NOT exist in database. "
+                                              "Delivery cancelled, contact support.")
                                 }
 
         # --------------------------------------------------------- #

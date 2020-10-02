@@ -1,5 +1,7 @@
 """
 Command line interface for Data Delivery System
+
+TODO: Info here?
 """
 
 ###############################################################################
@@ -19,11 +21,9 @@ import requests
 
 # Own modules
 import cli_code.file_handler as fh
-from cli_code import timestamp, API_BASE
+from cli_code import API_BASE
 from cli_code.data_deliverer import DataDeliverer
-from cli_code.database_connector import DatabaseConnector
-from cli_code.exceptions_ds import (CouchDBException, PoolExecutorError,
-                                    printout_error)
+from cli_code.exceptions_ds import (PoolExecutorError, printout_error)
 from cli_code.s3_connector import S3Connector
 
 
@@ -46,8 +46,6 @@ def cli():
 ###############################################################################
 
 
-# "'put' is too complex" -- this warning disappears when the database update
-# at end of delivery is moved to other place/changed (couchdb -> mariadb)
 @cli.command()
 @click.option('--config', '-c',
               required=False,
@@ -418,7 +416,7 @@ def get(config: str, username: str, password: str, project: str,
                 emessage = f"File: {fpath}. Database update failed: {e}"
                 delivery.update_progress(file=fpath, status='e')  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
-            else: 
+            else:
                 CLI_LOGGER.info(f"DATABASE UPDATE SUCCESSFUL: {fpath}")
 
                 # Set delivery as finished and display progress = check mark

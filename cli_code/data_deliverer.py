@@ -557,15 +557,15 @@ class DataDeliverer():
         '''
 
         # Variables ######################################### Variables #
-        all_files=dict()
-        initial_fail=dict()
+        all_files = dict()
+        initial_fail = dict()
 
-        data_list=list(data)
+        data_list = list(data)
         # --------------------------------------------------------------#
 
         # Add data included in pathfile to data dict
         if pathfile is not None and Path(pathfile).exists():
-            with Path(pathfile).resolve().open(mode = 'r') as file:
+            with Path(pathfile).resolve().open(mode='r') as file:
                 data_list += [line.strip() for line in file]
 
         # Fail delivery if not a correct method
@@ -576,8 +576,8 @@ class DataDeliverer():
             )
 
         # Get all project files in db
-        req=ENDPOINTS['project_files'] + f"/{self.project_id}"
-        response=requests.get(req)
+        req = ENDPOINTS['project_files'] + f"/{self.project_id}"
+        response = requests.get(req)
         if not response.ok:
             sys.exit(
                 printout_error(f"""{response.status_code} - {response.reason}:
@@ -585,9 +585,10 @@ class DataDeliverer():
             )
 
         # Get all project files from response
-        files_in_db=response.json()
+        files_in_db = response.json()
         LOG.debug(f"files in the db: {files_in_db}")
 
+        do_fail = False
         # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths
         for d in data_list:
@@ -603,13 +604,16 @@ class DataDeliverer():
             if self.method == "get":
                 iteminfo = self._get_download_info(
                     item=d,
-                    files_in_db=files_in_db['files']
+                    files_in_db=files_in_db['files'],
+                    do_fail=do_fail
                 )
 
                 # Save to failed dict or delivery dict
                 if len(iteminfo) == 1 and d in iteminfo:    # File
                     if not iteminfo[d]['proceed']:
                         initial_fail.update(iteminfo)
+                        if self.break_on_fail:
+                            do_fail = True
                         continue
 
                     all_files.update(iteminfo)
@@ -617,6 +621,8 @@ class DataDeliverer():
                     for f in iteminfo:
                         if not iteminfo[f]['proceed']:
                             initial_fail[f] = iteminfo[f]
+                            if self.break_on_fail:
+                                do_fail = True
                             continue
 
                         all_files[f] = iteminfo[f]
@@ -626,28 +632,41 @@ class DataDeliverer():
 
                 # Get info on files within folder
                 if curr_path.is_dir():
-                    dir_info, dir_fail = self._get_dir_info(folder=curr_path)
+                    dir_info, dir_fail = self._get_dir_info(folder=curr_path,
+                                                            do_fail=do_fail)
                     initial_fail.update(dir_fail)   # Not to be delivered
                     all_files.update(dir_info)      # To be delivered
                     continue
 
                 # Get info for individual files
-                file_info = self._get_file_info(file=curr_path, in_dir=False)
+                file_info = self._get_file_info(file=curr_path, in_dir=False,
+                                                do_fail=do_fail)
                 if not file_info['proceed']:
                     # Don't deliver --> save error message
                     initial_fail[curr_path] = file_info
+                    if self.break_on_fail:
+                        do_fail = True
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
 
         if self.method == "put":
             for file, info in list(all_files.items()):
+                if do_fail:
+                    initial_fail[file] = {
+                        **all_files.pop(file),
+                        'error': ("Break on fail specified and one fail occurred. "
+                                  "Cancelling delivery.")
+                    }
+
                 if info['new_file'] in files_in_db['files']:
                     LOG.info(f"{file} already exists in database")
                     initial_fail[file] = {
                         **all_files.pop(file),
                         'error': "File already exists in database"
                     }
+                    if self.break_on_fail:
+                        do_fail = True
                 else:
                     with S3Connector(bucketname=self.bucketname,
                                      project=self.s3project) as s3:
@@ -667,6 +686,8 @@ class DataDeliverer():
                                     Delivery cancelled, contact support."""
                                 )
                             }
+                            if self.break_on_fail:
+                                do_fail = True
 
         # --------------------------------------------------------- #
 
@@ -716,7 +737,7 @@ class DataDeliverer():
         #     except CouchDBException as e:
         #         LOG.warning(e)
 
-    def _get_dir_info(self, folder: Path) -> (dict, dict):
+    def _get_dir_info(self, folder: Path, do_fail: bool) -> (dict, dict):
         '''Iterate through folder contents and get file info
 
         Args:
@@ -737,6 +758,7 @@ class DataDeliverer():
             if f.is_file() and "DS_Store" not in str(f):    # CHANGE LATER
                 file_info = self._get_file_info(file=f,
                                                 in_dir=True,
+                                                do_fail=do_fail,
                                                 dir_name=folder)
 
                 # If file check failed in some way - do not deliver file
@@ -748,7 +770,8 @@ class DataDeliverer():
 
         return dir_info, dir_fail
 
-    def _get_download_info(self, item: str, files_in_db: dict) -> (dict):
+    def _get_download_info(self, item: str, files_in_db: dict, do_fail: bool) \
+            -> (dict):
         '''Gets info on file in database and checks if
         item exists in S3 bucket.
 
@@ -786,6 +809,14 @@ class DataDeliverer():
         # Check for file starting with the file/folder name
         for file in files_in_db:
             # Get info on file
+            if do_fail:
+                error = "Break on fail specified and one fail occurred. " + \
+                    "Cancelling delivery."
+                LOG.info(error)
+                return {item: {'proceed': False, 'error': error,
+                               'in_directory': in_directory,
+                               'dir_name': item if in_directory else None}}
+
             if file.startswith(item):
                 to_download[file] = {
                     **files_in_db[file],
@@ -840,7 +871,7 @@ class DataDeliverer():
 
         return to_download
 
-    def _get_file_info(self, file: Path, in_dir: bool,
+    def _get_file_info(self, file: Path, in_dir: bool, do_fail: bool,
                        dir_name: Path = Path("")) -> (dict):
         '''Get info on file and check if already delivered
 
@@ -864,6 +895,12 @@ class DataDeliverer():
         error = ""                  # Error message
         dir_info = {'in_directory': in_dir, 'dir_name': dir_name}
         # ---------------------------------------------------------- #
+
+        if do_fail:
+            error = "Break on fail specified and one fail occurred. " + \
+                    "Cancelling delivery."
+            LOG.info(error)
+            return {'proceed': False, 'error': error, **dir_info}
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=file)

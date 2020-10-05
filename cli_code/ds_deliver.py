@@ -114,7 +114,8 @@ def put(creds: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not info['proceed']:
                 CLI_LOGGER.warning(f"CANCELLED: '{path}'")
-                delivery.update_progress_bar(file=path, status='e')  # -> X-symbol
+                delivery.update_progress_bar(
+                    file=path, status='e')  # -> X-symbol
                 continue
 
             # Display progress = "Encrypting..."
@@ -136,7 +137,7 @@ def put(creds: str, username: str, password: str, project: str,
             except PoolExecutorError:
                 sys.exit(f"{pfuture.exception()}")
                 break  # Precaution if sys.exit not quit completely
-
+            
             # Update file info
             proceed = delivery.update_delivery(
                 file=ppath,
@@ -156,7 +157,8 @@ def put(creds: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning(f"CANCELLED: '{ppath}'")
-                delivery.update_progress_bar(file=ppath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(
+                    file=ppath, status='e')  # -> X-symbol
                 continue
 
             # Display progress = "Uploading..."
@@ -190,7 +192,8 @@ def put(creds: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning(f"CANCELLED: '{upath}'")
-                delivery.update_progress_bar(file=upath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(
+                    file=upath, status='e')  # -> X-symbol
                 continue
 
             CLI_LOGGER.info(f"UPLOAD COMPLETED: {upath} "
@@ -323,7 +326,8 @@ def get(creds: str, username: str, password: str, project: str,
             # If DS noted cancelation for file -- quit and move on
             if not info['proceed']:
                 CLI_LOGGER.warning(f"Cancelled: '{path}'")
-                delivery.update_progress_bar(file=path, status='e')  # -> X-symbol
+                delivery.update_progress_bar(
+                    file=path, status='e')  # -> X-symbol
                 continue
 
             # Display progress = "Downloading..."
@@ -354,7 +358,8 @@ def get(creds: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning(f"Cancelled: '{dpath}'")
-                delivery.update_progress_bar(file=dpath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(
+                    file=dpath, status='e')  # -> X-symbol
                 continue
 
             CLI_LOGGER.info(f"DOWNLOAD COMPLETED: {dpath} "
@@ -397,7 +402,8 @@ def get(creds: str, username: str, password: str, project: str,
             if not proceed:
                 CLI_LOGGER.warning(f"File: '{fpath}' -- cancelled "
                                    "-- moving on to next file")
-                delivery.update_progress_bar(file=fpath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(
+                    file=fpath, status='e')  # -> X-symbol
                 continue
 
             # Set file db update to in progress
@@ -409,7 +415,8 @@ def get(creds: str, username: str, password: str, project: str,
 
             if not response.ok:
                 emessage = f"File: {fpath}. Database update failed."
-                delivery.update_progress_bar(file=fpath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(
+                    file=fpath, status='e')  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
             else:
                 CLI_LOGGER.info(f"DATABASE UPDATE SUCCESSFUL: {fpath}")

@@ -67,11 +67,11 @@ class DataDeliverer():
     the data to the S3 storage.
 
     Args:
-        config (str):           Path to file with user creds and project info
-        username (str):         User spec. username, None if config used
-        password (str):         User spec. password, None if config used
-        project_id (str):       User spec. project ID, None if config used
-        project_owner (str):    User spec. project owner, None if config used
+        creds (str):           Path to file with user creds and project info
+        username (str):         User spec. username, None if creds used
+        password (str):         User spec. password, None if creds used
+        project_id (str):       User spec. project ID, None if creds used
+        project_owner (str):    User spec. project owner, None if creds used
         pathfile (str):         Path to file containing file paths
         data (tuple):           All paths to be uploaded/downloaded
         break_on_fail (bool):   True if folder delivery should be cancelled on
@@ -106,7 +106,7 @@ class DataDeliverer():
     #################
     # Magic Methods #
     #################
-    def __init__(self, config=None, username=None, password=None,
+    def __init__(self, creds=None, username=None, password=None,
                  project_id=None, project_owner=None,
                  pathfile=None, data=None, break_on_fail=True,
                  overwrite=False, encrypt=True):
@@ -120,12 +120,12 @@ class DataDeliverer():
 
         # --------------------------------------------------------------------#
 
-        # Quit execution if none of username, password, config are set
-        if all(x is None for x in [username, password, config]):
+        # Quit execution if none of username, password, creds are set
+        if all(x is None for x in [username, password, creds]):
             sys.exit(printout_error(
                 "Delivery System login credentials not specified.\n\n"
                 "Enter: \n"
-                "--username/-u AND --password/-pw, or --config/-c\n"
+                "--username/-u AND --password/-pw, or --creds/-c\n"
                 "--owner/-o\n\n"
                 "For help: 'ds_deliver --help'."
             ))
@@ -155,7 +155,7 @@ class DataDeliverer():
         self.user = _DSUser()
         self.user.username, self.user.password, self.project_id, \
             self.project_owner = self._check_user_input(
-                config=config,
+                creds=creds,
                 username=username,
                 password=password
             )
@@ -398,12 +398,12 @@ class DataDeliverer():
 
         return json_response
 
-    def _check_user_input(self, config, username, password) -> \
+    def _check_user_input(self, creds, username, password) -> \
             (str, str, int, int):
         '''Checks that the correct options and credentials are entered.
 
         Args:
-            config:     File containing the users DP username and password,
+            creds:     File containing the users DP username and password,
                         and the project relating to the upload/download.
                         Can be used instead of inputing the creds separately.
             username:   Username
@@ -418,15 +418,15 @@ class DataDeliverer():
                 owner_id    (int):     Owner ID
         '''
 
-        # No config file -------- loose credentials -------- No config file #
-        if config is None:
+        # No creds file -------- loose credentials -------- No creds file #
+        if creds is None:
             # Cancel delivery if username or password not specified
             if None in [username, password]:
                 sys.exit(
                     printout_error(
                         """Delivery System login credentials not specified.
                            Enter --username/-u AND --password/-pw,
-                           or --config/-c.
+                           or --creds/-c.
                            For help: 'ds_deliver --help'."""
                     )
                 )
@@ -436,8 +436,8 @@ class DataDeliverer():
                 sys.exit(
                     printout_error(
                         """Project not specified. Enter project ID using
-                           --project option or add to config file using
-                           --config/-c option."""
+                           --project option or add to creds file using
+                           --creds/-c option."""
                     )
                 )
 
@@ -446,15 +446,15 @@ class DataDeliverer():
                 # username, password, id, owner
                 return username, password, self.project_id, username
 
-        # Config file ----------- credentials in it ----------- Config file #
-        user_config = Path(config).resolve()
+        # creds file ----------- credentials in it ----------- creds file #
+        user_creds = Path(creds).resolve()
         try:
             # Get info from credentials file
-            with user_config.open(mode='r') as cf:
+            with user_creds.open(mode='r') as cf:
                 credentials = json.load(cf)
         except OSError as ose:
             sys.exit(
-                printout_error(f"""Could not open path-file {config}: {ose}""")
+                printout_error(f"""Could not open path-file {creds}: {ose}""")
             )
 
         # Quit if not all credentials are entered
@@ -462,7 +462,7 @@ class DataDeliverer():
                    in ['username', 'password', 'project']):
             sys.exit(
                 printout_error(
-                    """The config file does not contain all required
+                    """The creds file does not contain all required
                        information."""
                 )
             )
@@ -557,15 +557,15 @@ class DataDeliverer():
         '''
 
         # Variables ######################################### Variables #
-        all_files = dict()
-        initial_fail = dict()
+        all_files=dict()
+        initial_fail=dict()
 
-        data_list = list(data)
+        data_list=list(data)
         # --------------------------------------------------------------#
 
         # Add data included in pathfile to data dict
         if pathfile is not None and Path(pathfile).exists():
-            with Path(pathfile).resolve().open(mode='r') as file:
+            with Path(pathfile).resolve().open(mode = 'r') as file:
                 data_list += [line.strip() for line in file]
 
         # Fail delivery if not a correct method
@@ -576,8 +576,8 @@ class DataDeliverer():
             )
 
         # Get all project files in db
-        req = ENDPOINTS['project_files'] + f"/{self.project_id}"
-        response = requests.get(req)
+        req=ENDPOINTS['project_files'] + f"/{self.project_id}"
+        response=requests.get(req)
         if not response.ok:
             sys.exit(
                 printout_error(f"""{response.status_code} - {response.reason}:
@@ -585,7 +585,7 @@ class DataDeliverer():
             )
 
         # Get all project files from response
-        files_in_db = response.json()
+        files_in_db=response.json()
         LOG.debug(f"files in the db: {files_in_db}")
 
         # Gather data info ########################### Gather data info #
@@ -1102,7 +1102,7 @@ class DataDeliverer():
 
         return True
 
-    def update_progress(self, file, status: str):
+    def update_progress_bar(self, file, status: str):
         '''Update the status of the file - Waiting, Encrypting, Uploading, etc.
 
         Args:

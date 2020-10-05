@@ -47,7 +47,7 @@ def cli():
 
 
 @cli.command()
-@click.option('--config', '-c',
+@click.option('--creds', '-c',
               required=False,
               type=click.Path(exists=True),
               help="Path to config file containing e.g. username, password, "
@@ -85,13 +85,13 @@ def cli():
 @click.option('--break-on-fail', is_flag=True, default=True, show_default=True)
 @click.option('--overwrite', is_flag=True, default=False, show_default=True)
 @click.option('--encrypt/--dont-encrypt', default=True, show_default=True)
-def put(config: str, username: str, password: str, project: str,
+def put(creds: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple, break_on_fail=True,
         overwrite=False, encrypt=True) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
     # Create DataDeliverer to handle files and folders
-    with DataDeliverer(config=config, username=username, password=password,
+    with DataDeliverer(creds=creds, username=username, password=password,
                        project_id=project, project_owner=owner,
                        pathfile=pathfile, data=data,
                        break_on_fail=break_on_fail, overwrite=overwrite,
@@ -114,11 +114,11 @@ def put(config: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not info['proceed']:
                 CLI_LOGGER.warning(f"CANCELLED: '{path}'")
-                delivery.update_progress(file=path, status='e')  # -> X-symbol
+                delivery.update_progress_bar(file=path, status='e')  # -> X-symbol
                 continue
 
             # Display progress = "Encrypting..."
-            delivery.update_progress(file=path, status='enc')
+            delivery.update_progress_bar(file=path, status='enc')
 
             # Start file processing
             pools[
@@ -156,11 +156,11 @@ def put(config: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning(f"CANCELLED: '{ppath}'")
-                delivery.update_progress(file=ppath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(file=ppath, status='e')  # -> X-symbol
                 continue
 
             # Display progress = "Uploading..."
-            delivery.update_progress(file=ppath, status='u')
+            delivery.update_progress_bar(file=ppath, status='u')
 
             # Start upload
             threads[
@@ -190,7 +190,7 @@ def put(config: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning(f"CANCELLED: '{upath}'")
-                delivery.update_progress(file=upath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(file=upath, status='e')  # -> X-symbol
                 continue
 
             CLI_LOGGER.info(f"UPLOAD COMPLETED: {upath} "
@@ -226,14 +226,14 @@ def put(config: str, username: str, password: str, project: str,
                 with S3Connector(bucketname=delivery.bucketname,
                                  project=delivery.s3project) as s3:
                     s3.delete_item(key=key)
-                delivery.update_progress(file=upath, status='e')
+                delivery.update_progress_bar(file=upath, status='e')
                 continue
 
             CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: {upath}")
 
             # Set delivery as finished and display progress = check mark
             delivery.set_progress(item=upath, db=True, finished=True)
-            delivery.update_progress(file=upath, status='f')
+            delivery.update_progress_bar(file=upath, status='f')
             encrypted_file = delivery.data[upath]['encrypted_file']
 
             # Delete encrypted files as soon as success
@@ -272,10 +272,10 @@ def put(config: str, username: str, password: str, project: str,
 
 
 @cli.command()
-@click.option('--config', '-c',
+@click.option('--creds', '-c',
               required=False,
               type=click.Path(exists=True),
-              help="Path to config file containing e.g. username, password, "
+              help="Path to creds file containing e.g. username, password, "
                    "project id, etc.")
 @click.option('--username', '-u',
               required=False,
@@ -300,11 +300,11 @@ def put(config: str, username: str, password: str, project: str,
               multiple=True,
               type=str,
               help="Path to file or folder to upload.")
-def get(config: str, username: str, password: str, project: str,
+def get(creds: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
-    with DataDeliverer(config=config, username=username, password=password,
+    with DataDeliverer(creds=creds, username=username, password=password,
                        project_id=project, pathfile=pathfile, data=data) \
             as delivery:
 
@@ -323,11 +323,11 @@ def get(config: str, username: str, password: str, project: str,
             # If DS noted cancelation for file -- quit and move on
             if not info['proceed']:
                 CLI_LOGGER.warning(f"Cancelled: '{path}'")
-                delivery.update_progress(file=path, status='e')  # -> X-symbol
+                delivery.update_progress_bar(file=path, status='e')  # -> X-symbol
                 continue
 
             # Display progress = "Downloading..."
-            delivery.update_progress(file=path, status='d')
+            delivery.update_progress_bar(file=path, status='d')
 
             # Start download from S3
             threads[
@@ -354,14 +354,14 @@ def get(config: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning(f"Cancelled: '{dpath}'")
-                delivery.update_progress(file=dpath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(file=dpath, status='e')  # -> X-symbol
                 continue
 
             CLI_LOGGER.info(f"DOWNLOAD COMPLETED: {dpath} "
                             f" -> {delivery.data[dpath]['new_file']}")
 
             # Display progress = "Decrypting..."
-            delivery.update_progress(file=dpath, status='dec')
+            delivery.update_progress_bar(file=dpath, status='dec')
 
             # Start file finalizing -- decompression, decryption, etc.
             pools[
@@ -397,7 +397,7 @@ def get(config: str, username: str, password: str, project: str,
             if not proceed:
                 CLI_LOGGER.warning(f"File: '{fpath}' -- cancelled "
                                    "-- moving on to next file")
-                delivery.update_progress(file=fpath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(file=fpath, status='e')  # -> X-symbol
                 continue
 
             # Set file db update to in progress
@@ -409,14 +409,14 @@ def get(config: str, username: str, password: str, project: str,
 
             if not response.ok:
                 emessage = f"File: {fpath}. Database update failed."
-                delivery.update_progress(file=fpath, status='e')  # -> X-symbol
+                delivery.update_progress_bar(file=fpath, status='e')  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
             else:
                 CLI_LOGGER.info(f"DATABASE UPDATE SUCCESSFUL: {fpath}")
 
                 # Set delivery as finished and display progress = check mark
                 delivery.set_progress(item=fpath, db=True, finished=True)
-                delivery.update_progress(file=fpath, status='f')
+                delivery.update_progress_bar(file=fpath, status='f')
 
         # DELIVERY FINISHED ------------------------------- DELIVERY FINISHED #
 

@@ -664,11 +664,12 @@ class DataDeliverer():
 
                 if info['new_file'] in files_in_db['files']:
                     in_db = True
-                    LOG.info(f"{file} already exists in database")
-                    initial_fail[file] = {
-                        **all_files.pop(file),
-                        'error': "File already exists in database"
-                    }
+                    if not self.overwrite: 
+                        LOG.info(f"{file} already exists in database")
+                        initial_fail[file] = {
+                            **all_files.pop(file),
+                            'error': "File already exists in database"
+                        }
                     if self.break_on_fail:
                         do_fail = True
                         continue

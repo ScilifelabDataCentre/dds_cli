@@ -93,7 +93,7 @@ def timestamp() -> (str):
         else:
             timestamp += f"{t}"
 
-    return timestamp.replace(" ", "_").replace(":", "-")
+    return timestamp
 
 
 def create_directories():

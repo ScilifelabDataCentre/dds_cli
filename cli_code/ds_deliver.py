@@ -135,7 +135,7 @@ def put(creds: str, username: str, password: str, project: str,
             except PoolExecutorError:
                 sys.exit(f"{pfuture.exception()}")
                 break  # Precaution if sys.exit not quit completely
-            
+
             # Update file info
             proceed = delivery.update_delivery(
                 file=ppath,
@@ -209,7 +209,8 @@ def put(creds: str, username: str, password: str, project: str,
                 'size': delivery.data[upath]['size'],
                 'ds_compressed': delivery.data[upath]['ds_compressed'],
                 'key': delivery.data[upath]['key'],
-                'salt': delivery.data[upath]['salt']
+                'salt': delivery.data[upath]['salt'],
+                'overwrite': delivery.overwrite
             }
 
             req = ENDPOINTS['update_file']
@@ -303,11 +304,12 @@ def put(creds: str, username: str, password: str, project: str,
               help="Path to file or folder to upload.")
 @click.option('--break-on-fail/--nobreak-on-fail', default=True, show_default=True)
 def get(creds: str, username: str, password: str, project: str,
-        pathfile: str, data: tuple):
+        pathfile: str, data: tuple, break_on_fail: bool = True):
     """Downloads the files from S3 bucket. Not usable by facilities. """
 
     with DataDeliverer(creds=creds, username=username, password=password,
-                       project_id=project, pathfile=pathfile, data=data) \
+                       project_id=project, pathfile=pathfile, data=data,
+                       break_on_fail=break_on_fail) \
             as delivery:
 
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #

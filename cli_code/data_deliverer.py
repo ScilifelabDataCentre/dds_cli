@@ -109,14 +109,13 @@ class DataDeliverer():
     def __init__(self, creds=None, username=None, password=None,
                  project_id=None, project_owner=None,
                  pathfile=None, data=None, break_on_fail=True,
-                 overwrite=False, encrypt=True):
+                 overwrite=False):
         # NOTE: Restructure __init__?
         # NOTE: Change to args/kwargs?
 
         # Flags ------------------------------------------------------- Flags #
         self.break_on_fail = break_on_fail
         self.overwrite = overwrite
-        self.encrypt = encrypt
 
         # --------------------------------------------------------------------#
 
@@ -561,6 +560,8 @@ class DataDeliverer():
         initial_fail = dict()
 
         data_list = list(data)
+
+        in_db = False
         # --------------------------------------------------------------#
 
         # Add data included in pathfile to data dict
@@ -646,6 +647,7 @@ class DataDeliverer():
                     initial_fail[curr_path] = file_info
                     if self.break_on_fail:
                         do_fail = True
+                        continue
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
@@ -658,8 +660,10 @@ class DataDeliverer():
                         'error': ("Break on fail specified and one fail occurred. "
                                   "Cancelling delivery.")
                     }
+                    continue
 
                 if info['new_file'] in files_in_db['files']:
+                    in_db = True
                     LOG.info(f"{file} already exists in database")
                     initial_fail[file] = {
                         **all_files.pop(file),
@@ -667,6 +671,7 @@ class DataDeliverer():
                     }
                     if self.break_on_fail:
                         do_fail = True
+                        continue
                 else:
                     with S3Connector(bucketname=self.bucketname,
                                      project=self.s3project) as s3:
@@ -677,7 +682,7 @@ class DataDeliverer():
                         LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
 
                         # Error if the file exists in bucket, but not in the db
-                        if in_bucket:
+                        if in_bucket and in_db:
                             initial_fail[file] = {
                                 **all_files.pop(file),
                                 'error': (

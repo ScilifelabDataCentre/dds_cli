@@ -82,20 +82,18 @@ def cli():
               type=click.Path(exists=True),
               multiple=True,
               help="Path to file or folder to upload.")
-@click.option('--break-on-fail', is_flag=True, default=True, show_default=True)
+@click.option('--break-on-fail/--nobreak-on-fail', default=True, show_default=True)
 @click.option('--overwrite', is_flag=True, default=False, show_default=True)
-@click.option('--encrypt/--dont-encrypt', default=True, show_default=True)
 def put(creds: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple, break_on_fail=True,
-        overwrite=False, encrypt=True) -> (str):
+        overwrite=False) -> (str):
     """Uploads the files to S3 bucket. Only usable by facilities. """
 
     # Create DataDeliverer to handle files and folders
     with DataDeliverer(creds=creds, username=username, password=password,
                        project_id=project, project_owner=owner,
                        pathfile=pathfile, data=data,
-                       break_on_fail=break_on_fail, overwrite=overwrite,
-                       encrypt=encrypt) \
+                       break_on_fail=break_on_fail, overwrite=overwrite) \
             as delivery:
 
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
@@ -303,6 +301,7 @@ def put(creds: str, username: str, password: str, project: str,
               multiple=True,
               type=str,
               help="Path to file or folder to upload.")
+@click.option('--break-on-fail/--nobreak-on-fail', default=True, show_default=True)
 def get(creds: str, username: str, password: str, project: str,
         pathfile: str, data: tuple):
     """Downloads the files from S3 bucket. Not usable by facilities. """

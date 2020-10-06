@@ -653,6 +653,7 @@ class DataDeliverer():
                     all_files[curr_path] = file_info
 
         if self.method == "put":
+            print(f"\nOverwrite? {self.overwrite}\n")
             for file, info in list(all_files.items()):
                 if do_fail:
                     initial_fail[file] = {
@@ -664,6 +665,7 @@ class DataDeliverer():
 
                 if info['new_file'] in files_in_db['files']:
                     in_db = True
+                    print(f"\nFile is in db? {in_db}\n")
                     if not self.overwrite: 
                         LOG.info(f"{file} already exists in database")
                         initial_fail[file] = {
@@ -683,7 +685,7 @@ class DataDeliverer():
                         LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
 
                         # Error if the file exists in bucket, but not in the db
-                        if in_bucket and in_db:
+                        if in_bucket:
                             initial_fail[file] = {
                                 **all_files.pop(file),
                                 'error': (

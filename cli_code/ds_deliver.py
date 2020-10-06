@@ -218,7 +218,7 @@ def put(creds: str, username: str, password: str, project: str,
 
             if not response.ok:
                 sys.exit(printout_error(
-                    "Could not update database."
+                    f"Could not update database. {response.text}"
                 ))
 
             db_response = response.json()

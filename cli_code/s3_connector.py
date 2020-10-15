@@ -11,15 +11,15 @@ Communicates with and handles operations related to Safespring S3
 # Standard library
 import json
 import logging
+import pathlib
 import sys
 import traceback
-from pathlib import Path
 
 # Installed
 import boto3
 import boto3.session
 import botocore
-from botocore.client import ClientError
+import botocore.client  # ClientError
 
 # Own modules
 from cli_code.exceptions_ds import S3Error
@@ -80,7 +80,7 @@ class S3Connector():
             # Start S3 session
             self.session = boto3.session.Session()      # --> Thread safe
 
-            # TODO: SHOULD BE CHANGED LATER - Get from DB etc.
+            # TODO (ina): Put in DB, not in file
             # Get S3 credentials
             # Structure in file: {
             # 	                    "endpoint_url": "endpointurl",
@@ -91,7 +91,8 @@ class S3Connector():
             # 		                    }
             # 	                    }
             #                   }
-            s3path = Path.cwd() / Path("sensitive/s3_config.json")
+            s3path = pathlib.Path.cwd() / \
+                pathlib.Path("sensitive/s3_config.json")
             with s3path.open(mode='r') as f:
                 s3creds = json.load(f)
 
@@ -110,15 +111,15 @@ class S3Connector():
             # Connect to bucket
             try:
                 self.resource.meta.client.head_bucket(Bucket=self.bucketname)
-            except ClientError as ce:
+            except botocore.client.ClientError as cle:
                 error = (f"Bucket: {self.bucketname} - Bucket not found in "
-                         f"S3 resource. Error: {ce}")
+                         f"S3 resource. Error: {cle}")
                 S3_LOG.critical(error)
                 sys.exit(error)     # Fatal -> ds will not work
             else:
                 self.bucket = self.resource.Bucket(self.bucketname)
-        except ClientError as e:
-            S3_LOG.exception(f"S3 connection failed: {e}")
+        except botocore.client.ClientError as e:
+            S3_LOG.exception("S3 connection failed: %s", e)
 
         # S3_LOG.info("S3 connection successful.")
 
@@ -139,9 +140,9 @@ class S3Connector():
         except S3Error as delex:
             S3_LOG.exception(delex)
         else:
-            S3_LOG.info(f"Item {key} deleted from bucket.")
+            S3_LOG.info("Item %s deleted from bucket.", key)
 
-    def file_exists_in_bucket(self, key: str, put: bool = True) -> (bool, str):
+    def file_exists_in_bucket(self, key: str) -> (bool, str):
         '''Checks if the current file already exists in the specified bucket.
         If so, the file will not be uploaded (put), or will be downloaded (get)
 
@@ -165,7 +166,7 @@ class S3Connector():
         except botocore.exceptions.ClientError as e:
             # If 404 -- OK! If other error -- NOT OK!
             if e.response['Error']['Code'] == "404":   # 404 --> not in bucket
-                S3_LOG.info(f"File {key}: Not in bucket --> proceeding")
+                S3_LOG.info("File %s: Not in bucket --> proceeding", key)
                 return False, ""
             else:
                 error_message = (f"Checking for file in S3 bucket failed! "
@@ -173,5 +174,5 @@ class S3Connector():
                 S3_LOG.warning(error_message)
                 return False, error_message
 
-        S3_LOG.info(f"File {key}: In bucket.")
+        S3_LOG.info("File %s: In bucket.", key)
         return True, ""

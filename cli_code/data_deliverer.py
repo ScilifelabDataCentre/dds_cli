@@ -861,8 +861,7 @@ class DataDeliverer():
 
             # If folder - can contain more than one
             for file in to_download:
-                in_bucket, s3error = s3_conn.file_exists_in_bucket(key=file,
-                                                                   put=False)
+                in_bucket, s3error = s3_conn.file_exists_in_bucket(key=file)
 
                 if not in_bucket:
                     error = (f"File '{file}' in database but NOT in S3 bucket."

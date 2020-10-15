@@ -13,19 +13,19 @@ import sys
 import traceback
 
 # Installed
-from cryptography.hazmat import backends  # default_backend
+from cryptography.hazmat import backends
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import x25519
-# X25519PrivateKey, X25519PublicKey
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.kdf import hkdf  # HKDF
-from cryptography.hazmat.primitives.kdf import scrypt  # Scrypt
+from cryptography.hazmat.primitives.kdf import hkdf
+from cryptography.hazmat.primitives.kdf import scrypt
 from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt as decrypt
 import requests
 
 # Own modules
-from cli_code import DS_MAGIC, ENDPOINTS
-from cli_code.exceptions_ds import printout_error
+from cli_code import DS_MAGIC
+from cli_code import ENDPOINTS
+from cli_code import exceptions_ds
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -196,7 +196,7 @@ def get_project_private(proj_id: str, user):
     response = requests.get(req)
     if not response.ok:
         sys.exit(
-            printout_error(
+            exceptions_ds.printout_error(
                 f"""{response.status_code} - {response.reason}: \n{req}"""
             )
         )
@@ -243,8 +243,10 @@ def get_project_private(proj_id: str, user):
     to_read = magic_id_len
     magic_id = decrypted_key[start:start+to_read]
     if magic_id != DS_MAGIC:
-        sys.exit(printout_error("Error in private key! Signature should be"
-                                f"{DS_MAGIC} but found {magic_id}"))
+        sys.exit(exceptions_ds.printout_error(
+            "Error in private key! Signature should be"
+            f"{DS_MAGIC} but found {magic_id}"
+        ))
 
     # Get length of project id
     start += to_read
@@ -256,8 +258,8 @@ def get_project_private(proj_id: str, user):
     to_read = proj_len
     project_id = decrypted_key[start:start+to_read]
     if project_id != (proj_id).to_bytes(2, byteorder='big'):
-        sys.exit(printout_error("Error in private key! "
-                                "Project ID incorrect!"))
+        sys.exit(exceptions_ds.printout_error("Error in private key! "
+                                              "Project ID incorrect!"))
 
     # Get length of private key
     start += to_read
@@ -271,8 +273,10 @@ def get_project_private(proj_id: str, user):
 
     # Error if there are bytes left after read key
     if decrypted_key[start+to_read::] != b'':
-        sys.exit(printout_error("Error in private key! Extra bytes after"
-                                "key -- parsing failed or key corrupted!"))
+        sys.exit(exceptions_ds.printout_error(
+            "Error in private key! Extra bytes after"
+            "key -- parsing failed or key corrupted!"
+        ))
     # --------------------------------------------------------------------#
     CRYPTO_LOG.info("key successfully decrypted: %s", key)
     return key

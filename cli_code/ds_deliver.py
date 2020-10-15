@@ -96,7 +96,8 @@ def cli():
               type=click.Path(exists=True),
               multiple=True,
               help="Path to file or folder to upload.")
-@click.option('--break-on-fail/--nobreak-on-fail', default=True, show_default=True)
+@click.option('--break-on-fail/--nobreak-on-fail', default=True,
+              show_default=True)
 @click.option('--overwrite', is_flag=True, default=False, show_default=True)
 def put(creds: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple, break_on_fail=True,
@@ -129,12 +130,12 @@ def put(creds: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not info['proceed']:
                 CLI_LOGGER.warning("CANCELLED: '%s'", path)
-                delivery.update_progress_bar(
+                dd.update_progress_bar(
                     file=path, status='e')  # -> X-symbol
                 continue
 
             # Display progress = "Encrypting..."
-            delivery.update_progress_bar(file=path, status='enc')
+            dd.update_progress_bar(file=path, status='enc')
 
             # Start file processing
             pools[
@@ -172,12 +173,12 @@ def put(creds: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning("CANCELLED: '%s'", ppath)
-                delivery.update_progress_bar(
+                dd.update_progress_bar(
                     file=ppath, status='e')  # -> X-symbol
                 continue
 
             # Display progress = "Uploading..."
-            delivery.update_progress_bar(file=ppath, status='u')
+            dd.update_progress_bar(file=ppath, status='u')
 
             # Start upload
             threads[
@@ -207,7 +208,7 @@ def put(creds: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning("CANCELLED: '%s'", upath)
-                delivery.update_progress_bar(
+                dd.update_progress_bar(
                     file=upath, status='e')  # -> X-symbol
                 continue
 
@@ -245,14 +246,14 @@ def put(creds: str, username: str, password: str, project: str,
                                               project=delivery.s3project) \
                         as s3_conn:
                     s3_conn.delete_item(key=key)
-                delivery.update_progress_bar(file=upath, status='e')
+                dd.update_progress_bar(file=upath, status='e')
                 continue
 
             CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: '%s'", upath)
 
             # Set delivery as finished and display progress = check mark
             delivery.set_progress(item=upath, db=True, finished=True)
-            delivery.update_progress_bar(file=upath, status='f')
+            dd.update_progress_bar(file=upath, status='f')
             encrypted_file = delivery.data[upath]['encrypted_file']
 
             # Delete encrypted files as soon as success
@@ -319,7 +320,8 @@ def put(creds: str, username: str, password: str, project: str,
               multiple=True,
               type=str,
               help="Path to file or folder to upload.")
-@click.option('--break-on-fail/--nobreak-on-fail', default=True, show_default=True)
+@click.option('--break-on-fail/--nobreak-on-fail', default=True,
+              show_default=True)
 def get(creds: str, username: str, password: str, project: str,
         pathfile: str, data: tuple, break_on_fail: bool = True):
     """Downloads the files from S3 bucket. Not usable by facilities. """
@@ -344,11 +346,11 @@ def get(creds: str, username: str, password: str, project: str,
             # If DS noted cancelation for file -- quit and move on
             if not info['proceed']:
                 CLI_LOGGER.warning("Cancelled: '%s'", path)
-                delivery.update_progress_bar(file=path, status='e')  # -> X
+                dd.update_progress_bar(file=path, status='e')  # -> X
                 continue
 
             # Display progress = "Downloading..."
-            delivery.update_progress_bar(file=path, status='d')
+            dd.update_progress_bar(file=path, status='d')
 
             # Start download from S3
             threads[
@@ -375,14 +377,14 @@ def get(creds: str, username: str, password: str, project: str,
             # Quit and move on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning("Cancelled: '%s'", dpath)
-                delivery.update_progress_bar(file=dpath, status='e')  # -> X
+                dd.update_progress_bar(file=dpath, status='e')  # -> X
                 continue
 
             CLI_LOGGER.info("DOWNLOAD COMPLETED: '%s' -> '%s'",
                             dpath, delivery.data[dpath]['new_file'])
 
             # Display progress = "Decrypting..."
-            delivery.update_progress_bar(file=dpath, status='dec')
+            dd.update_progress_bar(file=dpath, status='dec')
 
             # Start file finalizing -- decompression, decryption, etc.
             pools[
@@ -418,7 +420,7 @@ def get(creds: str, username: str, password: str, project: str,
             if not proceed:
                 CLI_LOGGER.warning("File: '%s' -- cancelled "
                                    "-- moving on to next file", fpath)
-                delivery.update_progress_bar(file=fpath, status='e')  # -> X
+                dd.update_progress_bar(file=fpath, status='e')  # -> X
                 continue
 
             # Set file db update to in progress
@@ -430,7 +432,7 @@ def get(creds: str, username: str, password: str, project: str,
 
             if not response.ok:
                 emessage = f"File: {fpath}. Database update failed."
-                delivery.update_progress_bar(
+                dd.update_progress_bar(
                     file=fpath, status='e')  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
             else:
@@ -438,7 +440,7 @@ def get(creds: str, username: str, password: str, project: str,
 
                 # Set delivery as finished and display progress = check mark
                 delivery.set_progress(item=fpath, db=True, finished=True)
-                delivery.update_progress_bar(file=fpath, status='f')
+                dd.update_progress_bar(file=fpath, status='f')
 
         # DELIVERY FINISHED ------------------------------- DELIVERY FINISHED #
 

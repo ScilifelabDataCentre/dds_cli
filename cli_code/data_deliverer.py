@@ -23,20 +23,17 @@ import traceback
 import requests
 
 # Installed
-import botocore.client  # ClientError
-import prettytable  # Prettytable
+import botocore.client
+import prettytable
 
 
 # Own modules
 from cli_code import DIRS
 from cli_code import ENDPOINTS
-from cli_code import crypto_ds  # get_project_private
-from cli_code import exceptions_ds  # CouchDBException, DataException,
-# DeliverySystemException, printout_error
-from cli_code import file_handler  # file_deleter, get_root_path,
-# is_compressed, MAGIC_DICT,
-# process_file, reverse_processing
-from cli_code import s3_connector  # S3Connector
+from cli_code import crypto_ds
+from cli_code import exceptions_ds
+from cli_code import file_handler
+from cli_code import s3_connector
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -62,6 +59,8 @@ SCOLSIZE = 0
 
 TO_PRINT = ""
 PROGRESS = None
+
+LOGIN_BASE = ""
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -146,7 +145,7 @@ class DataDeliverer():
 
         # S3 related
         self.bucketname = ""    # S3 bucket name -- to connect to S3
-        self.s3project = "intra1.scilifelab.se"     # S3 project ID -- to connect to S3
+        self.s3project = "intra1.scilifelab.se"   # S3 project ID - for S3 conn
 
         # Cryptography related
         self.public = b''
@@ -192,7 +191,8 @@ class DataDeliverer():
         if self.method == 'put':
             self.private = b''
         elif self.method == 'get':
-            self.private = crypto_ds.get_project_private(self.project_id, self.user)
+            self.private = crypto_ds.get_project_private(
+                self.project_id, self.user)
 
         # Start progress info printout
         if self.data:
@@ -253,7 +253,7 @@ class DataDeliverer():
         # Failed items - on initial check
         for file, info in self.failed.items():
             # Remove encrypted files
-            self._finalize(file=file, info=info)
+            self._finalize(info=info)
 
             if info['in_directory'] and info['dir_name'] not in folders:
                 are_folders = True  # Note that folders have been delivered
@@ -271,8 +271,10 @@ class DataDeliverer():
                 # Add files in folder to table
                 for f, v in folders[info['dir_name']].items():
                     file_loc = \
-                        (v['directory_path'] if 'directory_path' in v else
-                         file_handler.get_root_path(file=f, path_base=v['dir_name'].name)) \
+                        (v['directory_path'] if 'directory_path' in v
+                         else
+                         file_handler.get_root_path(
+                             file=f, path_base=v['dir_name'].name)) \
                         / Path(Path(f).name)
                     folders_table.add_row(
                         ["",
@@ -293,7 +295,7 @@ class DataDeliverer():
         # Items passing the initial check - successfully delivered AND failed
         for file, info in self.data.items():
             # Remove encrypted files
-            self._finalize(file=file, info=info)
+            self._finalize(info=info)
 
             # Get all files in folder
             if info['in_directory'] and info['dir_name'] not in folders:
@@ -346,7 +348,6 @@ class DataDeliverer():
     # Private Methods #
     ###################
 
-    # NOTE: CouchDB -> MariaDB and optimize
     def _check_ds_access(self) -> (bool):
         '''Checks the users access to the delivery system
 
@@ -356,7 +357,7 @@ class DataDeliverer():
 
         '''
 
-        LOGIN_BASE = ""
+        global LOGIN_BASE
         args = {}
 
         # Get access to delivery system - check if derived pw hash valid
@@ -377,7 +378,7 @@ class DataDeliverer():
         response = requests.post(LOGIN_BASE, params=args)
         if not response.ok:
             sys.exit(
-                printout_error(
+                exceptions_ds.printout_error(
                     """Something wrong. Could not access api/db during access
                     check. Login failed. Delivery cancelled."""
                 )
@@ -387,7 +388,7 @@ class DataDeliverer():
         # Quit if user not granted Delivery System access
         if not json_response['access']:
             sys.exit(
-                printout_error(
+                exceptions_ds.printout_error(
                     f"""Delivery System access denied!
                        Delivery cancelled. {json_response['error']}"""
                 )
@@ -396,7 +397,7 @@ class DataDeliverer():
         # Quit if project ID not matching
         if int(json_response['project_id']) != self.project_id:
             sys.exit(
-                printout_error(
+                exceptions_ds.printout_error(
                     """Incorrect project ID. System error.
                     Cancelling delivery."""
                 )
@@ -429,7 +430,7 @@ class DataDeliverer():
             # Cancel delivery if username or password not specified
             if None in [username, password]:
                 sys.exit(
-                    printout_error(
+                    exceptions_ds.printout_error(
                         """Delivery System login credentials not specified.
                            Enter --username/-u AND --password/-pw,
                            or --creds/-c.
@@ -440,7 +441,7 @@ class DataDeliverer():
             # Cancel delivery if project_id not specified
             if self.project_id is None:
                 sys.exit(
-                    printout_error(
+                    exceptions_ds.printout_error(
                         """Project not specified. Enter project ID using
                            --project option or add to creds file using
                            --creds/-c option."""
@@ -456,18 +457,19 @@ class DataDeliverer():
         user_creds = Path(creds).resolve()
         try:
             # Get info from credentials file
-            with user_creds.open(mode='r') as cf:
-                credentials = json.load(cf)
+            with user_creds.open(mode='r') as crf:
+                credentials = json.load(crf)
         except OSError as ose:
             sys.exit(
-                printout_error(f"""Could not open path-file {creds}: {ose}""")
+                exceptions_ds.printout_error(
+                    f"""Could not open path-file {creds}: {ose}""")
             )
 
         # Quit if not all credentials are entered
         if not all(c in credentials for c
                    in ['username', 'password', 'project']):
             sys.exit(
-                printout_error(
+                exceptions_ds.printout_error(
                     """The creds file does not contain all required
                        information."""
                 )
@@ -485,7 +487,7 @@ class DataDeliverer():
         # Error if owner not specified and trying to put
         if self.project_owner is None and self.method == 'put':
             sys.exit(
-                printout_error(
+                exceptions_ds.printout_error(
                     """Project owner not specified. Cancelling delivery."""
                 )
             )
@@ -518,8 +520,9 @@ class DataDeliverer():
         FCOLSIZE = max(list(len(str(x)) for x in self.data))
 
         # To return
+        global TO_PRINT
         TO_PRINT = ""
-        PROGRESS_DICT = collections.OrderedDict()
+        progress_dict = collections.OrderedDict()
         # ------------------------------------------------------------------- #
 
         # Header of progress info, eg:
@@ -535,17 +538,17 @@ class DataDeliverer():
         # Set initial status for all files to 'Waiting to start...'
         for x in self.data:
             file = str(x)
-            PROGRESS_DICT[file] = \
+            progress_dict[file] = \
                 {'status': STATUS_DICT['w'],
                     'line': (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
                              f"{int(SCOLSIZE/2-len(STATUS_DICT['w'])/2)*' '}"
                              f"{STATUS_DICT['w']}\n")}
-            TO_PRINT += PROGRESS_DICT[file]['line']
+            TO_PRINT += progress_dict[file]['line']
 
         # Print all file statuses
         sys.stdout.write(TO_PRINT)
 
-        return TO_PRINT, PROGRESS_DICT
+        return TO_PRINT, progress_dict
 
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (dict, dict):
         '''Puts all entered paths into one list
@@ -579,8 +582,9 @@ class DataDeliverer():
         # Fail delivery if not a correct method
         if self.method not in ["get", "put"]:
             sys.exit(
-                printout_error(f"""Delivery option {self.method} not allowed.
-                               \nCancelling delivery.""")
+                exceptions_ds.printout_error(
+                    f"""Delivery option {self.method} not allowed.
+                     \nCancelling delivery.""")
             )
 
         # Get all project files in db
@@ -588,13 +592,14 @@ class DataDeliverer():
         response = requests.get(req)
         if not response.ok:
             sys.exit(
-                printout_error(f"""{response.status_code} - {response.reason}:
-                                   \n{req}""")
+                exceptions_ds.printout_error(
+                    f"""{response.status_code} - {response.reason}:
+                     \n{req}""")
             )
 
         # Get all project files from response
         files_in_db = response.json()
-        LOG.debug(f"files in the db: {files_in_db}")
+        LOG.debug("files in the db: %s", files_in_db)
 
         do_fail = False
         # Gather data info ########################### Gather data info #
@@ -604,8 +609,9 @@ class DataDeliverer():
             # Throw error if there are duplicate files
             if d in all_files or Path(d).resolve() in all_files:
                 sys.exit(
-                    printout_error(f"The path to file {d} is listed multiple "
-                                   "times, please remove path dublicates.")
+                    exceptions_ds.printout_error(
+                        f"The path to file {d} is listed multiple "
+                        "times, please remove path dublicates.")
                 )
 
             # Get file info ############################# Get file info #
@@ -665,8 +671,8 @@ class DataDeliverer():
                 if do_fail:
                     initial_fail[file] = {
                         **all_files.pop(file),
-                        'error': ("Break on fail specified and one fail occurred. "
-                                  "Cancelling delivery.")
+                        'error': ("Break on fail specified and one fail "
+                                  "occurred. Cancelling delivery.")
                     }
                     continue
 
@@ -674,7 +680,7 @@ class DataDeliverer():
                     in_db = True
                     print(f"\nFile is in db? {in_db}\n")
                     if not self.overwrite:
-                        LOG.info(f"{file} already exists in database")
+                        LOG.info("'%s' already exists in database", file)
                         initial_fail[file] = {
                             **all_files.pop(file),
                             'error': "File already exists in database"
@@ -683,13 +689,14 @@ class DataDeliverer():
                         do_fail = True
                         continue
                 else:
-                    with S3Connector(bucketname=self.bucketname,
-                                     project=self.s3project) as s3:
+                    with s3_connector.S3Connector(bucketname=self.bucketname,
+                                                  project=self.s3project) \
+                            as s3_conn:
                         # Check if file exists in bucket already
-                        in_bucket, s3error = s3.file_exists_in_bucket(
+                        in_bucket, _ = s3_conn.file_exists_in_bucket(
                             info['new_file']
                         )
-                        LOG.debug(f"File: {file}\t In bucket: {in_bucket}")
+                        LOG.debug("File: %s \t In bucket: %s", file, in_bucket)
 
                         # Error if the file exists in bucket, but not in the db
                         if in_bucket:
@@ -708,7 +715,7 @@ class DataDeliverer():
 
         return all_files, initial_fail
 
-    def _finalize(self, file: Path, info: dict):
+    def _finalize(self, info: dict):
         '''Makes sure that the file is not in bucket or db and deletes
         if it is.
 
@@ -721,36 +728,25 @@ class DataDeliverer():
         # Downloading ############## Delete local ############### Downloading #
         if self.method == 'get':
             if 'new_file' in info:
-                file_deleter(file=info['new_file'])
+                file_handler.file_deleter(file=info['new_file'])
                 return
 
         # Uploading ########### Delete local and remote ########### Uploading #
         # Delete local encrypted
         if 'encrypted_file' in info:
-            file_deleter(file=info['encrypted_file'])
+            file_handler.file_deleter(file=info['encrypted_file'])
 
         # NOTE: Add check here for if actually uploaded etc?
         # Delete from S3 if uploaded but not in database
-        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:
+        with s3_connector.S3Connector(bucketname=self.bucketname,
+                                      project=self.s3project) as s3_conn:
             if ('upload' in info and info['upload']['finished']
                     and 'database' in info
                     and not info['database']['finished']):
                 try:
-                    s3.delete_item(key=info['new_file'])
-                except ClientError as e:
+                    s3_conn.delete_item(key=info['new_file'])
+                except botocore.client.ClientError as e:
                     LOG.warning(e)
-
-        # # Delete from database if in database but not uploaded
-        # with DatabaseConnector(db_name='project_db') as prdb:
-        #     try:
-        #         proj = prdb[self.project_id]
-        #         if ('database' in info and info['database']['finished']
-        #                 and 'upload' in info
-        #                 and not info['upload']['finished']):
-        #             del proj['files'][info['new_file']]
-        #     except CouchDBException as e:
-        #         LOG.warning(e)
 
     def _get_dir_info(self, folder: Path, do_fail: bool) -> (dict, dict):
         '''Iterate through folder contents and get file info
@@ -860,13 +856,13 @@ class DataDeliverer():
                            'dir_name': item if in_directory else None}}
 
         # Check S3 bucket for item(s)
-        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:
+        with s3_connector.S3Connector(bucketname=self.bucketname,
+                                      project=self.s3project) as s3_conn:
 
             # If folder - can contain more than one
             for file in to_download:
-                in_bucket, s3error = s3.file_exists_in_bucket(key=file,
-                                                              put=False)
+                in_bucket, s3error = s3_conn.file_exists_in_bucket(key=file,
+                                                                   put=False)
 
                 if not in_bucket:
                     error = (f"File '{file}' in database but NOT in S3 bucket."
@@ -903,7 +899,8 @@ class DataDeliverer():
         # Variables ###################################### Variables #
         proceed = True  # If proceed with file delivery
         path_base = dir_name.name if in_dir else None   # Folder name if in dir
-        directory_path = get_root_path(file=file, path_base=path_base) \
+        directory_path = \
+            file_handler.get_root_path(file=file, path_base=path_base) \
             if path_base is not None else Path("")  # Path to file IN folder
         suffixes = file.suffixes    # File suffixes
         proc_suff = ""              # Saves final suffixes
@@ -918,7 +915,7 @@ class DataDeliverer():
             return {'proceed': False, 'error': error, **dir_info}
 
         # Check if file is compressed and fail delivery on error
-        compressed, error = is_compressed(file=file)
+        compressed, error = file_handler.is_compressed(file=file)
         if error != "":
             return {'proceed': False, 'error': error, **dir_info}
 
@@ -926,17 +923,17 @@ class DataDeliverer():
         # If compressed -- info that DS will not compress
         if not compressed:
             # Warning if suffixes are in magic dict but file "not compressed"
-            if set(suffixes).intersection(set(MAGIC_DICT)):
-                LOG.warning(f"File '{file}' has extensions belonging "
+            if set(suffixes).intersection(set(file_handler.MAGIC_DICT)):
+                LOG.warning("File '%s' has extensions belonging "
                             "to a compressed format but shows no "
                             "indication of being compressed. Not "
-                            "compressing file.")
+                            "compressing file.", file)
 
             proc_suff += ".zst"     # Update the future suffix
         elif compressed:
-            LOG.info(f"File '{file}' shows indication of being "
+            LOG.info("File '%s' shows indication of being "
                      "in a compressed format. "
-                     "Not compressing the file.")
+                     "Not compressing the file.", file)
 
         # Add (own) encryption format extension
         proc_suff += ".ccp"     # ChaCha20-Poly1305
@@ -994,8 +991,8 @@ class DataDeliverer():
         self.set_progress(item=file, decryption=True, started=True)
 
         # Decrypt etc
-        info = reverse_processing(file=file, file_info=fileinfo,
-                                  keys=(self.public, self.private))
+        info = file_handler.reverse_processing(file=file, file_info=fileinfo,
+                                               keys=(self.public, self.private))
 
         return info
 
@@ -1026,13 +1023,13 @@ class DataDeliverer():
         self.set_progress(item=path, processing=True, started=True)
 
         # Begin processing incl encryption
-        info = process_file(file=path,
-                            file_info=path_info,
-                            peer_public=self.public)
+        info = file_handler.process_file(file=path,
+                                         file_info=path_info,
+                                         peer_public=self.public)
 
         return info
 
-    def set_progress(self, item: Path, check: bool = False,
+    def set_progress(self, item: Path,
                      processing: bool = False, upload: bool = False,
                      download: bool = False, decryption: bool = False,
                      db: bool = False, started: bool = False,
@@ -1072,21 +1069,22 @@ class DataDeliverer():
 
         # Exit if trying to update something else
         if to_update == "":
-            raise DeliverySystemException("Trying to update progress on "
-                                          "forbidden process.")
+            raise exceptions_ds.DeliverySystemException(
+                "Trying to update progress on forbidden process."
+            )
 
         # Update the progress
         if started:
             self.data[item][to_update].update({'in_progress': started,
                                                'finished': not started})
             return
-        elif finished:
+
+        if finished:
             self.data[item][to_update].update({'in_progress': not finished,
                                                'finished': finished})
             return
 
-        LOG.exception(f"Data delivery information failed to "
-                      f"update: {dex}")
+        LOG.exception("Data delivery information failed to update")
 
     def update_delivery(self, file: Path, updinfo: dict) -> (bool):
         '''Updates data delivery information dictionary
@@ -1148,43 +1146,11 @@ class DataDeliverer():
         # If file to proceed, update file info
         try:
             self.data[file].update(updinfo)
-        except DataException as dex:
-            LOG.exception(f"Data delivery information failed to "
-                          f"update: {dex}")
+        except exceptions_ds.DeliverySystemException as dex:
+            LOG.exception("Data delivery information failed to "
+                          "update: %s", dex)
 
         return True
-
-    def update_progress_bar(self, file, status: str):
-        '''Update the status of the file - Waiting, Encrypting, Uploading, etc.
-
-        Args:
-            file:             File to update progress on
-            status (str):     Which stage the delivery is on
-
-        '''
-
-        file = str(file)    # For printing and len() purposes
-
-        # Change the status
-        PROGRESS[file]['status'] = STATUS_DICT[status]
-
-        # Line to update to in progress output
-        new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
-                    f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
-                    f"{2*' '}{STATUS_DICT[status]}")
-
-        # If shorter line than before -> cover up previous text
-        diff = abs(len(PROGRESS[file]['line']) - len(new_line))
-        new_line += diff*" " + "\n"
-
-        # Replace the printout and progress dict with the update
-        TO_PRINT = TO_PRINT.replace(PROGRESS[file]['line'],
-                                    new_line)
-        PROGRESS[file]['line'] = new_line
-
-        # Print the status
-        sys.stdout.write("\033[A"*len(PROGRESS))   # Jump up to cover prev
-        sys.stdout.write(TO_PRINT)                 # Print new for all
 
     ################
     # Main Methods #
@@ -1231,25 +1197,25 @@ class DataDeliverer():
         # LOG.debug(f"new_dir: {new_dir}")
 
         # DOWNLOAD START ##################################### DOWNLOAD START #
-        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:
+        with s3_connector.S3Connector(bucketname=self.bucketname,
+                                      project=self.s3project) as s3_conn:
 
             # Download file from S3
             try:
-                s3.resource.meta.client.download_file(
-                    Bucket=s3.bucketname,
+                s3_conn.resource.meta.client.download_file(
+                    Bucket=s3_conn.bucketname,
                     Key=path,
                     Filename=str(path_info['new_file'])
                 )
-            except ClientError as e:
+            except botocore.client.ClientError as e:
                 # Upload failed -- return error message and move on
                 error = (f"File: {path}. Download failed: {e}")
                 LOG.exception(error)
                 return False, error
             else:
                 # Upload successful
-                LOG.info(f"File: {path}. Download successful! "
-                         f"File location: {path_info['new_file']}")
+                LOG.info("File: '%s'. Download successful! File location: '%s'",
+                         path, path_info['new_file'])
                 return True, ""
 
     def put(self, file: Path, fileinfo: dict) -> (bool, str):
@@ -1284,17 +1250,17 @@ class DataDeliverer():
         self.set_progress(item=file, upload=True, started=True)
 
         # UPLOAD START ######################################### UPLOAD START #
-        with S3Connector(bucketname=self.bucketname, project=self.s3project) \
-                as s3:
+        with s3_connector.S3Connector(bucketname=self.bucketname,
+                                      project=self.s3project) as s3_conn:
 
             # Upload file
             try:
-                s3.resource.meta.client.upload_file(
+                s3_conn.resource.meta.client.upload_file(
                     Filename=str(fileinfo['encrypted_file']),
-                    Bucket=s3.bucketname,
+                    Bucket=s3_conn.bucketname,
                     Key=fileinfo['new_file']
                 )
-            except ClientError as e:
+            except botocore.client.ClientError as e:
                 # Upload failed -- return error message and move on
                 error = (f"File: {file}, Uploaded: "
                          f"{fileinfo['encrypted_file']} -- "
@@ -1329,3 +1295,37 @@ class _DSUser():
         self.password = password
         self.id = None
         self.role = None
+
+
+def update_progress_bar(file, status: str):
+    '''Update the status of the file - Waiting, Encrypting, Uploading, etc.
+
+    Args:
+        file:             File to update progress on
+        status (str):     Which stage the delivery is on
+
+    '''
+
+    file = str(file)    # For printing and len() purposes
+
+    # Change the status
+    PROGRESS[file]['status'] = STATUS_DICT[status]
+
+    # Line to update to in progress output
+    new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
+                f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
+                f"{2*' '}{STATUS_DICT[status]}")
+
+    # If shorter line than before -> cover up previous text
+    diff = abs(len(PROGRESS[file]['line']) - len(new_line))
+    new_line += diff*" " + "\n"
+
+    # Replace the printout and progress dict with the update
+    global TO_PRINT
+    TO_PRINT = TO_PRINT.replace(PROGRESS[file]['line'],
+                                new_line)
+    PROGRESS[file]['line'] = new_line
+
+    # Print the status
+    sys.stdout.write("\033[A"*len(PROGRESS))   # Jump up to cover prev
+    sys.stdout.write(TO_PRINT)                 # Print new for all

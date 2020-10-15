@@ -4,11 +4,15 @@ Main class - Data Deliverer
 Handles login of user, keeps track of data, uploads/downloads etc
 """
 
+# TODO(ina): Write docstring
+# TODO(ina): Fix or ignore "too-many-attributes" etc pylint error
+
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
 ###############################################################################
 
 # Standard library
+from pathlib import Path
 import collections
 import json
 import logging
@@ -16,22 +20,23 @@ import os
 import sys
 import textwrap
 import traceback
-from pathlib import Path
 import requests
 
 # Installed
-from prettytable import PrettyTable
-from botocore.client import ClientError
+import botocore.client  # ClientError
+import prettytable  # Prettytable
+
 
 # Own modules
-from cli_code import DIRS, API_BASE, ENDPOINTS
-from cli_code.crypto_ds import (get_project_private)
-from cli_code.exceptions_ds import (CouchDBException, DataException,
-                                    DeliverySystemException, printout_error)
-from cli_code.file_handler import (file_deleter, get_root_path,
-                                   is_compressed, MAGIC_DICT,
-                                   process_file, reverse_processing)
-from cli_code.s3_connector import S3Connector
+from cli_code import DIRS
+from cli_code import ENDPOINTS
+from cli_code import crypto_ds  # get_project_private
+from cli_code import exceptions_ds  # CouchDBException, DataException,
+# DeliverySystemException, printout_error
+from cli_code import file_handler  # file_deleter, get_root_path,
+# is_compressed, MAGIC_DICT,
+# process_file, reverse_processing
+from cli_code import s3_connector  # S3Connector
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -54,6 +59,9 @@ STATUS_DICT = {'w': "Waiting to start...", 'f': u'\u2705', 'e': u'\u274C',
 
 FCOLSIZE = 0
 SCOLSIZE = 0
+
+TO_PRINT = ""
+PROGRESS = None
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -110,8 +118,7 @@ class DataDeliverer():
                  project_id=None, project_owner=None,
                  pathfile=None, data=None, break_on_fail=True,
                  overwrite=False):
-        # NOTE: Restructure __init__?
-        # NOTE: Change to args/kwargs?
+        # TODO(ina): Write docstring?
 
         # Flags ------------------------------------------------------- Flags #
         self.break_on_fail = break_on_fail
@@ -121,7 +128,7 @@ class DataDeliverer():
 
         # Quit execution if none of username, password, creds are set
         if all(x is None for x in [username, password, creds]):
-            sys.exit(printout_error(
+            sys.exit(exceptions_ds.printout_error(
                 "Delivery System login credentials not specified.\n\n"
                 "Enter: \n"
                 "--username/-u AND --password/-pw, or --creds/-c\n"
@@ -145,10 +152,6 @@ class DataDeliverer():
         self.public = b''
         self.private = b''
 
-        # Progress related
-        self.TO_PRINT = ""
-        self.PROGRESS = None
-
         # Checks ----------------------------------------------------- Checks #
         # Check if all required info is entered and get user info
         self.user = _DSUser()
@@ -167,32 +170,35 @@ class DataDeliverer():
         # Fail if no data specified
         if not data and not pathfile:
             sys.exit(
-                printout_error("No data to be uploaded. Specify individual "
-                               "files/folders using the --data/-d option one "
-                               "or more times, or the --pathfile/-f. \n\n"
-                               "For help: 'ds_deliver --help'")
+                exceptions_ds.printout_error(
+                    "No data to be uploaded. Specify individual "
+                    "files/folders using the --data/-d option one "
+                    "or more times, or the --pathfile/-f. \n\n"
+                    "For help: 'ds_deliver --help'")
             )
 
         # If everything ok, set bucket name
         self.bucketname = delivery_info['s3_id']
         self.public = bytes.fromhex(delivery_info['public_key'])
-        LOG.debug(f"Project public key: {self.public}")
+        LOG.debug("Project public key: %s", self.public)
 
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
 
-        LOG.debug(f"Data to deliver: {self.data}")
+        LOG.debug("Data to deliver: %s", self.data)
         # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
         if self.method == 'put':
             self.private = b''
         elif self.method == 'get':
-            self.private = get_project_private(self.project_id, self.user)
+            self.private = crypto_ds.get_project_private(self.project_id, self.user)
 
         # Start progress info printout
         if self.data:
-            self.TO_PRINT, self.PROGRESS = self._create_progress_output()
+            global TO_PRINT
+            global PROGRESS
+            TO_PRINT, PROGRESS = self._create_progress_output()
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -216,7 +222,7 @@ class DataDeliverer():
 
         # Tables ##################################################### Tables #
         # Folders
-        folders_table = PrettyTable(
+        folders_table = prettytable.PrettyTable(
             ['Directory', 'File', 'Delivered', 'Error']
         )
         folders_table.padding_width = 2
@@ -224,7 +230,7 @@ class DataDeliverer():
         folders_table.align['Error'] = "l"
 
         # Files
-        files_table = PrettyTable(
+        files_table = prettytable.PrettyTable(
             ['File', 'Delivered', 'Error']
         )
         files_table.align['File'] = "r"
@@ -266,7 +272,7 @@ class DataDeliverer():
                 for f, v in folders[info['dir_name']].items():
                     file_loc = \
                         (v['directory_path'] if 'directory_path' in v else
-                         get_root_path(file=f, path_base=v['dir_name'].name)) \
+                         file_handler.get_root_path(file=f, path_base=v['dir_name'].name)) \
                         / Path(Path(f).name)
                     folders_table.add_row(
                         ["",
@@ -334,6 +340,7 @@ class DataDeliverer():
             f"\n#################### FILES DELIVERED ####################"
             f"\n{files_table}\n" if are_files else "\n"
         )
+        return True
 
     ###################
     # Private Methods #
@@ -666,7 +673,7 @@ class DataDeliverer():
                 if info['new_file'] in files_in_db['files']:
                     in_db = True
                     print(f"\nFile is in db? {in_db}\n")
-                    if not self.overwrite: 
+                    if not self.overwrite:
                         LOG.info(f"{file} already exists in database")
                         initial_fail[file] = {
                             **all_files.pop(file),
@@ -1159,7 +1166,7 @@ class DataDeliverer():
         file = str(file)    # For printing and len() purposes
 
         # Change the status
-        self.PROGRESS[file]['status'] = STATUS_DICT[status]
+        PROGRESS[file]['status'] = STATUS_DICT[status]
 
         # Line to update to in progress output
         new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
@@ -1167,17 +1174,17 @@ class DataDeliverer():
                     f"{2*' '}{STATUS_DICT[status]}")
 
         # If shorter line than before -> cover up previous text
-        diff = abs(len(self.PROGRESS[file]['line']) - len(new_line))
+        diff = abs(len(PROGRESS[file]['line']) - len(new_line))
         new_line += diff*" " + "\n"
 
         # Replace the printout and progress dict with the update
-        self.TO_PRINT = self.TO_PRINT.replace(self.PROGRESS[file]['line'],
-                                              new_line)
-        self.PROGRESS[file]['line'] = new_line
+        TO_PRINT = TO_PRINT.replace(PROGRESS[file]['line'],
+                                    new_line)
+        PROGRESS[file]['line'] = new_line
 
         # Print the status
-        sys.stdout.write("\033[A"*len(self.PROGRESS))   # Jump up to cover prev
-        sys.stdout.write(self.TO_PRINT)                 # Print new for all
+        sys.stdout.write("\033[A"*len(PROGRESS))   # Jump up to cover prev
+        sys.stdout.write(TO_PRINT)                 # Print new for all
 
     ################
     # Main Methods #

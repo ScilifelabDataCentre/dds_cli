@@ -10,18 +10,20 @@ Responsible for IO related operations, including compression, encryption, etc.
 # Standard library
 import logging
 import os
-import sys
+import pathlib
 import zstandard as zstd
-from pathlib import Path
 
 # Installed
-from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_decrypt,
-                           crypto_aead_chacha20poly1305_ietf_encrypt)
+from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt as decrypt
+from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt as encrypt
 
 # Own modules
-from cli_code import (CIPHER_SEGMENT_SIZE, DIRS, SEGMENT_SIZE)
-from cli_code.crypto_ds import ECDHKey
-from cli_code.exceptions_ds import DeliverySystemException
+from cli_code import CIPHER_SEGMENT_SIZE
+from cli_code import crypto_ds  # ECDHKey
+from cli_code import DIRS
+from cli_code import exceptions_ds  # DeliverySystemException
+from cli_code import SEGMENT_SIZE
+
 
 ###############################################################################
 # GLOBAL VARIABLES ######################################### GLOBAL VARIABLES #
@@ -66,25 +68,25 @@ LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-def del_from_temp(file: Path) -> (bool):
+def del_from_temp(file: pathlib.Path) -> (bool):
     '''Deletes temporary files'''
 
     if file.exists():
         try:
             os.remove(file)
-        except Exception as e:  # FIX EXCEPTION HERE
+        except OSError as e:  # FIX EXCEPTION HERE
             LOG.exception("Failed deletion of temporary file "
-                          f"{file}: {e}")
+                          "'%s': %s", file, e)
         else:
-            LOG.info(f"Encrypted temporary file '{file}'"
-                     "successfully deleted.")
+            LOG.info("Encrypted temporary file '%s'"
+                     "successfully deleted.", file)
     else:
-        LOG.warning(f"The file '{file}' does not exist, but was recently "
-                    "uploaded to S3 -- Error in delivery system! ")
+        LOG.warning("The file '%s' does not exist, but was recently "
+                    "uploaded to S3 -- Error in delivery system! ", file)
     return
 
 
-def file_deleter(file: Path):
+def file_deleter(file: pathlib.Path):
     '''Delete file
 
     Args:
@@ -100,7 +102,8 @@ def file_deleter(file: Path):
     try:
         file.unlink()
     except OSError as ose:
-        LOG.warning(f"Failed deleting file {file}: {ose}.\nTrying again.")
+        LOG.warning("Failed deleting file '%s': %s.\nTrying again.",
+                    file, ose)
         try:
             os.remove(file)
         except OSError as ose:
@@ -108,9 +111,9 @@ def file_deleter(file: Path):
             LOG.warning(error)
             return True, error
         else:
-            LOG.info(f"Deleted file {file}")
+            LOG.info("Deleted file '%s'", file)
     else:
-        LOG.info(f"Deleted file {file}")
+        LOG.info("Deleted file '%s'", file)
         return True, ""
 
 
@@ -161,7 +164,7 @@ def file_writer(filehandler, gen, last_nonce):
     return nonce_ok, error
 
 
-def get_root_path(file: Path, path_base: str = None) -> (Path):
+def get_root_path(file: pathlib.Path, path_base: str = None) -> (pathlib.Path):
     '''Gets the path to the file, from the entered folder.
 
     Args:
@@ -174,7 +177,7 @@ def get_root_path(file: Path, path_base: str = None) -> (Path):
 
     fileparts = file.parts
     start_ind = fileparts.index(path_base)
-    return Path(*fileparts[start_ind:-1])
+    return pathlib.Path(*fileparts[start_ind:-1])
 
 
 ###############################################################################
@@ -238,7 +241,7 @@ def decompress_file(filehandler, gen, last_nonce: bytes) -> (bool, str):
     return nonce_ok, error
 
 
-def is_compressed(file: Path) -> (bool, str):
+def is_compressed(file: pathlib.Path) -> (bool, str):
     '''Checks for file signatures in common compression formats.
 
     Args:
@@ -271,7 +274,7 @@ def is_compressed(file: Path) -> (bool, str):
 ###############################################################################
 # CRYPTO ############################################################# CRYPTO #
 ###############################################################################
-# NOTE: Move to own module/class?
+# TODO(ina): Move to own module/class?
 
 
 def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
@@ -297,8 +300,8 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
     # NOTE: Fix return error here?
     # If position not directly after first nonce, then error - fail
     if file.tell() != 12:
-        raise DeliverySystemException(f"Reading encrypted file {file.name} "
-                                      "failed!")
+        raise exceptions_ds.DeliverySystemException(
+            f"Reading encrypted file {file.name} failed!")
 
     # Variables ################################################### Variables #
     iv_int = int.from_bytes(iv, 'little')           # Transform nonce to int
@@ -315,11 +318,10 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
         iv_int += 1  # Increment nonce
 
         # Decrypt and yield nonce and plaintext
-        yield (nonce,
-               crypto_aead_chacha20poly1305_ietf_decrypt(ciphertext=enc_chunk,
-                                                         aad=aad,
-                                                         nonce=nonce,
-                                                         key=key))
+        yield (nonce, decrypt(ciphertext=enc_chunk,
+                              aad=aad,
+                              nonce=nonce,
+                              key=key))
 
 
 def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
@@ -354,10 +356,10 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
         iv_int += 1  # Increment nonce
 
         # Encrypt and yield nonce and ciphertext
-        yield nonce, crypto_aead_chacha20poly1305_ietf_encrypt(message=chunk,
-                                                               aad=aad,
-                                                               nonce=nonce,
-                                                               key=key)
+        yield nonce, encrypt(message=chunk,
+                             aad=aad,
+                             nonce=nonce,
+                             key=key)
 
 
 def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
@@ -389,6 +391,8 @@ def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
 
 
 def get_file_key():
+    """Add docstring here """
+    # TODO(ina): Add docstring
     return "private", "public"
 
 
@@ -397,8 +401,8 @@ def get_file_key():
 ###############################################################################
 
 
-def process_file(file: Path, file_info: dict, peer_public) \
-        -> (bool, Path, int, bool, bytes, bytes, str):
+def process_file(file: pathlib.Path, file_info: dict, peer_public) \
+        -> (bool, pathlib.Path, int, bool, bytes, bytes, str):
     '''Processes the files incl compression, encryption
 
     Args:
@@ -423,9 +427,9 @@ def process_file(file: Path, file_info: dict, peer_public) \
     '''
 
     # If file path not Path type --> quit whole execution, something wrong
-    if not isinstance(file, Path):
+    if not isinstance(file, pathlib.Path):
         emessage = f"Wrong format! {file} is not a 'Path' object."
-        raise DeliverySystemException(emessage)   # Bug somewhere in code
+        raise exceptions_ds.DeliverySystemException(emessage)
 
     # If file doesn't exist --> quit whole execution, something wrong
     if not file.exists():
@@ -437,18 +441,18 @@ def process_file(file: Path, file_info: dict, peer_public) \
     new_dir = DIRS[1] / file_info['directory_path']     # New temp subdir
     key = b''
     # ----------------------------------------------------------------------- #
-    LOG.debug(f"Infile: {file}, Outfile: {outfile}")
+    LOG.debug("Infile: '%s', Outfile: '%s'", file, outfile)
 
     # Encryption key ######################################### Encryption key #
-    keypair = ECDHKey()    # Create new ECDH key pair
-    LOG.debug(f"\npublic key for file {file}: -- "
-              "{keypair.public.public_bytes()}\n")
+    keypair = crypto_ds.ECDHKey()    # Create new ECDH key pair
+    LOG.debug("\npublic key for file '%s': -- %s\n",
+              file, keypair.public.public_bytes())
 
     # Generate shared symmetric encryption key from peer_public + pub + priv
     key, salt = keypair.generate_encryption_key(peer_public=peer_public)
-    LOG.debug(f"file: {file}\n\tprivate: {keypair.private}, "
-              f"\tpublic: {keypair.public} ({type(keypair.public)}), "
-              f"\tderived, shared symmetric: {key} ({len(key)})")
+    LOG.debug("file: %s\n\tprivate: %s, \tpublic: %s (%s), "
+              "\tderived, shared symmetric: %s (%s)", file, keypair.private,
+              keypair.public, type(keypair.public), key, len(key))
     # ----------------------------------------------------------------------- #
 
     # Create new temporary subdir if doesn't exist
@@ -458,7 +462,7 @@ def process_file(file: Path, file_info: dict, peer_public) \
         except OSError as e:
             error = f"File: {file} - Failed creating tempdir '{new_dir}': {e}"
             LOG.exception(error)
-            return False, Path(""), 0, False, "", "", error
+            return False, pathlib.Path(""), 0, False, "", "", error
 
     # PROCESSING START ##################################### PROCESSING START #
     try:
@@ -472,30 +476,30 @@ def process_file(file: Path, file_info: dict, peer_public) \
             chunk_stream = func(filehandler=f)
 
             # Encryption ######################################### Encryption #
-            with outfile.open(mode='wb+') as of:
+            with outfile.open(mode='wb+') as outf:
                 # Generate initial nonce and save to file
                 iv_bytes = os.urandom(12)
-                of.write(iv_bytes)
-                LOG.debug(f"File: {file} IV: {iv_bytes}")
+                outf.write(iv_bytes)
+                LOG.debug("File: '%s' IV: %s", file, iv_bytes)
 
                 # Encrypt and save ciphertext (not nonces) to file
                 nonce = b''     # Catches the nonces
                 for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
                                                              key=key,
                                                              iv=iv_bytes):
-                    of.write(ciphertext)
+                    outf.write(ciphertext)
 
                 # Save last nonce to end of file
-                of.write(nonce)
-                LOG.debug(f"File: {file}, last nonce:\t{nonce}\n")
+                outf.write(nonce)
+                LOG.debug("File: '%s', last nonce:\t%s\n", file, nonce)
 
-    except DeliverySystemException as ee:
-        error = f"File: {file}, Processig failed! {ee}"
+    except exceptions_ds.DeliverySystemException as dse:
+        error = f"File: {file}, Processig failed! {dse}"
         LOG.exception(error)
         return False, outfile, 0, False, "", "", error
     else:
-        LOG.info(f"File: '{file}', Processing successful! "
-                 f"Encrypted file saved at {outfile}")
+        LOG.info("File: '%s', Processing successful! "
+                 "Encrypted file saved at '%s'", file, outfile)
         # Info on if delivery system compressed or not
         ds_compressed = False if file_info['compressed'] else True
     finally:
@@ -528,25 +532,26 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
 
     # Variables ################################################### Variables #
     infile = file_info['new_file']                      # Downloaded file
-    outfile = infile.parent / Path(infile.stem).stem    # Finalized file path
+    outfile = infile.parent / \
+        pathlib.Path(infile.stem).stem    # Finalized file path
     error = ""
     # ----------------------------------------------------------------------- #
-    LOG.debug(f"Infile: {infile}, Outfile: {outfile}")
+    LOG.debug("Infile: %s, Outfile: %s", infile, outfile)
 
     # Encryption key ######################################### Encryption key #
     # Get keys for decryption
     peer_public = bytes.fromhex(file_info['public_key'])  # File public enc key
-    keypair = ECDHKey(keys=keys)                    # Project specific key pair
-    LOG.debug(f"public key peer: {peer_public}\n"
-              f"public key peer: {peer_public.hex().upper()}")
+    keypair = crypto_ds.ECDHKey(keys=keys)          # Project specific key pair
+    LOG.debug("public key peer: %s\npublic key peer: %s",
+              peer_public, peer_public.hex().upper())
 
     # Derive shared symmetric key
     salt = file_info['salt']                # Salt to generate same shared key
     key, _ = keypair.generate_encryption_key(peer_public=peer_public,
                                              salt_=salt)
-    LOG.debug(f"file: {file}\n\tprivate: {keypair.private}, "
-              f"\tpublic: {keypair.public} ({type(keypair.public)}), "
-              f"\tderived, shared symmetric: {key} ({len(key)})")
+    LOG.debug("file: %s\n\tprivate: %s, \tpublic: %s (%s), "
+              "\tderived, shared symmetric: %s (%s)", file, keypair.private,
+              keypair.public, type(keypair.public), key, len(key))
 
     # "Delete" private key
     keypair.del_priv_key()
@@ -572,25 +577,25 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
             chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
 
             # Save decrypted file
-            with outfile.open(mode='ab+') as of:
+            with outfile.open(mode='ab+') as outf:
 
                 # Decompress if DS compressed, otherwise save chunks
                 func = decompress_file if file_info['compressed'] \
                     else file_writer
-                saved, error = func(filehandler=of,
+                saved, error = func(filehandler=outf,
                                     gen=chunk_stream,
                                     last_nonce=last_nonce)
 
                 if not saved:
                     return False, outfile, error
 
-    except DeliverySystemException as ee:
-        error = f"Finalizing of file failed! {ee}"
+    except exceptions_ds.DeliverySystemException as dse:
+        error = f"Finalizing of file failed! {dse}"
         LOG.exception(error)
         return False, outfile, error
     else:
-        LOG.info(f"File: '{file}' -- Finalizing completed! Decrypted file "
-                 f"saved at {outfile}")
+        LOG.info("File: '%s' -- Finalizing completed! Decrypted file "
+                 "saved at '%s'", file, outfile)
     finally:
         os.umask(original_umask)    # Remove mask
 

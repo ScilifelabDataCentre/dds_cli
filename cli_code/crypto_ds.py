@@ -13,14 +13,14 @@ import sys
 import traceback
 
 # Installed
-from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat import backends  # default_backend
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric.x25519 import (X25519PrivateKey,
-                                                              X25519PublicKey)
+from cryptography.hazmat.primitives.asymmetric import x25519
+# X25519PrivateKey, X25519PublicKey
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from nacl.bindings import (crypto_aead_chacha20poly1305_ietf_decrypt)
+from cryptography.hazmat.primitives.kdf import hkdf  # HKDF
+from cryptography.hazmat.primitives.kdf import scrypt  # Scrypt
+from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt as decrypt
 import requests
 
 # Own modules
@@ -70,7 +70,7 @@ class ECDHKey:
         # If get -> keys will be project public & private from db
         if not keys:
             # Generate private key
-            self.private = X25519PrivateKey.generate()
+            self.private = x25519.X25519PrivateKey.generate()
 
             # Generate public
             self.public = self.private.public_key()
@@ -78,10 +78,10 @@ class ECDHKey:
         else:
             public, private = keys
             # X25519PrivateKey from project private key
-            self.private = X25519PrivateKey.from_private_bytes(private)
+            self.private = x25519.X25519PrivateKey.from_private_bytes(private)
 
             # X25519PublicKey from project public key
-            self.public = X25519PublicKey.from_public_bytes(public)
+            self.public = x25519.X25519PublicKey.from_public_bytes(public)
 
     def __enter__(self):
         '''Allows for implementation using "with" statement.
@@ -129,29 +129,33 @@ class ECDHKey:
         # Put -> salt will be empty string -> generate new salt
         # Get -> salt will be hex string from db -> get as bytes
         salt = os.urandom(16) if salt_ == "" else bytes.fromhex(salt_)
-        CRYPTO_LOG.debug(f"\nsalt:{salt}\t{salt.hex().upper()}\n")
+        CRYPTO_LOG.debug("\nsalt:%s\t%s\n", salt, salt.hex().upper())
 
         # X25519PublicKey from peer public key (from db)
-        loaded_peer_pub = X25519PublicKey.from_public_bytes(peer_public)
-        CRYPTO_LOG.debug(f"\npeer public key: {peer_public}\n")
-        CRYPTO_LOG.debug(
-            f"\nprivate key: {self.private.private_bytes(encoding=serialization.Encoding.Raw,format=serialization.PrivateFormat.Raw,encryption_algorithm=serialization.NoEncryption())}\n")
+        loaded_peer_pub = x25519.X25519PublicKey.from_public_bytes(peer_public)
+        CRYPTO_LOG.debug("\npeer public key: %s\n", peer_public)
+        CRYPTO_LOG.debug("\nprivate key: %s\n",
+                         self.private.private_bytes(
+                             encoding=serialization.Encoding.Raw,
+                             format=serialization.PrivateFormat.Raw,
+                             encryption_algorithm=serialization.NoEncryption())
+                         )
 
         # Generate shared key
         shared = (self.private).exchange(peer_public_key=loaded_peer_pub)
-        CRYPTO_LOG.debug(f"\nshared:{shared}\t{shared.hex().upper()}\n")
+        CRYPTO_LOG.debug("\nshared:%s\t%s\n", shared, shared.hex().upper())
 
         # Generate derived key from shared key - used for data encryption
         # Guarantees enough entropy in key
-        derived_key = HKDF(
+        derived_key = hkdf.HKDF(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
             info=b'handshake data',
-            backend=default_backend()
+            backend=backends.default_backend()
         ).derive(shared)
 
-        CRYPTO_LOG.debug(f"DERIVED: {derived_key}")
+        CRYPTO_LOG.debug("DERIVED: %s", derived_key)
         return derived_key, salt
 
     def public_to_hex(self) -> (str):
@@ -198,32 +202,32 @@ def get_project_private(proj_id: str, user):
         )
 
     key_info = response.json()
-    CRYPTO_LOG.debug(f"private key info: {key_info}")
+    CRYPTO_LOG.debug("private key info: %s", key_info)
 
     # Salt for deriving key used to encrypt/decrypt secret key
     key_salt = bytes.fromhex(key_info['salt'])
-    CRYPTO_LOG.debug(f"salt in hex: {key_info['salt']}")
-    CRYPTO_LOG.debug(f"salt: {key_salt}")
+    CRYPTO_LOG.debug("salt in hex: %s", key_info['salt'])
+    CRYPTO_LOG.debug("salt: %s", key_salt)
 
     # Derive key-encryption-key
-    kdf = Scrypt(salt=key_salt, length=32, n=2**14,
-                 r=8, p=1, backend=default_backend())
+    kdf = scrypt.Scrypt(salt=key_salt, length=32, n=2**14,
+                        r=8, p=1, backend=backends.default_backend())
 
-    CRYPTO_LOG.debug(f"password: {user.password}")
+    CRYPTO_LOG.debug("password: %s", user.password)
     key_enc_key = kdf.derive(user.password.encode('utf-8'))
-    CRYPTO_LOG.debug(f"key: {key_enc_key}")
+    CRYPTO_LOG.debug("key: %s", key_enc_key)
 
-    CRYPTO_LOG.debug(f"encrypted key in hex: {key_info['encrypted_key']}")
+    CRYPTO_LOG.debug("encrypted key in hex: %s", key_info['encrypted_key'])
 
     # Get encrypted private key and nonce from DB
     encrypted_key = bytes.fromhex(key_info['encrypted_key'])
-    CRYPTO_LOG.debug(f"\nencrypted key in db: {encrypted_key}\n")
+    CRYPTO_LOG.debug("\nencrypted key in db: %s\n", encrypted_key)
 
     nonce = bytes.fromhex(key_info['nonce'])
-    CRYPTO_LOG.debug(f"nonce: {nonce} --  in hex: {key_info['nonce']}")
+    CRYPTO_LOG.debug("nonce: %s --  in hex: %s", nonce, key_info['nonce'])
 
     # Decrypt key
-    decrypted_key = crypto_aead_chacha20poly1305_ietf_decrypt(
+    decrypted_key = decrypt(
         ciphertext=encrypted_key, aad=None, nonce=nonce, key=key_enc_key
     )
 
@@ -270,5 +274,5 @@ def get_project_private(proj_id: str, user):
         sys.exit(printout_error("Error in private key! Extra bytes after"
                                 "key -- parsing failed or key corrupted!"))
     # --------------------------------------------------------------------#
-    CRYPTO_LOG.info(f"key successfully decrypted: {key}")
+    CRYPTO_LOG.info("key successfully decrypted: %s", key)
     return key

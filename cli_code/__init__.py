@@ -29,7 +29,7 @@ __version__ = '0.1'
 __author__ = 'SciLifeLab Data Centre'
 __author_email__ = ''
 __license__ = 'MIT'
-__all__ = ['DIRS', 'LOG_FILE']  # TODO: Add things here and add to modules
+__all__ = ['DIRS', 'LOG_FILE']  # TODO(ina): Add things here and add to modules
 
 PROG = 'ds_deliver'
 
@@ -84,16 +84,16 @@ def timestamp() -> (str):
     '''
 
     now = datetime.datetime.now()
-    timestamp = ""
+    t_s = ""
 
     for t in (now.year, "-", now.month, "-", now.day, " ",
               now.hour, ":", now.minute, ":", now.second):
         if len(str(t)) == 1 and isinstance(t, int):
-            timestamp += f"0{t}"
+            t_s += f"0{t}"
         else:
-            timestamp += f"{t}"
+            t_s += f"{t}"
 
-    return timestamp
+    return t_s
 
 
 def create_directories():
@@ -120,11 +120,11 @@ def create_directories():
             temp_dir / Path("meta/"),
             temp_dir / Path("logs/"))
 
-    for d_ in dirs:
+    for d_i in dirs:
         try:
-            d_.mkdir(parents=True)
+            d_i.mkdir(parents=True)
         except IOError as ose:
-            print(f"The directory '{d_}' could not be created: {ose}"
+            print(f"The directory '{d_i}' could not be created: {ose}"
                   "Cancelling delivery. ")
 
             if temp_dir.exists() and not isinstance(ose, FileExistsError):
@@ -132,7 +132,7 @@ def create_directories():
                 try:
                     # Remove all prev created folders
                     shutil.rmtree(temp_dir)
-                    sys.exit(f"Temporary directory deleted. \n\n"
+                    sys.exit("Temporary directory deleted. \n\n"
                              "----DELIVERY CANCELLED---\n")  # and quit
                 except IOError as ose:
                     sys.exit(f"Could not delete directory {temp_dir}: "
@@ -168,8 +168,8 @@ def config_logger(filename: str):
                                          "%(name)s::%(lineno)d::%(message)s")
         file_handler.setFormatter(fh_formatter)
         logger.addHandler(file_handler)
-    except Exception as ex:
-        sys.exit(f"Logging to file failed: {ex}")
+    except OSError as ose:
+        sys.exit(f"Logging to file failed: {ose}")
 
     # Config file logger
     try:
@@ -179,8 +179,8 @@ def config_logger(filename: str):
                                          "%(lineno)d::%(message)s")
         stream_handler.setFormatter(sh_formatter)
         logger.addHandler(stream_handler)
-    except Exception as ex:
-        sys.exit(f"Logging to console failed: {ex}")
+    except OSError as ose:
+        sys.exit(f"Logging to console failed: {ose}")
 
     return logger
 

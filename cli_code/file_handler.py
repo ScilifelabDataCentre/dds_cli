@@ -19,9 +19,9 @@ from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt as encrypt
 
 # Own modules
 from cli_code import CIPHER_SEGMENT_SIZE
-from cli_code import crypto_ds  # ECDHKey
+from cli_code import crypto_ds
 from cli_code import DIRS
-from cli_code import exceptions_ds  # DeliverySystemException
+from cli_code import exceptions_ds
 from cli_code import SEGMENT_SIZE
 
 

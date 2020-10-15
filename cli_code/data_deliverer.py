@@ -1270,6 +1270,13 @@ class DataDeliverer():
             return True, ""
 
 
+# EXCEPTIONS ##################################################### EXCEPTIONS #
+
+
+class DeliverySystemException(Exception):
+    """Errors regarding Delivery Portal access etc"""
+
+
 # DSUSER ############################################################## DSUER #
 
 

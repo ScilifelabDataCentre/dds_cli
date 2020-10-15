@@ -22,7 +22,7 @@ import botocore
 import botocore.client  # ClientError
 
 # Own modules
-from cli_code.exceptions_ds import S3Error
+from cli_code import exceptions_ds
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -137,7 +137,7 @@ class S3Connector():
             self.resource.Object(
                 self.bucket.name, key
             ).delete()
-        except S3Error as delex:
+        except exceptions_ds.S3Error as delex:
             S3_LOG.exception(delex)
         else:
             S3_LOG.info("Item %s deleted from bucket.", key)

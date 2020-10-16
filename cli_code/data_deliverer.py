@@ -200,6 +200,10 @@ class DataDeliverer():
             global PROGRESS
             TO_PRINT, PROGRESS = self._create_progress_output()
 
+    def __repr__(self):
+
+        return f"< DataDeliverer {self.user.id} - {DIRS[0]}"
+
     def __enter__(self):
         '''Allows for implementation using "with" statement.
         Building.'''

@@ -68,24 +68,6 @@ LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-def del_from_temp(file: pathlib.Path) -> (bool):
-    '''Deletes temporary files'''
-
-    if file.exists():
-        try:
-            os.remove(file)
-        except OSError as e:  # FIX EXCEPTION HERE
-            LOG.exception("Failed deletion of temporary file "
-                          "'%s': %s", file, e)
-        else:
-            LOG.info("Encrypted temporary file '%s'"
-                     "successfully deleted.", file)
-    else:
-        LOG.warning("The file '%s' does not exist, but was recently "
-                    "uploaded to S3 -- Error in delivery system! ", file)
-    return
-
-
 def file_deleter(file: pathlib.Path):
     '''Delete file
 
@@ -207,7 +189,7 @@ def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
             yield chunk
 
 
-# NOTE: Merge this with file_writer?
+# TODO(ina): Merge this with file_writer?
 def decompress_file(filehandler, gen, last_nonce: bytes) -> (bool, str):
     '''Decompresses file
 
@@ -388,12 +370,6 @@ def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
         return False, error
     else:
         return True, ""
-
-
-def get_file_key():
-    """Add docstring here """
-    # TODO(ina): Add docstring
-    return "private", "public"
 
 
 ###############################################################################

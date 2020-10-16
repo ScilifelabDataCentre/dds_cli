@@ -27,6 +27,7 @@ import click
 import requests
 
 # Own modules
+import cli_code
 from cli_code import data_deliverer as dd
 from cli_code import ENDPOINTS
 from cli_code import exceptions_ds
@@ -38,9 +39,8 @@ from cli_code import s3_connector
 # IMPORTS ########################################################### IMPORTS #
 ###############################################################################
 
-# Setup logging
-CLI_LOGGER = logging.getLogger(__name__)
-CLI_LOGGER.setLevel(logging.WARNING)
+LOG = None
+CLI_LOGGER = None
 
 
 ###############################################################################
@@ -52,7 +52,17 @@ CLI_LOGGER.setLevel(logging.WARNING)
 def cli():
     """TODO(ina): Write a docstring here."""
 
-    CLI_LOGGER.info("Beginning data delivery...")
+    created = cli_code.create_directories()
+    if not created:
+        raise OSError("Temporary directory could not be created. "
+                      "Unable to continue delivery. Aborting. ")
+
+    global LOG
+    LOG = cli_code.config_logger(filename=cli_code.LOG_FILE)
+
+    global CLI_LOGGER
+    CLI_LOGGER = logging.getLogger(__name__)
+    CLI_LOGGER.setLevel(logging.WARNING)
 
 
 ###############################################################################

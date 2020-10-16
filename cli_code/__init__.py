@@ -16,9 +16,9 @@ not be compressed, all other files will (with Zstandard). All files (if not
 # Standard library
 import datetime
 import logging
+import pathlib
 import shutil
 import sys
-from pathlib import Path
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
@@ -29,7 +29,6 @@ __version__ = '0.1'
 __author__ = 'SciLifeLab Data Centre'
 __author_email__ = ''
 __license__ = 'MIT'
-__all__ = ['DIRS', 'LOG_FILE']  # TODO(ina): Add things here and add to modules
 
 PROG = 'ds_deliver'
 
@@ -70,12 +69,13 @@ ENDPOINTS = {'f_login': API_BASE + "/fac/login",
              'key': API_BASE + "/project/",
              'delivery_date': API_BASE + "/delivery/date/"}
 
+
 ###############################################################################
 # FUNCTIONS ####################################################### FUNCTIONS #
 ###############################################################################
 
 
-def timestamp() -> (str):
+def timestamp(folder: bool = False) -> (str):
     '''Gets the current time. Formats timestamp.
 
     Returns:
@@ -83,11 +83,14 @@ def timestamp() -> (str):
 
     '''
 
+    sep_date_time = "_" if folder else " "
+    sep_time = "-" if folder else ":"
+
     now = datetime.datetime.now()
     t_s = ""
 
-    for t in (now.year, "-", now.month, "-", now.day, " ",
-              now.hour, ":", now.minute, ":", now.second):
+    for t in (now.year, "-", now.month, "-", now.day, sep_date_time,
+              now.hour, sep_time, now.minute, sep_time, now.second):
         if len(str(t)) == 1 and isinstance(t, int):
             t_s += f"0{t}"
         else:
@@ -110,39 +113,30 @@ def create_directories():
     '''
 
     # Create temporary folder with timestamp and all subfolders
-    timestamp_ = timestamp()
-    temp_dir = Path.cwd() / Path(f"DataDelivery_{timestamp_}")
 
-    # TemporaryDirectories = collections.namedtuple('TemporaryDirectories',
-    #                                               'root files meta logs')
-    dirs = (temp_dir / Path(""),
-            temp_dir / Path("files/"),
-            temp_dir / Path("meta/"),
-            temp_dir / Path("logs/"))
-
-    for d_i in dirs:
+    for d_i in DIRS:
         try:
             d_i.mkdir(parents=True)
         except IOError as ose:
             print(f"The directory '{d_i}' could not be created: {ose}"
                   "Cancelling delivery. ")
 
-            if temp_dir.exists() and not isinstance(ose, FileExistsError):
+            if TEMP_DIR.exists() and not isinstance(ose, FileExistsError):
                 print("Deleting temporary directory.")
                 try:
                     # Remove all prev created folders
-                    shutil.rmtree(temp_dir)
+                    shutil.rmtree(TEMP_DIR)
                     sys.exit("Temporary directory deleted. \n\n"
                              "----DELIVERY CANCELLED---\n")  # and quit
                 except IOError as ose:
-                    sys.exit(f"Could not delete directory {temp_dir}: "
+                    sys.exit(f"Could not delete directory {TEMP_DIR}: "
                              f"{ose}\n\n ----DELIVERY CANCELLED---\n")
 
                     return False, ()
             else:
                 pass  # create log file here
 
-    return True, dirs
+    return True
 
 
 def config_logger(filename: str):
@@ -189,10 +183,13 @@ def config_logger(filename: str):
 ###############################################################################
 
 
-created, DIRS = create_directories()
-if not created:
-    raise OSError("Temporary directory could not be created. "
-                  "Unable to continue delivery. Aborting. ")
+# Get current timestamp and delivery temporary folder name
+TS = timestamp(folder=True)    # Timestamp
+TEMP_DIR = pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{TS}")
 
-LOG_FILE = str(DIRS[-1] / Path("ds.log"))   # Get log file name
-LOG = config_logger(filename=LOG_FILE)
+# Subfolders
+DIRS = tuple(TEMP_DIR / pathlib.Path(x)
+             for x in ["", "files/", "meta/", "logs/"])
+print(DIRS)
+
+LOG_FILE = str(DIRS[-1] / pathlib.Path("ds.log"))   # Get log file name

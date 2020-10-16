@@ -190,6 +190,6 @@ TEMP_DIR = pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{TS}")
 # Subfolders
 DIRS = tuple(TEMP_DIR / pathlib.Path(x)
              for x in ["", "files/", "meta/", "logs/"])
-print(DIRS)
 
-LOG_FILE = str(DIRS[-1] / pathlib.Path("ds.log"))   # Get log file name
+# Log file name
+LOG_FILE = str(DIRS[-1] / pathlib.Path("ds.log"))

@@ -167,7 +167,7 @@
 <p>Cryptography-related functions required for the Data Delivery System</p>
 <dl class="py class">
 <dt id="cli_code.crypto_ds.ECDHKey">
-<em class="property">class </em><code class="sig-prename descclassname">cli_code.crypto_ds.</code><code class="sig-name descname">ECDHKey</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span><span class="o">=</span><span class="default_value">()</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-name descname">ECDHKey</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span><span class="o">=</span><span class="default_value">()</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Elliptic-Curve Diffie-Hellman key pair</p>
 <dl class="py attribute">
@@ -251,7 +251,7 @@ bool:   Salt</p>
 
 <dl class="py function">
 <dt id="cli_code.crypto_ds.get_project_private">
-<code class="sig-prename descclassname">cli_code.crypto_ds.</code><code class="sig-name descname">get_project_private</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">proj_id</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">user</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.get_project_private" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_project_private</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">proj_id</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">user</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.get_project_private" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the project private key from the database - only while downloading.</p>
 <p>————————-Format in database:——————————-
 len(magic) + magic + len(projID) + projID + len(privateKey) + privateKey
@@ -279,7 +279,7 @@ len(magic) + magic + len(projID) + projID + len(privateKey) + privateKey
 Responsible for IO related operations, including compression, encryption, etc.</p>
 <dl class="py function">
 <dt id="cli_code.file_handler.aead_decrypt_chacha">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">aead_decrypt_chacha</code><span class="sig-paren">(</span><em class="sig-param">file</em>, <em class="sig-param">key: bytes</em>, <em class="sig-param">iv: bytes) -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.aead_decrypt_chacha" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">aead_decrypt_chacha</code><span class="sig-paren">(</span><em class="sig-param">file</em>, <em class="sig-param">key: bytes</em>, <em class="sig-param">iv: bytes) -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.aead_decrypt_chacha" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
 construction described in RFC7539.</p>
 <dl class="field-list">
@@ -306,7 +306,7 @@ bytes:  Plaintext chunk</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.aead_encrypt_chacha">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">aead_encrypt_chacha</code><span class="sig-paren">(</span><em class="sig-param">gen</em>, <em class="sig-param">key: bytes</em>, <em class="sig-param">iv: bytes) -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.aead_encrypt_chacha" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">aead_encrypt_chacha</code><span class="sig-paren">(</span><em class="sig-param">gen</em>, <em class="sig-param">key: bytes</em>, <em class="sig-param">iv: bytes) -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.aead_encrypt_chacha" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
 construction described in RFC7539.</p>
 <dl class="field-list">
@@ -330,7 +330,7 @@ bytes:  Ciphertext</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.check_last_nonce">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">check_last_nonce</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">last_nonce: bytes</em>, <em class="sig-param">nonce: bytes) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.check_last_nonce" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">check_last_nonce</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">last_nonce: bytes</em>, <em class="sig-param">nonce: bytes) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.check_last_nonce" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if the nonces match and give error if they don’t.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -356,7 +356,7 @@ str:    Error message, “” if none</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.compress_file">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">compress_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65536</span></em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#cli_code.file_handler.compress_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">compress_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65536</span></em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#cli_code.file_handler.compress_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compresses file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -373,7 +373,7 @@ str:    Error message, “” if none</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.decompress_file">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">decompress_file</code><span class="sig-paren">(</span><em class="sig-param">filehandler</em>, <em class="sig-param">gen</em>, <em class="sig-param">last_nonce: bytes) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.decompress_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">decompress_file</code><span class="sig-paren">(</span><em class="sig-param">filehandler</em>, <em class="sig-param">gen</em>, <em class="sig-param">last_nonce: bytes) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.decompress_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decompresses file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -399,7 +399,7 @@ str:    Error message, “” if none</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.file_deleter">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">file_deleter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.file_deleter" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">file_deleter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.file_deleter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete file</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -410,7 +410,7 @@ str:    Error message, “” if none</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.file_reader">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">file_reader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65536</span></em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#cli_code.file_handler.file_reader" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">file_reader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65536</span></em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#cli_code.file_handler.file_reader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Yields the file chunk by chunk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -427,7 +427,7 @@ str:    Error message, “” if none</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.file_writer">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">file_writer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">gen</span></em>, <em class="sig-param"><span class="n">last_nonce</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.file_writer" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">file_writer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">gen</span></em>, <em class="sig-param"><span class="n">last_nonce</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.file_writer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes decrypted chunks to file. Checks if last nonces match.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -453,7 +453,7 @@ str:    Error message, “” if none</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.get_root_path">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">get_root_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">path_base</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; pathlib.Path<a class="headerlink" href="#cli_code.file_handler.get_root_path" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_root_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">path_base</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; pathlib.Path<a class="headerlink" href="#cli_code.file_handler.get_root_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the path to the file, from the entered folder.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -473,7 +473,7 @@ str:    Error message, “” if none</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.is_compressed">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">is_compressed</code><span class="sig-paren">(</span><em class="sig-param">file: pathlib.Path) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.is_compressed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">is_compressed</code><span class="sig-paren">(</span><em class="sig-param">file: pathlib.Path) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.is_compressed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks for file signatures in common compression formats.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -495,7 +495,7 @@ str:    Error message, “” if no error</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.process_file">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">process_file</code><span class="sig-paren">(</span><em class="sig-param">file: pathlib.Path</em>, <em class="sig-param">file_info: dict</em>, <em class="sig-param">peer_public) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'pathlib.Path'&gt;</em>, <em class="sig-param">&lt;class 'int'&gt;</em>, <em class="sig-param">&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.process_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">process_file</code><span class="sig-paren">(</span><em class="sig-param">file: pathlib.Path</em>, <em class="sig-param">file_info: dict</em>, <em class="sig-param">peer_public) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'pathlib.Path'&gt;</em>, <em class="sig-param">&lt;class 'int'&gt;</em>, <em class="sig-param">&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.process_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Processes the files incl compression, encryption</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -531,7 +531,7 @@ str:    ‘Error message, “” if none</p>
 
 <dl class="py function">
 <dt id="cli_code.file_handler.reverse_processing">
-<code class="sig-prename descclassname">cli_code.file_handler.</code><code class="sig-name descname">reverse_processing</code><span class="sig-paren">(</span><em class="sig-param">file: str</em>, <em class="sig-param">file_info: dict</em>, <em class="sig-param">keys: tuple) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.reverse_processing" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reverse_processing</code><span class="sig-paren">(</span><em class="sig-param">file: str</em>, <em class="sig-param">file_info: dict</em>, <em class="sig-param">keys: tuple) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.reverse_processing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decrypts and decompresses file (if DS compressed)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

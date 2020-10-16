@@ -168,7 +168,7 @@
 <p>Handles login of user, keeps track of data, uploads/downloads etc</p>
 <dl class="py class">
 <dt id="cli_code.data_deliverer.DataDeliverer">
-<em class="property">class </em><code class="sig-prename descclassname">cli_code.data_deliverer.</code><code class="sig-name descname">DataDeliverer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">creds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">username</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pathfile</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">break_on_fail</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">overwrite</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-name descname">DataDeliverer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">creds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">username</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pathfile</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">break_on_fail</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">overwrite</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Instanstiates the delivery by logging the user into the Delivery System,
 checking the users access to the specified project, and uploads/downloads
@@ -533,14 +533,14 @@ the file checks, processing, upload or database.</p>
 
 <dl class="py exception">
 <dt id="cli_code.data_deliverer.DeliverySystemException">
-<em class="property">exception </em><code class="sig-prename descclassname">cli_code.data_deliverer.</code><code class="sig-name descname">DeliverySystemException</code><a class="headerlink" href="#cli_code.data_deliverer.DeliverySystemException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-name descname">DeliverySystemException</code><a class="headerlink" href="#cli_code.data_deliverer.DeliverySystemException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>Errors regarding Delivery Portal access etc</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="cli_code.data_deliverer.update_progress_bar">
-<code class="sig-prename descclassname">cli_code.data_deliverer.</code><code class="sig-name descname">update_progress_bar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">status</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.update_progress_bar" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_progress_bar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">status</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.update_progress_bar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the status of the file - Waiting, Encrypting, Uploading, etc.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -559,7 +559,7 @@ the file checks, processing, upload or database.</p>
 <p>Communicates with and handles operations related to Safespring S3</p>
 <dl class="py class">
 <dt id="cli_code.s3_connector.S3Connector">
-<em class="property">class </em><code class="sig-prename descclassname">cli_code.s3_connector.</code><code class="sig-name descname">S3Connector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bucketname</span></em>, <em class="sig-param"><span class="n">project</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.s3_connector.S3Connector" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-name descname">S3Connector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bucketname</span></em>, <em class="sig-param"><span class="n">project</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.s3_connector.S3Connector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Keeps information regarding the resource, project and bucket
 currently in use, and handles S3-related checks.</p>

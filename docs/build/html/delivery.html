@@ -1,0 +1,705 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Data Delivery &mdash; Data Delivery System 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Custom Error Handling" href="excep.html" />
+    <link rel="prev" title="File processing" href="files.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Data Delivery System
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Command Line Interface</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Components</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="files.html">File processing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data Delivery</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-cli_code.data_deliverer">Data Deliverer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-cli_code.s3_connector">S3 Connection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="excep.html">Custom Error Handling</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Data Delivery System</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Data Delivery</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/delivery.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="data-delivery">
+<h1>Data Delivery<a class="headerlink" href="#data-delivery" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-cli_code.data_deliverer">
+<span id="data-deliverer"></span><h2>Data Deliverer<a class="headerlink" href="#module-cli_code.data_deliverer" title="Permalink to this headline">¶</a></h2>
+<p>Main class - Data Deliverer</p>
+<p>Handles login of user, keeps track of data, uploads/downloads etc</p>
+<dl class="py class">
+<dt id="cli_code.data_deliverer.DataDeliverer">
+<em class="property">class </em><code class="sig-prename descclassname">cli_code.data_deliverer.</code><code class="sig-name descname">DataDeliverer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">creds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">username</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">project_owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pathfile</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">break_on_fail</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">overwrite</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Instanstiates the delivery by logging the user into the Delivery System,
+checking the users access to the specified project, and uploads/downloads
+the data to the S3 storage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>creds</strong> (<em>str</em>) – Path to file with user creds and project info</p></li>
+<li><p><strong>username</strong> (<em>str</em>) – User spec. username, None if creds used</p></li>
+<li><p><strong>password</strong> (<em>str</em>) – User spec. password, None if creds used</p></li>
+<li><p><strong>project_id</strong> (<em>str</em>) – User spec. project ID, None if creds used</p></li>
+<li><p><strong>project_owner</strong> (<em>str</em>) – User spec. project owner, None if creds used</p></li>
+<li><p><strong>pathfile</strong> (<em>str</em>) – Path to file containing file paths</p></li>
+<li><p><strong>data</strong> (<em>tuple</em>) – All paths to be uploaded/downloaded</p></li>
+<li><p><strong>break_on_fail</strong> (<em>bool</em>) – True if folder delivery should be cancelled on
+file fail</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em>) – True if deliver again - overwrite delivered
+files</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.break_on_fail">
+<code class="sig-name descname">break_on_fail</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.break_on_fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel delivery on fail or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.overwrite">
+<code class="sig-name descname">overwrite</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.overwrite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrite already delivered files or not</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.logfile">
+<code class="sig-name descname">logfile</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.logfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to log file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.LOGGER">
+<code class="sig-name descname">LOGGER</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.LOGGER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logger - keeps track of bugs, info, errors etc</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Logger</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.method">
+<code class="sig-name descname">method</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delivery method, put or get</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.user">
+<code class="sig-name descname">user</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data Delivery System user</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>DSUser</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.project_id">
+<code class="sig-name descname">project_id</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.project_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project ID to upload to/download from</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.project_owner">
+<code class="sig-name descname">project_owner</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.project_owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Owner of the current project</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.data">
+<code class="sig-name descname">data</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Paths and info to files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.failed">
+<code class="sig-name descname">failed</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Paths and info to failed files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.bucketname">
+<code class="sig-name descname">bucketname</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.bucketname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of S3 bucket to deliver to/from</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.s3project">
+<code class="sig-name descname">s3project</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.s3project" title="Permalink to this definition">¶</a></dt>
+<dd><p>ID of S3 project containing buckets</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.public">
+<code class="sig-name descname">public</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.public" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project public key</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.private">
+<code class="sig-name descname">private</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.private" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project private key, b’’ if uploading</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.TO_PRINT">
+<code class="sig-name descname">TO_PRINT</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.TO_PRINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Progress printout</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.data_deliverer.DataDeliverer.PROGRESS">
+<code class="sig-name descname">PROGRESS</code><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.PROGRESS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Progress info on files  # NOTE: put in data??</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#cli_code.data_deliverer.DeliverySystemException" title="cli_code.data_deliverer.DeliverySystemException"><strong>DeliverySystemException</strong></a> – Required info not found or access denied</p></li>
+<li><p><strong>OSError</strong> – Temporary directory failure</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="cli_code.data_deliverer.DataDeliverer.finalize_delivery">
+<code class="sig-name descname">finalize_delivery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">fileinfo</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.finalize_delivery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalizes delivery after download from s3:
+Decrypts, decompresses (if compressed in DS), and checks integrity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>str</em>) – Path to file</p></li>
+<li><p><strong>fileinfo</strong> (<em>dict</em>) – Information on file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Info on finalized file</p>
+<blockquote>
+<div><p>bool:   True if decryption etc successful
+str:    Path to new, delivered and decrypted file
+str:    Error message, “” if none</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.data_deliverer.DataDeliverer.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">path_info: dict) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downloads specified data from S3 bucket</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>str</em>) – File to be downloaded</p></li>
+<li><p><strong>path_info</strong> (<em>dict</em>) – Name of downloaded file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Info on download success</p>
+<blockquote>
+<div><p>bool:   True if downloaded
+str:    Error message, “” if none</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>OSError</strong> – Creating directory failed</p></li>
+<li><p><strong>botocore.client.ClientError</strong> – Failed download</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.data_deliverer.DataDeliverer.prep_upload">
+<code class="sig-name descname">prep_upload</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">path_info</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.prep_upload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares the files for upload.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<em>Path</em>) – Path to file</p></li>
+<li><p><strong>path_info</strong> (<em>dict</em>) – Info on file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Info on success and info</p>
+<blockquote>
+<div><p>bool:   True if processing successful
+Path:   Path to processed file
+int:    Size of processed file
+bool:   True if file compressed by the delivery system
+bytes:  Public key needed for file decryption
+bytes:  Salt needed for shared key derivation
+str:    Error message, “” if none</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.data_deliverer.DataDeliverer.put">
+<code class="sig-name descname">put</code><span class="sig-paren">(</span><em class="sig-param">file: pathlib.Path</em>, <em class="sig-param">fileinfo: dict) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uploads specified data to the S3 bucket.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Path</em>) – Path to original file</p></li>
+<li><p><strong>fileinfo</strong> (<em>dict</em>) – Info on file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bool:   True if upload successful
+str:    Encrypted file, to upload
+str:    Remote path, path in bucket
+str:    Error message, “” if none</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.data_deliverer.DataDeliverer.set_progress">
+<code class="sig-name descname">set_progress</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">processing</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">upload</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">download</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">decryption</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">db</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">started</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em>, <em class="sig-param"><span class="n">finished</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.set_progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set progress of file to in progress or finished, regarding
+the file checks, processing, upload or database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> (<em>Path</em>) – Path to file being handled</p></li>
+<li><p><strong>check</strong> (<em>bool</em>) – True if file checking in progress or finished</p></li>
+<li><p><strong>processing</strong> (<em>bool</em>) – True if processing in progress or finished</p></li>
+<li><p><strong>upload</strong> (<em>bool</em>) – True if upload in progress or finshed</p></li>
+<li><p><strong>db</strong> (<em>bool</em>) – True if database update in progress or finished</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>DataException</strong> – Data dictionary update failed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.data_deliverer.DataDeliverer.update_delivery">
+<code class="sig-name descname">update_delivery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">updinfo</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.update_delivery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates data delivery information dictionary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Path</em>) – The files info to be updated</p></li>
+<li><p><strong>updinfo</strong> (<em>dict</em>) – The dictionary to update the info with</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if to continue with delivery</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>DataException</strong> – Data dictionary update failed</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt id="cli_code.data_deliverer.DeliverySystemException">
+<em class="property">exception </em><code class="sig-prename descclassname">cli_code.data_deliverer.</code><code class="sig-name descname">DeliverySystemException</code><a class="headerlink" href="#cli_code.data_deliverer.DeliverySystemException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Errors regarding Delivery Portal access etc</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.data_deliverer.update_progress_bar">
+<code class="sig-prename descclassname">cli_code.data_deliverer.</code><code class="sig-name descname">update_progress_bar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">status</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.update_progress_bar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the status of the file - Waiting, Encrypting, Uploading, etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – File to update progress on</p></li>
+<li><p><strong>status</strong> (<em>str</em>) – Which stage the delivery is on</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cli_code.s3_connector">
+<span id="s3-connection"></span><h2>S3 Connection<a class="headerlink" href="#module-cli_code.s3_connector" title="Permalink to this headline">¶</a></h2>
+<p>S3 Connector</p>
+<p>Communicates with and handles operations related to Safespring S3</p>
+<dl class="py class">
+<dt id="cli_code.s3_connector.S3Connector">
+<em class="property">class </em><code class="sig-prename descclassname">cli_code.s3_connector.</code><code class="sig-name descname">S3Connector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bucketname</span></em>, <em class="sig-param"><span class="n">project</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.s3_connector.S3Connector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Keeps information regarding the resource, project and bucket
+currently in use, and handles S3-related checks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bucketname</strong> – Name of bucket to access</p></li>
+<li><p><strong>project</strong> – S3 project to access</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="cli_code.s3_connector.S3Connector.project">
+<code class="sig-name descname">project</code><a class="headerlink" href="#cli_code.s3_connector.S3Connector.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>S3 project ID</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.s3_connector.S3Connector.bucketname">
+<code class="sig-name descname">bucketname</code><a class="headerlink" href="#cli_code.s3_connector.S3Connector.bucketname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of bucket to access</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.s3_connector.S3Connector.bucket">
+<code class="sig-name descname">bucket</code><a class="headerlink" href="#cli_code.s3_connector.S3Connector.bucket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bucket object to access</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.s3_connector.S3Connector.resource">
+<code class="sig-name descname">resource</code><a class="headerlink" href="#cli_code.s3_connector.S3Connector.resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>S3 connection object</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.s3_connector.S3Connector.session">
+<code class="sig-name descname">session</code><a class="headerlink" href="#cli_code.s3_connector.S3Connector.session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Session - needed for multithreading/processing</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.s3_connector.S3Connector.delete_item">
+<code class="sig-name descname">delete_item</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.s3_connector.S3Connector.delete_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes specified item from S3 bucket</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Item (e.g. file) to delete from bucket</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="excep.html#cli_code.exceptions_ds.S3Error" title="cli_code.exceptions_ds.S3Error"><strong>S3Error</strong></a> – Error while deleting object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.s3_connector.S3Connector.file_exists_in_bucket">
+<code class="sig-name descname">file_exists_in_bucket</code><span class="sig-paren">(</span><em class="sig-param">key: str) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.s3_connector.S3Connector.file_exists_in_bucket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the current file already exists in the specified bucket.
+If so, the file will not be uploaded (put), or will be downloaded (get)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – File to check for in bucket</p></li>
+<li><p><strong>put</strong> (<em>bool</em>) – True if uploading (default)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the file already exists, False if it doesnt
+str:    Error message, “” if none</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>botocore.exceptions.ClientError</strong> – Error in searching bucket.
+    404 -&gt; OK, not 404 -&gt; not OK</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="excep.html" class="btn btn-neutral float-right" title="Custom Error Handling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="files.html" class="btn btn-neutral float-left" title="File processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Data Centre
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

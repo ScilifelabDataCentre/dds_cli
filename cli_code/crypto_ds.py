@@ -99,6 +99,10 @@ class ECDHKey:
 
         return True
 
+    def __repr__(self):
+
+        return '<ECDHKey>'
+        
     ##################
     # Public Methods #
     ##################

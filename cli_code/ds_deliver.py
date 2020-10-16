@@ -1,7 +1,7 @@
 """
 Command line interface for the Data Delivery System
 
-TODO(ina): This should be some information about the cli and how to use it.
+This should be some information about the cli and how to use it.
 
     And here there should be an example or two:
 
@@ -9,7 +9,7 @@ TODO(ina): This should be some information about the cli and how to use it.
 
     example 2:
 """
-
+# TODO(ina): Fix the docstrings
 # TODO(ina): Fix or ignore pylint "too-many-arguments" warnings etc
 
 ###############################################################################

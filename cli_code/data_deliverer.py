@@ -34,6 +34,7 @@ from cli_code import exceptions_ds
 from cli_code import file_handler
 from cli_code import s3_connector
 
+
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
@@ -51,9 +52,13 @@ LOG.setLevel(logging.DEBUG)
 # ns: not started, f: finished, e: error,
 # enc: encrypting, dec: decrypting
 # u: uploading, d: downloading
-STATUS_DICT = {"w": "Waiting to start...", "f": u"\u2705", "e": u"\u274C",
-               "enc": "Encrypting...", "dec": "Decrypting...",
-               "u": "Uploading...", "d": "Dowloading...", }
+STATUS_DICT = {"w": "Waiting to start...",
+               "f": u"\u2705",
+               "e": u"\u274C",
+               "enc": "Encrypting...",
+               "dec": "Decrypting...",
+               "u": "Uploading...",
+               "d": "Dowloading...", }
 
 # Initializes the column sizes for the progress output
 FCOLSIZE = 0    # File name column
@@ -73,7 +78,7 @@ LOGIN_BASE = ""
 ###############################################################################
 
 
-class DataDeliverer():
+class DataDeliverer:
     """
     Instanstiates the delivery by logging the user into the Delivery System,
     checking the users access to the specified project, and uploads/downloads
@@ -1290,7 +1295,8 @@ class DeliverySystemException(Exception):
 # DSUSER ############################################################## DSUER #
 
 
-class _DSUser():
+# TODO (ina): Remove DSuser or use in better way
+class _DSUser:
     """
     A Data Delivery System user.
 

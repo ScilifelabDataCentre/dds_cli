@@ -36,7 +36,7 @@ S3_LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-class S3Connector():
+class S3Connector:
     """
     Keeps information regarding the resource, project and bucket
     currently in use, and handles S3-related checks.

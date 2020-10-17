@@ -19,7 +19,7 @@ import traceback
 import boto3
 import boto3.session
 import botocore
-import botocore.client  # ClientError
+import botocore.client
 
 # Own modules
 from cli_code import exceptions_ds

@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="File processing" href="files.html" />
-    <link rel="prev" title="Welcome to Data Delivery System’s documentation!" href="index.html" /> 
+    <link rel="prev" title="SciLifeLab’s Data Delivery System" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -165,13 +165,39 @@
             
   <div class="section" id="module-cli_code.ds_deliver">
 <span id="cli"></span><h1>CLI<a class="headerlink" href="#module-cli_code.ds_deliver" title="Permalink to this headline">¶</a></h1>
-<p>Command line interface for the Data Delivery System</p>
-<p>This should be some information about the cli and how to use it.</p>
+<p>CLI for the Data Delivery System.</p>
+<p>The CLI begins with checking if the user has access - both if the user exists
+in the database, and if the current delivery is being performed by the correct
+role: Facilities can only use put (upload), while other users can only use get
+(download). The user credentials (independent of role) can either be specified
+within a json file (–creds option) or by using the –username, –password, etc
+options. Whether the file or loose options are used or not, the same user
+information is required:</p>
 <blockquote>
-<div><p>And here there should be an example or two:</p>
-<p>example 1:</p>
-<p>example 2:</p>
+<div><ul class="simple">
+<li><p>Username</p></li>
+<li><p>Password</p></li>
+<li><p>Project ID</p></li>
+<li><p>Project owner (only required for Facilities)</p></li>
+</ul>
+<dl>
+<dt>Example of –creds option json file:</dt><dd><dl>
+<dt>{</dt><dd><p>“username”: &lt;username&gt;,</p>
+<p>“password”: &lt;password&gt;,</p>
+<p>“project”: &lt;project_id&gt;,</p>
+<p>“owner”: &lt;owner_id&gt;</p>
+</dd>
+</dl>
+<p>}</p>
+</dd>
+</dl>
 </div></blockquote>
+<p>All files are checked for duplicates and later compressed (if not
+already so) to save space. Directories can be specified in the delivery and
+the system keeps the original directory structure, but the system always
+handles and processes the files within. This is to enable individual files to
+be delivered. All files, independent of previous encryption, are encrypted by
+the Data Delivery System.</p>
 <div class="section" id="ds-deliver">
 <h2>ds_deliver<a class="headerlink" href="#ds-deliver" title="Permalink to this headline">¶</a></h2>
 <p>TODO(ina): Write a docstring here.</p>
@@ -320,7 +346,7 @@
         <a href="files.html" class="btn btn-neutral float-right" title="File processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Data Delivery System’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="SciLifeLab’s Data Delivery System" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

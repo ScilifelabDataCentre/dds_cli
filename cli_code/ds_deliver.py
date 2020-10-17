@@ -1,15 +1,36 @@
+"""CLI for the Data Delivery System.
+
+The CLI begins with checking if the user has access - both if the user exists
+in the database, and if the current delivery is being performed by the correct
+role: Facilities can only use put (upload), while other users can only use get
+(download). The user credentials (independent of role) can either be specified
+within a json file (--creds option) or by using the --username, --password, etc
+options. Whether the file or loose options are used or not, the same user
+information is required:
+
+    * Username
+    * Password
+    * Project ID
+    * Project owner (only required for Facilities)
+
+    Example of --creds option json file:
+        {
+            "username": <username>,\n
+            "password": <password>,\n
+            "project": <project_id>,\n
+            "owner": <owner_id>
+        }
+
+All files are checked for duplicates and later compressed (if not
+already so) to save space. Directories can be specified in the delivery and
+the system keeps the original directory structure, but the system always
+handles and processes the files within. This is to enable individual files to
+be delivered. All files, independent of previous encryption, are encrypted by
+the Data Delivery System.
 """
-Command line interface for the Data Delivery System
 
-This should be some information about the cli and how to use it.
-
-    And here there should be an example or two:
-
-    example 1:
-
-    example 2:
-"""
 # TODO(ina): Fix the docstrings
+# TODO(ina): Add example to module docstring?
 # TODO(ina): Fix or ignore pylint "too-many-arguments" warnings etc
 
 ###############################################################################

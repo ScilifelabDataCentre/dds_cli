@@ -350,6 +350,10 @@ def get(creds: str, username: str, password: str, project: str,
     Currently not usable by facilities.
     """
 
+    # TODO(ina): Add example to docstring
+
+    # Instantiate DataDeliverer
+    # - checks access and gets neccessary delivery info
     with dd.DataDeliverer(creds=creds, username=username, password=password,
                           project_id=project, pathfile=pathfile, data=data,
                           break_on_fail=break_on_fail) \
@@ -363,42 +367,44 @@ def get(creds: str, username: str, password: str, project: str,
         pools = {}          # Finalizing e.g. decompression, decryption etc
         threads = {}        # Download from S3
 
-        # BEGIN DELIVERY # # # # # # # # # # # # # # # # # # # BEGIN DELIVERY #
-        # Download from S3
+        # BEGINS DELIVERY # # # # # # # # # # # # # # # # # # BEGINS DELIVERY #
         for path, info in delivery.data.items():
 
-            # If DS noted cancelation for file -- quit and move on
+            # Quits and moves on if DS noted cancelation for file
             if not info["proceed"]:
                 CLI_LOGGER.warning("Cancelled: '%s'", path)
                 dd.update_progress_bar(file=path, status="e")  # -> X
                 continue
 
-            # Display progress = "Downloading..."
+            # Displays progress = "Downloading..."
             dd.update_progress_bar(file=path, status="d")
 
-            # Start download from S3
+            # Starts download from S3
             threads[
                 thread_executor.submit(delivery.get, path=path, path_info=info)
             ] = path
 
-        # Get result and finalize - decrypt, decompress etc.
+        # Get results from download when each thread is finished
         for dfuture in concurrent.futures.as_completed(threads):
-            dpath = threads[dfuture]  # Original file path -- keep track
+            dpath = threads[dfuture]  # Original file path
             try:
+                # Gets information from download:
+                # downloaded - if download successful or not,
+                # error - error message
                 downloaded, error = dfuture.result()
             except concurrent.futures.BrokenExecutor:
                 sys.exit(f"{dfuture.exception()}")
                 break   # Precaution if sys.exit not quit completely
 
-            # Update file info
+            # Updates file info
             proceed = delivery.update_delivery(file=dpath,
                                                updinfo={"proceed": downloaded,
                                                         "error": error})
 
-            # Set file upload as finished
+            # Sets file upload as finished
             delivery.set_progress(item=dpath, download=True, finished=True)
 
-            # Quit and move on if DS noted cancelation for file
+            # Quits and moves on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning("Cancelled: '%s'", dpath)
                 dd.update_progress_bar(file=dpath, status="e")  # -> X
@@ -407,10 +413,10 @@ def get(creds: str, username: str, password: str, project: str,
             CLI_LOGGER.info("DOWNLOAD COMPLETED: '%s' -> '%s'",
                             dpath, delivery.data[dpath]["new_file"])
 
-            # Display progress = "Decrypting..."
+            # Displays progress = "Decrypting..."
             dd.update_progress_bar(file=dpath, status="dec")
 
-            # Start file finalizing -- decompression, decryption, etc.
+            # Starts file finalizing -- decompression, decryption, etc.
             pools[
                 pool_executor.submit(delivery.finalize_delivery,
                                      file=dpath,
@@ -418,16 +424,19 @@ def get(creds: str, username: str, password: str, project: str,
             ] = dpath
 
         # FINISH DELIVERY # # # # # # # # # # # # # # # # # # FINISH DELIVERY #
-        # Update database
         for ffuture in concurrent.futures.as_completed(pools):
-            fpath = pools[ffuture]  # Original file path -- keep track
+            fpath = pools[ffuture]  # Original file path
             try:
+                # Gets information from finalizing:
+                # decrypted - if decryption successful or not,
+                # decrypted_file - path to decrypted file,
+                # error - error message
                 decrypted, decrypted_file, error = ffuture.result()
             except concurrent.futures.BrokenExecutor:
                 sys.exit(f"{ffuture.exception()}")
                 break  # Precaution if sys.exit not quit completely
 
-            # Update file info
+            # Updates file info
             proceed = delivery.update_delivery(
                 file=fpath,
                 updinfo={"proceed": decrypted,
@@ -435,34 +444,36 @@ def get(creds: str, username: str, password: str, project: str,
                          "error": error}
             )
 
-            # Set file finalizing as finished
+            # Sets file finalizing as finished
             delivery.set_progress(item=fpath,
                                   decryption=True,
                                   finished=True)
 
-            # If DS noted cancelation for file -- quit and move on
+            # Quits and moves on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning("File: '%s' -- cancelled "
                                    "-- moving on to next file", fpath)
                 dd.update_progress_bar(file=fpath, status="e")  # -> X
                 continue
 
-            # Set file db update to in progress
+            # TODO(ina): Put db update request in function - threaded?
+            # Updates file information in database
+            # Args to send in request to api
             delivery.set_progress(item=fpath, db=True, started=True)
 
+            # Request endpoint
             req = ENDPOINTS["delivery_date"]
             args = {"file_id": delivery.data[fpath]["id"]}
             response = requests.post(req, params=args)
-
             if not response.ok:
+                # TODO (ina): Change here, should check response info
                 emessage = f"File: {fpath}. Database update failed."
-                dd.update_progress_bar(
-                    file=fpath, status="e")  # -> X-symbol
+                dd.update_progress_bar(file=fpath, status="e")  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
             else:
                 CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: '%s'", fpath)
 
-                # Set delivery as finished and display progress = check mark
+                # Sets delivery as finished and display progress = check mark
                 delivery.set_progress(item=fpath, db=True, finished=True)
                 dd.update_progress_bar(file=fpath, status="f")
 

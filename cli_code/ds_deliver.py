@@ -132,7 +132,8 @@ def put(creds: str, username: str, password: str, project: str,
 
     # TODO(ina): Add example in docstring
 
-    # Create DataDeliverer to handle files and folders
+    # Instantiate DataDeliverer
+    # - checks access and gets neccessary delivery info
     with dd.DataDeliverer(creds=creds, username=username, password=password,
                           project_id=project, project_owner=owner,
                           pathfile=pathfile, data=data,
@@ -148,38 +149,41 @@ def put(creds: str, username: str, password: str, project: str,
         threads = {}        # Upload to S3
         final_threads = {}  # Delete files
 
-        # BEGIN DELIVERY # # # # # # # # # # # # # # # # # # # BEGIN DELIVERY #
-        # Process files - Compression, encryption, etc
+        # BEGINS DELIVERY # # # # # # # # # # # # # # # # # # BEGINS DELIVERY #
         for path, info in delivery.data.items():
 
-            # Quit and move on if DS noted cancelation for file
+            # Quits and moves on if DS noted cancelation for file
             if not info["proceed"]:
                 CLI_LOGGER.warning("CANCELLED: '%s'", path)
-                dd.update_progress_bar(
-                    file=path, status="e")  # -> X-symbol
+                dd.update_progress_bar(file=path, status="e")  # -> X-symbol
                 continue
 
-            # Display progress = "Encrypting..."
+            # Displays progress = "Encrypting..."
             dd.update_progress_bar(file=path, status="enc")
 
-            # Start file processing
+            # Starts file processing - compression and encryption
             pools[
                 pool_executor.submit(delivery.prep_upload,
                                      path=path,
                                      path_info=delivery.data[path])
             ] = path
 
-        # Get results from processing and upload to S3
+        # Get results from processing when each pool is finished
         for pfuture in concurrent.futures.as_completed(pools):
-            ppath = pools[pfuture]      # Original file path -- keep track
+            ppath = pools[pfuture]      # Original file path
             try:
+                # Gets information from processing:
+                # processed - processing successful, efile - encrypted file,
+                # esize - size of efile, ds_compressed - compressed by
+                # delivery system or not, key - encryption public key,
+                # salt - salt used for key generation, error - error message
                 processed, efile, esize, \
                     ds_compressed, key, salt, error = pfuture.result()
             except concurrent.futures.BrokenExecutor:
                 sys.exit(f"{pfuture.exception()}")
                 break  # Precaution if sys.exit not quit completely
 
-            # Update file info
+            # Updates file info
             proceed = delivery.update_delivery(
                 file=ppath,
                 updinfo={"proceed": processed,
@@ -190,22 +194,20 @@ def put(creds: str, username: str, password: str, project: str,
                          "key": key,
                          "salt": salt}
             )
-            CLI_LOGGER.debug("PUBLIC KEY for file '%s': '%s'", ppath, key)
 
-            # Set processing as finished
+            # Sets processing as finished
             delivery.set_progress(item=ppath, processing=True, finished=True)
 
-            # Quit and move on if DS noted cancelation for file
+            # Quits and moves on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning("CANCELLED: '%s'", ppath)
-                dd.update_progress_bar(
-                    file=ppath, status="e")  # -> X-symbol
+                dd.update_progress_bar(file=ppath, status="e")  # -> X-symbol
                 continue
 
-            # Display progress = "Uploading..."
+            # Displays progress = "Uploading..."
             dd.update_progress_bar(file=ppath, status="u")
 
-            # Start upload
+            # Starts upload
             threads[
                 thread_executor.submit(delivery.put,
                                        file=ppath,
@@ -213,28 +215,28 @@ def put(creds: str, username: str, password: str, project: str,
             ] = ppath
 
         # FINISH DELIVERY # # # # # # # # # # # # # # # # # # FINISH DELIVERY #
-        # Update database
         for ufuture in concurrent.futures.as_completed(threads):
-            upath = threads[ufuture]       # Original file path -- keep track
+            upath = threads[ufuture]       # Original file path
             try:
+                # Gets information from upload:
+                # uploaded - if upload successful or not, error - error message
                 uploaded, error = ufuture.result()
             except concurrent.futures.BrokenExecutor:
                 sys.exit(f"{ufuture.exception()}")
                 break  # Precaution if sys.exit not quit completely
 
-            # Update file info
+            # Updates file info
             proceed = delivery.update_delivery(file=upath,
                                                updinfo={"proceed": uploaded,
                                                         "error": error})
 
-            # Set upload as finished
+            # Sets upload as finished
             delivery.set_progress(item=upath, upload=True, finished=True)
 
-            # Quit and move on if DS noted cancelation for file
+            # Quits and moves on if DS noted cancelation for file
             if not proceed:
                 CLI_LOGGER.warning("CANCELLED: '%s'", upath)
-                dd.update_progress_bar(
-                    file=upath, status="e")  # -> X-symbol
+                dd.update_progress_bar(file=upath, status="e")  # -> X-symbol
                 continue
 
             CLI_LOGGER.info("UPLOAD COMPLETED: '%s' -> '%s'",
@@ -244,6 +246,8 @@ def put(creds: str, username: str, password: str, project: str,
             delivery.set_progress(item=upath, db=True, started=True)
 
             # TODO(ina): Put db update request in function - threaded?
+            # Adds (or updates if --overwrite) file information to database
+            # Args to send in request to api
             req_args = {
                 "project": delivery.project_id,
                 "file": delivery.data[upath]["new_file"],
@@ -255,14 +259,16 @@ def put(creds: str, username: str, password: str, project: str,
                 "overwrite": delivery.overwrite
             }
 
+            # Request endpoint
             req = ENDPOINTS["update_file"]
             response = requests.post(req, params=req_args)
-
             if not response.ok:
                 sys.exit(exceptions_ds.printout_error(
                     f"Could not update database. {response.text}"
                 ))
 
+            # Get response from api:
+            # db_response - "updated"=True if database update successful
             db_response = response.json()
             if not db_response["updated"]:
                 emessage = f"Database update failed: {db_response['message']}"
@@ -276,12 +282,12 @@ def put(creds: str, username: str, password: str, project: str,
 
             CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: '%s'", upath)
 
-            # Set delivery as finished and display progress = check mark
+            # Sets delivery as finished and display progress = check mark
             delivery.set_progress(item=upath, db=True, finished=True)
             dd.update_progress_bar(file=upath, status="f")
             encrypted_file = delivery.data[upath]["encrypted_file"]
 
-            # Delete encrypted files as soon as success
+            # Deletes encrypted files as soon as success
             final_threads[
                 thread_executor.submit(file_handler.file_deleter,
                                        file=encrypted_file)
@@ -289,8 +295,11 @@ def put(creds: str, username: str, password: str, project: str,
 
         # Check if deletion successful
         for dfuture in concurrent.futures.as_completed(final_threads):
+            # Path to original (origpath) and encrypted (cryptpath) file
             origpath, cryptpath = final_threads[dfuture]
             try:
+                # Get information from thread:
+                # deleted - if file deletion was successful
                 deleted, _ = dfuture.result()
             except concurrent.futures.BrokenExecutor:
                 CLI_LOGGER.critical("%s", dfuture.exception())

@@ -79,13 +79,14 @@ LOGIN_BASE = ""
 
 
 class DataDeliverer:
-    """
+    """Handles and keeps track of all data delivery related operations.
+
     Instanstiates the delivery by logging the user into the Delivery System,
     checking the users access to the specified project, and uploads/downloads
     the data to the S3 storage.
 
     Args:
-        creds (str):           Path to file with user creds and project info
+        creds (str):            Path to file with user creds and project info
         username (str):         User spec. username, None if creds used
         password (str):         User spec. password, None if creds used
         project_id (str):       User spec. project ID, None if creds used
@@ -100,8 +101,6 @@ class DataDeliverer:
     Attributes:
         break_on_fail (bool):   Cancel delivery on fail or not
         overwrite (bool):       Overwrite already delivered files or not
-        logfile (str):          Path to log file
-        LOGGER (Logger):        Logger - keeps track of bugs, info, errors etc
         method (str):           Delivery method, put or get
         user (DSUser):          Data Delivery System user
         project_id (str):       Project ID to upload to/download from
@@ -112,31 +111,21 @@ class DataDeliverer:
         s3project (str):        ID of S3 project containing buckets
         public (bytes):         Project public key
         private (bytes):        Project private key, b'' if uploading
-        TO_PRINT (str):         Progress printout
-        PROGRESS (dict):        Progress info on files  # NOTE: put in data??
-
-    Raises:
-        DeliverySystemException:    Required info not found or access denied
-        OSError:                    Temporary directory failure
-
     """
 
     #################
     # Magic Methods #
     #################
     def __init__(self, creds=None, username=None, password=None,
-                 project_id=None, project_owner=None,
-                 pathfile=None, data=None, break_on_fail=True,
-                 overwrite=False):
-        # TODO(ina): Write docstring?
+                 project_id=None, project_owner=None, pathfile=None, data=None,
+                 break_on_fail=True, overwrite=False):
+        """Inits DataDeliverer and checks the users access to the system."""
 
         # Flags ------------------------------------------------------- Flags #
-        self.break_on_fail = break_on_fail
-        self.overwrite = overwrite
-
+        self.break_on_fail = break_on_fail  # If cancel on one failure
+        self.overwrite = overwrite          # If overwrite previous delivery
         # --------------------------------------------------------------------#
-
-        # Quit execution if none of username, password, creds are set
+        # Quit delivery if none of username, password, creds are set
         if all(x is None for x in [username, password, creds]):
             sys.exit(exceptions_ds.printout_error(
                 "Delivery System login credentials not specified.\n\n"
@@ -157,10 +146,11 @@ class DataDeliverer:
         # S3 related
         self.bucketname = ""    # S3 bucket name -- to connect to S3
         self.s3project = "intra1.scilifelab.se"   # S3 project ID - for S3 conn
+        # TODO (ina): Move s3project to database somewhere
 
         # Cryptography related
-        self.public = b""
-        self.private = b""
+        self.public = b""       # Public key    (project)
+        self.private = b""      # Private key   (project)
 
         # Checks ----------------------------------------------------- Checks #
         # Check if all required info is entered and get user info
@@ -363,13 +353,19 @@ class DataDeliverer:
     # Private Methods #
     ###################
 
-    def _check_ds_access(self) -> (bool):
-        """Checks the users access to the delivery system
+    def _check_ds_access(self):
+        """Checks the users access to the delivery system. 
+
+        Makes a request to the Delivery System REST API, which in turn
+        checks the database for the user and its corresponding information.
 
         Returns:
-            json:   access (bool), s3_id (str), public_key (str),
-                    error (str), project_id (int)
-
+            json:   Information on whether delivery can proceed and user info.
+                access (bool):      True if access to DS granted\n
+                s3_id (str):        ID of the S3 project (on Safespring)\n
+                public_key (str):   The projects public_key\n
+                error (str):        Error message if any\n
+                project_id (int):   Project ID\n
         """
 
         global LOGIN_BASE
@@ -425,19 +421,18 @@ class DataDeliverer:
         """Checks that the correct options and credentials are entered.
 
         Args:
-            creds:     File containing the users DP username and password,
+            creds:      File containing the users DP username and password,
                         and the project relating to the upload/download.
                         Can be used instead of inputing the creds separately.
-            username:   Username
-            password:   Password
+            username:   Delivery System username
+            password:   Delivery System password
 
         Returns:
             tuple:  Info about user if all credentials specified
-
-                username    (str):     Username
-                password    (str):     Password
-                project_id  (int):     Project ID
-                owner_id    (int):     Owner ID
+                username    (str):     Username\n
+                password    (str):     Password\n
+                project_id  (int):     Project ID\n
+                owner_id    (int):     Owner ID\n
         """
 
         # No creds file -------- loose credentials -------- No creds file #
@@ -566,16 +561,19 @@ class DataDeliverer:
         return TO_PRINT, progress_dict
 
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (dict, dict):
-        """Puts all entered paths into one list
+        """Puts all entered paths into one dictionary.
+
+        Gathers all folders and files, checks their format etc, if they have
+        been previously delivered, and puts all information into one
+        dictionary.
 
         Args:
             data (tuple):       Tuple containing paths
             pathfile (str):   Path to file containing paths
 
         Returns:
-            tuple:  Info on user specified files
-
-                dict:   Info on all files to be delivered
+            tuple:  Two dictionaries with info on user specified files.
+                dict:   Info on all files to be delivered\n
                 dict:   Info on files which failed initial check
 
         """

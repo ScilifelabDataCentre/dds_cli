@@ -8,6 +8,7 @@ Data Deliverer
    :members:
    :undoc-members:
    :show-inheritance:
+   :private-members:
 
 
 S3 Connection

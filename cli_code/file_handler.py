@@ -32,25 +32,25 @@ from cli_code import SEGMENT_SIZE
 
 # Compression formats and their file signatures
 MAGIC_DICT = {
-    b'\x913HF': "hap",
-    b'ustar': "tar",
-    b'`\xea': "arj",
+    b"\x913HF": "hap",
+    b"ustar": "tar",
+    b"`\xea": "arj",
     b"_\'\xa8\x89": "jar",
-    b'ZOO ': "zoo",
-    b'PK\x03\x04': "zip",
-    b'UFA\xc6\xd2\xc1': "ufa",
-    b'StuffIt ': "sit",
-    b'Rar!\x1a\x07\x00': "rar v4.x",
-    b'Rar!\x1a\x07\x01\x00': "rar v5",
-    b'MAr0\x00': "mar",
-    b'DMS!': "dms",
-    b'CRUSH v': "cru",
-    b'BZh': "bz2",
-    b'-lh': "lha",
-    b'(This fi': "hqx",
-    b'!\x12': "ain",
-    b'\x1a\x0b': "pak",
-    b'(\xb5/\xfd': "zst"
+    b"ZOO ": "zoo",
+    b"PK\x03\x04": "zip",
+    b"UFA\xc6\xd2\xc1": "ufa",
+    b"StuffIt ": "sit",
+    b"Rar!\x1a\x07\x00": "rar v4.x",
+    b"Rar!\x1a\x07\x01\x00": "rar v5",
+    b"MAr0\x00": "mar",
+    b"DMS!": "dms",
+    b"CRUSH v": "cru",
+    b"BZh": "bz2",
+    b"-lh": "lha",
+    b"(This fi": "hqx",
+    b"!\x12": "ain",
+    b"\x1a\x0b": "pak",
+    b"(\xb5/\xfd": "zst"
 }
 MAX_FMT = max(len(x) for x in MAGIC_DICT)   # Longest signature
 
@@ -69,12 +69,12 @@ LOG.setLevel(logging.DEBUG)
 
 
 def file_deleter(file: pathlib.Path):
-    '''Delete file
+    """Delete file
 
     Args:
         file (Path):    Path to file
 
-    '''
+    """
 
     if not file.exists():
         return
@@ -100,7 +100,7 @@ def file_deleter(file: pathlib.Path):
 
 
 def file_reader(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
-    '''Yields the file chunk by chunk.
+    """Yields the file chunk by chunk.
 
     Args:
         file:           Path to file
@@ -108,15 +108,15 @@ def file_reader(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
 
     Yields:
         bytes:  Data chunk of size chunk_size
-    '''
+    """
 
-    for chunk in iter(lambda: filehandler.read(chunk_size), b''):
+    for chunk in iter(lambda: filehandler.read(chunk_size), b""):
         yield chunk
 
 
 # NOTE: Merge this with decompress_file?
 def file_writer(filehandler, gen, last_nonce):
-    '''Writes decrypted chunks to file. Checks if last nonces match.
+    """Writes decrypted chunks to file. Checks if last nonces match.
 
     Args:
         filehandler:            Filehandler to save decompressed chunks to/with
@@ -129,9 +129,9 @@ def file_writer(filehandler, gen, last_nonce):
             bool:   True if file saved and last nonce is correct
             str:    Error message, "" if none
 
-    '''
+    """
 
-    nonce = b''  # Catches last nonce while decompressing decrypted chunk
+    nonce = b""  # Catches last nonce while decompressing decrypted chunk
 
     # Save chunks to file
     for nonce, chunk in gen:
@@ -147,7 +147,7 @@ def file_writer(filehandler, gen, last_nonce):
 
 
 def get_root_path(file: pathlib.Path, path_base: str = None) -> (pathlib.Path):
-    '''Gets the path to the file, from the entered folder.
+    """Gets the path to the file, from the entered folder.
 
     Args:
         file:       Path to file
@@ -155,7 +155,7 @@ def get_root_path(file: pathlib.Path, path_base: str = None) -> (pathlib.Path):
 
     Returns:
         Path:   Path from folder to file
-    '''
+    """
 
     fileparts = file.parts
     start_ind = fileparts.index(path_base)
@@ -169,7 +169,7 @@ def get_root_path(file: pathlib.Path, path_base: str = None) -> (pathlib.Path):
 
 
 def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
-    '''Compresses file
+    """Compresses file
 
     Args:
         file:           Path to file
@@ -178,20 +178,20 @@ def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
     Yields:
         bytes:  Compressed data chunk
 
-    '''
+    """
 
     # Initiate a Zstandard compressor
     cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
 
     # Compress file chunk by chunk while reading
     with cctzx.stream_reader(filehandler) as compressor:
-        for chunk in iter(lambda: compressor.read(chunk_size), b''):
+        for chunk in iter(lambda: compressor.read(chunk_size), b""):
             yield chunk
 
 
 # TODO(ina): Merge this with file_writer?
 def decompress_file(filehandler, gen, last_nonce: bytes) -> (bool, str):
-    '''Decompresses file
+    """Decompresses file
 
     Args:
         filehandler:            Filehandler to save decompressed chunks to/with
@@ -204,9 +204,9 @@ def decompress_file(filehandler, gen, last_nonce: bytes) -> (bool, str):
             bool:   True if file saved and last nonce is correct
             str:    Error message, "" if none
 
-    '''
+    """
 
-    nonce = b''     # Catches last nonce while decompressing decrypted chunk
+    nonce = b""     # Catches last nonce while decompressing decrypted chunk
 
     # Decompress chunks and save to file
     dctx = zstd.ZstdDecompressor()  # Initiate a Zstandard decompressor
@@ -224,7 +224,7 @@ def decompress_file(filehandler, gen, last_nonce: bytes) -> (bool, str):
 
 
 def is_compressed(file: pathlib.Path) -> (bool, str):
-    '''Checks for file signatures in common compression formats.
+    """Checks for file signatures in common compression formats.
 
     Args:
         file (Path):   Path object to be checked.
@@ -234,13 +234,13 @@ def is_compressed(file: pathlib.Path) -> (bool, str):
 
             bool:   True if file is compressed format.
             str:    Error message, "" if no error
-    '''
+    """
 
     error = ""  # Error message
 
     try:
         # Check for file signature in beginning of file
-        with file.open(mode='rb') as f:
+        with file.open(mode="rb") as f:
             file_start = f.read(MAX_FMT)    # Read the first x bytes
             # LOG.debug(f"file: {file}\tfile start: {file_start}")
             for magic, _ in MAGIC_DICT.items():
@@ -260,7 +260,7 @@ def is_compressed(file: pathlib.Path) -> (bool, str):
 
 
 def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
-    '''Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+    """Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
     construction described in RFC7539.
 
     Args:
@@ -277,7 +277,7 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
     Raises:
         DeliverySystemException:    Failed reading of nonces
 
-    '''
+    """
 
     # NOTE: Fix return error here?
     # If position not directly after first nonce, then error - fail
@@ -286,16 +286,16 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
             f"Reading encrypted file {file.name} failed!")
 
     # Variables ################################################### Variables #
-    iv_int = int.from_bytes(iv, 'little')           # Transform nonce to int
+    iv_int = int.from_bytes(iv, "little")           # Transform nonce to int
     aad = None              # Associated data, unencrypted but authenticated
     # ----------------------------------------------------------------------- #
 
-    for enc_chunk in iter(lambda: file.read(CIPHER_SEGMENT_SIZE), b''):
+    for enc_chunk in iter(lambda: file.read(CIPHER_SEGMENT_SIZE), b""):
         # Get nonce as bytes for decryption: if the nonce is larger than the
         # max number of chunks allowed to be encrypted (safely) -- begin at 0
         nonce = (iv_int if iv_int < MAX_NONCE
                  else iv_int % MAX_NONCE).to_bytes(length=12,
-                                                   byteorder='little')
+                                                   byteorder="little")
 
         iv_int += 1  # Increment nonce
 
@@ -307,7 +307,7 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
 
 
 def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
-    '''Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+    """Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
     construction described in RFC7539.
 
     Args:
@@ -320,10 +320,10 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
 
             bytes:  Nonce -- number only used once
             bytes:  Ciphertext
-    '''
+    """
 
     # Variables ################################################### Variables #
-    iv_int = int.from_bytes(iv, 'little')   # Transform nonce to int
+    iv_int = int.from_bytes(iv, "little")   # Transform nonce to int
     aad = None  # Associated data, unencrypted but authenticated
     # ----------------------------------------------------------------------- #
 
@@ -332,7 +332,7 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
         # max number of chunks allowed to be encrypted (safely) -- begin at 0
         nonce = (iv_int if iv_int < MAX_NONCE
                  else iv_int % MAX_NONCE).to_bytes(length=12,
-                                                   byteorder='little')
+                                                   byteorder="little")
         # LOG.debug(f"\nnonce in encryption: \t{nonce}\n")
 
         iv_int += 1  # Increment nonce
@@ -346,7 +346,7 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
 
 def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
         -> (bool, str):
-    '''Check if the nonces match and give error if they don't.
+    """Check if the nonces match and give error if they don't.
 
     Args:
         filename (str):     File name
@@ -359,7 +359,7 @@ def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
             bool:   True if the nonces match
             str:    Error message, "" if none
 
-    '''
+    """
 
     # If reached end of file but nonces don't match - the entire file has not
     # been delivered -- error
@@ -379,7 +379,7 @@ def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
 
 def process_file(file: pathlib.Path, file_info: dict, peer_public) \
         -> (bool, pathlib.Path, int, bool, bytes, bytes, str):
-    '''Processes the files incl compression, encryption
+    """Processes the files incl compression, encryption
 
     Args:
         file (Path):           Path to file
@@ -394,13 +394,13 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
             bool:   True if file compressed by the delivery system
             bytes:  Public key needed for file decryption
             bytes:  Salt needed for shared key derivation
-            str:    'Error message, "" if none
+            str:    Error message, '' if none
 
     Raises:
         DeliverySystemException:    Failed processing or wrong argument format
         OSError:                    File not found or could not create tempdir
 
-    '''
+    """
 
     # If file path not Path type --> quit whole execution, something wrong
     if not isinstance(file, pathlib.Path):
@@ -413,9 +413,9 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
         raise OSError(emessage)  # Bug somewhere in code
 
     # Variables ################################################### Variables #
-    outfile = DIRS[1] / file_info['new_file']   # Path to save processed file
-    new_dir = DIRS[1] / file_info['directory_path']     # New temp subdir
-    key = b''
+    outfile = DIRS[1] / file_info["new_file"]   # Path to save processed file
+    new_dir = DIRS[1] / file_info["directory_path"]     # New temp subdir
+    key = b""
     # ----------------------------------------------------------------------- #
     LOG.debug("Infile: '%s', Outfile: '%s'", file, outfile)
 
@@ -443,23 +443,23 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
     # PROCESSING START ##################################### PROCESSING START #
     try:
         original_umask = os.umask(0)  # User file-creation mode mask
-        with file.open(mode='rb') as f:
+        with file.open(mode="rb") as f:
 
             # Check if to compress or read
-            func = file_reader if file_info['compressed'] else compress_file
+            func = file_reader if file_info["compressed"] else compress_file
 
             # Compression ###### If not already compressed ###### Compression #
             chunk_stream = func(filehandler=f)
 
             # Encryption ######################################### Encryption #
-            with outfile.open(mode='wb+') as outf:
+            with outfile.open(mode="wb+") as outf:
                 # Generate initial nonce and save to file
                 iv_bytes = os.urandom(12)
                 outf.write(iv_bytes)
                 LOG.debug("File: '%s' IV: %s", file, iv_bytes)
 
                 # Encrypt and save ciphertext (not nonces) to file
-                nonce = b''     # Catches the nonces
+                nonce = b""     # Catches the nonces
                 for nonce, ciphertext in aead_encrypt_chacha(gen=chunk_stream,
                                                              key=key,
                                                              iv=iv_bytes):
@@ -477,7 +477,7 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
         LOG.info("File: '%s', Processing successful! "
                  "Encrypted file saved at '%s'", file, outfile)
         # Info on if delivery system compressed or not
-        ds_compressed = False if file_info['compressed'] else True
+        ds_compressed = False if file_info["compressed"] else True
     finally:
         os.umask(original_umask)    # Remove mask
 
@@ -489,7 +489,7 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
 
 def reverse_processing(file: str, file_info: dict, keys: tuple) \
         -> (bool, str, str):
-    '''Decrypts and decompresses file (if DS compressed)
+    """Decrypts and decompresses file (if DS compressed)
 
     Args:
         file (str):         Path to file
@@ -504,10 +504,10 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
             str:    Decrypted file
             str:    Error message, "" if none
 
-    '''
+    """
 
     # Variables ################################################### Variables #
-    infile = file_info['new_file']                      # Downloaded file
+    infile = file_info["new_file"]                      # Downloaded file
     outfile = infile.parent / \
         pathlib.Path(infile.stem).stem    # Finalized file path
     error = ""
@@ -516,13 +516,13 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
 
     # Encryption key ######################################### Encryption key #
     # Get keys for decryption
-    peer_public = bytes.fromhex(file_info['public_key'])  # File public enc key
+    peer_public = bytes.fromhex(file_info["public_key"])  # File public enc key
     keypair = crypto_ds.ECDHKey(keys=keys)          # Project specific key pair
     LOG.debug("public key peer: %s\npublic key peer: %s",
               peer_public, peer_public.hex().upper())
 
     # Derive shared symmetric key
-    salt = file_info['salt']                # Salt to generate same shared key
+    salt = file_info["salt"]                # Salt to generate same shared key
     key, _ = keypair.generate_encryption_key(peer_public=peer_public,
                                              salt_=salt)
     LOG.debug("file: %s\n\tprivate: %s, \tpublic: %s (%s), "
@@ -536,7 +536,7 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
     # START ########################################################### START #
     try:
         original_umask = os.umask(0)  # User file-creation mode mask
-        with infile.open(mode='rb+') as f:
+        with infile.open(mode="rb+") as f:
             # Get last nonce
             f.seek(-12, os.SEEK_END)
             last_nonce = f.read(12)
@@ -553,10 +553,10 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
             chunk_stream = aead_decrypt_chacha(file=f, key=key, iv=first_nonce)
 
             # Save decrypted file
-            with outfile.open(mode='ab+') as outf:
+            with outfile.open(mode="ab+") as outf:
 
                 # Decompress if DS compressed, otherwise save chunks
-                func = decompress_file if file_info['compressed'] \
+                func = decompress_file if file_info["compressed"] \
                     else file_writer
                 saved, error = func(filehandler=outf,
                                     gen=chunk_stream,

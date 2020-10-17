@@ -219,43 +219,44 @@ for examples.</p>
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-get-c">
 <span id="cmdoption-ds-deliver-get-c"></span><span id="cmdoption-ds_deliver-get-creds"></span><span id="cmdoption-ds-deliver-get-creds"></span><code class="sig-name descname">-c</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--creds</code><code class="sig-prename descclassname"> &lt;creds&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-get-c" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path to creds file containing e.g. username, password, project id, etc.</p>
+<dd><p>Path to file containing user credentials - username, password, project id, project owner.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-get-u">
 <span id="cmdoption-ds-deliver-get-u"></span><span id="cmdoption-ds_deliver-get-username"></span><span id="cmdoption-ds-deliver-get-username"></span><code class="sig-name descname">-u</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--username</code><code class="sig-prename descclassname"> &lt;username&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-get-u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delivery Portal username.</p>
+<dd><p>Your Data Delivery System username.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-get-pw">
 <span id="cmdoption-ds-deliver-get-pw"></span><span id="cmdoption-ds_deliver-get-password"></span><span id="cmdoption-ds-deliver-get-password"></span><code class="sig-name descname">-pw</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--password</code><code class="sig-prename descclassname"> &lt;password&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-get-pw" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delivery Portal password.</p>
+<dd><p>Your Data Delivery System password.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-get-p">
 <span id="cmdoption-ds-deliver-get-p"></span><span id="cmdoption-ds_deliver-get-project"></span><span id="cmdoption-ds-deliver-get-project"></span><code class="sig-name descname">-p</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--project</code><code class="sig-prename descclassname"> &lt;project&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-get-p" title="Permalink to this definition">¶</a></dt>
-<dd><p>Project to upload files to.</p>
+<dd><p>Project ID to which the delivery belongs to.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-get-f">
 <span id="cmdoption-ds-deliver-get-f"></span><span id="cmdoption-ds_deliver-get-pathfile"></span><span id="cmdoption-ds-deliver-get-pathfile"></span><code class="sig-name descname">-f</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--pathfile</code><code class="sig-prename descclassname"> &lt;pathfile&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-get-f" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path to file containing all files and folders to be uploaded.</p>
+<dd><p>Path to file containing all files and folders to be delivered.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-get-d">
 <span id="cmdoption-ds-deliver-get-d"></span><span id="cmdoption-ds_deliver-get-data"></span><span id="cmdoption-ds-deliver-get-data"></span><code class="sig-name descname">-d</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--data</code><code class="sig-prename descclassname"> &lt;data&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-get-d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path to file or folder to upload.</p>
+<dd><p>Path to file or folder to be delivered.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-get-break-on-fail">
 <span id="cmdoption-ds-deliver-get-break-on-fail"></span><span id="cmdoption-ds_deliver-get-nobreak-on-fail"></span><span id="cmdoption-ds-deliver-get-nobreak-on-fail"></span><code class="sig-name descname">--break-on-fail</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--nobreak-on-fail</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ds_deliver-get-break-on-fail" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Failure to deliver one file results in cancellation of all specified files.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Default</dt>
 <dd class="field-odd"><p>True</p>
 </dd>
@@ -274,31 +275,31 @@ for examples.</p>
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-c">
 <span id="cmdoption-ds-deliver-put-c"></span><span id="cmdoption-ds_deliver-put-creds"></span><span id="cmdoption-ds-deliver-put-creds"></span><code class="sig-name descname">-c</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--creds</code><code class="sig-prename descclassname"> &lt;creds&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-put-c" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path to config file containing e.g. username, password, project id, etc.</p>
+<dd><p>Path to file containing user credentials - username, password, project id, project owner.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-u">
 <span id="cmdoption-ds-deliver-put-u"></span><span id="cmdoption-ds_deliver-put-username"></span><span id="cmdoption-ds-deliver-put-username"></span><code class="sig-name descname">-u</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--username</code><code class="sig-prename descclassname"> &lt;username&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-put-u" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delivery Portal username.</p>
+<dd><p>Your Data Delivery System username.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-pw">
 <span id="cmdoption-ds-deliver-put-pw"></span><span id="cmdoption-ds_deliver-put-password"></span><span id="cmdoption-ds-deliver-put-password"></span><code class="sig-name descname">-pw</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--password</code><code class="sig-prename descclassname"> &lt;password&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-put-pw" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delivery Portal password.</p>
+<dd><p>Your Data Delivery System password.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-p">
 <span id="cmdoption-ds-deliver-put-p"></span><span id="cmdoption-ds_deliver-put-project"></span><span id="cmdoption-ds-deliver-put-project"></span><code class="sig-name descname">-p</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--project</code><code class="sig-prename descclassname"> &lt;project&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-put-p" title="Permalink to this definition">¶</a></dt>
-<dd><p>Project to upload files to.</p>
+<dd><p>Project ID to which the delivery belongs to.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-o">
 <span id="cmdoption-ds-deliver-put-o"></span><span id="cmdoption-ds_deliver-put-owner"></span><span id="cmdoption-ds-deliver-put-owner"></span><code class="sig-name descname">-o</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--owner</code><code class="sig-prename descclassname"> &lt;owner&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-put-o" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>Required</strong> The owner of the data.</p>
+<dd><p><strong>Required</strong> Owner ID - the user to whom you are delivering.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Default</dt>
 <dd class="field-odd"><p></p></dd>
@@ -308,19 +309,20 @@ for examples.</p>
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-f">
 <span id="cmdoption-ds-deliver-put-f"></span><span id="cmdoption-ds_deliver-put-pathfile"></span><span id="cmdoption-ds-deliver-put-pathfile"></span><code class="sig-name descname">-f</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--pathfile</code><code class="sig-prename descclassname"> &lt;pathfile&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-put-f" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path to file containing all files and folders to be uploaded.</p>
+<dd><p>Path to file containing all files and folders to be delivered.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-d">
 <span id="cmdoption-ds-deliver-put-d"></span><span id="cmdoption-ds_deliver-put-data"></span><span id="cmdoption-ds-deliver-put-data"></span><code class="sig-name descname">-d</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--data</code><code class="sig-prename descclassname"> &lt;data&gt;</code><a class="headerlink" href="#cmdoption-ds_deliver-put-d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path to file or folder to upload.</p>
+<dd><p>Path to file or folder to be delivered.</p>
 </dd></dl>
 
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-break-on-fail">
 <span id="cmdoption-ds-deliver-put-break-on-fail"></span><span id="cmdoption-ds_deliver-put-nobreak-on-fail"></span><span id="cmdoption-ds-deliver-put-nobreak-on-fail"></span><code class="sig-name descname">--break-on-fail</code><code class="sig-prename descclassname"></code><code class="sig-prename descclassname">, </code><code class="sig-name descname">--nobreak-on-fail</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ds_deliver-put-break-on-fail" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Failure to deliver one file results in cancellation of all specified files.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Default</dt>
 <dd class="field-odd"><p>True</p>
 </dd>
@@ -330,7 +332,8 @@ for examples.</p>
 <dl class="std option">
 <dt id="cmdoption-ds_deliver-put-overwrite">
 <span id="cmdoption-ds-deliver-put-overwrite"></span><code class="sig-name descname">--overwrite</code><code class="sig-prename descclassname"></code><a class="headerlink" href="#cmdoption-ds_deliver-put-overwrite" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Replace any previously delivered files specified in the current delivery.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Default</dt>
 <dd class="field-odd"><p>False</p>
 </dd>

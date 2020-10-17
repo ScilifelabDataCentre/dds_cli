@@ -24,13 +24,13 @@ import sys
 # PROJECT SPEC ################################################# PROJECT SPEC #
 ###############################################################################
 
-__title__ = 'SciLifeLab Data Delivery System'
-__version__ = '0.1'
-__author__ = 'SciLifeLab Data Centre'
-__author_email__ = ''
-__license__ = 'MIT'
+__title__ = "SciLifeLab Data Delivery System"
+__version__ = "0.1"
+__author__ = "SciLifeLab Data Centre"
+__author_email__ = ""
+__license__ = "MIT"
 
-PROG = 'ds_deliver'
+PROG = "ds_deliver"
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -54,20 +54,20 @@ LOG = logging.getLogger(__name__)
 
 SEGMENT_SIZE = 65536                        # Chunk size while reading file
 CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + 16     # Chunk to read from encrypted file
-DS_MAGIC = b'DelSys'                        # DS signature in encrypted key
+DS_MAGIC = b"DelSys"                        # DS signature in encrypted key
 
 API_BASE = "http://127.0.0.1:5000/api/v1"
-ENDPOINTS = {'f_login': API_BASE + "/fac/login",
-             'u_login': API_BASE + "/user/login",
-             'list_users': API_BASE + "/listusers",
-             'list_facts': API_BASE + "/listfacs",
-             'project_files': API_BASE + "/project/listfiles",
-             'list_files': API_BASE + "/listfiles",
-             'list_s3': API_BASE + "/lists3",
-             'update_file': API_BASE + "/project/updatefile",
-             'file_salt': API_BASE + "/file/salt",
-             'key': API_BASE + "/project/",
-             'delivery_date': API_BASE + "/delivery/date/"}
+ENDPOINTS = {"f_login": API_BASE + "/fac/login",
+             "u_login": API_BASE + "/user/login",
+             "list_users": API_BASE + "/listusers",
+             "list_facts": API_BASE + "/listfacs",
+             "project_files": API_BASE + "/project/listfiles",
+             "list_files": API_BASE + "/listfiles",
+             "list_s3": API_BASE + "/lists3",
+             "update_file": API_BASE + "/project/updatefile",
+             "file_salt": API_BASE + "/file/salt",
+             "key": API_BASE + "/project/",
+             "delivery_date": API_BASE + "/delivery/date/"}
 
 
 ###############################################################################
@@ -76,12 +76,12 @@ ENDPOINTS = {'f_login': API_BASE + "/fac/login",
 
 
 def timestamp(folder: bool = False) -> (str):
-    '''Gets the current time. Formats timestamp.
+    """Gets the current time. Formats timestamp.
 
     Returns:
         str:    Timestamp in format 'YY-MM-DD_HH-MM-SS'
 
-    '''
+    """
 
     sep_date_time = "_" if folder else " "
     sep_time = "-" if folder else ":"
@@ -100,7 +100,7 @@ def timestamp(folder: bool = False) -> (str):
 
 
 def create_directories():
-    '''Creates all temporary directories.
+    """Creates all temporary directories.
 
     Returns:
         tuple:  Directories created and all paths
@@ -110,7 +110,7 @@ def create_directories():
 
     Raises:
         IOError:    Temporary folder failure
-    '''
+    """
 
     # Create temporary folder with timestamp and all subfolders
 
@@ -140,7 +140,7 @@ def create_directories():
 
 
 def config_logger(filename: str):
-    '''Creates log file
+    """Creates log file
 
     Args:
         filename:           Path to wished log file
@@ -150,7 +150,7 @@ def config_logger(filename: str):
 
     Raises:
         Exception:   Logging to file or console failed
-    '''
+    """
 
     logger = logging.getLogger(__name__)
 

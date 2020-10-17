@@ -37,7 +37,7 @@ S3_LOG.setLevel(logging.DEBUG)
 
 
 class S3Connector():
-    '''
+    """
     Keeps information regarding the resource, project and bucket
     currently in use, and handles S3-related checks.
 
@@ -52,7 +52,7 @@ class S3Connector():
         resource:       S3 connection object
         session:        Session - needed for multithreading/processing
 
-    '''
+    """
 
     def __init__(self, bucketname, project):
 
@@ -74,7 +74,7 @@ class S3Connector():
         return True
 
     def _connect(self):
-        '''Connect to S3'''
+        """Connect to S3"""
 
         try:
             # Start S3 session
@@ -93,19 +93,19 @@ class S3Connector():
             #                   }
             s3path = pathlib.Path.cwd() / \
                 pathlib.Path("sensitive/s3_config.json")
-            with s3path.open(mode='r') as f:
+            with s3path.open(mode="r") as f:
                 s3creds = json.load(f)
 
             # Keys and endpoint from file - this will be changed to database
-            endpoint_url = s3creds['endpoint_url']
-            project_keys = s3creds['sfsp_keys'][self.project]
+            endpoint_url = s3creds["endpoint_url"]
+            project_keys = s3creds["sfsp_keys"][self.project]
 
             # Start s3 connection resource
             self.resource = self.session.resource(
-                service_name='s3',
+                service_name="s3",
                 endpoint_url=endpoint_url,
-                aws_access_key_id=project_keys['access_key'],
-                aws_secret_access_key=project_keys['secret_key'],
+                aws_access_key_id=project_keys["access_key"],
+                aws_secret_access_key=project_keys["secret_key"],
             )
 
             # Connect to bucket
@@ -124,14 +124,14 @@ class S3Connector():
         # S3_LOG.info("S3 connection successful.")
 
     def delete_item(self, key: str):
-        '''Deletes specified item from S3 bucket
+        """Deletes specified item from S3 bucket
 
         Args:
             key (str):    Item (e.g. file) to delete from bucket
 
         Raises:
             S3Error:    Error while deleting object
-        '''
+        """
 
         try:
             self.resource.Object(
@@ -143,7 +143,7 @@ class S3Connector():
             S3_LOG.info("Item %s deleted from bucket.", key)
 
     def file_exists_in_bucket(self, key: str) -> (bool, str):
-        '''Checks if the current file already exists in the specified bucket.
+        """Checks if the current file already exists in the specified bucket.
         If so, the file will not be uploaded (put), or will be downloaded (get)
 
         Args:
@@ -158,14 +158,14 @@ class S3Connector():
             botocore.exceptions.ClientError:    Error in searching bucket.
                                                 404 -> OK, not 404 -> not OK
 
-        '''
+        """
 
         try:
             # Retrieve meta data for object -- 404 error if not in bucket
             self.resource.Object(self.bucket.name, key).load()
         except botocore.exceptions.ClientError as e:
             # If 404 -- OK! If other error -- NOT OK!
-            if e.response['Error']['Code'] == "404":   # 404 --> not in bucket
+            if e.response["Error"]["Code"] == "404":   # 404 --> not in bucket
                 S3_LOG.info("File %s: Not in bucket --> proceeding", key)
                 return False, ""
             else:

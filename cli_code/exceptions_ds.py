@@ -28,7 +28,7 @@ class S3Error(Exception):
 
 
 def printout_error(message: str = "") -> (str):
-    '''Adds "padding" to error messages -> more attention.
+    """Adds "padding" to error messages -> more attention.
 
     Args:
         message (str): Error message
@@ -36,7 +36,7 @@ def printout_error(message: str = "") -> (str):
     Returns:
         str: Padded error message for console printout
 
-    '''
+    """
 
     return ("\nx x x x x x x x x x x x x x x x x x x x x x x x\n\n"
             + message +

@@ -46,7 +46,7 @@ SEGMENT_SIZE = 65536
 
 
 class ECDHKey:
-    '''
+    """
     Elliptic-Curve Diffie-Hellman key pair
 
     Attributes:
@@ -58,13 +58,13 @@ class ECDHKey:
         generate_encryption_key:    Derives shared data encryption key
         public_to_hex:              Converts public key to hex-string
 
-    '''
+    """
 
     #################
     # Magic Methods #
     #################
     def __init__(self, keys=()):
-        '''Generate public key pair'''
+        """Generate public key pair"""
 
         # If put -> keys will be empty tuple -> Generate new key pair
         # If get -> keys will be project public & private from db
@@ -84,14 +84,14 @@ class ECDHKey:
             self.public = x25519.X25519PublicKey.from_public_bytes(public)
 
     def __enter__(self):
-        '''Allows for implementation using "with" statement.
-        Building.'''
+        """Allows for implementation using "with" statement.
+        Building."""
 
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        '''Allows for implementation using "with" statement.
-        Tear it down. Delete class.'''
+        """Allows for implementation using "with" statement.
+        Tear it down. Delete class."""
 
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
@@ -101,26 +101,26 @@ class ECDHKey:
 
     def __repr__(self):
 
-        return '<ECDHKey>'
+        return "<ECDHKey>"
 
     ##################
     # Public Methods #
     ##################
 
     def del_priv_key(self):
-        '''Sets private key to None - important that it's kept secret'''
+        """Sets private key to None - important that it's kept secret"""
 
         self.private = None
 
     def generate_encryption_key(self, peer_public: bytes, salt_: str = "") \
             -> (bytes, bytes):
-        '''Generate shared symmetric encryption key using peer public key
+        """Generate shared symmetric encryption key using peer public key
         and own public and private key
 
         Args:
             peer_public (bytes):    Public component of peer ECDH key pair
             salt_ (str):            Salt used for deriving shared key.
-                                    "" if 'put' (default)
+                                    '' if 'put' (default)
 
         Returns:
             tuple:  Derived key and salt
@@ -128,7 +128,7 @@ class ECDHKey:
                 bool:   Derived shared key
                 bool:   Salt
 
-        '''
+        """
 
         # Put -> salt will be empty string -> generate new salt
         # Get -> salt will be hex string from db -> get as bytes
@@ -155,7 +155,7 @@ class ECDHKey:
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
-            info=b'handshake data',
+            info=b"handshake data",
             backend=backends.default_backend()
         ).derive(shared)
 
@@ -163,12 +163,12 @@ class ECDHKey:
         return derived_key, salt
 
     def public_to_hex(self) -> (str):
-        '''Converts public key to hex-string
+        """Converts public key to hex-string
 
         Returns:
             str:    Hex representation of public key
 
-        '''
+        """
 
         return self.public.public_bytes(
             encoding=serialization.Encoding.Raw,
@@ -181,7 +181,7 @@ class ECDHKey:
 ###############################################################################
 
 def get_project_private(proj_id: str, user):
-    '''Gets the project private key from the database - only while downloading.
+    """Gets the project private key from the database - only while downloading.
 
     -------------------------Format in database:-------------------------------
     len(magic) + magic + len(projID) + projID + len(privateKey) + privateKey
@@ -194,9 +194,9 @@ def get_project_private(proj_id: str, user):
     Returns:
         bytes:  Private key belonging to current project
 
-    '''
+    """
 
-    req = ENDPOINTS['key'] + f"{proj_id}/key"
+    req = ENDPOINTS["key"] + f"{proj_id}/key"
     response = requests.get(req)
     if not response.ok:
         sys.exit(
@@ -209,8 +209,8 @@ def get_project_private(proj_id: str, user):
     CRYPTO_LOG.debug("private key info: %s", key_info)
 
     # Salt for deriving key used to encrypt/decrypt secret key
-    key_salt = bytes.fromhex(key_info['salt'])
-    CRYPTO_LOG.debug("salt in hex: %s", key_info['salt'])
+    key_salt = bytes.fromhex(key_info["salt"])
+    CRYPTO_LOG.debug("salt in hex: %s", key_info["salt"])
     CRYPTO_LOG.debug("salt: %s", key_salt)
 
     # Derive key-encryption-key
@@ -218,17 +218,17 @@ def get_project_private(proj_id: str, user):
                         r=8, p=1, backend=backends.default_backend())
 
     CRYPTO_LOG.debug("password: %s", user.password)
-    key_enc_key = kdf.derive(user.password.encode('utf-8'))
+    key_enc_key = kdf.derive(user.password.encode("utf-8"))
     CRYPTO_LOG.debug("key: %s", key_enc_key)
 
-    CRYPTO_LOG.debug("encrypted key in hex: %s", key_info['encrypted_key'])
+    CRYPTO_LOG.debug("encrypted key in hex: %s", key_info["encrypted_key"])
 
     # Get encrypted private key and nonce from DB
-    encrypted_key = bytes.fromhex(key_info['encrypted_key'])
+    encrypted_key = bytes.fromhex(key_info["encrypted_key"])
     CRYPTO_LOG.debug("\nencrypted key in db: %s\n", encrypted_key)
 
-    nonce = bytes.fromhex(key_info['nonce'])
-    CRYPTO_LOG.debug("nonce: %s --  in hex: %s", nonce, key_info['nonce'])
+    nonce = bytes.fromhex(key_info["nonce"])
+    CRYPTO_LOG.debug("nonce: %s --  in hex: %s", nonce, key_info["nonce"])
 
     # Decrypt key
     decrypted_key = decrypt(
@@ -240,9 +240,9 @@ def get_project_private(proj_id: str, user):
     start = 0
     to_read = 2
     magic_id_len = int.from_bytes(
-        decrypted_key[start:start+to_read], 'big')
+        decrypted_key[start:start+to_read], "big")
 
-    # Read magic_id_len bytes -> magic id - should be b'DelSys'
+    # Read magic_id_len bytes -> magic id - should be b"DelSys"
     start += to_read
     to_read = magic_id_len
     magic_id = decrypted_key[start:start+to_read]
@@ -255,20 +255,20 @@ def get_project_private(proj_id: str, user):
     # Get length of project id
     start += to_read
     to_read = 2
-    proj_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
+    proj_len = int.from_bytes(decrypted_key[start:start+to_read], "big")
 
     # Read proj_len bytes -> project id - should be equal to current proj
     start += to_read
     to_read = proj_len
     project_id = decrypted_key[start:start+to_read]
-    if project_id != (proj_id).to_bytes(2, byteorder='big'):
+    if project_id != (proj_id).to_bytes(2, byteorder="big"):
         sys.exit(exceptions_ds.printout_error("Error in private key! "
                                               "Project ID incorrect!"))
 
     # Get length of private key
     start += to_read
     to_read = 2
-    key_len = int.from_bytes(decrypted_key[start:start+to_read], 'big')
+    key_len = int.from_bytes(decrypted_key[start:start+to_read], "big")
 
     # Read key_len bytes -> key
     start += to_read
@@ -276,7 +276,7 @@ def get_project_private(proj_id: str, user):
     key = decrypted_key[start:start+to_read]
 
     # Error if there are bytes left after read key
-    if decrypted_key[start+to_read::] != b'':
+    if decrypted_key[start+to_read::] != b"":
         sys.exit(exceptions_ds.printout_error(
             "Error in private key! Extra bytes after"
             "key -- parsing failed or key corrupted!"

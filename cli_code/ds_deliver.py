@@ -60,7 +60,7 @@ from cli_code import s3_connector
 # SETUP ############################################################### SETUP #
 ###############################################################################
 
-# Initiate variables
+# Initiate logging variables
 LOG = None
 CLI_LOGGER = None
 
@@ -72,7 +72,13 @@ CLI_LOGGER = None
 
 @click.group()
 def cli():
-    """TODO(ina): Write a docstring here."""
+    """Main CLI function called before put and get. 
+
+    Initiates the required delivery objects: A temporary directory where logs
+    and files will be stored, and the CLI logger. Cannot be used
+    independently - put or get must be specified as an argument. See the args
+    for examples. 
+    """
 
     created = cli_code.create_directories()
     if not created:
@@ -134,10 +140,12 @@ def cli():
 def put(creds: str, username: str, password: str, project: str,
         owner: str, pathfile: str, data: tuple, break_on_fail=True,
         overwrite=False) -> (str):
-    """Uploads the files to S3 bucket. Only usable by facilities."""
+    """Handles the upload of files to the project-specific S3 bucket.
 
-    # TODO(ina): Check if usage information is needed here
-    # or if click handles it.
+    Currently only usable by facilities.
+    """
+
+    # TODO(ina): Add example in docstring
 
     # Create DataDeliverer to handle files and folders
     with dd.DataDeliverer(creds=creds, username=username, password=password,
@@ -356,7 +364,10 @@ def put(creds: str, username: str, password: str, project: str,
               show_default=True)
 def get(creds: str, username: str, password: str, project: str,
         pathfile: str, data: tuple, break_on_fail: bool = True):
-    """Downloads the files from S3 bucket. Not usable by facilities. """
+    """Handles the download of files from the project-specific S3 bucket.
+
+    Currently not usable by facilities.
+    """
 
     with dd.DataDeliverer(creds=creds, username=username, password=password,
                           project_id=project, pathfile=pathfile, data=data,

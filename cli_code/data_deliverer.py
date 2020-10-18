@@ -1318,7 +1318,12 @@ class _DSUser:
 
 
 def update_progress_bar(file, status: str):
-    """Update the status of the file - Waiting, Encrypting, Uploading, etc.
+    """Update the status of the file and print out progress.
+
+    Updates the delivery status of the current file to the options found in
+    STATUS_DICT: 'Waiting to start...', 'Encrypting...', 'Decrypting...',
+    'Uploading...', 'Downloading...', and two unicode symbols: A check mark,
+    and a cross - symbolizing a finished delivery or a failure, respectively.
 
     Args:
         file:             File to update progress on
@@ -1342,8 +1347,7 @@ def update_progress_bar(file, status: str):
 
     # Replace the printout and progress dict with the update
     global TO_PRINT
-    TO_PRINT = TO_PRINT.replace(PROGRESS[file]["line"],
-                                new_line)
+    TO_PRINT = TO_PRINT.replace(PROGRESS[file]["line"], new_line)
     PROGRESS[file]["line"] = new_line
 
     # Print the status

@@ -459,7 +459,14 @@ class DataDeliverer:
                 )
 
             # Assume current user is owner if no owner is set
-            if self.project_owner is None:
+            if not self.project_owner or self.project_owner is None:
+                if self.method == "put":
+                    sys.exit(
+                        exceptions_ds.printout_error(
+                            "You have not specified the project owner. \n"
+                            "Cancelling delivery."
+                        )
+                    )
                 # username, password, id, owner
                 return username, password, self.project_id, username
 
@@ -480,8 +487,7 @@ class DataDeliverer:
                    in ["username", "password", "project"]):
             sys.exit(
                 exceptions_ds.printout_error(
-                    """The creds file does not contain all required
-                       information."""
+                    "The creds file does not contain all required information."
                 )
             )
 
@@ -495,7 +501,8 @@ class DataDeliverer:
             return username, password, project_id, credentials["owner"]
 
         # Error if owner not specified and trying to put
-        if self.project_owner is None and self.method == "put":
+        if (not self.project_owner or self.project_owner is None) \
+            and self.method == "put":
             sys.exit(
                 exceptions_ds.printout_error(
                     """Project owner not specified. Cancelling delivery."""
@@ -1056,7 +1063,7 @@ class DataDeliverer:
             upload (bool):      True if upload in progress or finshed
             db (bool):          True if database update in progress or finished
         """
-        # TODO (ina): Merge with update_progress_bar? 
+        # TODO (ina): Merge with update_progress_bar?
         # Which process to update
         to_update = ""
 

@@ -1011,6 +1011,9 @@ class DataDeliverer:
     def prep_upload(self, path: Path, path_info: dict) -> (tuple):
         """Prepares the files for upload.
 
+        Checks if the file should be delivered, sets the current process and
+        processes the files.
+
         Args:
             path (Path):        Path to file
             path_info (dict):   Info on file

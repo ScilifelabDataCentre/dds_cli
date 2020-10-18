@@ -64,7 +64,7 @@ class ECDHKey:
     # Magic Methods #
     #################
     def __init__(self, keys=()):
-        """Generate public key pair"""
+        """Generate ECDH key pair"""
 
         # If put -> keys will be empty tuple -> Generate new key pair
         # If get -> keys will be project public & private from db
@@ -124,9 +124,8 @@ class ECDHKey:
 
         Returns:
             tuple:  Derived key and salt
-
-                bool:   Derived shared key
-                bool:   Salt
+                bytes:   Derived shared key\n
+                bytes:   Salt\n
 
         """
 
@@ -163,7 +162,7 @@ class ECDHKey:
         return derived_key, salt
 
     def public_to_hex(self) -> (str):
-        """Converts public key to hex-string
+        """Converts public key to hex-string.
 
         Returns:
             str:    Hex representation of public key

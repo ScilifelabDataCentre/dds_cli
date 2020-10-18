@@ -1044,26 +1044,20 @@ class DataDeliverer:
 
         return info
 
-    def set_progress(self, item: Path,
-                     processing: bool = False, upload: bool = False,
-                     download: bool = False, decryption: bool = False,
-                     db: bool = False, started: bool = False,
-                     finished: bool = False):
+    def set_progress(self, item: Path, processing: bool = False,
+                     upload: bool = False, download: bool = False,
+                     decryption: bool = False, db: bool = False,
+                     started: bool = False, finished: bool = False):
         """Set progress of file to in progress or finished, regarding
         the file checks, processing, upload or database.
 
         Args:
             item (Path):        Path to file being handled
-            check (bool):       True if file checking in progress or finished
             processing (bool):  True if processing in progress or finished
             upload (bool):      True if upload in progress or finshed
             db (bool):          True if database update in progress or finished
-
-        Raises:
-            DataException:  Data dictionary update failed
-
         """
-
+        # TODO (ina): Merge with update_progress_bar? 
         # Which process to update
         to_update = ""
 

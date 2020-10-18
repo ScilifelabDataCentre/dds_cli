@@ -559,6 +559,8 @@ str:    Error message, “” if none</p>
 <dt id="cli_code.data_deliverer.DataDeliverer.prep_upload">
 <code class="sig-name descname">prep_upload</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">path_info</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.prep_upload" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepares the files for upload.</p>
+<p>Checks if the file should be delivered, sets the current process and
+processes the files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -617,14 +619,10 @@ the file checks, processing, upload or database.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>item</strong> (<em>Path</em>) – Path to file being handled</p></li>
-<li><p><strong>check</strong> (<em>bool</em>) – True if file checking in progress or finished</p></li>
 <li><p><strong>processing</strong> (<em>bool</em>) – True if processing in progress or finished</p></li>
 <li><p><strong>upload</strong> (<em>bool</em>) – True if upload in progress or finshed</p></li>
 <li><p><strong>db</strong> (<em>bool</em>) – True if database update in progress or finished</p></li>
 </ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>DataException</strong> – Data dictionary update failed</p>
 </dd>
 </dl>
 </dd></dl>
@@ -723,7 +721,11 @@ the file checks, processing, upload or database.</p>
 <dl class="py function">
 <dt id="cli_code.data_deliverer.update_progress_bar">
 <code class="sig-name descname">update_progress_bar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span></em>, <em class="sig-param"><span class="n">status</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.update_progress_bar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the status of the file - Waiting, Encrypting, Uploading, etc.</p>
+<dd><p>Update the status of the file and print out progress.</p>
+<p>Updates the delivery status of the current file to the options found in
+STATUS_DICT: ‘Waiting to start…’, ‘Encrypting…’, ‘Decrypting…’,
+‘Uploading…’, ‘Downloading…’, and two unicode symbols: A check mark,
+and a cross - symbolizing a finished delivery or a failure, respectively.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

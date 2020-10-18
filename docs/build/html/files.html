@@ -220,11 +220,11 @@ and own public and private key</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>Derived key and salt</p>
-<blockquote>
-<div><p>bool:   Derived shared key
-bool:   Salt</p>
-</div></blockquote>
+<dd class="field-even"><p><dl>
+<dt>Derived key and salt</dt><dd><p>bytes:   Derived shared key</p>
+<p>bytes:   Salt</p>
+</dd>
+</dl>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -236,7 +236,7 @@ bool:   Salt</p>
 <dl class="py method">
 <dt id="id2">
 <code class="sig-name descname">public_to_hex</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts public key to hex-string</p>
+<dd><p>Converts public key to hex-string.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Hex representation of public key</p>
@@ -496,7 +496,11 @@ str:    Error message, “” if no error</p>
 <dl class="py function">
 <dt id="cli_code.file_handler.process_file">
 <code class="sig-name descname">process_file</code><span class="sig-paren">(</span><em class="sig-param">file: pathlib.Path</em>, <em class="sig-param">file_info: dict</em>, <em class="sig-param">peer_public) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'pathlib.Path'&gt;</em>, <em class="sig-param">&lt;class 'int'&gt;</em>, <em class="sig-param">&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.process_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Processes the files incl compression, encryption</p>
+<dd><p>Processes the files before upload.</p>
+<p>Compresses the files that are not already in a compressed format,
+encrypts them using the algorithm ChaCha20-Poly1305 and returns info about
+what processing has been performed and the public key component. The secret
+key is not saved since the uploader should not be able to decrypt.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -505,16 +509,16 @@ str:    Error message, “” if no error</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>Information about finished processing</p>
-<blockquote>
-<div><p>bool:   True if processing successful
-Path:   Path to processed file
-int:    Size of processed file
-bool:   True if file compressed by the delivery system
-bytes:  Public key needed for file decryption
-bytes:  Salt needed for shared key derivation
-str:    Error message, ‘’ if none</p>
-</div></blockquote>
+<dd class="field-even"><p><dl>
+<dt>Information about finished processing</dt><dd><p>bool:   True if processing successful</p>
+<p>Path:   Path to processed file</p>
+<p>int:    Size of processed file</p>
+<p>bool:   True if file compressed by the delivery system</p>
+<p>bytes:  Public key needed for file decryption</p>
+<p>bytes:  Salt needed for shared key derivation</p>
+<p>str:    Error message, ‘’ if none</p>
+</dd>
+</dl>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>

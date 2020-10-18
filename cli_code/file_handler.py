@@ -169,7 +169,7 @@ def get_root_path(file: pathlib.Path, path_base: str = None) -> (pathlib.Path):
 
 
 def compress_file(filehandler, chunk_size: int = SEGMENT_SIZE) -> (bytes):
-    """Compresses file
+    """Compresses file by reading it chunk by chunk.
 
     Args:
         file:           Path to file
@@ -307,7 +307,9 @@ def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
 
 
 def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
-    """Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+    """Encrypts the file in chunks.
+
+    Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
     construction described in RFC7539.
 
     Args:
@@ -321,6 +323,7 @@ def aead_encrypt_chacha(gen, key: bytes, iv: bytes) -> (bytes, bytes):
             bytes:  Nonce -- number only used once
             bytes:  Ciphertext
     """
+    # TODO (ina): Move this to crypto module?
 
     # Variables ################################################### Variables #
     iv_int = int.from_bytes(iv, "little")   # Transform nonce to int
@@ -379,7 +382,12 @@ def check_last_nonce(filename: str, last_nonce: bytes, nonce: bytes) \
 
 def process_file(file: pathlib.Path, file_info: dict, peer_public) \
         -> (bool, pathlib.Path, int, bool, bytes, bytes, str):
-    """Processes the files incl compression, encryption
+    """Processes the files before upload.
+
+    Compresses the files that are not already in a compressed format,
+    encrypts them using the algorithm ChaCha20-Poly1305 and returns info about
+    what processing has been performed and the public key component. The secret
+    key is not saved since the uploader should not be able to decrypt.
 
     Args:
         file (Path):           Path to file
@@ -387,21 +395,19 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
 
     Returns:
         tuple: Information about finished processing
-
-            bool:   True if processing successful
-            Path:   Path to processed file
-            int:    Size of processed file
-            bool:   True if file compressed by the delivery system
-            bytes:  Public key needed for file decryption
-            bytes:  Salt needed for shared key derivation
-            str:    Error message, '' if none
+            bool:   True if processing successful\n
+            Path:   Path to processed file\n
+            int:    Size of processed file\n
+            bool:   True if file compressed by the delivery system\n
+            bytes:  Public key needed for file decryption\n
+            bytes:  Salt needed for shared key derivation\n
+            str:    Error message, '' if none\n
 
     Raises:
         DeliverySystemException:    Failed processing or wrong argument format
         OSError:                    File not found or could not create tempdir
-
     """
-
+    # TODO (ina): Look into using signing etc for the keys.
     # If file path not Path type --> quit whole execution, something wrong
     if not isinstance(file, pathlib.Path):
         emessage = f"Wrong format! {file} is not a 'Path' object."

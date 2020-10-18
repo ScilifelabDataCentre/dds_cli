@@ -37,7 +37,8 @@ S3_LOG.setLevel(logging.DEBUG)
 
 
 class S3Connector:
-    """
+    """Connection to the Safespring S3 instance.
+
     Keeps information regarding the resource, project and bucket
     currently in use, and handles S3-related checks.
 
@@ -124,7 +125,7 @@ class S3Connector:
         # S3_LOG.info("S3 connection successful.")
 
     def delete_item(self, key: str):
-        """Deletes specified item from S3 bucket
+        """Deletes specified item from S3 bucket.
 
         Args:
             key (str):    Item (e.g. file) to delete from bucket

@@ -979,7 +979,8 @@ class DataDeliverer:
     ##################
 
     def finalize_delivery(self, file: str, fileinfo: dict) -> (tuple):
-        """Finalizes delivery after download from s3:
+        """Finalizes delivery after download from s3.
+
         Decrypts, decompresses (if compressed in DS), and checks integrity.
 
         Args:
@@ -988,10 +989,9 @@ class DataDeliverer:
 
         Return:
             tuple:   Info on finalized file
-
-                bool:   True if decryption etc successful
-                str:    Path to new, delivered and decrypted file
-                str:    Error message, "" if none
+                bool:   True if decryption etc successful\n
+                str:    Path to new, delivered and decrypted file\n
+                str:    Error message, "" if none\n
 
         """
 
@@ -1020,14 +1020,13 @@ class DataDeliverer:
 
         Returns:
             tuple:  Info on success and info
-
-                bool:   True if processing successful
-                Path:   Path to processed file
-                int:    Size of processed file
-                bool:   True if file compressed by the delivery system
-                bytes:  Public key needed for file decryption
-                bytes:  Salt needed for shared key derivation
-                str:    Error message, "" if none
+                bool:   True if processing successful\n
+                Path:   Path to processed file\n
+                int:    Size of processed file\n
+                bool:   True if file compressed by the delivery system\n
+                bytes:  Public key needed for file decryption\n
+                bytes:  Salt needed for shared key derivation\n
+                str:    Error message, "" if none\n
         """
 
         # If DS noted cancelation of file -- quit and move on
@@ -1096,7 +1095,10 @@ class DataDeliverer:
         LOG.exception("Data delivery information failed to update")
 
     def update_delivery(self, file: Path, updinfo: dict) -> (bool):
-        """Updates data delivery information dictionary
+        """Updates data delivery information dictionary.
+
+        Updates the data dictionary with information from previous step, e.g.
+        processing or upload etc.
 
         Args:
             file (Path):        The files info to be updated
@@ -1106,7 +1108,7 @@ class DataDeliverer:
             bool:   True if to continue with delivery
 
         Raises:
-            DataException:  Data dictionary update failed
+            DeliverySystemException:  Data dictionary update failed
 
         """
 
@@ -1165,7 +1167,7 @@ class DataDeliverer:
     # Main Methods #
     ################
     def get(self, path: str, path_info: dict) -> (bool, str):
-        """Downloads specified data from S3 bucket
+        """Downloads specified data from S3 bucket.
 
         Args:
             path (str):         File to be downloaded
@@ -1173,9 +1175,8 @@ class DataDeliverer:
 
         Returns:
             tuple:  Info on download success
-
-                bool:   True if downloaded
-                str:    Error message, "" if none
+                bool:   True if downloaded\n
+                str:    Error message, "" if none\n
 
         Raises:
             OSError:                        Creating directory failed
@@ -1235,13 +1236,12 @@ class DataDeliverer:
             fileinfo (dict):   Info on file
 
         Returns:
-            tuple:
+            tuple: Info on upload success
+                bool:   True if upload successful\n
+                str:    Error message, '' if none\n
 
-                bool:   True if upload successful
-                str:    Encrypted file, to upload
-                str:    Remote path, path in bucket
-                str:    Error message, "" if none
-
+        Raises: 
+            botocore.client.ClientError:  Upload failed
         """
 
         # Quit and move on if DS noted cancelation of file

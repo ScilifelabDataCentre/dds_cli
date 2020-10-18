@@ -1,5 +1,7 @@
-"""
-Custom xceptions related to the Data Delivery System
+"""Custom Exceptions related to the Data Delivery System.
+
+Also contains the function printout_error() which makes the printed error
+messages more readable.
 """
 
 ###############################################################################
@@ -19,7 +21,6 @@ class DeliverySystemException(Exception):
 class S3Error(Exception):
     """Errors regarding S3 storage, e.g. upload, download,
     buckets, resources, etc. """
-
 
 
 ###############################################################################

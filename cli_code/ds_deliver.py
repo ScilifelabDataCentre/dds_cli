@@ -72,7 +72,7 @@ CLI_LOGGER = None
 
 @click.group()
 def cli():
-    """Main CLI function called before put and get.
+    """Main CLI function.
 
     Initiates the required delivery objects: A temporary directory where logs
     and files will be stored, and the CLI logger. Cannot be used

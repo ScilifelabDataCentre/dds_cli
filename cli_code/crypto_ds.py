@@ -1,5 +1,10 @@
-"""
-Cryptography-related functions required for the Data Delivery System
+"""Cryptography-related functions required for the Data Delivery System.
+
+Contains the ECDHKey class which generates a public key pair usable by
+Elliptic-Curve Diffie-Hellman cryptography and transforms the keys to readable
+hex strings. Also contains the function get_project_private() which gets the
+project private key from the project database and parses it. This function
+is only accessible by users downloading their data - not uploading.
 """
 
 ###############################################################################

@@ -164,7 +164,12 @@
 <h1>File processing<a class="headerlink" href="#file-processing" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-cli_code.crypto_ds">
 <span id="cryptography"></span><h2>Cryptography<a class="headerlink" href="#module-cli_code.crypto_ds" title="Permalink to this headline">¶</a></h2>
-<p>Cryptography-related functions required for the Data Delivery System</p>
+<p>Cryptography-related functions required for the Data Delivery System.</p>
+<p>Contains the ECDHKey class which generates a public key pair usable by
+Elliptic-Curve Diffie-Hellman cryptography and transforms the keys to readable
+hex strings. Also contains the function get_project_private() which gets the
+project private key from the project database and parses it. This function
+is only accessible by users downloading their data - not uploading.</p>
 <dl class="py class">
 <dt id="cli_code.crypto_ds.ECDHKey">
 <em class="property">class </em><code class="sig-name descname">ECDHKey</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span><span class="o">=</span><span class="default_value">()</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey" title="Permalink to this definition">¶</a></dt>
@@ -275,12 +280,15 @@ len(magic) + magic + len(projID) + projID + len(privateKey) + privateKey
 </div>
 <div class="section" id="module-cli_code.file_handler">
 <span id="file-handling"></span><h2>File handling<a class="headerlink" href="#module-cli_code.file_handler" title="Permalink to this headline">¶</a></h2>
-<p>File handler.
-Responsible for IO related operations, including compression, encryption, etc.</p>
+<p>File handler module.</p>
+<p>Responsible for IO related operations, including compression, encryption, etc.
+Also contains the variables MAGIC_DICT (all checked compression formats) and
+MAX_NONCE (the maximum number of nonces allowed for the same key).</p>
 <dl class="py function">
 <dt id="cli_code.file_handler.aead_decrypt_chacha">
 <code class="sig-name descname">aead_decrypt_chacha</code><span class="sig-paren">(</span><em class="sig-param">file</em>, <em class="sig-param">key: bytes</em>, <em class="sig-param">iv: bytes) -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.aead_decrypt_chacha" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+<dd><p>Decrypts the file in chunks.</p>
+<p>Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
 construction described in RFC7539.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -307,7 +315,8 @@ bytes:  Plaintext chunk</p>
 <dl class="py function">
 <dt id="cli_code.file_handler.aead_encrypt_chacha">
 <code class="sig-name descname">aead_encrypt_chacha</code><span class="sig-paren">(</span><em class="sig-param">gen</em>, <em class="sig-param">key: bytes</em>, <em class="sig-param">iv: bytes) -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.aead_encrypt_chacha" title="Permalink to this definition">¶</a></dt>
-<dd><p>Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+<dd><p>Encrypts the file in chunks.</p>
+<p>Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
 construction described in RFC7539.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -357,7 +366,7 @@ str:    Error message, “” if none</p>
 <dl class="py function">
 <dt id="cli_code.file_handler.compress_file">
 <code class="sig-name descname">compress_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65536</span></em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#cli_code.file_handler.compress_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compresses file</p>
+<dd><p>Compresses file by reading it chunk by chunk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

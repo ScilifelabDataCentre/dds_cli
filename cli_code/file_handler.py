@@ -1,6 +1,8 @@
-"""
-File handler.
+"""File handler module.
+
 Responsible for IO related operations, including compression, encryption, etc.
+Also contains the variables MAGIC_DICT (all checked compression formats) and
+MAX_NONCE (the maximum number of nonces allowed for the same key).
 """
 
 ###############################################################################
@@ -260,7 +262,9 @@ def is_compressed(file: pathlib.Path) -> (bool, str):
 
 
 def aead_decrypt_chacha(file, key: bytes, iv: bytes) -> (bytes, bytes):
-    """Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+    """Decrypts the file in chunks.
+
+    Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
     construction described in RFC7539.
 
     Args:

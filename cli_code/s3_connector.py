@@ -1,7 +1,8 @@
-"""
-S3 Connector
+"""S3 Connector.
 
-Communicates with and handles operations related to Safespring S3
+Communicates with and handles operations related to Safespring S3, including
+deleting items from the bucket and performing checks on whether the files
+exist in the buckets.
 """
 
 ###############################################################################

@@ -500,8 +500,8 @@ item exists in S3 bucket.</p>
 <dl class="py method">
 <dt id="cli_code.data_deliverer.DataDeliverer.finalize_delivery">
 <code class="sig-name descname">finalize_delivery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">fileinfo</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; tuple<a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.finalize_delivery" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finalizes delivery after download from s3:
-Decrypts, decompresses (if compressed in DS), and checks integrity.</p>
+<dd><p>Finalizes delivery after download from s3.</p>
+<p>Decrypts, decompresses (if compressed in DS), and checks integrity.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -510,12 +510,12 @@ Decrypts, decompresses (if compressed in DS), and checks integrity.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>Info on finalized file</p>
-<blockquote>
-<div><p>bool:   True if decryption etc successful
-str:    Path to new, delivered and decrypted file
-str:    Error message, “” if none</p>
-</div></blockquote>
+<dd class="field-even"><p><dl>
+<dt>Info on finalized file</dt><dd><p>bool:   True if decryption etc successful</p>
+<p>str:    Path to new, delivered and decrypted file</p>
+<p>str:    Error message, “” if none</p>
+</dd>
+</dl>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -527,7 +527,7 @@ str:    Error message, “” if none</p>
 <dl class="py method">
 <dt id="cli_code.data_deliverer.DataDeliverer.get">
 <code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">path_info: dict) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Downloads specified data from S3 bucket</p>
+<dd><p>Downloads specified data from S3 bucket.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -536,11 +536,11 @@ str:    Error message, “” if none</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>Info on download success</p>
-<blockquote>
-<div><p>bool:   True if downloaded
-str:    Error message, “” if none</p>
-</div></blockquote>
+<dd class="field-even"><p><dl>
+<dt>Info on download success</dt><dd><p>bool:   True if downloaded</p>
+<p>str:    Error message, “” if none</p>
+</dd>
+</dl>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -569,16 +569,16 @@ processes the files.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>Info on success and info</p>
-<blockquote>
-<div><p>bool:   True if processing successful
-Path:   Path to processed file
-int:    Size of processed file
-bool:   True if file compressed by the delivery system
-bytes:  Public key needed for file decryption
-bytes:  Salt needed for shared key derivation
-str:    Error message, “” if none</p>
-</div></blockquote>
+<dd class="field-even"><p><dl>
+<dt>Info on success and info</dt><dd><p>bool:   True if processing successful</p>
+<p>Path:   Path to processed file</p>
+<p>int:    Size of processed file</p>
+<p>bool:   True if file compressed by the delivery system</p>
+<p>bytes:  Public key needed for file decryption</p>
+<p>bytes:  Salt needed for shared key derivation</p>
+<p>str:    Error message, “” if none</p>
+</dd>
+</dl>
 </p>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -599,13 +599,18 @@ str:    Error message, “” if none</p>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>bool:   True if upload successful
-str:    Encrypted file, to upload
-str:    Remote path, path in bucket
-str:    Error message, “” if none</p>
+<dd class="field-even"><p><dl>
+<dt>Info on upload success</dt><dd><p>bool:   True if upload successful</p>
+<p>str:    Error message, ‘’ if none</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>tuple</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>botocore.client.ClientError</strong> – Upload failed</p>
 </dd>
 </dl>
 </dd></dl>
@@ -630,7 +635,9 @@ the file checks, processing, upload or database.</p>
 <dl class="py method">
 <dt id="cli_code.data_deliverer.DataDeliverer.update_delivery">
 <code class="sig-name descname">update_delivery</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">updinfo</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#cli_code.data_deliverer.DataDeliverer.update_delivery" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates data delivery information dictionary</p>
+<dd><p>Updates data delivery information dictionary.</p>
+<p>Updates the data dictionary with information from previous step, e.g.
+processing or upload etc.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -645,7 +652,7 @@ the file checks, processing, upload or database.</p>
 <dd class="field-odd"><p>bool</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>DataException</strong> – Data dictionary update failed</p>
+<dd class="field-even"><p><a class="reference internal" href="#cli_code.data_deliverer.DeliverySystemException" title="cli_code.data_deliverer.DeliverySystemException"><strong>DeliverySystemException</strong></a> – Data dictionary update failed</p>
 </dd>
 </dl>
 </dd></dl>
@@ -739,12 +746,15 @@ and a cross - symbolizing a finished delivery or a failure, respectively.</p>
 </div>
 <div class="section" id="module-cli_code.s3_connector">
 <span id="s3-connection"></span><h2>S3 Connection<a class="headerlink" href="#module-cli_code.s3_connector" title="Permalink to this headline">¶</a></h2>
-<p>S3 Connector</p>
-<p>Communicates with and handles operations related to Safespring S3</p>
+<p>S3 Connector.</p>
+<p>Communicates with and handles operations related to Safespring S3, including
+deleting items from the bucket and performing checks on whether the files
+exist in the buckets.</p>
 <dl class="py class">
 <dt id="cli_code.s3_connector.S3Connector">
 <em class="property">class </em><code class="sig-name descname">S3Connector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bucketname</span></em>, <em class="sig-param"><span class="n">project</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.s3_connector.S3Connector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Connection to the Safespring S3 instance.</p>
 <p>Keeps information regarding the resource, project and bucket
 currently in use, and handles S3-related checks.</p>
 <dl class="field-list simple">
@@ -788,7 +798,7 @@ currently in use, and handles S3-related checks.</p>
 <dl class="py method">
 <dt id="cli_code.s3_connector.S3Connector.delete_item">
 <code class="sig-name descname">delete_item</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.s3_connector.S3Connector.delete_item" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deletes specified item from S3 bucket</p>
+<dd><p>Deletes specified item from S3 bucket.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Item (e.g. file) to delete from bucket</p>

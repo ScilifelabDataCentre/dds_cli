@@ -25,7 +25,6 @@ import requests
 import botocore.client
 import prettytable
 
-
 # Own modules
 from cli_code import DIRS
 from cli_code import ENDPOINTS
@@ -373,6 +372,7 @@ class DataDeliverer:
 
         # Get access to delivery system - check if derived pw hash valid
         # Different endpoint depending on facility or not.
+        print(self.project_owner, flush=True)
         if self.method == "put":
             LOGIN_BASE = ENDPOINTS["f_login"]
             args = {"username": self.user.username,
@@ -387,6 +387,7 @@ class DataDeliverer:
 
         # Request to get access
         response = requests.post(LOGIN_BASE, params=args)
+        print(response.text)
         if not response.ok:
             sys.exit(
                 exceptions_ds.printout_error(
@@ -436,6 +437,7 @@ class DataDeliverer:
         """
 
         # No creds file -------- loose credentials -------- No creds file #
+        print(f"creds: {creds}")
         if creds is None:
             # Cancel delivery if username or password not specified
             if None in [username, password]:
@@ -469,6 +471,8 @@ class DataDeliverer:
                     )
                 # username, password, id, owner
                 return username, password, self.project_id, username
+            else: 
+                return username, password, self.project_id, self.project_owner
 
         # creds file ----------- credentials in it ----------- creds file #
         user_creds = Path(creds).resolve()

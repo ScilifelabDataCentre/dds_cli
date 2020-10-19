@@ -431,8 +431,6 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
 
     # Encryption key ######################################### Encryption key #
     keypair = crypto_ds.ECDHKey()    # Create new ECDH key pair
-    LOG.debug("\npublic key for file '%s': -- %s\n",
-              file, keypair.public.public_bytes())
 
     # Generate shared symmetric encryption key from peer_public + pub + priv
     key, salt = keypair.generate_encryption_key(peer_public=peer_public)

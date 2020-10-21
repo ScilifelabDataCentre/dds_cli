@@ -11,6 +11,7 @@ upload and download of all files. Also keeps track of the delivery progress.
 ###############################################################################
 
 # Standard library
+import threading
 from pathlib import Path
 import collections
 import json
@@ -68,6 +69,10 @@ SCOLSIZE = 0    # Status column
 TO_PRINT = ""       # Progress output
 PROGRESS = None     # Progress dict containing all file statuses
 # TODO (ina): Add statuses to data dict instead of own dict?
+
+progress_df = None
+fit_curve_3pol = [1.45299853e+00,  7.07227392e-08,
+                  1.69234091e-20, -1.70725707e-31]
 
 # Login endpoint - changes depending on facility or not
 LOGIN_BASE = ""
@@ -372,7 +377,7 @@ class DataDeliverer:
 
         # Get access to delivery system - check if derived pw hash valid
         # Different endpoint depending on facility or not.
-        print(self.project_owner, flush=True)
+        # print(self.project_owner, flush=True)
         if self.method == "put":
             LOGIN_BASE = ENDPOINTS["f_login"]
             args = {"username": self.user.username,
@@ -387,7 +392,7 @@ class DataDeliverer:
 
         # Request to get access
         response = requests.post(LOGIN_BASE, params=args)
-        print(response.text)
+        # print(response.text)
         if not response.ok:
             sys.exit(
                 exceptions_ds.printout_error(
@@ -437,7 +442,7 @@ class DataDeliverer:
         """
 
         # No creds file -------- loose credentials -------- No creds file #
-        print(f"creds: {creds}")
+        # print(f"creds: {creds}")
         if creds is None:
             # Cancel delivery if username or password not specified
             if None in [username, password]:
@@ -471,7 +476,7 @@ class DataDeliverer:
                     )
                 # username, password, id, owner
                 return username, password, self.project_id, username
-            else: 
+            else:
                 return username, password, self.project_id, self.project_owner
 
         # creds file ----------- credentials in it ----------- creds file #
@@ -506,7 +511,7 @@ class DataDeliverer:
 
         # Error if owner not specified and trying to put
         if (not self.project_owner or self.project_owner is None) \
-            and self.method == "put":
+                and self.method == "put":
             sys.exit(
                 exceptions_ds.printout_error(
                     """Project owner not specified. Cancelling delivery."""
@@ -528,6 +533,23 @@ class DataDeliverer:
 
         sys.stdout.write("\n")  # Space between command and any output
 
+        # from tabulate import tabulate
+        from prettytable import PrettyTable
+        import pandas as pd
+        pd.set_option('display.max_colwidth', -1)
+        
+
+        global progress_df
+        progress_df = pd.DataFrame(
+            {"File": [str(x) for x in self.data],
+             "     Status     ": [STATUS_DICT["w"] for _, y in self.data.items()],
+             "Progress          ": ["" for x in self.data]}
+        )
+        # print(len(progress_df))
+        sys.stdout.write(f"{progress_df.to_string(index=False)}\n")
+        # sys.stdout.write("\033[F"*len(progress_df) + f"dggdfgdfg\nsfgdfgdfgdfgdf\ndfdsgdfgdfhfghgfh\n")
+
+        ### OLD BELOW: ###
         # Variables ############################################### Variables #
         global SCOLSIZE, FCOLSIZE   # -- can edit their value
 
@@ -548,13 +570,13 @@ class DataDeliverer:
 
         # Header of progress info, eg:
         # -------------- File -------------- ------ Status ------
-        sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
-                         " File "
-                         f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
-                         " "
-                         f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
-                         " Progress "
-                         f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
+        # sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+        #                  " File "
+        #                  f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
+        #                  " "
+        #                  f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
+        #                  " Progress "
+        #                  f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
 
         # Set initial status for all files to "Waiting to start..."
         for x in self.data:
@@ -567,7 +589,7 @@ class DataDeliverer:
             TO_PRINT += progress_dict[file]["line"]
 
         # Print all file statuses
-        sys.stdout.write(TO_PRINT)
+        # sys.stdout.write(TO_PRINT)
 
         return TO_PRINT, progress_dict
 
@@ -690,7 +712,7 @@ class DataDeliverer:
                     all_files[curr_path] = file_info
 
         if self.method == "put":
-            print(f"\nOverwrite? {self.overwrite}\n")
+            # print(f"\nOverwrite? {self.overwrite}\n")
             for file, info in list(all_files.items()):
                 if do_fail:
                     initial_fail[file] = {
@@ -702,7 +724,7 @@ class DataDeliverer:
 
                 if info["new_file"] in files_in_db["files"]:
                     in_db = True
-                    print(f"\nFile is in db? {in_db}\n")
+                    # print(f"\nFile is in db? {in_db}\n")
                     if not self.overwrite:
                         LOG.info("'%s' already exists in database", file)
                         initial_fail[file] = {
@@ -1278,7 +1300,9 @@ class DataDeliverer:
                 s3_conn.resource.meta.client.upload_file(
                     Filename=str(fileinfo["encrypted_file"]),
                     Bucket=s3_conn.bucketname,
-                    Key=fileinfo["new_file"]
+                    Key=fileinfo["new_file"],
+                    Callback=ProgressPercentage(str(file),
+                                                str(fileinfo["encrypted_file"]))
                 )
             except botocore.client.ClientError as e:
                 # Upload failed -- return error message and move on
@@ -1290,6 +1314,28 @@ class DataDeliverer:
 
             return True, ""
 
+
+class ProgressPercentage(object):
+
+    def __init__(self, filename, ufile):
+        self._filename = filename
+        self._ufile = ufile
+        self._size = float(os.path.getsize(ufile))
+        self._seen_so_far = 0
+        self._lock = threading.Lock()
+
+    def __call__(self, bytes_amount):
+        # To simplify, assume this is hooked up to a single filename
+        with self._lock:
+            self._seen_so_far += bytes_amount
+            percentage = (self._seen_so_far / self._size) * 100
+            update_progress_bar(file=self._filename,
+                                status="u", perc=percentage)
+            # sys.stdout.write(
+            # "(%.2f%%)" % (
+            #     self._filename, self._seen_so_far, self._size,
+            #     percentage)
+            # sys.stdout.flush()
 
 # EXCEPTIONS ##################################################### EXCEPTIONS #
 
@@ -1325,7 +1371,7 @@ class _DSUser:
         self.role = None
 
 
-def update_progress_bar(file, status: str):
+def update_progress_bar(file, status: str, perc=0.0):
     """Update the status of the file and print out progress.
 
     Updates the delivery status of the current file to the options found in
@@ -1339,25 +1385,43 @@ def update_progress_bar(file, status: str):
 
     """
 
-    file = str(file)    # For printing and len() purposes
+    perc_print = ""
+    global progress_df
+    progress_df.loc[(progress_df.File == str(file)),
+                    "     Status     "] = STATUS_DICT[status]
 
-    # Change the status
-    PROGRESS[file]["status"] = STATUS_DICT[status]
+    if perc != 0.0:
+        perc_print = "%.2f%%" % (perc)
+        if perc_print == "100.00%":
+            progress_df.loc[(progress_df.File == str(file)),
+                            "     Status     "] = ""
 
-    # Line to update to in progress output
-    new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
-                f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
-                f"{2*' '}{STATUS_DICT[status]}")
+        progress_df.loc[(progress_df.File == str(file)),
+                        "Progress          "] = perc_print + " "*10
 
-    # If shorter line than before -> cover up previous text
-    diff = abs(len(PROGRESS[file]["line"]) - len(new_line))
-    new_line += diff*" " + "\n"
+    # print(progress_df)
+    sys.stdout.write("\033[F"*(len(progress_df)+1) +
+                     progress_df.to_string(index=False) + "\n")
+    # sys.exit()
+    # file = str(file)    # For printing and len() purposes
 
-    # Replace the printout and progress dict with the update
-    global TO_PRINT
-    TO_PRINT = TO_PRINT.replace(PROGRESS[file]["line"], new_line)
-    PROGRESS[file]["line"] = new_line
+    # # Change the status
+    # PROGRESS[file]["status"] = STATUS_DICT[status]
 
-    # Print the status
-    sys.stdout.write("\033[A"*len(PROGRESS))   # Jump up to cover prev
-    sys.stdout.write(TO_PRINT)                 # Print new for all
+    # # Line to update to in progress output
+    # new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
+    #             f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
+    #             f"{2*' '}{STATUS_DICT[status]}{2*' '}{perc}")
+
+    # # If shorter line than before -> cover up previous text
+    # diff = abs(len(PROGRESS[file]["line"]) - len(new_line))
+    # new_line += diff*" " + "\n"
+
+    # # Replace the printout and progress dict with the update
+    # global TO_PRINT
+    # TO_PRINT = TO_PRINT.replace(PROGRESS[file]["line"], new_line)
+    # PROGRESS[file]["line"] = new_line
+
+    # # Print the status
+    # # sys.stdout.write("\033[F"*len(PROGRESS))   # Jump up to cover prev
+    # sys.stdout.write(TO_PRINT)                 # Print new for all

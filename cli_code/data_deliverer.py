@@ -71,8 +71,7 @@ PROGRESS = None     # Progress dict containing all file statuses
 # TODO (ina): Add statuses to data dict instead of own dict?
 
 progress_df = None
-fit_curve_3pol = [1.45299853e+00,  7.07227392e-08,
-                  1.69234091e-20, -1.70725707e-31]
+
 
 # Login endpoint - changes depending on facility or not
 LOGIN_BASE = ""
@@ -536,14 +535,14 @@ class DataDeliverer:
         # from tabulate import tabulate
         from prettytable import PrettyTable
         import pandas as pd
-        pd.set_option('display.max_colwidth', -1)
-        
+        pd.set_option("display.max_colwidth", -1)
 
         global progress_df
         progress_df = pd.DataFrame(
             {"File": [str(x) for x in self.data],
              "     Status     ": [STATUS_DICT["w"] for _, y in self.data.items()],
-             "Progress          ": ["" for x in self.data]}
+             "Upload/Download Progress          ": ["" for x in self.data],
+             "Predicted time          ": "XXX minutes"}
         )
         # print(len(progress_df))
         sys.stdout.write(f"{progress_df.to_string(index=False)}\n")
@@ -1248,7 +1247,12 @@ class DataDeliverer:
                 s3_conn.resource.meta.client.download_file(
                     Bucket=s3_conn.bucketname,
                     Key=path,
-                    Filename=str(path_info["new_file"])
+                    Filename=str(path_info["new_file"]),
+                    Callback=ProgressPercentage(
+                        str(path),
+                        path_info["size_enc"], 
+                        get=True
+                    )
                 )
             except botocore.client.ClientError as e:
                 # Upload failed -- return error message and move on
@@ -1301,8 +1305,10 @@ class DataDeliverer:
                     Filename=str(fileinfo["encrypted_file"]),
                     Bucket=s3_conn.bucketname,
                     Key=fileinfo["new_file"],
-                    Callback=ProgressPercentage(str(file),
-                                                str(fileinfo["encrypted_file"]))
+                    Callback=ProgressPercentage(
+                        str(file),
+                        float(os.path.getsize(str(fileinfo["encrypted_file"])))
+                    )
                 )
             except botocore.client.ClientError as e:
                 # Upload failed -- return error message and move on
@@ -1317,11 +1323,11 @@ class DataDeliverer:
 
 class ProgressPercentage(object):
 
-    def __init__(self, filename, ufile):
+    def __init__(self, filename, ud_file_size, get=False):
         self._filename = filename
-        self._ufile = ufile
-        self._size = float(os.path.getsize(ufile))
+        self._size = ud_file_size
         self._seen_so_far = 0
+        self._download = get
         self._lock = threading.Lock()
 
     def __call__(self, bytes_amount):
@@ -1330,7 +1336,8 @@ class ProgressPercentage(object):
             self._seen_so_far += bytes_amount
             percentage = (self._seen_so_far / self._size) * 100
             update_progress_bar(file=self._filename,
-                                status="u", perc=percentage)
+                                status="d" if self._download else "u",
+                                perc=percentage)
             # sys.stdout.write(
             # "(%.2f%%)" % (
             #     self._filename, self._seen_so_far, self._size,
@@ -1395,9 +1402,14 @@ def update_progress_bar(file, status: str, perc=0.0):
         if perc_print == "100.00%":
             progress_df.loc[(progress_df.File == str(file)),
                             "     Status     "] = ""
-
-        progress_df.loc[(progress_df.File == str(file)),
-                        "Progress          "] = perc_print + " "*10
+           
+                
+        if status == "dec":
+            progress_df.loc[(progress_df.File == str(file)),
+                        "Upload/Download Progress          "] = " "*18
+        else:
+            progress_df.loc[(progress_df.File == str(file)),
+                            "Upload/Download Progress          "] = perc_print + " "*10
 
     # print(progress_df)
     sys.stdout.write("\033[F"*(len(progress_df)+1) +

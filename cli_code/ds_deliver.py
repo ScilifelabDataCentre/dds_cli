@@ -247,7 +247,9 @@ def put(creds: str, username: str, password: str, project: str,
 
             # TODO(ina): Put db update request in function - threaded?
             # Adds (or updates if --overwrite) file information to database
-            # Args to send in request to api
+            # Args to send in request to api    
+            print("\n\n\n\nDelivery system compressed: ", delivery.data[upath]["ds_compressed"], "\n\n\n\n")
+
             req_args = {
                 "project": delivery.project_id,
                 "file": delivery.data[upath]["new_file"],
@@ -285,7 +287,7 @@ def put(creds: str, username: str, password: str, project: str,
 
             # Sets delivery as finished and display progress = check mark
             delivery.set_progress(item=upath, db=True, finished=True)
-            dd.update_progress_bar(file=upath, status="f")
+            dd.update_progress_bar(file=upath.name, status="f")
             encrypted_file = delivery.data[upath]["encrypted_file"]
 
             # Deletes encrypted files as soon as success

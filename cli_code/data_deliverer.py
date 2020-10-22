@@ -12,6 +12,7 @@ upload and download of all files. Also keeps track of the delivery progress.
 
 # Standard library
 import threading
+import pandas as pd
 from pathlib import Path
 import collections
 import json
@@ -202,7 +203,7 @@ class DataDeliverer:
         if self.data:
             global TO_PRINT
             global PROGRESS
-            TO_PRINT, PROGRESS = self._create_progress_output()
+            self._create_progress_output()
 
     def __repr__(self):
 
@@ -532,65 +533,19 @@ class DataDeliverer:
 
         sys.stdout.write("\n")  # Space between command and any output
 
-        # from tabulate import tabulate
-        from prettytable import PrettyTable
-        import pandas as pd
+        # Set pandas to show all dataframe contents, no '...'
         pd.set_option("display.max_colwidth", -1)
 
-        global progress_df
+        global progress_df  # Can edit global variable contents
         progress_df = pd.DataFrame(
-            {"File": [str(x) for x in self.data],
+            {"File": [str(Path(x).name) for x in self.data],
              "     Status     ": [STATUS_DICT["w"] for _, y in self.data.items()],
-             "Upload/Download Progress          ": ["" for x in self.data],
-             "Predicted time          ": "XXX minutes"}
+             "Upload/Download Progress          ": ["" for x in self.data]}
         )
-        # print(len(progress_df))
+
         sys.stdout.write(f"{progress_df.to_string(index=False)}\n")
-        # sys.stdout.write("\033[F"*len(progress_df) + f"dggdfgdfg\nsfgdfgdfgdfgdf\ndfdsgdfgdfhfghgfh\n")
 
-        ### OLD BELOW: ###
-        # Variables ############################################### Variables #
-        global SCOLSIZE, FCOLSIZE   # -- can edit their value
-
-        # Find appropriate size of progress table
-        # Max length of status info
-        max_status = max(list(len(y) for x, y in STATUS_DICT.items()))
-        # Width of status "column"
-        SCOLSIZE = max_status if (max_status % 2 == 0) else max_status + 1
-
-        # Width of file "column"
-        FCOLSIZE = max(list(len(str(x)) for x in self.data))
-
-        # To return
-        global TO_PRINT
-        TO_PRINT = ""
-        progress_dict = collections.OrderedDict()
-        # ------------------------------------------------------------------- #
-
-        # Header of progress info, eg:
-        # -------------- File -------------- ------ Status ------
-        # sys.stdout.write(f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
-        #                  " File "
-        #                  f"{int((FCOLSIZE/2)-len('File')/2)*'-'}"
-        #                  " "
-        #                  f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}"
-        #                  " Progress "
-        #                  f"{int(SCOLSIZE/2-len('Progress')/2)*'-'}\n")
-
-        # Set initial status for all files to "Waiting to start..."
-        for x in self.data:
-            file = str(x)
-            progress_dict[file] = \
-                {"status": STATUS_DICT["w"],
-                    "line": (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
-                             f"{int(SCOLSIZE/2-len(STATUS_DICT['w'])/2)*' '}"
-                             f"{STATUS_DICT['w']}\n")}
-            TO_PRINT += progress_dict[file]["line"]
-
-        # Print all file statuses
-        # sys.stdout.write(TO_PRINT)
-
-        return TO_PRINT, progress_dict
+        return
 
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (dict, dict):
         """Puts all entered paths into one dictionary.
@@ -1249,7 +1204,7 @@ class DataDeliverer:
                     Key=path,
                     Filename=str(path_info["new_file"]),
                     Callback=ProgressPercentage(
-                        str(path),
+                        str(Path(path).name),
                         path_info["size_enc"], 
                         get=True
                     )
@@ -1306,8 +1261,9 @@ class DataDeliverer:
                     Bucket=s3_conn.bucketname,
                     Key=fileinfo["new_file"],
                     Callback=ProgressPercentage(
-                        str(file),
-                        float(os.path.getsize(str(fileinfo["encrypted_file"])))
+                        filename=str(file.name),
+                        ud_file_size=float(os.path.getsize(
+                            str(fileinfo["encrypted_file"])))
                     )
                 )
             except botocore.client.ClientError as e:
@@ -1403,7 +1359,6 @@ def update_progress_bar(file, status: str, perc=0.0):
             progress_df.loc[(progress_df.File == str(file)),
                             "     Status     "] = ""
            
-                
         if status == "dec":
             progress_df.loc[(progress_df.File == str(file)),
                         "Upload/Download Progress          "] = " "*18

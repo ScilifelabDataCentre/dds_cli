@@ -149,7 +149,7 @@ class DataDeliverer:
 
         # S3 related
         self.bucketname = ""    # S3 bucket name -- to connect to S3
-        self.s3project = "intra1.scilifelab.se"   # S3 project ID - for S3 conn
+        self.s3project = ""   # S3 project ID - for S3 conn
         # TODO (ina): Move s3project to database somewhere
 
         # Cryptography related
@@ -544,8 +544,6 @@ class DataDeliverer:
         )
 
         sys.stdout.write(f"{progress_df.to_string(index=False)}\n")
-
-        return
 
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (dict, dict):
         """Puts all entered paths into one dictionary.
@@ -1183,11 +1181,6 @@ class ProgressPercentage(object):
             update_progress_bar(file=self._filename,
                                 status="d" if self._download else "u",
                                 perc=percentage)
-            # sys.stdout.write(
-            # "(%.2f%%)" % (
-            #     self._filename, self._seen_so_far, self._size,
-            #     percentage)
-            # sys.stdout.flush()
 
 # EXCEPTIONS ##################################################### EXCEPTIONS #
 

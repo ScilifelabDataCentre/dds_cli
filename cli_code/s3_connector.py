@@ -100,6 +100,9 @@ class S3Connector:
 
             # Keys and endpoint from file - this will be changed to database
             endpoint_url = s3creds["endpoint_url"]
+            for key in s3creds["sfsp_keys"]:  # TODO (ina): get project from db
+                self.project = key
+                break
             project_keys = s3creds["sfsp_keys"][self.project]
 
             # Start s3 connection resource

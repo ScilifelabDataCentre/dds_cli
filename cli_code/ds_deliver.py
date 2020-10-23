@@ -240,7 +240,7 @@ def put(creds: str, username: str, password: str, project: str,
                 continue
 
             CLI_LOGGER.info("UPLOAD COMPLETED: '%s' -> '%s'",
-                            upath, delivery.data[upath]["new_file"])
+                            upath, delivery.data[upath]["path_in_bucket"])
 
             # Set db update as in progress
             delivery.set_progress(item=upath, db=True, started=True)
@@ -250,11 +250,12 @@ def put(creds: str, username: str, password: str, project: str,
             # Args to send in request to api
             req_args = {
                 "project": delivery.project_id,
-                "file": delivery.data[upath]["new_file"],
+                "file": delivery.data[upath]["path_in_db"],
                 "directory_path": delivery.data[upath]["directory_path"],
                 "size": delivery.data[upath]["size"],
                 "size_enc": delivery.data[upath]["encrypted_size"],
                 "ds_compressed": delivery.data[upath]["ds_compressed"],
+                "extension": delivery.data[upath]["extension"],
                 "key": delivery.data[upath]["key"],
                 "salt": delivery.data[upath]["salt"],
                 "overwrite": delivery.overwrite
@@ -277,7 +278,7 @@ def put(creds: str, username: str, password: str, project: str,
                 with s3_connector.S3Connector(bucketname=delivery.bucketname,
                                               project=delivery.s3project) \
                         as s3_conn:
-                    s3_conn.delete_item(key=key)
+                    s3_conn.delete_item(key=delivery.data["path_in_bucket"])
                 dd.update_progress_bar(file=upath, status="e")
                 continue
 
@@ -411,7 +412,7 @@ def get(creds: str, username: str, password: str, project: str,
                 continue
 
             CLI_LOGGER.info("DOWNLOAD COMPLETED: '%s' -> '%s'",
-                            dpath, delivery.data[dpath]["new_file"])
+                            dpath, delivery.data[dpath]["path_in_bucket"])
 
             # Displays progress = "Decrypting..."
             dd.update_progress_bar(file=dpath, status="dec")

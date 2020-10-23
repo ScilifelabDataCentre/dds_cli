@@ -198,16 +198,19 @@ def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
 
     # Variables ###################################### Variables #
     proceed = True  # If proceed with file delivery
-    path_base = dir_name.name if in_dir else None   # Folder name if in dir
-    directory_path = \
-        get_root_path(file=file, path_base=path_base) \
-        if path_base is not None else pathlib.Path("")  # Path to file IN folder
+
+    # Folder name and path to file IN folder
+    path_base = dir_name.name if in_dir else None
+    directory_path = get_root_path(file=file, path_base=path_base) \
+        if path_base is not None else pathlib.Path("")
+    dir_info = {"in_directory": in_dir, "local_dir_name": dir_name}
+
     suffixes = file.suffixes    # File suffixes
     proc_suff = ""              # Saves final suffixes
     error = ""                  # Error message
-    dir_info = {"in_directory": in_dir, "dir_name": dir_name}
     # ---------------------------------------------------------- #
 
+    # Cancel if delivery tagged as failed
     if do_fail:
         error = "Break on fail specified and one fail occurred. " + \
                 "Cancelling delivery."
@@ -240,21 +243,21 @@ def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
 
     # Path to file in temporary directory after processing, and bucket
     # after upload, >>including file name<<
-    bucketfilename = str(directory_path / pathlib.Path(file.name + proc_suff))
-
+    path_in_db = directory_path / pathlib.Path(file.name)
+    path_in_bucket = path_in_db.with_suffix("".join(suffixes) + proc_suff)
     return {"in_directory": in_dir,
-            "dir_name": dir_name if in_dir else None,
-            "path_base": path_base,
+            "local_dir_name": dir_name if in_dir else None,
             "directory_path": directory_path,
             "size": file.stat().st_size,
-            "suffixes": suffixes,
             "proceed": proceed,
             "compressed": compressed,
-            "new_file": bucketfilename,
+            "path_in_bucket": str(path_in_bucket),
+            "path_in_db": str(path_in_db),
             "error": error,
             "encrypted_file": pathlib.Path(""),
             "encrypted_size": 0,
             "key": "",
+            "extension": proc_suff,
             "processing": {"in_progress": False,
                            "finished": False},
             "upload": {"in_progress": False,
@@ -538,7 +541,7 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
         raise OSError(emessage)  # Bug somewhere in code
 
     # Variables ################################################### Variables #
-    outfile = DIRS[1] / file_info["new_file"]   # Path to save processed file
+    outfile = DIRS[1] / file_info["path_in_bucket"]   # Path to save processed file
     new_dir = DIRS[1] / file_info["directory_path"]     # New temp subdir
     key = b""
     # ----------------------------------------------------------------------- #
@@ -632,7 +635,7 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
     """
 
     # Variables ################################################### Variables #
-    infile = file_info["new_file"]                      # Downloaded file
+    infile = file_info["path_in_bucket"]                      # Downloaded file
     outfile = infile.parent / \
         pathlib.Path(infile.stem).stem    # Finalized file path
     error = ""

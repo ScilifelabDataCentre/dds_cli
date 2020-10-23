@@ -603,9 +603,9 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
         LOG.info("File: '%s', Processing successful! "
                  "Encrypted file saved at '%s'", file, outfile)
         # Info on if delivery system compressed or not
-        print("\n\n\n\n", file_info["compressed"],
-              type(file_info["compressed"]),
-              "\n\n\n\n")
+        # print("\n\n\n\n", file_info["compressed"],
+        #       type(file_info["compressed"]),
+        #       "\n\n\n\n")
         ds_compressed = not file_info["compressed"]
     finally:
         os.umask(original_umask)    # Remove mask

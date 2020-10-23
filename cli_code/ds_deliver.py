@@ -477,7 +477,7 @@ def get(creds: str, username: str, password: str, project: str,
                 # Sets delivery as finished and display progress = check mark
                 delivery.set_progress(item=fpath, db=True, finished=True)
                 dd.update_progress_bar(file=fpath, status="f")
-
+    
         # DELIVERY FINISHED ------------------------------- DELIVERY FINISHED #
 
         # STOPPING POOLEXECUTORS ##################### STOPPING POOLEXECUTORS #

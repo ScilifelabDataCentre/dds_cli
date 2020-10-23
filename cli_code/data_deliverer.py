@@ -199,8 +199,8 @@ class DataDeliverer:
             self.private = crypto_ds.get_project_private(
                 self.project_id, self.user)
 
-        for f, v in self.data.items():
-            print(f, "\t", v, "\n\n\n\n\n")
+        # for f, v in self.data.items():
+        #     print(f, "\t", v, "\n\n\n\n\n")
 
         # sys.exit()
         # Start progress info printout
@@ -633,7 +633,7 @@ class DataDeliverer:
                             continue
 
                         all_files[f] = iteminfo[f]
-                print("\n\n\n\n", iteminfo, "\n\n\n\n")
+                # print("\n\n\n\n", iteminfo, "\n\n\n\n")
 
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
@@ -646,7 +646,7 @@ class DataDeliverer:
                     )
                     initial_fail.update(dir_fail)   # Not to be delivered
                     all_files.update(dir_info)      # To be delivered
-                    print("\n\n\n\n\n", dir_info, "\n\n\n\n\n")
+                    # print("\n\n\n\n\n", dir_info, "\n\n\n\n\n")
                     # sys.exit()
                     continue
 
@@ -663,7 +663,7 @@ class DataDeliverer:
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
-                print("\n\n\n\n\n", file_info, "\n\n\n\n\n")
+                # print("\n\n\n\n\n", file_info, "\n\n\n\n\n")
                 # sys.exit()
 
         if self.method == "put":
@@ -786,8 +786,8 @@ class DataDeliverer:
         #     in_directory = True
 
         # Check for file starting with the file/folder name
-        for file in files_in_db:
-            print(file)
+        # for file in files_in_db:
+        #     print(file)
         for file in files_in_db:
             # Get info on file
             if do_fail:
@@ -800,9 +800,9 @@ class DataDeliverer:
 
             # The user specified item is a file if it matches the name in db
             # or a folder/directory if it starts with the directory_path in db
-            print(file, item, files_in_db)
+            # print(file, item, files_in_db)
             if file == item:    # File
-                print("exists")
+                # print("exists")
                 to_download[file] = {
                     **files_in_db[file],
                     **gen_finfo
@@ -1232,7 +1232,7 @@ class ProgressPercentage(object):
         self._seen_so_far = 0
         self._download = get
         self._lock = threading.Lock()
-        print(f"\n\n\n\n\n{self._filename}\n\n\n\n\n")
+        # print(f"\n\n\n\n\n{self._filename}\n\n\n\n\n")
 
     def __call__(self, bytes_amount):
         # To simplify, assume this is hooked up to a single filename

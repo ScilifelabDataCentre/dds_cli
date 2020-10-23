@@ -79,7 +79,7 @@ def file_deleter(file: pathlib.Path):
     """
 
     if not file.exists():
-        return
+        return False, f"File does not exist: {file}"
 
     # Try file.unlink() first (pathlib) and then os.remove(file) (os) if failed
     # Log warning - don't quit if deletion not possible

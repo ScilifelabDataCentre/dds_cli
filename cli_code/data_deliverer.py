@@ -71,7 +71,7 @@ TO_PRINT = ""       # Progress output
 PROGRESS = None     # Progress dict containing all file statuses
 # TODO (ina): Add statuses to data dict instead of own dict?
 
-progress_df = None
+PROGRESS_DF = None
 
 
 # Login endpoint - changes depending on facility or not
@@ -536,14 +536,14 @@ class DataDeliverer:
         # Set pandas to show all dataframe contents, no '...'
         pd.set_option("display.max_colwidth", -1)
 
-        global progress_df  # Can edit global variable contents
-        progress_df = pd.DataFrame(
+        global PROGRESS_DF  # Can edit global variable contents
+        PROGRESS_DF = pd.DataFrame(
             {"File": [str(Path(x).name) for x in self.data],
              "     Status     ": [STATUS_DICT["w"] for _, y in self.data.items()],
              "Upload/Download Progress          ": ["" for x in self.data]}
         )
 
-        sys.stdout.write(f"{progress_df.to_string(index=False)}\n")
+        sys.stdout.write(f"{PROGRESS_DF.to_string(index=False)}\n")
 
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (dict, dict):
         """Puts all entered paths into one dictionary.
@@ -1227,50 +1227,38 @@ def update_progress_bar(file, status: str, perc=0.0):
     Args:
         file:             File to update progress on
         status (str):     Which stage the delivery is on
+        perc:             Upload/Download percentage, 0.0 if not upl/dwnld
 
     """
 
+    # Percentage string to print
     perc_print = ""
-    global progress_df
-    progress_df.loc[(progress_df.File == str(file)),
-                    "     Status     "] = STATUS_DICT[status]
+
+    global PROGRESS_DF  # Make variable editable
+    PROGRESS_DF.loc[
+        (PROGRESS_DF.File == str(file)), "     Status     "
+    ] = STATUS_DICT[status]
 
     if perc != 0.0:
         perc_print = "%.2f%%" % (perc)
         if perc_print == "100.00%":
-            progress_df.loc[(progress_df.File == str(file)),
-                            "     Status     "] = ""
+            PROGRESS_DF.loc[
+                (PROGRESS_DF.File == str(file)), "     Status     "
+            ] = ""
 
         if status == "dec":
-            progress_df.loc[(progress_df.File == str(file)),
-                            "Upload/Download Progress          "] = " "*18
+            PROGRESS_DF.loc[
+                (PROGRESS_DF.File == str(file)),
+                "Upload/Download Progress          "
+            ] = " "*18
         else:
-            progress_df.loc[(progress_df.File == str(file)),
-                            "Upload/Download Progress          "] = perc_print + " "*10
+            PROGRESS_DF.loc[
+                (PROGRESS_DF.File == str(file)),
+                "Upload/Download Progress          "
+            ] = perc_print + " "*10
 
-    # print(progress_df)
-    sys.stdout.write("\033[F"*(len(progress_df)+1) +
-                     progress_df.to_string(index=False) + "\n")
-    # sys.exit()
-    # file = str(file)    # For printing and len() purposes
-
-    # # Change the status
-    # PROGRESS[file]["status"] = STATUS_DICT[status]
-
-    # # Line to update to in progress output
-    # new_line = (f"{file}{int(FCOLSIZE-len(file)+1)*' '} "
-    #             f"{int(SCOLSIZE/2-len(STATUS_DICT[status])/2)*' '}"
-    #             f"{2*' '}{STATUS_DICT[status]}{2*' '}{perc}")
-
-    # # If shorter line than before -> cover up previous text
-    # diff = abs(len(PROGRESS[file]["line"]) - len(new_line))
-    # new_line += diff*" " + "\n"
-
-    # # Replace the printout and progress dict with the update
-    # global TO_PRINT
-    # TO_PRINT = TO_PRINT.replace(PROGRESS[file]["line"], new_line)
-    # PROGRESS[file]["line"] = new_line
-
-    # # Print the status
-    # # sys.stdout.write("\033[F"*len(PROGRESS))   # Jump up to cover prev
-    # sys.stdout.write(TO_PRINT)                 # Print new for all
+    sys.stdout.write(
+        "\033[F"*(len(PROGRESS_DF)+1) +
+        PROGRESS_DF.to_string(index=False) +
+        "\n"
+    )

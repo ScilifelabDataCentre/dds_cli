@@ -646,15 +646,17 @@ class DataDeliverer:
 
                 # Get info on files within folder
                 if curr_path.is_dir():
-                    dir_info, dir_fail = self._get_dir_info(folder=curr_path,
-                                                            do_fail=do_fail)
+                    dir_info, dir_fail = file_handler.get_dir_info(
+                        folder=curr_path,
+                        do_fail=do_fail
+                    )
                     initial_fail.update(dir_fail)   # Not to be delivered
                     all_files.update(dir_info)      # To be delivered
                     continue
 
                 # Get info for individual files
-                file_info = self._get_file_info(file=curr_path, in_dir=False,
-                                                do_fail=do_fail)
+                file_info = file_handler.get_file_info(file=curr_path, in_dir=False,
+                                                       do_fail=do_fail)
                 if not file_info["proceed"]:
                     # Don't deliver --> save error message
                     initial_fail[curr_path] = file_info
@@ -747,39 +749,6 @@ class DataDeliverer:
                     s3_conn.delete_item(key=info["new_file"])
                 except botocore.client.ClientError as e:
                     LOG.warning(e)
-
-    def _get_dir_info(self, folder: Path, do_fail: bool) -> (dict, dict):
-        """Iterate through folder contents and get file info
-
-        Args:
-            folder (Path):  Path to folder
-
-        Returns:
-            dict:   Files to deliver
-            dict:   Files which failed -- not to deliver
-        """
-
-        # Variables ############################ Variables #
-        dir_info = {}   # Files to deliver
-        dir_fail = {}   # Failed files
-        # -------------------------------------------------#
-
-        # Iterate through folder contents and get file info
-        for f in folder.glob("**/*"):
-            if f.is_file() and "DS_Store" not in str(f):    # CHANGE LATER
-                file_info = self._get_file_info(file=f,
-                                                in_dir=True,
-                                                do_fail=do_fail,
-                                                dir_name=folder)
-
-                # If file check failed in some way - do not deliver file
-                # Otherwise deliver file -- no cancellation of folder here
-                if not file_info["proceed"]:
-                    dir_fail[f] = file_info
-                else:
-                    dir_info[f] = file_info
-
-        return dir_info, dir_fail
 
     def _get_download_info(self, item: str, files_in_db: dict, do_fail: bool) \
             -> (dict):
@@ -880,86 +849,6 @@ class DataDeliverer:
                 return {item: {"proceed": False, "error": error}}
 
         return to_download
-
-    def _get_file_info(self, file: Path, in_dir: bool, do_fail: bool,
-                       dir_name: Path = Path("")) -> (dict):
-        """Get info on file and check if already delivered
-
-        Args:
-            file (Path):        Path to file
-            in_dir (bool):      True if in directory specified by user
-            dir_name (Path):    Directory name, "" if not in folder
-
-        Returns:
-            dict:   Information about file e.g. format
-
-        """
-
-        # Variables ###################################### Variables #
-        proceed = True  # If proceed with file delivery
-        path_base = dir_name.name if in_dir else None   # Folder name if in dir
-        directory_path = \
-            file_handler.get_root_path(file=file, path_base=path_base) \
-            if path_base is not None else Path("")  # Path to file IN folder
-        suffixes = file.suffixes    # File suffixes
-        proc_suff = ""              # Saves final suffixes
-        error = ""                  # Error message
-        dir_info = {"in_directory": in_dir, "dir_name": dir_name}
-        # ---------------------------------------------------------- #
-
-        if do_fail:
-            error = "Break on fail specified and one fail occurred. " + \
-                    "Cancelling delivery."
-            LOG.info(error)
-            return {"proceed": False, "error": error, **dir_info}
-
-        # Check if file is compressed and fail delivery on error
-        compressed, error = file_handler.is_compressed(file=file)
-        if error != "":
-            return {"proceed": False, "error": error, **dir_info}
-
-        # If file not compressed -- add zst (Zstandard) suffix to final suffix
-        # If compressed -- info that DS will not compress
-        if not compressed:
-            # Warning if suffixes are in magic dict but file "not compressed"
-            if set(suffixes).intersection(set(file_handler.MAGIC_DICT)):
-                LOG.warning("File '%s' has extensions belonging "
-                            "to a compressed format but shows no "
-                            "indication of being compressed. Not "
-                            "compressing file.", file)
-
-            proc_suff += ".zst"     # Update the future suffix
-        elif compressed:
-            LOG.info("File '%s' shows indication of being "
-                     "in a compressed format. "
-                     "Not compressing the file.", file)
-
-        # Add (own) encryption format extension
-        proc_suff += ".ccp"     # ChaCha20-Poly1305
-
-        # Path to file in temporary directory after processing, and bucket
-        # after upload, >>including file name<<
-        bucketfilename = str(directory_path / Path(file.name + proc_suff))
-
-        return {"in_directory": in_dir,
-                "dir_name": dir_name if in_dir else None,
-                "path_base": path_base,
-                "directory_path": directory_path,
-                "size": file.stat().st_size,
-                "suffixes": suffixes,
-                "proceed": proceed,
-                "compressed": compressed,
-                "new_file": bucketfilename,
-                "error": error,
-                "encrypted_file": Path(""),
-                "encrypted_size": 0,
-                "key": "",
-                "processing": {"in_progress": False,
-                               "finished": False},
-                "upload": {"in_progress": False,
-                           "finished": False},
-                "database": {"in_progress": False,
-                             "finished": False}}
 
     ##################
     # Public Methods #
@@ -1205,7 +1094,7 @@ class DataDeliverer:
                     Filename=str(path_info["new_file"]),
                     Callback=ProgressPercentage(
                         str(Path(path).name),
-                        path_info["size_enc"], 
+                        path_info["size_enc"],
                         get=True
                     )
                 )
@@ -1358,10 +1247,10 @@ def update_progress_bar(file, status: str, perc=0.0):
         if perc_print == "100.00%":
             progress_df.loc[(progress_df.File == str(file)),
                             "     Status     "] = ""
-           
+
         if status == "dec":
             progress_df.loc[(progress_df.File == str(file)),
-                        "Upload/Download Progress          "] = " "*18
+                            "Upload/Download Progress          "] = " "*18
         else:
             progress_df.loc[(progress_df.File == str(file)),
                             "Upload/Download Progress          "] = perc_print + " "*10

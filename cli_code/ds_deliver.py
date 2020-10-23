@@ -247,15 +247,13 @@ def put(creds: str, username: str, password: str, project: str,
 
             # TODO(ina): Put db update request in function - threaded?
             # Adds (or updates if --overwrite) file information to database
-            # Args to send in request to api    
-            print("\n\n\n\nDelivery system compressed: ", delivery.data[upath]["ds_compressed"], "\n\n\n\n")
-
+            # Args to send in request to api
             req_args = {
                 "project": delivery.project_id,
                 "file": delivery.data[upath]["new_file"],
                 "directory_path": delivery.data[upath]["directory_path"],
                 "size": delivery.data[upath]["size"],
-                "size_enc": delivery.data[upath]["encrypted_size"], 
+                "size_enc": delivery.data[upath]["encrypted_size"],
                 "ds_compressed": delivery.data[upath]["ds_compressed"],
                 "key": delivery.data[upath]["key"],
                 "salt": delivery.data[upath]["salt"],
@@ -360,7 +358,7 @@ def get(creds: str, username: str, password: str, project: str,
                           project_id=project, pathfile=pathfile, data=data,
                           break_on_fail=break_on_fail) \
             as delivery:
-        
+
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
         pool_executor = concurrent.futures.ProcessPoolExecutor()   # Processing
         thread_executor = concurrent.futures.ThreadPoolExecutor()  # IO related

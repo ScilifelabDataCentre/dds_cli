@@ -412,7 +412,7 @@ def get(creds: str, username: str, password: str, project: str,
                 continue
 
             CLI_LOGGER.info("DOWNLOAD COMPLETED: '%s' -> '%s'",
-                            dpath, delivery.data[dpath]["path_in_bucket"])
+                            dpath, delivery.data[dpath]["path_in_temp"])
 
             # Displays progress = "Decrypting..."
             dd.update_progress_bar(file=dpath, status="dec")

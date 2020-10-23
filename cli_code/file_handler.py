@@ -635,9 +635,8 @@ def reverse_processing(file: str, file_info: dict, keys: tuple) \
     """
 
     # Variables ################################################### Variables #
-    infile = file_info["path_in_bucket"]                      # Downloaded file
-    outfile = infile.parent / \
-        pathlib.Path(infile.stem).stem    # Finalized file path
+    infile = file_info["path_in_temp"]                      # Downloaded file
+    outfile = DIRS[1] / pathlib.Path(file)   # Finalized file path
     error = ""
     # ----------------------------------------------------------------------- #
     LOG.debug("Infile: %s, Outfile: %s", infile, outfile)

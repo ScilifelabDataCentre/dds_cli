@@ -234,129 +234,129 @@ class DataDeliverer:
             return False  # uncomment to pass exception through
 
         return True
-        # # Tables ##################################################### Tables #
-        # # Folders
-        # folders_table = prettytable.PrettyTable(
-        #     ["Directory", "File", "Delivered", "Error"]
-        # )
-        # folders_table.padding_width = 2
-        # folders_table.align["File"] = "r"
-        # folders_table.align["Error"] = "l"
+        # Tables ##################################################### Tables #
+        # Folders
+        folders_table = prettytable.PrettyTable(
+            ["Directory", "File", "Delivered", "Error"]
+        )
+        folders_table.padding_width = 2
+        folders_table.align["File"] = "r"
+        folders_table.align["Error"] = "l"
 
-        # # Files
-        # files_table = prettytable.PrettyTable(
-        #     ["File", "Delivered", "Error"]
-        # )
-        # files_table.align["File"] = "r"
-        # files_table.align["Error"] = "l"
+        # Files
+        files_table = prettytable.PrettyTable(
+            ["File", "Delivered", "Error"]
+        )
+        files_table.align["File"] = "r"
+        files_table.align["Error"] = "l"
 
-        # # Reduce the text width and wraps in column
-        # wrapper = textwrap.TextWrapper(width=80)
-        # # ------------------------------------------------------------------- #
+        # Reduce the text width and wraps in column
+        wrapper = textwrap.TextWrapper(width=80)
+        # ------------------------------------------------------------------- #
 
-        # # Variables ############################################### Variables #
-        # folders = {}            # Already checked folders
-        # are_folders = False     # True if folders have been delivered/failed
-        # are_files = False       # True if files have been delivered/failed
+        # Variables ############################################### Variables #
+        folders = {}            # Already checked folders
+        are_folders = False     # True if folders have been delivered/failed
+        are_files = False       # True if files have been delivered/failed
 
-        # # Check if uploaded or downloaded successfully
-        # critical_op = "upload" if self.method == "put" else "download"
-        # # ------------------------------------------------------------------- #
+        # Check if uploaded or downloaded successfully
+        critical_op = "upload" if self.method == "put" else "download"
+        # ------------------------------------------------------------------- #
 
-        # # Iterate through items ####################### Iterate through items #
-        # # Failed items - on initial check
-        # for file, info in self.failed.items():
-        #     # Remove encrypted files
-        #     self._finalize(info=info)
+        # Iterate through items ####################### Iterate through items #
+        # Failed items - on initial check
+        for file, info in self.failed.items():
+            # Remove encrypted files
+            self._finalize(info=info)
 
-        #     if info["in_directory"] and info["local_dir_name"] not in folders:
-        #         are_folders = True  # Note that folders have been delivered
+            if info["in_directory"] and info["local_dir_name"] not in folders:
+                are_folders = True  # Note that folders have been delivered
 
-        #         # Get all failed files in folder
-        #         folders[info["local_dir_name"]] = {
-        #             f: val for f, val in self.failed.items()
-        #             if val["in_directory"] and
-        #             val["local_dir_name"] == info["local_dir_name"]
-        #         }
-        #         # Add folder name to table
-        #         folders_table.add_row(
-        #             [str(info["local_dir_name"]) + "\n", "", "", ""]
-        #         )
-        #         # Add files in folder to table
-        #         for f, v in folders[info["local_dir_name"]].items():
-        #             file_loc = \
-        #                 (v["directory_path"] if "directory_path" in v
-        #                  else
-        #                  file_handler.get_root_path(
-        #                      file=f, path_base=v["local_dir_name"].name)) \
-        #                 / Path(Path(f).name)
-        #             folders_table.add_row(
-        #                 ["",
-        #                  file_loc,
-        #                  "NO",
-        #                  "\n".join(wrapper.wrap(v["error"])) + "\n"]
-        #             )
+                # Get all failed files in folder
+                folders[info["local_dir_name"]] = {
+                    f: val for f, val in self.failed.items()
+                    if val["in_directory"] and
+                    val["local_dir_name"] == info["local_dir_name"]
+                }
+                # Add folder name to table
+                folders_table.add_row(
+                    [str(info["local_dir_name"]) + "\n", "", "", ""]
+                )
+                # Add files in folder to table
+                for f, v in folders[info["local_dir_name"]].items():
+                    file_loc = \
+                        (v["directory_path"] if "directory_path" in v
+                         else
+                         file_handler.get_root_path(
+                             file=f, path_base=v["local_dir_name"].name)) \
+                        / Path(Path(f).name)
+                    folders_table.add_row(
+                        ["",
+                         file_loc,
+                         "NO",
+                         "\n".join(wrapper.wrap(v["error"])) + "\n"]
+                    )
 
-        #     elif not info["in_directory"]:
-        #         are_files = True    # Note that files have been delivered
-        #         # Add file to table
-        #         files_table.add_row(
-        #             [file,
-        #              "NO",
-        #              "\n".join(wrapper.wrap(info["error"])) + "\n"]
-        #         )
+            elif not info["in_directory"]:
+                are_files = True    # Note that files have been delivered
+                # Add file to table
+                files_table.add_row(
+                    [file,
+                     "NO",
+                     "\n".join(wrapper.wrap(info["error"])) + "\n"]
+                )
 
-        # # Items passing the initial check - successfully delivered AND failed
-        # for file, info in self.data.items():
-        #     # Remove encrypted files
-        #     self._finalize(info=info)
+        # Items passing the initial check - successfully delivered AND failed
+        for file, info in self.data.items():
+            # Remove encrypted files
+            self._finalize(info=info)
 
-        #     # Get all files in folder
-        #     if info["in_directory"] and info["local_dir_name"] not in folders:
-        #         are_folders = True
-        #         folders[info["local_dir_name"]] = {
-        #             f: val for f, val in self.data.items()
-        #             if val["in_directory"] and
-        #             val["local_dir_name"] == info["local_dir_name"]
-        #         }
-        #         # Add folder name to table
-        #         folders_table.add_row(
-        #             [info["local_dir_name"], "", "", ""]
-        #         )
-        #         # Add files in folder to table
-        #         for f, v in folders[info["local_dir_name"]].items():
-        #             folders_table.add_row(
-        #                 ["",
-        #                     str(v["directory_path"] / Path(Path(f).name)),
-        #                     "YES"
-        #                     if all([v["proceed"], v[critical_op]["finished"],
-        #                             v["database"]["finished"]]) else "NO",
-        #                     "\n".join(wrapper.wrap(v["error"])) + "\n"]
-        #             )
+            # Get all files in folder
+            if info["in_directory"] and info["local_dir_name"] not in folders:
+                are_folders = True
+                folders[info["local_dir_name"]] = {
+                    f: val for f, val in self.data.items()
+                    if val["in_directory"] and
+                    val["local_dir_name"] == info["local_dir_name"]
+                }
+                # Add folder name to table
+                folders_table.add_row(
+                    [info["local_dir_name"], "", "", ""]
+                )
+                # Add files in folder to table
+                for f, v in folders[info["local_dir_name"]].items():
+                    folders_table.add_row(
+                        ["",
+                            str(v["directory_path"] / Path(Path(f).name)),
+                            "YES"
+                            if all([v["proceed"], v[critical_op]["finished"],
+                                    v["database"]["finished"]]) else "NO",
+                            "\n".join(wrapper.wrap(v["error"])) + "\n"]
+                    )
 
-        #     elif not info["in_directory"]:
-        #         are_files = True
-        #         LOG.debug(are_files)
-        #         # Add file to table
-        #         files_table.add_row(
-        #             [str(file),
-        #                 "YES"
-        #                 if all([info["proceed"], info[critical_op]["finished"],
-        #                         info["database"]["finished"]]) else "NO",
-        #                 "\n".join(wrapper.wrap(info["error"])) + "\n"])
-        # # ------------------------------------------------------------------- #
+            elif not info["in_directory"]:
+                are_files = True
+                LOG.debug(are_files)
+                # Add file to table
+                files_table.add_row(
+                    [str(file),
+                        "YES"
+                        if all([info["proceed"], info[critical_op]["finished"],
+                                info["database"]["finished"]]) else "NO",
+                        "\n".join(wrapper.wrap(info["error"])) + "\n"])
+        # ------------------------------------------------------------------- #
 
-        # # FINAL MESSAGE ####################################### FINAL MESSAGE #
-        # print("* * * * * * * * * * DELIVERY COMPLETED! * * * * * * * * * *")
-        # print(
-        #     f"\n################### FOLDERS DELIVERED ###################"
-        #     f"\n{folders_table}\n" if are_folders else "\n"
-        # )
-        # print(
-        #     f"\n#################### FILES DELIVERED ####################"
-        #     f"\n{files_table}\n" if are_files else "\n"
-        # )
-        # return True
+        # FINAL MESSAGE ####################################### FINAL MESSAGE #
+        print("* * * * * * * * * * DELIVERY COMPLETED! * * * * * * * * * *")
+        print(
+            f"\n################### FOLDERS DELIVERED ###################"
+            f"\n{folders_table}\n" if are_folders else "\n"
+        )
+        print(
+            f"\n#################### FILES DELIVERED ####################"
+            f"\n{files_table}\n" if are_files else "\n"
+        )
+        return True
 
     ###################
     # Private Methods #
@@ -781,11 +781,13 @@ class DataDeliverer:
 
         in_directory = False
         # If no suffixes assuming folder and adding trailing slash
-        if not Path(item).suffixes:
-            item = os.path.join(item, "")
-            in_directory = True
+        # if not Path(item).suffixes:
+        #     item = os.path.join(item, "")
+        #     in_directory = True
 
         # Check for file starting with the file/folder name
+        for file in files_in_db:
+            print(file)
         for file in files_in_db:
             # Get info on file
             if do_fail:
@@ -798,7 +800,9 @@ class DataDeliverer:
 
             # The user specified item is a file if it matches the name in db
             # or a folder/directory if it starts with the directory_path in db
+            print(file, item, files_in_db)
             if file == item:    # File
+                print("exists")
                 to_download[file] = {
                     **files_in_db[file],
                     **gen_finfo
@@ -812,19 +816,19 @@ class DataDeliverer:
                 file_path = Path(file)
                 full_suffixes = "".join(file_path.suffixes) + \
                     files_in_db[file]["extension"]
-                path_in_bucket = DIRS[1] / file_path.with_suffix(full_suffixes)
+                path_in_temp = DIRS[1] / file_path.with_suffix(full_suffixes)
 
                 # Save file info
                 to_download[file].update({
-                    "path_in_temp": path_in_bucket,
-                    "path_in_bucket": file_path.with_suffix(full_suffixes),   # Path in tempdir
+                    "path_in_temp": path_in_temp,  # Path in tempdir
+                    "path_in_bucket": file_path.with_suffix(full_suffixes),   
                     "in_directory": in_directory,       # If in dir
                     "local_dir_name": None,
                     "proceed": proceed,     # If ok to proceed with deliv
                     "error": error          # Error message, "" if none
                 })
             # Folder/Directory
-            elif files_in_db[file]["directory_path"].starts_with(item):
+            elif files_in_db[file]["directory_path"].startswith(item):
                 to_download[file] = {
                     **files_in_db[file],
                     **gen_finfo
@@ -839,11 +843,11 @@ class DataDeliverer:
                 file_path = Path(file)
                 full_suffixes = "".join(file_path.suffixes) + \
                     files_in_db[file]["extension"]
-                path_in_bucket = DIRS[1] / file_path.with_suffix(full_suffixes)
-
+                path_in_temp = DIRS[1] / file_path.with_suffix(full_suffixes)
+                
                 # Save file info
                 to_download[file].update({
-                    "path_in_temp": path_in_bucket,
+                    "path_in_temp": path_in_temp,
                     "path_in_bucket": file_path.with_suffix(full_suffixes),   # Path in tempdir
                     "in_directory": in_directory,       # If in dir
                     "local_dir_name": item,
@@ -851,13 +855,13 @@ class DataDeliverer:
                     "error": error          # Error message, "" if none
                 })
 
-            # No delivery if the item doesn't exist in the database
-            if not in_db:
-                error = f"Item: {item} -- not in database"
-                LOG.warning(error)
-                return {item: {"proceed": False, "error": error,
-                               "in_directory": in_directory,
-                               "dir_name": item if in_directory else None}}
+        # No delivery if the item doesn't exist in the database
+        if not in_db:
+            error = f"Item: {item} -- not in database"
+            LOG.warning(error)
+            return {item: {"proceed": False, "error": error,
+                            "in_directory": in_directory,
+                            "dir_name": item if in_directory else None}}
 
         # Check S3 bucket for item(s)
         with s3_connector.S3Connector(bucketname=self.bucketname,
@@ -865,7 +869,7 @@ class DataDeliverer:
 
             # If folder - can contain more than one
             for file in to_download:
-                in_bucket, s3error = s3_conn.file_exists_in_bucket(key=to_download[file]["path_in_bucket"])
+                in_bucket, s3error = s3_conn.file_exists_in_bucket(key=str(to_download[file]["path_in_bucket"]))
 
                 if not in_bucket:
                     error = (f"File '{file}' in database but NOT in S3 bucket."
@@ -1144,8 +1148,8 @@ class DataDeliverer:
             try:
                 s3_conn.resource.meta.client.download_file(
                     Bucket=s3_conn.bucketname,
-                    Key=path,
-                    Filename=str(path_info["path_in_bucket"]),
+                    Key=str(path_info["path_in_bucket"]),
+                    Filename=str(path_info["path_in_temp"]),
                     Callback=ProgressPercentage(
                         str(Path(path).name),
                         path_info["size_enc"],
@@ -1160,7 +1164,7 @@ class DataDeliverer:
             else:
                 # Upload successful
                 LOG.info("File: '%s'. Download successful! File location: '%s'",
-                         path, path_info["path_in_bucket"])
+                         path, path_info["path_in_temp"])
                 return True, ""
 
     def put(self, file: Path, fileinfo: dict) -> (bool, str):
@@ -1228,6 +1232,7 @@ class ProgressPercentage(object):
         self._seen_so_far = 0
         self._download = get
         self._lock = threading.Lock()
+        print(f"\n\n\n\n\n{self._filename}\n\n\n\n\n")
 
     def __call__(self, bytes_amount):
         # To simplify, assume this is hooked up to a single filename
@@ -1291,8 +1296,9 @@ def update_progress_bar(file, status: str, perc=0.0):
     perc_print = ""
 
     global PROGRESS_DF  # Make variable editable
+    #print(f"\n\n\n\n\n\n\n{file}\n\n\n\n\n\n\n")
     PROGRESS_DF.loc[
-        (PROGRESS_DF.File == str(file)), "     Status     "
+        (PROGRESS_DF.File == Path(file).name), "     Status     "
     ] = STATUS_DICT[status]
 
     # Change the status/progress fields if the upload/download has begun

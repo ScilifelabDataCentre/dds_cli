@@ -1239,19 +1239,21 @@ def update_progress_bar(file, status: str, perc=0.0):
         (PROGRESS_DF.File == str(file)), "     Status     "
     ] = STATUS_DICT[status]
 
+    # Change the status/progress fields if the upload/download has begun
     if perc != 0.0:
         perc_print = "%.2f%%" % (perc)
-        if perc_print == "100.00%":
+
+        if perc_print == "100.00%":     # Empty status if finished
             PROGRESS_DF.loc[
                 (PROGRESS_DF.File == str(file)), "     Status     "
             ] = ""
 
-        if status == "dec":
+        if status == "dec":     # Cover up previous text with empty if decrypt
             PROGRESS_DF.loc[
                 (PROGRESS_DF.File == str(file)),
                 "Upload/Download Progress          "
             ] = " "*18
-        else:
+        else:                   # Update progress percentages if upl/dwnld
             PROGRESS_DF.loc[
                 (PROGRESS_DF.File == str(file)),
                 "Upload/Download Progress          "

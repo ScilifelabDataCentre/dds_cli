@@ -233,7 +233,13 @@ class DataDeliverer:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        return True
+        print("\n\n\n\n\n\nSuccessful:\n")
+        for x, y in self.data.items(): 
+            print(x, "\t", y, "\n")
+
+        print("Failed: \t", self.failed, "\n")
+
+        
         # Tables ##################################################### Tables #
         # Folders
         folders_table = prettytable.PrettyTable(
@@ -1203,6 +1209,7 @@ class DataDeliverer:
 
             # Upload file
             try:
+                # TODO (ina): Check if use object instead?
                 s3_conn.resource.meta.client.upload_file(
                     Filename=str(fileinfo["encrypted_file"]),
                     Bucket=s3_conn.bucketname,

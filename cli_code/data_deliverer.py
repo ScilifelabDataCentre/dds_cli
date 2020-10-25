@@ -328,7 +328,7 @@ class DataDeliverer:
 
         # Only print out final message if data has been specified
         if folders or files["successful"] or files["failed"]:
-            sys.stdout.write("* "*11 + "DELIVERY REPORT" + " *"*11 + "\n")
+            sys.stdout.write("* "*11 + "DELIVERY REPORT" + " *"*11 + "\n\n")
 
         # Print out failed folders and information about delivered
         if folders:
@@ -410,21 +410,23 @@ class DataDeliverer:
                 )
 
                 print(files_table)
-                print_info = (
-                    "\n\n" + "- "*31 +
-                    f"\n\nLocation of {meth} files:\t {filerootloc}\n\n"
-                )
-                sys.stdout.write(print_info)
-                LOG.info("%s%s", files_table, print_info)
+                if files["successful"]:
+                    print_info = (
+                        "\n\n" + "- "*31 +
+                        f"\n\nLocation of {meth} files:\t {filerootloc}\n\n"
+                    )
+                    sys.stdout.write(print_info)
+
+                LOG.info("%s", files_table)
 
         # Information on file location
         if folders or files["successful"] or files["failed"]:
             sys.stdout.write(
-                f"A detailed list of {meth} user-specified data can be "
+                f"\nA detailed list of {meth} user-specified data can be "
                 "found \nin the delivery log file, located in the directory:\n"
                 f"{DIRS[-1]}\n\n" + "* "*31 + "\n\n"
             )
-        
+
         LOG.info("DELIVERY FINISHED")
         return True
 
@@ -711,7 +713,6 @@ class DataDeliverer:
 
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
-
                 # Get info on files within folder
                 if curr_path.is_dir():
                     dir_info, dir_fail = file_handler.get_dir_info(
@@ -723,7 +724,7 @@ class DataDeliverer:
                     # print("\n\n\n\n\n", dir_info, "\n\n\n\n\n")
                     # sys.exit()
                     continue
-
+                
                 # Get info for individual files
                 file_info = file_handler.get_file_info(
                     file=curr_path, in_dir=False, do_fail=do_fail
@@ -760,6 +761,10 @@ class DataDeliverer:
                             **all_files.pop(file),
                             "error": "File already exists in database"
                         }
+                    else:
+                        LOG.info("--overwrite specified - performing delivery of '%s'", file)
+                        continue
+
                     if self.break_on_fail:
                         do_fail = True
                         continue

@@ -149,9 +149,9 @@ def put(creds: str, username: str, password: str, project: str,
         threads = {}        # Upload to S3
         final_threads = {}  # Delete files
 
+        count = 0
         # BEGINS DELIVERY # # # # # # # # # # # # # # # # # # BEGINS DELIVERY #
         for path, info in delivery.data.items():
-
             # Quits and moves on if DS noted cancelation for file
             if not info["proceed"]:
                 CLI_LOGGER.warning("CANCELLED: '%s'", path)
@@ -182,7 +182,10 @@ def put(creds: str, username: str, password: str, project: str,
             except concurrent.futures.BrokenExecutor:
                 sys.exit(f"{pfuture.exception()}")
                 break  # Precaution if sys.exit not quit completely
-
+            
+            # count += 1
+            # if count == 3:
+            #     processed = False
             # Updates file info
             proceed = delivery.update_delivery(
                 file=ppath,

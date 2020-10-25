@@ -171,6 +171,7 @@ class DataDeliverer:
         # project_id, s3_id, and error.
         delivery_info = self._check_ds_access()
         self.user.id = delivery_info["user_id"]
+        self.token = delivery_info["token"]
 
         # Fail if no data specified
         if not data and not pathfile:
@@ -198,7 +199,7 @@ class DataDeliverer:
             self.private = b""
         elif self.method == "get":
             self.private = crypto_ds.get_project_private(
-                self.project_id, self.user)
+                self.project_id, self.user, self.token)
 
         # for f, v in self.data.items():
         #     print(f, "\t", v, "\n\n\n\n\n")
@@ -724,7 +725,7 @@ class DataDeliverer:
                     # print("\n\n\n\n\n", dir_info, "\n\n\n\n\n")
                     # sys.exit()
                     continue
-                
+
                 # Get info for individual files
                 file_info = file_handler.get_file_info(
                     file=curr_path, in_dir=False, do_fail=do_fail
@@ -762,7 +763,8 @@ class DataDeliverer:
                             "error": "File already exists in database"
                         }
                     else:
-                        LOG.info("--overwrite specified - performing delivery of '%s'", file)
+                        LOG.info(
+                            "--overwrite specified - performing delivery of '%s'", file)
                         continue
 
                     if self.break_on_fail:
@@ -978,7 +980,8 @@ class DataDeliverer:
             json: The API response contain all file information
         """
 
-        req = ENDPOINTS["project_files"] + "/" + str(self.project_id)
+        req = ENDPOINTS["project_files"] + "/" + \
+            str(self.project_id) + "/" + self.token
         response = requests.get(req)
         if not response.ok:
             sys.exit(
@@ -987,8 +990,14 @@ class DataDeliverer:
                      \n{req}""")
             )
 
+        resp_json = response.json()
+        if not resp_json["access_granted"]:
+            sys.exit(
+                exceptions_ds.printout_error(resp_json[message])
+            )
+
         # Get all project files from response
-        return response.json()
+        return resp_json
 
     ##################
     # Public Methods #

@@ -184,7 +184,7 @@ class ECDHKey:
 # FUNCTIONS ####################################################### FUNCTIONS #
 ###############################################################################
 
-def get_project_private(proj_id: str, user):
+def get_project_private(proj_id: str, user, token):
     """Gets the project private key from the database - only while downloading.
 
     -------------------------Format in database:-------------------------------
@@ -200,7 +200,7 @@ def get_project_private(proj_id: str, user):
 
     """
 
-    req = ENDPOINTS["key"] + f"{proj_id}/key"
+    req = ENDPOINTS["key"] + f"{proj_id}/key/{token}"
     response = requests.get(req)
     if not response.ok:
         sys.exit(

@@ -261,7 +261,8 @@ def put(creds: str, username: str, password: str, project: str,
                 "extension": delivery.data[upath]["extension"],
                 "key": delivery.data[upath]["key"],
                 "salt": delivery.data[upath]["salt"],
-                "overwrite": delivery.overwrite
+                "overwrite": delivery.overwrite,
+                "token": delivery.token
             }
 
             # Request endpoint
@@ -467,7 +468,7 @@ def get(creds: str, username: str, password: str, project: str,
 
             # Request endpoint
             req = ENDPOINTS["delivery_date"]
-            args = {"file_id": delivery.data[fpath]["id"]}
+            args = {"file_id": delivery.data[fpath]["id"], "token": delivery.token}
             response = requests.post(req, params=args)
             if not response.ok:
                 # TODO (ina): Change here, should check response info

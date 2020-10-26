@@ -216,6 +216,13 @@ def get_project_private(proj_id: str, user, token):
     key_info = response.json()
     CRYPTO_LOG.debug("private key info: %s", key_info)
 
+    if not key_info["access_granted"]:
+        sys.exit(
+            exceptions_ds.printout_error(
+                f"{key_info['message']}. Delivery cancelled."
+            )
+        )
+
     # Salt for deriving key used to encrypt/decrypt secret key
     key_salt = bytes.fromhex(key_info["salt"])
     CRYPTO_LOG.debug("salt in hex: %s", key_info["salt"])

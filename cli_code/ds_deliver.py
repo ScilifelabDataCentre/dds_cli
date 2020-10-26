@@ -182,7 +182,7 @@ def put(creds: str, username: str, password: str, project: str,
             except concurrent.futures.BrokenExecutor:
                 sys.exit(f"{pfuture.exception()}")
                 break  # Precaution if sys.exit not quit completely
-            
+
             # count += 1
             # if count == 3:
             #     processed = False
@@ -265,28 +265,44 @@ def put(creds: str, username: str, password: str, project: str,
                 "token": delivery.token
             }
 
-            # Request endpoint
+            # Perform request to DatabaseUpdate - update file and project info
             req = ENDPOINTS["update_file"]
             response = requests.post(req, params=req_args)
+
+            # TODO (ina): If this or database update failed - save info to log
+            # what info? facility should not have private key access
             if not response.ok:
                 sys.exit(exceptions_ds.printout_error(
                     f"Could not update database. {response.text}"
                 ))
 
-            # Get response from api:
-            # db_response - "updated"=True if database update successful
+            # Get response from api
             db_response = response.json()
+
+            # Check if token validation successful
+            if not db_response["access_granted"]:
+                emessage = db_response["message"]
+                CLI_LOGGER.fatal(emessage)
+                dd.update_progress_bar(file=upath, status="e")
+                # Updates file info
+                _ = delivery.update_delivery(file=upath,
+                                             updinfo={"proceed": False,
+                                                      "error": emessage})
+
+            # db_response - "updated"=True if database update successful
             if not db_response["updated"]:
                 emessage = f"Database update failed: {db_response['message']}"
                 CLI_LOGGER.warning(emessage)
+                # TODO (ina): Do NOT remove if db update failed - save info
                 with s3_connector.S3Connector(bucketname=delivery.bucketname,
                                               project=delivery.s3project) \
                         as s3_conn:
-                    s3_conn.delete_item(key=delivery.data["path_in_bucket"])
+                    # s3_conn.delete_item(key=delivery.data["path_in_bucket"])
+                    pass
                 dd.update_progress_bar(file=upath, status="e")
                 continue
 
-            CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: '%s'", upath)
+            CLI_LOGGER.info("File added to database: '%s'", upath)
 
             # Sets delivery as finished and display progress = check mark
             delivery.set_progress(item=upath, db=True, finished=True)
@@ -466,21 +482,37 @@ def get(creds: str, username: str, password: str, project: str,
             # Args to send in request to api
             delivery.set_progress(item=fpath, db=True, started=True)
 
-            # Request endpoint
+            # Perform request to DeliveryDate -- update delivery date
             req = ENDPOINTS["delivery_date"]
-            args = {"file_id": delivery.data[fpath]["id"], "token": delivery.token}
+            args = {"file_id": delivery.data[fpath]["id"],
+                    "token": delivery.token}
             response = requests.post(req, params=args)
+
+            #
             if not response.ok:
-                # TODO (ina): Change here, should check response info
-                emessage = f"File: {fpath}. Database update failed."
+                emessage = f"{response.status_code} - {response.reason}:" + \
+                    f"\n{req}"
+                _ = delivery.update_delivery(
+                    file=fpath,
+                    updinfo={"error": emessage}
+                )
                 dd.update_progress_bar(file=fpath, status="e")  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
             else:
-                CLI_LOGGER.info("DATABASE UPDATE SUCCESSFUL: '%s'", fpath)
+                json_resp = response.json()
+                if not json_resp["access_granted"] or not json_resp["updated"]:
+                    emessage = json_resp["message"]
+                    _ = delivery.update_delivery(
+                        file=fpath,
+                        updinfo={"error": emessage}
+                    )
+                    dd.update_progress_bar(file=fpath, status="e")  # -> X
+                else:
+                    CLI_LOGGER.info("File updated in db: '%s'", fpath)
 
-                # Sets delivery as finished and display progress = check mark
-                delivery.set_progress(item=fpath, db=True, finished=True)
-                dd.update_progress_bar(file=fpath, status="f")
+                    # Sets delivery as finished and display progress = check
+                    delivery.set_progress(item=fpath, db=True, finished=True)
+                    dd.update_progress_bar(file=fpath, status="f")
 
         # DELIVERY FINISHED ------------------------------- DELIVERY FINISHED #
 

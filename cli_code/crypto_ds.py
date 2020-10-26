@@ -200,15 +200,19 @@ def get_project_private(proj_id: str, user, token):
 
     """
 
+    # Perform request to ProjectKey - get encrypted and formatted private key
     req = ENDPOINTS["key"] + f"{proj_id}/key/{token}"
     response = requests.get(req)
+
+    # Cancel delivery if request error
     if not response.ok:
         sys.exit(
             exceptions_ds.printout_error(
-                f"""{response.status_code} - {response.reason}: \n{req}"""
+                f"{response.status_code} - {response.reason}: \n{req}"
             )
         )
 
+    # Get json response if request ok
     key_info = response.json()
     CRYPTO_LOG.debug("private key info: %s", key_info)
 

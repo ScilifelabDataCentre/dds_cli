@@ -168,7 +168,7 @@ class DataDeliverer:
             )
 
         # Get access to DS -- returns json format with access, user_id,
-        # project_id, s3_id, and error.
+        # project_id, s3_id, error and token.
         delivery_info = self._check_ds_access()
         self.user.id = delivery_info["user_id"]
         self.token = delivery_info["token"]
@@ -185,14 +185,16 @@ class DataDeliverer:
 
         # If everything ok, set bucket name
         self.bucketname = delivery_info["s3_id"]
+
+        # Set public key
         self.public = bytes.fromhex(delivery_info["public_key"])
         LOG.debug("Project public key: %s", self.public)
 
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
-
         LOG.debug("Data to deliver: %s", self.data)
+
         # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
         if self.method == "put":
@@ -200,11 +202,7 @@ class DataDeliverer:
         elif self.method == "get":
             self.private = crypto_ds.get_project_private(
                 self.project_id, self.user, self.token)
-
-        # for f, v in self.data.items():
-        #     print(f, "\t", v, "\n\n\n\n\n")
-
-        # sys.exit()
+                
         # Start progress info printout
         if self.data:
             global TO_PRINT
@@ -472,22 +470,23 @@ class DataDeliverer:
 
         # Request to get access
         response = requests.post(LOGIN_BASE, params=args)
-        # print(response.text)
         if not response.ok:
             sys.exit(
                 exceptions_ds.printout_error(
-                    """Something wrong. Could not access api/db during access
-                    check. Login failed. Delivery cancelled."""
+                    "Something wrong. Could not access api/db during access "
+                    "check. Login failed. Delivery cancelled."
                 )
             )
 
+        # Get json response if request successful (does not mean access)
         json_response = response.json()
+
         # Quit if user not granted Delivery System access
-        if not json_response["access"]:
+        if not json_response["access"] and json_response["token"] == "":
             sys.exit(
                 exceptions_ds.printout_error(
-                    f"""Delivery System access denied!
-                       Delivery cancelled. {json_response['error']}"""
+                    "Delivery System access denied! "
+                    f"Delivery cancelled. {json_response['error']}"
                 )
             )
 
@@ -495,8 +494,8 @@ class DataDeliverer:
         if int(json_response["project_id"]) != self.project_id:
             sys.exit(
                 exceptions_ds.printout_error(
-                    """Incorrect project ID. System error.
-                    Cancelling delivery."""
+                    "Incorrect project ID. System error. "
+                    "Cancelling delivery."
                 )
             )
 
@@ -556,8 +555,8 @@ class DataDeliverer:
                     )
                 # username, password, id, owner
                 return username, password, self.project_id, username
-            else:
-                return username, password, self.project_id, self.project_owner
+
+            return username, password, self.project_id, self.project_owner
 
         # creds file ----------- credentials in it ----------- creds file #
         user_creds = Path(creds).resolve()
@@ -688,7 +687,7 @@ class DataDeliverer:
             if self.method == "get":
                 iteminfo = self._get_download_info(
                     item=d,
-                    files_in_db=files_in_db["files"],
+                    files_in_db=files_in_db,
                     do_fail=do_fail
                 )
 
@@ -710,10 +709,10 @@ class DataDeliverer:
                             continue
 
                         all_files[f] = iteminfo[f]
-                # print("\n\n\n\n", iteminfo, "\n\n\n\n")
 
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
+
                 # Get info on files within folder
                 if curr_path.is_dir():
                     dir_info, dir_fail = file_handler.get_dir_info(
@@ -722,8 +721,6 @@ class DataDeliverer:
                     )
                     initial_fail.update(dir_fail)   # Not to be delivered
                     all_files.update(dir_info)      # To be delivered
-                    # print("\n\n\n\n\n", dir_info, "\n\n\n\n\n")
-                    # sys.exit()
                     continue
 
                 # Get info for individual files
@@ -739,8 +736,6 @@ class DataDeliverer:
                 else:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
-                # print("\n\n\n\n\n", file_info, "\n\n\n\n\n")
-                # sys.exit()
 
         if self.method == "put":
             for file, info in list(all_files.items()):
@@ -755,7 +750,7 @@ class DataDeliverer:
 
                 # Check if the "bucketfilename" exists in database (name col)
                 # and continue if not or if overwrite option specified
-                if info["path_in_db"] in files_in_db["files"]:
+                if info["path_in_db"] in files_in_db:
                     if not self.overwrite:
                         LOG.info("'%s' already exists in database", file)
                         initial_fail[file] = {
@@ -763,8 +758,8 @@ class DataDeliverer:
                             "error": "File already exists in database"
                         }
                     else:
-                        LOG.info(
-                            "--overwrite specified - performing delivery of '%s'", file)
+                        LOG.info("--overwrite specified - "
+                                 "performing delivery of '%s'", file)
                         continue
 
                     if self.break_on_fail:
@@ -980,24 +975,28 @@ class DataDeliverer:
             json: The API response contain all file information
         """
 
+        # Perform request to ProjectFiles - list all files connected to proj
         req = ENDPOINTS["project_files"] + "/" + \
             str(self.project_id) + "/" + self.token
         response = requests.get(req)
+
+        # If request error - cancel
         if not response.ok:
             sys.exit(
                 exceptions_ds.printout_error(
-                    f"""{response.status_code} - {response.reason}:
-                     \n{req}""")
+                    f"{response.status_code} - {response.reason}:\n{req}"
+                )
             )
 
+        # Get json response if request ok
         resp_json = response.json()
         if not resp_json["access_granted"]:
             sys.exit(
-                exceptions_ds.printout_error(resp_json[message])
+                exceptions_ds.printout_error(resp_json["message"])
             )
 
         # Get all project files from response
-        return resp_json
+        return resp_json["files"]
 
     ##################
     # Public Methods #

@@ -149,7 +149,7 @@ def put(creds: str, username: str, password: str, project: str,
         threads = {}        # Upload to S3
         final_threads = {}  # Delete files
 
-        count = 0
+        # count = 0     # For testing if failing works
         # BEGINS DELIVERY # # # # # # # # # # # # # # # # # # BEGINS DELIVERY #
         for path, info in delivery.data.items():
             # Quits and moves on if DS noted cancelation for file

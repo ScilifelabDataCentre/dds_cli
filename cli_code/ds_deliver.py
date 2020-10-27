@@ -29,7 +29,6 @@ be delivered. All files, independent of previous encryption, are encrypted by
 the Data Delivery System.
 """
 
-# TODO(ina): Fix the docstrings
 # TODO(ina): Add example to module docstring?
 # TODO(ina): Fix or ignore pylint "too-many-arguments" warnings etc
 
@@ -116,7 +115,7 @@ def cli():
                                     "folders to be delivered."))
 @click.option("--data", "-d", required=False, type=click.Path(exists=True),
               multiple=True, help="Path to file or folder to be delivered.")
-@click.option("--break-on-fail/--nobreak-on-fail", default=True,
+@click.option("--break-on-fail", is_flag=True, default=False,
               show_default=True, help=("Failure to deliver one file results in"
                                        " cancellation of all specified files."))
 @click.option("--overwrite", is_flag=True, default=False, show_default=True,
@@ -279,27 +278,16 @@ def put(creds: str, username: str, password: str, project: str,
             # Get response from api
             db_response = response.json()
 
-            # Check if token validation successful
-            if not db_response["access_granted"]:
-                emessage = db_response["message"]
-                CLI_LOGGER.fatal(emessage)
+            # db_response - "updated"=True if database update successful
+            if not db_response["access_granted"] or not db_response["updated"]:
+                emessage = f"Database update failed: {db_response['message']}"
+                CLI_LOGGER.warning(emessage)
                 dd.update_progress_bar(file=upath, status="e")
-                # Updates file info
                 _ = delivery.update_delivery(file=upath,
                                              updinfo={"proceed": False,
                                                       "error": emessage})
-
-            # db_response - "updated"=True if database update successful
-            if not db_response["updated"]:
-                emessage = f"Database update failed: {db_response['message']}"
-                CLI_LOGGER.warning(emessage)
-                # TODO (ina): Do NOT remove if db update failed - save info
-                with s3_connector.S3Connector(bucketname=delivery.bucketname,
-                                              project=delivery.s3project) \
-                        as s3_conn:
-                    # s3_conn.delete_item(key=delivery.data["path_in_bucket"])
-                    pass
-                dd.update_progress_bar(file=upath, status="e")
+                # TODO (ina): Info to save if failed after processing:
+                # req_args + 
                 continue
 
             CLI_LOGGER.info("File added to database: '%s'", upath)
@@ -361,7 +349,7 @@ def put(creds: str, username: str, password: str, project: str,
                                     "folders to be delivered."))
 @click.option("--data", "-d", required=False, type=str,
               multiple=True, help="Path to file or folder to be delivered.")
-@click.option("--break-on-fail/--nobreak-on-fail", default=True,
+@click.option("--break-on-fail", is_flag=True, default=False,
               show_default=True, help=("Failure to deliver one file results in"
                                        " cancellation of all specified files."))
 def get(creds: str, username: str, password: str, project: str,
@@ -485,16 +473,17 @@ def get(creds: str, username: str, password: str, project: str,
             # Perform request to DeliveryDate -- update delivery date
             req = ENDPOINTS["delivery_date"]
             args = {"file_id": delivery.data[fpath]["id"],
+                    "project": delivery.project_id,
                     "token": delivery.token}
             response = requests.post(req, params=args)
 
             #
             if not response.ok:
                 emessage = f"{response.status_code} - {response.reason}:" + \
-                    f"\n{req}"
+                    f"\n{req}\n{response.text}"
                 _ = delivery.update_delivery(
                     file=fpath,
-                    updinfo={"error": emessage}
+                    updinfo={"proceed": False, "error": emessage}
                 )
                 dd.update_progress_bar(file=fpath, status="e")  # -> X-symbol
                 CLI_LOGGER.warning(emessage)
@@ -504,7 +493,7 @@ def get(creds: str, username: str, password: str, project: str,
                     emessage = json_resp["message"]
                     _ = delivery.update_delivery(
                         file=fpath,
-                        updinfo={"error": emessage}
+                        updinfo={"proceed": False, "error": emessage}
                     )
                     dd.update_progress_bar(file=fpath, status="e")  # -> X
                 else:

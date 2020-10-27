@@ -28,6 +28,7 @@ import botocore.client
 import prettytable
 
 # Own modules
+from cli_code import Format
 from cli_code import DIRS
 from cli_code import ENDPOINTS
 from cli_code import crypto_ds
@@ -327,22 +328,22 @@ class DataDeliverer:
 
         # Only print out final message if data has been specified
         if folders or files["successful"] or files["failed"]:
-            sys.stdout.write("* "*11 + "DELIVERY REPORT" + " *"*11 + "\n\n")
+            sys.stdout.write(Format.HEADER + "* "*11 + "DELIVERY REPORT" + " *"*11 + Format.END + "\n\n")
 
         # Print out failed folders and information about delivered
         if folders:
-            sys.stdout.write("\n" + "- "*13 + "Folders" + " -"*13 + "\n\n")
+            sys.stdout.write(Format.BOLD + "\n" + "- "*13 + "Folders" + " -"*13 + Format.END + "\n\n")
             for f in folders:
                 total_attempted = len(folders[f]["successful"]) + \
                     len(folders[f]["failed"])
                 if not folders[f]["failed"]:    # All files successful
-                    print_info = (f"Folder: {f}\nFiles attempted: "
+                    print_info = (f"{Format.UNDERLINE}Folder:{Format.END} {f}\nFiles attempted: "
                                   f"{total_attempted}\t Files {meth}: "
                                   f"{len(folders[f]['successful'])}.\n\n")
                     sys.stdout.write(print_info)
                     LOG.info(print_info)
                 else:
-                    print_info = (f"Folder: {f}\nFiles attempted: "
+                    print_info = (f"{Format.UNDERLINE}Folder:{Format.END} {f}\nFiles attempted: "
                                   f"{total_attempted}\tFiles {meth}: "
                                   f"{len(folders[f]['successful'])}\n"
                                   "Failed files: \n")
@@ -372,8 +373,8 @@ class DataDeliverer:
                     LOG.info("\n%s\n\n", folders_table)
 
         if not files["failed"] and files["successful"]:  # All files sucessful
-            print_info = ("- "*7 + "Files (not located in directory)" +
-                          " -"*7 + "\n\nFiles attempted: "
+            print_info = (Format.BOLD + "- "*7 + "Files (not located in directory)" +
+                          " -"*7 + Format.END + "\n\nFiles attempted: "
                           f"{len(files['successful'])}\tFiles {meth}: "
                           f"{len(files['successful'])}\n\n" + "- "*31 +
                           f"\n\nLocation of {meth} files:\t {filerootloc}\n")
@@ -384,7 +385,7 @@ class DataDeliverer:
                 len(files["failed"])
 
             print_info = (
-                "- "*7 + "Files (not located in directory)" + " -"*7 + "\n\n"
+                Format.BOLD + "- "*7 + "Files (not located in directory)" + " -"*7 + Format.END + "\n\n"
                 f"Files attempted: {total_attempted}\t"
                 f"Files {meth}: {len(files['successful'])}\n"
                 "Failed files: \n"
@@ -615,6 +616,8 @@ class DataDeliverer:
         # Set pandas to show all dataframe contents, no '...'
         pd.set_option("display.max_colwidth", -1)
 
+        b_u = Format.BOLD + Format.UNDERLINE
+        end = Format.END
         global PROGRESS_DF  # Can edit global variable contents
         PROGRESS_DF = pd.DataFrame(
             {"File": [str(Path(x).name) for x in self.data],

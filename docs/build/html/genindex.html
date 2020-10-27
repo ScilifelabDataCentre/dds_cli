@@ -205,15 +205,6 @@
 </li>
       </ul></li>
       <li>
-    --nobreak-on-fail
-
-      <ul>
-        <li><a href="cli.html#cmdoption-ds_deliver-get-break-on-fail">ds_deliver-get command line option</a>
-</li>
-        <li><a href="cli.html#cmdoption-ds_deliver-put-break-on-fail">ds_deliver-put command line option</a>
-</li>
-      </ul></li>
-      <li>
     --overwrite
 
       <ul>
@@ -346,11 +337,9 @@
 </li>
       <li><a href="delivery.html#cli_code.data_deliverer.DataDeliverer._finalize">_finalize() (DataDeliverer method)</a>
 </li>
-      <li><a href="delivery.html#cli_code.data_deliverer.DataDeliverer._get_dir_info">_get_dir_info() (DataDeliverer method)</a>
-</li>
       <li><a href="delivery.html#cli_code.data_deliverer.DataDeliverer._get_download_info">_get_download_info() (DataDeliverer method)</a>
 </li>
-      <li><a href="delivery.html#cli_code.data_deliverer.DataDeliverer._get_file_info">_get_file_info() (DataDeliverer method)</a>
+      <li><a href="delivery.html#cli_code.data_deliverer.DataDeliverer._get_project_files">_get_project_files() (DataDeliverer method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -464,8 +453,6 @@
 </li>
         <li><a href="cli.html#cmdoption-ds_deliver-get-d">--data &lt;data&gt;</a>
 </li>
-        <li><a href="cli.html#cmdoption-ds_deliver-get-break-on-fail">--nobreak-on-fail</a>
-</li>
         <li><a href="cli.html#cmdoption-ds_deliver-get-pw">--password &lt;password&gt;</a>
 </li>
         <li><a href="cli.html#cmdoption-ds_deliver-get-f">--pathfile &lt;pathfile&gt;</a>
@@ -498,8 +485,6 @@
         <li><a href="cli.html#cmdoption-ds_deliver-put-c">--creds &lt;creds&gt;</a>
 </li>
         <li><a href="cli.html#cmdoption-ds_deliver-put-d">--data &lt;data&gt;</a>
-</li>
-        <li><a href="cli.html#cmdoption-ds_deliver-put-break-on-fail">--nobreak-on-fail</a>
 </li>
         <li><a href="cli.html#cmdoption-ds_deliver-put-overwrite">--overwrite</a>
 </li>
@@ -566,8 +551,12 @@
 </li>
       <li><a href="delivery.html#cli_code.data_deliverer.DataDeliverer.get">get() (DataDeliverer method)</a>
 </li>
+      <li><a href="files.html#cli_code.file_handler.get_dir_info">get_dir_info() (in module cli_code.file_handler)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="files.html#cli_code.file_handler.get_file_info">get_file_info() (in module cli_code.file_handler)</a>
+</li>
       <li><a href="files.html#cli_code.crypto_ds.get_project_private">get_project_private() (in module cli_code.crypto_ds)</a>
 </li>
       <li><a href="files.html#cli_code.file_handler.get_root_path">get_root_path() (in module cli_code.file_handler)</a>
@@ -636,6 +625,8 @@
 </li>
       </ul></li>
       <li><a href="files.html#cli_code.file_handler.process_file">process_file() (in module cli_code.file_handler)</a>
+</li>
+      <li><a href="delivery.html#cli_code.data_deliverer.ProgressPercentage">ProgressPercentage (class in cli_code.data_deliverer)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>

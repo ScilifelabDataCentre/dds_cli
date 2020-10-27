@@ -256,7 +256,7 @@ and own public and private key</p>
 
 <dl class="py function">
 <dt id="cli_code.crypto_ds.get_project_private">
-<code class="sig-name descname">get_project_private</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">proj_id</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">user</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.get_project_private" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_project_private</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">proj_id</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">user</span></em>, <em class="sig-param"><span class="n">token</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.get_project_private" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gets the project private key from the database - only while downloading.</p>
 <p>————————-Format in database:——————————-
 len(magic) + magic + len(projID) + projID + len(privateKey) + privateKey
@@ -456,6 +456,45 @@ str:    Error message, “” if none</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.get_dir_info">
+<code class="sig-name descname">get_dir_info</code><span class="sig-paren">(</span><em class="sig-param">folder: pathlib.Path</em>, <em class="sig-param">do_fail: bool) -&gt; (&lt;class 'dict'&gt;</em>, <em class="sig-param">&lt;class 'dict'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.get_dir_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through folder contents and get file info</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em>) – Path to folder</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Files to deliver
+dict:   Files which failed – not to deliver</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.get_file_info">
+<code class="sig-name descname">get_file_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">in_dir</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">do_fail</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">dir_name</span><span class="p">:</span> <span class="n">pathlib.Path</span> <span class="o">=</span> <span class="default_value">PosixPath('.')</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#cli_code.file_handler.get_file_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get info on file and check if already delivered</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Path</em>) – Path to file</p></li>
+<li><p><strong>in_dir</strong> (<em>bool</em>) – True if in directory specified by user</p></li>
+<li><p><strong>dir_name</strong> (<em>Path</em>) – Directory name, “” if not in folder</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Information about file e.g. format</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>

@@ -12,15 +12,13 @@ upload and download of all files. Also keeps track of the delivery progress.
 
 # Standard library
 from pathlib import Path
-import collections
 import json
 import logging
 import os
 import pandas as pd
 import sys
-import textwrap
-import traceback
 import threading
+import traceback
 import requests
 
 # Installed

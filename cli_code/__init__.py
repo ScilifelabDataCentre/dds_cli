@@ -4,8 +4,8 @@ This package allows SciLifeLab facilities to deliver data to their users in
 a secure way.
 
 Any type of file or folder can be delivered. Compressed files or archives will
-not be compressed, all other files will (with Zstandard). All files (if not
---no-encryption flag used) will be encrypted with ChaCha20-Poly1305.
+not be compressed, all other files will (with Zstandard). All files will be
+encrypted with ChaCha20-Poly1305.
 
 """
 

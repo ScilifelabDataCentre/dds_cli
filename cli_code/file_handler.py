@@ -35,11 +35,11 @@ from cli_code import SEGMENT_SIZE
 # Compression formats and their file signatures
 MAGIC_DICT = {
     b"\x913HF": "hap",
-    b"ustar": "tar",
     b"`\xea": "arj",
     b"_\'\xa8\x89": "jar",
     b"ZOO ": "zoo",
     b"PK\x03\x04": "zip",
+    b"\x1F\x8B": "gzip",
     b"UFA\xc6\xd2\xc1": "ufa",
     b"StuffIt ": "sit",
     b"Rar!\x1a\x07\x00": "rar v4.x",

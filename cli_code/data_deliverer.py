@@ -658,8 +658,7 @@ class DataDeliverer:
             with Path(pathfile).resolve().open(mode="r") as file:
                 data_list += [line.strip() for line in file]
 
-        self.data_input = data_list  # Save list of paths user chose
-
+        self.data_input = list(Path(x).resolve() for x in data_list)  # Save list of paths user chose
         # Fail delivery if not a correct method
         if self.method not in ["get", "put"]:
             sys.exit(

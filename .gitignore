@@ -24,3 +24,4 @@ test*
 not_used*
 encryption.md
 chunk_tester.py
+creds_files

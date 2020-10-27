@@ -33,6 +33,7 @@ from cli_code import SEGMENT_SIZE
 # NOTE: Move these to other module?
 
 # Compression formats and their file signatures
+# TODO (ina): Add xz and 7z
 MAGIC_DICT = {
     b"\x913HF": "hap",
     b"`\xea": "arj",

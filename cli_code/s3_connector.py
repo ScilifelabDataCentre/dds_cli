@@ -78,6 +78,20 @@ class S3Connector:
     def _connect(self):
         """Connect to S3"""
 
+        import requests
+        from cli_code import ENDPOINTS
+
+        s3_creds_resp = requests.get(ENDPOINTS["s3info"])
+        if not s3_creds_resp.ok:
+            sys.exit(
+                exceptions_ds.printout_error(
+                    "No S3 access information available. "
+                    f"Cannot upload/download. {s3_creds_resp.status_code}, "
+                    f"{s3_creds_resp.reason}"
+                )
+            )
+        s3creds = s3_creds_resp.json()
+
         try:
             # Start S3 session
             self.session = boto3.session.Session()      # --> Thread safe
@@ -93,10 +107,6 @@ class S3Connector:
             # 		                    }
             # 	                    }
             #                   }
-            s3path = pathlib.Path.cwd() / \
-                pathlib.Path("sensitive/s3_config.json")
-            with s3path.open(mode="r") as f:
-                s3creds = json.load(f)
 
             # Keys and endpoint from file - this will be changed to database
             endpoint_url = s3creds["endpoint_url"]

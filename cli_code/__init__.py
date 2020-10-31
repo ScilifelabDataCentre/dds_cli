@@ -67,7 +67,8 @@ ENDPOINTS = {"f_login": API_BASE + "/fac/login",
              "update_file": API_BASE + "/project/updatefile",
              "file_salt": API_BASE + "/file/salt",
              "key": API_BASE + "/project/",
-             "delivery_date": API_BASE + "/delivery/date/"}
+             "delivery_date": API_BASE + "/delivery/date/", 
+             "s3info": API_BASE + "/s3info"}
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

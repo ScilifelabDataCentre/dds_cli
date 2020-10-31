@@ -204,8 +204,8 @@ class DataDeliverer:
                 
         # Start progress info printout
         if self.data:
-            global TO_PRINT
-            global PROGRESS
+            # cap_not_exceeded = self._check_cap()
+            # if cap_not_exceeded:
             self._create_progress_output()
 
     def __repr__(self):
@@ -434,6 +434,18 @@ class DataDeliverer:
     # Private Methods #
     ###################
 
+    def _check_cap(self):
+        """Checks if the file size exceeds 700 GB."""
+
+        tot_size = 0
+        for x, y in self.data.items():
+            tot_size += y["size"]
+            print(x, y["size"], tot_size)
+            if tot_size > 700000000000:
+                return False
+            
+        return True
+
     def _check_ds_access(self):
         """Checks the users access to the delivery system.
 
@@ -656,7 +668,6 @@ class DataDeliverer:
             with Path(pathfile).resolve().open(mode="r") as file:
                 data_list += [line.strip() for line in file]
 
-        self.data_input = list(Path(x).resolve() for x in data_list)  # Save list of paths user chose
         # Fail delivery if not a correct method
         if self.method not in ["get", "put"]:
             sys.exit(
@@ -664,6 +675,22 @@ class DataDeliverer:
                     f"""Delivery option {self.method} not allowed.
                      \nCancelling delivery.""")
             )
+        
+        if self.method == "put":
+            self.data_input = list()
+            tot_size = 0
+            for x in data_list:
+                filepath = Path(x).resolve()
+                tot_size += filepath.stat().st_size
+                print(tot_size)
+                if tot_size > 700e9:
+                    sys.exit(
+                        exceptions_ds.printout_error(
+                            "Too much data. The upload cap is set at 700 GB."
+                        )
+                    )
+        elif self.method == "get":
+            self.data_input = list(x for x in data_list)  # Save list of paths user chose
 
         # Get all project files in db
         # TODO: move to function?

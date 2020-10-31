@@ -676,6 +676,7 @@ class DataDeliverer:
                      \nCancelling delivery.""")
             )
         
+        # Temporary cap
         if self.method == "put":
             self.data_input = list()
             tot_size = 0
@@ -689,6 +690,7 @@ class DataDeliverer:
                             "Too much data. The upload cap is set at 700 GB."
                         )
                     )
+                self.data_input.append(filepath)
         elif self.method == "get":
             self.data_input = list(x for x in data_list)  # Save list of paths user chose
 
@@ -892,6 +894,7 @@ class DataDeliverer:
         # Check for file starting with the file/folder name
         # for file in files_in_db:
         #     print(file)
+        tot_size = 0
         for file in files_in_db:
             # Get info on file
             if do_fail:
@@ -906,6 +909,15 @@ class DataDeliverer:
             # or a folder/directory if it starts with the directory_path in db
             # print(file, item, files_in_db)
             if file == item:    # File
+                # Temporary cap
+                tot_size += int(files_in_db[file]["size_enc"])
+                if tot_size > 700e9:
+                    sys.exit(
+                        exceptions_ds.printout_error(
+                            "Too much data. Cap set at 700 GB."
+                        )
+                    )
+
                 # print("exists")
                 to_download[file] = {
                     **files_in_db[file],

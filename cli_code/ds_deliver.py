@@ -113,7 +113,7 @@ def cli():
 @click.option("--pathfile", "-f", required=False, type=click.Path(exists=True),
               multiple=False, help=("Path to file containing all files and "
                                     "folders to be delivered."))
-@click.option("--data", "-d", required=False, type=click.Path(exists=True),
+@click.option("--source", "-s", required=False, type=click.Path(exists=True),
               multiple=True, help="Path to file or folder to be delivered.")
 @click.option("--break-on-fail", is_flag=True, default=False,
               show_default=True, help=("Failure to deliver one file results in"
@@ -122,7 +122,7 @@ def cli():
               help=("Replace any previously delivered files specified in the "
                     "current delivery."))
 def put(creds: str, username: str, password: str, project: str,
-        owner: str, pathfile: str, data: tuple, break_on_fail=True,
+        owner: str, pathfile: str, source: tuple, break_on_fail=True,
         overwrite=False) -> (str):
     """Handles the upload of files to the project-specific S3 bucket.
 
@@ -135,7 +135,7 @@ def put(creds: str, username: str, password: str, project: str,
     # - checks access and gets neccessary delivery info
     with dd.DataDeliverer(creds=creds, username=username, password=password,
                           project_id=project, project_owner=owner,
-                          pathfile=pathfile, data=data,
+                          pathfile=pathfile, data=source,
                           break_on_fail=break_on_fail, overwrite=overwrite) \
             as delivery:
 
@@ -347,13 +347,13 @@ def put(creds: str, username: str, password: str, project: str,
 @click.option("--pathfile", "-f", required=False, type=click.Path(exists=True),
               multiple=False, help=("Path to file containing all files and "
                                     "folders to be delivered."))
-@click.option("--data", "-d", required=False, type=str,
+@click.option("--source", "-s", required=False, type=str,
               multiple=True, help="Path to file or folder to be delivered.")
 @click.option("--break-on-fail", is_flag=True, default=False,
               show_default=True, help=("Failure to deliver one file results in"
                                        " cancellation of all specified files."))
 def get(creds: str, username: str, password: str, project: str,
-        pathfile: str, data: tuple, break_on_fail: bool = True):
+        pathfile: str, source: tuple, break_on_fail: bool = True):
     """Handles the download of files from the project-specific S3 bucket.
 
     Currently not usable by facilities.
@@ -364,7 +364,7 @@ def get(creds: str, username: str, password: str, project: str,
     # Instantiate DataDeliverer
     # - checks access and gets neccessary delivery info
     with dd.DataDeliverer(creds=creds, username=username, password=password,
-                          project_id=project, pathfile=pathfile, data=data,
+                          project_id=project, pathfile=pathfile, data=source,
                           break_on_fail=break_on_fail) \
             as delivery:
 

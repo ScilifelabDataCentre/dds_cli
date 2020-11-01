@@ -509,3 +509,40 @@ def get(creds: str, username: str, password: str, project: str,
         pool_executor.shutdown(wait=True)
         thread_executor.shutdown(wait=True)
         sys.stdout.write("\n")
+
+
+###############################################################################
+# LIST  ################################################################ LIST #
+###############################################################################
+
+@cli.command()
+@click.option("--creds", "-c", required=False, type=click.Path(exists=True),
+              help=("Path to file containing user credentials - username, "
+                    "password, project id, project owner."))
+@click.option("--username", "-u", required=False, type=str,
+              help="Your Data Delivery System username.")
+@click.option("--password", "-pw", required=True, prompt=True, hide_input=True,
+              help="Your Data Delivery System password.")
+@click.option("--project", "-p", required=False, type=str,
+              help="Project ID to which the delivery belongs to.")
+@click.option("--level", "-o", required=False,
+              type=click.Choice(["projects", "files"], case_sensitive=False),
+              help=("Objects to list. If 'projects', lists all projects that "
+                    "user is involved in. If 'files', lists all data uploaded "
+                    "in specifies project."))
+def list(creds: str, username: str, password: str, project: str, level: str):
+    """Handles the listing of projects and files."""
+
+    # TODO(ina): Add example to docstring
+
+    # Instantiate DataDeliverer
+    # - checks access and gets neccessary delivery info
+    with dd.DataDeliverer(creds=creds, username=username, password=password,
+                          project_id=project, level=level) as delivery:
+        pass
+
+###############################################################################
+# DELETE ############################################################# DELETE #
+###############################################################################
+
+# TODO (ina): delete function

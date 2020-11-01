@@ -528,6 +528,8 @@ class DataDeliverer:
                         Can be used instead of inputing the creds separately.
             username:   Delivery System username
             password:   Delivery System password
+            project:    Project ID
+            owner:      Project owner
 
         Returns:
             tuple:  Info about user if all credentials specified

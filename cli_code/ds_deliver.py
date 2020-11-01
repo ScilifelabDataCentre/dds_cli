@@ -49,6 +49,7 @@ import requests
 # Own modules
 import cli_code
 from cli_code import data_deliverer as dd
+from cli_code import data_handler as dh
 from cli_code import ENDPOINTS
 from cli_code import exceptions_ds
 from cli_code import file_handler
@@ -537,8 +538,8 @@ def list(creds: str, username: str, password: str, project: str, level: str):
 
     # Instantiate DataDeliverer
     # - checks access and gets neccessary delivery info
-    with dd.DataDeliverer(creds=creds, username=username, password=password,
-                          project_id=project, level=level) as delivery:
+    with dh.DataHandler(creds=creds, username=username, password=password,
+                          project_id=project, level=level) as lister:
         pass
 
 ###############################################################################

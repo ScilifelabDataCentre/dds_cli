@@ -1,6 +1,6 @@
 """Data Deliverer, used by the Data Delivery System CLI.
 
-Handled the login of all users, performs checks on the data and handles the
+Handles the login of all users, performs checks on the data and handles the
 upload and download of all files. Also keeps track of the delivery progress.
 """
 

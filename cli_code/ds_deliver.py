@@ -103,12 +103,12 @@ def cli():
                     "password, project id, project owner."))
 @click.option("--username", "-u", required=False, type=str,
               help="Your Data Delivery System username.")
-@click.option("--password", "-pw", required=False, type=str,
+@click.option("--password", "-pw", required=True, prompt=True, hide_input=True,
               help="Your Data Delivery System password.")
 @click.option("--project", "-p", required=False, type=str,
               help="Project ID to which the delivery belongs to.")
-@click.option("--owner", "-o", required=True, type=str, multiple=False,
-              default="", show_default=True,
+@click.option("--owner", "-o", required=False, type=str, multiple=False,
+              show_default=True,
               help="Owner ID - the user to whom you are delivering.")
 @click.option("--pathfile", "-f", required=False, type=click.Path(exists=True),
               multiple=False, help=("Path to file containing all files and "
@@ -287,7 +287,7 @@ def put(creds: str, username: str, password: str, project: str,
                                              updinfo={"proceed": False,
                                                       "error": emessage})
                 # TODO (ina): Info to save if failed after processing:
-                # req_args + 
+                # req_args +
                 continue
 
             CLI_LOGGER.info("File added to database: '%s'", upath)
@@ -340,7 +340,7 @@ def put(creds: str, username: str, password: str, project: str,
                     "password, project id, project owner."))
 @click.option("--username", "-u", required=False, type=str,
               help="Your Data Delivery System username.")
-@click.option("--password", "-pw", required=False, type=str,
+@click.option("--password", "-pw", required=True, prompt=True, hide_input=True,
               help="Your Data Delivery System password.")
 @click.option("--project", "-p", required=False, type=str,
               help="Project ID to which the delivery belongs to.")

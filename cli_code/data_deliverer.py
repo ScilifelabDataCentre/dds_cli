@@ -141,8 +141,8 @@ class DataDeliverer:
         # Main attributes ----------------------------------- Main attributes #
         # General
         self.method = sys._getframe().f_back.f_code.co_name  # put or get
-        self.project_id = project_id        # Project ID - not S3
-        self.project_owner = project_owner  # User, not facility
+        # self.project_id = project_id        # Project ID - not S3
+        # self.project_owner = project_owner  # User, not facility
         self.data_input = []        # Data that the user specified
         self.data = None            # Dictionary, keeps track of delivery
         self.failed = None          # Dictionary, saves intially failed files
@@ -163,7 +163,9 @@ class DataDeliverer:
             self.project_owner = self._check_user_input(
                 creds=creds,
                 username=username,
-                password=password
+                password=password,
+                project=project_id,
+                owner=project_owner
             )
 
         # Get access to DS -- returns json format with access, user_id,
@@ -201,7 +203,7 @@ class DataDeliverer:
         elif self.method == "get":
             self.private = crypto_ds.get_project_private(
                 self.project_id, self.user, self.token)
-                
+
         # Start progress info printout
         if self.data:
             # cap_not_exceeded = self._check_cap()
@@ -326,11 +328,13 @@ class DataDeliverer:
 
         # Only print out final message if data has been specified
         if folders or files["successful"] or files["failed"]:
-            sys.stdout.write(Format.HEADER + "* "*11 + "DELIVERY REPORT" + " *"*11 + Format.END + "\n\n")
+            sys.stdout.write(Format.HEADER + "* "*11 +
+                             "DELIVERY REPORT" + " *"*11 + Format.END + "\n\n")
 
         # Print out failed folders and information about delivered
         if folders:
-            sys.stdout.write(Format.BOLD + "\n" + "- "*13 + "Folders" + " -"*13 + Format.END + "\n\n")
+            sys.stdout.write(Format.BOLD + "\n" + "- "*13 +
+                             "Folders" + " -"*13 + Format.END + "\n\n")
             for f in folders:
                 total_attempted = len(folders[f]["successful"]) + \
                     len(folders[f]["failed"])
@@ -383,7 +387,9 @@ class DataDeliverer:
                 len(files["failed"])
 
             print_info = (
-                Format.BOLD + "- "*7 + "Files (not located in directory)" + " -"*7 + Format.END + "\n\n"
+                Format.BOLD + "- "*7 +
+                "Files (not located in directory)" +
+                " -"*7 + Format.END + "\n\n"
                 f"Files attempted: {total_attempted}\t"
                 f"Files {meth}: {len(files['successful'])}\n"
                 "Failed files: \n"
@@ -443,7 +449,7 @@ class DataDeliverer:
             print(x, y["size"], tot_size)
             if tot_size > 700000000000:
                 return False
-            
+
         return True
 
     def _check_ds_access(self):
@@ -512,8 +518,8 @@ class DataDeliverer:
 
         return json_response
 
-    def _check_user_input(self, creds, username, password) -> \
-            (str, str, int, int):
+    def _check_user_input(self, creds, username, password, project, owner) \
+            -> (str, str, int, int):
         """Checks that the correct options and credentials are entered.
 
         Args:
@@ -531,84 +537,59 @@ class DataDeliverer:
                 owner_id    (int):     Owner ID\n
         """
 
-        # No creds file -------- loose credentials -------- No creds file #
-        # print(f"creds: {creds}")
-        if creds is None:
-            # Cancel delivery if username or password not specified
-            if None in [username, password]:
-                sys.exit(
-                    exceptions_ds.printout_error(
-                        """Delivery System login credentials not specified.
-                           Enter --username/-u AND --password/-pw,
-                           or --creds/-c.
-                           For help: 'ds_deliver --help'."""
-                    )
+        if not password or password is None:
+            sys.exit(
+                exceptions_ds.printout_error(
+                    "Password not entered. Cancelling delivery."
                 )
-
-            # Cancel delivery if project_id not specified
-            if self.project_id is None:
-                sys.exit(
-                    exceptions_ds.printout_error(
-                        """Project not specified. Enter project ID using
-                           --project option or add to creds file using
-                           --creds/-c option."""
-                    )
-                )
-
-            # Assume current user is owner if no owner is set
-            if not self.project_owner or self.project_owner is None:
-                if self.method == "put":
-                    sys.exit(
-                        exceptions_ds.printout_error(
-                            "You have not specified the project owner. \n"
-                            "Cancelling delivery."
-                        )
-                    )
-                # username, password, id, owner
-                return username, password, self.project_id, username
-
-            return username, password, self.project_id, self.project_owner
+            )
 
         # creds file ----------- credentials in it ----------- creds file #
-        user_creds = Path(creds).resolve()
-        try:
-            # Get info from credentials file
-            with user_creds.open(mode="r") as crf:
-                credentials = json.load(crf)
-        except OSError as ose:
-            sys.exit(
-                exceptions_ds.printout_error(
-                    f"""Could not open path-file {creds}: {ose}""")
-            )
+        if creds:
+            user_creds = Path(creds).resolve()
+            try:
+                # Get info from credentials file
+                with user_creds.open(mode="r") as crf:
+                    credentials = json.load(crf)
+            except OSError as ose:
+                sys.exit(
+                    exceptions_ds.printout_error(
+                        f"""Could not open path-file {creds}: {ose}""")
+                )
 
-        # Quit if not all credentials are entered
-        if not all(c in credentials for c
-                   in ["username", "password", "project"]):
+            # If the options have not been specified,
+            # look for them in the credentials file
+            if username is None and "username" in credentials:
+                username = credentials["username"]
+            if project is None and "project" in credentials:
+                project = credentials["project"]
+            if owner is None and "owner" in credentials:
+                owner = credentials["owner"]
+
+        # options ----------------------------------------------- options #
+        if None in [username, password, project]:
             sys.exit(
                 exceptions_ds.printout_error(
-                    "The creds file does not contain all required information."
+                    "Data Delivery System options missing.\n"
+                    "For help: 'ds_deliver --help'."
                 )
             )
 
-        # Save info from credentials file
-        username = credentials["username"]
-        password = credentials["password"]
-        project_id = credentials["project"]
-
-        # OK if owner specified
-        if "owner" in credentials:
-            return username, password, project_id, credentials["owner"]
-
-        # Error if owner not specified and trying to put
-        if (not self.project_owner or self.project_owner is None) \
-                and self.method == "put":
+        # Uploading requires a specified project owner
+        # For downloading, it's currently assumed to be the user
+        if self.method == "put" and owner is None:
             sys.exit(
                 exceptions_ds.printout_error(
-                    """Project owner not specified. Cancelling delivery."""
+                    "Project owner not specified. Required for delivery.\n"
+                    "Cancelling upload."
                 )
             )
+        elif self.method == "get":
+            owner = username
 
-        return username, password, project_id, username
+        print(f"username: {username}\tpassword: {password}\tproject: {project}"
+              f"\towner: {owner}")
+        return username, password, project, owner
 
     def _create_progress_output(self) -> (str, dict):
         """Create list of files and the individual delivery progress.
@@ -675,7 +656,7 @@ class DataDeliverer:
                     f"""Delivery option {self.method} not allowed.
                      \nCancelling delivery.""")
             )
-        
+
         # Temporary cap
         if self.method == "put":
             self.data_input = list()
@@ -692,7 +673,8 @@ class DataDeliverer:
                     )
                 self.data_input.append(filepath)
         elif self.method == "get":
-            self.data_input = list(x for x in data_list)  # Save list of paths user chose
+            # Save list of paths user chose
+            self.data_input = list(x for x in data_list)
 
         # Get all project files in db
         # TODO: move to function?

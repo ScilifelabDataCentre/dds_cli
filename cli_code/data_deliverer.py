@@ -506,7 +506,7 @@ class DataDeliverer:
             )
 
         # Quit if project ID not matching
-        if int(json_response["project_id"]) != self.project_id:
+        if json_response["project_id"] != self.project_id:
             sys.exit(
                 exceptions_ds.printout_error(
                     "Incorrect project ID. System error. "
@@ -997,9 +997,10 @@ class DataDeliverer:
         """
 
         # Perform request to ProjectFiles - list all files connected to proj
-        req = ENDPOINTS["project_files"] + "/" + \
-            str(self.project_id) + "/" + self.token
-        response = requests.get(req)
+        args = {"project": self.project_id,
+                "token": self.token}
+        req = ENDPOINTS["project_files"]
+        response = requests.get(req, params=args)
 
         # If request error - cancel
         if not response.ok:

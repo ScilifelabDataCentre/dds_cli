@@ -231,7 +231,7 @@ def get_project_private(proj_id: str, user, token):
     # Derive key-encryption-key
     kdf = scrypt.Scrypt(salt=key_salt, length=32, n=2**14,
                         r=8, p=1, backend=backends.default_backend())
-    
+
     passphrase = key_info["passphrase"]
     CRYPTO_LOG.debug("password: %s", user.password)
     key_enc_key = kdf.derive(passphrase.encode("utf-8"))
@@ -255,8 +255,7 @@ def get_project_private(proj_id: str, user, token):
     # Get length of magic id
     start = 0
     to_read = 2
-    magic_id_len = int.from_bytes(
-        decrypted_key[start:start+to_read], "big")
+    magic_id_len = int.from_bytes(decrypted_key[start:start+to_read], "big")
 
     # Read magic_id_len bytes -> magic id - should be b"DelSys"
     start += to_read
@@ -277,9 +276,11 @@ def get_project_private(proj_id: str, user, token):
     start += to_read
     to_read = proj_len
     project_id = decrypted_key[start:start+to_read]
-    if project_id != (proj_id).to_bytes(2, byteorder="big"):
-        sys.exit(exceptions_ds.printout_error("Error in private key! "
-                                              "Project ID incorrect!"))
+    if project_id != bytes(proj_id, "utf8"):
+        sys.exit(exceptions_ds.printout_error(
+            "Error in private key! Project ID incorrect!"
+            f"Should be {bytes(proj_id, 'utf8')} but found {project_id}"
+        ))
 
     # Get length of private key
     start += to_read

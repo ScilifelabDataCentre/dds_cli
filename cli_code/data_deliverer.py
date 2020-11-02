@@ -473,17 +473,15 @@ class DataDeliverer:
         # Get access to delivery system - check if derived pw hash valid
         # Different endpoint depending on facility or not.
         # print(self.project_owner, flush=True)
+        LOGIN_BASE = ENDPOINTS["u_login"]
+        args = {"username": self.user.username,
+                "password": self.user.password,
+                "project": self.project_id}
         if self.method == "put":
-            LOGIN_BASE = ENDPOINTS["f_login"]
-            args = {"username": self.user.username,
-                    "password": self.user.password,
-                    "project": self.project_id,
-                    "owner": self.project_owner}
+            args.update({"owner": self.project_owner,
+                         "role": "facility"})
         elif self.method == "get":
-            LOGIN_BASE = ENDPOINTS["u_login"]
-            args = {"username": self.user.username,
-                    "password": self.user.password,
-                    "project": self.project_id}
+            args.update({"role": "user"})
 
         # Request to get access
         response = requests.post(LOGIN_BASE, params=args)

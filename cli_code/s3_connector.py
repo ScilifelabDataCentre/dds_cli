@@ -10,9 +10,7 @@ exist in the buckets.
 ###############################################################################
 
 # Standard library
-import json
 import logging
-import pathlib
 import sys
 import traceback
 
@@ -21,8 +19,10 @@ import boto3
 import boto3.session
 import botocore
 import botocore.client
+import requests
 
 # Own modules
+from cli_code import ENDPOINTS
 from cli_code import exceptions_ds
 
 ###############################################################################
@@ -77,9 +77,6 @@ class S3Connector:
 
     def _connect(self):
         """Connect to S3"""
-
-        import requests
-        from cli_code import ENDPOINTS
 
         s3_creds_resp = requests.get(ENDPOINTS["s3info"])
         if not s3_creds_resp.ok:

@@ -542,7 +542,7 @@ def process_file(file: pathlib.Path, file_info: dict, peer_public) \
         raise OSError(emessage)  # Bug somewhere in code
 
     # Variables ################################################### Variables #
-    outfile = DIRS[1] / file_info["path_in_bucket"]   # Path to save processed file
+    outfile = DIRS[1] / file_info["path_in_bucket"]   # Path to save processed
     new_dir = DIRS[1] / file_info["directory_path"]     # New temp subdir
     key = b""
     # ----------------------------------------------------------------------- #

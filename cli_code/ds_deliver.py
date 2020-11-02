@@ -49,11 +49,9 @@ import requests
 # Own modules
 import cli_code
 from cli_code import data_deliverer as dd
-from cli_code import data_handler as dh
 from cli_code import ENDPOINTS
 from cli_code import exceptions_ds
 from cli_code import file_handler
-from cli_code import s3_connector
 
 
 ###############################################################################
@@ -516,31 +514,7 @@ def get(creds: str, username: str, password: str, project: str,
 # LIST  ################################################################ LIST #
 ###############################################################################
 
-@cli.command()
-@click.option("--creds", "-c", required=False, type=click.Path(exists=True),
-              help=("Path to file containing user credentials - username, "
-                    "password, project id, project owner."))
-@click.option("--username", "-u", required=False, type=str,
-              help="Your Data Delivery System username.")
-@click.option("--password", "-pw", required=True, prompt=True, hide_input=True,
-              help="Your Data Delivery System password.")
-@click.option("--project", "-p", required=False, type=str,
-              help="Project ID to which the delivery belongs to.")
-@click.option("--level", "-o", required=False,
-              type=click.Choice(["projects", "files"], case_sensitive=False),
-              help=("Objects to list. If 'projects', lists all projects that "
-                    "user is involved in. If 'files', lists all data uploaded "
-                    "in specifies project."))
-def list(creds: str, username: str, password: str, project: str, level: str):
-    """Handles the listing of projects and files."""
-
-    # TODO(ina): Add example to docstring
-
-    # Instantiate DataDeliverer
-    # - checks access and gets neccessary delivery info
-    with dh.DataHandler(creds=creds, username=username, password=password,
-                          project_id=project, level=level) as lister:
-        pass
+# TODO (ina): list function
 
 ###############################################################################
 # DELETE ############################################################# DELETE #

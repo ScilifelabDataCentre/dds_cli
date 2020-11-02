@@ -25,3 +25,4 @@ not_used*
 encryption.md
 chunk_tester.py
 creds_files
+create_encrypted_private.py

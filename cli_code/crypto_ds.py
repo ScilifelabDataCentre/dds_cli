@@ -231,9 +231,10 @@ def get_project_private(proj_id: str, user, token):
     # Derive key-encryption-key
     kdf = scrypt.Scrypt(salt=key_salt, length=32, n=2**14,
                         r=8, p=1, backend=backends.default_backend())
-
+    
+    passphrase = key_info["passphrase"]
     CRYPTO_LOG.debug("password: %s", user.password)
-    key_enc_key = kdf.derive(user.password.encode("utf-8"))
+    key_enc_key = kdf.derive(passphrase.encode("utf-8"))
     CRYPTO_LOG.debug("key: %s", key_enc_key)
 
     CRYPTO_LOG.debug("encrypted key in hex: %s", key_info["encrypted_key"])

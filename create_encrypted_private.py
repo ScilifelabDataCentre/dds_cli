@@ -19,7 +19,7 @@ DS_MAGIC = b'DelSys'
 proj_id = 1
 proj_id_bytes = (proj_id).to_bytes(2, byteorder='big')
 
-password = "password1"
+PRIVKEY_ENC_PASSPHRASE = "922d5b93f5455050e96b33a45f65a3e8c7d4f6198ed8473879c11e10711ed937"
 
 # Generate keys
 private = X25519PrivateKey.generate()
@@ -40,7 +40,7 @@ print(f"salt: {salt}")
 # Derive key-encryption-key
 kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1,
              backend=default_backend())
-derived_key = kdf.derive(password.encode('utf-8'))
+derived_key = kdf.derive(PRIVKEY_ENC_PASSPHRASE.encode('utf-8'))
 print(f"derived key-encryption-key: {derived_key}")
 
 decrypted_key = len(DS_MAGIC).to_bytes(2, byteorder='big') + DS_MAGIC + \

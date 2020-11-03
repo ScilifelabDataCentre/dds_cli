@@ -1392,6 +1392,26 @@ class _DSUser:
         self.role = None
 
 
+def save_failed(file: Path, file_info: dict):
+    """Saves file information to file in logs folder.
+    
+    Args:
+        file:       Path to file (source)
+        file_info:  Info which failed to be saved/used
+    """
+
+    filename = DIRS[-1] / Path("important_give_to_DC.json")
+    for x in file_info:
+        if isinstance(file_info[x], Path):
+            file_info[x] = str(file_info[x])
+
+    try: 
+        with filename.open(mode="a+") as outfile:
+            json.dump({str(file): file_info}, outfile)
+    except IOError as e:
+        sys.exit(exceptions_ds.printout_error(str(e)))
+
+
 def update_progress_bar(file, status: str, perc=0.0):
     """Update the status of the file and print out progress.
 

@@ -276,7 +276,6 @@ def put(creds: str, username: str, password: str, project: str,
 
             # Get response from api
             db_response = response.json()
-
             # db_response - "updated"=True if database update successful
             if not db_response["access_granted"] or not db_response["updated"]:
                 emessage = f"Database update failed: {db_response['message']}"
@@ -286,7 +285,7 @@ def put(creds: str, username: str, password: str, project: str,
                                              updinfo={"proceed": False,
                                                       "error": emessage})
                 # TODO (ina): Info to save if failed after processing:
-                # req_args +
+                dd.save_failed(file=upath, file_info=req_args)
                 continue
 
             CLI_LOGGER.info("File added to database: '%s'", upath)
@@ -458,10 +457,24 @@ def get(creds: str, username: str, password: str, project: str,
                                   finished=True)
 
             # Quits and moves on if DS noted cancelation for file
+            proceed = False
             if not proceed:
                 CLI_LOGGER.warning("File: '%s' -- cancelled "
                                    "-- moving on to next file", fpath)
                 dd.update_progress_bar(file=fpath, status="e")  # -> X
+
+                args = {
+                    "project": delivery.project_id,
+                    "file": delivery.data[fpath]["path_in_bucket"],
+                    "directory_path": delivery.data[fpath]["directory_path"],
+                    "size": delivery.data[fpath]["size"],
+                    "size_enc": delivery.data[fpath]["size_enc"],
+                    "ds_compressed": delivery.data[fpath]["compressed"],
+                    "extension": delivery.data[fpath]["extension"],
+                    "key": delivery.data[fpath]["public_key"],
+                    "salt": delivery.data[fpath]["salt"]
+                }
+                dd.save_failed(file=delivery.data[fpath]["path_in_temp"], file_info=args)
                 continue
 
             # TODO(ina): Put db update request in function - threaded?

@@ -201,8 +201,9 @@ def get_project_private(proj_id: str, user, token):
     """
 
     # Perform request to ProjectKey - get encrypted and formatted private key
-    req = ENDPOINTS["key"] + f"{proj_id}/key/{token}"
-    response = requests.get(req)
+    args = {"token": token}
+    req = ENDPOINTS["key"] + f"{proj_id}/key"
+    response = requests.get(req, params=args)
 
     # Cancel delivery if request error
     if not response.ok:

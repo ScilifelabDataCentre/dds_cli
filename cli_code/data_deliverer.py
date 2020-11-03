@@ -483,13 +483,15 @@ class DataDeliverer:
         elif self.method == "get":
             args.update({"role": "user"})
 
+        print(LOGIN_BASE, args)
         # Request to get access
         response = requests.post(LOGIN_BASE, params=args)
         if not response.ok:
             sys.exit(
                 exceptions_ds.printout_error(
                     "Something wrong. Could not access api/db during access "
-                    "check. Login failed. Delivery cancelled."
+                    "check. Login failed. Delivery cancelled.\n"
+                    f"{response.status_code} -- {response.reason} -- {response.text}"
                 )
             )
 
@@ -997,9 +999,8 @@ class DataDeliverer:
         """
 
         # Perform request to ProjectFiles - list all files connected to proj
-        args = {"project": self.project_id,
-                "token": self.token}
-        req = ENDPOINTS["project_files"]
+        args = {"token": self.token}
+        req = ENDPOINTS["project_files"] + self.project_id + "/listfiles"
         response = requests.get(req, params=args)
 
         # If request error - cancel

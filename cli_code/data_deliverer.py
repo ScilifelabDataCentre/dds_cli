@@ -589,8 +589,6 @@ class DataDeliverer:
         elif self.method == "get":
             owner = username
 
-        print(f"username: {username}\tpassword: {password}\tproject: {project}"
-              f"\towner: {owner}")
         return username, password, project, owner
 
     def _create_progress_output(self) -> (str, dict):
@@ -1394,7 +1392,7 @@ class _DSUser:
 
 def save_failed(file: Path, file_info: dict):
     """Saves file information to file in logs folder.
-    
+
     Args:
         file:       Path to file (source)
         file_info:  Info which failed to be saved/used
@@ -1405,7 +1403,7 @@ def save_failed(file: Path, file_info: dict):
         if isinstance(file_info[x], Path):
             file_info[x] = str(file_info[x])
 
-    try: 
+    try:
         with filename.open(mode="a+") as outfile:
             json.dump({str(file): file_info}, outfile)
     except IOError as e:

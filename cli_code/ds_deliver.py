@@ -457,7 +457,6 @@ def get(creds: str, username: str, password: str, project: str,
                                   finished=True)
 
             # Quits and moves on if DS noted cancelation for file
-            proceed = False
             if not proceed:
                 CLI_LOGGER.warning("File: '%s' -- cancelled "
                                    "-- moving on to next file", fpath)

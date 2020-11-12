@@ -1,64 +1,50 @@
-**All of this should be changed -- is not valid any more.**
-
-# ds_deliver
-API to access Scilifelab Data Centre's delivery system. Built to handle data upload/download to/from Safespring S3.
-
-**WIP** 
+# Data Delivery System CLI -- **WIP**
+This will be used for data delivery within larger projects
+and/or projects resulting in the production of large amounts of data, e.g. sequence data.
 
 ---
-## Usage
-```bash
-dp_cli --file "/directory/of/file/to/upload.xxx"
-```
-## Setup
-### CLI setup
-```bash
-pip3 install --editable .
-```
-Depends on a working database setup. 
-### Database setup
-#### Alternative 1: 
-Fork the [Delivery Portal](https://github.com/ScilifelabDataCentre/delivery_portal.git) and follow the instructions. 
+## Setup docker environment:
 
-#### Alternative 2: 
-Follow the [instructions](https://github.com/ScilifelabDataCentre/delivery_portal.git) without setting up the Delivery Portal: 
+**1. Docker installation**
 
-1. Install Docker if you don't already have it.
+	Mac:
+	https://docs.docker.com/v17.12/docker-for-mac/install
 
-Mac:  
-https://docs.docker.com/v17.12/docker-for-mac/install
+	Ubuntu:
+	https://docs.docker.com/install/linux/docker-ce/ubuntu/
 
-Ubuntu:  
-https://docs.docker.com/install/linux/docker-ce/ubuntu/
+**2. In _DS_CLI_ folder**
+* Setup CLI: `pip3 install --editable .`
 
-2. Build and run containers
+**3. In root (Data-Delivery-System)** 
+* Build and run containers
+	In the root folder (Data-Delivery-System/), run: 
+	```bash
+	docker-compose up
+	```
 
-```bash
-cp dportal.yaml.sample dportal.yaml
-docker-compose up
-```
+	* To use terminal after starting services, use the `-d` option.
 
-**To use terminal after starting services, use the `-d` option.**
-```bash 
-cp dportal.yaml.sample dportal.yaml
-docker-compose up -d 
-```
+		```
+		docker-compose up -d 
+		```
 
-**To stop service** (if `-d` option used or in new terminal tab):
-```bash 
-docker-compose down
-```
+	* To stop service: 
+		```bash 
+		docker-compose down
+		```
 
-3. Go to http://localhost:5984/_utils/#setup
-
-4. Create the databases. 
-```bash
-curl -X PUT http://delport:delport@127.0.0.1:5984/projects_db
-curl -X PUT http://delport:delport@127.0.0.1:5984/user_db
-```
-
-5. Import the database contents. 
-```bash
-curl -d @dbfiles/project_db.json -H "Content-type: application/json" -X POST http://delport:delport@127.0.0.1:5984/project_db/_bulk_docs
-curl -d @dbfiles/user_db.json -H "Content-type: application/json" -X POST http://delport:delport@127.0.0.1:5984/user_db/_bulk_docs
-```
+**4. After changing DB**
+To rebuild the database after a change, you need to: 
+1. Delete the `db-data` folder
+2. Run 
+	```
+	docker rm $(docker ps -a -q) -f
+	docker volume prune
+	```
+3. Run 
+	```
+	docker-compose build --no-cache
+	```
+4. Run `docker-compose up` as described above.
+5. If there are still issues, try deleting the pycache folders and repeat the steps. 

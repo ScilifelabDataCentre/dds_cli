@@ -6,11 +6,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'Click',
-        'CouchDB',
-        'filetype', 
-        'cryptography', 
-        'requests',
+        line.strip() for line in open("requirements.txt").readlines()
     ],
     entry_points={
         'console_scripts': [

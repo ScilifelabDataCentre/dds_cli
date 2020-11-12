@@ -53,8 +53,8 @@ LOG.setLevel(logging.DEBUG)
 # enc: encrypting, dec: decrypting
 # u: uploading, d: downloading
 STATUS_DICT = {"w": "Waiting to start...",
-               "f": u"\u2705",
-               "e": u"\u274C",
+               "f": u"\u2705        ",
+               "e": u"\u274C        ",
                "enc": "Encrypting...",
                "dec": "Decrypting...",
                "u": "Uploading...",
@@ -446,7 +446,7 @@ class DataDeliverer:
         tot_size = 0
         for x, y in self.data.items():
             tot_size += y["size"]
-            print(x, y["size"], tot_size)
+            # print(x, y["size"], tot_size)
             if tot_size > 700000000000:
                 return False
 
@@ -483,7 +483,6 @@ class DataDeliverer:
         elif self.method == "get":
             args.update({"role": "user"})
 
-        print(LOGIN_BASE, args)
         # Request to get access
         response = requests.post(LOGIN_BASE, params=args)
         if not response.ok:
@@ -605,7 +604,7 @@ class DataDeliverer:
         sys.stdout.write("\n")  # Space between command and any output
 
         # Set pandas to show all dataframe contents, no '...'
-        pd.set_option("display.max_colwidth", -1)
+        pd.set_option("display.max_colwidth", None)
 
         b_u = Format.BOLD + Format.UNDERLINE
         end = Format.END
@@ -664,7 +663,7 @@ class DataDeliverer:
             for x in data_list:
                 filepath = Path(x).resolve()
                 tot_size += filepath.stat().st_size
-                print(tot_size)
+                # print(tot_size)
                 if tot_size > 700e9:
                     sys.exit(
                         exceptions_ds.printout_error(
@@ -1183,15 +1182,19 @@ class DataDeliverer:
                         # If within shared folder and upload not in progress or
                         # finished -- set current file error and cancel
                         if path != file and info["proceed"] and \
-                            info["local_dir_name"] == local_dir_name \
-                                and not all([info[critical_op]["in_progress"],
-                                             info[critical_op]["finished"]]):
+                                info["local_dir_name"] == local_dir_name:
+                            if (self.method == "get" and
+                                    not all([info[critical_op]["in_progress"],
+                                             info[critical_op]["finished"]])) or \
+                                    (self.method == "put" and
+                                     not (info[critical_op]["in_progress"] or
+                                          info[critical_op]["finished"])):
 
-                            self.data[path].update({
-                                "proceed": False,
-                                "error": ("break-on-fail chosen --"
-                                          f"{updinfo['error']}")
-                            })
+                                self.data[path].update({
+                                    "proceed": False,
+                                    "error": ("break-on-fail chosen --"
+                                            f"{updinfo['error']}")
+                                })
                     return False
 
             # If individual file -- cancel this specific file only

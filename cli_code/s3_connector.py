@@ -127,9 +127,29 @@ class S3Connector:
                 error = (f"Bucket: {self.bucketname} - Bucket not found in "
                          f"S3 resource. Error: {cle}")
                 S3_LOG.critical(error)
-                sys.exit(error)     # Fatal -> ds will not work
-            else:
-                self.bucket = self.resource.Bucket(self.bucketname)
+
+                # Create bucket if it doesn't already exist
+                try:
+                    self.resource.meta.client.create_bucket(
+                        Bucket=self.bucketname)
+                except botocore.client.ClientError as cle:
+                    error = (f"Bucket: {self.bucketname} could not be created "
+                             "in S3 resource. Error: {cle}")
+                    S3_LOG.critical(error)
+                    sys.exit(error)     # Fatal -> ds will not work
+                else:
+                    # Connect to the bucket if it was successfully created
+                    try:
+                        self.resource.meta.client.head_bucket(
+                            Bucket=self.bucketname)
+                    except botocore.client.ClientError as cle:
+                        # Cancel delivery if connection failed
+                        error = (f"Bucket: {self.bucketname} - Bucket not found in "
+                                 f"S3 resource. Error: {cle}")
+                        S3_LOG.critical(error)
+                        sys.exit(error)     # Fatal -> ds will not work
+
+            self.bucket = self.resource.Bucket(self.bucketname)
         except botocore.client.ClientError as e:
             S3_LOG.exception("S3 connection failed: %s", e)
 

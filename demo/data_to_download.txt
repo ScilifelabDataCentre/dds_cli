@@ -1,0 +1,6 @@
+testfile.txt
+test-folder/testfile_0.fna
+test-folder/next_folder/testfile_1.txt
+test-folder/next_folder/testfile_2.txt
+test-folder/next_folder/testfile_3.txt
+test-folder/next_folder/testfile_4.txt

@@ -38,6 +38,7 @@ the Data Delivery System.
 
 # Standard library
 import concurrent.futures
+import getpass
 import logging
 import logging.config
 import sys
@@ -70,12 +71,11 @@ CLI_LOGGER = None
 
 @click.group()
 def cli():
-    """Main CLI function.
+    """Data Delivery System CLI.
 
     Initiates the required delivery objects: A temporary directory where logs
     and files will be stored, and the CLI logger. Cannot be used
-    independently - put or get must be specified as an argument. See the args
-    for examples.
+    independently - put or get must be specified as an argument.
     """
 
     created = cli_code.create_directories()
@@ -102,8 +102,6 @@ def cli():
                     "password, project id, project owner."))
 @click.option("--username", "-u", required=False, type=str,
               help="Your Data Delivery System username.")
-@click.option("--password", "-pw", required=True, prompt=True, hide_input=True,
-              help="Your Data Delivery System password.")
 @click.option("--project", "-p", required=False, type=str,
               help="Project ID to which the delivery belongs to.")
 @click.option("--owner", "-o", required=False, type=str, multiple=False,
@@ -120,7 +118,7 @@ def cli():
 @click.option("--overwrite", is_flag=True, default=False, show_default=True,
               help=("Replace any previously delivered files specified in the "
                     "current delivery."))
-def put(creds: str, username: str, password: str, project: str,
+def put(creds: str, username: str, project: str,
         owner: str, pathfile: str, source: tuple, break_on_fail=True,
         overwrite=False) -> (str):
     """Handles the upload of files to the project-specific S3 bucket.
@@ -129,6 +127,7 @@ def put(creds: str, username: str, password: str, project: str,
     """
 
     # TODO(ina): Add example in docstring
+    password = getpass.getpass()  # Display prompt for password
 
     # Instantiate DataDeliverer
     # - checks access and gets neccessary delivery info
@@ -184,6 +183,7 @@ def put(creds: str, username: str, password: str, project: str,
             # count += 1
             # if count == 3:
             #     processed = False
+            #     error = "Test error message. Something went wrong."
             # Updates file info
             proceed = delivery.update_delivery(
                 file=ppath,
@@ -338,8 +338,6 @@ def put(creds: str, username: str, password: str, project: str,
                     "password, project id, project owner."))
 @click.option("--username", "-u", required=False, type=str,
               help="Your Data Delivery System username.")
-@click.option("--password", "-pw", required=True, prompt=True, hide_input=True,
-              help="Your Data Delivery System password.")
 @click.option("--project", "-p", required=False, type=str,
               help="Project ID to which the delivery belongs to.")
 @click.option("--pathfile", "-f", required=False, type=click.Path(exists=True),
@@ -350,7 +348,7 @@ def put(creds: str, username: str, password: str, project: str,
 @click.option("--break-on-fail", is_flag=True, default=False,
               show_default=True, help=("Failure to deliver one file results in"
                                        " cancellation of all specified files."))
-def get(creds: str, username: str, password: str, project: str,
+def get(creds: str, username: str, project: str,
         pathfile: str, source: tuple, break_on_fail: bool = True):
     """Handles the download of files from the project-specific S3 bucket.
 
@@ -358,6 +356,7 @@ def get(creds: str, username: str, password: str, project: str,
     """
 
     # TODO(ina): Add example to docstring
+    password = getpass.getpass()  # Display prompt for password
 
     # Instantiate DataDeliverer
     # - checks access and gets neccessary delivery info
@@ -374,6 +373,7 @@ def get(creds: str, username: str, password: str, project: str,
         pools = {}          # Finalizing e.g. decompression, decryption etc
         threads = {}        # Download from S3
 
+        # count = 0
         # BEGINS DELIVERY # # # # # # # # # # # # # # # # # # BEGINS DELIVERY #
         for path, info in delivery.data.items():
 
@@ -402,7 +402,11 @@ def get(creds: str, username: str, password: str, project: str,
             except concurrent.futures.BrokenExecutor:
                 sys.exit(f"{dfuture.exception()}")
                 break   # Precaution if sys.exit not quit completely
-
+            
+            # count += 1
+            # if count == 1:
+            #     downloaded = False
+            #     error = "Test error message. Something went wrong."
             # Updates file info
             proceed = delivery.update_delivery(file=dpath,
                                                updinfo={"proceed": downloaded,
@@ -520,7 +524,6 @@ def get(creds: str, username: str, password: str, project: str,
         pool_executor.shutdown(wait=True)
         thread_executor.shutdown(wait=True)
         sys.stdout.write("\n")
-
 
 ###############################################################################
 # LIST  ################################################################ LIST #

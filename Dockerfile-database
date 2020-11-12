@@ -1,7 +1,0 @@
-# Defines base image to start the build process from
-FROM couchdb:latest
-
-# Sets the environment variables (one or more)
-ENV COUCHDB_USER delport
-ENV COUCHDB_PASSWORD delport
-ENV COUCHDB_SECRET secret

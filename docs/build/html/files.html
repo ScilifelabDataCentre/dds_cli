@@ -1,0 +1,671 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>File processing &mdash; Data Delivery System 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Data Delivery" href="delivery.html" />
+    <link rel="prev" title="CLI" href="cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Data Delivery System
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Command Line Interface</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Components</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">File processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-cli_code.crypto_ds">Cryptography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-cli_code.file_handler">File handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="delivery.html">Data Delivery</a></li>
+<li class="toctree-l1"><a class="reference internal" href="excep.html">Custom Error Handling</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Data Delivery System</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>File processing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/files.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="file-processing">
+<h1>File processing<a class="headerlink" href="#file-processing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-cli_code.crypto_ds">
+<span id="cryptography"></span><h2>Cryptography<a class="headerlink" href="#module-cli_code.crypto_ds" title="Permalink to this headline">¶</a></h2>
+<p>Cryptography-related functions required for the Data Delivery System.</p>
+<p>Contains the ECDHKey class which generates a public key pair usable by
+Elliptic-Curve Diffie-Hellman cryptography and transforms the keys to readable
+hex strings. Also contains the function get_project_private() which gets the
+project private key from the project database and parses it. This function
+is only accessible by users downloading their data - not uploading.</p>
+<dl class="py class">
+<dt id="cli_code.crypto_ds.ECDHKey">
+<em class="property">class </em><code class="sig-name descname">ECDHKey</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">keys</span><span class="o">=</span><span class="default_value">()</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Elliptic-Curve Diffie-Hellman key pair</p>
+<dl class="py attribute">
+<dt id="cli_code.crypto_ds.ECDHKey.private">
+<code class="sig-name descname">private</code><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey.private" title="Permalink to this definition">¶</a></dt>
+<dd><p>Private component</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="cli_code.crypto_ds.ECDHKey.public">
+<code class="sig-name descname">public</code><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey.public" title="Permalink to this definition">¶</a></dt>
+<dd><p>Public component, generated from private</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.crypto_ds.ECDHKey.del_priv_key">
+<code class="sig-name descname">del_priv_key</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey.del_priv_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes private key</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.crypto_ds.ECDHKey.generate_encryption_key">
+<code class="sig-name descname">generate_encryption_key</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey.generate_encryption_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives shared data encryption key</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="cli_code.crypto_ds.ECDHKey.public_to_hex">
+<code class="sig-name descname">public_to_hex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.ECDHKey.public_to_hex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts public key to hex-string</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id0">
+<code class="sig-name descname">del_priv_key</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets private key to None - important that it’s kept secret</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id1">
+<code class="sig-name descname">generate_encryption_key</code><span class="sig-paren">(</span><em class="sig-param">peer_public: bytes</em>, <em class="sig-param">salt_: str = '') -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate shared symmetric encryption key using peer public key
+and own public and private key</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>peer_public</strong> (<em>bytes</em>) – Public component of peer ECDH key pair</p></li>
+<li><p><strong>salt</strong> (<em>str</em>) – Salt used for deriving shared key.
+‘’ if ‘put’ (default)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl>
+<dt>Derived key and salt</dt><dd><p>bytes:   Derived shared key</p>
+<p>bytes:   Salt</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="id2">
+<code class="sig-name descname">public_to_hex</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts public key to hex-string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Hex representation of public key</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.crypto_ds.get_project_private">
+<code class="sig-name descname">get_project_private</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">proj_id</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">user</span></em>, <em class="sig-param"><span class="n">token</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.crypto_ds.get_project_private" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the project private key from the database - only while downloading.</p>
+<p>————————-Format in database:——————————-
+len(magic) + magic + len(projID) + projID + len(privateKey) + privateKey
+—————————————————————————</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proj_id</strong> (<em>str</em>) – Project ID</p></li>
+<li><p><strong>user</strong> (<a class="reference internal" href="delivery.html#cli_code.data_deliverer._DSUser" title="cli_code.data_deliverer._DSUser"><em>_DSUser</em></a>) – User object with info on username, password, etc</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Private key belonging to current project</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cli_code.file_handler">
+<span id="file-handling"></span><h2>File handling<a class="headerlink" href="#module-cli_code.file_handler" title="Permalink to this headline">¶</a></h2>
+<p>File handler module.</p>
+<p>Responsible for IO related operations, including compression, encryption, etc.
+Also contains the variables MAGIC_DICT (all checked compression formats) and
+MAX_NONCE (the maximum number of nonces allowed for the same key).</p>
+<dl class="py function">
+<dt id="cli_code.file_handler.aead_decrypt_chacha">
+<code class="sig-name descname">aead_decrypt_chacha</code><span class="sig-paren">(</span><em class="sig-param">file</em>, <em class="sig-param">key: bytes</em>, <em class="sig-param">iv: bytes) -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.aead_decrypt_chacha" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrypts the file in chunks.</p>
+<p>Decrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+construction described in RFC7539.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – Filehandler to read from</p></li>
+<li><p><strong>key</strong> (<em>bytes</em>) – Derived, shared key</p></li>
+<li><p><strong>iv</strong> (<em>bytes</em>) – First used for encryption/decryption</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><em>tuple</em> –</p>
+<p>Nonce and plaintext</p>
+<blockquote>
+<div><p>bytes:  Nonce used for each chunk
+bytes:  Plaintext chunk</p>
+</div></blockquote>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="delivery.html#cli_code.data_deliverer.DeliverySystemException" title="cli_code.data_deliverer.DeliverySystemException"><strong>DeliverySystemException</strong></a> – Failed reading of nonces</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.aead_encrypt_chacha">
+<code class="sig-name descname">aead_encrypt_chacha</code><span class="sig-paren">(</span><em class="sig-param">gen</em>, <em class="sig-param">key: bytes</em>, <em class="sig-param">iv: bytes) -&gt; (&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.aead_encrypt_chacha" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encrypts the file in chunks.</p>
+<p>Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+construction described in RFC7539.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gen</strong> (<em>Generator</em>) – Generator object, stream of file chunks</p></li>
+<li><p><strong>key</strong> (<em>bytes</em>) – Data encryption key</p></li>
+<li><p><strong>iv</strong> (<em>bytes</em>) – Initial nonce</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><em>tuple</em> –</p>
+<p>The nonce for each data chunk and ciphertext</p>
+<blockquote>
+<div><p>bytes:  Nonce – number only used once
+bytes:  Ciphertext</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.check_last_nonce">
+<code class="sig-name descname">check_last_nonce</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">last_nonce: bytes</em>, <em class="sig-param">nonce: bytes) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.check_last_nonce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the nonces match and give error if they don’t.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – File name</p></li>
+<li><p><strong>last_nonce</strong> (<em>bytes</em>) – Last nonce (read from end of encrypted file)</p></li>
+<li><p><strong>nonce</strong> (<em>bytes</em>) – Nonce which decryption/decompression ended on</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Info on delivery ok or not</p>
+<blockquote>
+<div><p>bool:   True if the nonces match
+str:    Error message, “” if none</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.compress_file">
+<code class="sig-name descname">compress_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65536</span></em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#cli_code.file_handler.compress_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compresses file by reading it chunk by chunk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – Path to file</p></li>
+<li><p><strong>chunk_size</strong> – Number of bytes to compress at a time</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><em>bytes</em> – Compressed data chunk</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.decompress_file">
+<code class="sig-name descname">decompress_file</code><span class="sig-paren">(</span><em class="sig-param">filehandler</em>, <em class="sig-param">gen</em>, <em class="sig-param">last_nonce: bytes) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.decompress_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompresses file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filehandler</strong> – Filehandler to save decompressed chunks to/with</p></li>
+<li><p><strong>gen</strong> – Generator - all decrypted chunks streamed</p></li>
+<li><p><strong>last_nonce</strong> (<em>bytes</em>) – Last nonce found from file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Info on saved file, decryption and decompression</p>
+<blockquote>
+<div><p>bool:   True if file saved and last nonce is correct
+str:    Error message, “” if none</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.file_deleter">
+<code class="sig-name descname">file_deleter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.file_deleter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>Path</em>) – Path to file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.file_reader">
+<code class="sig-name descname">file_reader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">chunk_size</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">65536</span></em><span class="sig-paren">)</span> &#x2192; bytes<a class="headerlink" href="#cli_code.file_handler.file_reader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yields the file chunk by chunk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – Path to file</p></li>
+<li><p><strong>chunk_size</strong> – Number of bytes to read from file at a time</p></li>
+</ul>
+</dd>
+<dt class="field-even">Yields</dt>
+<dd class="field-even"><p><em>bytes</em> – Data chunk of size chunk_size</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.file_writer">
+<code class="sig-name descname">file_writer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filehandler</span></em>, <em class="sig-param"><span class="n">gen</span></em>, <em class="sig-param"><span class="n">last_nonce</span></em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.file_writer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes decrypted chunks to file. Checks if last nonces match.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filehandler</strong> – Filehandler to save decompressed chunks to/with</p></li>
+<li><p><strong>gen</strong> – Generator - all decrypted chunks streamed</p></li>
+<li><p><strong>last_nonce</strong> (<em>bytes</em>) – Last nonce found from file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Info on saved file, decryption and decompression</p>
+<blockquote>
+<div><p>bool:   True if file saved and last nonce is correct
+str:    Error message, “” if none</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.get_dir_info">
+<code class="sig-name descname">get_dir_info</code><span class="sig-paren">(</span><em class="sig-param">folder: pathlib.Path</em>, <em class="sig-param">do_fail: bool) -&gt; (&lt;class 'dict'&gt;</em>, <em class="sig-param">&lt;class 'dict'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.get_dir_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through folder contents and get file info</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em>) – Path to folder</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Files to deliver
+dict:   Files which failed – not to deliver</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.get_file_info">
+<code class="sig-name descname">get_file_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">in_dir</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">do_fail</span><span class="p">:</span> <span class="n">bool</span></em>, <em class="sig-param"><span class="n">dir_name</span><span class="p">:</span> <span class="n">pathlib.Path</span> <span class="o">=</span> <span class="default_value">PosixPath('.')</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="headerlink" href="#cli_code.file_handler.get_file_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get info on file and check if already delivered</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Path</em>) – Path to file</p></li>
+<li><p><strong>in_dir</strong> (<em>bool</em>) – True if in directory specified by user</p></li>
+<li><p><strong>dir_name</strong> (<em>Path</em>) – Directory name, “” if not in folder</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Information about file e.g. format</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.get_root_path">
+<code class="sig-name descname">get_root_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file</span><span class="p">:</span> <span class="n">pathlib.Path</span></em>, <em class="sig-param"><span class="n">path_base</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; pathlib.Path<a class="headerlink" href="#cli_code.file_handler.get_root_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the path to the file, from the entered folder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> – Path to file</p></li>
+<li><p><strong>path_base</strong> – None if single file, folder name if in folder</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Path from folder to file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.is_compressed">
+<code class="sig-name descname">is_compressed</code><span class="sig-paren">(</span><em class="sig-param">file: pathlib.Path) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.is_compressed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks for file signatures in common compression formats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>Path</em>) – Path object to be checked.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Info on if compressed format or not.</p>
+<blockquote>
+<div><p>bool:   True if file is compressed format.
+str:    Error message, “” if no error</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.process_file">
+<code class="sig-name descname">process_file</code><span class="sig-paren">(</span><em class="sig-param">file: pathlib.Path</em>, <em class="sig-param">file_info: dict</em>, <em class="sig-param">peer_public) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'pathlib.Path'&gt;</em>, <em class="sig-param">&lt;class 'int'&gt;</em>, <em class="sig-param">&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'bytes'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.process_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes the files before upload.</p>
+<p>Compresses the files that are not already in a compressed format,
+encrypts them using the algorithm ChaCha20-Poly1305 and returns info about
+what processing has been performed and the public key component. The secret
+key is not saved since the uploader should not be able to decrypt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>Path</em>) – Path to file</p></li>
+<li><p><strong>file_info</strong> (<em>dict</em>) – Info about file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl>
+<dt>Information about finished processing</dt><dd><p>bool:   True if processing successful</p>
+<p>Path:   Path to processed file</p>
+<p>int:    Size of processed file</p>
+<p>bool:   True if file compressed by the delivery system</p>
+<p>bytes:  Public key needed for file decryption</p>
+<p>bytes:  Salt needed for shared key derivation</p>
+<p>str:    Error message, ‘’ if none</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="delivery.html#cli_code.data_deliverer.DeliverySystemException" title="cli_code.data_deliverer.DeliverySystemException"><strong>DeliverySystemException</strong></a> – Failed processing or wrong argument format</p></li>
+<li><p><strong>OSError</strong> – File not found or could not create tempdir</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="cli_code.file_handler.reverse_processing">
+<code class="sig-name descname">reverse_processing</code><span class="sig-paren">(</span><em class="sig-param">file: str</em>, <em class="sig-param">file_info: dict</em>, <em class="sig-param">keys: tuple) -&gt; (&lt;class 'bool'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em>, <em class="sig-param">&lt;class 'str'&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#cli_code.file_handler.reverse_processing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrypts and decompresses file (if DS compressed)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file</strong> (<em>str</em>) – Path to file</p></li>
+<li><p><strong>file_info</strong> (<em>dict</em>) – Info on file</p></li>
+<li><p><strong>keys</strong> (<em>tuple</em>) – Project specific ECDH keys required for decryption
+Format: (public, private)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>Info on finalizing delivery</p>
+<blockquote>
+<div><p>bool:   True if decryption etc successful
+str:    Decrypted file
+str:    Error message, “” if none</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="delivery.html" class="btn btn-neutral float-right" title="Data Delivery" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="cli.html" class="btn btn-neutral float-left" title="CLI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Data Centre
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

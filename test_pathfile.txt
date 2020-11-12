@@ -1,3 +1,0 @@
-configfile.txt
-yes.txt
-no.txt

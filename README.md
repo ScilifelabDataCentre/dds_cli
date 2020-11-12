@@ -1,5 +1,7 @@
-# dp_api
-API to access Scilifelab Data Centre's delivery portal. Built to handle data upload/download to/from Safespring S3.
+**All of this should be changed -- is not valid any more.**
+
+# ds_deliver
+API to access Scilifelab Data Centre's delivery system. Built to handle data upload/download to/from Safespring S3.
 
 **WIP** 
 

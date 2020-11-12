@@ -26,4 +26,5 @@ encryption.md
 chunk_tester.py
 creds_files
 create_account.py
-demo
+*demo*
+*test.py

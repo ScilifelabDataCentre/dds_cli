@@ -125,8 +125,8 @@ class S3Connector:
                 self.resource.meta.client.head_bucket(Bucket=self.bucketname)
             except botocore.client.ClientError as cle:
                 error = (f"Bucket: {self.bucketname} - Bucket not found in "
-                         f"S3 resource. Error: {cle}")
-                S3_LOG.critical(error)
+                         f"S3 resource. Error: {cle}. Attempting to create.")
+                S3_LOG.info(error)
 
                 # Create bucket if it doesn't already exist
                 try:

@@ -1,6 +1,0 @@
-/Absolute/Path/To/demo/testfile.txt
-/Absolute/Path/To/demo/test-folder/testfile_0.fna
-/Absolute/Path/To/demo/test-folder/next_folder/testfile_1.txt
-/Absolute/Path/To/demo/test-folder/next_folder/testfile_2.txt
-/Absolute/Path/To/demo/test-folder/next_folder/testfile_3.txt
-/Absolute/Path/To/demo/test-folder/next_folder/testfile_4.txt

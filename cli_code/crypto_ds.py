@@ -235,7 +235,7 @@ def get_project_private(proj_id: str, user, token):
 
     passphrase = key_info["passphrase"]
     CRYPTO_LOG.debug("password: %s", user.password)
-    key_enc_key = kdf.derive(passphrase.encode("utf-8"))
+    key_enc_key = kdf.derive(bytes.fromhex(passphrase))
     CRYPTO_LOG.debug("key: %s", key_enc_key)
 
     CRYPTO_LOG.debug("encrypted key in hex: %s", key_info["encrypted_key"])
@@ -248,9 +248,17 @@ def get_project_private(proj_id: str, user, token):
     CRYPTO_LOG.debug("nonce: %s --  in hex: %s", nonce, key_info["nonce"])
 
     # Decrypt key
-    decrypted_key = decrypt(
-        ciphertext=encrypted_key, aad=None, nonce=nonce, key=key_enc_key
-    )
+    try:
+        decrypted_key = decrypt(
+            ciphertext=encrypted_key, aad=None, nonce=nonce, key=key_enc_key
+        )
+    except Exception as e:
+        CRYPTO_LOG.debug(str(e))
+        sys.exit(exceptions_ds.printout_error(
+            "Error in private key! Decryption failed. Cannot procede with "
+            "delivery."
+        ))
+    
 
     # Verify key ############################################# Verify key #
     # Get length of magic id

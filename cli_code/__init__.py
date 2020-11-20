@@ -56,8 +56,8 @@ SEGMENT_SIZE = 65536                        # Chunk size while reading file
 CIPHER_SEGMENT_SIZE = SEGMENT_SIZE + 16     # Chunk to read from encrypted file
 DS_MAGIC = b"DelSys"                        # DS signature in encrypted key
 
-API_BASE = "http://127.0.0.1:5000/api/v1"
-# API_BASE = "https://dds.dckube.scilifelab.se/api/v1"
+# API_BASE = "http://127.0.0.1:5000/api/v1"
+API_BASE = "https://dds.dckube.scilifelab.se/api/v1"
 ENDPOINTS = {"u_login": API_BASE + "/user/login",
              "project_files": API_BASE + "/project/",
              "update_file": API_BASE + "/updatefile",

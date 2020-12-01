@@ -134,7 +134,7 @@ class S3Connector:
                         Bucket=self.bucketname)
                 except botocore.client.ClientError as cle:
                     error = (f"Bucket: {self.bucketname} could not be created "
-                             "in S3 resource. Error: {cle}")
+                             f"in S3 resource. Error: {cle}")
                     S3_LOG.critical(error)
                     sys.exit(error)     # Fatal -> ds will not work
                 else:

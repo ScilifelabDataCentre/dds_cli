@@ -13,11 +13,11 @@ MAX_NONCE (the maximum number of nonces allowed for the same key).
 import logging
 import os
 import pathlib
-import zstandard as zstd
 
 # Installed
 from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt as decrypt
 from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt as encrypt
+import zstandard as zstd
 
 # Own modules
 from cli_code import CIPHER_SEGMENT_SIZE

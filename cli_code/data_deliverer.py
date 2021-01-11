@@ -19,10 +19,10 @@ import sys
 import threading
 import traceback
 import requests
-import pandas as pd
 
 # Installed
 import botocore.client
+import pandas as pd
 import prettytable
 
 # Own modules

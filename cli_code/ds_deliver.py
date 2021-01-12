@@ -263,14 +263,25 @@ def put(creds: str, username: str, project: str,
 
             # Perform request to DatabaseUpdate - update file and project info
             req = ENDPOINTS["update_file"]
-            response = requests.post(req, params=req_args)
+            try:
+                response = requests.post(req, params=req_args)
+            except requests.exceptions.ConnectionError:
+                sys.exit(
+                    exceptions_ds.printout_error(
+                        "Failed to establish connection to the Data Delivery "
+                        "System. The service is down. \n"
+                        "Contact the SciLifeLab Data Centre."
+                    )
+                )
 
             # TODO (ina): If this or database update failed - save info to log
             # what info? facility should not have private key access
             if not response.ok:
-                sys.exit(exceptions_ds.printout_error(
-                    f"Could not update database. {response.text}"
-                ))
+                sys.exit(
+                    exceptions_ds.printout_error(
+                        f"Could not update database. {response.text}"
+                    )
+                )
 
             # Get response from api
             db_response = response.json()
@@ -354,11 +365,10 @@ def get(creds: str, username: str, project: str,
     """
 
     # TODO(ina): Add example to docstring
-    password = getpass.getpass()  # Display prompt for password
 
     # Instantiate DataDeliverer
     # - checks access and gets neccessary delivery info
-    with dd.DataDeliverer(creds=creds, username=username, password=password,
+    with dd.DataDeliverer(creds=creds, username=username,
                           project_id=project, pathfile=pathfile, data=source,
                           break_on_fail=break_on_fail) \
             as delivery:
@@ -400,7 +410,7 @@ def get(creds: str, username: str, project: str,
             except concurrent.futures.BrokenExecutor:
                 sys.exit(f"{dfuture.exception()}")
                 break   # Precaution if sys.exit not quit completely
-            
+
             # count += 1
             # if count == 1:
             #     downloaded = False
@@ -475,7 +485,8 @@ def get(creds: str, username: str, project: str,
                     "key": delivery.data[fpath]["public_key"],
                     "salt": delivery.data[fpath]["salt"]
                 }
-                dd.save_failed(file=delivery.data[fpath]["path_in_temp"], file_info=args)
+                dd.save_failed(file=delivery.data[fpath]["path_in_temp"],
+                               file_info=args)
                 continue
 
             # TODO(ina): Put db update request in function - threaded?
@@ -488,7 +499,16 @@ def get(creds: str, username: str, project: str,
             args = {"file_id": delivery.data[fpath]["id"],
                     "project": delivery.project_id,
                     "token": delivery.token}
-            response = requests.post(req, params=args)
+            try:
+                response = requests.post(req, params=args)
+            except requests.exceptions.ConnectionError:
+                sys.exit(
+                    exceptions_ds.printout_error(
+                        "Failed to establish connection to the Data Delivery "
+                        "System. The service is down. \n"
+                        "Contact the SciLifeLab Data Centre."
+                    )
+                )
 
             #
             if not response.ok:

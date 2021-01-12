@@ -485,13 +485,24 @@ class DataDeliverer:
             args.update({"role": "user"})
 
         # Request to get access
-        response = requests.post(LOGIN_BASE, params=args)
+        try:
+            response = requests.post(LOGIN_BASE, params=args)
+        except requests.exceptions.ConnectionError:
+            sys.exit(
+                exceptions_ds.printout_error(
+                    "Failed to establish connection to the Data Delivery "
+                    "System. The service is down. \n"
+                    "Contact the SciLifeLab Data Centre."
+                )
+            )
+
         if not response.ok:
             sys.exit(
                 exceptions_ds.printout_error(
                     "Something wrong. Could not access api/db during access "
                     "check. Login failed. Delivery cancelled.\n"
-                    f"{response.status_code} -- {response.reason} -- {response.text}"
+                    f"{response.status_code} -- {response.reason} -- "
+                    f"{response.text}"
                 )
             )
 
@@ -569,7 +580,7 @@ class DataDeliverer:
                 owner = credentials["owner"]
 
             if "password" in credentials:
-                password = credentials["password"]   
+                password = credentials["password"]
 
         # options ----------------------------------------------- options #
         if None in [username, project]:
@@ -1006,7 +1017,16 @@ class DataDeliverer:
         # Perform request to ProjectFiles - list all files connected to proj
         args = {"token": self.token}
         req = ENDPOINTS["project_files"] + self.project_id + "/listfiles"
-        response = requests.get(req, params=args)
+        try:
+            response = requests.get(req, params=args)
+        except requests.exceptions.ConnectionError:
+            sys.exit(
+                exceptions_ds.printout_error(
+                    "Failed to establish connection to the Data Delivery "
+                    "System. The service is down. \n"
+                    "Contact the SciLifeLab Data Centre."
+                )
+            )
 
         # If request error - cancel
         if not response.ok:
@@ -1201,7 +1221,7 @@ class DataDeliverer:
                                 self.data[path].update({
                                     "proceed": False,
                                     "error": ("break-on-fail chosen --"
-                                            f"{updinfo['error']}")
+                                              f"{updinfo['error']}")
                                 })
                     return False
 

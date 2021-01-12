@@ -78,7 +78,17 @@ class S3Connector:
     def _connect(self):
         """Connect to S3"""
 
-        s3_creds_resp = requests.get(ENDPOINTS["s3info"])
+        try:
+            s3_creds_resp = requests.get(ENDPOINTS["s3info"])
+        except requests.exceptions.ConnectionError:
+            sys.exit(
+                exceptions_ds.printout_error(
+                    "Failed to establish connection to the Data Delivery "
+                    "System. The service is down. \n"
+                    "Contact the SciLifeLab Data Centre."
+                )
+            )
+            
         if not s3_creds_resp.ok:
             sys.exit(
                 exceptions_ds.printout_error(

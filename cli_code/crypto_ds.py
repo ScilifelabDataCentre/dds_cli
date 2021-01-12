@@ -203,7 +203,16 @@ def get_project_private(proj_id: str, user, token):
     # Perform request to ProjectKey - get encrypted and formatted private key
     args = {"token": token}
     req = ENDPOINTS["key"] + f"{proj_id}/key"
-    response = requests.get(req, params=args)
+    try:
+        response = requests.get(req, params=args)
+    except requests.exceptions.ConnectionError:
+        sys.exit(
+            exceptions_ds.printout_error(
+                "Failed to establish connection to the Data Delivery "
+                "System. The service is down. \n"
+                "Contact the SciLifeLab Data Centre."
+            )
+        )
 
     # Cancel delivery if request error
     if not response.ok:
@@ -258,7 +267,6 @@ def get_project_private(proj_id: str, user, token):
             "Error in private key! Decryption failed. Cannot procede with "
             "delivery."
         ))
-    
 
     # Verify key ############################################# Verify key #
     # Get length of magic id

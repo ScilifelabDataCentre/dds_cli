@@ -12,6 +12,7 @@ upload and download of all files. Also keeps track of the delivery progress.
 
 # Standard library
 from pathlib import Path
+import getpass
 import json
 import logging
 import os
@@ -538,12 +539,12 @@ class DataDeliverer:
                 owner_id    (int):     Owner ID\n
         """
 
-        if not password or password is None:
-            sys.exit(
-                exceptions_ds.printout_error(
-                    "Password not entered. Cancelling delivery."
-                )
-            )
+        # if not password or password is None:
+        #     sys.exit(
+        #         exceptions_ds.printout_error(
+        #             "Password not entered. Cancelling delivery."
+        #         )
+        #     )
 
         # creds file ----------- credentials in it ----------- creds file #
         if creds:
@@ -567,14 +568,21 @@ class DataDeliverer:
             if owner is None and "owner" in credentials:
                 owner = credentials["owner"]
 
+            if "password" in credentials:
+                password = credentials["password"]   
+
         # options ----------------------------------------------- options #
-        if None in [username, password, project]:
+        if None in [username, project]:
             sys.exit(
                 exceptions_ds.printout_error(
                     "Data Delivery System options missing.\n"
                     "For help: 'ds_deliver --help'."
                 )
             )
+
+        # Display prompt for password if not specified
+        if password is None:
+            password = getpass.getpass()
 
         # Uploading requires a specified project owner
         # For downloading, it's currently assumed to be the user

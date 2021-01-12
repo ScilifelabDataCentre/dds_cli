@@ -38,7 +38,6 @@ the Data Delivery System.
 
 # Standard library
 import concurrent.futures
-import getpass
 import logging
 import logging.config
 import sys
@@ -127,11 +126,10 @@ def put(creds: str, username: str, project: str,
     """
 
     # TODO(ina): Add example in docstring
-    password = getpass.getpass()  # Display prompt for password
 
     # Instantiate DataDeliverer
     # - checks access and gets neccessary delivery info
-    with dd.DataDeliverer(creds=creds, username=username, password=password,
+    with dd.DataDeliverer(creds=creds, username=username,
                           project_id=project, project_owner=owner,
                           pathfile=pathfile, data=source,
                           break_on_fail=break_on_fail, overwrite=overwrite) \

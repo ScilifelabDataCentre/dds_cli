@@ -673,7 +673,7 @@ class DataDeliverer:
         # Add data included in pathfile to data dict
         if pathfile is not None and Path(pathfile).exists():
             with Path(pathfile).resolve().open(mode="r") as file:
-                data_list += [line.strip() for line in file]
+                data_list = file.read().splitlines()
 
         # Fail delivery if not a correct method
         if self.method not in ["get", "put"]:
@@ -683,20 +683,10 @@ class DataDeliverer:
                      \nCancelling delivery.""")
             )
 
-        # Temporary cap
         if self.method == "put":
             self.data_input = list()
-            tot_size = 0
             for x in data_list:
                 filepath = Path(x).resolve()
-                tot_size += filepath.stat().st_size
-                # print(tot_size)
-                if tot_size > 700e9:
-                    sys.exit(
-                        exceptions_ds.printout_error(
-                            "Too much data. The upload cap is set at 700 GB."
-                        )
-                    )
                 self.data_input.append(filepath)
         elif self.method == "get":
             # Save list of paths user chose

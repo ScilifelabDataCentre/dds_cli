@@ -456,11 +456,11 @@ class DataDeliverer:
         """
         # NOTE: Remove user class?
 
-        def __init__(self, username=None, password=None):
+        def __init__(self, username, password, method):
             self.username = username
             self.password = password
             self.id = None
-            self.role = None
+            self.role = "facility" if method == "put" else "user"
 
     ###################
     # Private Methods #
@@ -494,15 +494,17 @@ class DataDeliverer:
         """
 
         global LOGIN_BASE
-        args = {}
-
+        args = {"username": self.user.username,
+                "password": self.user.password,
+                "role": self.user.role,
+                "project": self.project_id}
+        print(args)
+        sys.exit()
         # Get access to delivery system - check if derived pw hash valid
         # Different endpoint depending on facility or not.
         # print(self.project_owner, flush=True)
         LOGIN_BASE = ENDPOINTS["u_login"]
-        args = {"username": self.user.username,
-                "password": self.user.password,
-                "project": self.project_id}
+        
         if self.method == "put":
             args.update({"owner": self.project_owner,
                          "role": "facility"})

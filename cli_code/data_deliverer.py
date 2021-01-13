@@ -498,18 +498,13 @@ class DataDeliverer:
                 "password": self.user.password,
                 "role": self.user.role,
                 "project": self.project_id}
-        print(args)
-        sys.exit()
+
         # Get access to delivery system - check if derived pw hash valid
         # Different endpoint depending on facility or not.
-        # print(self.project_owner, flush=True)
         LOGIN_BASE = ENDPOINTS["u_login"]
-        
+
         if self.method == "put":
-            args.update({"owner": self.project_owner,
-                         "role": "facility"})
-        elif self.method == "get":
-            args.update({"role": "user"})
+            args.update({"owner": self.project_owner})
 
         # Request to get access
         try:
@@ -535,6 +530,8 @@ class DataDeliverer:
 
         # Get json response if request successful (does not mean access)
         json_response = response.json()
+        print(json_response)
+        sys.exit()
 
         # Quit if user not granted Delivery System access
         if not json_response["access"] and json_response["token"] == "":
@@ -634,7 +631,8 @@ class DataDeliverer:
         elif self.method == "get":
             owner = username
 
-        return self.User(username=username, password=password), project, owner
+        return self.User(username=username, password=password,
+                         method=self.method), project, owner
 
     def _create_progress_output(self) -> (str, dict):
         """Create list of files and the individual delivery progress.

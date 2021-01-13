@@ -667,15 +667,15 @@ class DataDeliverer:
         initial_fail = dict()   # Files failing initial check
 
         data_list = list(data)  # List with data specified by user
-
         # --------------------------------------------------------------#
 
         # Add data included in pathfile to data dict
         if pathfile is not None and Path(pathfile).exists():
             with Path(pathfile).resolve().open(mode="r") as file:
-                data_list = file.read().splitlines()
+                data_list += file.read().splitlines()
 
         # Fail delivery if not a correct method
+        # TODO (ina): Will need to change
         if self.method not in ["get", "put"]:
             sys.exit(
                 exceptions_ds.printout_error(
@@ -684,14 +684,11 @@ class DataDeliverer:
             )
 
         if self.method == "put":
-            self.data_input = list()
-            for x in data_list:
-                filepath = Path(x).resolve()
-                self.data_input.append(filepath)
+            self.data_input = list(Path(x).resolve() for x in data_list)
         elif self.method == "get":
             # Save list of paths user chose
             self.data_input = list(x for x in data_list)
-
+        
         # Get all project files in db
         # TODO: move to function?
         files_in_db = self._get_project_files()

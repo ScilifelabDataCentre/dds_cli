@@ -170,9 +170,8 @@ class DataDeliverer:
 
         # Get access to DS -- returns json format with access, user_id,
         # project_id, s3_id, error and token.
-        delivery_info = self._check_ds_access()
-        self.user.id = delivery_info["user_id"]
-        self.token = delivery_info["token"]
+        self.user.id, self.token, self.bucketname, self.public = \
+            self._check_ds_access()
 
         # Fail if no data specified
         if not data and not pathfile:
@@ -183,13 +182,6 @@ class DataDeliverer:
                     "or more times, or the --pathfile/-f. \n\n"
                     "For help: 'ds_deliver --help'")
             )
-
-        # If everything ok, set bucket name
-        self.bucketname = delivery_info["s3_id"]
-
-        # Set public key
-        self.public = bytes.fromhex(delivery_info["public_key"])
-        LOG.debug("Project public key: %s", self.public)
 
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
@@ -202,7 +194,8 @@ class DataDeliverer:
             self.private = b""
         elif self.method == "get":
             self.private = crypto_ds.get_project_private(
-                self.project_id, self.user, self.token)
+                self.project_id, self.user, self.token
+            )
 
         # Start progress info printout
         if self.data:
@@ -500,7 +493,7 @@ class DataDeliverer:
                      "password": self.user.password,
                      "role": self.user.role,
                      "project": self.project_id})
-        
+
         # Get access to delivery system - check if derived pw hash valid
         LOGIN_BASE = ENDPOINTS["u_login"]
 
@@ -547,7 +540,8 @@ class DataDeliverer:
                 )
             )
 
-        return json_response
+        return json_response["user_id"], json_response["token"], \
+            json_response["s3_id"], bytes.fromhex(json_response["public_key"])
 
     def _check_user_input(self, creds, username, password, project, owner) \
             -> (str, str, int, int):
@@ -569,13 +563,6 @@ class DataDeliverer:
                 project_id  (int):     Project ID\n
                 owner_id    (int):     Owner ID\n
         """
-
-        # if not password or password is None:
-        #     sys.exit(
-        #         exceptions_ds.printout_error(
-        #             "Password not entered. Cancelling delivery."
-        #         )
-        #     )
 
         # creds file ----------- credentials in it ----------- creds file #
         if creds:

@@ -159,9 +159,8 @@ class DataDeliverer:
 
         # Checks ----------------------------------------------------- Checks #
         # Check if all required info is entered and get user info
-        self.user = _DSUser()
-        self.user.username, self.user.password, self.project_id, \
-            self.project_owner = self._check_user_input(
+        self.user, self.project_id, self.project_owner = \
+            self._check_user_input(
                 creds=creds,
                 username=username,
                 password=password,
@@ -437,6 +436,32 @@ class DataDeliverer:
 
         # ------------------------------------------------------------------- #
 
+    ##################
+    # NESTED CLASSES #
+    ##################
+
+    class User:
+        """
+        A Data Delivery System user.
+
+        Args:
+            username (str):   Delivery System username
+            password (str):   Delivery System password
+
+        Attributes:
+            username (str): Delivery System username
+            password (str): Delivery System password
+            id (str):       User ID
+            role (str):     Facility or researcher
+        """
+        # NOTE: Remove user class?
+
+        def __init__(self, username=None, password=None):
+            self.username = username
+            self.password = password
+            self.id = None
+            self.role = None
+
     ###################
     # Private Methods #
     ###################
@@ -607,7 +632,7 @@ class DataDeliverer:
         elif self.method == "get":
             owner = username
 
-        return username, password, project, owner
+        return self.User(username=username, password=password), project, owner
 
     def _create_progress_output(self) -> (str, dict):
         """Create list of files and the individual delivery progress.
@@ -1392,33 +1417,6 @@ class ProgressPercentage(object):
 
 class DeliverySystemException(Exception):
     """Errors regarding Delivery Portal access etc"""
-
-
-# DSUSER ############################################################## DSUER #
-
-
-# TODO (ina): Remove DSuser or use in better way
-class _DSUser:
-    """
-    A Data Delivery System user.
-
-    Args:
-        username (str):   Delivery System username
-        password (str):   Delivery System password
-
-    Attributes:
-        username (str): Delivery System username
-        password (str): Delivery System password
-        id (str):       User ID
-        role (str):     Facility or researcher
-    """
-    # NOTE: Remove user class?
-
-    def __init__(self, username=None, password=None):
-        self.username = username
-        self.password = password
-        self.id = None
-        self.role = None
 
 
 def save_failed(file: Path, file_info: dict):

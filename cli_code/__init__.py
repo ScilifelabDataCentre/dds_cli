@@ -24,7 +24,7 @@ import sys
 # PROJECT SPEC ################################################# PROJECT SPEC #
 ###############################################################################
 
-__title__ = "SciLifeLab Data Delivery System"
+__title__ = "Data Delivery System"
 __version__ = "0.1"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = ""

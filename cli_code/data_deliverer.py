@@ -494,17 +494,15 @@ class DataDeliverer:
         """
 
         global LOGIN_BASE
-        args = {"username": self.user.username,
-                "password": self.user.password,
-                "role": self.user.role,
-                "project": self.project_id}
-
+        args = {"owner": self.project_owner} if self.user.role == "facility" \
+            else {}
+        args.update({"username": self.user.username,
+                     "password": self.user.password,
+                     "role": self.user.role,
+                     "project": self.project_id})
+        
         # Get access to delivery system - check if derived pw hash valid
-        # Different endpoint depending on facility or not.
         LOGIN_BASE = ENDPOINTS["u_login"]
-
-        if self.method == "put":
-            args.update({"owner": self.project_owner})
 
         # Request to get access
         try:
@@ -530,8 +528,6 @@ class DataDeliverer:
 
         # Get json response if request successful (does not mean access)
         json_response = response.json()
-        print(json_response)
-        sys.exit()
 
         # Quit if user not granted Delivery System access
         if not json_response["access"] and json_response["token"] == "":

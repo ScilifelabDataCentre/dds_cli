@@ -691,8 +691,8 @@ class DataDeliverer:
         
         # Get all project files in db
         # TODO: move to function?
-        files_in_db = self._get_project_files()
-        LOG.debug("files in the db: %s", files_in_db)
+        # files_in_db = self._get_project_files()
+        # LOG.debug("files in the db: %s", files_in_db)
 
         do_fail = False
         # Gather data info ########################### Gather data info #

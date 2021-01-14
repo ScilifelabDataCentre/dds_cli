@@ -193,8 +193,10 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True):
                 final_dict.update(
                     get_file_info_rec(path=f, do_fail=do_fail, root=False)
                 )
+        print("Folder: ", path.name)
     else:
         final_dict = {path: {"in_directory": not root}}
+        print("Parent: ", path.parent)
 
     return final_dict
 
@@ -220,6 +222,8 @@ def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
     path_base = dir_name.name if in_dir else None
     directory_path = get_root_path(file=file, path_base=path_base) \
         if path_base is not None else pathlib.Path("")
+    print("Directory path: ", directory_path)
+    print("Current working directory: ", os.getcwd())
     dir_info = {"in_directory": in_dir, "local_dir_name": dir_name}
 
     suffixes = file.suffixes    # File suffixes

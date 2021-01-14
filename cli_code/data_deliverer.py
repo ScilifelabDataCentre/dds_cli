@@ -691,7 +691,7 @@ class DataDeliverer:
 
         # Get all project files in db
         # TODO: move to function?
-        # files_in_db = self._get_project_files()
+        files_in_db = self._get_project_files()
         # LOG.debug("files in the db: %s", files_in_db)
 
         do_fail = False
@@ -736,9 +736,9 @@ class DataDeliverer:
 
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
-                final_dict = file_handler.get_file_info_rec(path=curr_path, do_fail=do_fail)
-                print(final_dict)
-                continue
+                # final_dict = file_handler.get_file_info_rec(path=curr_path, do_fail=do_fail)
+                # print(final_dict)
+                # continue
                 
                 # Get info on files within folder
                 if curr_path.is_dir():

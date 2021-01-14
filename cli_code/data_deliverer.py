@@ -688,7 +688,7 @@ class DataDeliverer:
         elif self.method == "get":
             # Save list of paths user chose
             self.data_input = list(x for x in data_list)
-        
+
         # Get all project files in db
         # TODO: move to function?
         # files_in_db = self._get_project_files()
@@ -698,7 +698,7 @@ class DataDeliverer:
         # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths
         for d in data_list:
-
+            
             # Throw error if there are duplicate files
             if d in all_files or Path(d).resolve() in all_files:
                 sys.exit(
@@ -736,7 +736,10 @@ class DataDeliverer:
 
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
-
+                final_dict = file_handler.get_file_info_rec(path=curr_path, do_fail=do_fail)
+                print(final_dict)
+                continue
+                
                 # Get info on files within folder
                 if curr_path.is_dir():
                     dir_info, dir_fail = file_handler.get_dir_info(
@@ -761,6 +764,7 @@ class DataDeliverer:
                     # Deliver --> save info
                     all_files[curr_path] = file_info
 
+        sys.exit()
         if self.method == "put":
             for file, info in list(all_files.items()):
                 # Cancel if delivery tagged as failed

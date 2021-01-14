@@ -183,6 +183,22 @@ def get_dir_info(folder: pathlib.Path, do_fail: bool) -> (dict, dict):
     return dir_info, dir_fail
 
 
+def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True):
+    print("\nPath: ", path, " - Root: ", root)
+    final_dict = {}
+
+    if path.is_dir():
+        for f in path.glob("**/*"):
+            if f.is_file() and "DS_Store" not in str(f):
+                final_dict.update(
+                    get_file_info_rec(path=f, do_fail=do_fail, root=False)
+                )
+    else:
+        final_dict = {path: {"in_directory": not root}}
+
+    return final_dict
+
+
 def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
                   dir_name: pathlib.Path = pathlib.Path("")) -> (dict):
     """Get info on file and check if already delivered

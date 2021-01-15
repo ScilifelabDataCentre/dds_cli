@@ -737,7 +737,13 @@ class DataDeliverer:
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
                 final_dict = file_handler.get_file_info_rec(path=curr_path, do_fail=do_fail)
-                print(final_dict)
+                for x, y in final_dict.items():
+                    print(x, y, "\n")
+                
+                if curr_path in final_dict:  # file
+                    pass
+                else:  # folder
+                    pass
                 continue
                 
                 # Get info on files within folder

@@ -188,6 +188,8 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
     """Docstring"""
     # TODO (Ina): Add docstring
 
+    proceed = True  # If proceed with file delivery
+
     # Error if single file specified but a folder passed as arg
     if (not root and folder is None) or (root and folder is not None):
         LOG.critical("Error message here!")
@@ -213,11 +215,59 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=path)
-        error = "fail"
         if error != "":
+            # proceed = False
             return {"proceed": False, "error": error, **final_dict[path]}
 
-    return final_dict
+        suff_aftproc = ""  # Suffixes after processing
+        # If file not compressed -- add zst (Zstandard) suffix to final suffix
+        # If compressed -- info that DS will not compress
+        if not compressed:
+            # Warning if suffixes are in magic dict but file "not compressed"
+            if set(path.suffixes).intersection(set(MAGIC_DICT)):
+                LOG.warning("File '%s' has extensions belonging "
+                            "to a compressed format but shows no "
+                            "indication of being compressed. Not "
+                            "compressing file.", path)
+
+            suff_aftproc += ".zst"     # Update the future suffix
+        elif compressed:
+            LOG.info("File '%s' shows indication of being "
+                    "in a compressed format. "
+                    "Not compressing the file.", path)
+
+        # Add (own) encryption format extension
+        suff_aftproc += ".ccp"     # ChaCha20-Poly1305
+
+        # Path to file in temporary directory after processing, and bucket
+        # after upload, >>including file name<<
+        path_in_db = final_dict[path]["directory_path"] / pathlib.Path(path.name)
+        path_in_bucket = path_in_db.with_suffix("".join(path.suffixes) + suff_aftproc)
+
+        final_dict[path].update({
+            "size": path.stat().st_size, 
+            "proceed": proceed, 
+            "compressed": compressed, 
+            "path_in_bucket": str(path_in_bucket),
+            "path_in_db": str(path_in_db),  # "local path"?
+            "error": error,
+            "encrypted_file": pathlib.Path(""), 
+            "encrypted_size": 0, 
+            "key": "",  # public key (?)
+            "extension": suff_aftproc, # suffixes after processing
+            "processing": {"in_progress": False,
+                            "finished": False},
+            "upload": {"in_progress": False,
+                        "finished": False},
+            "database": {"in_progress": False,
+                            "finished": False}
+        })
+
+        if not final_dict[path]["proceed"]:
+            if self.break_on_fail:
+                do_fail == True
+
+    return final_dict, do_fail
 
 
 def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,

@@ -698,7 +698,7 @@ class DataDeliverer:
         # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths
         for d in data_list:
-            
+
             # Throw error if there are duplicate files
             if d in all_files or Path(d).resolve() in all_files:
                 sys.exit(
@@ -736,19 +736,21 @@ class DataDeliverer:
 
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
-                final_dict, failed_dict = file_handler.get_file_info_rec(path=curr_path, do_fail=do_fail)
-                
-                print(final_dict, "\n", failed_dict)
+                final_dict = file_handler.get_file_info_rec(
+                    path=curr_path, break_on_fail=self.break_on_fail
+                )
 
-                for x, y in final_dict.items():
-                    print(x, y, "\n")
-                
-                if curr_path in final_dict:  # file
+                print(final_dict, len(final_dict))
+
+                if curr_path in final_dict and len(final_dict) == 1:  # file
+                    # if not final_dict[curr_path]["proceed"]:
+                    #     initial_fail[curr_path] = final_dict[curr_path]
+                    #     if self.break_on_fail =
                     pass
                 else:  # folder
                     pass
                 continue
-                
+
                 # Get info on files within folder
                 if curr_path.is_dir():
                     dir_info, dir_fail = file_handler.get_dir_info(

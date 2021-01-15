@@ -183,7 +183,8 @@ def get_dir_info(folder: pathlib.Path, do_fail: bool) -> (dict, dict):
     return dir_info, dir_fail
 
 
-def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
+def get_file_info_rec(path: pathlib.Path, root: bool = True,
+                      break_on_fail: bool = True,
                       folder: pathlib.Path = None):
     """Docstring"""
     # TODO (Ina): Add docstring
@@ -201,7 +202,7 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
         for f in path.glob("**/*"):
             if f.is_file() and "DS_Store" not in str(f):
                 final_dict.update(
-                    get_file_info_rec(path=f, do_fail=do_fail, root=False,
+                    get_file_info_rec(path=f, root=False, break_on_fail=break_on_fail,
                                       folder=path.name)
                 )
         print("Folder: ", path.name)
@@ -216,7 +217,6 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=path)
-        error = "fail"
         if error != "":
             return {path: {**final_dict[path], **{"proceed": False, "error": error}}}
 

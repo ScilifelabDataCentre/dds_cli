@@ -211,6 +211,12 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
             "directory_path": get_subdir(file=path, folder=folder)  # sub directory from spec fold
         }}
 
+        # Check if file is compressed and fail delivery on error
+        compressed, error = is_compressed(file=path)
+        error = "fail"
+        if error != "":
+            return {"proceed": False, "error": error, **final_dict[path]}
+
     return final_dict
 
 

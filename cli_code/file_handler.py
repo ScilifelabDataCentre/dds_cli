@@ -183,7 +183,15 @@ def get_dir_info(folder: pathlib.Path, do_fail: bool) -> (dict, dict):
     return dir_info, dir_fail
 
 
-def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True):
+def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
+                      folder: pathlib.Path = None):
+    """Docstring"""
+    # TODO (Ina): Add docstring
+
+    # Error if single file specified but a folder passed as arg
+    if (not root and folder is None) or (root and folder is not None):
+        LOG.critical("Error message here!")
+
     print("\nPath: ", path, " - Root: ", root)
     final_dict = {}
 
@@ -191,12 +199,17 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True):
         for f in path.glob("**/*"):
             if f.is_file() and "DS_Store" not in str(f):
                 final_dict.update(
-                    get_file_info_rec(path=f, do_fail=do_fail, root=False)
+                    get_file_info_rec(path=f, do_fail=do_fail, root=False,
+                                      folder=path.name)
                 )
         print("Folder: ", path.name)
     else:
-        final_dict = {path: {"in_directory": not root}}
-        print("Parent: ", path.parent)
+        # TODO (ina): Change names of the dict keys - more logical
+        final_dict = {path: {
+            "in_directory": not root,  # single file entered or in folder
+            "local_dir_path": folder,  # local directory, specified in cli call
+            "directory_path": get_subdir(file=path, folder=folder)  # sub directory from spec fold
+        }}
 
     return final_dict
 
@@ -220,7 +233,7 @@ def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
 
     # Folder name and path to file IN folder
     path_base = dir_name.name if in_dir else None
-    directory_path = get_root_path(file=file, path_base=path_base) \
+    directory_path = get_subdir(file=file, folder=path_base) \
         if path_base is not None else pathlib.Path("")
     print("Directory path: ", directory_path)
     print("Current working directory: ", os.getcwd())
@@ -287,7 +300,7 @@ def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
                          "finished": False}}
 
 
-def get_root_path(file: pathlib.Path, path_base: str = None) -> (pathlib.Path):
+def get_subdir(file: pathlib.Path, folder: str = None) -> (pathlib.Path):
     """Gets the path to the file, from the entered folder.
 
     Args:
@@ -298,9 +311,14 @@ def get_root_path(file: pathlib.Path, path_base: str = None) -> (pathlib.Path):
         Path:   Path from folder to file
     """
 
-    fileparts = file.parts
-    start_ind = fileparts.index(path_base)
-    return pathlib.Path(*fileparts[start_ind:-1])
+    subdir = pathlib.Path("")
+    
+    if folder is not None:
+        fileparts = file.parts
+        start_ind = fileparts.index(folder)
+        subdir = pathlib.Path(*fileparts[start_ind:-1])
+    
+    return subdir
 
 
 ###############################################################################

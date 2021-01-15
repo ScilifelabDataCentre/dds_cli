@@ -736,7 +736,10 @@ class DataDeliverer:
 
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
-                final_dict = file_handler.get_file_info_rec(path=curr_path, do_fail=do_fail)
+                final_dict, failed_dict = file_handler.get_file_info_rec(path=curr_path, do_fail=do_fail)
+                
+                print(final_dict, "\n", failed_dict)
+
                 for x, y in final_dict.items():
                     print(x, y, "\n")
                 

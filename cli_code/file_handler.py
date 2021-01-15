@@ -210,14 +210,15 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
         final_dict = {path: {
             "in_directory": not root,  # single file entered or in folder
             "local_dir_path": folder,  # local directory, specified in cli call
-            "directory_path": get_subdir(file=path, folder=folder)  # sub directory from spec fold
+            # sub directory from spec fold
+            "directory_path": get_subdir(file=path, folder=folder)
         }}
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=path)
+        error = "fail"
         if error != "":
-            # proceed = False
-            return {"proceed": False, "error": error, **final_dict[path]}
+            return {path: {**final_dict[path], **{"proceed": False, "error": error}}}
 
         suff_aftproc = ""  # Suffixes after processing
         # If file not compressed -- add zst (Zstandard) suffix to final suffix
@@ -233,41 +234,38 @@ def get_file_info_rec(path: pathlib.Path, do_fail: bool, root: bool = True,
             suff_aftproc += ".zst"     # Update the future suffix
         elif compressed:
             LOG.info("File '%s' shows indication of being "
-                    "in a compressed format. "
-                    "Not compressing the file.", path)
+                     "in a compressed format. "
+                     "Not compressing the file.", path)
 
         # Add (own) encryption format extension
         suff_aftproc += ".ccp"     # ChaCha20-Poly1305
 
         # Path to file in temporary directory after processing, and bucket
         # after upload, >>including file name<<
-        path_in_db = final_dict[path]["directory_path"] / pathlib.Path(path.name)
-        path_in_bucket = path_in_db.with_suffix("".join(path.suffixes) + suff_aftproc)
-
+        path_in_db = final_dict[path]["directory_path"] / \
+            pathlib.Path(path.name)
+        path_in_bucket = path_in_db.with_suffix(
+            "".join(path.suffixes) + suff_aftproc)
         final_dict[path].update({
-            "size": path.stat().st_size, 
-            "proceed": proceed, 
-            "compressed": compressed, 
+            "size": path.stat().st_size,
+            "proceed": proceed,
+            "compressed": compressed,
             "path_in_bucket": str(path_in_bucket),
             "path_in_db": str(path_in_db),  # "local path"?
             "error": error,
-            "encrypted_file": pathlib.Path(""), 
-            "encrypted_size": 0, 
+            "encrypted_file": pathlib.Path(""),
+            "encrypted_size": 0,
             "key": "",  # public key (?)
-            "extension": suff_aftproc, # suffixes after processing
+            "extension": suff_aftproc,  # suffixes after processing
             "processing": {"in_progress": False,
-                            "finished": False},
+                           "finished": False},
             "upload": {"in_progress": False,
                         "finished": False},
             "database": {"in_progress": False,
-                            "finished": False}
+                         "finished": False}
         })
 
-        if not final_dict[path]["proceed"]:
-            if self.break_on_fail:
-                do_fail == True
-
-    return final_dict, do_fail
+    return final_dict
 
 
 def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
@@ -368,12 +366,12 @@ def get_subdir(file: pathlib.Path, folder: str = None) -> (pathlib.Path):
     """
 
     subdir = pathlib.Path("")
-    
+
     if folder is not None:
         fileparts = file.parts
         start_ind = fileparts.index(folder)
         subdir = pathlib.Path(*fileparts[start_ind:-1])
-    
+
     return subdir
 
 

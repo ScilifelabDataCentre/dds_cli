@@ -25,7 +25,11 @@
             'in_progress': False, 
             'finished': False
         }
-    }, PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder/next_folder/testfile_3.txt'): {'in_directory': True, 'local_dir_name': PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder'), 'directory_path': PosixPath('test-folder/next_folder'), 'size': 4194337, 'proceed': True, 'compressed': False, 'path_in_bucket': 'test-folder/next_folder/testfile_3.txt.zst.ccp', 'path_in_db': 'test-folder/next_folder/testfile_3.txt', 'error': '', 'encrypted_file': PosixPath('.'), 'encrypted_size': 0, 'key': '', 'extension': '.zst.ccp', 'processing': {'in_progress': False, 'finished': False
+    }, 
+    PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder/next_folder/testfile_3.txt'):{
+        'in_directory': True, 
+        'local_dir_name': PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder'), 
+        'directory_path': PosixPath('test-folder/next_folder'), 'size': 4194337, 'proceed': True, 'compressed': False, 'path_in_bucket': 'test-folder/next_folder/testfile_3.txt.zst.ccp', 'path_in_db': 'test-folder/next_folder/testfile_3.txt', 'error': '', 'encrypted_file': PosixPath('.'), 'encrypted_size': 0, 'key': '', 'extension': '.zst.ccp', 'processing': {'in_progress': False, 'finished': False
         }, 'upload': {'in_progress': False, 'finished': False
         }, 'database': {'in_progress': False, 'finished': False
         }

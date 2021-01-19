@@ -197,15 +197,28 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
     if (not root and folder is None) or (root and folder is not None):
         LOG.critical("Error message here!")
 
+    do_fail = False
+
     if path.is_dir():
         for f in path.glob("**/*"):
             if f.is_file() and "DS_Store" not in str(f):
-                final_dict, failed_dict = get_file_info_rec(path=f, root=False, break_on_fail=break_on_fail,
-                                      folder=path.name)
-                
-                if failed_dict and break_on_fail:
+                if do_fail:
+                    failed_files.update({f: {"proceed": False,
+                                             "error": "break on fail here"}})
+                    continue
 
-                    break
+                final_dict, failed_dict = get_file_info_rec(
+                    path=f, root=False, break_on_fail=break_on_fail,
+                    folder=path.name
+                )
+
+                if failed_dict and break_on_fail:
+                    failed_files.update(
+                        {**failed_dict}
+                    )
+                    do_fail = True
+                    continue
+
                 ok_files.update(final_dict)
                 failed_files.update(failed_dict)
 
@@ -220,7 +233,7 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=path)
-        error="fail"
+        # error = "fail"
         if error != "":
             # proceed = False
             return {}, {path: {**ok_files[path], **{"proceed": False, "error": error}}}
@@ -273,90 +286,90 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
     return ok_files, failed_files
 
 
-def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
-                  dir_name: pathlib.Path = pathlib.Path("")) -> (dict):
-    """Get info on file and check if already delivered
+# def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
+#                   dir_name: pathlib.Path = pathlib.Path("")) -> (dict):
+#     """Get info on file and check if already delivered
 
-    Args:
-        file (Path):        Path to file
-        in_dir (bool):      True if in directory specified by user
-        dir_name (Path):    Directory name, "" if not in folder
+#     Args:
+#         file (Path):        Path to file
+#         in_dir (bool):      True if in directory specified by user
+#         dir_name (Path):    Directory name, "" if not in folder
 
-    Returns:
-        dict:   Information about file e.g. format
+#     Returns:
+#         dict:   Information about file e.g. format
 
-    """
+#     """
 
-    # Variables ###################################### Variables #
-    proceed = True  # If proceed with file delivery
+#     # Variables ###################################### Variables #
+#     proceed = True  # If proceed with file delivery
 
-    # Folder name and path to file IN folder
-    path_base = dir_name.name if in_dir else None
-    directory_path = get_subdir(file=file, folder=path_base) \
-        if path_base is not None else pathlib.Path("")
-    # print("Directory path: ", directory_path)
-    # print("Current working directory: ", os.getcwd())
-    dir_info = {"in_directory": in_dir, "local_dir_name": dir_name}
+#     # Folder name and path to file IN folder
+#     path_base = dir_name.name if in_dir else None
+#     directory_path = get_subdir(file=file, folder=path_base) \
+#         if path_base is not None else pathlib.Path("")
+#     # print("Directory path: ", directory_path)
+#     # print("Current working directory: ", os.getcwd())
+#     dir_info = {"in_directory": in_dir, "local_dir_name": dir_name}
 
-    suffixes = file.suffixes    # File suffixes
-    proc_suff = ""              # Saves final suffixes
-    error = ""                  # Error message
-    # ---------------------------------------------------------- #
+#     suffixes = file.suffixes    # File suffixes
+#     proc_suff = ""              # Saves final suffixes
+#     error = ""                  # Error message
+#     # ---------------------------------------------------------- #
 
-    # Cancel if delivery tagged as failed
-    if do_fail:
-        error = "Break on fail specified and one fail occurred. " + \
-                "Cancelling delivery."
-        LOG.info(error)
-        return {"proceed": False, "error": error, **dir_info}
+#     # Cancel if delivery tagged as failed
+#     if do_fail:
+#         error = "Break on fail specified and one fail occurred. " + \
+#                 "Cancelling delivery."
+#         LOG.info(error)
+#         return {"proceed": False, "error": error, **dir_info}
 
-    # Check if file is compressed and fail delivery on error
-    compressed, error = is_compressed(file=file)
-    if error != "":
-        return {"proceed": False, "error": error, **dir_info}
+#     # Check if file is compressed and fail delivery on error
+#     compressed, error = is_compressed(file=file)
+#     if error != "":
+#         return {"proceed": False, "error": error, **dir_info}
 
-    # If file not compressed -- add zst (Zstandard) suffix to final suffix
-    # If compressed -- info that DS will not compress
-    if not compressed:
-        # Warning if suffixes are in magic dict but file "not compressed"
-        if set(suffixes).intersection(set(MAGIC_DICT)):
-            LOG.warning("File '%s' has extensions belonging "
-                        "to a compressed format but shows no "
-                        "indication of being compressed. Not "
-                        "compressing file.", file)
+#     # If file not compressed -- add zst (Zstandard) suffix to final suffix
+#     # If compressed -- info that DS will not compress
+#     if not compressed:
+#         # Warning if suffixes are in magic dict but file "not compressed"
+#         if set(suffixes).intersection(set(MAGIC_DICT)):
+#             LOG.warning("File '%s' has extensions belonging "
+#                         "to a compressed format but shows no "
+#                         "indication of being compressed. Not "
+#                         "compressing file.", file)
 
-        proc_suff += ".zst"     # Update the future suffix
-    elif compressed:
-        LOG.info("File '%s' shows indication of being "
-                 "in a compressed format. "
-                 "Not compressing the file.", file)
+#         proc_suff += ".zst"     # Update the future suffix
+#     elif compressed:
+#         LOG.info("File '%s' shows indication of being "
+#                  "in a compressed format. "
+#                  "Not compressing the file.", file)
 
-    # Add (own) encryption format extension
-    proc_suff += ".ccp"     # ChaCha20-Poly1305
+#     # Add (own) encryption format extension
+#     proc_suff += ".ccp"     # ChaCha20-Poly1305
 
-    # Path to file in temporary directory after processing, and bucket
-    # after upload, >>including file name<<
-    path_in_db = directory_path / pathlib.Path(file.name)
-    path_in_bucket = path_in_db.with_suffix("".join(suffixes) + proc_suff)
-    return {"in_directory": in_dir,
-            "local_dir_name": dir_name if in_dir else None,
-            "directory_path": directory_path,
-            "size": file.stat().st_size,
-            "proceed": proceed,
-            "compressed": compressed,
-            "path_in_bucket": str(path_in_bucket),
-            "path_in_db": str(path_in_db),
-            "error": error,
-            "encrypted_file": pathlib.Path(""),
-            "encrypted_size": 0,
-            "key": "",
-            "extension": proc_suff,
-            "processing": {"in_progress": False,
-                           "finished": False},
-            "upload": {"in_progress": False,
-                       "finished": False},
-            "database": {"in_progress": False,
-                         "finished": False}}
+#     # Path to file in temporary directory after processing, and bucket
+#     # after upload, >>including file name<<
+#     path_in_db = directory_path / pathlib.Path(file.name)
+#     path_in_bucket = path_in_db.with_suffix("".join(suffixes) + proc_suff)
+#     return {"in_directory": in_dir,
+#             "local_dir_name": dir_name if in_dir else None,
+#             "directory_path": directory_path,
+#             "size": file.stat().st_size,
+#             "proceed": proceed,
+#             "compressed": compressed,
+#             "path_in_bucket": str(path_in_bucket),
+#             "path_in_db": str(path_in_db),
+#             "error": error,
+#             "encrypted_file": pathlib.Path(""),
+#             "encrypted_size": 0,
+#             "key": "",
+#             "extension": proc_suff,
+#             "processing": {"in_progress": False,
+#                            "finished": False},
+#             "upload": {"in_progress": False,
+#                        "finished": False},
+#             "database": {"in_progress": False,
+#                          "finished": False}}
 
 
 def get_subdir(file: pathlib.Path, folder: str = None) -> (pathlib.Path):

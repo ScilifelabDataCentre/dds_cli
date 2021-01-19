@@ -736,45 +736,52 @@ class DataDeliverer:
 
             elif self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
-                final_dict = file_handler.get_file_info_rec(
+                final_dict, failed_dict = file_handler.get_file_info_rec(
                     path=curr_path, break_on_fail=self.break_on_fail
                 )
+                final_dict = {"yes": {"lol": "ues"}}
+                # if failed_dict and self.break_on_fail:
+                initial_fail.update({**final_dict, **failed_dict})
+                final_dict = {}
+                # break
 
-                print(final_dict, len(final_dict))
-
-                if curr_path in final_dict and len(final_dict) == 1:  # file
-                    # if not final_dict[curr_path]["proceed"]:
-                    #     initial_fail[curr_path] = final_dict[curr_path]
-                    #     if self.break_on_fail =
-                    pass
-                else:  # folder
-                    pass
-                continue
+                all_files.update(final_dict)
+                initial_fail.update(failed_dict)
 
                 # Get info on files within folder
-                if curr_path.is_dir():
-                    dir_info, dir_fail = file_handler.get_dir_info(
-                        folder=curr_path,
-                        do_fail=do_fail
-                    )
-                    initial_fail.update(dir_fail)   # Not to be delivered
-                    all_files.update(dir_info)      # To be delivered
-                    continue
+                # if curr_path.is_dir():
+                #     dir_info, dir_fail = file_handler.get_dir_info(
+                #         folder=curr_path,
+                #         do_fail=do_fail
+                #     )
+                #     initial_fail.update(dir_fail)   # Not to be delivered
+                #     all_files.update(dir_info)      # To be delivered
+                #     continue
 
                 # Get info for individual files
-                file_info = file_handler.get_file_info(
-                    file=curr_path, in_dir=False, do_fail=do_fail
-                )
-                if not file_info["proceed"]:
-                    # Don't deliver --> save error message
-                    initial_fail[curr_path] = file_info
-                    if self.break_on_fail:
-                        do_fail = True
-                        continue
-                else:
-                    # Deliver --> save info
-                    all_files[curr_path] = file_info
+                # file_info = file_handler.get_file_info(
+                #     file=curr_path, in_dir=False, do_fail=do_fail
+                # )
+                # if not file_info["proceed"]:
+                #     # Don't deliver --> save error message
+                #     initial_fail[curr_path] = file_info
+                #     if self.break_on_fail:
+                #         do_fail = True
+                #         continue
+                # else:
+                #     # Deliver --> save info
+                #     all_files[curr_path] = file_info
 
+        print("OK: ")
+        for x, y in all_files.items():
+            print(x, " -- ", y)
+
+        print("\nFAILED: ")
+        for x, y in initial_fail.items():
+            print(x, " -- ", y)
+
+        if initial_fail and self.break_on_fail:
+            pass
         sys.exit()
         if self.method == "put":
             for file, info in list(all_files.items()):

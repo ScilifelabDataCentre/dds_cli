@@ -190,25 +190,28 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
     # TODO (Ina): Add docstring
 
     proceed = True  # If proceed with file delivery
+    ok_files = {}
+    failed_files = {}
 
     # Error if single file specified but a folder passed as arg
     if (not root and folder is None) or (root and folder is not None):
         LOG.critical("Error message here!")
 
-    print("\nPath: ", path, " - Root: ", root)
-    final_dict = {}
-
     if path.is_dir():
         for f in path.glob("**/*"):
             if f.is_file() and "DS_Store" not in str(f):
-                final_dict.update(
-                    get_file_info_rec(path=f, root=False, break_on_fail=break_on_fail,
+                final_dict, failed_dict = get_file_info_rec(path=f, root=False, break_on_fail=break_on_fail,
                                       folder=path.name)
-                )
-        print("Folder: ", path.name)
+                
+                if failed_dict and break_on_fail:
+
+                    break
+                ok_files.update(final_dict)
+                failed_files.update(failed_dict)
+
     else:
         # TODO (ina): Change names of the dict keys - more logical
-        final_dict = {path: {
+        ok_files = {path: {
             "in_directory": not root,  # single file entered or in folder
             "local_dir_path": folder,  # local directory, specified in cli call
             # sub directory from spec fold
@@ -217,8 +220,10 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=path)
+        error="fail"
         if error != "":
-            return {path: {**final_dict[path], **{"proceed": False, "error": error}}}
+            # proceed = False
+            return {}, {path: {**ok_files[path], **{"proceed": False, "error": error}}}
 
         suff_aftproc = ""  # Suffixes after processing
         # If file not compressed -- add zst (Zstandard) suffix to final suffix
@@ -242,11 +247,11 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
 
         # Path to file in temporary directory after processing, and bucket
         # after upload, >>including file name<<
-        path_in_db = final_dict[path]["directory_path"] / \
+        path_in_db = ok_files[path]["directory_path"] / \
             pathlib.Path(path.name)
         path_in_bucket = path_in_db.with_suffix(
             "".join(path.suffixes) + suff_aftproc)
-        final_dict[path].update({
+        ok_files[path].update({
             "size": path.stat().st_size,
             "proceed": proceed,
             "compressed": compressed,
@@ -265,7 +270,7 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
                          "finished": False}
         })
 
-    return final_dict
+    return ok_files, failed_files
 
 
 def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
@@ -289,8 +294,8 @@ def get_file_info(file: pathlib.Path, in_dir: bool, do_fail: bool,
     path_base = dir_name.name if in_dir else None
     directory_path = get_subdir(file=file, folder=path_base) \
         if path_base is not None else pathlib.Path("")
-    print("Directory path: ", directory_path)
-    print("Current working directory: ", os.getcwd())
+    # print("Directory path: ", directory_path)
+    # print("Current working directory: ", os.getcwd())
     dir_info = {"in_directory": in_dir, "local_dir_name": dir_name}
 
     suffixes = file.suffixes    # File suffixes

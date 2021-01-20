@@ -1013,14 +1013,12 @@ class DataDeliverer:
         
         # Perform request to ProjectFiles - list all files connected to proj
         args = {"token": self.token}
-        payload = files.to_json()
+        # payload = files.to_json()
 
-        print(payload)
-        sys.exit()
-        req = ENDPOINTS["project_files"] + self.project_id + "/checkfiles"
-        # req = ENDPOINTS["project_files"] + self.project_id + "/listfiles"
+        # req = ENDPOINTS["project_files"] + self.project_id + "/checkfiles"
+        req = ENDPOINTS["project_files"] + self.project_id + "/listfiles"
         try:
-            response = requests.post(req, params=args)
+            response = requests.post(req, params=args, json=files)
         except requests.exceptions.ConnectionError:
             sys.exit(
                 exceptions_ds.printout_error(
@@ -1030,6 +1028,7 @@ class DataDeliverer:
                 )
             )
 
+        sys.exit()
         # If request error - cancel
         if not response.ok:
             sys.exit(

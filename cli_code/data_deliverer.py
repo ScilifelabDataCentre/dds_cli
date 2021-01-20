@@ -756,6 +756,10 @@ class DataDeliverer:
                 all_files.update(final_dict)
                 initial_fail.update(failed_dict)
 
+        if all_files:
+            # check if the files have been previously uploaded
+            self._check_prev_upload(list(y["path_in_db"] for x, y in all_files.items()))
+
         sys.exit()
         if self.method == "put":
             for file, info in list(all_files.items()):
@@ -998,13 +1002,15 @@ class DataDeliverer:
 
         return to_download
 
-    def _get_project_files(self):
+    def _check_prev_upload(self, files):
         """Get all files delivered within the specified project.
 
         Returns:
             json: The API response contain all file information
         """
 
+        print(files)
+        sys.exit()
         # Perform request to ProjectFiles - list all files connected to proj
         args = {"token": self.token}
         req = ENDPOINTS["project_files"] + self.project_id + "/listfiles"

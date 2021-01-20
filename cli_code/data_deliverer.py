@@ -1028,7 +1028,6 @@ class DataDeliverer:
                 )
             )
 
-        sys.exit()
         # If request error - cancel
         if not response.ok:
             sys.exit(
@@ -1044,6 +1043,8 @@ class DataDeliverer:
                 exceptions_ds.printout_error(resp_json["message"])
             )
 
+        print(resp_json)
+        sys.exit()
         # Get all project files from response
         return resp_json["files"]
 

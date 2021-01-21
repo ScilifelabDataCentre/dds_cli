@@ -710,6 +710,7 @@ class DataDeliverer:
             # Get file info ############################# Get file info #
             if self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
+                
                 final_dict, failed_dict = file_handler.get_file_info_rec(
                     path=curr_path, break_on_fail=self.break_on_fail
                 )

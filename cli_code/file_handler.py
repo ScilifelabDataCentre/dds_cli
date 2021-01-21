@@ -186,7 +186,21 @@ def file_writer(filehandler, gen, last_nonce):
 def get_file_info_rec(path: pathlib.Path, root: bool = True,
                       break_on_fail: bool = True,
                       folder: pathlib.Path = None):
-    """Docstring"""
+    """Recursive function to get file information.
+    
+    Checks if each file has been compressed or not, and saves info on size etc.
+    Feeds back to itself if the path is a folder.
+    
+    Args:
+        path:   User specified path to file or folder
+        root:   True if the current folder or file is in the "root" - cwd
+        break_on_fail:  True if the delivery should cancel if one file fails
+        folder: True if file is within a user specified folder
+    
+    Returns:
+        Two dicts representing the files to be delivered and those that failed
+        the initial tests.
+    """
     # TODO (Ina): Add docstring
 
     proceed = True  # If proceed with file delivery
@@ -196,6 +210,8 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
     # Error if single file specified but a folder passed as arg
     if (not root and folder is None) or (root and folder is not None):
         LOG.critical("Error message here!")
+
+    do_fail = False
 
     if path.is_dir():
         for f in path.glob("**/*"):
@@ -214,6 +230,7 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
                     failed_files.update(
                         {**failed_dict}
                     )
+                    do_fail = True
                     continue
 
                 ok_files.update(final_dict)

@@ -752,13 +752,17 @@ class DataDeliverer:
                     final_dict.clear()
                     do_fail = True
                     break
-                
+
                 all_files.update(final_dict)
                 initial_fail.update(failed_dict)
 
         if all_files:
             # check if the files have been previously uploaded
-            self._check_prev_upload(list(y["path_in_db"] for x, y in all_files.items()))
+            new_files, prevup_files = self._check_prev_upload(
+                file_dict=all_files)
+            print(new_files, prevup_files)
+            all_files = new_files
+            initial_fail.update(prevup_files)
 
         sys.exit()
         if self.method == "put":
@@ -1002,15 +1006,17 @@ class DataDeliverer:
 
         return to_download
 
-    def _check_prev_upload(self, files):
+    def _check_prev_upload(self, file_dict):
         """Get all files delivered within the specified project.
 
         Returns:
             json: The API response contain all file information
         """
 
-        print(files)
-        
+        print(file_dict)
+
+        files = list(y["path_in_db"] for x, y in file_dict.items())
+
         # Perform request to ProjectFiles - list all files connected to proj
         args = {"token": self.token}
         # payload = files.to_json()
@@ -1038,15 +1044,82 @@ class DataDeliverer:
 
         # Get json response if request ok
         resp_json = response.json()
-        if not resp_json["access_granted"]:
-            sys.exit(
-                exceptions_ds.printout_error(resp_json["message"])
-            )
+        # if not resp_json["access_granted"]:
+        #     sys.exit(
+        #         exceptions_ds.printout_error(resp_json["message"])
+        #     )
 
-        print(resp_json)
-        sys.exit()
+        # if not resp_json["files"]:
+        # all files are new
+        #    return file_dict, {}
+        # print(resp_json)
+
+        # # print(set(files).intersection(set(resp_json["files"])))
+        # print("not previously uploaded: ", set(
+        #     files) - set(resp_json["files"]))
+        # for
+        # print(set(resp_json["files"]) - set(files))
+
+        # continue_with = {f: resp_json["files"][f] for f in resp_json["files"] if f not in files}
+        # print(continue_with)
+        # sys.exit()
         # Get all project files from response
-        return resp_json["files"]
+
+        # specified files (file_dict) -- {abs path: {"path_in_db": "xxx"}}
+        # returned files (resp_json["files"]) -- {xxx: {info}}
+        prevup_files = {}
+        for x, y in list(file_dict.items()):
+
+            # If file already uploaded
+            if y["path_in_db"] in resp_json["files"]:
+                if not self.overwrite:
+                    LOG.info("'%s' already exists in database", x)
+                    prevup_files[x] = {
+                        **file_dict.pop(x),
+                        "error": "File already exists in database"
+                    }
+                else:
+                    LOG.info("--overwrite specified - "
+                             "performing delivery of '%s'", x)
+                    continue
+
+                if self.break_on_fail:
+                    prevup_files.update(
+                        {f: {**y, "proceed": False,
+                             "error": "break on fail"}
+                         for f, y in file_dict.items()}
+                    )
+                    file_dict.clear()
+                    break
+            else:
+                with s3_connector.S3Connector(bucketname=self.bucketname,
+                                              project=self.s3project) \
+                        as s3_conn:
+                    # Check if file exists in bucket already
+                    in_bucket, _ = s3_conn.file_exists_in_bucket(
+                        y["path_in_bucket"]
+                    )
+                    LOG.debug("File: %s \t In bucket: %s", x, in_bucket)
+
+                    if in_bucket:
+                        prevup_files[x] = {
+                            **file_dict.pop(x),
+                            "error": (
+                                f"""File '{x.name}' already exists in
+                                    bucket, but does NOT exist in database.
+                                    Delivery cancelled, contact support."""
+                            )
+                        }
+                        if self.break_on_fail:
+                            prevup_files.update(
+                                {f: {**y, "proceed": False,
+                                     "error": "break on fail"}
+                                    for f, y in file_dict.items()}
+                            )
+                            file_dict.clear()
+                            break
+
+        return file_dict, prevup_files
 
     ##################
     # Public Methods #

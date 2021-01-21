@@ -253,6 +253,7 @@ class DataDeliverer:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
+        return True
         # ------------------------------------------------------------------- #
 
         # Variables ############################################### Variables #
@@ -694,7 +695,6 @@ class DataDeliverer:
         # files_in_db = self._get_project_files()
         # LOG.debug("files in the db: %s", files_in_db)
 
-        do_fail = False
         # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths
         for d in data_list:
@@ -708,33 +708,7 @@ class DataDeliverer:
                 )
 
             # Get file info ############################# Get file info #
-            if self.method == "get":
-                iteminfo = self._get_download_info(
-                    item=d,
-                    files_in_db=files_in_db,
-                    do_fail=do_fail
-                )
-
-                # Save to failed dict or delivery dict
-                if len(iteminfo) == 1 and d in iteminfo:    # File
-                    if not iteminfo[d]["proceed"]:
-                        initial_fail.update(iteminfo)
-                        if self.break_on_fail:
-                            do_fail = True
-                        continue
-
-                    all_files.update(iteminfo)
-                else:                                       # Folder
-                    for f in iteminfo:
-                        if not iteminfo[f]["proceed"]:
-                            initial_fail[f] = iteminfo[f]
-                            if self.break_on_fail:
-                                do_fail = True
-                            continue
-
-                        all_files[f] = iteminfo[f]
-
-            elif self.method == "put":
+            if self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
                 final_dict, failed_dict = file_handler.get_file_info_rec(
                     path=curr_path, break_on_fail=self.break_on_fail
@@ -750,11 +724,36 @@ class DataDeliverer:
                             and Path(d).resolve() != curr_path}}
                     )
                     final_dict.clear()
-                    do_fail = True
                     break
 
                 all_files.update(final_dict)
                 initial_fail.update(failed_dict)
+            elif self.method == "get":
+                pass
+                # iteminfo = self._get_download_info(
+                #     item=d,
+                #     files_in_db=files_in_db,
+                #     do_fail=do_fail
+                # )
+
+                # # Save to failed dict or delivery dict
+                # if len(iteminfo) == 1 and d in iteminfo:    # File
+                #     if not iteminfo[d]["proceed"]:
+                #         initial_fail.update(iteminfo)
+                #         if self.break_on_fail:
+                #             do_fail = True
+                #         continue
+
+                #     all_files.update(iteminfo)
+                # else:                                       # Folder
+                #     for f in iteminfo:
+                #         if not iteminfo[f]["proceed"]:
+                #             initial_fail[f] = iteminfo[f]
+                #             if self.break_on_fail:
+                #                 do_fail = True
+                #             continue
+
+                #         all_files[f] = iteminfo[f]
 
         if all_files:
             # check if the files have been previously uploaded
@@ -763,58 +762,6 @@ class DataDeliverer:
             print(new_files, prevup_files)
             all_files = new_files
             initial_fail.update(prevup_files)
-
-        sys.exit()
-        if self.method == "put":
-            for file, info in list(all_files.items()):
-                # Cancel if delivery tagged as failed
-                if do_fail:
-                    initial_fail[file] = {
-                        **all_files.pop(file),
-                        "error": ("Break on fail specified and one fail "
-                                  "occurred. Cancelling delivery.")
-                    }
-                    continue
-
-                # Check if the "bucketfilename" exists in database (name col)
-                # and continue if not or if overwrite option specified
-                if info["path_in_db"] in files_in_db:
-                    if not self.overwrite:
-                        LOG.info("'%s' already exists in database", file)
-                        initial_fail[file] = {
-                            **all_files.pop(file),
-                            "error": "File already exists in database"
-                        }
-                    else:
-                        LOG.info("--overwrite specified - "
-                                 "performing delivery of '%s'", file)
-                        continue
-
-                    if self.break_on_fail:
-                        do_fail = True
-                        continue
-                else:
-                    with s3_connector.S3Connector(bucketname=self.bucketname,
-                                                  project=self.s3project) \
-                            as s3_conn:
-                        # Check if file exists in bucket already
-                        in_bucket, _ = s3_conn.file_exists_in_bucket(
-                            info["path_in_bucket"]
-                        )
-                        LOG.debug("File: %s \t In bucket: %s", file, in_bucket)
-
-                        # Error if the file exists in bucket, but not in the db
-                        if in_bucket:
-                            initial_fail[file] = {
-                                **all_files.pop(file),
-                                "error": (
-                                    f"""File '{file.name}' already exists in
-                                    bucket, but does NOT exist in database.
-                                    Delivery cancelled, contact support."""
-                                )
-                            }
-                            if self.break_on_fail:
-                                do_fail = True
 
         # --------------------------------------------------------- #
 
@@ -1044,29 +991,7 @@ class DataDeliverer:
 
         # Get json response if request ok
         resp_json = response.json()
-        # if not resp_json["access_granted"]:
-        #     sys.exit(
-        #         exceptions_ds.printout_error(resp_json["message"])
-        #     )
 
-        # if not resp_json["files"]:
-        # all files are new
-        #    return file_dict, {}
-        # print(resp_json)
-
-        # # print(set(files).intersection(set(resp_json["files"])))
-        # print("not previously uploaded: ", set(
-        #     files) - set(resp_json["files"]))
-        # for
-        # print(set(resp_json["files"]) - set(files))
-
-        # continue_with = {f: resp_json["files"][f] for f in resp_json["files"] if f not in files}
-        # print(continue_with)
-        # sys.exit()
-        # Get all project files from response
-
-        # specified files (file_dict) -- {abs path: {"path_in_db": "xxx"}}
-        # returned files (resp_json["files"]) -- {xxx: {info}}
         prevup_files = {}
         for x, y in list(file_dict.items()):
 

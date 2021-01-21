@@ -149,38 +149,38 @@ def file_writer(filehandler, gen, last_nonce):
     return nonce_ok, error
 
 
-def get_dir_info(folder: pathlib.Path, do_fail: bool) -> (dict, dict):
-    """Iterate through folder contents and get file info
+# def get_dir_info(folder: pathlib.Path, do_fail: bool) -> (dict, dict):
+#     """Iterate through folder contents and get file info
 
-    Args:
-        folder (Path):  Path to folder
+#     Args:
+#         folder (Path):  Path to folder
 
-    Returns:
-        dict:   Files to deliver
-        dict:   Files which failed -- not to deliver
-    """
+#     Returns:
+#         dict:   Files to deliver
+#         dict:   Files which failed -- not to deliver
+#     """
 
-    # Variables ############################ Variables #
-    dir_info = {}   # Files to deliver
-    dir_fail = {}   # Failed files
-    # -------------------------------------------------#
+#     # Variables ############################ Variables #
+#     dir_info = {}   # Files to deliver
+#     dir_fail = {}   # Failed files
+#     # -------------------------------------------------#
 
-    # Iterate through folder contents and get file info
-    for f in folder.glob("**/*"):
-        if f.is_file() and "DS_Store" not in str(f):    # CHANGE LATER
-            file_info = get_file_info(file=f,
-                                      in_dir=True,
-                                      do_fail=do_fail,
-                                      dir_name=folder)
+#     # Iterate through folder contents and get file info
+#     for f in folder.glob("**/*"):
+#         if f.is_file() and "DS_Store" not in str(f):    # CHANGE LATER
+#             file_info = get_file_info(file=f,
+#                                       in_dir=True,
+#                                       do_fail=do_fail,
+#                                       dir_name=folder)
 
-            # If file check failed in some way - do not deliver file
-            # Otherwise deliver file -- no cancellation of folder here
-            if not file_info["proceed"]:
-                dir_fail[f] = file_info
-            else:
-                dir_info[f] = file_info
+#             # If file check failed in some way - do not deliver file
+#             # Otherwise deliver file -- no cancellation of folder here
+#             if not file_info["proceed"]:
+#                 dir_fail[f] = file_info
+#             else:
+#                 dir_info[f] = file_info
 
-    return dir_info, dir_fail
+#     return dir_info, dir_fail
 
 
 def get_file_info_rec(path: pathlib.Path, root: bool = True,
@@ -196,8 +196,6 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
     # Error if single file specified but a folder passed as arg
     if (not root and folder is None) or (root and folder is not None):
         LOG.critical("Error message here!")
-
-    do_fail = False
 
     if path.is_dir():
         for f in path.glob("**/*"):
@@ -216,7 +214,6 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
                     failed_files.update(
                         {**failed_dict}
                     )
-                    do_fail = True
                     continue
 
                 ok_files.update(final_dict)

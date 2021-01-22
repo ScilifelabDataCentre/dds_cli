@@ -654,6 +654,32 @@ class DataDeliverer:
 
         sys.stdout.write(f"{PROGRESS_DF.to_string(index=False)}\n")
 
+    def _get_fileinfo_get(self, data_input):
+        """Docstring"""
+
+        ok_files = dict()
+        failed_files = dict()
+
+        # data_input = list(x for x in data_list)
+
+        failed_files, ok_files = self._check_prev_upload(
+            file_dict=data_input
+        )
+        
+        for d in data_input:
+            # Throw error if there are duplicate files
+            if d in ok_files:
+                sys.exit(
+                    exceptions_ds.printout_error(
+                        f"The path to file {d} is listed multiple "
+                        "times, please remove path dublicates.")
+                )
+            
+
+            
+        
+
+
     def _get_fileinfo_put(self, data):
         """Doctstring"""
 
@@ -763,7 +789,8 @@ class DataDeliverer:
             LOG.info(initial_fail)
         elif self.method == "get":
             # Save list of paths user chose
-            self.data_input = list(x for x in data_list)
+            # self.data_input = list(x for x in data_list)
+            self._get_fileinfo_get(data_input=data_list)
 
         # Get all project files in db
         # TODO: move to function?
@@ -1044,7 +1071,10 @@ class DataDeliverer:
 
         # print(file_dict)
 
-        files = list(y["path_in_db"] for x, y in file_dict.items())
+        if self.method == "put":
+            files = list(y["path_in_db"] for x, y in file_dict.items())
+        elif self.method == "get":
+            files = list(x for x in file_dict)
 
         # Perform request to ProjectFiles - list all files connected to proj
         args = {"token": self.token}

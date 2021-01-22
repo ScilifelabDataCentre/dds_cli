@@ -187,6 +187,15 @@ class DataDeliverer:
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
         LOG.debug("Data to deliver: %s", self.data)
+        LOG.info("Upload: ")
+        for x, y in self.data.items():
+            print(x, y)
+
+        LOG.info("Failed: ")
+        for x, y in self.failed.items():
+            print(x, y)
+
+        sys.exit()
 
         # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
@@ -710,11 +719,14 @@ class DataDeliverer:
             # Get file info ############################# Get file info #
             if self.method == "put":
                 curr_path = Path(d).resolve()   # Full path to data
-                
+
+                # Get all file info incl info on compressed or not
                 final_dict, failed_dict = file_handler.get_file_info_rec(
                     path=curr_path, break_on_fail=self.break_on_fail
                 )
 
+                # If there are failed files and break_on_fail specified then
+                # quit delivery - clear file dict and save them as failed
                 if failed_dict and self.break_on_fail:
                     initial_fail.update(
                         {**failed_dict,
@@ -727,8 +739,10 @@ class DataDeliverer:
                     final_dict.clear()
                     break
 
+                # If no failed - move on
                 all_files.update(final_dict)
                 initial_fail.update(failed_dict)
+
             elif self.method == "get":
                 pass
                 # iteminfo = self._get_download_info(
@@ -756,11 +770,12 @@ class DataDeliverer:
 
                 #         all_files[f] = iteminfo[f]
 
+        # If there are files to upload check db for previous uploads
         if all_files:
             # check if the files have been previously uploaded
             new_files, prevup_files = self._check_prev_upload(
-                file_dict=all_files)
-            print(new_files, prevup_files)
+                file_dict=all_files
+            )
             all_files = new_files
             initial_fail.update(prevup_files)
 
@@ -961,7 +976,7 @@ class DataDeliverer:
             json: The API response contain all file information
         """
 
-        print(file_dict)
+        # print(file_dict)
 
         files = list(y["path_in_db"] for x, y in file_dict.items())
 

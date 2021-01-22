@@ -154,7 +154,7 @@ def create_directories():
     return True
 
 
-def config_logger(filename: str):
+def config_logger(filename: str, stream_level = logging.DEBUG):
     """Creates log file
 
     Args:
@@ -183,7 +183,7 @@ def config_logger(filename: str):
     # Config file logger
     try:
         stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.CRITICAL)
+        stream_handler.setLevel(stream_level)
         sh_formatter = logging.Formatter("%(levelname)s::%(name)s::" +
                                          "%(lineno)d::%(message)s")
         stream_handler.setFormatter(sh_formatter)

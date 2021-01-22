@@ -135,7 +135,6 @@ def put(creds: str, username: str, project: str,
                           break_on_fail=break_on_fail, overwrite=overwrite) \
             as delivery:
 
-        # print(delivery.data)
         # sys.exit()
         # POOLEXECUTORS STARTED ####################### POOLEXECUTORS STARTED #
         pool_executor = concurrent.futures.ProcessPoolExecutor()   # Processing

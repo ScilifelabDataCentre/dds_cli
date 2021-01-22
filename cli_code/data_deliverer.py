@@ -186,7 +186,9 @@ class DataDeliverer:
         # Get all data to be delivered
         self.data, self.failed = self._data_to_deliver(data=data,
                                                        pathfile=pathfile)
-        LOG.debug("Data to deliver: %s", self.data)
+        
+        # REMOVE
+        # LOG.debug("Data to deliver: %s", self.data)
         LOG.info("Upload: ")
         for x, y in self.data.items():
             print(x, y)
@@ -194,8 +196,6 @@ class DataDeliverer:
         LOG.info("Failed: ")
         for x, y in self.failed.items():
             print(x, y)
-
-        sys.exit()
 
         # NOTE: Change this into ECDH key? Tried but problems with pickling
         # Get project keys
@@ -1008,6 +1008,8 @@ class DataDeliverer:
         # Get json response if request ok
         resp_json = response.json()
 
+        LOG.debug("File response: \n %s", resp_json)
+
         prevup_files = {}
         for x, y in list(file_dict.items()):
 
@@ -1040,7 +1042,7 @@ class DataDeliverer:
                     in_bucket, _ = s3_conn.file_exists_in_bucket(
                         y["path_in_bucket"]
                     )
-                    LOG.debug("File: %s \t In bucket: %s", x, in_bucket)
+                    # LOG.debug("File: %s \t In bucket: %s", x, in_bucket)
 
                     if in_bucket:
                         prevup_files[x] = {

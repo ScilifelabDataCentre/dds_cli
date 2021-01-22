@@ -654,6 +654,69 @@ class DataDeliverer:
 
         sys.stdout.write(f"{PROGRESS_DF.to_string(index=False)}\n")
 
+    def _get_fileinfo_put(self, data):
+        """Doctstring"""
+
+        ok_files = dict()
+        failed_files = dict()
+
+        data_input = list(Path(x).resolve() for x in data)
+
+        LOG.debug("Data input: %s", data_input)
+        for d in data_input: 
+            LOG.debug("File: %s", d)
+            # Throw error if there are duplicate files
+            if d in ok_files:
+                LOG.debug("File: %s  -- ok_files: %s", d, ok_files)
+                sys.exit(
+                    exceptions_ds.printout_error(
+                        f"The path to file {d} is listed multiple "
+                        "times, please remove path dublicates.")
+                )
+            
+            # Get file info ############################# Get file info #
+            ok_dict, failed_dict = file_handler.get_file_info_rec(
+                path=d, break_on_fail=self.break_on_fail
+            )
+
+            # Quit delivery if there are any failed files and breakonfail
+            # specified - clear dict and save as failed
+            if failed_dict and self.break_on_fail:
+                failed_files.update(
+                    {**failed_dict,
+                    **{d: {"proceed": False, 
+                    "error": "break on fail"}
+                    for x in data_input if x not in failed_dict
+                    and x != d}}
+                )
+                ok_dict.clear()
+                break
+            
+            # Move on if no failed or to continue
+            ok_files.update(ok_dict)
+            failed_files.update(failed_dict)
+        
+        # Check db for previous uploads
+        if ok_files:
+            new_files, prevup_files = self._check_prev_upload(
+                file_dict=ok_files
+            )
+
+            LOG.debug("New files: %s \n", new_files)
+            LOG.debug("ok_files: %s \n", new_files)
+            LOG.debug("Prevup files: %s \n", prevup_files)
+            LOG.debug("failed_files: %s \n", new_files)
+            
+            if prevup_files and self.overwrite:
+                ok_files = {**new_files, **{prevup_files}}
+            else:
+                ok_files.update(new_files)
+                [ok_files.pop(x) for x in prevup_files if x in ok_files]
+                failed_files.update(prevup_files)
+
+        return ok_files, failed_files
+
+
     def _data_to_deliver(self, data: tuple, pathfile: str) -> (dict, dict):
         """Puts all entered paths into one dictionary.
 
@@ -694,7 +757,10 @@ class DataDeliverer:
             )
 
         if self.method == "put":
-            self.data_input = list(Path(x).resolve() for x in data_list)
+            # self.data_input = list(Path(x).resolve() for x in data_list)
+            all_files, initial_fail = self._get_fileinfo_put(data=data_list)
+            LOG.info(all_files)
+            LOG.info(initial_fail)
         elif self.method == "get":
             # Save list of paths user chose
             self.data_input = list(x for x in data_list)
@@ -703,7 +769,7 @@ class DataDeliverer:
         # TODO: move to function?
         # files_in_db = self._get_project_files()
         # LOG.debug("files in the db: %s", files_in_db)
-
+        return all_files, initial_fail
         # Gather data info ########################### Gather data info #
         # Iterate through all user specified paths
         for d in data_list:

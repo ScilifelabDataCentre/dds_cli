@@ -675,6 +675,7 @@ class DataDeliverer:
                         "times, please remove path dublicates.")
                 )
             
+            
 
             
         
@@ -862,8 +863,6 @@ class DataDeliverer:
                 #             continue
 
                 #         all_files[f] = iteminfo[f]
-                “In this report, we describe the use case where the VEIl.AI Anonymization Engine is brought into SciLifeLab, a Swedish national data producing infrastructure in life science, in order to develop a data transfer and storage system that integrates the VEIL anonymization technology.”? 
-Just nu tycker jag att slutet av meningen låter lite som att ”its” pekar på ”data transfer and storage system”.
 
 
         # If there are files to upload check db for previous uploads
@@ -1086,7 +1085,7 @@ Just nu tycker jag att slutet av meningen låter lite som att ”its” pekar p�
         # req = ENDPOINTS["project_files"] + self.project_id + "/checkfiles"
         req = ENDPOINTS["project_files"] + self.project_id + "/listfiles"
         try:
-            response = requests.post(req, params=args, json=files)
+            response = requests.post(req, headers=args, json=files)
         except requests.exceptions.ConnectionError:
             sys.exit(
                 exceptions_ds.printout_error(

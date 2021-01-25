@@ -184,9 +184,13 @@ class DataDeliverer:
             )
 
         # Get all data to be delivered
-        self.data, self.failed = self._data_to_deliver(data=data,
-                                                       pathfile=pathfile)
-        
+        if self.method == "put":
+            self.data, self.failed = self._data_to_upload(data=data,
+                                                          pathfile=pathfile)
+        elif self.method == "get":
+            self.data, self.failed = self._data_to_download(data=data,
+                                                            pathfile=pathfile)
+
         # REMOVE
         # LOG.debug("Data to deliver: %s", self.data)
         LOG.info("Upload: ")
@@ -654,19 +658,115 @@ class DataDeliverer:
 
         sys.stdout.write(f"{PROGRESS_DF.to_string(index=False)}\n")
 
-    def _get_fileinfo_get(self, data_input):
+    # def _get_fileinfo_get(self, data_input):
+    #     """Docstring"""
+
+    #     ok_files = dict()
+    #     failed_files = dict()
+
+    #     # data_input = list(x for x in data_list)
+
+    #     failed_files, ok_files = self._check_prev_upload(
+    #         file_dict=data_input
+    #     )
+
+    #     for d in data_input:
+    #         # Throw error if there are duplicate files
+    #         if d in ok_files:
+    #             sys.exit(
+    #                 exceptions_ds.printout_error(
+    #                     f"The path to file {d} is listed multiple "
+    #                     "times, please remove path dublicates.")
+    #             )
+
+        # ok_files[d].update{
+        #     "path_in_bucket": DIRS[1] / ok_files[d][]
+        # }
+
+    # def _get_fileinfo_put(self, data):
+    #     """Doctstring"""
+
+    #     ok_files = dict()
+    #     failed_files = dict()
+
+    #     data_input = list(Path(x).resolve() for x in data)
+
+    #     LOG.debug("Data input: %s", data_input)
+    #     for d in data_input:
+    #         LOG.debug("File: %s", d)
+    #         # Throw error if there are duplicate files
+    #         if d in ok_files:
+    #             LOG.debug("File: %s  -- ok_files: %s", d, ok_files)
+    #             sys.exit(
+    #                 exceptions_ds.printout_error(
+    #                     f"The path to file {d} is listed multiple "
+    #                     "times, please remove path dublicates.")
+    #             )
+
+    #         # Get file info ############################# Get file info #
+    #         ok_dict, failed_dict = file_handler.get_file_info_rec(
+    #             path=d, break_on_fail=self.break_on_fail
+    #         )
+
+    #         # Quit delivery if there are any failed files and breakonfail
+    #         # specified - clear dict and save as failed
+    #         if failed_dict and self.break_on_fail:
+    #             failed_files.update(
+    #                 {**failed_dict,
+    #                  **{d: {"proceed": False,
+    #                         "error": "break on fail"}
+    #                     for x in data_input if x not in failed_dict
+    #                     and x != d}}
+    #             )
+    #             ok_dict.clear()
+    #             break
+
+    #         # Move on if no failed or to continue
+    #         ok_files.update(ok_dict)
+    #         failed_files.update(failed_dict)
+
+    #     # Check db for previous uploads
+    #     if ok_files:
+    #         new_files, prevup_files = self._check_prev_upload(
+    #             file_dict=ok_files
+    #         )
+
+    #         LOG.debug("New files: %s \n", new_files)
+    #         LOG.debug("ok_files: %s \n", ok_files)
+    #         LOG.debug("Prevup files: %s \n", prevup_files)
+    #         LOG.debug("failed_files: %s \n", failed_files)
+
+    #         if prevup_files and self.overwrite:
+    #             ok_files = {**new_files, **{prevup_files}}
+    #         else:
+    #             ok_files.update(new_files)
+    #             [ok_files.pop(x) for x in prevup_files if x in ok_files]
+    #             failed_files.update(prevup_files)
+
+    #     return ok_files, failed_files
+
+    def _data_to_download(self, data: tuple, pathfile: str) -> (dict, dict):
         """Docstring"""
 
-        ok_files = dict()
-        failed_files = dict()
+        # Variables ######################################### Variables #
+        data_list = list(data)  # List with data specified by user
+        LOG.debug("data_list: %s", data_list)
 
-        # data_input = list(x for x in data_list)
+        ok_files = dict()       # Files to continue downloading
+        failed_files = dict()   # Files to cancel
+        # --------------------------------------------------------------#
 
+        # Add data included in pathfile to data dict
+        if pathfile is not None and Path(pathfile).exists():
+            with Path(pathfile).resolve().open(mode="r") as file:
+                data_list += file.read().splitlines()
+
+        # Check if the files exist in the db
         failed_files, ok_files = self._check_prev_upload(
-            file_dict=data_input
+            file_dict={d: {} for d in data_list}
         )
-        
-        for d in data_input:
+
+        for d in data_list:
             # Throw error if there are duplicate files
             if d in ok_files:
                 sys.exit(
@@ -674,77 +774,8 @@ class DataDeliverer:
                         f"The path to file {d} is listed multiple "
                         "times, please remove path dublicates.")
                 )
-            
-            
 
-            
-        
-
-
-    def _get_fileinfo_put(self, data):
-        """Doctstring"""
-
-        ok_files = dict()
-        failed_files = dict()
-
-        data_input = list(Path(x).resolve() for x in data)
-
-        LOG.debug("Data input: %s", data_input)
-        for d in data_input: 
-            LOG.debug("File: %s", d)
-            # Throw error if there are duplicate files
-            if d in ok_files:
-                LOG.debug("File: %s  -- ok_files: %s", d, ok_files)
-                sys.exit(
-                    exceptions_ds.printout_error(
-                        f"The path to file {d} is listed multiple "
-                        "times, please remove path dublicates.")
-                )
-            
-            # Get file info ############################# Get file info #
-            ok_dict, failed_dict = file_handler.get_file_info_rec(
-                path=d, break_on_fail=self.break_on_fail
-            )
-
-            # Quit delivery if there are any failed files and breakonfail
-            # specified - clear dict and save as failed
-            if failed_dict and self.break_on_fail:
-                failed_files.update(
-                    {**failed_dict,
-                    **{d: {"proceed": False, 
-                    "error": "break on fail"}
-                    for x in data_input if x not in failed_dict
-                    and x != d}}
-                )
-                ok_dict.clear()
-                break
-            
-            # Move on if no failed or to continue
-            ok_files.update(ok_dict)
-            failed_files.update(failed_dict)
-        
-        # Check db for previous uploads
-        if ok_files:
-            new_files, prevup_files = self._check_prev_upload(
-                file_dict=ok_files
-            )
-
-            LOG.debug("New files: %s \n", new_files)
-            LOG.debug("ok_files: %s \n", new_files)
-            LOG.debug("Prevup files: %s \n", prevup_files)
-            LOG.debug("failed_files: %s \n", new_files)
-            
-            if prevup_files and self.overwrite:
-                ok_files = {**new_files, **{prevup_files}}
-            else:
-                ok_files.update(new_files)
-                [ok_files.pop(x) for x in prevup_files if x in ok_files]
-                failed_files.update(prevup_files)
-
-        return ok_files, failed_files
-
-
-    def _data_to_deliver(self, data: tuple, pathfile: str) -> (dict, dict):
+    def _data_to_upload(self, data: tuple, pathfile: str) -> (dict, dict):
         """Puts all entered paths into one dictionary.
 
         Gathers all folders and files, checks their format etc, if they have
@@ -763,120 +794,159 @@ class DataDeliverer:
         """
 
         # Variables ######################################### Variables #
-        all_files = dict()      # Files passing initial check
-        initial_fail = dict()   # Files failing initial check
-
         data_list = list(data)  # List with data specified by user
-        # --------------------------------------------------------------#
+
+        ok_files = dict()       # Files to continue uploading
+        failed_files = dict()   # Files to cancel
+        # ------------------------------------------------------------- #
 
         # Add data included in pathfile to data dict
         if pathfile is not None and Path(pathfile).exists():
             with Path(pathfile).resolve().open(mode="r") as file:
                 data_list += file.read().splitlines()
 
-        # Fail delivery if not a correct method
-        # TODO (ina): Will need to change
-        if self.method not in ["get", "put"]:
-            sys.exit(
-                exceptions_ds.printout_error(
-                    f"""Delivery option {self.method} not allowed.
-                     \nCancelling delivery.""")
+        # Get full path to all files/folders
+        data_input = list(Path(x).resolve() for x in data)
+
+        for d in data_input:
+            # Throw error if there are duplicate files
+            if d in ok_files:
+                LOG.debug("File: %s  -- ok_files: %s", d, ok_files)
+                sys.exit(
+                    exceptions_ds.printout_error(
+                        f"The path to file {d} is listed multiple "
+                        "times, please remove path dublicates."
+                    )
+                )
+
+            # Get file info
+            ok_dict, failed_dict = file_handler.get_file_info_rec(
+                path=d, break_on_fail=self.break_on_fail
             )
 
-        if self.method == "put":
-            # self.data_input = list(Path(x).resolve() for x in data_list)
-            all_files, initial_fail = self._get_fileinfo_put(data=data_list)
-            LOG.info(all_files)
-            LOG.info(initial_fail)
-        elif self.method == "get":
-            # Save list of paths user chose
-            # self.data_input = list(x for x in data_list)
-            self._get_fileinfo_get(data_input=data_list)
+            # Quit delivery if there are any failed files and breakonfail
+            # specified - clear dict and save as failed
+            if failed_dict and self.break_on_fail:
+                failed_files.update(
+                    {**failed_dict,
+                     **{d: {"proceed": False,
+                            "error": "break on fail"}
+                        for x in data_input if x not in failed_dict
+                        and x != d}}
+                )
+                ok_dict.clear()
+                break
+
+            # Move on if no failed or to continue
+            ok_files.update(ok_dict)
+            failed_files.update(failed_dict)
+
+        # Check db for previous uploads
+        if ok_files:
+            new_files, prevup_files = self._check_prev_upload(
+                file_dict=ok_files
+            )
+
+            # Continue with ok files, otherwise fail and cancel upload
+            if prevup_files and self.overwrite:
+                ok_files = {**new_files, **{prevup_files}}
+            else:
+                ok_files.update(new_files)
+                [ok_files.pop(x) for x in prevup_files if x in ok_files]
+                failed_files.update(prevup_files)
+
+        return ok_files, failed_files
+
+        # elif self.method == "get":
+        #     # Save list of paths user chose
+        #     # self.data_input = list(x for x in data_list)
+        #     self._get_fileinfo_get(data_input=data_list)
 
         # Get all project files in db
         # TODO: move to function?
         # files_in_db = self._get_project_files()
         # LOG.debug("files in the db: %s", files_in_db)
-        return all_files, initial_fail
-        # Gather data info ########################### Gather data info #
-        # Iterate through all user specified paths
-        for d in data_list:
 
-            # Throw error if there are duplicate files
-            if d in all_files or Path(d).resolve() in all_files:
-                sys.exit(
-                    exceptions_ds.printout_error(
-                        f"The path to file {d} is listed multiple "
-                        "times, please remove path dublicates.")
-                )
+        # return all_files, initial_fail
 
-            # Get file info ############################# Get file info #
-            if self.method == "put":
-                curr_path = Path(d).resolve()   # Full path to data
+        # # Gather data info ########################### Gather data info #
+        # # Iterate through all user specified paths
+        # for d in data_list:
 
-                # Get all file info incl info on compressed or not
-                final_dict, failed_dict = file_handler.get_file_info_rec(
-                    path=curr_path, break_on_fail=self.break_on_fail
-                )
+        #     # Throw error if there are duplicate files
+        #     if d in all_files or Path(d).resolve() in all_files:
+        #         sys.exit(
+        #             exceptions_ds.printout_error(
+        #                 f"The path to file {d} is listed multiple "
+        #                 "times, please remove path dublicates.")
+        #         )
 
-                # If there are failed files and break_on_fail specified then
-                # quit delivery - clear file dict and save them as failed
-                if failed_dict and self.break_on_fail:
-                    initial_fail.update(
-                        {**failed_dict,
-                         **{d: {"proceed": False,
-                                "error": "break on fail"}
-                            for d in data_list
-                            if Path(d).resolve() not in failed_dict
-                            and Path(d).resolve() != curr_path}}
-                    )
-                    final_dict.clear()
-                    break
+        #     # Get file info ############################# Get file info #
+        #     if self.method == "put":
+        #         curr_path = Path(d).resolve()   # Full path to data
 
-                # If no failed - move on
-                all_files.update(final_dict)
-                initial_fail.update(failed_dict)
+        #         # Get all file info incl info on compressed or not
+        #         final_dict, failed_dict = file_handler.get_file_info_rec(
+        #             path=curr_path, break_on_fail=self.break_on_fail
+        #         )
 
-            elif self.method == "get":
-                pass
-                # iteminfo = self._get_download_info(
-                #     item=d,
-                #     files_in_db=files_in_db,
-                #     do_fail=do_fail
-                # )
+        #         # If there are failed files and break_on_fail specified then
+        #         # quit delivery - clear file dict and save them as failed
+        #         if failed_dict and self.break_on_fail:
+        #             initial_fail.update(
+        #                 {**failed_dict,
+        #                  **{d: {"proceed": False,
+        #                         "error": "break on fail"}
+        #                     for d in data_list
+        #                     if Path(d).resolve() not in failed_dict
+        #                     and Path(d).resolve() != curr_path}}
+        #             )
+        #             final_dict.clear()
+        #             break
 
-                # # Save to failed dict or delivery dict
-                # if len(iteminfo) == 1 and d in iteminfo:    # File
-                #     if not iteminfo[d]["proceed"]:
-                #         initial_fail.update(iteminfo)
-                #         if self.break_on_fail:
-                #             do_fail = True
-                #         continue
+        #         # If no failed - move on
+        #         all_files.update(final_dict)
+        #         initial_fail.update(failed_dict)
 
-                #     all_files.update(iteminfo)
-                # else:                                       # Folder
-                #     for f in iteminfo:
-                #         if not iteminfo[f]["proceed"]:
-                #             initial_fail[f] = iteminfo[f]
-                #             if self.break_on_fail:
-                #                 do_fail = True
-                #             continue
+        #     elif self.method == "get":
+        #         pass
+        #         # iteminfo = self._get_download_info(
+        #         #     item=d,
+        #         #     files_in_db=files_in_db,
+        #         #     do_fail=do_fail
+        #         # )
 
-                #         all_files[f] = iteminfo[f]
+        #         # # Save to failed dict or delivery dict
+        #         # if len(iteminfo) == 1 and d in iteminfo:    # File
+        #         #     if not iteminfo[d]["proceed"]:
+        #         #         initial_fail.update(iteminfo)
+        #         #         if self.break_on_fail:
+        #         #             do_fail = True
+        #         #         continue
 
+        #         #     all_files.update(iteminfo)
+        #         # else:                                       # Folder
+        #         #     for f in iteminfo:
+        #         #         if not iteminfo[f]["proceed"]:
+        #         #             initial_fail[f] = iteminfo[f]
+        #         #             if self.break_on_fail:
+        #         #                 do_fail = True
+        #         #             continue
 
-        # If there are files to upload check db for previous uploads
-        if all_files:
-            # check if the files have been previously uploaded
-            new_files, prevup_files = self._check_prev_upload(
-                file_dict=all_files
-            )
-            all_files = new_files
-            initial_fail.update(prevup_files)
+        #         #         all_files[f] = iteminfo[f]
+
+        # # If there are files to upload check db for previous uploads
+        # if all_files:
+        #     # check if the files have been previously uploaded
+        #     new_files, prevup_files = self._check_prev_upload(
+        #         file_dict=all_files
+        #     )
+        #     all_files = new_files
+        #     initial_fail.update(prevup_files)
 
         # --------------------------------------------------------- #
 
-        return all_files, initial_fail
+        # return all_files, initial_fail
 
     def _finalize(self, info: dict):
         """Makes sure that the file is not in bucket or db and deletes
@@ -967,13 +1037,13 @@ class DataDeliverer:
             # print(file, item, files_in_db)
             if file == item:    # File
                 # Temporary cap
-                tot_size += int(files_in_db[file]["size_enc"])
-                if tot_size > 700e9:
-                    sys.exit(
-                        exceptions_ds.printout_error(
-                            "Too much data. Cap set at 700 GB."
-                        )
-                    )
+                # tot_size += int(files_in_db[file]["size_enc"])
+                # if tot_size > 700e9:
+                #     sys.exit(
+                #         exceptions_ds.printout_error(
+                #             "Too much data. Cap set at 700 GB."
+                #         )
+                #     )
 
                 # print("exists")
                 to_download[file] = {
@@ -1071,18 +1141,14 @@ class DataDeliverer:
             json: The API response contain all file information
         """
 
-        # print(file_dict)
-
+        # Get name of files which will be present in db if file uploaded
         if self.method == "put":
             files = list(y["path_in_db"] for x, y in file_dict.items())
         elif self.method == "get":
             files = list(x for x in file_dict)
 
         # Perform request to ProjectFiles - list all files connected to proj
-        args = {"token": self.token}
-        # payload = files.to_json()
-
-        # req = ENDPOINTS["project_files"] + self.project_id + "/checkfiles"
+        args = {"token": self.token, "method": self.method}
         req = ENDPOINTS["project_files"] + self.project_id + "/listfiles"
         try:
             response = requests.post(req, headers=args, json=files)
@@ -1105,13 +1171,15 @@ class DataDeliverer:
 
         # Get json response if request ok
         resp_json = response.json()
+        LOG.debug(resp_json)
 
-        LOG.debug("File response: \n %s", resp_json)
-
-        prevup_files = {}
+        sys.exit()
+        
+        prevup_files = {}   # Files existing in database
         for x, y in list(file_dict.items()):
-
-            # If file already uploaded
+            # Save files to prevup_files if file already uploaded and
+            # overwrite not specified, or if break on fail specified,
+            # Otherwise check if file in bucket and then call error
             if y["path_in_db"] in resp_json["files"]:
                 if not self.overwrite:
                     LOG.info("'%s' already exists in database", x)
@@ -1136,12 +1204,13 @@ class DataDeliverer:
                 with s3_connector.S3Connector(bucketname=self.bucketname,
                                               project=self.s3project) \
                         as s3_conn:
-                    # Check if file exists in bucket already
+                    # Check if file exists in bucket
                     in_bucket, _ = s3_conn.file_exists_in_bucket(
                         y["path_in_bucket"]
                     )
-                    # LOG.debug("File: %s \t In bucket: %s", x, in_bucket)
 
+                    # Cancel file upload if in the Safespring bucket and
+                    # all if break on fail
                     if in_bucket:
                         prevup_files[x] = {
                             **file_dict.pop(x),

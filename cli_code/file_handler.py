@@ -187,45 +187,52 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
                       break_on_fail: bool = True,
                       folder: pathlib.Path = None):
     """Recursive function to get file information.
-    
+
     Checks if each file has been compressed or not, and saves info on size etc.
     Feeds back to itself if the path is a folder.
-    
+
     Args:
         path:   User specified path to file or folder
         root:   True if the current folder or file is in the "root" - cwd
         break_on_fail:  True if the delivery should cancel if one file fails
         folder: True if file is within a user specified folder
-    
+
     Returns:
         Two dicts representing the files to be delivered and those that failed
         the initial tests.
     """
     # TODO (Ina): Add docstring
 
-    proceed = True  # If proceed with file delivery
-    ok_files = {}
-    failed_files = {}
+    # Variables ######################################### Variables #
+    proceed = True      # If proceed with file delivery
+    do_fail = False     # If fail whole delivery
+
+    ok_files = {}       # Files to continue uploading
+    failed_files = {}   # Files to cancel
+    # ------------------------------------------------------------- #
 
     # Error if single file specified but a folder passed as arg
     if (not root and folder is None) or (root and folder is not None):
         LOG.critical("Error message here!")
 
-    do_fail = False
-
+    # Recursively get information on each file
     if path.is_dir():
+        # Get the names of all files within the folder and subfolders
         for f in path.glob("**/*"):
             if f.is_file() and "DS_Store" not in str(f):
+                # Cancel upload if delivery flagged as failed
                 if do_fail:
                     failed_files.update({f: {"proceed": False,
                                              "error": "break on fail here"}})
                     continue
 
+                # Send each file into this function
                 final_dict, failed_dict = get_file_info_rec(
                     path=f, root=False, break_on_fail=break_on_fail,
                     folder=path.name
                 )
 
+                # Cancel upload if break on fail flag used and one failed
                 if failed_dict and break_on_fail:
                     failed_files.update(
                         {**failed_dict}
@@ -233,26 +240,31 @@ def get_file_info_rec(path: pathlib.Path, root: bool = True,
                     do_fail = True
                     continue
 
+                # Update file information in dicts
                 ok_files.update(final_dict)
                 failed_files.update(failed_dict)
 
     else:
+        # Set file info in dict
         # TODO (ina): Change names of the dict keys - more logical
-        ok_files = {path: {
-            "in_directory": not root,  # single file entered or in folder
-            "local_dir_path": folder,  # local directory, specified in cli call
-            # sub directory from spec fold
-            "directory_path": get_subdir(file=path, folder=folder)
-        }}
+        ok_files = {
+            path: {
+                "in_directory": not root,  # single file entered or in folder
+                "local_dir_path": folder,  # local directory, specified in cli call
+                # sub directory from spec fold
+                "directory_path": get_subdir(file=path, folder=folder)
+            }
+        }
 
         # Check if file is compressed and fail delivery on error
         compressed, error = is_compressed(file=path)
-        # error = "fail"
         if error != "":
-            # proceed = False
-            return {}, {path: {**ok_files[path], **{"proceed": False, "error": error}}}
+            return {}, {path: {**ok_files[path], \
+                **{"proceed": False, "error": error}}}
 
-        suff_aftproc = ""  # Suffixes after processing
+        # Set future (after processing) suffixes
+        suff_aftproc = ""
+        
         # If file not compressed -- add zst (Zstandard) suffix to final suffix
         # If compressed -- info that DS will not compress
         if not compressed:

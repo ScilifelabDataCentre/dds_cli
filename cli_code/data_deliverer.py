@@ -754,6 +754,8 @@ class DataDeliverer:
 
         ok_files = dict()       # Files to continue downloading
         failed_files = dict()   # Files to cancel
+
+        in_directory = False
         # --------------------------------------------------------------#
 
         # Add data included in pathfile to data dict
@@ -762,18 +764,94 @@ class DataDeliverer:
                 data_list += file.read().splitlines()
 
         # Check if the files exist in the db
-        failed_files, ok_files = self._check_prev_upload(
+        file_api_resp = self._check_prev_upload(
             file_dict={d: {"path_in_db": d} for d in data_list}
         )
 
-        for d in data_list:
-            # Throw error if there are duplicate files
-            if d in ok_files:
+        # TODO (ina): Check what the file_api_resp looks like if no files
+        # in db that match, and add to error commented below
+        # Quit delivery if there are any failed files and breakonfail
+        # specified - clear dict and save as failed
+        # if not file_api_resp["files"] or file_api_resp["files"] == [] \
+        #     and self.break_on_fail:
+        #     failed_files.update(
+        #         {**failed_dict,
+        #         **{d: {"proceed": False,
+        #                 "error": "break on fail"}
+        #             for x in data_input if x not in failed_dict
+        #             and x != d}}
+        #     )
+        #     ok_dict.clear()
+        #     break
+
+        for x, y in file_api_resp["files"].items():
+            if x in ok_files:
+                LOG.debug("File: %s  -- ok_files: %s", x, ok_files)
                 sys.exit(
                     exceptions_ds.printout_error(
-                        f"The path to file {d} is listed multiple "
-                        "times, please remove path dublicates.")
+                        f"The path to file {x} is listed multiple "
+                        "times, please remove path dublicates."
+                    )
                 )
+
+            if x in data_list:
+                in_directory = False
+                local_dir_name = None
+
+            elif y["directory_path"].startswith(tuple(data_list)):
+                input_files = [x for x in data_list
+                               if y["directory_path"].startswith(x)]
+                if len(input_files) != 1:
+                    pass  # TODO (ina): Exception here
+
+                in_directory = True
+                local_dir_name = input_files[0]
+            else:
+                with s3_connector.S3Connector(bucketname=self.bucketname,
+                                              project=self.s3project) \
+                        as s3_conn:
+                    # Check if file exists in bucket
+                    in_bucket, _ = s3_conn.file_exists_in_bucket(x)
+
+                    # Cancel file upload if in the Safespring bucket and
+                    # all if break on fail
+                    if in_bucket:
+                        failed_files[x] = {
+                            **ok_files.pop(x),
+                            "error": (
+                                f"""File '{x.name}' already exists in
+                                    bucket, but does NOT exist in database.
+                                    Delivery cancelled, contact support."""
+                            )
+                        }
+
+                        if self.break_on_fail:
+                            failed_files.update(
+                                {f: {**y, "proceed": False,
+                                     "error": "break on fail"}
+                                    for f, y in ok_files.items()}
+                            )
+                            ok_files.clear()
+                            break
+
+            file_path = Path(x)
+            full_suffixes = "".join(file_path.suffixes) + y["extension"]
+            path_in_temp = DIRS[1] / file_path.with_suffix(full_suffixes)
+
+            ok_files[x] = {**y,
+                           "path_in_temp": path_in_temp,
+                           "path_in_bucket": file_path.with_suffix(full_suffixes),
+                           "in_directory": in_directory,
+                           "local_dir_name": local_dir_name,
+                           "proceed": True,
+                           "download": {"in_progress": False,
+                                        "finished": False},
+                           "decryption": {"in_progress": False,
+                                          "finished": False},
+                           "database": {"in_progress": False,
+                                        "finished": False}}
+        
+        return ok_files, failed_files
 
     def _data_to_upload(self, data: tuple, pathfile: str) -> (dict, dict):
         """Puts all entered paths into one dictionary.
@@ -1230,62 +1308,62 @@ class DataDeliverer:
 
         return resp_json
 
-        prevup_files = {}   # Files existing in database
-        for x, y in list(file_dict.items()):
+        # prevup_files = {}   # Files existing in database
+        # for x, y in list(file_dict.items()):
 
-            # Save files to prevup_files if file already uploaded and
-            # overwrite not specified, or if break on fail specified,
-            # Otherwise check if file in bucket and then call error
-            if y["path_in_db"] in resp_json["files"]:
-                if not self.overwrite:
-                    LOG.info("'%s' already exists in database", x)
-                    prevup_files[x] = {
-                        **file_dict.pop(x),
-                        "error": "File already exists in database"
-                    }
-                else:
-                    LOG.info("--overwrite specified - "
-                             "performing delivery of '%s'", x)
-                    continue
+        #     # Save files to prevup_files if file already uploaded and
+        #     # overwrite not specified, or if break on fail specified,
+        #     # Otherwise check if file in bucket and then call error
+        #     if y["path_in_db"] in resp_json["files"]:
+        #         if not self.overwrite:
+        #             LOG.info("'%s' already exists in database", x)
+        #             prevup_files[x] = {
+        #                 **file_dict.pop(x),
+        #                 "error": "File already exists in database"
+        #             }
+        #         else:
+        #             LOG.info("--overwrite specified - "
+        #                      "performing delivery of '%s'", x)
+        #             continue
 
-                if self.break_on_fail:
-                    prevup_files.update(
-                        {f: {**y, "proceed": False,
-                             "error": "break on fail"}
-                         for f, y in file_dict.items()}
-                    )
-                    file_dict.clear()
-                    break
-            else:
-                with s3_connector.S3Connector(bucketname=self.bucketname,
-                                              project=self.s3project) \
-                        as s3_conn:
-                    # Check if file exists in bucket
-                    in_bucket, _ = s3_conn.file_exists_in_bucket(
-                        y["path_in_bucket"]
-                    )
+        #         if self.break_on_fail:
+        #             prevup_files.update(
+        #                 {f: {**y, "proceed": False,
+        #                      "error": "break on fail"}
+        #                  for f, y in file_dict.items()}
+        #             )
+        #             file_dict.clear()
+        #             break
+        #     else:
+        #         with s3_connector.S3Connector(bucketname=self.bucketname,
+        #                                       project=self.s3project) \
+        #                 as s3_conn:
+        #             # Check if file exists in bucket
+        #             in_bucket, _ = s3_conn.file_exists_in_bucket(
+        #                 y["path_in_bucket"]
+        #             )
 
-                    # Cancel file upload if in the Safespring bucket and
-                    # all if break on fail
-                    if in_bucket:
-                        prevup_files[x] = {
-                            **file_dict.pop(x),
-                            "error": (
-                                f"""File '{x.name}' already exists in
-                                    bucket, but does NOT exist in database.
-                                    Delivery cancelled, contact support."""
-                            )
-                        }
-                        if self.break_on_fail:
-                            prevup_files.update(
-                                {f: {**y, "proceed": False,
-                                     "error": "break on fail"}
-                                    for f, y in file_dict.items()}
-                            )
-                            file_dict.clear()
-                            break
+        #             # Cancel file upload if in the Safespring bucket and
+        #             # all if break on fail
+        #             if in_bucket:
+        #                 prevup_files[x] = {
+        #                     **file_dict.pop(x),
+        #                     "error": (
+        #                         f"""File '{x.name}' already exists in
+        #                             bucket, but does NOT exist in database.
+        #                             Delivery cancelled, contact support."""
+        #                     )
+        #                 }
+        #                 if self.break_on_fail:
+        #                     prevup_files.update(
+        #                         {f: {**y, "proceed": False,
+        #                              "error": "break on fail"}
+        #                             for f, y in file_dict.items()}
+        #                     )
+        #                     file_dict.clear()
+        #                     break
 
-        return file_dict, prevup_files
+        # return file_dict, prevup_files
 
     ##################
     # Public Methods #

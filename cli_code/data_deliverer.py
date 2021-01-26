@@ -763,7 +763,7 @@ class DataDeliverer:
 
         # Check if the files exist in the db
         failed_files, ok_files = self._check_prev_upload(
-            file_dict={d: {} for d in data_list}
+            file_dict={d: {"path_in_db": d} for d in data_list}
         )
 
         for d in data_list:
@@ -844,17 +844,71 @@ class DataDeliverer:
         if not ok_files:
             return ok_files, failed_files
 
-        new_files, prevup_files = self._check_prev_upload(
+        # new_files, prevup_files = self._check_prev_upload(
+        #     file_dict=ok_files
+        # )
+
+        # TEST
+        file_api_resp = self._check_prev_upload(
             file_dict=ok_files
         )
 
-        # Continue with ok files, otherwise fail and cancel upload
-        if prevup_files and self.overwrite:
-            ok_files = {**new_files, **{prevup_files}}
-        else:
-            ok_files.update(new_files)
-            [ok_files.pop(x) for x in prevup_files if x in ok_files]
-            failed_files.update(prevup_files)
+        for x, y in list(ok_files.items()):
+            # Save files to failed files if file already uploaded and
+            # overwrite not specified, or if break on fail specified,
+            # Otherwise check if file in bucket and then call error
+            if y["path_in_db"] in file_api_resp["files"]:
+                if not self.overwrite:
+                    LOG.info("'%s' already exists in database", x)
+                    failed_files[x] = {
+                        **ok_files.pop(x),
+                        "error": "File already exists in database"
+                    }
+                else:
+                    LOG.info("--overwrite specified - "
+                             "performing delivery of '%s'", x)
+                    continue
+
+                if self.break_on_fail:
+                    failed_files.update(
+                        {f: {**y, "proceed": False,
+                             "error": "break on fail"}
+                         for f, y in ok_files.items()}
+                    )
+                    ok_files.clear()
+                    break
+            else:
+                with s3_connector.S3Connector(bucketname=self.bucketname,
+                                              project=self.s3project) \
+                        as s3_conn:
+                    # Check if file exists in bucket
+                    in_bucket, _ = s3_conn.file_exists_in_bucket(
+                        y["path_in_bucket"]
+                    )
+
+                    # Cancel file upload if in the Safespring bucket and
+                    # all if break on fail
+                    if in_bucket:
+                        failed_files[x] = {
+                            **ok_files.pop(x),
+                            "error": (
+                                f"""File '{x.name}' already exists in
+                                    bucket, but does NOT exist in database.
+                                    Delivery cancelled, contact support."""
+                            )
+                        }
+                        if self.break_on_fail:
+                            failed_files.update(
+                                {f: {**y, "proceed": False,
+                                     "error": "break on fail"}
+                                    for f, y in ok_files.items()}
+                            )
+                            ok_files.clear()
+                            break
+
+        # TEST ^
+        LOG.debug("failed files: %s", failed_files)
+        LOG.debug("ok files: %s", ok_files)
 
         return ok_files, failed_files
 
@@ -1173,11 +1227,12 @@ class DataDeliverer:
         # Get json response if request ok
         resp_json = response.json()
         LOG.debug(resp_json)
-        
-        sys.exit()
-        
+
+        return resp_json
+
         prevup_files = {}   # Files existing in database
         for x, y in list(file_dict.items()):
+
             # Save files to prevup_files if file already uploaded and
             # overwrite not specified, or if break on fail specified,
             # Otherwise check if file in bucket and then call error

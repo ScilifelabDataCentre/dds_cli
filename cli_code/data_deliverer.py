@@ -841,19 +841,20 @@ class DataDeliverer:
             ok_files.update(ok_dict)
             failed_files.update(failed_dict)
 
-        # Check db for previous uploads
-        if ok_files:
-            new_files, prevup_files = self._check_prev_upload(
-                file_dict=ok_files
-            )
+        if not ok_files:
+            return ok_files, failed_files
 
-            # Continue with ok files, otherwise fail and cancel upload
-            if prevup_files and self.overwrite:
-                ok_files = {**new_files, **{prevup_files}}
-            else:
-                ok_files.update(new_files)
-                [ok_files.pop(x) for x in prevup_files if x in ok_files]
-                failed_files.update(prevup_files)
+        new_files, prevup_files = self._check_prev_upload(
+            file_dict=ok_files
+        )
+
+        # Continue with ok files, otherwise fail and cancel upload
+        if prevup_files and self.overwrite:
+            ok_files = {**new_files, **{prevup_files}}
+        else:
+            ok_files.update(new_files)
+            [ok_files.pop(x) for x in prevup_files if x in ok_files]
+            failed_files.update(prevup_files)
 
         return ok_files, failed_files
 
@@ -1172,7 +1173,7 @@ class DataDeliverer:
         # Get json response if request ok
         resp_json = response.json()
         LOG.debug(resp_json)
-
+        
         sys.exit()
         
         prevup_files = {}   # Files existing in database

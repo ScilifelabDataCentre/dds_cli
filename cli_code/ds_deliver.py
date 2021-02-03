@@ -13,6 +13,7 @@ import sys
 import click
 
 # Own modules
+from cli_code import user
 from cli_code import directory
 from cli_code import logger
 from cli_code import timestamp
@@ -57,7 +58,18 @@ def cli(ctx, debug):
 
 
 @cli.command()
+@click.option("--config", "-c", required=False, type=click.Path(exists=True),
+              help="Path to file with user credentials, destination, etc.")
+@click.option("--username", "-u", required=False, type=str,
+              help="Your Data Delivery System username.")
+@click.option("--project", "-p", required=False, type=str,
+              help="Project ID to which you're uploading data.")
+@click.option("--recipient", "-r", required=False, type=str,
+              help="ID of the user which owns the data.")
 @click.pass_obj
-def test(dds_info):
-    click.echo("testing")
-    click.echo(dds_info)
+def put(dds_info, config, username, project, recipient):
+    """Processes and uploads specified files to the cloud."""
+
+    dds_user = user.User(config=config, username=username,
+                         project_id=project, recipient=recipient)
+    click.echo(dds_user)

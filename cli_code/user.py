@@ -9,11 +9,13 @@ import getpass
 import json
 import logging
 import pathlib
+import requests
 import sys
 
 # Installed
 
 # Own modules
+from cli_code import DDSEndpoint
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -83,4 +85,11 @@ class User:
         if self.method == "put" and recipient is None:
             sys.exit("Project owner/data recipient not specified.")
 
+        self.authenticate_user()
+
         return username, password, project, recipient
+
+    def authenticate_user(self):
+        
+        response = requests.post(DDSEndpoint.AUTH, auth=("username", "password"))
+        print(response.content)

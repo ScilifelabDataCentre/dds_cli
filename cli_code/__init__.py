@@ -37,6 +37,8 @@ class DDSEndpoint:
 
     BASE_ENDPOINT = BASE_ENDPOINT_LOCAL
 
+    AUTH = BASE_ENDPOINT + "/auth"
+
 
 class FileSegment:
     """Defines information on signatures, file chunks, etc."""

@@ -50,14 +50,20 @@ class User:
 
         password = None
 
+        # Get info from config file if specified
         if config:
             configpath = pathlib.Path(config).resolve()
+            if not configpath.exists():
+                sys.exit("Config file does not exist.")
+
+            # Get contents from file
             try:
                 with configpath.open(mode="r") as cfp:
                     contents = json.load(cfp)
-            except OSError as err:
+            except json.decoder.JSONDecodeError as err:
                 sys.exit(f"Failed to get config file contents: {err}")
 
+            # Get user credentials and project info
             if username is None and "username" in contents:
                 username = contents["username"]
             if project is None and "project" in contents:

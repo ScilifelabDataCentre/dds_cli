@@ -38,7 +38,7 @@ class DDSEndpoint:
     BASE_ENDPOINT = BASE_ENDPOINT_LOCAL
 
     AUTH = BASE_ENDPOINT + "/user/auth"
-    
+    AUTH_PROJ = BASE_ENDPOINT + "/proj/auth"
 
 
 class FileSegment:

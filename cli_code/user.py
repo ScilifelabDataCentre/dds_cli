@@ -43,9 +43,11 @@ class User:
         LOG.debug("Method: %s", self.method)
 
         # Get user info
-        self.username, self.password, self.project, self.recipient = \
-            self.verify_input(config=config, username=username,
-                              project=project_id, recipient=recipient)
+        self.username, self.password, self.project, \
+            self.recipient, self.token = self.verify_input(
+                config=config, username=username,
+                project=project_id, recipient=recipient
+            )
 
     def verify_input(self, config, username, project, recipient):
         """Verifies that the users input is valid and fully specified."""
@@ -85,11 +87,19 @@ class User:
         if self.method == "put" and recipient is None:
             sys.exit("Project owner/data recipient not specified.")
 
-        self.authenticate_user()
+        token = self.authenticate_user(username=username, password=password)
 
-        return username, password, project, recipient
+        return username, password, project, recipient, token
 
-    def authenticate_user(self):
-        
-        response = requests.post(DDSEndpoint.AUTH, auth=("username", "password"))
-        print(response.content)
+    def authenticate_user(self, username, password):
+        """Authenticates the username and password via a call to the API."""
+
+        response = requests.post(DDSEndpoint.AUTH, auth=(username, password))
+
+        if not response.ok:
+            sys.exit("User authentication failed! "
+                     f"Error code: {response.status_code} "
+                     f" -- {response.reason}")
+
+        token = response.json()
+        return token

@@ -13,9 +13,9 @@ import sys
 import click
 
 # Own modules
+import cli_code
 from cli_code import user
 from cli_code import directory
-from cli_code import logger
 from cli_code import timestamp
 from cli_code import data_deliverer as dd
 
@@ -23,7 +23,6 @@ from cli_code import data_deliverer as dd
 ###############################################################################
 # MAIN ################################################################# MAIN #
 ###############################################################################
-
 
 @click.group()
 @click.option("--debug", default=False, is_flag=True)
@@ -44,17 +43,17 @@ def cli(ctx, debug):
     logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
 
     # Create logger
-    log = logging.getLogger(__name__)
-    log = logger.log_to_file(logger=log, filename=logfile)
-    log = logger.log_to_terminal(logger=log)
-    log.setLevel(logging.DEBUG if debug else logging.WARNING)
+    cli_code.setup_custom_logger(filename=logfile, debug=debug)
+
+    LOG = logging.getLogger(__name__)
+    LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
 
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,
         "DDS_DIRS": all_dirs,
         "LOGFILE": logfile,
-        "LOGGER": log
+        "LOGGER": LOG
     }
 
 
@@ -71,9 +70,10 @@ def cli(ctx, debug):
 def put(dds_info, config, username, project, recipient):
     """Processes and uploads specified files to the cloud."""
 
-    info = dd.DataDeliverer(config=config, username=username, project=project,
-                            recipient=recipient)
-    click.echo(info)
+    LOG = dds_info["LOGGER"]
+    delivery = dd.DataDeliverer(config=config, username=username, project=project,
+                                recipient=recipient)
+    LOG.debug("testtesttest")
     # dds_user = user.User(config=config, username=username,
     #                      project_id=project, recipient=recipient)
     # click.echo(dds_user)

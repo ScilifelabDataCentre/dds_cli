@@ -37,11 +37,14 @@ class User:
         # Authenticate user
         token = self.authenticate_user(username=username, password=password,
                                        facility=recipient is not None)
-        print(token)
 
         # Approve project
         approved = self.verify_project_access(project=project,
                                               token=token)
+        
+        self.username = username
+        self.token = token
+        
 
     def authenticate_user(self, username, password, facility):
         """Authenticates the username and password via a call to the API."""
@@ -71,3 +74,9 @@ class User:
                      f" -- {response.reason} "
                      f" -- {response.request}\n\n"
                      f"{response.text}")
+        
+        dds_access = response.json()
+        if not dds_access["dds-access-granted"]:
+            sys.exit("Project access denied.")
+
+        return True

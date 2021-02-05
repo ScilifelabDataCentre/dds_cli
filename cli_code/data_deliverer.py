@@ -32,7 +32,8 @@ class DataDeliverer:
     """Data deliverer class."""
 
     def __init__(self, *args, **kwargs):
-
+        
+        LOG.debug("data test test test")
         # Quit if no delivery info is specified
         if not kwargs:
             sys.exit("Missing Data Delivery System user credentials.")
@@ -46,6 +47,8 @@ class DataDeliverer:
 
         dds_user = user.User(username=username, password=password,
                              project=project, recipient=recipient)
+        print(dds_user)
+        LOG.debug("this is working")
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""

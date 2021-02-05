@@ -70,10 +70,9 @@ def cli(ctx, debug):
 def put(dds_info, config, username, project, recipient):
     """Processes and uploads specified files to the cloud."""
 
+    # Get logger
     LOG = dds_info["LOGGER"]
-    delivery = dd.DataDeliverer(config=config, username=username, project=project,
-                                recipient=recipient)
-    LOG.debug("testtesttest")
-    # dds_user = user.User(config=config, username=username,
-    #                      project_id=project, recipient=recipient)
-    # click.echo(dds_user)
+    delivery = dd.DataDeliverer(config=config, username=username,
+                                project=project, recipient=recipient)
+
+    LOG.debug("blablabla")

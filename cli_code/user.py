@@ -32,19 +32,21 @@ class User:
     """Authenticates the DDS user."""
 
     def __init__(self, username=None, password=None, project=None,
-                 recipient=None, method=None):
+                 recipient=None):
 
         # Authenticate user
+        if None in [username, password, project]:
+            sys.exit("Missing user information.")
+
         token = self.authenticate_user(username=username, password=password,
                                        facility=recipient is not None)
 
         # Approve project
         approved = self.verify_project_access(project=project,
                                               token=token)
-        
+
         self.username = username
         self.token = token
-        
 
     def authenticate_user(self, username, password, facility):
         """Authenticates the username and password via a call to the API."""
@@ -74,7 +76,7 @@ class User:
                      f" -- {response.reason} "
                      f" -- {response.request}\n\n"
                      f"{response.text}")
-        
+
         dds_access = response.json()
         if not dds_access["dds-access-granted"]:
             sys.exit("Project access denied.")

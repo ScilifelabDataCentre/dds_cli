@@ -52,9 +52,9 @@ class User:
         token = self.authenticate_user(username=username, password=password)
 
         # Approve project
-        approved = self.verify_project_access(project=project,
-                                              username=username,
-                                              token=token)
+        # approved = self.verify_project_access(project=project,
+        #                                       username=username,
+        #                                       token=token)
 
     def verify_input(self, config, username, project, recipient):
         """Verifies that the users input is valid and fully specified."""
@@ -112,8 +112,9 @@ class User:
     def verify_project_access(self, project, username, token):
         """docstring"""
 
-        response = requests.post(DDSEndpoint.AUTH_PROJ,
-                                 headers=token)
+        response = requests.get(DDSEndpoint.AUTH_PROJ,
+                                params={"project": project},
+                                headers=token)
 
         if not response.ok:
             sys.exit("Project access denied! "

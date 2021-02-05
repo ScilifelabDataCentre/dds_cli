@@ -17,6 +17,7 @@ from cli_code import user
 from cli_code import directory
 from cli_code import logger
 from cli_code import timestamp
+from cli_code import data_deliverer as dd
 
 
 ###############################################################################
@@ -70,6 +71,9 @@ def cli(ctx, debug):
 def put(dds_info, config, username, project, recipient):
     """Processes and uploads specified files to the cloud."""
 
-    dds_user = user.User(config=config, username=username,
-                         project_id=project, recipient=recipient)
-    click.echo(dds_user)
+    info = dd.DataDeliverer(config=config, username=username, project=project,
+                            recipient=recipient)
+    click.echo(info)
+    # dds_user = user.User(config=config, username=username,
+    #                      project_id=project, recipient=recipient)
+    # click.echo(dds_user)

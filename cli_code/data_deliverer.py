@@ -42,14 +42,27 @@ class DataDeliverer:
             sys.exit("Unauthorized method!")
 
         # Get user info
-        username, password, project, recipient, data = \
+        username, password, project, recipient, kwargs = \
             self.verify_input(user_input=kwargs)
 
         dds_user = user.User(username=username, password=password,
                              project=project, recipient=recipient)
-        self.user = dds_user
-        self.data = data
+
+        # Get file info
+        if self.method == "put":
+            self.collect_file_info(user_input=kwargs)
+
+        # self.user = dds_user
+        # self.data = data
         # Get data to deliver
+
+    def collect_file_info(self, user_input):
+        """Docstring"""
+
+        if not any(x in user_input for x in ["source", "source_path_file"]):
+            sys.exit("No data specified.")
+
+    
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
@@ -103,14 +116,8 @@ class DataDeliverer:
         if self.method == "put" and recipient is None:
             sys.exit("Project owner/data recipient not specified.")
 
-        # Get data specified and quit if none
-        data = dict()
-        if "source" in user_input and user_input["source"]:
-            data["source"] = user_input["source"]
-        if "source_path_file" in user_input and user_input["source_path_file"]:
-            data["source_path_file"] = user_input["source_path_file"]
+        # Only keep the data input in the kwargs
+        [user_input.pop(x, None) for x in
+         ["username", "password", "project", "recipient", "config"]]
 
-        if not data:
-            sys.exit("No data specified.")
-
-        return username, password, project, recipient, data
+        return username, password, project, recipient, user_input

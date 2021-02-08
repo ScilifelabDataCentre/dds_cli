@@ -42,12 +42,13 @@ class DataDeliverer:
             sys.exit("Unauthorized method!")
 
         # Get user info
-        username, password, project, recipient = \
+        username, password, project, recipient, data = \
             self.verify_input(user_input=kwargs)
 
         dds_user = user.User(username=username, password=password,
                              project=project, recipient=recipient)
-
+        self.user = dds_user
+        self.data = data
         # Get data to deliver
 
     def verify_input(self, user_input):
@@ -102,4 +103,14 @@ class DataDeliverer:
         if self.method == "put" and recipient is None:
             sys.exit("Project owner/data recipient not specified.")
 
-        return username, password, project, recipient
+        # Get data specified and quit if none
+        data = dict()
+        if "source" in user_input and user_input["source"]:
+            data["source"] = user_input["source"]
+        if "source_path_file" in user_input and user_input["source_path_file"]:
+            data["source_path_file"] = user_input["source_path_file"]
+
+        if not data:
+            sys.exit("No data specified.")
+
+        return username, password, project, recipient, data

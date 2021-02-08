@@ -66,13 +66,20 @@ def cli(ctx, debug):
               help="Project ID to which you're uploading data.")
 @click.option("--recipient", "-r", required=False, type=str,
               help="ID of the user which owns the data.")
+@click.option("--source", "-s", required=False, type=click.Path(exists=True),
+              multiple=True, help="Path to file or directory (local).")
+@click.option("--source-path-file", "-spf", required=False,
+              type=click.Path(exists=True), multiple=False,
+              help="File containing path to files or directories. ")
 @click.pass_obj
-def put(dds_info, config, username, project, recipient):
+def put(dds_info, config, username, project, recipient, source, source_path_file):
     """Processes and uploads specified files to the cloud."""
 
     # Get logger
     LOG = dds_info["LOGGER"]
-    delivery = dd.DataDeliverer(config=config, username=username,
-                                project=project, recipient=recipient)
+    delivery = dd.DataDeliverer(
+        config=config, username=username, project=project, recipient=recipient,
+        source=source, source_path_file=source_path_file
+    )
 
     LOG.debug("blablabla")

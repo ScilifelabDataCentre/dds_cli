@@ -38,6 +38,8 @@ class DataDeliverer:
             sys.exit("Missing Data Delivery System user credentials.")
 
         self.method = sys._getframe().f_back.f_code.co_name
+        if not self.method in ["put"]:
+            sys.exit("Unauthorized method!")
 
         # Get user info
         username, password, project, recipient = \
@@ -45,7 +47,7 @@ class DataDeliverer:
 
         dds_user = user.User(username=username, password=password,
                              project=project, recipient=recipient)
-
+        self.user = dds_user
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
@@ -84,7 +86,7 @@ class DataDeliverer:
             if recipient is None and "recipient" in contents:
                 recipient = contents["recipient"]
 
-            if "password" in contents:
+            if password is None and "password" in contents:
                 password = contents["password"]
 
         # Username and project info is minimum required info
@@ -92,10 +94,12 @@ class DataDeliverer:
             sys.exit("Data Delivery System options are missing.")
 
         if password is None:
-            password = getpass.getpass()
+            # password = getpass.getpass()
+            password = "password"   # TODO: REMOVE - ONLY FOR DEV
 
         # Recipient required for upload
         if self.method == "put" and recipient is None:
             sys.exit("Project owner/data recipient not specified.")
 
+        print(username, password, project, recipient)
         return username, password, project, recipient

@@ -47,7 +47,8 @@ class DataDeliverer:
 
         dds_user = user.User(username=username, password=password,
                              project=project, recipient=recipient)
-        self.user = dds_user
+
+        # Get data to deliver
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
@@ -101,5 +102,4 @@ class DataDeliverer:
         if self.method == "put" and recipient is None:
             sys.exit("Project owner/data recipient not specified.")
 
-        print(username, password, project, recipient)
         return username, password, project, recipient

@@ -41,10 +41,10 @@ class User:
         token = self.authenticate_user(username=username, password=password,
                                        facility=recipient is not None)
 
-        # Approve project
-        approved = self.verify_project_access(project=project,
-                                              token=token)
+        # Approve project access
+        self.verify_project_access(project=project, token=token)
 
+        # Set attributes
         self.username = username
         self.token = token
 
@@ -80,5 +80,3 @@ class User:
         dds_access = response.json()
         if not dds_access["dds-access-granted"]:
             sys.exit("Project access denied.")
-
-        return True

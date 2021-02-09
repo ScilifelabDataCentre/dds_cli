@@ -10,12 +10,14 @@ import logging
 import pathlib
 import sys
 import json
+import traceback
 
 # Installed
 
 # Own modules
 from cli_code import user
 from cli_code import file_handler
+from cli_code import s3_connector
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -53,8 +55,19 @@ class DataDeliverer:
         data = file_handler.FileCollector(user_input=kwargs)
 
         self.user = dds_user
-        self.data = data
-        # Get data to deliver
+        self.data = data.data
+        self.project = project
+        self.token = dds_user.token
+        
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+            return False  # uncomment to pass exception through
+
+        return True
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
@@ -117,4 +130,5 @@ class DataDeliverer:
     def put(self, file):
         """Uploads files to the cloud."""
 
+        test = s3_connector.S3Connector(project_id=self.project, token=self.token)
         

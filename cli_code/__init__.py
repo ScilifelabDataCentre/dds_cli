@@ -84,6 +84,8 @@ class DDSEndpoint:
     AUTH = BASE_ENDPOINT + "/user/auth"
     AUTH_PROJ = BASE_ENDPOINT + "/proj/auth"
 
+    S3KEYS = BASE_ENDPOINT + "/proj/s3"
+
 
 class FileSegment:
     """Defines information on signatures, file chunks, etc."""

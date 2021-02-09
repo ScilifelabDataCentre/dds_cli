@@ -50,12 +50,10 @@ class DataDeliverer:
                              project=project, recipient=recipient)
 
         # Get file info
-        if self.method == "put":
-            files = file_handler.FileCollection(user_input=kwargs)
-            files.get_info()
+        data = file_handler.FileCollector(user_input=kwargs)
 
-        # self.user = dds_user
-        # self.data = data
+        self.user = dds_user
+        self.data = data
         # Get data to deliver
 
     def verify_input(self, user_input):
@@ -115,3 +113,8 @@ class DataDeliverer:
          ["username", "password", "project", "recipient", "config"]]
 
         return username, password, project, recipient, user_input
+
+    def put(self, file):
+        """Uploads files to the cloud."""
+
+        

@@ -10,6 +10,7 @@ import sys
 import pathlib
 
 # Installed
+import frozendict
 
 # Own modules
 
@@ -25,7 +26,7 @@ LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-class FileCollection:
+class FileCollector:
     """Collects the files specified by the user."""
 
     def __init__(self, user_input):
@@ -41,16 +42,15 @@ class FileCollection:
                 with source_path_file.resolve().open(mode="r") as spf:
                     data_list += spf.read().splitlines()
 
+        # Get absolute paths to all data
+        data_list = [pathlib.Path(x).resolve() for x in data_list
+                     if pathlib.Path(x).exists()
+                     and pathlib.Path(x).resolve() not in data_list]
+
         # Quit if no data
         if not data_list:
             sys.exit("No data specified.")
 
-        # Get absolute paths to all data
-        data_list = [pathlib.Path(x).resolve() for x in data_list
-                     if pathlib.Path(x).exists()]
-
         self.data = data_list
-    
-    def get_info(self):
 
-        pass
+

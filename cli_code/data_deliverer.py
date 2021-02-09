@@ -15,6 +15,7 @@ import json
 
 # Own modules
 from cli_code import user
+from cli_code import file_handler
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -50,19 +51,12 @@ class DataDeliverer:
 
         # Get file info
         if self.method == "put":
-            self.collect_file_info(user_input=kwargs)
+            files = file_handler.FileCollection(user_input=kwargs)
+            files.get_info()
 
         # self.user = dds_user
         # self.data = data
         # Get data to deliver
-
-    def collect_file_info(self, user_input):
-        """Docstring"""
-
-        if not any(x in user_input for x in ["source", "source_path_file"]):
-            sys.exit("No data specified.")
-
-    
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""

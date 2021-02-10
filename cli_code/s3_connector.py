@@ -26,11 +26,12 @@ LOG.setLevel(logging.DEBUG)
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
+
 class S3Connector:
 
     def __init__(self, project_id, token):
         self.get_s3info(project_id=project_id, token=token)
-    
+
     def __enter__(self):
         return self
 
@@ -40,13 +41,14 @@ class S3Connector:
             return False  # uncomment to pass exception through
 
         return True
-    
+
     def get_s3info(self, project_id, token):
-        
+        """Gets the safespring project and keys."""
+
         args = {"project": project_id}
 
         response = requests.get(DDSEndpoint.S3KEYS, params=args, headers=token)
-        
+
         if not response.ok:
             sys.exit(response.reason)
 

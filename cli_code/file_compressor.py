@@ -1,3 +1,4 @@
+import immutabledict
 
 
 class CompressionMagic:
@@ -11,12 +12,13 @@ class CompressionMagic:
     GZIP = b"\x1F\x8B"
     ZSTANDARD = b"(\xb5/\xfd"
 
+
 class Compressor:
     """Handles operations relating to file compression."""
 
     def __init__(self, algorithm="zstandard"):
         self.algorithm = algorithm
-        self.FMT_MAGIC = frozendict.frozendict({
+        self.FMT_MAGIC = immutabledict.immutabledict({
             b"\x913HF": "hap",
             b"`\xea": "arj",
             b"_\'\xa8\x89": "jar",

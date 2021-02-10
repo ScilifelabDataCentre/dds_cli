@@ -34,7 +34,7 @@ class S3Connector:
             self.get_s3info(project_id=project_id, token=token)
 
     def __enter__(self):
-        return self
+        return self.connect()
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_type is not None:

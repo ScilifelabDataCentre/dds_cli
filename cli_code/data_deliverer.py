@@ -47,6 +47,7 @@ class DataDeliverer:
         # Get user info
         username, password, project, recipient, kwargs = \
             self.verify_input(user_input=kwargs)
+        print(kwargs)
 
         dds_user = user.User(username=username, password=password,
                              project=project, recipient=recipient)

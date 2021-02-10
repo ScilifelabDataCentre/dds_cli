@@ -10,7 +10,6 @@ import sys
 import pathlib
 
 # Installed
-import frozendict
 
 # Own modules
 
@@ -30,7 +29,7 @@ class FileCollector:
     """Collects the files specified by the user."""
 
     def __init__(self, user_input):
-
+        
         # Get user specified data
         data_list = list()
         if "source" in user_input and user_input["source"]:
@@ -42,10 +41,9 @@ class FileCollector:
                 with source_path_file.resolve().open(mode="r") as spf:
                     data_list += spf.read().splitlines()
 
-        # Get absolute paths to all data
-        data_list = [pathlib.Path(x).resolve() for x in data_list
-                     if pathlib.Path(x).exists()
-                     and pathlib.Path(x).resolve() not in data_list]
+        # Get absolute paths to all data and removes duplicates
+        data_list = list(set(pathlib.Path(x).resolve() for x in data_list
+                     if pathlib.Path(x).exists()))
 
         # Quit if no data
         if not data_list:

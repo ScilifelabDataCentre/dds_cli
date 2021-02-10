@@ -73,14 +73,15 @@ def cli(ctx, debug):
               type=click.Path(exists=True), multiple=False,
               help="File containing path to files or directories. ")
 @click.pass_obj
-def put(dds_info, config, username, project, recipient, source, source_path_file):
+def put(dds_info, config, username, project, recipient, source,
+        source_path_file):
     """Processes and uploads specified files to the cloud."""
 
     # Get logger
-    LOG = dds_info["LOGGER"]
+    log = dds_info["LOGGER"]
     with dd.DataDeliverer(config=config, username=username, project=project,
                           recipient=recipient, source=source,
                           source_path_file=source_path_file) as delivery:
-        
+
         for file in delivery.data.data:
             delivery.put(file)

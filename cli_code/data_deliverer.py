@@ -16,8 +16,8 @@ import traceback
 
 # Own modules
 from cli_code import user
-from cli_code import file_handler
-from cli_code import s3_connector
+from cli_code import file_handler as fh
+from cli_code import s3_connector as s3
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -53,13 +53,13 @@ class DataDeliverer:
                              project=project, recipient=recipient)
 
         # Get file info
-        file_collector = file_handler.FileCollector(user_input=kwargs)
+        file_collector = fh.FileCollector(user_input=kwargs)
 
         self.user = dds_user
         self.data = file_collector
         self.project = project
         self.token = dds_user.token
-        
+
     def __enter__(self):
         return self
 
@@ -131,5 +131,5 @@ class DataDeliverer:
     def put(self, file):
         """Uploads files to the cloud."""
 
-        test = s3_connector.S3Connector(project_id=self.project, token=self.token)
-        
+        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+            print(conn)

@@ -11,6 +11,8 @@ import requests
 import sys
 
 # Installed
+import boto3
+import botocore
 
 # Own modules
 from cli_code import DDSEndpoint
@@ -19,8 +21,8 @@ from cli_code import DDSEndpoint
 # LOGGING ########################################################### LOGGING #
 ###############################################################################
 
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -30,7 +32,7 @@ LOG.setLevel(logging.DEBUG)
 class S3Connector:
 
     def __init__(self, project_id, token):
-        self.safespring_project, self.keys = \
+        self.safespring_project, self.keys, self.url = \
             self.get_s3info(project_id=project_id, token=token)
 
     def __enter__(self):
@@ -57,7 +59,19 @@ class S3Connector:
                      f"{response.text}")
 
         s3info = response.json()
-        return s3info["safespring_project"], s3info["keys"]
+        return s3info["safespring_project"], s3info["keys"], s3info["url"]
 
     def connect(self):
-        """"""
+        """Connect to S3"""
+
+        try:
+            session = boto3.session.Session()
+
+            resource = session.resource(
+                service_name="s3",
+                endpoint_url=self.url,
+                aws_access_key_id=self.keys["access_key"],
+                aws_secret_access_key=self.keys["secret_key"]
+            )
+        except botocore.client.ClientError as err:
+            sys.exit("S3 connection failed: %s", err)

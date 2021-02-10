@@ -82,5 +82,5 @@ def put(dds_info, config, username, project, recipient, source, source_path_file
                           recipient=recipient, source=source,
                           source_path_file=source_path_file) as delivery:
         
-        for file in delivery.data:
+        for file in delivery.data.data:
             delivery.put(file)

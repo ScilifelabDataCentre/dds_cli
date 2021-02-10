@@ -52,10 +52,10 @@ class DataDeliverer:
                              project=project, recipient=recipient)
 
         # Get file info
-        data = file_handler.FileCollector(user_input=kwargs)
+        file_collector = file_handler.FileCollector(user_input=kwargs)
 
         self.user = dds_user
-        self.data = data.data
+        self.data = file_collector
         self.project = project
         self.token = dds_user.token
         

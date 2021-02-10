@@ -30,7 +30,8 @@ LOG.setLevel(logging.DEBUG)
 class S3Connector:
 
     def __init__(self, project_id, token):
-        self.get_s3info(project_id=project_id, token=token)
+        self.safespring_project, self.keys = \
+            self.get_s3info(project_id=project_id, token=token)
 
     def __enter__(self):
         return self
@@ -50,6 +51,13 @@ class S3Connector:
         response = requests.get(DDSEndpoint.S3KEYS, params=args, headers=token)
 
         if not response.ok:
-            sys.exit(response.reason)
+            sys.exit("Failed retrieving Safespring project name. "
+                     f"Error code: {response.status_code} "
+                     f" -- {response.reason}"
+                     f"{response.text}")
 
-        print(response.json())
+        s3info = response.json()
+        return s3info["safespring_project"], s3info["keys"]
+
+    def connect(self):
+        """"""

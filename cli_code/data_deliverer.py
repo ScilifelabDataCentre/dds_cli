@@ -13,6 +13,7 @@ import json
 import traceback
 
 # Installed
+import botocore
 
 # Own modules
 from cli_code import user
@@ -23,8 +24,8 @@ from cli_code import s3_connector as s3
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -47,7 +48,7 @@ class DataDeliverer:
         # Get user info
         username, password, project, recipient, kwargs = \
             self.verify_input(user_input=kwargs)
-        print(kwargs)
+        log.debug(kwargs)
 
         dds_user = user.User(username=username, password=password,
                              project=project, recipient=recipient)
@@ -69,6 +70,9 @@ class DataDeliverer:
             return False  # uncomment to pass exception through
 
         return True
+
+    def __repr__(self):
+        return f"<DataDeliverer proj:{self.project}>"
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
@@ -130,6 +134,17 @@ class DataDeliverer:
 
     def put(self, file):
         """Uploads files to the cloud."""
-
+        
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-            print(conn)
+            
+            # Upload file
+            try:
+                conn.resource.meta.client.upload_file(
+                    Filename=str(file),
+                    Bucket=conn.bucketname,
+                    Key="testfile_128.txt"
+                )
+            except botocore.client.ClientError as err:
+                sys.exit(f"Failed to upload file '{file}'! {err}")
+
+        return True

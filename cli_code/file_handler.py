@@ -8,6 +8,7 @@
 import logging
 import sys
 import pathlib
+import uuid
 
 # Installed
 
@@ -29,7 +30,7 @@ class FileCollector:
     """Collects the files specified by the user."""
 
     def __init__(self, user_input):
-        
+
         # Get user specified data
         data_list = list()
         if "source" in user_input and user_input["source"]:
@@ -43,12 +44,25 @@ class FileCollector:
 
         # Get absolute paths to all data and removes duplicates
         data_list = list(set(pathlib.Path(x).resolve() for x in data_list
-                     if pathlib.Path(x).exists()))
+                             if pathlib.Path(x).exists()))
 
         # Quit if no data
         if not data_list:
             sys.exit("No data specified.")
 
-        self.data = data_list
+        self.data = self.collect_file_info_local(data=data_list)
 
+    def generate_new_filename(self, file_name):
+        """Generates filename which the file will be called in the bucket."""
 
+        return "".join([str(uuid.uuid4().hex[:6]), file_name])
+
+    def collect_file_info_local(self, data):
+        """Gets information relating to all specified paths."""
+
+        all_files = {}
+        for x in data:
+            if x.is_file():
+                all_files[x] = {}
+
+        return data

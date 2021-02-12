@@ -86,6 +86,8 @@ class DDSEndpoint:
 
     S3KEYS = BASE_ENDPOINT + "/s3/proj"
 
+    NEWFILE = BASE_ENDPOINT + "/file/new"
+
 
 class FileSegment:
     """Defines information on signatures, file chunks, etc."""

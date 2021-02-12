@@ -9,6 +9,7 @@ import logging
 import sys
 import pathlib
 import uuid
+import concurrent
 
 # Installed
 
@@ -53,7 +54,6 @@ class FileCollector:
         self.data = self.collect_file_info_local(all_paths=data_list)
         for x, y in self.data.items():
             log.debug("%s : %s\n", x, y)
-        sys.exit()
 
     def collect_file_info_local(self, all_paths, folder=None):
         """Get info on each file in each path specified."""

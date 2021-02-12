@@ -11,6 +11,7 @@ import pathlib
 import sys
 import json
 import traceback
+import requests
 
 # Installed
 import botocore
@@ -19,6 +20,7 @@ import botocore
 from cli_code import user
 from cli_code import file_handler as fh
 from cli_code import s3_connector as s3
+from cli_code import DDSEndpoint
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -134,17 +136,34 @@ class DataDeliverer:
 
     def put(self, file):
         """Uploads files to the cloud."""
-        
+
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-            
+
             # Upload file
             try:
                 conn.resource.meta.client.upload_file(
                     Filename=str(file),
                     Bucket=conn.bucketname,
-                    Key="testfile_128.txt"
+                    Key=self.data.data[file]["name_in_bucket"]
                 )
             except botocore.client.ClientError as err:
-                sys.exit(f"Failed to upload file '{file}'! {err}")
+                log.exception("Failed to upload file '%s': %s", file, err)
+                return False
 
         return True
+
+    def add_file_db(self, file):
+
+        fileinfo = self.data.data[file]
+        response = requests.post(
+            DDSEndpoint.NEWFILE,
+            params={"name": fileinfo["name_in_db"],
+                    "name_in_bucket": fileinfo["name_in_bucket"], 
+                    "project": self.project},
+            headers=self.token
+        )
+
+        if not response.ok:
+            sys.exit(f"Failed to add file {file} to database! {response.status_code} -- {response.text}")
+
+        log.debug(response.json())

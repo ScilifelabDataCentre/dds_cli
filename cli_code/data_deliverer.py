@@ -150,6 +150,7 @@ class DataDeliverer:
                 log.exception("Failed to upload file '%s': %s", file, err)
                 return False
 
+        log.info("Success: File '%s' uploaded!", file)
         return True
 
     def add_file_db(self, file):
@@ -159,13 +160,16 @@ class DataDeliverer:
         response = requests.post(
             DDSEndpoint.NEWFILE,
             params={"name": fileinfo["name_in_db"],
-                    "name_in_bucket": fileinfo["name_in_bucket"], 
+                    "name_in_bucket": fileinfo["name_in_bucket"],
                     "subpath": fileinfo["subpath"],
                     "project": self.project},
             headers=self.token
         )
 
         if not response.ok:
-            sys.exit(f"Failed to add file {file} to database! {response.status_code} -- {response.text}")
+            log.exception("Failed to add file '%s' to database! %s -- %s",
+                          file, response.status_code, response.text)
+            return False
 
+        log.info("Success: File '%s' added to DB!", file)
         return True

@@ -89,18 +89,20 @@ def put(dds_info, config, username, project, recipient, source,
                           recipient=recipient, source=source,
                           source_path_file=source_path_file) as delivery:
 
-        upload_threads = {}
-        db_threads = {}
+        # Keep track of futures
+        upload_threads = {}     # Upload related
+        db_threads = {}         # Database related
 
         with futures.ThreadPoolExecutor(max_workers=num_threads) as t_exec:
 
+            # Upload --------------------------------------------- Upload #
             for file in delivery.data.data:
                 # Upload file to S3 in thread
                 upload_threads[
                     t_exec.submit(delivery.put, file=file)
                 ] = file
 
-            # Continue when each file is uploaded
+            # When each file is uploaded ------ When each file is uploaded #
             for upload_future in futures.as_completed(upload_threads):
                 uploaded_file = upload_threads[upload_future]
 
@@ -110,17 +112,19 @@ def put(dds_info, config, username, project, recipient, source,
                 except futures.BrokenExecutor():
                     sys.exit(f"{upload_future.exception()}")
                     break
-
+                
+                # Error if file >upload< failed
                 if not uploaded:
                     # TODO (ina): Change here - don't quit
                     sys.exit("Failed: Upload of file '%s' failed!",
                              uploaded_file)
 
-                # Add file to db in thread
+                # Add to db ------------------------------------ Add to db #
                 db_threads[
                     t_exec.submit(delivery.add_file_db, file=uploaded_file)
                 ] = uploaded_file
 
+            # When db update done -------------------- When db update done #
             for db_future in futures.as_completed(db_threads):
                 added_file = db_threads[db_future]
 
@@ -130,8 +134,7 @@ def put(dds_info, config, username, project, recipient, source,
                 except futures.BrokenExecutor():
                     log.exception("Error! %s", db_future.exception())
 
-                log.debug("Added file: %s", added_file)
-                log.debug("File added to db: %s", file_added)
+                # Error if >db update< failed
                 if not file_added:
                     # TODO (ina): Change here - don't quit
                     log.exception("Failed: File '%s' not added to database!", added_file)

@@ -144,7 +144,11 @@ class DataDeliverer:
                 conn.resource.meta.client.upload_file(
                     Filename=str(file),
                     Bucket=conn.bucketname,
-                    Key=self.data.data[file]["name_in_bucket"]
+                    Key=self.data.data[file]["name_in_bucket"],
+                    ExtraArgs={
+                        "ACL": "private",  # Access control list
+                        "CacheControl": "no-store"  # Don't store cache
+                    }
                 )
             except botocore.client.ClientError as err:
                 log.exception("Failed to upload file '%s': %s", file, err)
@@ -156,7 +160,10 @@ class DataDeliverer:
     def add_file_db(self, file):
         """Make API request to add file to DB."""
 
+        # Get file info
         fileinfo = self.data.data[file]
+
+        # Send file info to API
         response = requests.post(
             DDSEndpoint.NEWFILE,
             params={"name": fileinfo["name_in_db"],
@@ -166,6 +173,7 @@ class DataDeliverer:
             headers=self.token
         )
 
+        # Error if failed
         if not response.ok:
             log.exception("Failed to add file '%s' to database! %s -- %s",
                           file, response.status_code, response.text)

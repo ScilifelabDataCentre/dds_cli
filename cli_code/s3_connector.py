@@ -31,6 +31,7 @@ log.setLevel(logging.DEBUG)
 
 
 class S3Connector:
+    """Connects to Simple Storage Service."""
 
     def __init__(self, project_id, token):
         self.safespring_project, self.keys, self.url, self.bucketname = \
@@ -104,9 +105,10 @@ class S3Connector:
         """Creates the bucket"""
 
         log.info("Creating bucket '%s'...", self.bucketname)
-        
+
         try:
-            self.resource.meta.client.create_bucket(Bucket=self.bucketname)
+            self.resource.meta.client.create_bucket(Bucket=self.bucketname,
+                                                    ACL="private")
         except botocore.client.ClientError as err2:
             log.critical("Could not create bucket %s! %s",
                          self.bucketname, err2)

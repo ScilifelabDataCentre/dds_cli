@@ -73,12 +73,16 @@ def cli(ctx, debug):
 @click.option("--source-path-file", "-spf", required=False,
               type=click.Path(exists=True), multiple=False,
               help="File containing path to files or directories. ")
-@click.option("--num_threads", "-nt", default=min(32, os.cpu_count() + 4),
-              type=click.IntRange(1,32), required=False, multiple=False,
+@click.option("--break-on-fail", is_flag=True, default=False,
+              show_default=True,
+              help="Cancel upload of all files if one fails")
+@click.option("--num_threads", "-nt", required=False, multiple=False,
+              default=min(32, os.cpu_count() + 4), show_default=True,
+              type=click.IntRange(1, 32),
               help="Number of parallel threads to perform the delivery.")
 @click.pass_obj
 def put(dds_info, config, username, project, recipient, source,
-        source_path_file, num_threads):
+        source_path_file, break_on_fail, num_threads):
     """Processes and uploads specified files to the cloud."""
 
     # Get logger
@@ -87,7 +91,8 @@ def put(dds_info, config, username, project, recipient, source,
     # Begin delivery
     with dd.DataDeliverer(config=config, username=username, project=project,
                           recipient=recipient, source=source,
-                          source_path_file=source_path_file) as delivery:
+                          source_path_file=source_path_file,
+                          break_on_fail=break_on_fail) as delivery:
 
         # Keep track of futures
         upload_threads = {}     # Upload related
@@ -96,7 +101,7 @@ def put(dds_info, config, username, project, recipient, source,
         with futures.ThreadPoolExecutor(max_workers=num_threads) as t_exec:
 
             # Upload --------------------------------------------- Upload #
-            for file in delivery.data.data:
+            for file in list(delivery.data.data):
                 # Upload file to S3 in thread
                 upload_threads[
                     t_exec.submit(delivery.put, file=file)
@@ -137,6 +142,7 @@ def put(dds_info, config, username, project, recipient, source,
                 # Error if >db update< failed
                 if not file_added:
                     # TODO (ina): Change here - don't quit
-                    log.exception("Failed: File '%s' not added to database!", added_file)
+                    log.exception(
+                        "Failed: File '%s' not added to database!", added_file)
 
                 log.debug("Finished -- '%s' : '%s'", added_file, file_added)

@@ -62,6 +62,8 @@ class DataDeliverer:
         self.data = file_collector
         self.project = project
         self.token = dds_user.token
+        self.break_on_fail = kwargs["break_on_fail"] \
+            if "break_on_fail" in kwargs else False
 
     def __enter__(self):
         return self
@@ -137,6 +139,8 @@ class DataDeliverer:
     def put(self, file):
         """Uploads files to the cloud."""
 
+        self.set_upload_status(file=file)
+
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             # Upload file
@@ -152,10 +156,40 @@ class DataDeliverer:
                 )
             except botocore.client.ClientError as err:
                 log.exception("Failed to upload file '%s': %s", file, err)
+                self.cancel(file=file)  # TODO (ina): check out, confused atm
                 return False
 
         log.info("Success: File '%s' uploaded!", file)
         return True
+
+    def set_upload_status(self, file, started=True, done=False):
+        """Updates the current files status"""
+
+        if started and done:
+            log.critical("Error! Upload marked as both 'started' and 'done' "
+                         " for file '%s'", file)
+
+        if not started and not done:
+            log.critical("Error! Setting upload status to neither started or "
+                         "done -- should not be possible. File: '%s'", file)
+
+        if self.data.data[file]["status"]["do_fail"]["value"]:
+            pass  # TODO (ina): Do something here
+
+        new_status = {"started": started, "done": done}
+        if self.data.data[file]["status"]["processing"]["done"]:
+            self.data.data[file]["status"]["upload"].update(new_status)
+
+    def cancel(self, file):
+        """Cancels upload of single failed file or all"""
+
+        if self.break_on_fail:
+            # Cancel all
+            pass
+        else:
+            # Cancel one
+            pass
+
 
     def add_file_db(self, file):
         """Make API request to add file to DB."""

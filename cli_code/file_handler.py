@@ -14,7 +14,7 @@ import concurrent
 # Installed
 
 # Own modules
-
+from cli_code import status
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
@@ -52,6 +52,7 @@ class FileHandler:
             sys.exit("No data specified.")
 
         self.data = self.collect_file_info_local(all_paths=data_list)
+
         for x, y in self.data.items():
             log.debug("%s : %s\n", x, y)
 
@@ -71,7 +72,11 @@ class FileHandler:
                         filename=path.name,
                         folder=folder
                     ),
-                    "name_in_db": subpath / path.name
+                    "name_in_db": subpath / path.name,
+                    "status": {"do_fail": {"value": False, "reason": ""},
+                               "processing": {"started": False, "done": False},
+                               "upload": {"started": False, "done": False},
+                               "db": {"started": False, "done": False}}
                 }
             elif path.is_dir():
                 file_info.update({
@@ -104,3 +109,9 @@ class FileHandler:
             subdir = pathlib.Path(*fileparts[start_ind:-1])
 
         return subdir
+
+    def cancel_all(self):
+        """Cancel upload of all files"""
+
+    def cancel_one(self):
+        """Cancel the failed file"""

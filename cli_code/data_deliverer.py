@@ -56,7 +56,7 @@ class DataDeliverer:
                              project=project, recipient=recipient)
 
         # Get file info
-        file_collector = fh.FileCollector(user_input=kwargs)
+        file_collector = fh.FileHandler(user_input=kwargs)
 
         self.user = dds_user
         self.data = file_collector
@@ -153,12 +153,14 @@ class DataDeliverer:
         return True
 
     def add_file_db(self, file):
+        """Make API request to add file to DB."""
 
         fileinfo = self.data.data[file]
         response = requests.post(
             DDSEndpoint.NEWFILE,
             params={"name": fileinfo["name_in_db"],
                     "name_in_bucket": fileinfo["name_in_bucket"], 
+                    "subpath": fileinfo["subpath"],
                     "project": self.project},
             headers=self.token
         )
@@ -166,4 +168,4 @@ class DataDeliverer:
         if not response.ok:
             sys.exit(f"Failed to add file {file} to database! {response.status_code} -- {response.text}")
 
-        log.debug(response.json())
+        return True

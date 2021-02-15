@@ -27,7 +27,7 @@ log.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-class FileCollector:
+class FileHandler:
     """Collects the files specified by the user."""
 
     def __init__(self, user_input):

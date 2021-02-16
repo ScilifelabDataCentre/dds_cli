@@ -86,7 +86,8 @@ class DDSEndpoint:
 
     S3KEYS = BASE_ENDPOINT + "/s3/proj"
 
-    NEWFILE = BASE_ENDPOINT + "/file/new"
+    FILE_NEW = BASE_ENDPOINT + "/file/new"
+    FILE_MATCH = BASE_ENDPOINT + "/file/match"
 
 
 class FileSegment:

@@ -86,10 +86,6 @@ class S3Connector:
         except botocore.client.ClientError as err:
             sys.exit("S3 connection failed: %s", err)
 
-        bucket_exists = self.check_bucket_exists()
-        if not bucket_exists:
-            self.create_bucket()
-
     def check_bucket_exists(self):
         """Checks if the bucket exists"""
 

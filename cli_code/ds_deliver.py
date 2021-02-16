@@ -113,8 +113,8 @@ def put(dds_info, config, username, project, recipient, source,
 
                 # Get returned info
                 try:
-                    uploaded = upload_future.result()
-                except futures.BrokenExecutor():
+                    uploaded, _ = upload_future.result()
+                except futures.BrokenExecutor:
                     sys.exit(f"{upload_future.exception()}")
                     break
 
@@ -136,7 +136,7 @@ def put(dds_info, config, username, project, recipient, source,
                 # Get returned info
                 try:
                     file_added = db_future.result()
-                except futures.BrokenExecutor():
+                except futures.BrokenExecutor:
                     log.exception("Error! %s", db_future.exception())
 
                 # Error if >db update< failed

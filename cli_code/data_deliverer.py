@@ -34,6 +34,17 @@ log.setLevel(logging.DEBUG)
 ###############################################################################
 
 
+def outer_function(func):
+    # TODO (ina): Checkout decorator for cancelling files?
+    def inner_function(self, *args, **kwargs):
+        print("RUNNING DECORATOR")
+        to_return = func(self, *args, **kwargs)
+        print("FINISHING DECORATOR")
+        return to_return
+
+    return inner_function
+
+
 class DataDeliverer:
     """Data deliverer class."""
 
@@ -43,9 +54,14 @@ class DataDeliverer:
         if not kwargs:
             sys.exit("Missing Data Delivery System user credentials.")
 
+        # Get CLI arg
         self.method = sys._getframe().f_back.f_code.co_name
         if not self.method in ["put"]:
             sys.exit("Unauthorized method!")
+
+        # Flags
+        self.break_on_fail = kwargs["break_on_fail"] \
+            if "break_on_fail" in kwargs else False
 
         # Get user info
         username, password, project, recipient, kwargs = \
@@ -57,14 +73,20 @@ class DataDeliverer:
 
         # Get file info
         file_collector = fh.FileHandler(user_input=kwargs)
+        files_in_db = file_collector.get_existing_files(
+            project=project, token=dds_user.token
+        )
 
         self.user = dds_user
         self.data = file_collector
-        self.status = self.create_status_dict()
+        self.status = self.create_status_dict(to_cancel=files_in_db)
         self.project = project
         self.token = dds_user.token
-        self.break_on_fail = kwargs["break_on_fail"] \
-            if "break_on_fail" in kwargs else False
+
+        # Control ok connection to S3
+        self.prepare_s3()
+
+        sys.exit()
 
     def __enter__(self):
         return self
@@ -78,15 +100,40 @@ class DataDeliverer:
 
     def __repr__(self):
         return f"<DataDeliverer proj:{self.project}>"
+    
+    @outer_function
+    def prepare_s3(self):
+        """Check that s3 connection works, and that bucket exists."""
 
-    def create_status_dict(self):
+        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+            bucket_exists = conn.check_bucket_exists()
+            if not bucket_exists:
+                conn.create_bucket()
+
+    def create_status_dict(self, to_cancel):
         """Create dict for tracking file delivery status"""
 
-        return {x: {"cancel": False,
+        if to_cancel and self.break_on_fail:
+            sys.exit("Break-on-fail chosen. "
+                     "File upload cancelled due to the following files: \n"
+                     f"{to_cancel}")
+
+        status_dict = {}
+        for x, y in list(self.data.data.items()):
+            cancel = bool(y["name_in_db"] in to_cancel)
+            if cancel:
+                self.data.failed[x] = {**self.data.data.pop(x),
+                                       **{"message": "File already uploaded"}}
+            else:
+                status_dict[x] = {
+                    "cancel": False,
                     "message": "",
                     "upload": {"started": False, "done": False},
-                    "db": {"started": False, "done": False}}
-                for x in self.data.data}
+                    "db": {"started": False, "done": False}
+                }
+
+        log.debug(status_dict)
+        return status_dict
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
@@ -153,7 +200,7 @@ class DataDeliverer:
         cancel, message = self.set_file_status(file=file, task="upload")
         if cancel:
             self.cancel(file=file, message=message)
-            return False
+            return False, message
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -172,7 +219,7 @@ class DataDeliverer:
                 message = f"S3 upload of file '{file}' failed!"
                 log.exception("%s: %s", file, err)
                 self.cancel(file=file, message=message)
-                return False
+                return False, message
 
         log.info("Success: File '%s' uploaded!", file)
         _, _ = self.set_file_status(file=file, task="upload",
@@ -206,7 +253,7 @@ class DataDeliverer:
             return True, message
 
         if self.status[file]["cancel"]:
-            message = "File cancelled. Error: %s", self.status[file]["message"]
+            message = f"File cancelled. Error: {self.status[file]['message']}"
             log.info(message)
             return True, message
 
@@ -259,7 +306,7 @@ class DataDeliverer:
 
         # Send file info to API
         response = requests.post(
-            DDSEndpoint.NEWFILE,
+            DDSEndpoint.FILE_NEW,
             params={"name": fileinfo["name_in_db"],
                     "name_in_bucket": fileinfo["name_in_bucket"],
                     "subpath": fileinfo["subpath"],

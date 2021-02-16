@@ -9,12 +9,14 @@ import logging
 import sys
 import pathlib
 import uuid
-import concurrent
+import requests
 
 # Installed
 
 # Own modules
 from cli_code import status
+from cli_code import DDSEndpoint
+
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
@@ -52,9 +54,43 @@ class FileHandler:
             sys.exit("No data specified.")
 
         self.data = self.collect_file_info_local(all_paths=data_list)
+        self.failed = {}
 
         for x, y in self.data.items():
             log.debug("%s : %s\n", x, y)
+
+    def get_existing_files(self, project, token):
+        """Do API call and check for the files in the DB,
+        cancels those existing in the DB."""
+
+        args = {"project": project}
+        files = list(y["name_in_db"] for _, y in self.data.items())
+        log.debug(files)
+
+        response = requests.get(DDSEndpoint.FILE_MATCH, params=args,
+                                headers=token, json=files)
+
+        if not response.ok:
+            sys.exit("Failed to match previously uploaded files."
+                     f"{response.status_code} -- {response.text}")
+
+        files_not_in_db = response.json()
+
+        log.debug("Files not in db: %s", files_not_in_db)
+        if "files" not in files_not_in_db:
+            sys.exit("Files not returned from API.")
+
+        if files_not_in_db["files"] is None:
+            return set()
+        # if set(files_not_in_db["files"]) == set(files):
+        #     self.failed = self.data
+        #     self.data = {}
+        #     sys.exit("All specified files have already been uploaded.")
+
+        log.debug("Files not in db: %s", files_not_in_db["files"])
+
+        # Return files to cancel
+        return set(files).difference(set(files_not_in_db["files"]))
 
     def collect_file_info_local(self, all_paths, folder=None):
         """Get info on each file in each path specified."""
@@ -72,7 +108,7 @@ class FileHandler:
                         filename=path.name,
                         folder=folder
                     ),
-                    "name_in_db": subpath / path.name
+                    "name_in_db": str(subpath / path.name)
                 }
             elif path.is_dir():
                 file_info.update({

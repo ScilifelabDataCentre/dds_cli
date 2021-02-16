@@ -60,6 +60,7 @@ class DataDeliverer:
 
         self.user = dds_user
         self.data = file_collector
+        self.status = self.create_status_dict()
         self.project = project
         self.token = dds_user.token
         self.break_on_fail = kwargs["break_on_fail"] \
@@ -77,6 +78,14 @@ class DataDeliverer:
 
     def __repr__(self):
         return f"<DataDeliverer proj:{self.project}>"
+
+    def create_status_dict(self):
+        """Create dict for tracking file delivery status"""
+
+        return {x: {"cancel": False,
+                    "message": "",
+                    "upload": {"started": False, "done": False}}
+                for x in self.data.data}
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
@@ -139,7 +148,10 @@ class DataDeliverer:
     def put(self, file):
         """Uploads files to the cloud."""
 
-        self.set_upload_status(file=file)
+        # Do not upload if already cancelled
+        cancel = self.set_upload_status(file=file)
+        if cancel:
+            return False
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -155,41 +167,62 @@ class DataDeliverer:
                     }
                 )
             except botocore.client.ClientError as err:
-                log.exception("Failed to upload file '%s': %s", file, err)
-                self.cancel(file=file)  # TODO (ina): check out, confused atm
+                message = f"S3 upload of file '{file}' failed!"
+                log.exception("%s: %s", file, err)
+                self.cancel(file=file, message=message)
                 return False
 
         log.info("Success: File '%s' uploaded!", file)
+        _ = self.set_upload_status(file=file, started=False, done=True)
         return True
 
     def set_upload_status(self, file, started=True, done=False):
-        """Updates the current files status"""
+        """Updates the current files status, and returns if to fail or not."""
 
         if started and done:
             log.critical("Error! Upload marked as both 'started' and 'done' "
                          " for file '%s'", file)
+            return True
 
         if not started and not done:
             log.critical("Error! Setting upload status to neither started or "
                          "done -- should not be possible. File: '%s'", file)
+            return True
 
-        if self.data.data[file]["status"]["do_fail"]["value"]:
-            pass  # TODO (ina): Do something here
+        if self.status[file]["cancel"]:
+            log.info("File cancelled. Error: %s", self.status[file]["message"])
+            return True
 
+        # Update file status
         new_status = {"started": started, "done": done}
-        if self.data.data[file]["status"]["processing"]["done"]:
-            self.data.data[file]["status"]["upload"].update(new_status)
+        self.status[file]["upload"].update(new_status)
+        log.info("Status change! '%s' : %s", file, new_status)
+        return False
 
-    def cancel(self, file):
+    def cancel(self, file, message):
         """Cancels upload of single failed file or all"""
 
         if self.break_on_fail:
             # Cancel all
-            pass
+            for curr_file, file_status in list(self.status.items()):
+                # Cancel the current failed file
+                if curr_file == file:
+                    self.status[curr_file].update({"cancel": True,
+                                                   "message": message})
+
+                # Only cancel if upload has neither started or is finished
+                # and the file isn't previously cancelled due to other problem
+                if not any([file_status["upload"]["started"],
+                            file_status["upload"]["done"]]):
+                    if not file_status["cancel"]:
+                        self.status[curr_file].update(
+                            {"cancel": True,
+                             "message": ("File upload cancelled due to the "
+                                         f"file {file}. Break-on-fail chosen.")}
+                        )
         else:
             # Cancel one
-            pass
-
+            self.status[file].update({"cancel": True, "message": message})
 
     def add_file_db(self, file):
         """Make API request to add file to DB."""

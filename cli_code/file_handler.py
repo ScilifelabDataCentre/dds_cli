@@ -72,9 +72,7 @@ class FileHandler:
                         filename=path.name,
                         folder=folder
                     ),
-                    "name_in_db": subpath / path.name,
-                    "status": {"fail": False,
-                               "upload": {"started": False, "done": False}}
+                    "name_in_db": subpath / path.name
                 }
             elif path.is_dir():
                 file_info.update({

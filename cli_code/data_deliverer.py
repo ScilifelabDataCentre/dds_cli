@@ -84,7 +84,8 @@ class DataDeliverer:
 
         return {x: {"cancel": False,
                     "message": "",
-                    "upload": {"started": False, "done": False}}
+                    "upload": {"started": False, "done": False},
+                    "db": {"started": False, "done": False}}
                 for x in self.data.data}
 
     def verify_input(self, user_input):
@@ -149,8 +150,9 @@ class DataDeliverer:
         """Uploads files to the cloud."""
 
         # Do not upload if already cancelled
-        cancel = self.set_upload_status(file=file)
+        cancel, message = self.set_file_status(file=file, task="upload")
         if cancel:
+            self.cancel(file=file, message=message)
             return False
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
@@ -173,31 +175,46 @@ class DataDeliverer:
                 return False
 
         log.info("Success: File '%s' uploaded!", file)
-        _ = self.set_upload_status(file=file, started=False, done=True)
-        return True
+        _, _ = self.set_file_status(file=file, task="upload",
+                                    started=False, done=True)
+        return True, ""
 
-    def set_upload_status(self, file, started=True, done=False):
+    def set_file_status(self, file, task, started=True, done=False):
         """Updates the current files status, and returns if to fail or not."""
 
+        if task not in ["upload", "db"]:
+            message = "Invalid status task: %s", task
+            log.critical(message)
+            return True, message
+
+        if task == "db" and not self.status[file]["upload"]["done"]:
+            message = "Trying to add file '%s' to db before file is uploaded.",\
+                file
+            log.critical(message)
+            return True, message
+
         if started and done:
-            log.critical("Error! Upload marked as both 'started' and 'done' "
-                         " for file '%s'", file)
+            message = "Error! Upload marked as both 'started' and 'done' " \
+                " for file '%s'", file
+            log.critical(message)
             return True
 
         if not started and not done:
-            log.critical("Error! Setting upload status to neither started or "
-                         "done -- should not be possible. File: '%s'", file)
-            return True
+            message = "Error! Setting upload status to neither started or " \
+                "done -- should not be possible. File: '%s'", file
+            log.critical(message)
+            return True, message
 
         if self.status[file]["cancel"]:
-            log.info("File cancelled. Error: %s", self.status[file]["message"])
-            return True
+            message = "File cancelled. Error: %s", self.status[file]["message"]
+            log.info(message)
+            return True, message
 
         # Update file status
         new_status = {"started": started, "done": done}
-        self.status[file]["upload"].update(new_status)
-        log.info("Status change! '%s' : %s", file, new_status)
-        return False
+        self.status[file][task].update(new_status)
+        log.info("Status change! '%s' : %s : %s", file, task, new_status)
+        return False, ""
 
     def cancel(self, file, message):
         """Cancels upload of single failed file or all"""
@@ -207,8 +224,7 @@ class DataDeliverer:
             for curr_file, file_status in list(self.status.items()):
                 # Cancel the current failed file
                 if curr_file == file:
-                    self.status[curr_file].update({"cancel": True,
-                                                   "message": message})
+                    self.cancel_one(file=file, message=message)
 
                 # Only cancel if upload has neither started or is finished
                 # and the file isn't previously cancelled due to other problem
@@ -222,10 +238,21 @@ class DataDeliverer:
                         )
         else:
             # Cancel one
+            self.cancel_one(file=file, message=message)
+
+    def cancel_one(self, file, message):
+        """Cancel one file"""
+
+        if not self.status[file]["cancel"]:
             self.status[file].update({"cancel": True, "message": message})
 
     def add_file_db(self, file):
         """Make API request to add file to DB."""
+
+        cancel, _ = self.set_file_status(file=file, task="db")
+        log.debug("cancel? %s", cancel)
+        if cancel:
+            return False
 
         # Get file info
         fileinfo = self.data.data[file]
@@ -246,5 +273,10 @@ class DataDeliverer:
                           file, response.status_code, response.text)
             return False
 
-        log.info("Success: File '%s' added to DB!", file)
+        response_json = response.json()
+        if "message" in response_json:
+            log.info("Success: %s", response_json["message"])
+
+        _ = self.set_file_status(file=file, task="db",
+                                 started=False, done=True)
         return True

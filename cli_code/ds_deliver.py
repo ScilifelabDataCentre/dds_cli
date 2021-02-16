@@ -117,12 +117,12 @@ def put(dds_info, config, username, project, recipient, source,
                 except futures.BrokenExecutor():
                     sys.exit(f"{upload_future.exception()}")
                     break
-                
+
                 # Error if file >upload< failed
                 if not uploaded:
                     # TODO (ina): Change here - don't quit
-                    sys.exit("Failed: Upload of file '%s' failed!",
-                             uploaded_file)
+                    log.warning("File '%s' not uploaded!", uploaded_file)
+                    break
 
                 # Add to db ------------------------------------ Add to db #
                 db_threads[
@@ -142,7 +142,7 @@ def put(dds_info, config, username, project, recipient, source,
                 # Error if >db update< failed
                 if not file_added:
                     # TODO (ina): Change here - don't quit
-                    log.exception(
-                        "Failed: File '%s' not added to database!", added_file)
+                    log.warning("File '%s' not added to database!", added_file)
+                    break
 
                 log.debug("Finished -- '%s' : '%s'", added_file, file_added)

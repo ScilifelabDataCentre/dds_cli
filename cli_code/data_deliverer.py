@@ -12,6 +12,9 @@ import sys
 import json
 import traceback
 import requests
+import functools
+import time
+import dataclasses
 
 # Installed
 import botocore
@@ -30,20 +33,94 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 ###############################################################################
-# CLASSES ########################################################### CLASSES #
+# DECORATORS ##################################################### DECORATORS #
 ###############################################################################
 
 
-def outer_function(func):
-    # TODO (ina): Checkout decorator for cancelling files?
-    def inner_function(self, *args, **kwargs):
-        print("RUNNING DECORATOR")
-        to_return = func(self, *args, **kwargs)
-        print("FINISHING DECORATOR")
-        return to_return
+def verify_proceed(func):
+    """Decorator for verifying that the file is not cancelled.
+    Also cancels the upload of all non-started files if break-on-fail."""
 
-    return inner_function
+    @functools.wraps(func)
+    def wrapped(self, *args, **kwargs):
 
+        # Check that function has correct args
+        if "file" not in kwargs:
+            raise Exception("Missing key word argument in wrapper over "
+                            f"function {func.__name__}: 'file'")
+        file = kwargs["file"]
+
+        # Return if file cancelled by another file
+        if self.status[file]["cancel"]:
+            message = f"File already cancelled, stopping upload " \
+                f"of file {file}"
+            log.warning(message)
+            return False
+
+        # Run function
+        ok_to_proceed, message = func(self, *args, **kwargs)
+
+        # Cancel file(s) if something failed
+        if not ok_to_proceed:
+            self.status[file].update({"cancel": True, "message": message})
+            if self.break_on_fail:
+                message = f"Cancelling upload due to file '{file}'. " \
+                    "Break-on-fail specified in call."
+                _ = [self.status[x].update({"cancel": True, "message": message})
+                     for x in self.status if not self.status[x]["cancel"]
+                     and not any([self.status[x]["put"]["started"],
+                                  self.status[x]["put"]["done"]])
+                     and x != file]
+
+            log.debug("Status updated: %s", self.status[file])
+
+        return ok_to_proceed
+
+    return wrapped
+
+
+def update_status(func):
+    """Decorator for updating the status of files."""
+
+    @functools.wraps(func)
+    def wrapped(self, *args, **kwargs):
+
+        # Check that function has correct args
+        if "file" not in kwargs:
+            raise Exception("Missing key word argument in wrapper over "
+                            f"function {func.__name__}: 'file'")
+        file = kwargs["file"]
+
+        if func.__name__ not in ["put", "add_file_db"]:
+            raise Exception(f"The function {func.__name__} cannot be used with"
+                            " this decorator.")
+        if func.__name__ not in self.status[file]:
+            raise Exception(f"No status found for function {func.__name__}.")
+
+        # Update status to started
+        self.status[file][func.__name__].update({"started": True})
+
+        # Run function
+        ok_to_continue, message, *info = func(self, *args, **kwargs)
+
+        log.debug("ok to contiue %s: %s", func.__name__, ok_to_continue)
+        log.debug("message: %s", message)
+        log.debug("Returned: %s", info)
+
+        if not ok_to_continue:
+            return False, message
+
+        # Update status to done
+        self.status[file][func.__name__].update({"done": True})
+
+        return ok_to_continue, message
+
+    return wrapped
+
+
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
 
 class DataDeliverer:
     """Data deliverer class."""
@@ -86,8 +163,6 @@ class DataDeliverer:
         # Control ok connection to S3
         self.prepare_s3()
 
-        sys.exit()
-
     def __enter__(self):
         return self
 
@@ -100,8 +175,7 @@ class DataDeliverer:
 
     def __repr__(self):
         return f"<DataDeliverer proj:{self.project}>"
-    
-    @outer_function
+
     def prepare_s3(self):
         """Check that s3 connection works, and that bucket exists."""
 
@@ -128,8 +202,8 @@ class DataDeliverer:
                 status_dict[x] = {
                     "cancel": False,
                     "message": "",
-                    "upload": {"started": False, "done": False},
-                    "db": {"started": False, "done": False}
+                    "put": {"started": False, "done": False},
+                    "add_file_db": {"started": False, "done": False}
                 }
 
         log.debug(status_dict)
@@ -193,14 +267,12 @@ class DataDeliverer:
 
         return username, password, project, recipient, user_input
 
+    @verify_proceed
+    @update_status
     def put(self, file):
         """Uploads files to the cloud."""
 
-        # Do not upload if already cancelled
-        cancel, message = self.set_file_status(file=file, task="upload")
-        if cancel:
-            self.cancel(file=file, message=message)
-            return False, message
+        message = ""
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -218,88 +290,14 @@ class DataDeliverer:
             except botocore.client.ClientError as err:
                 message = f"S3 upload of file '{file}' failed!"
                 log.exception("%s: %s", file, err)
-                self.cancel(file=file, message=message)
                 return False, message
 
-        log.info("Success: File '%s' uploaded!", file)
-        _, _ = self.set_file_status(file=file, task="upload",
-                                    started=False, done=True)
-        return True, ""
+        return True, message
 
-    def set_file_status(self, file, task, started=True, done=False):
-        """Updates the current files status, and returns if to fail or not."""
-
-        if task not in ["upload", "db"]:
-            message = "Invalid status task: %s", task
-            log.critical(message)
-            return True, message
-
-        if task == "db" and not self.status[file]["upload"]["done"]:
-            message = "Trying to add file '%s' to db before file is uploaded.",\
-                file
-            log.critical(message)
-            return True, message
-
-        if started and done:
-            message = "Error! Upload marked as both 'started' and 'done' " \
-                " for file '%s'", file
-            log.critical(message)
-            return True
-
-        if not started and not done:
-            message = "Error! Setting upload status to neither started or " \
-                "done -- should not be possible. File: '%s'", file
-            log.critical(message)
-            return True, message
-
-        if self.status[file]["cancel"]:
-            message = f"File cancelled. Error: {self.status[file]['message']}"
-            log.info(message)
-            return True, message
-
-        # Update file status
-        new_status = {"started": started, "done": done}
-        self.status[file][task].update(new_status)
-        log.info("Status change! '%s' : %s : %s", file, task, new_status)
-        return False, ""
-
-    def cancel(self, file, message):
-        """Cancels upload of single failed file or all"""
-
-        if self.break_on_fail:
-            # Cancel all
-            for curr_file, file_status in list(self.status.items()):
-                # Cancel the current failed file
-                if curr_file == file:
-                    self.cancel_one(file=file, message=message)
-
-                # Only cancel if upload has neither started or is finished
-                # and the file isn't previously cancelled due to other problem
-                if not any([file_status["upload"]["started"],
-                            file_status["upload"]["done"]]):
-                    if not file_status["cancel"]:
-                        self.status[curr_file].update(
-                            {"cancel": True,
-                             "message": ("File upload cancelled due to the "
-                                         f"file {file}. Break-on-fail chosen.")}
-                        )
-        else:
-            # Cancel one
-            self.cancel_one(file=file, message=message)
-
-    def cancel_one(self, file, message):
-        """Cancel one file"""
-
-        if not self.status[file]["cancel"]:
-            self.status[file].update({"cancel": True, "message": message})
-
+    @verify_proceed
+    @update_status
     def add_file_db(self, file):
         """Make API request to add file to DB."""
-
-        cancel, _ = self.set_file_status(file=file, task="db")
-        log.debug("cancel? %s", cancel)
-        if cancel:
-            return False
 
         # Get file info
         fileinfo = self.data.data[file]
@@ -316,14 +314,10 @@ class DataDeliverer:
 
         # Error if failed
         if not response.ok:
-            log.exception("Failed to add file '%s' to database! %s -- %s",
-                          file, response.status_code, response.text)
-            return False
+            message = f"Failed to add file '{file}' to database! " \
+                f"{response.status_code} -- {response.text}"
+            log.exception(message)
+            return False, message
 
-        response_json = response.json()
-        if "message" in response_json:
-            log.info("Success: %s", response_json["message"])
-
-        _ = self.set_file_status(file=file, task="db",
-                                 started=False, done=True)
-        return True
+        message = response.json()["message"]
+        return True, message

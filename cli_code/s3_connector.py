@@ -9,6 +9,8 @@ import logging
 import traceback
 import requests
 import sys
+import dataclasses
+import functools
 
 # Installed
 import boto3
@@ -26,52 +28,45 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 ###############################################################################
-# CLASSES ########################################################### CLASSES #
+# DECORATORS ##################################################### DECORATORS #
 ###############################################################################
 
 
-class S3Connector:
-    """Connects to Simple Storage Service."""
+def s3info_required(func):
+    """Gets required cloud information incl. project and keys."""
 
-    def __init__(self, project_id, token):
-        self.safespring_project, self.keys, self.url, self.bucketname = \
-            self.get_s3info(project_id=project_id, token=token)
+    @functools.wraps(func)
+    def get_s3_info(self, *args, **kwargs):
 
-        self.resource = None
+        if not all(x in kwargs for x in ["project_id", "token"]):
+            raise Exception("Project information missing, cannot connect "
+                            "to cloud.")
 
-    def __enter__(self):
-        self.connect()
-        return self
+        params = {"project": kwargs["project_id"]}
 
-    def __exit__(self, exc_type, exc_value, tb):
-        if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
-            return False  # uncomment to pass exception through
-
-        return True
-
-    def __repr__(self):
-        return "<S3Connector>"
-
-    def get_s3info(self, project_id, token):
-        """Gets the safespring project and keys."""
-
-        args = {"project": project_id}
-
-        response = requests.get(DDSEndpoint.S3KEYS, params=args, headers=token)
+        response = requests.get(DDSEndpoint.S3KEYS,
+                                params=params, headers=kwargs["token"])
 
         if not response.ok:
-            sys.exit("Failed retrieving Safespring project name. "
-                     f"Error code: {response.status_code} "
-                     f" -- {response.reason}"
-                     f"{response.text}")
+            raise Exception("Failed retrieving Safespring project name. "
+                            f"Error code: {response.status_code} "
+                            f" -- {response.reason}"
+                            f"{response.text}")
 
         s3info = response.json()
-        return s3info["safespring_project"], s3info["keys"], s3info["url"], \
-            s3info["bucket"]
 
-    def connect(self):
-        """Connect to S3"""
+        return func(self, safespring_project=s3info["safespring_project"],
+                    keys=s3info["keys"], url=s3info["url"],
+                    bucketname=s3info["bucket"])
+
+    return get_s3_info
+
+
+def connect_cloud(func):
+    """Connect to S3"""
+
+    @functools.wraps(func)
+    def init_resource(self, *args, **kwargs):
 
         # Connect to service
         try:
@@ -85,6 +80,41 @@ class S3Connector:
             )
         except botocore.client.ClientError as err:
             sys.exit("S3 connection failed: %s", err)
+
+        return func(self, *args, **kwargs)
+
+    return init_resource
+
+
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
+
+
+class S3Connector:
+    """Connects to Simple Storage Service."""
+
+    @s3info_required
+    def __init__(self, safespring_project, keys, url, bucketname):
+        self.safespring_project = safespring_project
+        self.keys = keys
+        self.url = url
+        self.bucketname = bucketname
+        self.resource = None
+
+    @connect_cloud
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+            return False  # uncomment to pass exception through
+
+        return True
+
+    def __repr__(self):
+        return "<S3Connector>"
 
     def check_bucket_exists(self):
         """Checks if the bucket exists"""

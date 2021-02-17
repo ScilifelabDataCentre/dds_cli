@@ -51,7 +51,7 @@ class FileHandler:
 
         # Quit if no data
         if not data_list:
-            sys.exit("No data specified.")
+            raise Exception("No data specified.")
 
         self.data = self.collect_file_info_local(all_paths=data_list)
         self.failed = {}

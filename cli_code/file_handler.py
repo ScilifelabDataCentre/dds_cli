@@ -11,6 +11,7 @@ import pathlib
 import uuid
 import requests
 import dataclasses
+import functools
 
 # Installed
 
@@ -39,7 +40,7 @@ class FileHandler:
     failed: dict = dataclasses.field(init=False)
 
     def __post_init__(self, user_input):
-        
+
         source, source_path_file, *_ = user_input
 
         # Get user specified data
@@ -64,14 +65,34 @@ class FileHandler:
         self.failed = {}
 
         for x, y in self.data.items():
-            log.debug("%s : %s\n", x, y)
+            log.debug("\n%s : %s\n", x, y)
 
-    def get_existing_files(self, project, token):
+    def create_status_dict(self, to_cancel):
+        """Create dict for tracking file delivery status"""
+
+        status_dict = {}
+        for x in self.data:
+            cancel = bool(x in to_cancel)
+            if cancel:
+                self.failed[x] = {**self.data.pop(x),
+                                       **{"message": "File already uploaded"}}
+            else:
+                status_dict[x] = {
+                    "cancel": False,
+                    "message": "",
+                    "put": {"started": False, "done": False},
+                    "add_file_db": {"started": False, "done": False}
+                }
+
+        log.debug(status_dict)
+        return status_dict
+
+    def get_files_remote(self, project, token):
         """Do API call and check for the files in the DB,
         cancels those existing in the DB."""
 
         args = {"project": project}
-        files = list(y["name_in_db"] for _, y in self.data.items())
+        files = list(x for x in self.data)
         log.debug(files)
 
         response = requests.get(DDSEndpoint.FILE_MATCH, params=args,
@@ -81,23 +102,14 @@ class FileHandler:
             sys.exit("Failed to match previously uploaded files."
                      f"{response.status_code} -- {response.text}")
 
-        files_not_in_db = response.json()
+        files_in_db = response.json()
 
-        log.debug("Files not in db: %s", files_not_in_db)
-        if "files" not in files_not_in_db:
+        if "files" not in files_in_db:
             sys.exit("Files not returned from API.")
 
-        if files_not_in_db["files"] is None:
-            return set()
-        # if set(files_not_in_db["files"]) == set(files):
-        #     self.failed = self.data
-        #     self.data = {}
-        #     sys.exit("All specified files have already been uploaded.")
-
-        log.debug("Files not in db: %s", files_not_in_db["files"])
-
-        # Return files to cancel
-        return set(files).difference(set(files_not_in_db["files"]))
+        # Files in db
+        return list() if files_in_db["files"] is None \
+            else list(files_in_db["files"])
 
     def collect_file_info_local(self, all_paths, folder=None):
         """Get info on each file in each path specified."""
@@ -109,13 +121,14 @@ class FileHandler:
             # and feed back to same function for all folders
             if path.is_file():
                 subpath = self.compute_subpath(file=path, folder=folder)
-                file_info[path] = {
+                file_info[str(subpath / path.name)] = {
+                    "path_local": path,
                     "subpath": subpath,
                     "name_in_bucket": self.generate_bucket_filepath(
                         filename=path.name,
                         folder=folder
-                    ),
-                    "name_in_db": str(subpath / path.name)
+                    )
+                    # "name_in_db": str(subpath / path.name)
                 }
             elif path.is_dir():
                 file_info.update({

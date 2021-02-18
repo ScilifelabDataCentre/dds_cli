@@ -141,7 +141,7 @@ class DataDeliverer:
     source: dataclasses.InitVar[tuple] = None
     source_path_file: dataclasses.InitVar[pathlib.Path] = None
 
-    def __post_init__(self, *args, **kwargs):
+    def __post_init__(self, *args):
 
         if not self.method in ["put"]:
             sys.exit("Unauthorized method!")
@@ -152,18 +152,21 @@ class DataDeliverer:
 
         dds_user = user.User(username=username, password=password,
                              project=self.project, recipient=recipient)
-        
+
         # Get file info
         file_collector = fh.FileHandler(user_input=args)
-        files_in_db = file_collector.get_existing_files(
-            project=self.project, token=dds_user.token
-        )
+        files_in_db = file_collector.get_files_remote(project=self.project,
+                                                      token=dds_user.token)
+
+        if files_in_db and self.break_on_fail:
+            sys.exit("Some files have already been uploaded and "
+                     f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}")
 
         # self.user = dds_user
         self.data = file_collector
-        self.status = self.create_status_dict(to_cancel=files_in_db)
+        self.status = self.data.create_status_dict(to_cancel=files_in_db)
         self.token = dds_user.token
-
+        
         self.prepare_s3()
 
     def __enter__(self):
@@ -183,31 +186,6 @@ class DataDeliverer:
             bucket_exists = conn.check_bucket_exists()
             if not bucket_exists:
                 _ = conn.create_bucket()
-
-    def create_status_dict(self, to_cancel):
-        """Create dict for tracking file delivery status"""
-
-        if to_cancel and self.break_on_fail:
-            sys.exit("Break-on-fail chosen. "
-                     "File upload cancelled due to the following files: \n"
-                     f"{to_cancel}")
-
-        status_dict = {}
-        for x, y in list(self.data.data.items()):
-            cancel = bool(y["name_in_db"] in to_cancel)
-            if cancel:
-                self.data.failed[x] = {**self.data.data.pop(x),
-                                       **{"message": "File already uploaded"}}
-            else:
-                status_dict[x] = {
-                    "cancel": False,
-                    "message": "",
-                    "put": {"started": False, "done": False},
-                    "add_file_db": {"started": False, "done": False}
-                }
-
-        log.debug(status_dict)
-        return status_dict
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
@@ -261,15 +239,17 @@ class DataDeliverer:
         """Uploads files to the cloud."""
 
         message = ""
+        file_local = str(self.data.data[file]["path_local"])
+        file_remote = self.data.data[file]["name_in_bucket"]
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             # Upload file
             try:
                 conn.resource.meta.client.upload_file(
-                    Filename=str(file),
+                    Filename=file_local,
                     Bucket=conn.bucketname,
-                    Key=self.data.data[file]["name_in_bucket"],
+                    Key=file_remote,
                     ExtraArgs={
                         "ACL": "private",  # Access control list
                         "CacheControl": "no-store"  # Don't store cache
@@ -293,7 +273,7 @@ class DataDeliverer:
         # Send file info to API
         response = requests.post(
             DDSEndpoint.FILE_NEW,
-            params={"name": fileinfo["name_in_db"],
+            params={"name": file,
                     "name_in_bucket": fileinfo["name_in_bucket"],
                     "subpath": fileinfo["subpath"],
                     "project": self.project},

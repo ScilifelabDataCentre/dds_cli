@@ -101,7 +101,7 @@ def put(dds_info, config, username, project, recipient, source,
         with futures.ThreadPoolExecutor(max_workers=num_threads) as t_exec:
 
             # Upload --------------------------------------------- Upload #
-            for file in list(delivery.data.data):
+            for file, _ in list(delivery.data.data.items()):
                 # Upload file to S3 in thread
                 upload_threads[
                     t_exec.submit(delivery.put, file=file)

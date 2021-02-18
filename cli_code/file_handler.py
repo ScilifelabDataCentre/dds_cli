@@ -39,14 +39,15 @@ class FileHandler:
     failed: dict = dataclasses.field(init=False)
 
     def __post_init__(self, user_input):
+        
+        source, source_path_file, *_ = user_input
 
         # Get user specified data
         data_list = list()
-        if "source" in user_input and user_input["source"]:
-            data_list += list(user_input["source"])
-        if "source_path_file" in user_input and \
-                user_input["source_path_file"]:
-            source_path_file = pathlib.Path(user_input["source_path_file"])
+        if source is not None:
+            data_list += list(source)
+        if source_path_file is not None:
+            source_path_file = pathlib.Path(source_path_file)
             if source_path_file.exists():
                 with source_path_file.resolve().open(mode="r") as spf:
                     data_list += spf.read().splitlines()

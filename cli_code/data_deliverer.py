@@ -122,56 +122,49 @@ def update_status(func):
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
-# def get_method():
-#     return sys._getframe().f_back.f_code.co_name
 
-# @dataclasses.dataclass
-# class TestClass:
-
-#     method: str = "put"
-#     break_on_fail: bool = False
-
-
-
+@dataclasses.dataclass
 class DataDeliverer:
     """Data deliverer class."""
 
-    def __init__(self, *args, **kwargs):
+    method: str = "put"
+    break_on_fail: bool = False
+    project: str = None
+    data: dict = dataclasses.field(init=False)
+    status: dict = dataclasses.field(init=False)
+    token: dict = dataclasses.field(init=False)
+    username: dataclasses.InitVar[str] = None
+    password: dataclasses.InitVar[str] = None
+    recipient: dataclasses.InitVar[str] = None
+    config: dataclasses.InitVar[pathlib.Path] = None
+    source: dataclasses.InitVar[tuple] = None
+    source_path_file: dataclasses.InitVar[pathlib.Path] = None
 
-        # Quit if no delivery info is specified
-        if not kwargs:
-            sys.exit("Missing Data Delivery System user credentials.")
+    def __post_init__(self, *args, **kwargs):
 
-        # Get CLI arg
-        self.method = sys._getframe().f_back.f_code.co_name
+        log.debug("args: %s", args)
+        log.debug("kwargs: %s", kwargs)
         if not self.method in ["put"]:
             sys.exit("Unauthorized method!")
 
-        # Flags
-        self.break_on_fail = kwargs["break_on_fail"] \
-            if "break_on_fail" in kwargs else False
-
         # Get user info
-        username, password, project, recipient, kwargs = \
-            self.verify_input(user_input=kwargs)
-        log.debug(kwargs)
+        username, password, self.project, recipient, args = \
+            self.verify_input(user_input=(self.project, ) + args)
 
         dds_user = user.User(username=username, password=password,
-                             project=project, recipient=recipient)
+                             project=self.project, recipient=recipient)
 
         # Get file info
-        file_collector = fh.FileHandler(user_input=kwargs)
+        file_collector = fh.FileHandler(user_input=args)
         files_in_db = file_collector.get_existing_files(
-            project=project, token=dds_user.token
+            project=self.project, token=dds_user.token
         )
 
-        self.user = dds_user
+        # self.user = dds_user
         self.data = file_collector
         self.status = self.create_status_dict(to_cancel=files_in_db)
-        self.project = project
         self.token = dds_user.token
 
-        # Control ok connection to S3
         self.prepare_s3()
 
     def __enter__(self):
@@ -190,7 +183,7 @@ class DataDeliverer:
     def prepare_s3(self):
         """Check that s3 connection works, and that bucket exists."""
 
-        with s3.S3Connector(project=self.project, token=self.token) as conn:
+        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
             bucket_exists = conn.check_bucket_exists()
             if not bucket_exists:
                 _ = conn.create_bucket()
@@ -223,22 +216,11 @@ class DataDeliverer:
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""
 
-        username = None
-        password = None
-        project = None
-        recipient = None
-
-        # Get user info from kwargs
-        if "username" in user_input and user_input["username"]:
-            username = user_input["username"]
-        if "project" in user_input and user_input["project"]:
-            project = user_input["project"]
-        if "recipient" in user_input and user_input["recipient"]:
-            recipient = user_input["recipient"]
+        project, username, password, recipient, config, *args = user_input
 
         # Get contents from file
-        if "config" in user_input and user_input["config"]:
-            configpath = pathlib.Path(user_input["config"]).resolve()
+        if config is not None:
+            configpath = pathlib.Path(config).resolve()
             if not configpath.exists():
                 sys.exit("Config file does not exist.")
 
@@ -272,11 +254,7 @@ class DataDeliverer:
         if self.method == "put" and recipient is None:
             sys.exit("Project owner/data recipient not specified.")
 
-        # Only keep the data input in the kwargs
-        [user_input.pop(x, None) for x in
-         ["username", "password", "project", "recipient", "config"]]
-
-        return username, password, project, recipient, user_input
+        return username, password, project, recipient, args
 
     @verify_proceed
     @update_status

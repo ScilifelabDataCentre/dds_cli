@@ -18,6 +18,7 @@ import functools
 # Own modules
 from cli_code import status
 from cli_code import DDSEndpoint
+from cli_code import s3_connector as s3
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -71,11 +72,11 @@ class FileHandler:
         """Create dict for tracking file delivery status"""
 
         status_dict = {}
-        for x in self.data:
+        for x in list(self.data):
             cancel = bool(x in to_cancel)
             if cancel:
                 self.failed[x] = {**self.data.pop(x),
-                                       **{"message": "File already uploaded"}}
+                                  **{"message": "File already uploaded"}}
             else:
                 status_dict[x] = {
                     "cancel": False,
@@ -86,30 +87,6 @@ class FileHandler:
 
         log.debug(status_dict)
         return status_dict
-
-    def get_files_remote(self, project, token):
-        """Do API call and check for the files in the DB,
-        cancels those existing in the DB."""
-
-        args = {"project": project}
-        files = list(x for x in self.data)
-        log.debug(files)
-
-        response = requests.get(DDSEndpoint.FILE_MATCH, params=args,
-                                headers=token, json=files)
-
-        if not response.ok:
-            sys.exit("Failed to match previously uploaded files."
-                     f"{response.status_code} -- {response.text}")
-
-        files_in_db = response.json()
-
-        if "files" not in files_in_db:
-            sys.exit("Files not returned from API.")
-
-        # Files in db
-        return list() if files_in_db["files"] is None \
-            else list(files_in_db["files"])
 
     def collect_file_info_local(self, all_paths, folder=None):
         """Get info on each file in each path specified."""

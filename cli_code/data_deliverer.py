@@ -119,6 +119,22 @@ def update_status(func):
     return wrapped
 
 
+def verify_bucket_exist(func):
+    """Check that s3 connection works, and that bucket exists."""
+
+    @functools.wraps(func)
+    def wrapped(self, *args, **kwargs):
+
+        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+            bucket_exists = conn.check_bucket_exists()
+            if not bucket_exists:
+                _ = conn.create_bucket()
+            log.debug("verify_bucket_exists")
+
+        return func(self, *args, **kwargs)
+
+    return wrapped
+
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
@@ -152,22 +168,19 @@ class DataDeliverer:
 
         dds_user = user.User(username=username, password=password,
                              project=self.project, recipient=recipient)
+        self.token = dds_user.token
 
         # Get file info
-        file_collector = fh.FileHandler(user_input=args)
-        files_in_db = file_collector.get_files_remote(project=self.project,
-                                                      token=dds_user.token)
+        self.data = fh.FileHandler(user_input=args)
+        files_in_db = self.check_files_remote()
 
         if files_in_db and self.break_on_fail:
             sys.exit("Some files have already been uploaded and "
                      f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}")
 
-        # self.user = dds_user
-        self.data = file_collector
+        log.debug(files_in_db)
+
         self.status = self.data.create_status_dict(to_cancel=files_in_db)
-        self.token = dds_user.token
-        
-        self.prepare_s3()
 
     def __enter__(self):
         return self
@@ -179,13 +192,61 @@ class DataDeliverer:
 
         return True
 
-    def prepare_s3(self):
-        """Check that s3 connection works, and that bucket exists."""
+    def check_files_remote(self, *args, **kwargs):
+        """Do API call and check for the files in the DB."""
+
+        log.debug("check_files_remote")
+
+        args = {"project": self.project}
+        files = list(x for x in self.data.data)
+
+        response = requests.get(DDSEndpoint.FILE_MATCH, params=args,
+                                headers=self.token, json=files)
+
+        if not response.ok:
+            sys.exit("Failed to match previously uploaded files."
+                     f"{response.status_code} -- {response.text}")
+
+        files_in_db = response.json()
+
+        if "files" not in files_in_db:
+            sys.exit("Files not returned from API.")
+
+        # Continue with all
+        if files_in_db["files"] is None:
+            return list()
+
+        # Continue with those not in db
+        files_not_in_db = set(files).difference(set(files_in_db["files"]))
+        self.verify_file_bucket_status(files=files_not_in_db)
+        return files_in_db["files"]
+
+    @verify_bucket_exist
+    def verify_file_bucket_status(self, *args, **kwargs):
+        """Verifies that the files not found in the db are also not found
+        in the cloud."""
+
+        files = kwargs["files"]
+        if not files:
+            files = self.data.data
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-            bucket_exists = conn.check_bucket_exists()
-            if not bucket_exists:
-                _ = conn.create_bucket()
+
+            # Check that each new file is not in the bucket
+            for x in files:
+                try:
+                    conn.resource.meta.client.head_object(
+                        Bucket=conn.bucketname,
+                        Key=self.data.data[x]["name_in_bucket"]
+                    )
+                except botocore.client.ClientError:
+                    log.info("File '%s' does not exist!", x)
+                    continue
+
+                raise Exception(
+                    "The file '%s' was found in bucket (not in database). "
+                    "Contact DDS support."
+                )
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""

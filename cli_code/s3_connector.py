@@ -7,10 +7,11 @@
 # Standard library
 import logging
 import traceback
-import requests
+
 import sys
 import dataclasses
 import functools
+import requests
 
 # Installed
 import boto3
@@ -18,7 +19,6 @@ import botocore
 
 # Own modules
 from cli_code import DDSEndpoint
-from cli_code import timestamp
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -93,9 +93,9 @@ class S3Connector:
 
         if not response.ok:
             sys.exit("Failed retrieving Safespring project name. "
-                            f"Error code: {response.status_code} "
-                            f" -- {response.reason}"
-                            f"{response.text}")
+                     f"Error code: {response.status_code} "
+                     f" -- {response.reason}"
+                     f"{response.text}")
 
         s3info = response.json()
 
@@ -145,3 +145,5 @@ class S3Connector:
             sys.exit("Bucket '%s' does not exist. Failed second attempt.")
 
         log.info("Bucket '%s' created!", self.bucketname)
+
+        return True

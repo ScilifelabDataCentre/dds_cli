@@ -122,6 +122,17 @@ def update_status(func):
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
+# def get_method():
+#     return sys._getframe().f_back.f_code.co_name
+
+# @dataclasses.dataclass
+# class TestClass:
+
+#     method: str = "put"
+#     break_on_fail: bool = False
+
+
+
 class DataDeliverer:
     """Data deliverer class."""
 
@@ -182,7 +193,7 @@ class DataDeliverer:
         with s3.S3Connector(project=self.project, token=self.token) as conn:
             bucket_exists = conn.check_bucket_exists()
             if not bucket_exists:
-                conn.create_bucket()
+                _ = conn.create_bucket()
 
     def create_status_dict(self, to_cancel):
         """Create dict for tracking file delivery status"""

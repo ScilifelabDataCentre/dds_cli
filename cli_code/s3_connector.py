@@ -32,36 +32,6 @@ log.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-def s3info_required(func):
-    """Gets required cloud information incl. project and keys."""
-
-    @functools.wraps(func)
-    def get_s3_info(self, *args, **kwargs):
-
-        if not all(x in kwargs for x in ["project_id", "token"]):
-            raise Exception("Project information missing, cannot connect "
-                            "to cloud.")
-
-        params = {"project": kwargs["project_id"]}
-
-        response = requests.get(DDSEndpoint.S3KEYS,
-                                params=params, headers=kwargs["token"])
-
-        if not response.ok:
-            raise Exception("Failed retrieving Safespring project name. "
-                            f"Error code: {response.status_code} "
-                            f" -- {response.reason}"
-                            f"{response.text}")
-
-        s3info = response.json()
-
-        return func(self, safespring_project=s3info["safespring_project"],
-                    keys=s3info["keys"], url=s3info["url"],
-                    bucketname=s3info["bucket"])
-
-    return get_s3_info
-
-
 def connect_cloud(func):
     """Connect to S3"""
 
@@ -91,16 +61,46 @@ def connect_cloud(func):
 ###############################################################################
 
 
+@dataclasses.dataclass
 class S3Connector:
     """Connects to Simple Storage Service."""
 
-    @s3info_required
-    def __init__(self, safespring_project, keys, url, bucketname):
-        self.safespring_project = safespring_project
-        self.keys = keys
-        self.url = url
-        self.bucketname = bucketname
-        self.resource = None
+    project_id: dataclasses.InitVar[str]
+    token: dataclasses.InitVar[dict]
+    safespring_project: str = dataclasses.field(init=False)
+    keys: dict = dataclasses.field(init=False)
+    url: str = dataclasses.field(init=False)
+    bucketname: str = dataclasses.field(init=False)
+    resource = None
+
+    def __post_init__(self, project_id, token):
+
+        self.safespring_project, self.keys, self.url, self.bucketname = \
+            self.get_s3_info(project_id=project_id, token=token)
+
+    @staticmethod
+    def get_s3_info(project_id, token):
+        """Get information required to connect to cloud."""
+
+        if None in [project_id, token]:
+            raise Exception("Project information missing, cannot connect "
+                            "to cloud.")
+
+        params = {"project": project_id}
+
+        response = requests.get(DDSEndpoint.S3KEYS,
+                                params=params, headers=token)
+
+        if not response.ok:
+            sys.exit("Failed retrieving Safespring project name. "
+                            f"Error code: {response.status_code} "
+                            f" -- {response.reason}"
+                            f"{response.text}")
+
+        s3info = response.json()
+
+        return s3info["safespring_project"], s3info["keys"], s3info["url"], \
+            s3info["bucket"]
 
     @connect_cloud
     def __enter__(self):

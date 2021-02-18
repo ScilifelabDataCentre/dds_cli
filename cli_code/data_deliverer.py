@@ -179,7 +179,7 @@ class DataDeliverer:
     def prepare_s3(self):
         """Check that s3 connection works, and that bucket exists."""
 
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+        with s3.S3Connector(project=self.project, token=self.token) as conn:
             bucket_exists = conn.check_bucket_exists()
             if not bucket_exists:
                 conn.create_bucket()

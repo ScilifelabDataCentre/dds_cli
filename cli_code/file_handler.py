@@ -10,6 +10,7 @@ import sys
 import pathlib
 import uuid
 import requests
+import dataclasses
 
 # Installed
 
@@ -29,10 +30,15 @@ log.setLevel(logging.DEBUG)
 ###############################################################################
 
 
+@dataclasses.dataclass
 class FileHandler:
     """Collects the files specified by the user."""
 
-    def __init__(self, user_input):
+    user_input: dataclasses.InitVar[dict]
+    data: dict = dataclasses.field(init=False)
+    failed: dict = dataclasses.field(init=False)
+
+    def __post_init__(self, user_input):
 
         # Get user specified data
         data_list = list()
@@ -51,7 +57,7 @@ class FileHandler:
 
         # Quit if no data
         if not data_list:
-            raise Exception("No data specified.")
+            sys.exit("No data specified.")
 
         self.data = self.collect_file_info_local(all_paths=data_list)
         self.failed = {}

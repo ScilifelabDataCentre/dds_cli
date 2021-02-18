@@ -11,6 +11,7 @@ import logging
 import pathlib
 import sys
 import requests
+import dataclasses
 
 # Installed
 
@@ -28,32 +29,33 @@ LOG = logging.getLogger(__name__)
 ###############################################################################
 
 
+@dataclasses.dataclass
 class User:
     """Authenticates the DDS user."""
 
-    def __init__(self, username=None, password=None, project=None,
-                 recipient=None):
+    username: str = None
+    password: dataclasses.InitVar[str] = None
+    project: dataclasses.InitVar[str] = None
+    recipient: dataclasses.InitVar[str] = None
+    token: dict = dataclasses.field(init=False)
 
+    def __post_init__(self, password, project, recipient):
         # Authenticate user
-        if None in [username, password, project]:
+        if None in [self.username, password, project]:
             sys.exit("Missing user information.")
 
-        token = self.authenticate_user(username=username, password=password,
-                                       facility=recipient is not None)
+        self.token = self.authenticate_user(password=password,
+                                            facility=recipient is not None)
 
         # Approve project access
-        self.verify_project_access(project=project, token=token)
+        self.verify_project_access(project=project)
 
-        # Set attributes
-        self.username = username
-        self.token = token
-
-    def authenticate_user(self, username, password, facility):
+    def authenticate_user(self, password, facility):
         """Authenticates the username and password via a call to the API."""
 
         response = requests.get(DDSEndpoint.AUTH,
                                 params={"facility": facility},
-                                auth=(username, password))
+                                auth=(self.username, password))
 
         if not response.ok:
             sys.exit("User authentication failed! "
@@ -63,12 +65,12 @@ class User:
         token = response.json()
         return {"x-access-token": token["token"]}
 
-    def verify_project_access(self, project, token):
+    def verify_project_access(self, project):
         """docstring"""
 
         response = requests.get(DDSEndpoint.AUTH_PROJ,
                                 params={"project": project},
-                                headers=token)
+                                headers=self.token)
 
         if not response.ok:
             sys.exit("Project access denied! "

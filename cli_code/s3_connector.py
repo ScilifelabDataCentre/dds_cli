@@ -113,9 +113,6 @@ class S3Connector:
 
         return True
 
-    def __repr__(self):
-        return "<S3Connector>"
-
     def check_bucket_exists(self):
         """Checks if the bucket exists"""
 

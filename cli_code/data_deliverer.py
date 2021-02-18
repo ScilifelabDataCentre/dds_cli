@@ -15,6 +15,7 @@ import requests
 import functools
 import time
 import dataclasses
+import os
 
 # Installed
 import botocore
@@ -142,8 +143,6 @@ class DataDeliverer:
 
     def __post_init__(self, *args, **kwargs):
 
-        log.debug("args: %s", args)
-        log.debug("kwargs: %s", kwargs)
         if not self.method in ["put"]:
             sys.exit("Unauthorized method!")
 
@@ -153,7 +152,7 @@ class DataDeliverer:
 
         dds_user = user.User(username=username, password=password,
                              project=self.project, recipient=recipient)
-
+        
         # Get file info
         file_collector = fh.FileHandler(user_input=args)
         files_in_db = file_collector.get_existing_files(
@@ -176,9 +175,6 @@ class DataDeliverer:
             return False  # uncomment to pass exception through
 
         return True
-
-    def __repr__(self):
-        return f"<DataDeliverer proj:{self.project}>"
 
     def prepare_s3(self):
         """Check that s3 connection works, and that bucket exists."""
@@ -226,10 +222,13 @@ class DataDeliverer:
 
             # Get contents from file
             try:
+                original_umask = os.umask(0)
                 with configpath.open(mode="r") as cfp:
                     contents = json.load(cfp)
             except json.decoder.JSONDecodeError as err:
                 sys.exit(f"Failed to get config file contents: {err}")
+            finally:
+                os.umask(original_umask)
 
             # Get user credentials and project info if not already specified
             if username is None and "username" in contents:

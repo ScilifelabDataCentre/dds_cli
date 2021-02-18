@@ -129,7 +129,6 @@ def verify_bucket_exist(func):
             bucket_exists = conn.check_bucket_exists()
             if not bucket_exists:
                 _ = conn.create_bucket()
-            log.debug("verify_bucket_exists")
 
         return func(self, *args, **kwargs)
 
@@ -219,6 +218,9 @@ class DataDeliverer:
         # Continue with those not in db
         files_not_in_db = set(files).difference(set(files_in_db["files"]))
         self.verify_file_bucket_status(files=files_not_in_db)
+
+        log.debug("files in db: %s", files_in_db["files"])
+        log.debug("files NOT in db: %s", files_not_in_db)
         return files_in_db["files"]
 
     @verify_bucket_exist
@@ -230,21 +232,27 @@ class DataDeliverer:
         if not files:
             files = self.data.data
 
+        log.debug(files)
+
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             # Check that each new file is not in the bucket
             for x in files:
+                log.debug("File - %s, Key - %s", x, self.data.data[x]["name_in_bucket"])
                 try:
-                    conn.resource.meta.client.head_object(
+                    response = conn.resource.meta.client.head_object(
                         Bucket=conn.bucketname,
                         Key=self.data.data[x]["name_in_bucket"]
                     )
-                except botocore.client.ClientError:
+
+                except conn.resource.meta.client.exceptions.NoSuchKey:
                     log.info("File '%s' does not exist!", x)
                     continue
+                except botocore.exceptions.ClientError as err:
+                    log.info(err)
 
                 raise Exception(
-                    "The file '%s' was found in bucket (not in database). "
+                    f"The file '{x}' was found in bucket (not in database). "
                     "Contact DDS support."
                 )
 

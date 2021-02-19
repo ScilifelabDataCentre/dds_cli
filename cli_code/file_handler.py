@@ -40,6 +40,7 @@ class FileHandler:
     data: dict = dataclasses.field(init=False)
     failed: dict = dataclasses.field(init=False)
 
+    # Magic methods ################ Magic methods #
     def __post_init__(self, user_input):
 
         source, source_path_file, *_ = user_input
@@ -68,26 +69,34 @@ class FileHandler:
         for x, y in self.data.items():
             log.debug("\n%s : %s\n", x, y)
 
-    def create_status_dict(self, to_cancel):
-        """Create dict for tracking file delivery status"""
+    # Static methods ############## Static methods #
+    @staticmethod
+    def compute_subpath(file, folder):
+        """Computes the path to the file, from the specified folder."""
 
-        status_dict = {}
-        for x in list(self.data):
-            cancel = bool(x in to_cancel)
-            if cancel:
-                self.failed[x] = {**self.data.pop(x),
-                                  **{"message": "File already uploaded"}}
-            else:
-                status_dict[x] = {
-                    "cancel": False,
-                    "message": "",
-                    "put": {"started": False, "done": False},
-                    "add_file_db": {"started": False, "done": False}
-                }
+        subdir = pathlib.Path("")
+        if folder is not None:
+            fileparts = file.parts
+            start_ind = fileparts.index(folder)
+            subdir = pathlib.Path(*fileparts[start_ind:-1])
 
-        log.debug(status_dict)
-        return status_dict
+        return subdir
 
+    @staticmethod
+    def generate_bucket_filepath(filename="", folder=None):
+        """Generates filename and new path which the file will be
+        called in the bucket."""
+
+        # Set path to file
+        directory = pathlib.Path("") if folder is None \
+            else pathlib.Path(folder)
+
+        # Generate new file name
+        new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
+
+        return str(directory / pathlib.Path(new_name))
+
+    # General methods ############ General methods #
     def collect_file_info_local(self, all_paths, folder=None):
         """Get info on each file in each path specified."""
 
@@ -105,7 +114,6 @@ class FileHandler:
                         filename=path.name,
                         folder=folder
                     )
-                    # "name_in_db": str(subpath / path.name)
                 }
             elif path.is_dir():
                 file_info.update({
@@ -115,32 +123,22 @@ class FileHandler:
 
         return file_info
 
-    def generate_bucket_filepath(self, filename="", folder=None):
-        """Generates filename and new path which the file will be
-        called in the bucket."""
+    def create_status_dict(self, existing_files):
+        """Create dict for tracking file delivery status"""
 
-        # Set path to file
-        directory = pathlib.Path("") if folder is None \
-            else pathlib.Path(folder)
+        status_dict = {}
+        for x in list(self.data):
+            cancel = bool(x in existing_files)
+            if cancel:
+                self.failed[x] = {**self.data.pop(x),
+                                  **{"message": "File already uploaded"}}
+            else:
+                status_dict[x] = {
+                    "cancel": False,
+                    "message": "",
+                    "put": {"started": False, "done": False},
+                    "add_file_db": {"started": False, "done": False}
+                }
 
-        # Generate new file name
-        new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
-
-        return str(directory / pathlib.Path(new_name))
-
-    def compute_subpath(self, file, folder):
-        """Computes the path to the file, from the specified folder."""
-
-        subdir = pathlib.Path("")
-        if folder is not None:
-            fileparts = file.parts
-            start_ind = fileparts.index(folder)
-            subdir = pathlib.Path(*fileparts[start_ind:-1])
-
-        return subdir
-
-    def cancel_all(self):
-        """Cancel upload of all files"""
-
-    def cancel_one(self):
-        """Cancel the failed file"""
+        log.debug(status_dict)
+        return status_dict

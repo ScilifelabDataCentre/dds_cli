@@ -130,7 +130,9 @@ def verify_bucket_exist(func):
             if not bucket_exists:
                 _ = conn.create_bucket()
 
-        return func(self, *args, **kwargs)
+            result = func(self, conn, *args, **kwargs)
+
+        return result
 
     return wrapped
 
@@ -156,6 +158,7 @@ class DataDeliverer:
     source: dataclasses.InitVar[tuple] = None
     source_path_file: dataclasses.InitVar[pathlib.Path] = None
 
+    # Magic methods ########################## Magic methods #
     def __post_init__(self, *args):
 
         if not self.method in ["put"]:
@@ -171,15 +174,13 @@ class DataDeliverer:
 
         # Get file info
         self.data = fh.FileHandler(user_input=args)
-        files_in_db = self.check_files_remote()
+        files_in_db = self.check_previous_upload()
 
         if files_in_db and self.break_on_fail:
             sys.exit("Some files have already been uploaded and "
                      f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}")
 
-        log.debug(files_in_db)
-
-        self.status = self.data.create_status_dict(to_cancel=files_in_db)
+        self.status = self.data.create_status_dict(existing_files=files_in_db)
 
     def __enter__(self):
         return self
@@ -191,11 +192,11 @@ class DataDeliverer:
 
         return True
 
-    def check_files_remote(self, *args, **kwargs):
+    # General methods ###################### General methods #
+    def check_previous_upload(self, *args, **kwargs):
         """Do API call and check for the files in the DB."""
 
-        log.debug("check_files_remote")
-
+        # Get files from db
         args = {"project": self.project}
         files = list(x for x in self.data.data)
 
@@ -208,19 +209,26 @@ class DataDeliverer:
 
         files_in_db = response.json()
 
+        # API failure
         if "files" not in files_in_db:
             sys.exit("Files not returned from API.")
 
-        # Continue with all
-        if files_in_db["files"] is None:
-            return list()
+        # None of the files were found in the db
+        # if files_in_db["files"] is None:
+        #     pass  # check all files
+
+        files_not_in_db = set(files).difference(
+            set() if files_in_db["files"] is None
+            else set(files_in_db["files"])
+        )
+        log.debug("Files in db: %s", files_in_db)
+        log.debug("Files not in db: %s", files_not_in_db)
 
         # Continue with those not in db
-        files_not_in_db = set(files).difference(set(files_in_db["files"]))
-        self.verify_file_bucket_status(files=files_not_in_db)
+        # TODO (ina): Decide if to do this check or not? In that case,
+        # needs to return name in bucket from db.
+        # self.verify_file_bucket_status(files=files_not_in_db)
 
-        log.debug("files in db: %s", files_in_db["files"])
-        log.debug("files NOT in db: %s", files_not_in_db)
         return files_in_db["files"]
 
     @verify_bucket_exist
@@ -229,32 +237,24 @@ class DataDeliverer:
         in the cloud."""
 
         files = kwargs["files"]
-        if not files:
-            files = self.data.data
+        conn = args[0]
 
-        log.debug(files)
-
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            # Check that each new file is not in the bucket
-            for x in files:
-                log.debug("File - %s, Key - %s", x, self.data.data[x]["name_in_bucket"])
-                try:
-                    response = conn.resource.meta.client.head_object(
-                        Bucket=conn.bucketname,
-                        Key=self.data.data[x]["name_in_bucket"]
-                    )
-
-                except conn.resource.meta.client.exceptions.NoSuchKey:
-                    log.info("File '%s' does not exist!", x)
-                    continue
-                except botocore.exceptions.ClientError as err:
-                    log.info(err)
-
-                raise Exception(
-                    f"The file '{x}' was found in bucket (not in database). "
-                    "Contact DDS support."
+        # Check that each new file is not in the bucket
+        # and raise exception if one does - error in DDS
+        for x in files:
+            log.debug("File - %s, Key - %s", x,
+                      self.data.data[x]["name_in_bucket"])
+            try:
+                conn.resource.meta.client.head_object(
+                    Bucket=conn.bucketname,
+                    Key=self.data.data[x]["name_in_bucket"]
                 )
+            except (conn.resource.meta.client.exceptions.NoSuchKey,
+                    botocore.exceptions.ClientError):
+                continue
+
+            raise Exception(f"The file '{x}' was found in bucket "
+                            " (not in database). Contact DDS support.")
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""

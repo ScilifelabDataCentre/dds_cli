@@ -101,79 +101,48 @@ def put(dds_info, config, username, project, recipient, source,
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as t_exec:
 
+            # Upload --------------------------------------------- Upload #
             for file, _ in list(delivery.data.data.items()):
-                log.debug("Starting upload thread for file %s...", file)
+                # Upload file to S3 in thread
                 upload_threads[
                     t_exec.submit(delivery.put, file=file)
                 ] = file
 
-            while upload_threads:
-                done, _ =  concurrent.futures.wait(upload_threads, return_when=concurrent.futures.FIRST_COMPLETED)
-                
-                for fut in done:
-                    uploaded_file = upload_threads.pop(fut)
-                    file_uploaded = fut.result()
-                    log.debug("Uploaded file: %s, Upload successful: %s", uploaded_file, file_uploaded)
-                    
-                    log.debug("Starting database thread for file %s...", uploaded_file)
-                    db_threads[
-                        t_exec.submit(delivery.add_file_db, file=uploaded_file)
-                    ] = uploaded_file
+            # When each file is uploaded ------ When each file is uploaded #
+            for upload_future in concurrent.futures.as_completed(upload_threads):
+                uploaded_file = upload_threads[upload_future]
 
-                while db_threads:
-                    done_db, _ =  concurrent.futures.wait(db_threads, return_when=concurrent.futures.FIRST_COMPLETED)
+                log.debug(uploaded_file)
+                # Get returned info
+                try:
+                    uploaded = upload_future.result()
+                    if not uploaded:
+                        log.warning("File '%s' not uploaded!", uploaded_file)
+                        break
+                except concurrent.futures.BrokenExecutor:
+                    sys.exit(f"{upload_future.exception()}")
+                    break
 
-                    for fut_db in done_db:
-                        saved_file = db_threads.pop(fut_db)
-                        file_saved = fut_db.result()
-                        log.debug("Saved file: %s, Save successful: %s", saved_file, file_saved)
+                # Add to db ------------------------------------ Add to db #
+                db_threads[
+                    t_exec.submit(delivery.add_file_db, file=uploaded_file)
+                ] = uploaded_file
 
+            # When db update done -------------------- When db update done #
+            for db_future in concurrent.futures.as_completed(db_threads):
+                added_file = db_threads[db_future]
+                print(added_file)
+                # Get returned info
+                try:
+                    log.debug("Getting result for file '%s'...", added_file)
+                    file_added = db_future.result()
+                    log.debug("...Result for file '%s'", added_file)
+                    # Error if >db update< failed
+                    if not file_added:
+                        # TODO (ina): Change here - don't quit
+                        log.warning("File '%s' not added to database!", added_file)
+                        break
+                except concurrent.futures.BrokenExecutor:
+                    log.exception("Error! %s", db_future.exception())
 
-
-
-
-            # # Upload --------------------------------------------- Upload #
-            # for file, _ in list(delivery.data.data.items()):
-            #     # Upload file to S3 in thread
-            #     upload_threads[
-            #         t_exec.submit(delivery.put, file=file)
-            #     ] = file
-
-            # # When each file is uploaded ------ When each file is uploaded #
-            # for upload_future in futures.as_completed(upload_threads):
-            #     uploaded_file = upload_threads[upload_future]
-
-            #     log.debug(uploaded_file)
-            #     # Get returned info
-            #     try:
-            #         uploaded = upload_future.result()
-            #         if not uploaded:
-            #             log.warning("File '%s' not uploaded!", uploaded_file)
-            #             break
-            #     except futures.BrokenExecutor:
-            #         sys.exit(f"{upload_future.exception()}")
-            #         break
-
-            #     # Add to db ------------------------------------ Add to db #
-            #     db_threads[
-            #         t_exec.submit(delivery.add_file_db, file=uploaded_file)
-            #     ] = uploaded_file
-
-            # # When db update done -------------------- When db update done #
-            # for db_future in futures.as_completed(db_threads):
-            #     added_file = db_threads[db_future]
-            #     print(added_file)
-            #     # Get returned info
-            #     try:
-            #         log.debug("Getting result for file '%s'...", added_file)
-            #         file_added = db_future.result()
-            #         log.debug("...Result for file '%s'", added_file)
-            #         # Error if >db update< failed
-            #         if not file_added:
-            #             # TODO (ina): Change here - don't quit
-            #             log.warning("File '%s' not added to database!", added_file)
-            #             break
-            #     except futures.BrokenExecutor:
-            #         log.exception("Error! %s", db_future.exception())
-
-            #     log.debug("Finished -- '%s' : '%s'", added_file, file_added)
+                log.debug("Finished -- '%s' : '%s'", added_file, file_added)

@@ -104,10 +104,6 @@ def update_status(func):
         # Run function
         ok_to_continue, message, *info = func(self, *args, **kwargs)
 
-        log.debug("ok to contiue %s: %s", func.__name__, ok_to_continue)
-        log.debug("message: %s", message)
-        log.debug("Returned: %s", info)
-
         if not ok_to_continue:
             return False, message
 
@@ -213,48 +209,7 @@ class DataDeliverer:
         if "files" not in files_in_db:
             sys.exit("Files not returned from API.")
 
-        # None of the files were found in the db
-        # if files_in_db["files"] is None:
-        #     pass  # check all files
-
-        files_not_in_db = set(files).difference(
-            set() if files_in_db["files"] is None
-            else set(files_in_db["files"])
-        )
-        log.debug("Files in db: %s", files_in_db)
-        log.debug("Files not in db: %s", files_not_in_db)
-
-        # Continue with those not in db
-        # TODO (ina): Decide if to do this check or not? In that case,
-        # needs to return name in bucket from db.
-        # self.verify_file_bucket_status(files=files_not_in_db)
-
-        return files_in_db["files"]
-
-    @verify_bucket_exist
-    def verify_file_bucket_status(self, *args, **kwargs):
-        """Verifies that the files not found in the db are also not found
-        in the cloud."""
-
-        files = kwargs["files"]
-        conn = args[0]
-
-        # Check that each new file is not in the bucket
-        # and raise exception if one does - error in DDS
-        for x in files:
-            log.debug("File - %s, Key - %s", x,
-                      self.data.data[x]["name_in_bucket"])
-            try:
-                conn.resource.meta.client.head_object(
-                    Bucket=conn.bucketname,
-                    Key=self.data.data[x]["name_in_bucket"]
-                )
-            except (conn.resource.meta.client.exceptions.NoSuchKey,
-                    botocore.exceptions.ClientError):
-                continue
-
-            raise Exception(f"The file '{x}' was found in bucket "
-                            " (not in database). Contact DDS support.")
+        return list() if files_in_db["files"] is None else files_in_db["files"]
 
     def verify_input(self, user_input):
         """Verifies that the users input is valid and fully specified."""

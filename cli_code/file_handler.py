@@ -140,5 +140,4 @@ class FileHandler:
                     "add_file_db": {"started": False, "done": False}
                 }
 
-        log.debug(status_dict)
         return status_dict

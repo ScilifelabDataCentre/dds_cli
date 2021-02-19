@@ -29,7 +29,7 @@ from cli_code import DDSEndpoint
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
-
+ 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
@@ -52,6 +52,7 @@ def verify_proceed(func):
         file = kwargs["file"]
 
         # Return if file cancelled by another file
+        # log.debug("File: %s, Status: %s", file, self.status)
         if self.status[file]["cancel"]:
             message = f"File already cancelled, stopping upload " \
                 f"of file {file}"
@@ -126,9 +127,7 @@ def verify_bucket_exist(func):
             if not bucket_exists:
                 _ = conn.create_bucket()
 
-            result = func(self, conn, *args, **kwargs)
-
-        return result
+        return func(self, conn, *args, **kwargs)
 
     return wrapped
 
@@ -189,6 +188,7 @@ class DataDeliverer:
         return True
 
     # General methods ###################### General methods #
+    @verify_bucket_exist
     def check_previous_upload(self, *args, **kwargs):
         """Do API call and check for the files in the DB."""
 

@@ -98,125 +98,76 @@ def put(dds_info, config, username, project, recipient, source,
         # Keep track of futures
         upload_threads = {}     # Upload related
         db_threads = {}         # Database related
-        
+
+        # Iterator to keep track of which files have been handled
         iterator = iter(delivery.data.data.copy())
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor() as texec:
 
-            # Schedule the first N futures.  We don't want to schedule them all
-            # at once, to avoid consuming excessive amounts of memory.
+            # Schedule the first num_threads futures for upload
             for file in itertools.islice(iterator, num_threads):
                 log.debug("Uploading file %s...", file)
                 upload_threads[
-                    executor.submit(delivery.put, file=file)
+                    texec.submit(delivery.put, file=file)
                 ] = file
 
+            # Continue until all files are done
             while upload_threads:
-
-                # Wait for the next future to complete.
-                done, _ = concurrent.futures.wait(
-                    upload_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                # Wait for the next future to complete
+                udone, _ = concurrent.futures.wait(
+                    upload_threads,
+                    return_when=concurrent.futures.FIRST_COMPLETED
                 )
-                
-                for fut in done:
-                    uploaded_file = upload_threads.pop(fut)
+
+                # Get result from future and schedule database update
+                for ufut in udone:
+                    uploaded_file = upload_threads.pop(ufut)
                     log.debug("...File %s uploaded!", uploaded_file)
 
+                    # Get result
+                    try:
+                        _ = ufut.result()
+                    except concurrent.futures.BrokenExecutor as err:
+                        log.critical("Upload of file %s failed! Error: %s",
+                                     uploaded_file, err)
+                        continue
+
+                    # Schedule file for db update
                     log.debug("Adding to db: %s...", uploaded_file)
                     db_threads[
-                        executor.submit(delivery.add_file_db, file=uploaded_file)
+                        texec.submit(delivery.add_file_db, file=uploaded_file)
                     ] = uploaded_file
 
-                while db_threads:
-                    done_db, _ = concurrent.futures.wait(
-                        db_threads, return_when=concurrent.futures.FIRST_COMPLETED
-                    )
-                    log.debug("\nThreads:\tUpload %s\tDB %s\n", len(upload_threads), len(db_threads))
+                new_tasks = 0
 
+                # Continue until all files are done
+                while db_threads:
+                    # Wait for the next future to complete
+                    done_db, _ = concurrent.futures.wait(
+                        db_threads,
+                        return_when=concurrent.futures.FIRST_COMPLETED
+                    )
+
+                    # Get result from future
                     for fut_db in done_db:
                         added_file = db_threads.pop(fut_db)
                         log.debug("...File added to db: %s", added_file)
 
-                for ufile in itertools.islice(iterator, len(done)):
+                        new_tasks += 1
+
+                        # Get result
+                        try:
+                            _ = fut_db.result()
+                        except concurrent.futures.BrokenExecutor as err:
+                            log.critical(
+                                "Adding of file %s to database failed! "
+                                "Error: %s", uploaded_file, err
+                            )
+                            continue
+
+                # Schedule the next set of futures for upload
+                for ufile in itertools.islice(iterator, len(done_db)):
                     log.debug("Uploading file %s...", ufile)
                     upload_threads[
-                        executor.submit(delivery.put, file=ufile)
+                        texec.submit(delivery.put, file=ufile)
                     ] = ufile
-                
-
-
-                
-                # new_tasks = 0
-
-                # for fut in done:
-                #     original_task = upload_threads.pop(fut)
-                #     print(f"The outcome of {original_task} is {fut.result()}")
-                #     try:
-                #         _ = all_files.pop(original_task)
-                #     except Exception as err:
-                #         log.warning(err)
-                #     else:
-                #         log.info("Deleted %s from dict. Dict now looks like: \n %s", original_task, all_files)
-                    
-                #     if fut.result():
-                #         print(f"The file {original_task} has been uploaded!")
-                    
-                #     new_tasks += 1
-
-                # # Schedule the next set of futures.  We don't want more than N futures
-                # # in the pool at a time, to keep memory consumption down.
-                # for task in itertools.islice(list(all_files), new_tasks):
-                #     upload_threads[
-                #         executor.submit(delivery.put, file=task)
-                #     ] = task
-
-            
-
-        # CORRECT BELOW -------------------------------------------------------
-        # with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as t_exec:
-
-        #     # Upload --------------------------------------------- Upload #
-        #     for file, _ in list(delivery.data.data.items()):
-        #         # Upload file to S3 in thread
-        #         upload_threads[
-        #             t_exec.submit(delivery.put, file=file)
-        #         ] = file
-
-        #     # When each file is uploaded ------ When each file is uploaded #
-        #     for upload_future in concurrent.futures.as_completed(upload_threads):
-        #         uploaded_file = upload_threads[upload_future]
-
-        #         log.debug(uploaded_file)
-        #         # Get returned info
-        #         try:
-        #             uploaded = upload_future.result()
-        #             if not uploaded:
-        #                 log.warning("File '%s' not uploaded!", uploaded_file)
-        #                 break
-        #         except concurrent.futures.BrokenExecutor:
-        #             sys.exit(f"{upload_future.exception()}")
-        #             break
-
-        #         # Add to db ------------------------------------ Add to db #
-        #         db_threads[
-        #             t_exec.submit(delivery.add_file_db, file=uploaded_file)
-        #         ] = uploaded_file
-
-        #     # When db update done -------------------- When db update done #
-        #     for db_future in concurrent.futures.as_completed(db_threads):
-        #         added_file = db_threads[db_future]
-        #         print(added_file)
-        #         # Get returned info
-        #         try:
-        #             log.debug("Getting result for file '%s'...", added_file)
-        #             file_added = db_future.result()
-        #             log.debug("...Result for file '%s'", added_file)
-        #             # Error if >db update< failed
-        #             if not file_added:
-        #                 # TODO (ina): Change here - don't quit
-        #                 log.warning("File '%s' not added to database!", added_file)
-        #                 break
-        #         except concurrent.futures.BrokenExecutor:
-        #             log.exception("Error! %s", db_future.exception())
-
-        #         log.debug("Finished -- '%s' : '%s'", added_file, file_added)

@@ -283,7 +283,7 @@ class DataDeliverer:
                 message = f"S3 upload of file '{file}' failed!"
                 log.exception("%s: %s", file, err)
                 return False, message
-
+        # return False, message
         return True, message
 
     @verify_proceed
@@ -312,4 +312,5 @@ class DataDeliverer:
             return False, message
 
         message = response.json()["message"]
+        # return False, "test"
         return True, message

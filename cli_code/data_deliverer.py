@@ -11,14 +11,13 @@ import pathlib
 import sys
 import json
 import traceback
-import requests
 import functools
-import time
 import dataclasses
 import os
 
 # Installed
 import botocore
+import requests
 
 # Own modules
 from cli_code import user

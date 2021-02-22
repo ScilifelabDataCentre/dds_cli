@@ -171,3 +171,19 @@ def put(dds_info, config, username, project, recipient, source,
                     upload_threads[
                         texec.submit(delivery.put, file=ufile)
                     ] = ufile
+
+
+
+@cli.command()
+@click.argument("proj_arg", required=False)
+@click.option("--project", "-p", required=False)
+@click.option("--config", "-c", required=False, type=click.Path(exists=True),
+              help="Path to file with user credentials, destination, etc.")
+@click.option("--username", "-u", required=False, type=str,
+              help="Your Data Delivery System username.")
+@click.pass_obj
+def ls(dds_info, proj_arg, project, config, username):
+    """List the projects and the files within the projects."""
+
+    project = proj_arg if proj_arg is not None else project
+    with dd.DataLister(project=project, config=config, username=username)

@@ -54,13 +54,13 @@ class User:
         """Authenticates the username and password via a call to the API."""
 
         response = requests.get(DDSEndpoint.AUTH,
-                                params={"facility": facility},
+                                # params={"facility": facility},
                                 auth=(self.username, password))
 
         if not response.ok:
             sys.exit("User authentication failed! "
                      f"Error code: {response.status_code} "
-                     f" -- {response.reason}")
+                     f" -- {response.text}")
 
         token = response.json()
         return {"x-access-token": token["token"]}

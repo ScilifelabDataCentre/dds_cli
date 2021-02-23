@@ -74,8 +74,6 @@ def cli(ctx, debug):
               help="Your Data Delivery System username.")
 @click.option("--project", "-p", required=False, type=str,
               help="Project ID to which you're uploading data.")
-@click.option("--recipient", "-r", required=False, type=str,
-              help="ID of the user which owns the data.")
 @click.option("--source", "-s", required=False, type=click.Path(exists=True),
               multiple=True, help="Path to file or directory (local).")
 @click.option("--source-path-file", "-spf", required=False,
@@ -89,7 +87,7 @@ def cli(ctx, debug):
               type=click.IntRange(1, 32),
               help="Number of parallel threads to perform the delivery.")
 @click.pass_obj
-def put(dds_info, config, username, project, recipient, source,
+def put(dds_info, config, username, project, source,
         source_path_file, break_on_fail, num_threads):
     """Processes and uploads specified files to the cloud."""
 
@@ -97,10 +95,9 @@ def put(dds_info, config, username, project, recipient, source,
     log = dds_info["LOGGER"]
 
     # Begin delivery
-    with dd.DataDeliverer(config=config, username=username, project=project,
-                          recipient=recipient, source=source,
-                          source_path_file=source_path_file,
-                          break_on_fail=break_on_fail) as delivery:
+    with dd.DataPutter(username=username, config=config, project=project,
+                       source=source, source_path_file=source_path_file,
+                       break_on_fail=break_on_fail) as delivery:
 
         # Keep track of futures
         upload_threads = {}     # Upload related
@@ -197,5 +194,3 @@ def ls(dds_info, proj_arg, project, config, username):
     project = proj_arg if proj_arg is not None else project
     with dl.DataLister(project=project, config=config, username=username) as lister:
         log.debug(lister.project)
-
-

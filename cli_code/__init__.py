@@ -23,7 +23,7 @@ __author__ = "SciLifeLab Data Centre"
 __author_email__ = ""
 __license__ = "MIT"
 
-PROG = "ds_deliver"
+PROG = "dds"
 
 # Logging
 LOG = logging.getLogger(__name__)

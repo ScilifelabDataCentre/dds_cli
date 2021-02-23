@@ -144,7 +144,7 @@ def attempted_operation():
 
 
 @dataclasses.dataclass
-class DataDeliverer:
+class DataPutter:
     """Data deliverer class."""
 
     method: str = dataclasses.field(default_factory=attempted_operation)

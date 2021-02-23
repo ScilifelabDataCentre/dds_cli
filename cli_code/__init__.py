@@ -9,6 +9,7 @@ import logging
 import sys
 
 # Installed
+from rich.logging import RichHandler
 
 # Own modules
 
@@ -48,7 +49,7 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
         try:
             file_handler = logging.FileHandler(filename=filename)
             fh_formatter = logging.Formatter("%(asctime)s::%(levelname)s::" +
-                                            "%(name)s::%(lineno)d::%(message)s")
+                                             "%(name)s::%(lineno)d::%(message)s")
             file_handler.setFormatter(fh_formatter)
             file_handler.setLevel(logging.INFO)
             logger.addHandler(file_handler)
@@ -58,11 +59,9 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
     # Config file logger
     if debug:
         try:
-            stream_handler = logging.StreamHandler()
-            sh_formatter = logging.Formatter("%(levelname)s::%(name)s::" +
-                                            "%(lineno)d::%(message)s")
-            stream_handler.setFormatter(sh_formatter)
-            logger.addHandler(stream_handler)
+            richhandler = RichHandler(rich_tracebacks=True,
+                                      log_time_format="[%Y-%m-%d %H:%M:%S]")
+            logger.addHandler(richhandler)
         except OSError as ose:
             sys.exit(f"Logging to console failed: {ose}")
 
@@ -112,4 +111,3 @@ class StringFormat:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
     END = '\033[0m'
-

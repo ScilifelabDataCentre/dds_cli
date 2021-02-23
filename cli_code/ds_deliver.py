@@ -14,6 +14,8 @@ import itertools
 
 # Installed
 import click
+from rich import pretty
+import rich.console
 
 # Own modules
 import cli_code
@@ -22,6 +24,9 @@ from cli_code import directory
 from cli_code import timestamp
 from cli_code import data_deliverer as dd
 
+# Setup
+pretty.install()
+console = rich.console.Console()
 
 ###############################################################################
 # MAIN ################################################################# MAIN #
@@ -94,6 +99,7 @@ def put(dds_info, config, username, project, recipient, source,
                           recipient=recipient, source=source,
                           source_path_file=source_path_file,
                           break_on_fail=break_on_fail) as delivery:
+        console.print(delivery.data.data)
 
         # Keep track of futures
         upload_threads = {}     # Upload related
@@ -174,16 +180,17 @@ def put(dds_info, config, username, project, recipient, source,
 
 
 
-@cli.command()
-@click.argument("proj_arg", required=False)
-@click.option("--project", "-p", required=False)
-@click.option("--config", "-c", required=False, type=click.Path(exists=True),
-              help="Path to file with user credentials, destination, etc.")
-@click.option("--username", "-u", required=False, type=str,
-              help="Your Data Delivery System username.")
-@click.pass_obj
-def ls(dds_info, proj_arg, project, config, username):
-    """List the projects and the files within the projects."""
+# @cli.command()
+# @click.argument("proj_arg", required=False)
+# @click.option("--project", "-p", required=False)
+# @click.option("--config", "-c", required=False, type=click.Path(exists=True),
+#               help="Path to file with user credentials, destination, etc.")
+# @click.option("--username", "-u", required=False, type=str,
+#               help="Your Data Delivery System username.")
+# @click.pass_obj
+# def ls(dds_info, proj_arg, project, config, username):
+#     """List the projects and the files within the projects."""
 
-    project = proj_arg if proj_arg is not None else project
-    with dd.DataLister(project=project, config=config, username=username)
+#     project = proj_arg if proj_arg is not None else project
+#     with dd.DataLister(project=project, config=config, username=username) as dl:
+#         pass

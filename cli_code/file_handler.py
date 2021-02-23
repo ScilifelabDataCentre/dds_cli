@@ -42,7 +42,7 @@ class FileHandler:
 
     # Magic methods ################ Magic methods #
     def __post_init__(self, user_input):
-
+        
         source, source_path_file, *_ = user_input
 
         # Get user specified data
@@ -51,6 +51,7 @@ class FileHandler:
             data_list += list(source)
         if source_path_file is not None:
             source_path_file = pathlib.Path(source_path_file)
+            print(source_path_file.exists())
             if source_path_file.exists():
                 with source_path_file.resolve().open(mode="r") as spf:
                     data_list += spf.read().splitlines()
@@ -58,7 +59,6 @@ class FileHandler:
         # Get absolute paths to all data and removes duplicates
         data_list = list(set(pathlib.Path(x).resolve() for x in data_list
                              if pathlib.Path(x).exists()))
-
         # Quit if no data
         if not data_list:
             sys.exit("No data specified.")

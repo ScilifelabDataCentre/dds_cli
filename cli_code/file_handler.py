@@ -12,6 +12,8 @@ import uuid
 import requests
 import dataclasses
 import functools
+import os
+import json
 
 # Installed
 
@@ -42,7 +44,7 @@ class FileHandler:
 
     # Magic methods ################ Magic methods #
     def __post_init__(self, user_input):
-        
+
         source, source_path_file, *_ = user_input
 
         # Get user specified data
@@ -95,6 +97,25 @@ class FileHandler:
         new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
 
         return str(directory / pathlib.Path(new_name))
+
+    @staticmethod
+    def extract_config(configfile):
+        """Extracts info from config file."""
+
+        configpath = pathlib.Path(configfile).resolve()
+        if not configpath.exists():
+            sys.exit("Config file does not exist.")
+
+        try:
+            original_umask = os.umask(0)
+            with configpath.open(mode="r") as cfp:
+                contents = json.load(cfp)
+        except json.decoder.JSONDecodeError as err:
+            sys.exit(f"Failed to get config file contents: {err}")
+        finally:
+            os.umask(original_umask)
+
+        return contents
 
     # General methods ############ General methods #
     def collect_file_info_local(self, all_paths, folder=None):

@@ -14,6 +14,7 @@ import traceback
 import functools
 import dataclasses
 import os
+import inspect
 
 # Installed
 import botocore
@@ -28,7 +29,7 @@ from cli_code import DDSEndpoint
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
- 
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
@@ -135,11 +136,18 @@ def verify_bucket_exist(func):
 ###############################################################################
 
 
+def attempted_operation():
+    """Gets the command entered by the user (e.g. put)."""
+
+    curframe = inspect.currentframe()
+    return inspect.getouterframes(curframe, 2)[2].function
+
+
 @dataclasses.dataclass
 class DataDeliverer:
     """Data deliverer class."""
 
-    method: str = "put"
+    method: str = dataclasses.field(default_factory=attempted_operation)
     break_on_fail: bool = False
     project: str = None
     data: dict = dataclasses.field(init=False)
@@ -154,7 +162,6 @@ class DataDeliverer:
 
     # Magic methods ########################## Magic methods #
     def __post_init__(self, *args):
-
         if not self.method in ["put"]:
             sys.exit("Unauthorized method!")
 
@@ -162,9 +169,12 @@ class DataDeliverer:
         username, password, self.project, recipient, args = \
             self.verify_input(user_input=(self.project, ) + args)
 
-        dds_user = user.User(username=username, password=password,
-                             project=self.project, recipient=recipient)
+        dds_user = user.User(username=username, password=password)
         self.token = dds_user.token
+
+        # Approve project access
+        dds_user.verify_project_access(project=self.project,
+                                       method=self.method)
 
         # Get file info
         self.data = fh.FileHandler(user_input=args)
@@ -217,19 +227,8 @@ class DataDeliverer:
 
         # Get contents from file
         if config is not None:
-            configpath = pathlib.Path(config).resolve()
-            if not configpath.exists():
-                sys.exit("Config file does not exist.")
-
             # Get contents from file
-            try:
-                original_umask = os.umask(0)
-                with configpath.open(mode="r") as cfp:
-                    contents = json.load(cfp)
-            except json.decoder.JSONDecodeError as err:
-                sys.exit(f"Failed to get config file contents: {err}")
-            finally:
-                os.umask(original_umask)
+            contents = fh.FileHandler.extract_config(configfile=config)
 
             # Get user credentials and project info if not already specified
             if username is None and "username" in contents:
@@ -238,7 +237,6 @@ class DataDeliverer:
                 project = contents["project"]
             if recipient is None and "recipient" in contents:
                 recipient = contents["recipient"]
-
             if password is None and "password" in contents:
                 password = contents["password"]
 

@@ -132,18 +132,10 @@ def verify_bucket_exist(func):
 
     return wrapped
 
+
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
-
-
-def attempted_operation():
-    """Gets the command entered by the user (e.g. put)."""
-
-    curframe = inspect.currentframe()
-    return inspect.getouterframes(curframe, 2)[2].function
-
-# @base.DDSBaseClass
 
 
 @dataclasses.dataclass
@@ -165,7 +157,8 @@ class DataPutter(base.DDSBaseClass):
 
     # Magic methods ########################## Magic methods #
     def __post_init__(self, username, password, config, *args):
-        log.debug(args)
+
+        # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, password=password,
                          config=config, project=self.project)
 
@@ -173,8 +166,7 @@ class DataPutter(base.DDSBaseClass):
             sys.exit("Unauthorized method!")
 
         # Approve project access
-        self.user.verify_project_access(project=self.project,
-                                        method=self.method)
+        self.verify_project_access()
 
         # Get file info
         self.data = fh.FileHandler(user_input=args)

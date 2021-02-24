@@ -22,7 +22,7 @@ import cli_code
 from cli_code import user
 from cli_code import directory
 from cli_code import timestamp
-from cli_code import data_deliverer as dd
+from cli_code import data_putter as dp
 from cli_code import data_lister as dl
 
 # Setup
@@ -95,7 +95,7 @@ def put(dds_info, config, username, project, source,
     log = dds_info["LOGGER"]
 
     # Begin delivery
-    with dd.DataPutter(username=username, config=config, project=project,
+    with dp.DataPutter(username=username, config=config, project=project,
                        source=source, source_path_file=source_path_file,
                        break_on_fail=break_on_fail) as delivery:
 

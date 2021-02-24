@@ -44,9 +44,10 @@ class User:
         if None in [self.username, password]:
             sys.exit("Missing user information.")
 
-        self.token = self.authenticate_user(password=password)
+        self.token = self.__authenticate_user(password=password)
 
-    def authenticate_user(self, password):
+    # Private methods ######################### Private methods #
+    def __authenticate_user(self, password):
         """Authenticates the username and password via a call to the API."""
 
         response = requests.get(DDSEndpoint.AUTH,
@@ -60,19 +61,5 @@ class User:
         token = response.json()
         return {"x-access-token": token["token"]}
 
-    def verify_project_access(self, project, method):
-        """Verifies that the user has access to the specified project."""
-
-        response = requests.get(DDSEndpoint.AUTH_PROJ,
-                                params={"project": project,
-                                        "method": method},
-                                headers=self.token)
-
-        if not response.ok:
-            sys.exit("Project access denied! "
-                     f"Error code: {response.status_code} "
-                     f" -- {response.text}")
-
-        dds_access = response.json()
-        if not dds_access["dds-access-granted"]:
-            sys.exit("Project access denied.")
+    # Public methods ########################### Public methods #
+    

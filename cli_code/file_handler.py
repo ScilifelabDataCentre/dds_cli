@@ -45,7 +45,7 @@ class FileHandler:
     # Magic methods ################ Magic methods #
     def __post_init__(self, user_input):
 
-        source, source_path_file, *_ = user_input
+        source, source_path_file = user_input
 
         # Get user specified data
         data_list = list()
@@ -65,7 +65,7 @@ class FileHandler:
         if not data_list:
             sys.exit("No data specified.")
 
-        self.data = self.collect_file_info_local(all_paths=data_list)
+        self.data = self.__collect_file_info_local(all_paths=data_list)
         self.failed = {}
 
         for x, y in self.data.items():
@@ -117,8 +117,8 @@ class FileHandler:
 
         return contents
 
-    # General methods ############ General methods #
-    def collect_file_info_local(self, all_paths, folder=None):
+    # Private methods ############ Private methods #
+    def __collect_file_info_local(self, all_paths, folder=None):
         """Get info on each file in each path specified."""
 
         file_info = dict()
@@ -138,8 +138,9 @@ class FileHandler:
                 }
             elif path.is_dir():
                 file_info.update({
-                    **self.collect_file_info_local(all_paths=path.glob("**/*"),
-                                                   folder=path.name)
+                    **self.__collect_file_info_local(
+                        all_paths=path.glob("**/*"), folder=path.name
+                    )
                 })
 
         return file_info

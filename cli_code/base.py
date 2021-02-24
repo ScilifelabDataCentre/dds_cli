@@ -5,17 +5,17 @@
 ###############################################################################
 
 # Standard library
-import dataclasses
 import inspect
 import logging
-import functools
 import sys
 
 # Installed
+import requests
 
 # Own modules
 from cli_code import file_handler as fh
 from cli_code import user
+from cli_code import DDSEndpoint
 
 
 ###############################################################################
@@ -42,15 +42,16 @@ class DDSBaseClass:
 
         # Verify that user entered enough info
         username, password, self.project = \
-            self.verify_input(username=username, password=password,
-                              config=config, project=project)
+            self.__verify_input(username=username, password=password,
+                                config=config, project=project)
 
         # Authenticate the user and get the token
         self.user = user.User(username=username, password=password)
         self.token = self.user.token
 
-    def verify_input(self, username=None, password=None, config=None,
-                     project=None):
+    # Private methods ############################### Private methods #
+    def __verify_input(self, username=None, password=None, config=None,
+                       project=None):
         """Verifies that the users input is valid and fully specified."""
         # Get contents from file
         if config is not None:
@@ -77,17 +78,21 @@ class DDSBaseClass:
             password = "password"   # TODO: REMOVE - ONLY FOR DEV
 
         return username, password, project
-    # def __init__(self, func):
-    #     functools.update_wrapper(self, func)
-    #     self.func = func
 
-    # def __call__(self, *args, **kwargs):
-    #     log.debug(args)
-    #     log.debug(kwargs)
-    #     return self.func(*args, **kwargs)
+    # Public methods ################################# Public methods #
+    def verify_project_access(self):
+        """Verifies that the user has access to the specified project."""
 
-    # method: str = dataclasses.field(default_factory=attempted_operation)
-    # username: dataclasses.InitVar[str] = None
+        response = requests.get(DDSEndpoint.AUTH_PROJ,
+                                params={"project": self.project,
+                                        "method": self.method},
+                                headers=self.token)
 
-    # def __post_init__(self, username):
-    #     log.debug(username)
+        if not response.ok:
+            sys.exit("Project access denied! "
+                     f"Error code: {response.status_code} "
+                     f" -- {response.text}")
+
+        dds_access = response.json()
+        if not dds_access["dds-access-granted"]:
+            sys.exit("Project access denied.")

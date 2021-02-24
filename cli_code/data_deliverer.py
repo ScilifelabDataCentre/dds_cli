@@ -22,6 +22,7 @@ import requests
 
 # Own modules
 from cli_code import user
+from cli_code import base
 from cli_code import file_handler as fh
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
@@ -142,39 +143,38 @@ def attempted_operation():
     curframe = inspect.currentframe()
     return inspect.getouterframes(curframe, 2)[2].function
 
+# @base.DDSBaseClass
+
 
 @dataclasses.dataclass
-class DataPutter:
+class DataPutter(base.DDSBaseClass):
     """Data deliverer class."""
 
-    method: str = dataclasses.field(default_factory=attempted_operation)
-    break_on_fail: bool = False
-    project: str = None
-    data: dict = dataclasses.field(init=False)
-    status: dict = dataclasses.field(init=False)
-    token: dict = dataclasses.field(init=False)
+    # Super
     username: dataclasses.InitVar[str] = None
     password: dataclasses.InitVar[str] = None
-    recipient: dataclasses.InitVar[str] = None
     config: dataclasses.InitVar[pathlib.Path] = None
+    project: str = None
+
+    # Put
+    break_on_fail: bool = False
+    data: dict = dataclasses.field(init=False)
+    status: dict = dataclasses.field(init=False)
     source: dataclasses.InitVar[tuple] = None
     source_path_file: dataclasses.InitVar[pathlib.Path] = None
 
     # Magic methods ########################## Magic methods #
-    def __post_init__(self, *args):
-        if not self.method in ["put"]:
+    def __post_init__(self, username, password, config, *args):
+        log.debug(args)
+        super().__init__(username=username, password=password,
+                         config=config, project=self.project)
+
+        if self.method != "put":
             sys.exit("Unauthorized method!")
 
-        # Get user info
-        username, password, self.project, recipient, args = \
-            self.verify_input(user_input=(self.project, ) + args)
-
-        dds_user = user.User(username=username, password=password)
-        self.token = dds_user.token
-
         # Approve project access
-        dds_user.verify_project_access(project=self.project,
-                                       method=self.method)
+        self.user.verify_project_access(project=self.project,
+                                        method=self.method)
 
         # Get file info
         self.data = fh.FileHandler(user_input=args)
@@ -219,40 +219,6 @@ class DataPutter:
             sys.exit("Files not returned from API.")
 
         return list() if files_in_db["files"] is None else files_in_db["files"]
-
-    def verify_input(self, user_input):
-        """Verifies that the users input is valid and fully specified."""
-
-        project, username, password, recipient, config, *args = user_input
-
-        # Get contents from file
-        if config is not None:
-            # Get contents from file
-            contents = fh.FileHandler.extract_config(configfile=config)
-
-            # Get user credentials and project info if not already specified
-            if username is None and "username" in contents:
-                username = contents["username"]
-            if project is None and "project" in contents:
-                project = contents["project"]
-            if recipient is None and "recipient" in contents:
-                recipient = contents["recipient"]
-            if password is None and "password" in contents:
-                password = contents["password"]
-
-        # Username and project info is minimum required info
-        if None in [username, project]:
-            sys.exit("Data Delivery System options are missing.")
-
-        if password is None:
-            # password = getpass.getpass()
-            password = "password"   # TODO: REMOVE - ONLY FOR DEV
-
-        # Recipient required for upload
-        if self.method == "put" and recipient is None:
-            sys.exit("Project owner/data recipient not specified.")
-
-        return username, password, project, recipient, args
 
     @verify_proceed
     @update_status

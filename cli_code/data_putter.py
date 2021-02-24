@@ -161,12 +161,9 @@ class DataPutter(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, password=password,
                          config=config, project=self.project)
-
+        
         if self.method != "put":
             sys.exit("Unauthorized method!")
-
-        # Approve project access
-        self.verify_project_access()
 
         # Get file info
         self.data = fh.FileHandler(user_input=args)

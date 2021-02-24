@@ -46,8 +46,15 @@ class DDSBaseClass:
                                 config=config, project=project)
 
         # Authenticate the user and get the token
-        self.user = user.User(username=username, password=password)
+        self.user = user.User(username=username, password=password,
+                              project=self.project)
         self.token = self.user.token
+
+        # Project access only required if trying to upload, download or list
+        # files within project
+        if self.method == "put" or \
+                (self.method == "ls" and self.project is not None):
+            self.token = self.__verify_project_access()
 
     # Private methods ############################### Private methods #
     def __verify_input(self, username=None, password=None, config=None,
@@ -79,13 +86,11 @@ class DDSBaseClass:
 
         return username, password, project
 
-    # Public methods ################################# Public methods #
-    def verify_project_access(self):
+    def __verify_project_access(self):
         """Verifies that the user has access to the specified project."""
 
         response = requests.get(DDSEndpoint.AUTH_PROJ,
-                                params={"project": self.project,
-                                        "method": self.method},
+                                params={"method": self.method},
                                 headers=self.token)
 
         if not response.ok:
@@ -94,5 +99,11 @@ class DDSBaseClass:
                      f" -- {response.text}")
 
         dds_access = response.json()
-        if not dds_access["dds-access-granted"]:
+        if not dds_access["dds-access-granted"] or "token" not in dds_access:
             sys.exit("Project access denied.")
+        
+        return {"x-access-token": dds_access["token"]}
+        
+
+
+    # Public methods ################################# Public methods #

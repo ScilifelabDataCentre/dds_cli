@@ -37,20 +37,23 @@ class User:
 
     username: str = None
     password: dataclasses.InitVar[str] = None
+    project: dataclasses.InitVar[str] = None
     token: dict = dataclasses.field(init=False)
 
-    def __post_init__(self, password):
+    def __post_init__(self, password, project):
         # Authenticate user
         if None in [self.username, password]:
             sys.exit("Missing user information.")
 
-        self.token = self.__authenticate_user(password=password)
+        self.token = self.__authenticate_user(
+            password=password, project=project)
 
     # Private methods ######################### Private methods #
-    def __authenticate_user(self, password):
+    def __authenticate_user(self, password, project):
         """Authenticates the username and password via a call to the API."""
 
         response = requests.get(DDSEndpoint.AUTH,
+                                params={"project": project},
                                 auth=(self.username, password))
 
         if not response.ok:
@@ -62,4 +65,3 @@ class User:
         return {"x-access-token": token["token"]}
 
     # Public methods ########################### Public methods #
-    

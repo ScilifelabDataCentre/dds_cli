@@ -30,7 +30,7 @@ def attempted_operation():
     """Gets the command entered by the user (e.g. put)."""
 
     curframe = inspect.currentframe()
-    return inspect.getouterframes(curframe, 2)[4].function
+    return inspect.getouterframes(curframe, 2)[3].function
 
 
 class DDSBaseClass:

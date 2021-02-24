@@ -145,6 +145,7 @@ class FileHandler:
 
         return file_info
 
+    # Public methods ############## Public methods #
     def create_status_dict(self, existing_files):
         """Create dict for tracking file delivery status"""
 

@@ -138,41 +138,35 @@ def verify_bucket_exist(func):
 ###############################################################################
 
 
-@dataclasses.dataclass
 class DataPutter(base.DDSBaseClass):
     """Data deliverer class."""
 
-    # Super
-    username: dataclasses.InitVar[str] = None
-    password: dataclasses.InitVar[str] = None
-    config: dataclasses.InitVar[pathlib.Path] = None
-    project: str = None
-
-    # Put
-    break_on_fail: bool = False
-    data: dict = dataclasses.field(init=False)
-    status: dict = dataclasses.field(init=False)
-    source: dataclasses.InitVar[tuple] = None
-    source_path_file: dataclasses.InitVar[pathlib.Path] = None
-
-    # Magic methods ########################## Magic methods #
-    def __post_init__(self, username, password, config, *args):
+    def __init__(self, username: str = None, config: pathlib.Path = None,
+                 project: str = None, break_on_fail: bool = False,
+                 source: tuple = (), source_path_file: pathlib.Path = None):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, password=password,
-                         config=config, project=self.project)
+        super().__init__(username=username, config=config, project=project)
         
+        # Initiate DataPutter specific attributes
+        self.break_on_fail = break_on_fail
+        self.data = None
+        self.status = dict()
+
+        # Only method "put" can use the DataPutter class
         if self.method != "put":
-            sys.exit("Unauthorized method!")
+            sys.exit(f"Unauthorized method: {self.method}")
 
         # Get file info
-        self.data = fh.FileHandler(user_input=args)
+        self.data = fh.FileHandler(user_input=(source, source_path_file))
         files_in_db = self.check_previous_upload()
 
+        # Quit if error and flag
         if files_in_db and self.break_on_fail:
             sys.exit("Some files have already been uploaded and "
                      f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}")
 
+        # Generate status dict
         self.status = self.data.create_status_dict(existing_files=files_in_db)
 
     def __enter__(self):

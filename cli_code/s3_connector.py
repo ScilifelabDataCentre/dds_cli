@@ -93,8 +93,7 @@ class S3Connector:
 
         if not response.ok:
             sys.exit("Failed retrieving Safespring project name. "
-                     f"Error code: {response.status_code} "
-                     f" -- {response.reason}"
+                     f"Error code: {response.status_code} -- "
                      f"{response.text}")
 
         s3info = response.json()

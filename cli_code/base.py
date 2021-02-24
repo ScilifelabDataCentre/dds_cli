@@ -49,11 +49,9 @@ class DDSBaseClass:
         self.user = user.User(username=username, password=password)
         self.token = self.user.token
 
-    @staticmethod
-    def verify_input(username=None, password=None, config=None,
+    def verify_input(self, username=None, password=None, config=None,
                      project=None):
         """Verifies that the users input is valid and fully specified."""
-
         # Get contents from file
         if config is not None:
             # Get contents from file
@@ -68,9 +66,12 @@ class DDSBaseClass:
                 password = contents["password"]
 
         # Username and project info is minimum required info
-        if None in [username, project]:
+        if self.method == "put" and project is None:
+            sys.exit("Data Delivery System project information is missing.")
+        if username is None:
             sys.exit("Data Delivery System options are missing.")
 
+        # Set password if missing
         if password is None:
             # password = getpass.getpass()
             password = "password"   # TODO: REMOVE - ONLY FOR DEV

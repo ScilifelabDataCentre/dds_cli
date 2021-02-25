@@ -64,6 +64,24 @@ class DataLister(base.DDSBaseClass):
 
         return True
 
+    # Static methods ########################### Static methods #
+    @staticmethod
+    def __warn_if_many(count, threshold=100):
+
+        if count > threshold:
+            cont = input(
+                f"{StringFormat.UNDERLINE}\nItems to list:{StringFormat.END} "
+                f"{StringFormat.BLUE}{count}{StringFormat.END}. "
+                "The display layout might be affected due to too many entries."
+                f"\nTip: Try the command again with {StringFormat.BOLD}| more"
+                f"{StringFormat.END} at the end."
+                "\n\nContinue anyway? (y/n)\t"
+            )
+
+            if not cont in ["y", "yes"]:
+                print("\nCancelled listing function.\n")
+                os._exit(os.EX_OK)
+
     # Public methods ########################### Public methods #
     def list_projects(self):
         """Gets a list of all projects the user is involved in."""
@@ -113,19 +131,3 @@ class DataLister(base.DDSBaseClass):
             console.print(table)
         else:
             console.print("[i]No projects[/i]")
-
-    def __warn_if_many(self, count, threshold=100):
-
-        if count > threshold:
-            cont = input(
-                f"{StringFormat.UNDERLINE}\nItems to list:{StringFormat.END} "
-                f"{StringFormat.BLUE}{count}{StringFormat.END}. "
-                "The performance of the tool my be affected. \n"
-                f"Tip: Try the command again with {StringFormat.BOLD}| more"
-                f"{StringFormat.END} at the end."
-                "\n\nContinue anyway? (y/n)\t"
-            )
-
-            if not cont in ["y", "yes"]:
-                print("\nCancelled listing function.\n")
-                os._exit(os.EX_OK)

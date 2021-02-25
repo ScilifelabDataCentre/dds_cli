@@ -87,7 +87,6 @@ class S3Connector:
                             "to cloud.")
 
         params = {"project": project_id}
-
         response = requests.get(DDSEndpoint.S3KEYS,
                                 params=params, headers=token)
 

@@ -41,17 +41,19 @@ class User:
     token: dict = dataclasses.field(init=False)
 
     def __post_init__(self, password, project):
-        # Authenticate user
+        # Username and password required for user authentication
         if None in [self.username, password]:
             sys.exit("Missing user information.")
 
-        self.token = self.__authenticate_user(
-            password=password, project=project)
+        # Authenticate user and get delivery JWT token
+        self.token = self.__authenticate_user(password=password,
+                                              project=project)
 
     # Private methods ######################### Private methods #
     def __authenticate_user(self, password, project):
         """Authenticates the username and password via a call to the API."""
 
+        # Project passed in to add it to the token. Can be None.
         response = requests.get(DDSEndpoint.AUTH,
                                 params={"project": project},
                                 auth=(self.username, password))

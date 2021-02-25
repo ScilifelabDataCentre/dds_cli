@@ -25,6 +25,10 @@ from cli_code import DDSEndpoint
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
+###############################################################################
+# FUNCTIONS ####################################################### FUNCTIONS #
+###############################################################################
+
 
 def attempted_operation():
     """Gets the command entered by the user (e.g. put)."""
@@ -32,6 +36,10 @@ def attempted_operation():
     curframe = inspect.currentframe()
     return inspect.getouterframes(curframe, 2)[3].function
 
+
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
 
 class DDSBaseClass:
     """Data Delivery System base class. For common operations."""
@@ -46,9 +54,9 @@ class DDSBaseClass:
                                 config=config, project=project)
 
         # Authenticate the user and get the token
-        self.user = user.User(username=username, password=password,
-                              project=self.project)
-        self.token = self.user.token
+        dds_user = user.User(username=username, password=password,
+                             project=self.project)
+        self.token = dds_user.token
 
         # Project access only required if trying to upload, download or list
         # files within project
@@ -101,9 +109,7 @@ class DDSBaseClass:
         dds_access = response.json()
         if not dds_access["dds-access-granted"] or "token" not in dds_access:
             sys.exit("Project access denied.")
-        
-        return {"x-access-token": dds_access["token"]}
-        
 
+        return {"x-access-token": dds_access["token"]}
 
     # Public methods ################################# Public methods #

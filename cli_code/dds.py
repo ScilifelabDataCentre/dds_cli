@@ -97,14 +97,14 @@ def put(dds_info, config, username, project, source,
     # Begin delivery
     with dp.DataPutter(username=username, config=config, project=project,
                        source=source, source_path_file=source_path_file,
-                       break_on_fail=break_on_fail) as delivery:
+                       break_on_fail=break_on_fail) as putter:
 
         # Keep track of futures
         upload_threads = {}     # Upload related
         db_threads = {}         # Database related
 
         # Iterator to keep track of which files have been handled
-        iterator = iter(delivery.data.data.copy())
+        iterator = iter(putter.data.data.copy())
 
         with concurrent.futures.ThreadPoolExecutor() as texec:
 
@@ -112,7 +112,7 @@ def put(dds_info, config, username, project, source,
             for file in itertools.islice(iterator, num_threads):
                 log.debug("Uploading file %s...", file)
                 upload_threads[
-                    texec.submit(delivery.put, file=file)
+                    texec.submit(putter.put, file=file)
                 ] = file
 
             # Continue until all files are done
@@ -139,7 +139,7 @@ def put(dds_info, config, username, project, source,
                     # Schedule file for db update
                     log.debug("Adding to db: %s...", uploaded_file)
                     db_threads[
-                        texec.submit(delivery.add_file_db, file=uploaded_file)
+                        texec.submit(putter.add_file_db, file=uploaded_file)
                     ] = uploaded_file
 
                 new_tasks = 0
@@ -153,7 +153,7 @@ def put(dds_info, config, username, project, source,
                     )
 
                     # Get result from future
-                    for fut_db in done_db:
+                    for fut_db in done_db: 
                         added_file = db_threads.pop(fut_db)
                         log.debug("...File added to db: %s", added_file)
 
@@ -173,7 +173,7 @@ def put(dds_info, config, username, project, source,
                 for ufile in itertools.islice(iterator, len(done_db)):
                     log.debug("Uploading file %s...", ufile)
                     upload_threads[
-                        texec.submit(delivery.put, file=ufile)
+                        texec.submit(putter.put, file=ufile)
                     ] = ufile
 
 

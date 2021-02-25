@@ -185,10 +185,9 @@ class DataPutter(base.DDSBaseClass):
         """Do API call and check for the files in the DB."""
 
         # Get files from db
-        args = {"project": self.project}
         files = list(x for x in self.data.data)
 
-        response = requests.get(DDSEndpoint.FILE_MATCH, params=args,
+        response = requests.get(DDSEndpoint.FILE_MATCH,
                                 headers=self.token, json=files)
 
         if not response.ok:
@@ -245,8 +244,7 @@ class DataPutter(base.DDSBaseClass):
             DDSEndpoint.FILE_NEW,
             params={"name": file,
                     "name_in_bucket": fileinfo["name_in_bucket"],
-                    "subpath": fileinfo["subpath"],
-                    "project": self.project},
+                    "subpath": fileinfo["subpath"]},
             headers=self.token
         )
 

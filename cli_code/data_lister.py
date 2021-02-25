@@ -10,6 +10,7 @@ import logging
 import pathlib
 import traceback
 import sys
+import os
 
 # Installed
 import requests
@@ -21,6 +22,7 @@ from cli_code import file_handler as fh
 from cli_code import user
 from cli_code import base
 from cli_code import DDSEndpoint
+from cli_code import StringFormat
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -66,7 +68,6 @@ class DataLister(base.DDSBaseClass):
     def list_projects(self):
         """Gets a list of all projects the user is involved in."""
 
-        import operator
         response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
 
         if not response.ok:
@@ -77,6 +78,8 @@ class DataLister(base.DDSBaseClass):
         if "all_projects" not in resp_json:
             sys.exit("No project info was retrieved. No files to list.")
 
+        self.__warn_if_many(count=len(resp_json["all_projects"]))
+
         sorted_projects = sorted(
             sorted(resp_json["all_projects"],
                    key=lambda i: i["Project ID"]
@@ -86,11 +89,19 @@ class DataLister(base.DDSBaseClass):
         )
 
         console = Console()
-        table = Table(show_header=True, header_style="bold magenta")
+        table = Table(title="Your Projects", show_header=True,
+                      header_style="bold")
 
         columns = resp_json["columns"]
         for col in columns:
-            table.add_column(col)
+            just = "left"
+            if col == "Last updated":
+                just = "center"
+
+            style = None
+            if "ID" in col:
+                style = "green"
+            table.add_column(col, justify=just, style=style)
 
         # Add all column values for each row to table
         for proj in sorted_projects:
@@ -98,4 +109,23 @@ class DataLister(base.DDSBaseClass):
                 *[proj[columns[i]] for i in range(len(columns))]
             )
 
-        console.print(table)
+        if table.columns:
+            console.print(table)
+        else:
+            console.print("[i]No projects[/i]")
+
+    def __warn_if_many(self, count, threshold=100):
+
+        if count > threshold:
+            cont = input(
+                f"{StringFormat.UNDERLINE}\nItems to list:{StringFormat.END} "
+                f"{StringFormat.BLUE}{count}{StringFormat.END}. "
+                "The performance of the tool my be affected. \n"
+                f"Tip: Try the command again with {StringFormat.BOLD}| more"
+                f"{StringFormat.END} at the end."
+                "\n\nContinue anyway? (y/n)\t"
+            )
+
+            if not cont in ["y", "yes"]:
+                print("\nCancelled listing function.\n")
+                os._exit(os.EX_OK)

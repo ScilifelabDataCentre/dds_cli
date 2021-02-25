@@ -12,10 +12,15 @@ import traceback
 import sys
 
 # Installed
+import requests
+from rich.console import Console
+from rich.table import Column, Table
 
 # Own modules
 from cli_code import file_handler as fh
 from cli_code import user
+from cli_code import base
+from cli_code import DDSEndpoint
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -34,29 +39,18 @@ log.setLevel(logging.DEBUG)
 
 
 @dataclasses.dataclass
-class DataLister:
+class DataLister(base.DDSBaseClass):
     """Data lister class."""
 
-    project: str = None
-    config: dataclasses.InitVar[pathlib.Path] = None
-    username: dataclasses.InitVar[str] = None
-    password: dataclasses.InitVar[str] = None
+    def __init__(self, username: str = None, config: pathlib.Path = None,
+                 project: str = None):
 
-    # Magic methods ################# Magic methods #
-    def __post_init__(self, *args):
-        log.debug(args)
+        # Initiate DDSBaseClass to authenticate user
+        super().__init__(username=username, config=config, project=project)
 
-        username, password, self.project, args = \
-            self.verify_input(user_input=(self.project, ) + args)
-
-        dds_user = user.User(username=username, password=password)
-        self.token = dds_user.token
-
-        if self.project is None:
-            pass  # TODO (ina): list all projects
-        else:
-            pass  # List all files in project
-        
+        # Only method "ls" can use the DataLister class
+        if self.method != "ls":
+            sys.exit(f"Unauthorized method: {self.method}")
 
     def __enter__(self):
         return self
@@ -68,28 +62,40 @@ class DataLister:
 
         return True
 
-    # Static methods ############### Static methods #
-    @staticmethod
-    def verify_input(user_input):
-        """Verifies that the required information is specified."""
+    # Public methods ########################### Public methods #
+    def list_projects(self):
+        """Gets a list of all projects the user is involved in."""
 
-        project, config, username, password, *args = user_input
+        import operator
+        response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
 
-        # Get contents from file
-        if config is not None:
-            contents = fh.FileHandler.extract_config(configfile=config)
+        if not response.ok:
+            sys.exit("Failed to get list of projects. "
+                     f"{response.status_code} -- {response.text}")
 
-            log.debug(contents)
-            if username is None and "username" in contents:
-                username = contents["username"]
-            if password is None and "password" in contents:
-                password = contents["password"]
+        resp_json = response.json()
+        if "all_projects" not in resp_json:
+            sys.exit("No project info was retrieved. No files to list.")
 
-        if username is None:
-            sys.exit("Data Delivery System username is missing.")
+        sorted_projects = sorted(
+            sorted(resp_json["all_projects"],
+                   key=lambda i: i["Project ID"]
+                   ),
+            key=lambda t: (t["Last updated"] is None, t["Last updated"]),
+            reverse=True
+        )
 
-        if password is None:
-            # password = getpass.getpass()
-            password = "password"   # TODO: REMOVE - ONLY FOR DEV
+        console = Console()
+        table = Table(show_header=True, header_style="bold magenta")
 
-        return username, password, project, args
+        columns = resp_json["columns"]
+        for col in columns:
+            table.add_column(col)
+
+        # Add all column values for each row to table
+        for proj in sorted_projects:
+            table.add_row(
+                *[proj[columns[i]] for i in range(len(columns))]
+            )
+
+        console.print(table)

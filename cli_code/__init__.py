@@ -88,6 +88,8 @@ class DDSEndpoint:
     FILE_NEW = BASE_ENDPOINT + "/file/new"
     FILE_MATCH = BASE_ENDPOINT + "/file/match"
 
+    LIST_PROJ = BASE_ENDPOINT + "/proj/list"
+
 
 class FileSegment:
     """Defines information on signatures, file chunks, etc."""

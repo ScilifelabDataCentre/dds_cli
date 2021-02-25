@@ -193,4 +193,10 @@ def ls(dds_info, proj_arg, project, config, username):
 
     project = proj_arg if proj_arg is not None else project
     with dl.DataLister(project=project, config=config, username=username) as lister:
-        log.debug(lister.project)
+        
+        # List all projects if project is None and all files if project spec
+        if lister.project is None:
+            lister.list_projects()
+        else:
+            pass  # List all files in project
+

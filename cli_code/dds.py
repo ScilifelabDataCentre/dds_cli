@@ -198,5 +198,5 @@ def ls(dds_info, proj_arg, project, config, username):
         if lister.project is None:
             lister.list_projects()
         else:
-            pass  # List all files in project
+            lister.list_files()
 

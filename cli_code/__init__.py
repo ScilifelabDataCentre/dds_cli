@@ -89,6 +89,7 @@ class DDSEndpoint:
     FILE_MATCH = BASE_ENDPOINT + "/file/match"
 
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
+    LIST_FILES = BASE_ENDPOINT + "/files/list"
 
 
 class FileSegment:

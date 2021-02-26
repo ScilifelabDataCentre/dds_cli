@@ -16,6 +16,9 @@ import os
 import requests
 from rich.console import Console
 from rich.table import Column, Table
+from rich.prompt import Prompt
+from rich.highlighter import RegexHighlighter
+from rich.tree import Tree
 
 # Own modules
 from cli_code import file_handler as fh
@@ -30,6 +33,10 @@ from cli_code import StringFormat
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+###############################################################################
+# RICH ################################################################# RICH #
+###############################################################################
 
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #
@@ -67,18 +74,17 @@ class DataLister(base.DDSBaseClass):
     # Static methods ########################### Static methods #
     @staticmethod
     def __warn_if_many(count, threshold=100):
+        """Warn the user if there are many lines to print out."""
 
         if count > threshold:
-            cont = input(
-                f"{StringFormat.UNDERLINE}\nItems to list:{StringFormat.END} "
-                f"{StringFormat.BLUE}{count}{StringFormat.END}. "
+            do_continue = Prompt.ask(
+                f"\nItems to list: {count}. "
                 "The display layout might be affected due to too many entries."
-                f"\nTip: Try the command again with {StringFormat.BOLD}| more"
-                f"{StringFormat.END} at the end."
-                "\n\nContinue anyway? (y/n)\t"
+                f"\nTip: Try the command again with [b]| more[/b] at the end."
+                "\n\nContinue anyway?", choices=["y", "n"], default="n"
             )
 
-            if not cont in ["y", "yes"]:
+            if not do_continue in ["y", "yes"]:
                 print("\nCancelled listing function.\n")
                 os._exit(os.EX_OK)
 
@@ -86,6 +92,7 @@ class DataLister(base.DDSBaseClass):
     def list_projects(self):
         """Gets a list of all projects the user is involved in."""
 
+        # Get projects from API
         response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
 
         if not response.ok:
@@ -93,11 +100,15 @@ class DataLister(base.DDSBaseClass):
                      f"{response.status_code} -- {response.text}")
 
         resp_json = response.json()
+
+        # Cancel if user not involved in any projects
         if "all_projects" not in resp_json:
             sys.exit("No project info was retrieved. No files to list.")
 
+        # Warn user if many lines to print
         self.__warn_if_many(count=len(resp_json["all_projects"]))
 
+        # Sort list of projects by 1. Last updated, 2. Project ID
         sorted_projects = sorted(
             sorted(resp_json["all_projects"],
                    key=lambda i: i["Project ID"]
@@ -106,10 +117,12 @@ class DataLister(base.DDSBaseClass):
             reverse=True
         )
 
+        # Create table
         console = Console()
         table = Table(title="Your Projects", show_header=True,
                       header_style="bold")
 
+        # Add columns to table
         columns = resp_json["columns"]
         for col in columns:
             just = "left"
@@ -127,7 +140,35 @@ class DataLister(base.DDSBaseClass):
                 *[proj[columns[i]] for i in range(len(columns))]
             )
 
+        # Print if there are any lines
         if table.columns:
             console.print(table)
         else:
             console.print("[i]No projects[/i]")
+
+    def list_files(self):
+
+        response = requests.get(DDSEndpoint.LIST_FILES, headers=self.token)
+
+        if not response.ok:
+            sys.exit(response.text)
+
+        resp_json = response.json()
+
+        files_folders = resp_json["files_folders"]
+        log.debug(files_folders)
+
+        sorted_projects = sorted(files_folders,
+                                 key=lambda f: f["name"])
+        log.debug(sorted_projects)
+
+        tree = Tree(f"Files/Directories in project: {self.project}")
+
+        for x in sorted_projects:
+            if x["folder"]:
+                pass
+            else:
+                tree.add(x["name"])
+        
+        console = Console()
+        console.print(tree)

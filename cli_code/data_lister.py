@@ -73,7 +73,7 @@ class DataLister(base.DDSBaseClass):
 
     # Static methods ########################### Static methods #
     @staticmethod
-    def __warn_if_many(count, threshold=100):
+    def __warn_if_many(count, threshold=50):
         """Warn the user if there are many lines to print out."""
 
         if count > threshold:
@@ -146,29 +146,40 @@ class DataLister(base.DDSBaseClass):
         else:
             console.print("[i]No projects[/i]")
 
-    def list_files(self):
+    def list_files(self, folder: str = None, show_size: bool = False):
+        """Create a tree displaying the files within the project."""
 
-        response = requests.get(DDSEndpoint.LIST_FILES, headers=self.token)
-
+        # Make call to API
+        response = requests.get(DDSEndpoint.LIST_FILES,
+                                params={"subpath": folder},
+                                headers=self.token)
         if not response.ok:
-            sys.exit(response.text)
+            sys.exit("Failed to get list of files. "
+                     f"{response.status_code} -- {response.text}")
 
+        # Get files and folders
         resp_json = response.json()
-
         files_folders = resp_json["files_folders"]
-        log.debug(files_folders)
 
+        # Warn user if there will be too many rows
+        self.__warn_if_many(count=len(files_folders))
+
+        # Sort the file/folders according to names
         sorted_projects = sorted(files_folders,
                                  key=lambda f: f["name"])
-        log.debug(sorted_projects)
 
-        tree = Tree(f"Files/Directories in project: {self.project}")
+        # Create tree
+        tree_title = folder
+        if folder is None:
+            tree_title = f"Files/Directories in project: {self.project}"
+        tree = Tree(f"[bold spring_green4]{tree_title}")
 
+        # Add items to tree
         for x in sorted_projects:
             if x["folder"]:
-                pass
+                tree.add(f"[bold deep_sky_blue3]{x['name']}/")
             else:
-                tree.add(x["name"])
-        
+                tree.add(f"{x['name']}")
+
         console = Console()
         console.print(tree)

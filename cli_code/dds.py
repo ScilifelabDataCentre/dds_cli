@@ -153,7 +153,7 @@ def put(dds_info, config, username, project, source,
                     )
 
                     # Get result from future
-                    for fut_db in done_db: 
+                    for fut_db in done_db:
                         added_file = db_threads.pop(fut_db)
                         log.debug("...File added to db: %s", added_file)
 
@@ -179,24 +179,28 @@ def put(dds_info, config, username, project, source,
 
 @cli.command()
 @click.argument("proj_arg", required=False)
+@click.argument("fold_arg", required=False)
 @click.option("--project", "-p", required=False)
+@click.option("--folder", "-f", required=False)
+@click.option("--size", "-sz", is_flag=True, default=False)
 @click.option("--config", "-c", required=False, type=click.Path(exists=True),
               help="Path to file with user credentials, destination, etc.")
 @click.option("--username", "-u", required=False, type=str,
               help="Your Data Delivery System username.")
 @click.pass_obj
-def ls(dds_info, proj_arg, project, config, username):
+def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
     """List the projects and the files within the projects."""
 
     # Get logger
     log = dds_info["LOGGER"]
 
     project = proj_arg if proj_arg is not None else project
-    with dl.DataLister(project=project, config=config, username=username) as lister:
-        
+    folder = fold_arg if fold_arg is not None else folder
+    with dl.DataLister(project=project, config=config, username=username) \
+            as lister:
+
         # List all projects if project is None and all files if project spec
         if lister.project is None:
             lister.list_projects()
         else:
-            lister.list_files()
-
+            lister.list_files(folder=folder, show_size=size)

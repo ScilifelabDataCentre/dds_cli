@@ -11,6 +11,7 @@ import pathlib
 import traceback
 import sys
 import os
+import math
 
 # Installed
 import requests
@@ -176,15 +177,33 @@ class DataLister(base.DDSBaseClass):
             tree_title = f"Files/Directories in project: {self.project}"
         tree = Tree(f"[bold spring_green4]{tree_title}")
 
-        # Add items to tree
-        for x in sorted_projects:
-            is_folder = x.pop("folder")
-            if is_folder:
-                tree.add(f"[bold deep_sky_blue3]{x['name']}/")
-            else:
-                tab = "\t"
-                tree.add(f"{tab.join([str(z) for y, z in x.items()])}")
-                # tree.add(f"{x['name']}\t{x['size']}")
-
+        log.debug(sorted_projects)
         console = Console()
-        console.print(tree)
+        if sorted_projects:
+            # Add items to tree
+            max_string = max([len(x["name"]) for x in sorted_projects])
+            for x in sorted_projects:
+                is_folder = x.pop("folder")
+                tab = format_tabs(
+                    string_len=len(x["name"])+(1 if is_folder else 0),
+                    max_string_len=max_string
+                )
+                if is_folder:
+                    branch_name = f"[bold deep_sky_blue3]{x['name']}/"
+                    if show_size and "size" in x:
+                        branch_name += f"{tab}{x['size']}"
+                    tree.add(branch_name)
+                else:
+                    tree.add(f"{tab.join([str(z) for y, z in x.items()])}")
+            console.print(tree)
+        else:
+            console.print(f"[i]No folder called '{folder}'[/i]")
+
+
+def format_tabs(string_len, max_string_len):
+    """Format number of tabs to have within string."""
+
+    tab_len = 4
+    tab = " " * (max_string_len-string_len+tab_len)
+
+    return tab

@@ -182,28 +182,36 @@ class DataLister(base.DDSBaseClass):
         if sorted_projects:
             # Add items to tree
             max_string = max([len(x["name"]) for x in sorted_projects])
+            max_size = max([len(x["size"][0]) for x in sorted_projects])
             for x in sorted_projects:
                 is_folder = x.pop("folder")
                 tab = format_tabs(
                     string_len=len(x["name"])+(1 if is_folder else 0),
                     max_string_len=max_string
                 )
+                text_formatting = ""
+                line = ""
                 if is_folder:
-                    branch_name = f"[bold deep_sky_blue3]{x['name']}/"
-                    if show_size and "size" in x:
-                        branch_name += f"{tab}{x['size']}"
-                    tree.add(branch_name)
-                else:
-                    tree.add(f"{tab.join([str(z) for y, z in x.items()])}")
+                    text_formatting = "[bold deep_sky_blue3]"
+                line = text_formatting + x["name"] + ("/" if is_folder else "")
+
+                if show_size and "size" in x:
+                    line += f"{tab}{x['size'][0]}"
+                    tabs_bf_format = format_tabs(
+                        string_len=len(x["size"][0]),
+                        max_string_len=max_size,
+                        tab_len=2
+                    )
+                    line += f"{tabs_bf_format}{x['size'][1]}"
+                tree.add(line)
             console.print(tree)
         else:
             console.print(f"[i]No folder called '{folder}'[/i]")
 
 
-def format_tabs(string_len, max_string_len):
+def format_tabs(string_len, max_string_len, tab_len=4):
     """Format number of tabs to have within string."""
 
-    tab_len = 4
     tab = " " * (max_string_len-string_len+tab_len)
 
     return tab

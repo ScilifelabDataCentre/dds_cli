@@ -149,9 +149,11 @@ class DataLister(base.DDSBaseClass):
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
 
+        log.debug("Show size? %s", show_size)
         # Make call to API
         response = requests.get(DDSEndpoint.LIST_FILES,
-                                params={"subpath": folder},
+                                params={"subpath": folder,
+                                        "show_size": show_size},
                                 headers=self.token)
         if not response.ok:
             sys.exit("Failed to get list of files. "
@@ -176,10 +178,13 @@ class DataLister(base.DDSBaseClass):
 
         # Add items to tree
         for x in sorted_projects:
-            if x["folder"]:
+            is_folder = x.pop("folder")
+            if is_folder:
                 tree.add(f"[bold deep_sky_blue3]{x['name']}/")
             else:
-                tree.add(f"{x['name']}")
+                tab = "\t"
+                tree.add(f"{tab.join([str(z) for y, z in x.items()])}")
+                # tree.add(f"{x['name']}\t{x['size']}")
 
         console = Console()
         console.print(tree)

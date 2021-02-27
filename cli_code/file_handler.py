@@ -134,7 +134,8 @@ class FileHandler:
                     "name_in_bucket": self.generate_bucket_filepath(
                         filename=path.name,
                         folder=folder
-                    )
+                    ),
+                    "size": path.stat().st_size
                 }
             elif path.is_dir():
                 file_info.update({

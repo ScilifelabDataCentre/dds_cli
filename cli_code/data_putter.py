@@ -244,7 +244,8 @@ class DataPutter(base.DDSBaseClass):
             DDSEndpoint.FILE_NEW,
             params={"name": file,
                     "name_in_bucket": fileinfo["name_in_bucket"],
-                    "subpath": fileinfo["subpath"]},
+                    "subpath": fileinfo["subpath"],
+                    "size": fileinfo["size"]},
             headers=self.token
         )
 

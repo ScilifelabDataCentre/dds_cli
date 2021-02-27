@@ -182,7 +182,9 @@ class DataLister(base.DDSBaseClass):
         if sorted_projects:
             # Add items to tree
             max_string = max([len(x["name"]) for x in sorted_projects])
-            max_size = max([len(x["size"][0]) for x in sorted_projects])
+            sizes = [len(x["size"][0]) for x in sorted_projects if "size" in x]
+            max_size = max(sizes) if sizes else 0
+
             for x in sorted_projects:
                 is_folder = x.pop("folder")
                 tab = format_tabs(

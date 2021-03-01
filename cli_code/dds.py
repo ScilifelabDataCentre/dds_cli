@@ -29,6 +29,13 @@ from cli_code import data_lister as dl
 pretty.install()
 console = rich.console.Console()
 
+
+###############################################################################
+# START LOGGING CONFIG ################################# START LOGGING CONFIG #
+###############################################################################
+
+log = None
+
 ###############################################################################
 # MAIN ################################################################# MAIN #
 ###############################################################################
@@ -55,15 +62,16 @@ def cli(ctx, debug):
     # Create logger
     cli_code.setup_custom_logger(filename=logfile, debug=debug)
 
-    LOG = logging.getLogger(__name__)
-    LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
+    global log
+    log = logging.getLogger(__name__)
+    log.setLevel(logging.DEBUG if debug else logging.WARNING)
 
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,
         "DDS_DIRS": all_dirs,
         "LOGFILE": logfile,
-        "LOGGER": LOG
+        # "LOGGER": LOG
     }
 
 
@@ -92,7 +100,7 @@ def put(dds_info, config, username, project, source,
     """Processes and uploads specified files to the cloud."""
 
     # Get logger
-    log = dds_info["LOGGER"]
+    # log = dds_info["LOGGER"]
 
     # Begin delivery
     with dp.DataPutter(username=username, config=config, project=project,
@@ -192,7 +200,7 @@ def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
     """List the projects and the files within the projects."""
 
     # Get logger
-    log = dds_info["LOGGER"]
+    # log = dds_info["LOGGER"]
 
     project = proj_arg if proj_arg is not None else project
     folder = fold_arg if fold_arg is not None else folder
@@ -204,3 +212,13 @@ def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
             lister.list_projects()
         else:
             lister.list_files(folder=folder, show_size=size)
+
+@cli.command()
+@click.pass_obj
+def rm(dds_info):
+    """Delete the files within a project."""
+
+    # log = dds_info
+    log.debug("test")
+
+    print("herllu")

@@ -11,22 +11,18 @@ import pathlib
 import traceback
 import sys
 import os
-import math
 
 # Installed
 import requests
 from rich.console import Console
-from rich.table import Column, Table
+from rich.table import Table
 from rich.prompt import Prompt
-from rich.highlighter import RegexHighlighter
 from rich.tree import Tree
 
 # Own modules
-from cli_code import file_handler as fh
-from cli_code import user
+from cli_code import text_handler as th
 from cli_code import base
 from cli_code import DDSEndpoint
-from cli_code import StringFormat
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -150,7 +146,6 @@ class DataLister(base.DDSBaseClass):
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
 
-        log.debug("Show size? %s", show_size)
         # Make call to API
         response = requests.get(DDSEndpoint.LIST_FILES,
                                 params={"subpath": folder,
@@ -177,29 +172,39 @@ class DataLister(base.DDSBaseClass):
             tree_title = f"Files/Directories in project: {self.project}"
         tree = Tree(f"[bold spring_green4]{tree_title}")
 
-        log.debug(sorted_projects)
         console = Console()
         if sorted_projects:
-            # Add items to tree
+            # Get max length of file name
             max_string = max([len(x["name"]) for x in sorted_projects])
-            sizes = [len(x["size"][0]) for x in sorted_projects if "size" in x]
+
+            # Get max length of size string
+            sizes = [len(x["size"][0]) for x in sorted_projects
+                     if show_size and "size" in x]
             max_size = max(sizes) if sizes else 0
 
+            # Add items to tree
             for x in sorted_projects:
+                # Check if string is folder
                 is_folder = x.pop("folder")
-                tab = format_tabs(
+
+                # Att 1 for folders due to trailing /
+                tab = th.TextHandler.format_tabs(
                     string_len=len(x["name"])+(1 if is_folder else 0),
                     max_string_len=max_string
                 )
-                text_formatting = ""
+
+                # Add formatting if folder and set string name
                 line = ""
                 if is_folder:
-                    text_formatting = "[bold deep_sky_blue3]"
-                line = text_formatting + x["name"] + ("/" if is_folder else "")
+                    line = "[bold deep_sky_blue3]"
+                line += x["name"] + ("/" if is_folder else "")
 
+                # Add size to line if option specified
                 if show_size and "size" in x:
                     line += f"{tab}{x['size'][0]}"
-                    tabs_bf_format = format_tabs(
+
+                    # Define space between number and size format
+                    tabs_bf_format = th.TextHandler.format_tabs(
                         string_len=len(x["size"][0]),
                         max_string_len=max_size,
                         tab_len=2
@@ -210,10 +215,3 @@ class DataLister(base.DDSBaseClass):
         else:
             console.print(f"[i]No folder called '{folder}'[/i]")
 
-
-def format_tabs(string_len, max_string_len, tab_len=4):
-    """Format number of tabs to have within string."""
-
-    tab = " " * (max_string_len-string_len+tab_len)
-
-    return tab

@@ -98,19 +98,3 @@ class FileSegment:
     DDS_SIGNATURE = b"DelSys"
     SEGMENT_SIZE_RAW = 65536
     SEGMENT_SIZE_CIPHER = SEGMENT_SIZE_RAW + 16
-
-
-class StringFormat:
-    """Defines different formats for strings, e.g. colors and bold."""
-
-    HEADER = '\033[95m'
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    END = '\033[0m'

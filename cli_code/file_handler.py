@@ -117,6 +117,7 @@ class FileHandler:
 
         return contents
 
+
     # Private methods ############ Private methods #
     def __collect_file_info_local(self, all_paths, folder=None):
         """Get info on each file in each path specified."""

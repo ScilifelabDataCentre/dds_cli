@@ -78,6 +78,17 @@ class S3Connector:
         self.safespring_project, self.keys, self.url, self.bucketname = \
             self.get_s3_info(project_id=project_id, token=token)
 
+    @connect_cloud
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+            return False  # uncomment to pass exception through
+
+        return True
+
     @staticmethod
     def get_s3_info(project_id, token):
         """Get information required to connect to cloud."""
@@ -99,17 +110,6 @@ class S3Connector:
 
         return s3info["safespring_project"], s3info["keys"], s3info["url"], \
             s3info["bucket"]
-
-    @connect_cloud
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, tb):
-        if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
-            return False  # uncomment to pass exception through
-
-        return True
 
     def check_bucket_exists(self):
         """Checks if the bucket exists"""

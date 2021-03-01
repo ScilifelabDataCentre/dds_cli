@@ -242,7 +242,7 @@ def rm(dds_info, proj_arg, project, username, config, rm_all):
     # Warn if trying to remove all contents
     if rm_all:
         rm_all = rich.prompt.Prompt.ask(
-            "Are you sure you want to delete all files within project "
+            "> Are you sure you want to delete all files within project "
             f"{project}?", choices=["y", "n"], default="n"
         ) == "y"
 
@@ -251,7 +251,7 @@ def rm(dds_info, proj_arg, project, username, config, rm_all):
         if rm_all:
             console = rich.console.Console(stderr=True, style="orange3")
             console.print(
-                "\nDeleting all files in project {project}...\n"
+                "\nRemoving all files in project {project}...\n"
             )
 
             remover.remove_all()

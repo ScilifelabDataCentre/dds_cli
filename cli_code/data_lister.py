@@ -5,7 +5,6 @@
 ###############################################################################
 
 # Standard library
-import dataclasses
 import logging
 import pathlib
 import traceback
@@ -44,7 +43,6 @@ log.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-@dataclasses.dataclass
 class DataLister(base.DDSBaseClass):
     """Data lister class."""
 

@@ -16,6 +16,7 @@ import itertools
 import click
 from rich import pretty
 import rich.console
+import rich.prompt
 
 # Own modules
 import cli_code
@@ -24,10 +25,11 @@ from cli_code import directory
 from cli_code import timestamp
 from cli_code import data_putter as dp
 from cli_code import data_lister as dl
+from cli_code import data_remover as dr
 
 # Setup
 pretty.install()
-console = rich.console.Console()
+console_main = rich.console.Console()
 
 
 ###############################################################################
@@ -98,9 +100,6 @@ def cli(ctx, debug):
 def put(dds_info, config, username, project, source,
         source_path_file, break_on_fail, num_threads):
     """Processes and uploads specified files to the cloud."""
-
-    # Get logger
-    # log = dds_info["LOGGER"]
 
     # Begin delivery
     with dp.DataPutter(username=username, config=config, project=project,
@@ -188,9 +187,11 @@ def put(dds_info, config, username, project, source,
 @cli.command()
 @click.argument("proj_arg", required=False)
 @click.argument("fold_arg", required=False)
-@click.option("--project", "-p", required=False)
-@click.option("--folder", "-f", required=False)
-@click.option("--size", "-sz", is_flag=True, default=False)
+@click.option("--project", "-p", required=False, help="Project ID.")
+@click.option("--folder", "-f", required=False,
+              help="Folder to list files within.")
+@click.option("--size", "-sz", is_flag=True, default=False,
+              help="Show size of project contents.")
 @click.option("--config", "-c", required=False, type=click.Path(exists=True),
               help="Path to file with user credentials, destination, etc.")
 @click.option("--username", "-u", required=False, type=str,
@@ -199,11 +200,16 @@ def put(dds_info, config, username, project, source,
 def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
     """List the projects and the files within the projects."""
 
-    # Get logger
-    # log = dds_info["LOGGER"]
-
     project = proj_arg if proj_arg is not None else project
     folder = fold_arg if fold_arg is not None else folder
+
+    if project is None and size:
+        console = rich.console.Console(stderr=True, style="orange3")
+        console.print(
+            "\nNB! Showing the project size is not implemented in the "
+            "listing command at this time. No size will be displayed.\n"
+        )
+
     with dl.DataLister(project=project, config=config, username=username) \
             as lister:
 
@@ -213,12 +219,40 @@ def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
         else:
             lister.list_files(folder=folder, show_size=size)
 
+
 @cli.command()
+@click.argument("proj_arg", required=False)
+@click.option("--project", required=False, type=str, help="Project ID.")
+@click.option("--username", "-u", required=False, type=str,
+              help="Your Data Delivery System username.")
+@click.option("--config", "-c", required=False, type=click.Path(exists=True),
+              help="Path to file with user credentials, destination, etc.")
+@click.option("--rm-all", "-a", is_flag=True, default=False,
+              help="Remove all project contents.")
 @click.pass_obj
-def rm(dds_info):
+def rm(dds_info, proj_arg, project, username, config, rm_all):
     """Delete the files within a project."""
 
-    # log = dds_info
-    log.debug("test")
+    # One of proj_arg or project is required
+    if all(x is None for x in [proj_arg, project]):
+        sys.exit("No project specified, cannot remove anything.")
 
-    print("herllu")
+    project = proj_arg if proj_arg is not None else project
+
+    # Warn if trying to remove all contents
+    if rm_all:
+        rm_all = rich.prompt.Prompt.ask(
+            "Are you sure you want to delete all files within project "
+            f"{project}?", choices=["y", "n"], default="n"
+        ) == "y"
+
+    with dr.DataRemover(project=project, username=username, config=config) as remover:
+
+        if rm_all:
+            console = rich.console.Console(stderr=True, style="orange3")
+            console.print(
+                "\nDeleting all files in project {project}...\n"
+            )
+
+            remover.remove_all()
+        

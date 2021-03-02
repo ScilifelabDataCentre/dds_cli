@@ -91,7 +91,8 @@ class DDSEndpoint:
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
     LIST_FILES = BASE_ENDPOINT + "/files/list"
 
-    REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm/"
+    REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm"
+    REMOVE_FILE = BASE_ENDPOINT + "/file/rm"
 
 
 class FileSegment:

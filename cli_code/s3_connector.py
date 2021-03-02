@@ -38,6 +38,7 @@ def connect_cloud(func):
     @functools.wraps(func)
     def init_resource(self, *args, **kwargs):
 
+        log.debug(self.keys)
         # Connect to service
         try:
             session = boto3.session.Session()

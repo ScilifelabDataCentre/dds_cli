@@ -55,7 +55,7 @@ class DataRemover(base.DDSBaseClass):
 
     def remove_all(self):
         """Remove all files in project."""
-        
+
         # Perform request to API to perform deletion
         response = requests.delete(DDSEndpoint.REMOVE_PROJ_CONT,
                                    headers=self.token)
@@ -77,8 +77,20 @@ class DataRemover(base.DDSBaseClass):
 
             console.print(resp_json["message"])
 
-    def remove_file(self):
+    def remove_file(self, files):
         """Remove specific files."""
+
+        response = requests.delete(DDSEndpoint.REMOVE_FILE,
+                                   json=files,
+                                   headers=self.token)
+
+        if not response.ok:
+            sys.exit(
+                f"Failed to delete file '{files}' in project {self.project}: "
+                f"{response.status_code} -- {response.text}"
+            )
+
+        log.debug(response.json())
 
     def remove_folder(self):
         """Remove specific folders."""

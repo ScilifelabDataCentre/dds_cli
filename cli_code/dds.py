@@ -229,13 +229,19 @@ def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
               help="Path to file with user credentials, destination, etc.")
 @click.option("--rm-all", "-a", is_flag=True, default=False,
               help="Remove all project contents.")
+@click.option("--file", "-f", required=False, type=str, multiple=True,
+              help="Path within bucket to file to remove.")
 @click.pass_obj
-def rm(dds_info, proj_arg, project, username, config, rm_all):
+def rm(dds_info, proj_arg, project, username, config, rm_all, file):
     """Delete the files within a project."""
 
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
         sys.exit("No project specified, cannot remove anything.")
+    
+    # Either all or a file
+    if rm_all and file:
+        sys.exit("The options '--rm-all' and '--file' cannot be used together.")
 
     project = proj_arg if proj_arg is not None else project
 
@@ -251,8 +257,11 @@ def rm(dds_info, proj_arg, project, username, config, rm_all):
         if rm_all:
             console = rich.console.Console(stderr=True, style="orange3")
             console.print(
-                "\nRemoving all files in project {project}...\n"
+                f"\nRemoving all files in project {project}...\n"
             )
 
             remover.remove_all()
+
+        if file:
+            remover.remove_file(files=file)
         

@@ -143,6 +143,8 @@ class DataLister(base.DDSBaseClass):
 
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
+        
+        console = Console()
 
         # Make call to API
         response = requests.get(DDSEndpoint.LIST_FILES,
@@ -153,8 +155,15 @@ class DataLister(base.DDSBaseClass):
             sys.exit("Failed to get list of files. "
                      f"{response.status_code} -- {response.text}")
 
-        # Get files and folders
+        # Get response
         resp_json = response.json()
+        
+        # Check if project empty
+        if "num_items" in resp_json and resp_json["num_items"] == 0:
+            console.print(f"[i]Project '{self.project}' is empty.[/i]")
+            return
+
+        # Get files
         files_folders = resp_json["files_folders"]
 
         # Warn user if there will be too many rows
@@ -162,7 +171,7 @@ class DataLister(base.DDSBaseClass):
 
         # Sort the file/folders according to names
         sorted_projects = sorted(files_folders,
-                                 key=lambda f: f["name"])
+                                key=lambda f: f["name"])
 
         # Create tree
         tree_title = folder
@@ -170,14 +179,13 @@ class DataLister(base.DDSBaseClass):
             tree_title = f"Files/Directories in project: {self.project}"
         tree = Tree(f"[bold spring_green4]{tree_title}")
 
-        console = Console()
         if sorted_projects:
             # Get max length of file name
             max_string = max([len(x["name"]) for x in sorted_projects])
 
             # Get max length of size string
             sizes = [len(x["size"][0]) for x in sorted_projects
-                     if show_size and "size" in x]
+                    if show_size and "size" in x]
             max_size = max(sizes) if sizes else 0
 
             # Add items to tree
@@ -212,4 +220,3 @@ class DataLister(base.DDSBaseClass):
             console.print(tree)
         else:
             console.print(f"[i]No folder called '{folder}'[/i]")
-

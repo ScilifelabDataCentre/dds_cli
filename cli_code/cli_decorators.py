@@ -15,6 +15,7 @@ import os
 import inspect
 
 # Installed
+import boto3
 import botocore
 import requests
 
@@ -51,10 +52,9 @@ def verify_proceed(func):
         file = kwargs["file"]
 
         # Return if file cancelled by another file
-        # log.debug("File: %s, Status: %s", file, self.status)
+        log.debug("File: %s, Status: %s", file, self.status)
         if self.status[file]["cancel"]:
-            message = f"File already cancelled, stopping upload " \
-                f"of file {file}"
+            message = f"File already cancelled, stopping file {file}"
             log.warning(message)
             return False
 
@@ -73,7 +73,7 @@ def verify_proceed(func):
                                   self.status[x]["put"]["done"]])
                      and x != file]
 
-            log.debug("Status updated: %s", self.status[file])
+            log.debug("Status updated (%s): %s", file, self.status[file])
 
         return ok_to_proceed
 
@@ -122,6 +122,7 @@ def verify_bucket_exist(func):
     def wrapped(self, *args, **kwargs):
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+
             bucket_exists = conn.check_bucket_exists()
             if not bucket_exists:
                 _ = conn.create_bucket()
@@ -129,3 +130,29 @@ def verify_bucket_exist(func):
         return func(self, conn, *args, **kwargs)
 
     return wrapped
+
+
+def connect_cloud(func):
+    """Connect to S3"""
+
+    @functools.wraps(func)
+    def init_resource(self, *args, **kwargs):
+
+        # Connect to service
+        try:
+            session = boto3.session.Session()
+
+            self.resource = session.resource(
+                service_name="s3",
+                endpoint_url=self.url,
+                aws_access_key_id=self.keys["access_key"],
+                aws_secret_access_key=self.keys["secret_key"]
+            )
+        except botocore.client.ClientError as err:
+            self.url, self.keys, self.message = (
+                None, None, f"S3 connection failed: {err}"
+            )
+        else:
+            return func(self, *args, **kwargs)
+
+    return init_resource

@@ -13,8 +13,10 @@ import sys
 import requests
 import dataclasses
 import inspect
+import os
 
 # Installed
+import rich
 
 # Own modules
 from cli_code import DDSEndpoint
@@ -57,11 +59,11 @@ class User:
         response = requests.get(DDSEndpoint.AUTH,
                                 params={"project": project},
                                 auth=(self.username, password))
-
+        
         if not response.ok:
-            sys.exit("User authentication failed! "
-                     f"Error code: {response.status_code} "
-                     f" -- {response.text}")
+            console = rich.console.Console()
+            console.print(f"{response.text}")
+            os._exit(1)
 
         token = response.json()
         return {"x-access-token": token["token"]}

@@ -7,7 +7,7 @@
 # Standard library
 import logging
 import traceback
-
+import os
 import sys
 import dataclasses
 import functools
@@ -16,9 +16,11 @@ import requests
 # Installed
 import boto3
 import botocore
+import rich
 
 # Own modules
 from cli_code import DDSEndpoint
+from cli_code.cli_decorators import connect_cloud
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -26,36 +28,6 @@ from cli_code import DDSEndpoint
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
-###############################################################################
-# DECORATORS ##################################################### DECORATORS #
-###############################################################################
-
-
-def connect_cloud(func):
-    """Connect to S3"""
-
-    @functools.wraps(func)
-    def init_resource(self, *args, **kwargs):
-
-        log.debug(self.keys)
-        # Connect to service
-        try:
-            session = boto3.session.Session()
-
-            self.resource = session.resource(
-                service_name="s3",
-                endpoint_url=self.url,
-                aws_access_key_id=self.keys["access_key"],
-                aws_secret_access_key=self.keys["secret_key"]
-            )
-        except botocore.client.ClientError as err:
-            sys.exit("S3 connection failed: %s", err)
-
-        return func(self, *args, **kwargs)
-
-    return init_resource
-
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -76,8 +48,8 @@ class S3Connector:
 
     def __post_init__(self, project_id, token):
 
-        self.safespring_project, self.keys, self.url, self.bucketname = \
-            self.get_s3_info(project_id=project_id, token=token)
+        self.safespring_project, self.keys, self.url, self.bucketname, \
+            self.message = self.get_s3_info(project_id=project_id, token=token)
 
     @connect_cloud
     def __enter__(self):
@@ -98,19 +70,18 @@ class S3Connector:
             raise Exception("Project information missing, cannot connect "
                             "to cloud.")
 
-        params = {"project": project_id}
         response = requests.get(DDSEndpoint.S3KEYS,
-                                params=params, headers=token)
+                                headers=token)
 
         if not response.ok:
-            sys.exit("Failed retrieving Safespring project name. "
-                     f"Error code: {response.status_code} -- "
-                     f"{response.text}")
+            return (None, None, None, None,
+                    "Failed retrieving Safespring project name:"
+                    f"{response.text}")
 
         s3info = response.json()
 
         return s3info["safespring_project"], s3info["keys"], s3info["url"], \
-            s3info["bucket"]
+            s3info["bucket"], ""
 
     def check_bucket_exists(self):
         """Checks if the bucket exists"""

@@ -19,6 +19,7 @@ import inspect
 # Installed
 import botocore
 import requests
+import rich
 
 # Own modules
 from cli_code import user
@@ -92,15 +93,17 @@ class DataPutter(base.DDSBaseClass):
         response = requests.get(DDSEndpoint.FILE_MATCH,
                                 headers=self.token, json=files)
 
+        console = rich.console.Console()
         if not response.ok:
-            sys.exit("Failed to match previously uploaded files."
-                     f"{response.status_code} -- {response.text}")
+            console.print(response.text)
+            os._exit(1)
 
         files_in_db = response.json()
 
         # API failure
         if "files" not in files_in_db:
-            sys.exit("Files not returned from API.")
+            console.print("Files not returned from API.")
+            os._exit(1)
 
         return list() if files_in_db["files"] is None else files_in_db["files"]
 
@@ -109,34 +112,42 @@ class DataPutter(base.DDSBaseClass):
     def put(self, file):
         """Uploads files to the cloud."""
 
-        message = ""
+        uploaded = False
+        error = ""
         file_local = str(self.data.data[file]["path_local"])
         file_remote = self.data.data[file]["name_in_bucket"]
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
-            # Upload file
-            try:
-                conn.resource.meta.client.upload_file(
-                    Filename=file_local,
-                    Bucket=conn.bucketname,
-                    Key=file_remote,
-                    ExtraArgs={
-                        "ACL": "private",  # Access control list
-                        "CacheControl": "no-store"  # Don't store cache
-                    }
-                )
-            except botocore.client.ClientError as err:
-                message = f"S3 upload of file '{file}' failed!"
-                log.exception("%s: %s", file, err)
-                return False, message
-        # return False, message
-        return True, message
+            if None in [conn.url, conn.keys, conn.bucketname]:
+                 error = "No s3 info returned! " + conn.message
+            else:
+                # Upload file
+                try:
+                    conn.resource.meta.client.upload_file(
+                        Filename=file_local,
+                        Bucket=conn.bucketname,
+                        Key=file_remote,
+                        ExtraArgs={
+                            "ACL": "private",  # Access control list
+                            "CacheControl": "no-store"  # Don't store cache
+                        }
+                    )
+                except botocore.client.ClientError as err:
+                    error = f"S3 upload of file '{file}' failed: {err}"
+                    log.exception("%s: %s", file, err)
+                else:
+                    uploaded = True
+
+        return uploaded, error
 
     @verify_proceed
     @update_status
     def add_file_db(self, file):
         """Make API request to add file to DB."""
+
+        added_to_db = False
+        error = ""
 
         # Get file info
         fileinfo = self.data.data[file]
@@ -153,11 +164,10 @@ class DataPutter(base.DDSBaseClass):
 
         # Error if failed
         if not response.ok:
-            message = f"Failed to add file '{file}' to database! " \
-                f"{response.status_code} -- {response.text}"
-            log.exception(message)
-            return False, message
+            error = f"Failed to add file '{file}' to database: {response.text}"
+            log.exception(error)
+            return added_to_db, error
 
-        message = response.json()["message"]
-        # return False, "test"
-        return True, message
+        added_to_db, error = (True, response.json()["message"])
+
+        return added_to_db, error

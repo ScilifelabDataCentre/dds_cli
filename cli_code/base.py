@@ -8,9 +8,11 @@
 import inspect
 import logging
 import sys
+import os 
 
 # Installed
 import requests
+import rich 
 
 # Own modules
 from cli_code import file_handler as fh
@@ -102,9 +104,9 @@ class DDSBaseClass:
                                 headers=self.token)
 
         if not response.ok:
-            sys.exit("Project access denied! "
-                     f"Error code: {response.status_code} "
-                     f" -- {response.text}")
+            console = rich.console.Console()
+            console.print(f"Project access denied: {response.text}")
+            os._exit(1)
 
         dds_access = response.json()
         if not dds_access["dds-access-granted"] or "token" not in dds_access:

@@ -96,14 +96,14 @@ class DataPutter(base.DDSBaseClass):
         console = rich.console.Console()
         if not response.ok:
             console.print(response.text)
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         files_in_db = response.json()
 
         # API failure
         if "files" not in files_in_db:
             console.print("Files not returned from API.")
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         return list() if files_in_db["files"] is None else files_in_db["files"]
 

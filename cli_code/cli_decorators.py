@@ -3,28 +3,15 @@
 ###############################################################################
 
 # Standard library
-import getpass
 import logging
-import pathlib
-import sys
-import json
-import traceback
 import functools
-import dataclasses
-import os
-import inspect
 
 # Installed
 import boto3
 import botocore
-import requests
 
 # Own modules
-from cli_code import user
-from cli_code import base
-from cli_code import file_handler as fh
 from cli_code import s3_connector as s3
-from cli_code import DDSEndpoint
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

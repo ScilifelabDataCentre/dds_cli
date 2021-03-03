@@ -76,7 +76,8 @@ class DataLister(base.DDSBaseClass):
             )
 
             if not do_continue in ["y", "yes"]:
-                print("\nCancelled listing function.\n")
+                console = Console()
+                console.print("\nCancelled listing function.\n")
                 os._exit(os.EX_OK)
 
     # Public methods ########################### Public methods #
@@ -86,15 +87,17 @@ class DataLister(base.DDSBaseClass):
         # Get projects from API
         response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
 
+        console = Console()
         if not response.ok:
-            sys.exit("Failed to get list of projects. "
-                     f"{response.status_code} -- {response.text}")
+            console.print(f"Failed to get list of projects: {response.text}")
+            os._exit(os.EX_OK)
 
         resp_json = response.json()
 
         # Cancel if user not involved in any projects
         if "all_projects" not in resp_json:
-            sys.exit("No project info was retrieved. No files to list.")
+            console.print("No project info was retrieved. No files to list.")
+            os._exit(os.EX_OK)
 
         # Warn user if many lines to print
         self.__warn_if_many(count=len(resp_json["all_projects"]))
@@ -109,7 +112,6 @@ class DataLister(base.DDSBaseClass):
         )
 
         # Create table
-        console = Console()
         table = Table(title="Your Projects", show_header=True,
                       header_style="bold")
 
@@ -148,8 +150,8 @@ class DataLister(base.DDSBaseClass):
                                         "show_size": show_size},
                                 headers=self.token)
         if not response.ok:
-            sys.exit("Failed to get list of files. "
-                     f"{response.status_code} -- {response.text}")
+            console.print(f"Failed to get list of files: {response.text}")
+            os._exit(os.EX_OK)
 
         # Get response
         resp_json = response.json()
@@ -157,7 +159,7 @@ class DataLister(base.DDSBaseClass):
         # Check if project empty
         if "num_items" in resp_json and resp_json["num_items"] == 0:
             console.print(f"[i]Project '{self.project}' is empty.[/i]")
-            return
+            os._exit(os.EX_OK)
 
         # Get files
         files_folders = resp_json["files_folders"]

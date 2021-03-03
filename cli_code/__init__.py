@@ -93,6 +93,7 @@ class DDSEndpoint:
 
     REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm"
     REMOVE_FILE = BASE_ENDPOINT + "/file/rm"
+    REMOVE_FOLDER = BASE_ENDPOINT + "/file/rmdir"
 
 
 class FileSegment:

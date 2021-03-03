@@ -9,6 +9,7 @@ import logging
 import pathlib
 import sys
 import traceback
+import os
 
 # Installed
 import requests
@@ -60,22 +61,22 @@ class DataRemover(base.DDSBaseClass):
         response = requests.delete(DDSEndpoint.REMOVE_PROJ_CONT,
                                    headers=self.token)
 
+        console = rich.console.Console()
         if not response.ok:
-            sys.exit(f"Failed to delete files in project {self.project}: "
-                     f"{response.status_code} -- {response.text}")
+            console.print(f"Failed to delete files in project: {response.text}")
+            os._exit(1)
 
         # Print out response - deleted or not?
         resp_json = response.json()
-        console = rich.console.Console()
         if resp_json["removed"]:
             console.print(
                 f"All files have been removed from project {self.project}."
             )
         else:
-            if "message" not in resp_json:
+            if "error" not in resp_json:
                 sys.exit("No error message returned despite failure.")
 
-            console.print(resp_json["message"])
+            console.print(resp_json["error"])
 
     def remove_file(self, files):
         """Remove specific files."""
@@ -84,11 +85,13 @@ class DataRemover(base.DDSBaseClass):
                                    json=files,
                                    headers=self.token)
 
+        console = rich.console.Console()
         if not response.ok:
-            sys.exit(
+            console.print(
                 f"Failed to delete file '{files}' in project {self.project}: "
-                f"{response.status_code} -- {response.text}"
+                f"{response.text}"
             )
+            os._exit(1)
 
         log.debug(response.json())
 

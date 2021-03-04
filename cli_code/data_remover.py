@@ -147,3 +147,9 @@ class DataRemover(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         log.debug(response.json())
+
+        # List successful folders
+
+        # List partially successful folders
+        
+        # Create tree for which are not deleted

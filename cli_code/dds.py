@@ -188,7 +188,7 @@ def put(dds_info, config, username, project, source,
 @click.argument("proj_arg", required=False)
 @click.argument("fold_arg", required=False)
 @click.option("--project", "-p", required=False, help="Project ID.")
-@click.option("--folder", "-f", required=False,
+@click.option("--folder", "-f", required=False, multiple=False,
               help="Folder to list files within.")
 @click.option("--size", "-sz", is_flag=True, default=False,
               help="Show size of project contents.")
@@ -231,17 +231,23 @@ def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
               help="Remove all project contents.")
 @click.option("--file", "-f", required=False, type=str, multiple=True,
               help="Path within bucket to file to remove.")
+@click.option("--directory", "-d", required=False, type=str, multiple=True,
+              help="Path within bucket to folder to remove.")
 @click.pass_obj
-def rm(dds_info, proj_arg, project, username, config, rm_all, file):
+def rm(dds_info, proj_arg, project, username, config, rm_all, file, directory):
     """Delete the files within a project."""
 
+    console = rich.console.Console()
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
-        sys.exit("No project specified, cannot remove anything.")
-    
+        console.print("No project specified, cannot remove anything.")
+        os._exit(os.EX_OK)
+
     # Either all or a file
-    if rm_all and file:
-        sys.exit("The options '--rm-all' and '--file' cannot be used together.")
+    if rm_all and (file or directory):
+        console.print("The options '--rm-all' and '--file'/'--directory' "
+                      "cannot be used together.")
+        os._exit(os.EX_OK)
 
     project = proj_arg if proj_arg is not None else project
 
@@ -265,3 +271,5 @@ def rm(dds_info, proj_arg, project, username, config, rm_all, file):
         if file:
             remover.remove_file(files=file)
         
+        if directory:
+            remover.remove_folder(folder=directory)

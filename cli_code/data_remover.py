@@ -130,7 +130,7 @@ class DataRemover(base.DDSBaseClass):
                  for f, v in resp_json["not_removed"].items()]
 
             console.print(rich.padding.Padding(table, 2))
-        
+
     def remove_folder(self, folder):
         """Remove specific folders."""
 
@@ -148,24 +148,11 @@ class DataRemover(base.DDSBaseClass):
 
         # Make sure required info is returned
         resp_json = response.json()
-        if not all(x in resp_json for x in
-                   ["successful", "not_exists", "not_removed"]):
-            console.print("No information returned. Server error.")
-            os._exit(os.EX_OK)
+        log.debug(resp_json)
+
+        # if not all(x in resp_json for x in
+        #            ["successful", "not_exists", "not_removed"]):
+        #     console.print("No information returned. Server error.")
+        #     os._exit(os.EX_OK)
+
         
-        md_success = None
-        if resp_json["successful"]:
-            md_success = Markdown("""*Deleted folders:*\n""")
-
-        # for x in folder:
-        #     if x, y in resp_json["successful"].items():
-        #         if y["complete"]:
-                    
-        #             console.print(rich.padding.Padding(md, 2))
-
-
-        # List successful folders
-
-        # List partially successful folders
-
-        # Create tree for which are not deleted

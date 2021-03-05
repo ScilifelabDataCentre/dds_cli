@@ -64,20 +64,18 @@ class DataLister(base.DDSBaseClass):
 
     # Static methods ########################### Static methods #
     @staticmethod
-    def __warn_if_many(count, threshold=50):
+    def warn_if_many(count, threshold=50):
         """Warn the user if there are many lines to print out."""
 
         if count > threshold:
             do_continue = Prompt.ask(
-                f"\nItems to list: {count}. "
+                f"\nItems to display: {count}. "
                 "The display layout might be affected due to too many entries."
                 f"\nTip: Try the command again with [b]| more[/b] at the end."
                 "\n\nContinue anyway?", choices=["y", "n"], default="n"
             )
 
             if not do_continue in ["y", "yes"]:
-                console = Console()
-                console.print("\nCancelled listing function.\n")
                 os._exit(os.EX_OK)
 
     # Public methods ########################### Public methods #
@@ -100,7 +98,7 @@ class DataLister(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         # Warn user if many lines to print
-        self.__warn_if_many(count=len(resp_json["all_projects"]))
+        self.warn_if_many(count=len(resp_json["all_projects"]))
 
         # Sort list of projects by 1. Last updated, 2. Project ID
         sorted_projects = sorted(
@@ -165,7 +163,7 @@ class DataLister(base.DDSBaseClass):
         files_folders = resp_json["files_folders"]
 
         # Warn user if there will be too many rows
-        self.__warn_if_many(count=len(files_folders))
+        self.warn_if_many(count=len(files_folders))
 
         # Sort the file/folders according to names
         sorted_projects = sorted(files_folders,

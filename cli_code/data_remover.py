@@ -21,6 +21,7 @@ import rich
 
 # Own modules
 from cli_code import base
+from cli_code import data_lister
 from cli_code import DDSEndpoint
 
 ###############################################################################
@@ -98,32 +99,10 @@ class DataRemover(base.DDSBaseClass):
             )
             os._exit(os.EX_OK)
 
-        # Make sure required info is returned
+        # Get info in response
         resp_json = response.json()
-        if not all(x in resp_json for x in
-                   ["successful", "not_exists", "not_removed"]):
-            console.print("No information returned. Server error.")
-            os._exit(os.EX_OK)
 
-        delete_ok = resp_json["successful"]
-        not_exists = resp_json["not_exists"]
-        delete_failed = resp_json["not_removed"]
-
-        if not_exists or delete_failed:
-            table = rich.table.Table(title="Files not deleted", title_justify="left",
-                                     show_header=True, header_style="bold")
-            columns = ["File", "Error"]
-
-            for x in columns:
-                table.add_column(x)
-
-            _ = [table.add_row(x, "No such file") for x in not_exists]
-            _ = [table.add_row(f"[light_salmon3]{x}[/light_salmon3]",
-                               f"[light_salmon3]{y}[/light_salmon3]")
-                 for x, y in delete_failed.items()]
-
-            console.print(table)
-
+        self.__response_delete(resp_json=resp_json)
 
     def remove_folder(self, folder):
         """Remove specific folders."""
@@ -142,9 +121,47 @@ class DataRemover(base.DDSBaseClass):
 
         # Make sure required info is returned
         resp_json = response.json()
-        log.debug(resp_json)
 
-        # if not all(x in resp_json for x in
-        #            ["successful", "not_exists", "not_removed"]):
-        #     console.print("No information returned. Server error.")
-        #     os._exit(os.EX_OK)
+        self.__response_delete(resp_json=resp_json, level="Folder")
+
+    @staticmethod
+    def __response_delete(resp_json, level="File"):
+        """Output a response after deletion."""
+
+        console = rich.console.Console()
+
+        # Check that enough info
+        if not all(x in resp_json for x in ["not_exists", "not_removed"]):
+            console.print("No information returned. Server error.")
+            os._exit(os.EX_OK)
+
+        # Get info
+        not_exists = resp_json["not_exists"]
+        delete_failed = resp_json["not_removed"]
+
+        # Create table if any files failed
+        if not_exists or delete_failed:
+            # Warn if many failed files
+            data_lister.DataLister.warn_if_many(
+                count=len(not_exists)+len(delete_failed)
+            )
+
+            # Create table and add columns
+            table = rich.table.Table(title=f"{level}s not deleted",
+                                     title_justify="left",
+                                     show_header=True, header_style="bold")
+            columns = [level, "Error"]
+            for x in columns:
+                table.add_column(x)
+
+            # Add rows
+            _ = [table.add_row(x, f"No such {level.lower()}")
+                 for x in not_exists]
+            _ = [table.add_row(f"[light_salmon3]{x}[/light_salmon3]",
+                               f"[light_salmon3]{y}[/light_salmon3]")
+                 for x, y in delete_failed.items()]
+
+            # Print out table
+            console.print(rich.padding.Padding(
+                table, 1
+            ))

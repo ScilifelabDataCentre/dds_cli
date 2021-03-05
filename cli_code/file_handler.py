@@ -70,6 +70,7 @@ class FileHandler:
 
         for x, y in self.data.items():
             log.debug("\n%s : %s\n", x, y)
+        os._exit(1)
 
     # Static methods ############## Static methods #
     @staticmethod
@@ -117,18 +118,21 @@ class FileHandler:
 
         return contents
 
-
     # Private methods ############ Private methods #
-    def __collect_file_info_local(self, all_paths, folder=None):
+
+    def __collect_file_info_local(self, all_paths, folder=None, root=True):
         """Get info on each file in each path specified."""
 
         file_info = dict()
 
+        log.debug(root)
         for path in all_paths:
             # Get info for all files
             # and feed back to same function for all folders
             if path.is_file():
                 subpath = self.compute_subpath(file=path, folder=folder)
+                log.debug("folder: %s -- root: %s -- file: %s -- subpath: %s\n",
+                          folder, root, path, subpath)
                 file_info[str(subpath / path.name)] = {
                     "path_local": path,
                     "subpath": subpath,
@@ -141,7 +145,8 @@ class FileHandler:
             elif path.is_dir():
                 file_info.update({
                     **self.__collect_file_info_local(
-                        all_paths=path.glob("**/*"), folder=path.name
+                        all_paths=path.glob("**/*"), folder=path.name,
+                        root=False
                     )
                 })
 

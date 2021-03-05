@@ -92,8 +92,8 @@ class DataRemover(base.DDSBaseClass):
         console = rich.console.Console()
         if not response.ok:
             console.print(
-                f"Failed to delete file(s) '{files}' in project {self.project}: "
-                f"{response.text}"
+                f"Failed to delete file(s) '{files}' in project {self.project}:"
+                f" {response.text}"
             )
             os._exit(os.EX_OK)
 
@@ -104,32 +104,59 @@ class DataRemover(base.DDSBaseClass):
             console.print("No information returned. Server error.")
             os._exit(os.EX_OK)
 
+        message = ""
+
         # List of successfully deleted files
         if resp_json["successful"]:
-            md = Markdown(
-                """*Deleted files:*\n""" +
-                "\n".join(f"""* {x}""" for x in resp_json["successful"])
-            )
+            # Get list of files
+            deleted_files = resp_json["successful"]
+
+            # Only one line if only one file
+            if len(deleted_files) == 1:
+                message = f"**File deleted:** {deleted_files[0]}"
+            else:
+                message = ("**Deleted files:**\n" +
+                           "\n".join(f"* {x}" for x in deleted_files))
+
+            md = Markdown(message)
             console.print(rich.padding.Padding(md, 2))
 
         # Create list of files which were not found in the database
         if resp_json["not_exists"]:
-            md = Markdown(
-                """**No such files:**\n""" +
-                "\n".join(f"""* {x}""" for x in resp_json["not_exists"])
-            )
+            # Get list of files
+            nonexistent_files = resp_json["not_exists"]
+
+            # Only one line if only one file
+            if len(nonexistent_files) == 1:
+                message = f"**No such file:** {nonexistent_files[0]}"
+            else:
+                message = ("**No such files:**\n" +
+                           "\n".join(f"""* {x}""" for x in nonexistent_files))
+
+            md = Markdown(message)
             console.print(rich.padding.Padding(md, 2))
 
         # Create table for files which were not deleted
         if resp_json["not_removed"]:
-            table = rich.table.Table(title="Files not deleted",
-                                     show_header=True, header_style="bold")
-            _ = [table.add_column(x) for x in ["File name", "Error"]]
+            # Get file dict
+            error_files = resp_json["not_removed"]
 
-            _ = [table.add_row(f, v["error"])
-                 for f, v in resp_json["not_removed"].items()]
+            if len(error_files) == 1:
+                info = list(error_files.items())[0]
+                message = (
+                    f"**_ERROR_** \t **File not deleted:** {info[0]}"
+                    f"\t-\t*{info[1]}*")
+                md = Markdown(message)
+                console.print(rich.padding.Padding(md, 2))
+            else:
+                table = rich.table.Table(title="Files not deleted",
+                                         show_header=True, header_style="bold")
+                _ = [table.add_column(x) for x in ["File name", "Error"]]
 
-            console.print(rich.padding.Padding(table, 2))
+                _ = [table.add_row(f, v["error"])
+                     for f, v in resp_json["not_removed"].items()]
+
+                console.print(rich.padding.Padding(table, 2))
 
     def remove_folder(self, folder):
         """Remove specific folders."""
@@ -154,5 +181,3 @@ class DataRemover(base.DDSBaseClass):
         #            ["successful", "not_exists", "not_removed"]):
         #     console.print("No information returned. Server error.")
         #     os._exit(os.EX_OK)
-
-        

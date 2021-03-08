@@ -70,34 +70,37 @@ class FileHandler:
 
         for x, y in self.data.items():
             log.debug("\n%s : %s\n", x, y)
-        os._exit(1)
+        # os._exit(1)
 
     # Static methods ############## Static methods #
     @staticmethod
     def compute_subpath(file, folder):
         """Computes the path to the file, from the specified folder."""
 
+        log.debug("File: %s (%s) -- Folder: %s (%s)", file, type(file),
+                  folder, type(folder))
         subdir = pathlib.Path("")
-        if folder is not None:
+        if folder != "":
             fileparts = file.parts
+            log.debug("File parts: %s", fileparts)
             start_ind = fileparts.index(folder)
             subdir = pathlib.Path(*fileparts[start_ind:-1])
 
         return subdir
 
     @staticmethod
-    def generate_bucket_filepath(filename="", folder=None):
+    def generate_bucket_filepath(filename="", folder=pathlib.Path("")):
         """Generates filename and new path which the file will be
         called in the bucket."""
 
         # Set path to file
-        directory = pathlib.Path("") if folder is None \
-            else pathlib.Path(folder)
+        # directory = pathlib.Path("") if folder is None \
+        #     else pathlib.Path(folder)
 
         # Generate new file name
         new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
 
-        return str(directory / pathlib.Path(new_name))
+        return str(folder / pathlib.Path(new_name))
 
     @staticmethod
     def extract_config(configfile):
@@ -120,22 +123,21 @@ class FileHandler:
 
     # Private methods ############ Private methods #
 
-    def __collect_file_info_local(self, all_paths, folder=None, root=True):
+    def __collect_file_info_local(self, all_paths, folder=pathlib.Path("")):
         """Get info on each file in each path specified."""
 
         file_info = dict()
 
-        log.debug(root)
+
         for path in all_paths:
             # Get info for all files
             # and feed back to same function for all folders
             if path.is_file():
-                subpath = self.compute_subpath(file=path, folder=folder)
-                log.debug("folder: %s -- root: %s -- file: %s -- subpath: %s\n",
-                          folder, root, path, subpath)
-                file_info[str(subpath / path.name)] = {
+                log.debug("File: %s\n"
+                          "Key: %s\n", path, str(folder / path.name))
+                file_info[str(folder / path.name)] = {
                     "path_local": path,
-                    "subpath": subpath,
+                    "subpath": folder,
                     "name_in_bucket": self.generate_bucket_filepath(
                         filename=path.name,
                         folder=folder
@@ -145,8 +147,8 @@ class FileHandler:
             elif path.is_dir():
                 file_info.update({
                     **self.__collect_file_info_local(
-                        all_paths=path.glob("**/*"), folder=path.name,
-                        root=False
+                        all_paths=path.glob("*"),
+                        folder=folder / pathlib.Path(path.name)
                     )
                 })
 

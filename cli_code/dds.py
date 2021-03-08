@@ -92,19 +92,22 @@ def cli(ctx, debug):
 @click.option("--break-on-fail", is_flag=True, default=False,
               show_default=True,
               help="Cancel upload of all files if one fails")
+@click.option("--overwrite", is_flag=True, default=False, show_default=True,
+              help="Overwrite files if already uploaded.")
 @click.option("--num-threads", "-nt", required=False, multiple=False,
               default=min(32, os.cpu_count() + 4), show_default=True,
               type=click.IntRange(1, 32),
               help="Number of parallel threads to perform the delivery.")
 @click.pass_obj
-def put(dds_info, config, username, project, source,
-        source_path_file, break_on_fail, num_threads):
+def put(_, config, username, project, source,
+        source_path_file, break_on_fail, overwrite, num_threads):
     """Processes and uploads specified files to the cloud."""
 
     # Begin delivery
     with dp.DataPutter(username=username, config=config, project=project,
                        source=source, source_path_file=source_path_file,
-                       break_on_fail=break_on_fail) as putter:
+                       break_on_fail=break_on_fail, overwrite=overwrite) \
+            as putter:
 
         # Keep track of futures
         upload_threads = {}     # Upload related
@@ -197,7 +200,7 @@ def put(dds_info, config, username, project, source,
 @click.option("--username", "-u", required=False, type=str,
               help="Your Data Delivery System username.")
 @click.pass_obj
-def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
+def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
     """List the projects and the files within the projects."""
 
     project = proj_arg if proj_arg is not None else project
@@ -231,10 +234,10 @@ def ls(dds_info, proj_arg, fold_arg, project, folder, size, config, username):
               help="Remove all project contents.")
 @click.option("--file", "-f", required=False, type=str, multiple=True,
               help="Path within bucket to file to remove.")
-@click.option("--directory", "-d", required=False, type=str, multiple=True,
+@click.option("--folder", "-d", required=False, type=str, multiple=True,
               help="Path within bucket to folder to remove.")
 @click.pass_obj
-def rm(dds_info, proj_arg, project, username, config, rm_all, file, directory):
+def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     """Delete the files within a project."""
 
     console = rich.console.Console()
@@ -251,6 +254,12 @@ def rm(dds_info, proj_arg, project, username, config, rm_all, file, directory):
 
     project = proj_arg if proj_arg is not None else project
 
+    # Will not delete anything if no file or folder specified
+    if project and not any([file, folder]):
+        console.print("One of the options must be specified to perform "
+                      "data deletion: '--rm-all' / '--file' / '--folder'.")
+        os._exit(os.EX_OK)
+
     # Warn if trying to remove all contents
     if rm_all:
         rm_all = rich.prompt.Prompt.ask(
@@ -258,7 +267,8 @@ def rm(dds_info, proj_arg, project, username, config, rm_all, file, directory):
             f"{project}?", choices=["y", "n"], default="n"
         ) == "y"
 
-    with dr.DataRemover(project=project, username=username, config=config) as remover:
+    with dr.DataRemover(project=project, username=username, config=config) \
+            as remover:
 
         if rm_all:
             console = rich.console.Console(stderr=True, style="orange3")
@@ -270,6 +280,6 @@ def rm(dds_info, proj_arg, project, username, config, rm_all, file, directory):
 
         if file:
             remover.remove_file(files=file)
-        
-        if directory:
-            remover.remove_folder(folder=directory)
+
+        if folder:
+            remover.remove_folder(folder=folder)

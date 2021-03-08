@@ -74,28 +74,9 @@ class FileHandler:
 
     # Static methods ############## Static methods #
     @staticmethod
-    def compute_subpath(file, folder):
-        """Computes the path to the file, from the specified folder."""
-
-        log.debug("File: %s (%s) -- Folder: %s (%s)", file, type(file),
-                  folder, type(folder))
-        subdir = pathlib.Path("")
-        if folder != "":
-            fileparts = file.parts
-            log.debug("File parts: %s", fileparts)
-            start_ind = fileparts.index(folder)
-            subdir = pathlib.Path(*fileparts[start_ind:-1])
-
-        return subdir
-
-    @staticmethod
     def generate_bucket_filepath(filename="", folder=pathlib.Path("")):
         """Generates filename and new path which the file will be
         called in the bucket."""
-
-        # Set path to file
-        # directory = pathlib.Path("") if folder is None \
-        #     else pathlib.Path(folder)
 
         # Generate new file name
         new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])

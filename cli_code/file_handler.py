@@ -53,14 +53,16 @@ class FileHandler:
             data_list += list(source)
         if source_path_file is not None:
             source_path_file = pathlib.Path(source_path_file)
-            print(source_path_file.exists())
             if source_path_file.exists():
                 with source_path_file.resolve().open(mode="r") as spf:
                     data_list += spf.read().splitlines()
 
         # Get absolute paths to all data and removes duplicates
-        data_list = list(set(pathlib.Path(x).resolve() for x in data_list
-                             if pathlib.Path(x).exists()))
+        data_list = list(
+            set(
+                pathlib.Path(x).resolve() for x in data_list if pathlib.Path(x).exists()
+            )
+        )
         # Quit if no data
         if not data_list:
             sys.exit("No data specified.")
@@ -68,8 +70,8 @@ class FileHandler:
         self.data = self.__collect_file_info_local(all_paths=data_list)
         self.failed = {}
 
-        for x, y in self.data.items():
-            log.debug("\n%s : %s\n", x, y)
+        # for x, y in self.data.items():
+        #     log.debug("\n%s : %s\n", x, y)
         # os._exit(1)
 
     # Static methods ############## Static methods #
@@ -109,48 +111,58 @@ class FileHandler:
 
         file_info = dict()
 
-
         for path in all_paths:
             # Get info for all files
             # and feed back to same function for all folders
             if path.is_file():
-                log.debug("File: %s\n"
-                          "Key: %s\n", path, str(folder / path.name))
                 file_info[str(folder / path.name)] = {
                     "path_local": path,
                     "subpath": folder,
                     "name_in_bucket": self.generate_bucket_filepath(
-                        filename=path.name,
-                        folder=folder
+                        filename=path.name, folder=folder
                     ),
-                    "size": path.stat().st_size
+                    "size": path.stat().st_size,
+                    "overwrite": False,
                 }
             elif path.is_dir():
-                file_info.update({
-                    **self.__collect_file_info_local(
-                        all_paths=path.glob("*"),
-                        folder=folder / pathlib.Path(path.name)
-                    )
-                })
+                file_info.update(
+                    {
+                        **self.__collect_file_info_local(
+                            all_paths=path.glob("*"),
+                            folder=folder / pathlib.Path(path.name),
+                        )
+                    }
+                )
 
         return file_info
 
     # Public methods ############## Public methods #
-    def create_status_dict(self, existing_files):
+    def create_status_dict(self, existing_files, overwrite=False):
         """Create dict for tracking file delivery status"""
 
         status_dict = {}
         for x in list(self.data):
-            cancel = bool(x in existing_files)
-            if cancel:
-                self.failed[x] = {**self.data.pop(x),
-                                  **{"message": "File already uploaded"}}
+            in_db = bool(x in existing_files)
+            if in_db and not overwrite:
+                self.failed[x] = {
+                    **self.data.pop(x),
+                    **{"message": "File already uploaded"},
+                }
             else:
+                if in_db:
+                    if overwrite:
+                        self.data[x].update(
+                            {
+                                "overwrite": True,
+                                "name_in_bucket": existing_files[x],
+                            }
+                        )
+
                 status_dict[x] = {
                     "cancel": False,
                     "message": "",
                     "put": {"started": False, "done": False},
-                    "add_file_db": {"started": False, "done": False}
+                    "add_file_db": {"started": False, "done": False},
                 }
 
         return status_dict

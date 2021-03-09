@@ -17,6 +17,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt
 from rich.tree import Tree
+from rich.padding import Padding
 
 # Own modules
 from cli_code import text_handler as th
@@ -42,8 +43,9 @@ log.setLevel(logging.DEBUG)
 class DataLister(base.DDSBaseClass):
     """Data lister class."""
 
-    def __init__(self, username: str = None, config: pathlib.Path = None,
-                 project: str = None):
+    def __init__(
+        self, username: str = None, config: pathlib.Path = None, project: str = None
+    ):
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, project=project)
@@ -72,7 +74,9 @@ class DataLister(base.DDSBaseClass):
                 f"\nItems to display: {count}. "
                 "The display layout might be affected due to too many entries."
                 f"\nTip: Try the command again with [b]| more[/b] at the end."
-                "\n\nContinue anyway?", choices=["y", "n"], default="n"
+                "\n\nContinue anyway?",
+                choices=["y", "n"],
+                default="n",
             )
 
             if not do_continue in ["y", "yes"]:
@@ -102,16 +106,13 @@ class DataLister(base.DDSBaseClass):
 
         # Sort list of projects by 1. Last updated, 2. Project ID
         sorted_projects = sorted(
-            sorted(resp_json["all_projects"],
-                   key=lambda i: i["Project ID"]
-                   ),
+            sorted(resp_json["all_projects"], key=lambda i: i["Project ID"]),
             key=lambda t: (t["Last updated"] is None, t["Last updated"]),
-            reverse=True
+            reverse=True,
         )
 
         # Create table
-        table = Table(title="Your Projects", show_header=True,
-                      header_style="bold")
+        table = Table(title="Your Projects", show_header=True, header_style="bold")
 
         # Add columns to table
         columns = resp_json["columns"]
@@ -127,9 +128,7 @@ class DataLister(base.DDSBaseClass):
 
         # Add all column values for each row to table
         for proj in sorted_projects:
-            table.add_row(
-                *[proj[columns[i]] for i in range(len(columns))]
-            )
+            table.add_row(*[proj[columns[i]] for i in range(len(columns))])
 
         # Print if there are any lines
         if table.columns:
@@ -139,21 +138,22 @@ class DataLister(base.DDSBaseClass):
 
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
-        
+
         console = Console()
 
         # Make call to API
-        response = requests.get(DDSEndpoint.LIST_FILES,
-                                params={"subpath": folder,
-                                        "show_size": show_size},
-                                headers=self.token)
+        response = requests.get(
+            DDSEndpoint.LIST_FILES,
+            params={"subpath": folder, "show_size": show_size},
+            headers=self.token,
+        )
         if not response.ok:
             console.print(f"Failed to get list of files: {response.text}")
             os._exit(os.EX_OK)
 
         # Get response
         resp_json = response.json()
-        
+
         # Check if project empty
         if "num_items" in resp_json and resp_json["num_items"] == 0:
             console.print(f"[i]Project '{self.project}' is empty.[/i]")
@@ -166,8 +166,7 @@ class DataLister(base.DDSBaseClass):
         self.warn_if_many(count=len(files_folders))
 
         # Sort the file/folders according to names
-        sorted_projects = sorted(files_folders,
-                                key=lambda f: f["name"])
+        sorted_projects = sorted(files_folders, key=lambda f: f["name"])
 
         # Create tree
         tree_title = folder
@@ -180,8 +179,9 @@ class DataLister(base.DDSBaseClass):
             max_string = max([len(x["name"]) for x in sorted_projects])
 
             # Get max length of size string
-            sizes = [len(x["size"][0]) for x in sorted_projects
-                    if show_size and "size" in x]
+            sizes = [
+                len(x["size"][0]) for x in sorted_projects if show_size and "size" in x
+            ]
             max_size = max(sizes) if sizes else 0
 
             # Add items to tree
@@ -191,8 +191,8 @@ class DataLister(base.DDSBaseClass):
 
                 # Att 1 for folders due to trailing /
                 tab = th.TextHandler.format_tabs(
-                    string_len=len(x["name"])+(1 if is_folder else 0),
-                    max_string_len=max_string
+                    string_len=len(x["name"]) + (1 if is_folder else 0),
+                    max_string_len=max_string,
                 )
 
                 # Add formatting if folder and set string name
@@ -207,12 +207,10 @@ class DataLister(base.DDSBaseClass):
 
                     # Define space between number and size format
                     tabs_bf_format = th.TextHandler.format_tabs(
-                        string_len=len(x["size"][0]),
-                        max_string_len=max_size,
-                        tab_len=2
+                        string_len=len(x["size"][0]), max_string_len=max_size, tab_len=2
                     )
                     line += f"{tabs_bf_format}{x['size'][1]}"
                 tree.add(line)
-            console.print(tree)
+            console.print(Padding(tree, 1))
         else:
-            console.print(f"[i]No folder called '{folder}'[/i]")
+            console.print(Padding(f"[i]No folder called '{folder}'[/i]", 1))

@@ -44,10 +44,16 @@ log.setLevel(logging.DEBUG)
 class DataPutter(base.DDSBaseClass):
     """Data deliverer class."""
 
-    def __init__(self, username: str = None, config: pathlib.Path = None,
-                 project: str = None, break_on_fail: bool = False,
-                 overwrite: bool = False, source: tuple = (),
-                 source_path_file: pathlib.Path = None):
+    def __init__(
+        self,
+        username: str = None,
+        config: pathlib.Path = None,
+        project: str = None,
+        break_on_fail: bool = False,
+        overwrite: bool = False,
+        source: tuple = (),
+        source_path_file: pathlib.Path = None,
+    ):
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, project=project)
@@ -67,14 +73,20 @@ class DataPutter(base.DDSBaseClass):
         files_in_db = self.check_previous_upload()
 
         # Quit if error and flag
-        if files_in_db and self.break_on_fail:
-            sys.exit("Some files have already been uploaded and "
-                     f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}")
+        if files_in_db and self.break_on_fail and not self.overwrite:
+            sys.exit(
+                "Some files have already been uploaded and "
+                f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}"
+            )
 
         # Generate status dict
         self.status = self.data.create_status_dict(
-            existing_files=files_in_db if not self.overwrite else list()
+            existing_files=files_in_db, overwrite=self.overwrite
         )
+
+        # for x, y in self.data.data.items():
+        #     log.debug("\n%s : %s\n", x, y)
+        # os._exit(1)
 
     def __enter__(self):
         return self
@@ -94,8 +106,7 @@ class DataPutter(base.DDSBaseClass):
         # Get files from db
         files = list(x for x in self.data.data)
 
-        response = requests.get(DDSEndpoint.FILE_MATCH,
-                                headers=self.token, json=files)
+        response = requests.get(DDSEndpoint.FILE_MATCH, headers=self.token, json=files)
 
         console = rich.console.Console()
         if not response.ok:
@@ -109,7 +120,7 @@ class DataPutter(base.DDSBaseClass):
             console.print("Files not returned from API.")
             os._exit(os.EX_OK)
 
-        return list() if files_in_db["files"] is None else files_in_db["files"]
+        return dict() if files_in_db["files"] is None else files_in_db["files"]
 
     @verify_proceed
     @update_status
@@ -134,8 +145,8 @@ class DataPutter(base.DDSBaseClass):
                         Key=file_remote,
                         ExtraArgs={
                             "ACL": "private",  # Access control list
-                            "CacheControl": "no-store"  # Don't store cache
-                        }
+                            "CacheControl": "no-store",  # Don't store cache
+                        },
                     )
                 except botocore.client.ClientError as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
@@ -155,15 +166,18 @@ class DataPutter(base.DDSBaseClass):
 
         # Get file info
         fileinfo = self.data.data[file]
-
+        params = {
+            "name": file,
+            "name_in_bucket": fileinfo["name_in_bucket"],
+            "subpath": fileinfo["subpath"],
+            "size": fileinfo["size"],
+        }
         # Send file info to API
-        response = requests.post(
+        put_or_post = requests.put if fileinfo["overwrite"] else requests.post
+        response = put_or_post(
             DDSEndpoint.FILE_NEW,
-            params={"name": file,
-                    "name_in_bucket": fileinfo["name_in_bucket"],
-                    "subpath": fileinfo["subpath"],
-                    "size": fileinfo["size"]},
-            headers=self.token
+            params=params,
+            headers=self.token,
         )
 
         # Error if failed

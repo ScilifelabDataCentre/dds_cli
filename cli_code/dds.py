@@ -24,6 +24,7 @@ from cli_code import timestamp
 from cli_code import data_putter as dp
 from cli_code import data_lister as dl
 from cli_code import data_remover as dr
+from cli_code import data_getter as dg
 
 # Setup
 pretty.install()
@@ -73,6 +74,11 @@ def cli(ctx, debug):
         "LOGFILE": logfile,
         # "LOGGER": LOG
     }
+
+
+###############################################################################
+# PUT ################################################################### PUT #
+###############################################################################
 
 
 @cli.command()
@@ -236,6 +242,11 @@ def put(
                     upload_threads[texec.submit(putter.put, file=ufile)] = ufile
 
 
+###############################################################################
+# LIST ################################################################# LIST #
+###############################################################################
+
+
 @cli.command()
 @click.argument("proj_arg", required=False)
 @click.argument("fold_arg", required=False)
@@ -285,6 +296,11 @@ def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
             lister.list_projects()
         else:
             lister.list_files(folder=folder, show_size=size)
+
+
+###############################################################################
+# DELETE ############################################################# DELETE #
+###############################################################################
 
 
 @cli.command()
@@ -375,3 +391,37 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
 
         if folder:
             remover.remove_folder(folder=folder)
+
+
+###############################################################################
+# GET ################################################################### GET #
+###############################################################################
+
+
+@cli.command()
+@click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials, destination, etc.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=False,
+    type=str,
+    help="Project ID to which you're uploading data.",
+)
+@click.pass_obj
+def get(_, config, username, project):
+
+    with dg.DataGetter(username=username, config=config, project=project) as getter:
+        LOG.debug(getter)

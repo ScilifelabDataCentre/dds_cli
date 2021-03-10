@@ -1,4 +1,4 @@
-"""Data deliverer."""
+"""Data putter."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -36,7 +36,7 @@ LOG.setLevel(logging.DEBUG)
 
 
 class DataPutter(base.DDSBaseClass):
-    """Data deliverer class."""
+    """Data putter class."""
 
     def __init__(
         self,

@@ -5,16 +5,11 @@
 ###############################################################################
 
 # Standard library
-import getpass
 import logging
 import pathlib
 import sys
-import json
 import traceback
-import functools
-import dataclasses
 import os
-import inspect
 
 # Installed
 import botocore
@@ -22,7 +17,6 @@ import requests
 import rich
 
 # Own modules
-from cli_code import user
 from cli_code import base
 from cli_code import file_handler as fh
 from cli_code import s3_connector as s3
@@ -33,8 +27,8 @@ from cli_code.cli_decorators import verify_bucket_exist, verify_proceed, update_
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -85,7 +79,7 @@ class DataPutter(base.DDSBaseClass):
         )
 
         # for x, y in self.data.data.items():
-        #     log.debug("\n%s : %s\n", x, y)
+        #     LOG.debug("\n%s : %s\n", x, y)
         # os._exit(1)
 
     def __enter__(self):
@@ -100,7 +94,7 @@ class DataPutter(base.DDSBaseClass):
 
     # General methods ###################### General methods #
     @verify_bucket_exist
-    def check_previous_upload(self, *args, **kwargs):
+    def check_previous_upload(self):
         """Do API call and check for the files in the DB."""
 
         # Get files from db
@@ -150,7 +144,7 @@ class DataPutter(base.DDSBaseClass):
                     )
                 except botocore.client.ClientError as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
-                    log.exception("%s: %s", file, err)
+                    LOG.exception("%s: %s", file, err)
                 else:
                     uploaded = True
 
@@ -183,7 +177,7 @@ class DataPutter(base.DDSBaseClass):
         # Error if failed
         if not response.ok:
             error = f"Failed to add file '{file}' to database: {response.text}"
-            log.exception(error)
+            LOG.exception(error)
             return added_to_db, error
 
         added_to_db, error = (True, response.json()["message"])

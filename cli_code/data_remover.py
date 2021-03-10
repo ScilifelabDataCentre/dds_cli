@@ -10,14 +10,10 @@ import pathlib
 import sys
 import traceback
 import os
-import itertools
 
 # Installed
 import requests
-from rich.markdown import Markdown
-from rich.layout import Layout
 import rich
-
 
 # Own modules
 from cli_code import base
@@ -28,8 +24,8 @@ from cli_code import DDSEndpoint
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -39,8 +35,7 @@ log.setLevel(logging.DEBUG)
 class DataRemover(base.DDSBaseClass):
     """Data remover class."""
 
-    def __init__(self, project: str, username: str = None,
-                 config: pathlib.Path = None):
+    def __init__(self, project: str, username: str = None, config: pathlib.Path = None):
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, project=project)
@@ -63,21 +58,17 @@ class DataRemover(base.DDSBaseClass):
         """Remove all files in project."""
 
         # Perform request to API to perform deletion
-        response = requests.delete(DDSEndpoint.REMOVE_PROJ_CONT,
-                                   headers=self.token)
+        response = requests.delete(DDSEndpoint.REMOVE_PROJ_CONT, headers=self.token)
 
         console = rich.console.Console()
         if not response.ok:
-            console.print(
-                f"Failed to delete files in project: {response.text}")
+            console.print(f"Failed to delete files in project: {response.text}")
             os._exit(os.EX_OK)
 
         # Print out response - deleted or not?
         resp_json = response.json()
         if resp_json["removed"]:
-            console.print(
-                f"All files have been removed from project {self.project}."
-            )
+            console.print(f"All files have been removed from project {self.project}.")
         else:
             if "error" not in resp_json:
                 sys.exit("No error message returned despite failure.")
@@ -87,9 +78,9 @@ class DataRemover(base.DDSBaseClass):
     def remove_file(self, files):
         """Remove specific files."""
 
-        response = requests.delete(DDSEndpoint.REMOVE_FILE,
-                                   json=files,
-                                   headers=self.token)
+        response = requests.delete(
+            DDSEndpoint.REMOVE_FILE, json=files, headers=self.token
+        )
 
         console = rich.console.Console()
         if not response.ok:
@@ -107,9 +98,9 @@ class DataRemover(base.DDSBaseClass):
     def remove_folder(self, folder):
         """Remove specific folders."""
 
-        response = requests.delete(DDSEndpoint.REMOVE_FOLDER,
-                                   json=folder,
-                                   headers=self.token)
+        response = requests.delete(
+            DDSEndpoint.REMOVE_FOLDER, json=folder, headers=self.token
+        )
 
         console = rich.console.Console()
         if not response.ok:
@@ -143,25 +134,29 @@ class DataRemover(base.DDSBaseClass):
         if not_exists or delete_failed:
             # Warn if many failed files
             data_lister.DataLister.warn_if_many(
-                count=len(not_exists)+len(delete_failed)
+                count=len(not_exists) + len(delete_failed)
             )
 
             # Create table and add columns
-            table = rich.table.Table(title=f"{level}s not deleted",
-                                     title_justify="left",
-                                     show_header=True, header_style="bold")
+            table = rich.table.Table(
+                title=f"{level}s not deleted",
+                title_justify="left",
+                show_header=True,
+                header_style="bold",
+            )
             columns = [level, "Error"]
             for x in columns:
                 table.add_column(x)
 
             # Add rows
-            _ = [table.add_row(x, f"No such {level.lower()}")
-                 for x in not_exists]
-            _ = [table.add_row(f"[light_salmon3]{x}[/light_salmon3]",
-                               f"[light_salmon3]{y}[/light_salmon3]")
-                 for x, y in delete_failed.items()]
+            _ = [table.add_row(x, f"No such {level.lower()}") for x in not_exists]
+            _ = [
+                table.add_row(
+                    f"[light_salmon3]{x}[/light_salmon3]",
+                    f"[light_salmon3]{y}[/light_salmon3]",
+                )
+                for x, y in delete_failed.items()
+            ]
 
             # Print out table
-            console.print(rich.padding.Padding(
-                table, 1
-            ))
+            console.print(rich.padding.Padding(table, 1))

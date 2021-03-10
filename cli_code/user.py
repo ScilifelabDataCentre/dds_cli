@@ -5,15 +5,11 @@
 ###############################################################################
 
 # Standard library
-import getpass
-import json
 import logging
-import pathlib
 import sys
-import requests
 import dataclasses
-import inspect
 import os
+import requests
 
 # Installed
 import rich
@@ -25,8 +21,8 @@ from cli_code import DDSEndpoint
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -48,18 +44,19 @@ class User:
             sys.exit("Missing user information.")
 
         # Authenticate user and get delivery JWT token
-        self.token = self.__authenticate_user(password=password,
-                                              project=project)
+        self.token = self.__authenticate_user(password=password, project=project)
 
     # Private methods ######################### Private methods #
     def __authenticate_user(self, password, project):
         """Authenticates the username and password via a call to the API."""
 
         # Project passed in to add it to the token. Can be None.
-        response = requests.get(DDSEndpoint.AUTH,
-                                params={"project": project},
-                                auth=(self.username, password))
-        
+        response = requests.get(
+            DDSEndpoint.AUTH,
+            params={"project": project},
+            auth=(self.username, password),
+        )
+
         if not response.ok:
             console = rich.console.Console()
             console.print(f"{response.text}")

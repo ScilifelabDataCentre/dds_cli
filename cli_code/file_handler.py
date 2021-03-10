@@ -9,25 +9,20 @@ import logging
 import sys
 import pathlib
 import uuid
-import requests
 import dataclasses
-import functools
 import os
 import json
 
 # Installed
 
 # Own modules
-from cli_code import status
-from cli_code import DDSEndpoint
-from cli_code import s3_connector as s3
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -71,7 +66,7 @@ class FileHandler:
         self.failed = {}
 
         # for x, y in self.data.items():
-        #     log.debug("\n%s : %s\n", x, y)
+        #     LOG.debug("\n%s : %s\n", x, y)
         # os._exit(1)
 
     # Static methods ############## Static methods #

@@ -1,4 +1,4 @@
-
+"""Base class for the DDS CLI. Verifies the users access to the DDS."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -8,11 +8,11 @@
 import inspect
 import logging
 import sys
-import os 
+import os
 
 # Installed
 import requests
-import rich 
+import rich
 
 # Own modules
 from cli_code import file_handler as fh
@@ -24,8 +24,8 @@ from cli_code import DDSEndpoint
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # FUNCTIONS ####################################################### FUNCTIONS #
@@ -43,6 +43,7 @@ def attempted_operation():
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
+
 class DDSBaseClass:
     """Data Delivery System base class. For common operations."""
 
@@ -51,24 +52,23 @@ class DDSBaseClass:
         self.method = attempted_operation()
 
         # Verify that user entered enough info
-        username, password, self.project = \
-            self.__verify_input(username=username, password=password,
-                                config=config, project=project)
+        username, password, self.project = self.__verify_input(
+            username=username, password=password, config=config, project=project
+        )
 
         # Authenticate the user and get the token
-        dds_user = user.User(username=username, password=password,
-                             project=self.project)
+        dds_user = user.User(username=username, password=password, project=self.project)
         self.token = dds_user.token
 
         # Project access only required if trying to upload, download or list
         # files within project
-        if self.method == "put" or \
-                (self.method in ["ls", "rm"] and self.project is not None):
+        if self.method == "put" or (
+            self.method in ["ls", "rm"] and self.project is not None
+        ):
             self.token = self.__verify_project_access()
 
     # Private methods ############################### Private methods #
-    def __verify_input(self, username=None, password=None, config=None,
-                       project=None):
+    def __verify_input(self, username=None, password=None, config=None, project=None):
         """Verifies that the users input is valid and fully specified."""
         # Get contents from file
         if config is not None:
@@ -92,16 +92,16 @@ class DDSBaseClass:
         # Set password if missing
         if password is None:
             # password = getpass.getpass()
-            password = "password"   # TODO: REMOVE - ONLY FOR DEV
+            password = "password"  # TODO: REMOVE - ONLY FOR DEV
 
         return username, password, project
 
     def __verify_project_access(self):
         """Verifies that the user has access to the specified project."""
 
-        response = requests.get(DDSEndpoint.AUTH_PROJ,
-                                params={"method": self.method},
-                                headers=self.token)
+        response = requests.get(
+            DDSEndpoint.AUTH_PROJ, params={"method": self.method}, headers=self.token
+        )
 
         if not response.ok:
             console = rich.console.Console()

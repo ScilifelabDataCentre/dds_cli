@@ -7,7 +7,6 @@
 # Standard library
 import logging
 import pathlib
-import sys
 import os
 import concurrent.futures
 import itertools
@@ -20,7 +19,6 @@ import rich.prompt
 
 # Own modules
 import cli_code
-from cli_code import user
 from cli_code import directory
 from cli_code import timestamp
 from cli_code import data_putter as dp
@@ -36,7 +34,7 @@ console_main = rich.console.Console()
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-log = None
+LOG = None
 
 ###############################################################################
 # MAIN ################################################################# MAIN #
@@ -64,9 +62,9 @@ def cli(ctx, debug):
     # Create logger
     cli_code.setup_custom_logger(filename=logfile, debug=debug)
 
-    global log
-    log = logging.getLogger(__name__)
-    log.setLevel(logging.DEBUG if debug else logging.WARNING)
+    global LOG
+    LOG = logging.getLogger(__name__)
+    LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
 
     # Create context object
     ctx.obj = {
@@ -175,7 +173,7 @@ def put(
 
             # Schedule the first num_threads futures for upload
             for file in itertools.islice(iterator, num_threads):
-                log.debug("Uploading file %s...", file)
+                LOG.debug("Uploading file %s...", file)
                 upload_threads[texec.submit(putter.put, file=file)] = file
 
             # Continue until all files are done
@@ -188,19 +186,19 @@ def put(
                 # Get result from future and schedule database update
                 for ufut in udone:
                     uploaded_file = upload_threads.pop(ufut)
-                    log.debug("...File %s uploaded!", uploaded_file)
+                    LOG.debug("...File %s uploaded!", uploaded_file)
 
                     # Get result
                     try:
                         _ = ufut.result()
                     except concurrent.futures.BrokenExecutor as err:
-                        log.critical(
+                        LOG.critical(
                             "Upload of file %s failed! Error: %s", uploaded_file, err
                         )
                         continue
 
                     # Schedule file for db update
-                    log.debug("Adding to db: %s...", uploaded_file)
+                    LOG.debug("Adding to db: %s...", uploaded_file)
                     db_threads[
                         texec.submit(putter.add_file_db, file=uploaded_file)
                     ] = uploaded_file
@@ -217,7 +215,7 @@ def put(
                     # Get result from future
                     for fut_db in done_db:
                         added_file = db_threads.pop(fut_db)
-                        log.debug("...File added to db: %s", added_file)
+                        LOG.debug("...File added to db: %s", added_file)
 
                         new_tasks += 1
 
@@ -225,7 +223,7 @@ def put(
                         try:
                             _ = fut_db.result()
                         except concurrent.futures.BrokenExecutor as err:
-                            log.critical(
+                            LOG.critical(
                                 "Adding of file %s to database failed! " "Error: %s",
                                 uploaded_file,
                                 err,
@@ -234,7 +232,7 @@ def put(
 
                 # Schedule the next set of futures for upload
                 for ufile in itertools.islice(iterator, len(done_db)):
-                    log.debug("Uploading file %s...", ufile)
+                    LOG.debug("Uploading file %s...", ufile)
                     upload_threads[texec.submit(putter.put, file=ufile)] = ufile
 
 

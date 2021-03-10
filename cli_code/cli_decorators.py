@@ -1,3 +1,5 @@
+"""Module for all decorators related to the execution of the DDS CLI."""
+
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
 ###############################################################################
@@ -17,8 +19,8 @@ from cli_code import s3_connector as s3
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #
@@ -34,15 +36,17 @@ def verify_proceed(func):
 
         # Check that function has correct args
         if "file" not in kwargs:
-            raise Exception("Missing key word argument in wrapper over "
-                            f"function {func.__name__}: 'file'")
+            raise Exception(
+                "Missing key word argument in wrapper over "
+                f"function {func.__name__}: 'file'"
+            )
         file = kwargs["file"]
 
         # Return if file cancelled by another file
-        log.debug("File: %s, Status: %s", file, self.status)
+        LOG.debug("File: %s, Status: %s", file, self.status)
         if self.status[file]["cancel"]:
             message = f"File already cancelled, stopping file {file}"
-            log.warning(message)
+            LOG.warning(message)
             return False
 
         # Run function
@@ -52,15 +56,24 @@ def verify_proceed(func):
         if not ok_to_proceed:
             self.status[file].update({"cancel": True, "message": message})
             if self.break_on_fail:
-                message = f"Cancelling upload due to file '{file}'. " \
+                message = (
+                    f"Cancelling upload due to file '{file}'. "
                     "Break-on-fail specified in call."
-                _ = [self.status[x].update({"cancel": True, "message": message})
-                     for x in self.status if not self.status[x]["cancel"]
-                     and not any([self.status[x]["put"]["started"],
-                                  self.status[x]["put"]["done"]])
-                     and x != file]
+                )
+                _ = [
+                    self.status[x].update({"cancel": True, "message": message})
+                    for x in self.status
+                    if not self.status[x]["cancel"]
+                    and not any(
+                        [
+                            self.status[x]["put"]["started"],
+                            self.status[x]["put"]["done"],
+                        ]
+                    )
+                    and x != file
+                ]
 
-            log.debug("Status updated (%s): %s", file, self.status[file])
+            LOG.debug("Status updated (%s): %s", file, self.status[file])
 
         return ok_to_proceed
 
@@ -75,13 +88,16 @@ def update_status(func):
 
         # Check that function has correct args
         if "file" not in kwargs:
-            raise Exception("Missing key word argument in wrapper over "
-                            f"function {func.__name__}: 'file'")
+            raise Exception(
+                "Missing key word argument in wrapper over "
+                f"function {func.__name__}: 'file'"
+            )
         file = kwargs["file"]
 
         if func.__name__ not in ["put", "add_file_db"]:
-            raise Exception(f"The function {func.__name__} cannot be used with"
-                            " this decorator.")
+            raise Exception(
+                f"The function {func.__name__} cannot be used with" " this decorator."
+            )
         if func.__name__ not in self.status[file]:
             raise Exception(f"No status found for function {func.__name__}.")
 
@@ -89,7 +105,7 @@ def update_status(func):
         self.status[file][func.__name__].update({"started": True})
 
         # Run function
-        ok_to_continue, message, *info = func(self, *args, **kwargs)
+        ok_to_continue, message, *_ = func(self, *args, **kwargs)
 
         if not ok_to_continue:
             return False, message
@@ -114,7 +130,7 @@ def verify_bucket_exist(func):
             if not bucket_exists:
                 _ = conn.create_bucket()
 
-        return func(self, conn, *args, **kwargs)
+        return func(self, *args, **kwargs)
 
     return wrapped
 
@@ -133,11 +149,13 @@ def connect_cloud(func):
                 service_name="s3",
                 endpoint_url=self.url,
                 aws_access_key_id=self.keys["access_key"],
-                aws_secret_access_key=self.keys["secret_key"]
+                aws_secret_access_key=self.keys["secret_key"],
             )
         except botocore.client.ClientError as err:
             self.url, self.keys, self.message = (
-                None, None, f"S3 connection failed: {err}"
+                None,
+                None,
+                f"S3 connection failed: {err}",
             )
         else:
             return func(self, *args, **kwargs)

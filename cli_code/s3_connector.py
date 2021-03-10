@@ -7,16 +7,12 @@
 # Standard library
 import logging
 import traceback
-import os
 import sys
 import dataclasses
-import functools
 import requests
 
 # Installed
-import boto3
 import botocore
-import rich
 
 # Own modules
 from cli_code import DDSEndpoint
@@ -26,8 +22,8 @@ from cli_code.cli_decorators import connect_cloud
 # LOGGING ########################################################### LOGGING #
 ###############################################################################
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -48,8 +44,13 @@ class S3Connector:
 
     def __post_init__(self, project_id, token):
 
-        self.safespring_project, self.keys, self.url, self.bucketname, \
-            self.message = self.get_s3_info(project_id=project_id, token=token)
+        (
+            self.safespring_project,
+            self.keys,
+            self.url,
+            self.bucketname,
+            self.message,
+        ) = self.get_s3_info(project_id=project_id, token=token)
 
     @connect_cloud
     def __enter__(self):
@@ -67,21 +68,28 @@ class S3Connector:
         """Get information required to connect to cloud."""
 
         if None in [project_id, token]:
-            raise Exception("Project information missing, cannot connect "
-                            "to cloud.")
+            raise Exception("Project information missing, cannot connect " "to cloud.")
 
-        response = requests.get(DDSEndpoint.S3KEYS,
-                                headers=token)
+        response = requests.get(DDSEndpoint.S3KEYS, headers=token)
 
         if not response.ok:
-            return (None, None, None, None,
-                    "Failed retrieving Safespring project name:"
-                    f"{response.text}")
+            return (
+                None,
+                None,
+                None,
+                None,
+                "Failed retrieving Safespring project name:" f"{response.text}",
+            )
 
         s3info = response.json()
 
-        return s3info["safespring_project"], s3info["keys"], s3info["url"], \
-            s3info["bucket"], ""
+        return (
+            s3info["safespring_project"],
+            s3info["keys"],
+            s3info["url"],
+            s3info["bucket"],
+            "",
+        )
 
     def check_bucket_exists(self):
         """Checks if the bucket exists"""
@@ -89,7 +97,7 @@ class S3Connector:
         try:
             self.resource.meta.client.head_bucket(Bucket=self.bucketname)
         except botocore.client.ClientError:
-            log.info("Bucket '%s' does not exist!", self.bucketname)
+            LOG.info("Bucket '%s' does not exist!", self.bucketname)
             return False
 
         return True
@@ -97,20 +105,20 @@ class S3Connector:
     def create_bucket(self):
         """Creates the bucket"""
 
-        log.info("Creating bucket '%s'...", self.bucketname)
+        LOG.info("Creating bucket '%s'...", self.bucketname)
 
         try:
-            self.resource.meta.client.create_bucket(Bucket=self.bucketname,
-                                                    ACL="private")
+            self.resource.meta.client.create_bucket(
+                Bucket=self.bucketname, ACL="private"
+            )
         except botocore.client.ClientError as err2:
-            log.critical("Could not create bucket %s! %s",
-                         self.bucketname, err2)
+            LOG.critical("Could not create bucket %s! %s", self.bucketname, err2)
             return False
 
         bucket_exists = self.check_bucket_exists()
         if not bucket_exists:
             sys.exit("Bucket '%s' does not exist. Failed second attempt.")
 
-        log.info("Bucket '%s' created!", self.bucketname)
+        LOG.info("Bucket '%s' created!", self.bucketname)
 
         return True

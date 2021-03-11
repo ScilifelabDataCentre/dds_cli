@@ -34,11 +34,12 @@ class FileHandler:
     """Collects the files specified by the user."""
 
     user_input: dataclasses.InitVar[dict]
+    local: dataclasses.InitVar[bool] = True
     data: dict = dataclasses.field(init=False)
     failed: dict = dataclasses.field(init=False)
 
     # Magic methods ################ Magic methods #
-    def __post_init__(self, user_input):
+    def __post_init__(self, user_input, local):
 
         source, source_path_file = user_input
 
@@ -53,17 +54,12 @@ class FileHandler:
                     data_list += spf.read().splitlines()
 
         # Get absolute paths to all data and removes duplicates
-        data_list = list(
-            set(
-                pathlib.Path(x).resolve() for x in data_list if pathlib.Path(x).exists()
+        if local:
+            self.data, self.failed = self.__resolve_and_get_info(data_list=data_list)
+        else:
+            self.data, self.failed = self.__collect_file_info_remote(
+                data_list=data_list
             )
-        )
-        # Quit if no data
-        if not data_list:
-            sys.exit("No data specified.")
-
-        self.data = self.__collect_file_info_local(all_paths=data_list)
-        self.failed = {}
 
         # for x, y in self.data.items():
         #     LOG.debug("\n%s : %s\n", x, y)
@@ -100,6 +96,23 @@ class FileHandler:
         return contents
 
     # Private methods ############ Private methods #
+    def __resolve_and_get_info(self, data_list):
+        """Resolves the paths to absolute and computes file info."""
+
+        data_list = list(
+            set(
+                pathlib.Path(x).resolve() for x in data_list if pathlib.Path(x).exists()
+            )
+        )
+
+        # Quit if no data
+        if not data_list:
+            sys.exit("No data specified.")
+
+        failed = {}
+        data = self.__collect_file_info_local(all_paths=data_list)
+
+        return data, failed
 
     def __collect_file_info_local(self, all_paths, folder=pathlib.Path("")):
         """Get info on each file in each path specified."""
@@ -130,6 +143,18 @@ class FileHandler:
                 )
 
         return file_info
+
+    def __collect_file_info_remote(self, data_list):
+        failed = {}
+        data_list = list(set(data_list))
+
+        LOG.debug(data_list)
+
+        # Quit if no data
+        if not data_list:
+            sys.exit("No data specified.")
+
+        return data_list, failed
 
     # Public methods ############## Public methods #
     def create_status_dict(self, existing_files, overwrite=False):

@@ -14,6 +14,7 @@ import sys
 
 # Own modules
 from cli_code import base
+from cli_code import file_handler_remote as fhr
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -31,7 +32,12 @@ class DataGetter(base.DDSBaseClass):
     """Data getter class."""
 
     def __init__(
-        self, username: str = None, config: pathlib.Path = None, project: str = None
+        self,
+        username: str = None,
+        config: pathlib.Path = None,
+        project: str = None,
+        source: tuple = (),
+        source_path_file: pathlib.Path = None,
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -40,6 +46,8 @@ class DataGetter(base.DDSBaseClass):
         # Only method "get" can use the DataGetter class
         if self.method != "get":
             sys.exit(f"Unauthorized method: {self.method}")
+
+        self.filehandler = fhr.RemoteFileHandler(user_input=(source, source_path_file))
 
     def __enter__(self):
         return self

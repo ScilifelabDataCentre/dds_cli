@@ -18,7 +18,7 @@ import rich
 
 # Own modules
 from cli_code import base
-from cli_code import file_handler as fh
+from cli_code import file_handler_local as fhl
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
 from cli_code.cli_decorators import verify_proceed, update_status
@@ -63,7 +63,7 @@ class DataPutter(base.DDSBaseClass):
             sys.exit(f"Unauthorized method: {self.method}")
 
         # Get file info
-        self.filehandler = fh.LocalFileHandler(user_input=(source, source_path_file))
+        self.filehandler = fhl.LocalFileHandler(user_input=(source, source_path_file))
         self.verify_bucket_exist()
         files_in_db = self.filehandler.check_previous_upload(token=self.token)
 

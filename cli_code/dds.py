@@ -420,8 +420,30 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     type=str,
     help="Project ID to which you're uploading data.",
 )
+@click.option(
+    "--source",
+    "-s",
+    required=False,
+    type=str,
+    multiple=True,
+    help="Path to file or directory (local).",
+)
+@click.option(
+    "--source-path-file",
+    "-spf",
+    required=False,
+    type=click.Path(exists=True),
+    multiple=False,
+    help="File containing path to files or directories. ",
+)
 @click.pass_obj
-def get(_, config, username, project):
+def get(_, config, username, project, source, source_path_file):
 
-    with dg.DataGetter(username=username, config=config, project=project) as getter:
+    with dg.DataGetter(
+        username=username,
+        config=config,
+        project=project,
+        source=source,
+        source_path_file=source_path_file,
+    ) as getter:
         LOG.debug(getter)

@@ -18,6 +18,7 @@ import rich
 from cli_code import file_handler as fh
 from cli_code import user
 from cli_code import DDSEndpoint
+from cli_code import s3_connector as s3
 
 
 ###############################################################################
@@ -118,3 +119,13 @@ class DDSBaseClass:
         return {"x-access-token": dds_access["token"]}
 
     # Public methods ################################# Public methods #
+    def verify_bucket_exist(self):
+        """Check that s3 connection works, and that bucket exists."""
+
+        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+
+            bucket_exists = conn.check_bucket_exists()
+            if not bucket_exists:
+                _ = conn.create_bucket()
+
+        return True

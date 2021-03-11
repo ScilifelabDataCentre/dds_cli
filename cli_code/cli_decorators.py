@@ -7,6 +7,8 @@
 # Standard library
 import logging
 import functools
+import sys
+import os
 
 # Installed
 import boto3
@@ -114,23 +116,6 @@ def update_status(func):
         self.status[file][func.__name__].update({"done": True})
 
         return ok_to_continue, message
-
-    return wrapped
-
-
-def verify_bucket_exist(func):
-    """Check that s3 connection works, and that bucket exists."""
-
-    @functools.wraps(func)
-    def wrapped(self, *args, **kwargs):
-
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            bucket_exists = conn.check_bucket_exists()
-            if not bucket_exists:
-                _ = conn.create_bucket()
-
-        return func(self, *args, **kwargs)
 
     return wrapped
 

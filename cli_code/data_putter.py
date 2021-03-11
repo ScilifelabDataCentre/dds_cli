@@ -21,7 +21,7 @@ from cli_code import base
 from cli_code import file_handler as fh
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
-from cli_code.cli_decorators import verify_bucket_exist, verify_proceed, update_status
+from cli_code.cli_decorators import verify_proceed, update_status
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -55,7 +55,7 @@ class DataPutter(base.DDSBaseClass):
         # Initiate DataPutter specific attributes
         self.break_on_fail = break_on_fail
         self.overwrite = overwrite
-        self.data = None
+        self.filehandler = None
         self.status = dict()
 
         # Only method "put" can use the DataPutter class
@@ -63,8 +63,9 @@ class DataPutter(base.DDSBaseClass):
             sys.exit(f"Unauthorized method: {self.method}")
 
         # Get file info
-        self.data = fh.FileHandler(user_input=(source, source_path_file))
-        files_in_db = self.check_previous_upload()
+        self.filehandler = fh.LocalFileHandler(user_input=(source, source_path_file))
+        self.verify_bucket_exist()
+        files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
         # Quit if error and flag
         if files_in_db and self.break_on_fail and not self.overwrite:
@@ -74,13 +75,9 @@ class DataPutter(base.DDSBaseClass):
             )
 
         # Generate status dict
-        self.status = self.data.create_status_dict(
+        self.status = self.filehandler.create_upload_status_dict(
             existing_files=files_in_db, overwrite=self.overwrite
         )
-
-        # for x, y in self.data.data.items():
-        #     LOG.debug("\n%s : %s\n", x, y)
-        # os._exit(1)
 
     def __enter__(self):
         return self
@@ -93,29 +90,6 @@ class DataPutter(base.DDSBaseClass):
         return True
 
     # General methods ###################### General methods #
-    @verify_bucket_exist
-    def check_previous_upload(self):
-        """Do API call and check for the files in the DB."""
-
-        # Get files from db
-        files = list(x for x in self.data.data)
-
-        response = requests.get(DDSEndpoint.FILE_MATCH, headers=self.token, json=files)
-
-        console = rich.console.Console()
-        if not response.ok:
-            console.print(response.text)
-            os._exit(os.EX_OK)
-
-        files_in_db = response.json()
-
-        # API failure
-        if "files" not in files_in_db:
-            console.print("Files not returned from API.")
-            os._exit(os.EX_OK)
-
-        return dict() if files_in_db["files"] is None else files_in_db["files"]
-
     @verify_proceed
     @update_status
     def put(self, file):
@@ -123,8 +97,8 @@ class DataPutter(base.DDSBaseClass):
 
         uploaded = False
         error = ""
-        file_local = str(self.data.data[file]["path_local"])
-        file_remote = self.data.data[file]["name_in_bucket"]
+        file_local = str(self.filehandler.data[file]["path_local"])
+        file_remote = self.filehandler.data[file]["name_in_bucket"]
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -159,7 +133,7 @@ class DataPutter(base.DDSBaseClass):
         error = ""
 
         # Get file info
-        fileinfo = self.data.data[file]
+        fileinfo = self.filehandler.data[file]
         params = {
             "name": file,
             "name_in_bucket": fileinfo["name_in_bucket"],

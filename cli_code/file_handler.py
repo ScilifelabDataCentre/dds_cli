@@ -14,8 +14,11 @@ import os
 import json
 
 # Installed
+import requests
+import rich
 
 # Own modules
+from cli_code import DDSEndpoint
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -29,56 +32,23 @@ LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-@dataclasses.dataclass
 class FileHandler:
-    """Collects the files specified by the user."""
+    """Main file handler."""
 
-    user_input: dataclasses.InitVar[dict]
-    data: dict = dataclasses.field(init=False)
-    failed: dict = dataclasses.field(init=False)
-
-    # Magic methods ################ Magic methods #
-    def __post_init__(self, user_input):
-
+    def __init__(self, user_input):
         source, source_path_file = user_input
 
         # Get user specified data
-        data_list = list()
+        self.data_list = list()
         if source is not None:
-            data_list += list(source)
+            self.data_list += list(source)
         if source_path_file is not None:
             source_path_file = pathlib.Path(source_path_file)
             if source_path_file.exists():
                 with source_path_file.resolve().open(mode="r") as spf:
-                    data_list += spf.read().splitlines()
+                    self.data_list += spf.read().splitlines()
 
-        # Get absolute paths to all data and removes duplicates
-        data_list = list(
-            set(
-                pathlib.Path(x).resolve() for x in data_list if pathlib.Path(x).exists()
-            )
-        )
-        # Quit if no data
-        if not data_list:
-            sys.exit("No data specified.")
-
-        self.data = self.__collect_file_info_local(all_paths=data_list)
         self.failed = {}
-
-        # for x, y in self.data.items():
-        #     LOG.debug("\n%s : %s\n", x, y)
-        # os._exit(1)
-
-    # Static methods ############## Static methods #
-    @staticmethod
-    def generate_bucket_filepath(filename="", folder=pathlib.Path("")):
-        """Generates filename and new path which the file will be
-        called in the bucket."""
-
-        # Generate new file name
-        new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
-
-        return str(folder / pathlib.Path(new_name))
 
     @staticmethod
     def extract_config(configfile):
@@ -99,8 +69,46 @@ class FileHandler:
 
         return contents
 
-    # Private methods ############ Private methods #
 
+class LocalFileHandler(FileHandler):
+    """Collects the files specified by the user."""
+
+    # Magic methods ################ Magic methods #
+    def __init__(self, user_input):
+
+        # Initiate FileHandler from inheritance
+        super().__init__(user_input=user_input)
+
+        # Get absolute paths to all data and removes duplicates
+        self.data_list = list(
+            set(
+                pathlib.Path(x).resolve()
+                for x in self.data_list
+                if pathlib.Path(x).exists()
+            )
+        )
+        # Quit if no data
+        if not self.data_list:
+            sys.exit("No data specified.")
+
+        self.data = self.__collect_file_info_local(all_paths=self.data_list)
+        self.data_list = None
+        # for x, y in self.data.items():
+        #     LOG.debug("\n%s : %s\n", x, y)
+        # os._exit(1)
+
+    # Static methods ############## Static methods #
+    @staticmethod
+    def generate_bucket_filepath(filename="", folder=pathlib.Path("")):
+        """Generates filename and new path which the file will be
+        called in the bucket."""
+
+        # Generate new file name
+        new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
+
+        return str(folder / pathlib.Path(new_name))
+
+    # Private methods ############ Private methods #
     def __collect_file_info_local(self, all_paths, folder=pathlib.Path("")):
         """Get info on each file in each path specified."""
 
@@ -132,7 +140,7 @@ class FileHandler:
         return file_info
 
     # Public methods ############## Public methods #
-    def create_status_dict(self, existing_files, overwrite=False):
+    def create_upload_status_dict(self, existing_files, overwrite=False):
         """Create dict for tracking file delivery status"""
 
         status_dict = {}
@@ -161,3 +169,25 @@ class FileHandler:
                 }
 
         return status_dict
+
+    def check_previous_upload(self, token):
+        """Do API call and check for the files in the DB."""
+
+        # Get files from db
+        files = list(x for x in self.data)
+
+        response = requests.get(DDSEndpoint.FILE_MATCH, headers=token, json=files)
+
+        console = rich.console.Console()
+        if not response.ok:
+            console.print(response.text)
+            os._exit(os.EX_OK)
+
+        files_in_db = response.json()
+
+        # API failure
+        if "files" not in files_in_db:
+            console.print("Files not returned from API.")
+            os._exit(os.EX_OK)
+
+        return dict() if files_in_db["files"] is None else files_in_db["files"]

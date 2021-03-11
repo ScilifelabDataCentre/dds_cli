@@ -243,6 +243,62 @@ def put(
 
 
 ###############################################################################
+# GET ################################################################### GET #
+###############################################################################
+
+
+@cli.command()
+@click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials, destination, etc.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=False,
+    type=str,
+    help="Project ID to which you're uploading data.",
+)
+@click.option(
+    "--source",
+    "-s",
+    required=False,
+    type=str,
+    multiple=True,
+    help="Path to file or directory (remote).",
+)
+@click.option(
+    "--source-path-file",
+    "-spf",
+    required=False,
+    type=click.Path(exists=True),
+    multiple=False,
+    help="File containing path to files or directories (remote).",
+)
+@click.pass_obj
+def get(_, config, username, project, source, source_path_file):
+
+    with dg.DataGetter(
+        username=username,
+        config=config,
+        project=project,
+        source=source,
+        source_path_file=source_path_file,
+    ) as getter:
+        LOG.debug(getter)
+
+
+###############################################################################
 # LIST ################################################################# LIST #
 ###############################################################################
 

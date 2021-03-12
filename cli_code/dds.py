@@ -492,8 +492,18 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     multiple=False,
     help="File containing path to files or directories. ",
 )
+@click.option(
+    "--num-threads",
+    "-nt",
+    required=False,
+    multiple=False,
+    default=min(32, os.cpu_count() + 4),
+    show_default=True,
+    type=click.IntRange(1, 32),
+    help="Number of parallel threads to perform the download.",
+)
 @click.pass_obj
-def get(_, config, username, project, source, source_path_file):
+def get(dds_info, config, username, project, source, source_path_file, num_threads):
 
     with dg.DataGetter(
         username=username,
@@ -501,5 +511,23 @@ def get(_, config, username, project, source, source_path_file):
         project=project,
         source=source,
         source_path_file=source_path_file,
+        destination=dds_info["DDS_DIRS"]["FILES"],
     ) as getter:
-        LOG.debug(getter)
+
+        for file in getter.filehandler.data:
+            getter.get(file=file)
+        # Keep track of futures
+        # download_threads = {}  # Upload related
+
+        # # Iterator to keep track of which files have been handled
+        # iterator = iter(getter.filehandler.data.copy())
+
+        # with concurrent.futures.ThreadPoolExecutor() as texec:
+
+        #     # Schedule the first num_threads futures for download
+        #     for file in itertools.islice(iterator, num_threads):
+        #         LOG.debug("Downloading file %s...", file)
+        #         download_threads[texec.submit(getter.get, file=file)] = file
+
+        #     # Continue until all files are done
+        #     while download_threads:

@@ -13,10 +13,13 @@ import os
 
 # Installed
 import rich
+import botocore
 
 # Own modules
 from cli_code import base
 from cli_code import file_handler_remote as fhr
+from cli_code import s3_connector as s3
+from cli_code.cli_decorators import verify_proceed, update_status
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -40,17 +43,24 @@ class DataGetter(base.DDSBaseClass):
         project: str = None,
         source: tuple = (),
         source_path_file: pathlib.Path = None,
+        destination: pathlib.Path = pathlib.Path(""),
     ):
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, project=project)
+
+        # Initiate DataGetter specific attributes
+        self.filehandler = None
+        self.status = dict()
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
             sys.exit(f"Unauthorized method: {self.method}")
 
         self.filehandler = fhr.RemoteFileHandler(
-            user_input=(source, source_path_file), token=self.token
+            user_input=(source, source_path_file),
+            token=self.token,
+            destination=destination,
         )
 
         console = rich.console.Console()
@@ -76,3 +86,33 @@ class DataGetter(base.DDSBaseClass):
             return False  # uncomment to pass exception through
 
         return True
+
+    @verify_proceed
+    @update_status
+    def get(self, file):
+        """Downloads files from the cloud."""
+
+        downloaded = False
+        error = ""
+        file_local = file
+        file_remote = self.filehandler.data[file]["name_in_bucket"]
+
+        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+
+            if None in [conn.url, conn.keys, conn.bucketname]:
+                error = "No s3 info returned! " + conn.message
+            else:
+                # Upload file
+                try:
+                    conn.resource.meta.client.download_file(
+                        Filename=file_local,
+                        Bucket=conn.bucketname,
+                        Key=file_remote,
+                    )
+                except botocore.client.ClientError as err:
+                    error = f"S3 download of file '{file}' failed: {err}"
+                    LOG.exception("%s: %s", file, err)
+                else:
+                    downloaded = True
+
+        return downloaded, error

@@ -34,10 +34,12 @@ class RemoteFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, user_input, token):
+    def __init__(self, user_input, token, destination=pathlib.Path("")):
 
         # Initiate FileHandler from inheritance
         super().__init__(user_input=user_input)
+
+        self.destination = destination
 
         self.data_list = list(set(self.data_list))
         LOG.debug(self.data_list)
@@ -83,15 +85,32 @@ class RemoteFileHandler(fh.FileHandler):
         # Save info on files in dict and return
         data = {}
         for x in file_info["files"]:
-            new_name = pathlib.Path(x[0]).name
-            data[new_name] = {"name_in_bucket": x[1], "name_in_db": x[0]}
+            new_name = self.destination / pathlib.Path(pathlib.Path(x[0]).name)
+            data[new_name] = {
+                "name_in_bucket": x[1],
+                "name_in_db": x[0],
+            }
 
         for x, y in file_info["folders"].items():
-            data.update({z[0]: {"name_in_bucket": z[1], "name_in_db": z[0]} for z in y})
-
+            data.update(
+                {
+                    self.destination
+                    / pathlib.Path(z[0]): {"name_in_bucket": z[1], "name_in_db": z[0]}
+                    for z in y
+                }
+            )
+        LOG.debug(data)
         return data
 
     def create_download_status_dict(self):
         """Create dict for tracking file download status."""
 
-        return "hej"
+        status_dict = {}
+        for x in list(self.data):
+            status_dict[x] = {
+                "cancel": False,
+                "message": "",
+                "get": {"started": False, "done": False},
+            }
+
+        return status_dict

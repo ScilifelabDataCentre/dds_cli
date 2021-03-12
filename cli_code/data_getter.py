@@ -9,8 +9,10 @@ import logging
 import pathlib
 import traceback
 import sys
+import os
 
 # Installed
+import rich
 
 # Own modules
 from cli_code import base
@@ -50,6 +52,20 @@ class DataGetter(base.DDSBaseClass):
         self.filehandler = fhr.RemoteFileHandler(
             user_input=(source, source_path_file), token=self.token
         )
+
+        console = rich.console.Console()
+        if self.filehandler.failed:
+            console.print(
+                "Some specified files were not found in the system\n\n"
+                "Files not found: {self.failed}"
+            )
+            os._exit(1)
+
+        if not self.filehandler.data:
+            console.print("No files to download.")
+            os._exit(1)
+
+        self.status = self.filehandler.create_download_status_dict()
 
     def __enter__(self):
         return self

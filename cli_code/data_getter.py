@@ -47,7 +47,9 @@ class DataGetter(base.DDSBaseClass):
         if self.method != "get":
             sys.exit(f"Unauthorized method: {self.method}")
 
-        self.filehandler = fhr.RemoteFileHandler(user_input=(source, source_path_file))
+        self.filehandler = fhr.RemoteFileHandler(
+            user_input=(source, source_path_file), token=self.token
+        )
 
     def __enter__(self):
         return self

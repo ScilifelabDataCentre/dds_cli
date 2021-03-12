@@ -48,8 +48,9 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
     if filename != "":
         try:
             file_handler = logging.FileHandler(filename=filename)
-            fh_formatter = logging.Formatter("%(asctime)s::%(levelname)s::" +
-                                             "%(name)s::%(lineno)d::%(message)s")
+            fh_formatter = logging.Formatter(
+                "%(asctime)s::%(levelname)s::" + "%(name)s::%(lineno)d::%(message)s"
+            )
             file_handler.setFormatter(fh_formatter)
             file_handler.setLevel(logging.INFO)
             logger.addHandler(file_handler)
@@ -59,13 +60,15 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
     # Config file logger
     if debug:
         try:
-            richhandler = RichHandler(rich_tracebacks=True,
-                                      log_time_format="[%Y-%m-%d %H:%M:%S]")
+            richhandler = RichHandler(
+                rich_tracebacks=True, log_time_format="[%Y-%m-%d %H:%M:%S]"
+            )
             logger.addHandler(richhandler)
         except OSError as ose:
             sys.exit(f"Logging to console failed: {ose}")
 
     return logger
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -87,6 +90,7 @@ class DDSEndpoint:
 
     FILE_NEW = BASE_ENDPOINT + "/file/new"
     FILE_MATCH = BASE_ENDPOINT + "/file/match"
+    FILE_INFO = BASE_ENDPOINT + "/file/info"
 
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
     LIST_FILES = BASE_ENDPOINT + "/files/list"

@@ -29,6 +29,12 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
+# RICH CONFIG ################################################### RICH CONFIG #
+###############################################################################
+
+console = rich.console.Console()
+
+###############################################################################
 # FUNCTIONS ####################################################### FUNCTIONS #
 ###############################################################################
 
@@ -88,9 +94,17 @@ class DDSBaseClass:
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:
-            sys.exit("Data Delivery System project information is missing.")
+            console.print(
+                "\n:warning: "
+                "Data Delivery System project information is missing. "
+                ":warning:\n"
+            )
+            os._exit(1)
         if username is None:
-            sys.exit("Data Delivery System options are missing.")
+            console.print(
+                "\n:warning: Data Delivery System options are missing :warning:\n"
+            )
+            os._exit(1)
 
         # Set password if missing
         if password is None:

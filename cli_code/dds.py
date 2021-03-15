@@ -94,14 +94,14 @@ def cli(ctx, debug):
     "-u",
     required=False,
     type=str,
-    help="Your Data Delivery System username.",
+    help="Your Data Delivery System username",
 )
 @click.option(
     "--project",
     "-p",
     required=False,
     type=str,
-    help="Project ID to which you're uploading data.",
+    help="Project ID to which you're uploading data",
 )
 @click.option(
     "--source",
@@ -109,7 +109,7 @@ def cli(ctx, debug):
     required=False,
     type=click.Path(exists=True),
     multiple=True,
-    help="Path to file or directory (local).",
+    help="Path to file or directory (local)",
 )
 @click.option(
     "--source-path-file",
@@ -117,7 +117,7 @@ def cli(ctx, debug):
     required=False,
     type=click.Path(exists=True),
     multiple=False,
-    help="File containing path to files or directories. ",
+    help="File containing path to files or directories",
 )
 @click.option(
     "--break-on-fail",
@@ -131,7 +131,7 @@ def cli(ctx, debug):
     is_flag=True,
     default=False,
     show_default=True,
-    help="Overwrite files if already uploaded.",
+    help="Overwrite files if already uploaded",
 )
 @click.option(
     "--num-threads",
@@ -141,7 +141,7 @@ def cli(ctx, debug):
     default=min(32, os.cpu_count() + 4),
     show_default=True,
     type=click.IntRange(1, 32),
-    help="Number of parallel threads to perform the delivery.",
+    help="Number of parallel threads to perform the delivery",
 )
 @click.pass_obj
 def put(

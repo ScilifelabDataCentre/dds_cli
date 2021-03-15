@@ -9,12 +9,10 @@ import logging
 import pathlib
 import sys
 import traceback
-import os
 
 # Installed
 import botocore
 import requests
-import rich
 
 # Own modules
 from cli_code import base

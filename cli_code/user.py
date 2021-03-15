@@ -25,6 +25,12 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
+# RICH CONFIG ################################################### RICH CONFIG #
+###############################################################################
+
+console = rich.console.Console()
+
+###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
@@ -41,7 +47,8 @@ class User:
     def __post_init__(self, password, project):
         # Username and password required for user authentication
         if None in [self.username, password]:
-            sys.exit("Missing user information.")
+            console.print("\n:warning: Missing user information :warning:\n")
+            os._exit(1)
 
         # Authenticate user and get delivery JWT token
         self.token = self.__authenticate_user(password=password, project=project)
@@ -58,11 +65,17 @@ class User:
         )
 
         if not response.ok:
-            console = rich.console.Console()
-            console.print(f"{response.text}")
+            console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
             os._exit(1)
 
         token = response.json()
+
+        if "token" not in token:
+            console.print(
+                "\n:warning: Missing token in authentication response :warning:\n"
+            )
+            os._exit(1)
+
         return {"x-access-token": token["token"]}
 
     # Public methods ########################### Public methods #

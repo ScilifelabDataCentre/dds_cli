@@ -116,18 +116,25 @@ class DDSBaseClass:
     def __verify_project_access(self):
         """Verifies that the user has access to the specified project."""
 
+        # Perform request to API
         response = requests.get(
             DDSEndpoint.AUTH_PROJ, params={"method": self.method}, headers=self.token
         )
 
+        # Problem
         if not response.ok:
-            console = rich.console.Console()
-            console.print(f"Project access denied: {response.text}")
+            console.print(
+                "\n:no_entry_sign: "
+                f"Project access denied: {response.text} "
+                ":no_entry_sign:\n"
+            )
             os._exit(1)
 
+        # Access not granted
         dds_access = response.json()
         if not dds_access["dds-access-granted"] or "token" not in dds_access:
-            sys.exit("Project access denied.")
+            console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
+            os._exit(1)
 
         return {"x-access-token": dds_access["token"]}
 

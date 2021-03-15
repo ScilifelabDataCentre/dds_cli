@@ -58,7 +58,7 @@ def verify_proceed(func):
         # Cancel file(s) if something failed
         if not ok_to_proceed:
             self.status[file].update({"cancel": True, "message": message})
-            if self.break_on_fail:
+            if hasattr(self, "break_on_fail") and self.break_on_fail:
                 message = (
                     f"Cancelling upload due to file '{file}'. "
                     "Break-on-fail specified in call."
@@ -97,7 +97,7 @@ def update_status(func):
             )
         file = kwargs["file"]
 
-        if func.__name__ not in ["put", "add_file_db", "get"]:
+        if func.__name__ not in ["put", "add_file_db", "get", "update_db"]:
             raise Exception(
                 f"The function {func.__name__} cannot be used with this decorator."
             )

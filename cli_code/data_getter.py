@@ -117,3 +117,12 @@ class DataGetter(base.DDSBaseClass):
                     downloaded = True
 
         return downloaded, error
+
+    @verify_proceed
+    @update_status
+    def update_db(self, file):
+
+        updated_in_db = False
+        error = ""
+
+        return updated_in_db, error

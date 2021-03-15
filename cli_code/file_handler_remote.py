@@ -112,6 +112,7 @@ class RemoteFileHandler(fh.FileHandler):
                 "cancel": False,
                 "message": "",
                 "get": {"started": False, "done": False},
+                "update_db": {"started": False, "done": False},
             }
 
         return status_dict

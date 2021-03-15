@@ -230,7 +230,7 @@ def put(
                             _ = fut_db.result()
                         except concurrent.futures.BrokenExecutor as err:
                             LOG.critical(
-                                "Adding of file %s to database failed! " "Error: %s",
+                                "Adding of file %s to database failed! Error: %s",
                                 uploaded_file,
                                 err,
                             )
@@ -516,6 +516,7 @@ def get(dds_info, config, username, project, source, source_path_file, num_threa
 
         # Keep track of futures
         download_threads = {}
+        db_threads = {}
 
         # Iterator to keep track of which files have been handled
         iterator = iter(getter.filehandler.data.copy())
@@ -549,12 +550,37 @@ def get(dds_info, config, username, project, source, source_path_file, num_threa
                         continue
 
                     # Schedule file for db update
-                    # TODO (ina): Update download date in db
+                    LOG.debug("Updating db info for file %s...", downloaded_file)
+                    db_threads[
+                        texec.submit(getter.update_db, file=downloaded_file)
+                    ] = downloaded_file
 
-                # new_tasks = 0
+                new_tasks = 0
 
                 # Continue until all files are done
-                # TODO (ina): DB threads stuff
+                while db_threads:
+                    # Wait for the next future to complete
+                    done_db, _ = concurrent.futures.wait(
+                        db_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                    )
+
+                    # Get result from future
+                    for fut_db in done_db:
+                        updated_file = db_threads.pop(fut_db)
+                        LOG.debug("...File updated: %s", updated_file)
+
+                        new_tasks += 1
+
+                        # Get result
+                        try:
+                            _ = fut_db.result()
+                        except concurrent.futures.BrokenExecutor as err:
+                            LOG.critical(
+                                "Updating of file %s to database failed! Error: %s",
+                                updated_file,
+                                err,
+                            )
+                            continue
 
                 # Schedule the next set of futures for download
                 for dfile in itertools.islice(iterator, len(ddone)):

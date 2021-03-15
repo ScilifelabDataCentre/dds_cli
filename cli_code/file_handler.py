@@ -12,6 +12,7 @@ import os
 import json
 
 # Installed
+import rich
 
 # Own modules
 
@@ -21,6 +22,12 @@ import json
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
+
+###############################################################################
+# RICH CONFIG ################################################### RICH CONFIG #
+###############################################################################
+
+console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -49,16 +56,20 @@ class FileHandler:
     def extract_config(configfile):
         """Extracts info from config file."""
 
+        # Absolute path to config file
         configpath = pathlib.Path(configfile).resolve()
         if not configpath.exists():
-            sys.exit("Config file does not exist.")
+            console.print("\n:warning: Config file does not exist. :warning:\n")
+            os._exit(1)
 
+        # Open config file and get contents
         try:
             original_umask = os.umask(0)
             with configpath.open(mode="r") as cfp:
                 contents = json.load(cfp)
         except json.decoder.JSONDecodeError as err:
-            sys.exit(f"Failed to get config file contents: {err}")
+            console.print(f"\nFailed to get config file contents: {err}\n")
+            os._exit(1)
         finally:
             os.umask(original_umask)
 

@@ -27,6 +27,12 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
+# RICH CONFIG ################################################### RICH CONFIG #
+###############################################################################
+
+console = rich.console.Console()
+
+###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
@@ -48,15 +54,14 @@ class LocalFileHandler(fh.FileHandler):
                 if pathlib.Path(x).exists()
             )
         )
-        # Quit if no data
+
+        # No data -- cannot proceed
         if not self.data_list:
-            sys.exit("No data specified.")
+            console.print("\n:warning: No data specified. :warning:\n")
+            os._exit(1)
 
         self.data = self.__collect_file_info_local(all_paths=self.data_list)
         self.data_list = None
-        # for x, y in self.data.items():
-        #     LOG.debug("\n%s : %s\n", x, y)
-        # os._exit(1)
 
     # Static methods ############## Static methods #
     @staticmethod

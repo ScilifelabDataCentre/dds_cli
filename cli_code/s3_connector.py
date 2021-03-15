@@ -67,29 +67,37 @@ class S3Connector:
     def get_s3_info(project_id, token):
         """Get information required to connect to cloud."""
 
+        sfsp_proj, keys, url, bucket, error = (None, None, None, None, "")
+
         if None in [project_id, token]:
             raise Exception("Project information missing, cannot connect to cloud.")
 
+        # Perform request to API
         response = requests.get(DDSEndpoint.S3KEYS, headers=token)
 
+        # Error
         if not response.ok:
             return (
-                None,
-                None,
-                None,
-                None,
-                "Failed retrieving Safespring project name:" f"{response.text}",
+                sfsp_proj,
+                keys,
+                url,
+                bucket,
+                f"Failed retrieving Safespring project name: {response.text}",
             )
 
+        # Get s3 info
         s3info = response.json()
+        if any(value is None for value in s3info.values()):
+            error = "Response ok but s3 info missing."
+        else:
+            sfsp_proj, keys, url, bucket = (
+                s3info["safespring_project"],
+                s3info["keys"],
+                s3info["url"],
+                s3info["bucket"],
+            )
 
-        return (
-            s3info["safespring_project"],
-            s3info["keys"],
-            s3info["url"],
-            s3info["bucket"],
-            "",
-        )
+        return sfsp_proj, keys, url, bucket, error
 
     def check_bucket_exists(self):
         """Checks if the bucket exists"""

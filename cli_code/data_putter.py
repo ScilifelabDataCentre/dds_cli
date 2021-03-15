@@ -8,6 +8,7 @@
 import logging
 import pathlib
 import sys
+import os
 import traceback
 
 # Installed
@@ -27,6 +28,12 @@ from cli_code.cli_decorators import verify_proceed, update_status
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
+
+###############################################################################
+# RICH CONFIG ################################################### RICH CONFIG #
+###############################################################################
+
+console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -58,10 +65,16 @@ class DataPutter(base.DDSBaseClass):
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
-            sys.exit(f"Unauthorized method: {self.method}")
+            console.print(
+                "\n:no_entry_sign: "
+                f"Unauthorized method: {self.method} "
+                ":no_entry_sign:\n"
+            )
+            os._exit(1)
 
         # Get file info
         self.filehandler = fhl.LocalFileHandler(user_input=(source, source_path_file))
+        # 2021-03-15 ----- ------ ------ ------ ------- ------ ------
         self.verify_bucket_exist()
         files_in_db = self.filehandler.check_previous_upload(token=self.token)
 

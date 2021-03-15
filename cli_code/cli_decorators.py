@@ -9,6 +9,7 @@ import logging
 import functools
 import sys
 import os
+import pathlib
 
 # Installed
 import boto3
@@ -96,9 +97,9 @@ def update_status(func):
             )
         file = kwargs["file"]
 
-        if func.__name__ not in ["put", "add_file_db"]:
+        if func.__name__ not in ["put", "add_file_db", "get"]:
             raise Exception(
-                f"The function {func.__name__} cannot be used with" " this decorator."
+                f"The function {func.__name__} cannot be used with this decorator."
             )
         if func.__name__ not in self.status[file]:
             raise Exception(f"No status found for function {func.__name__}.")
@@ -146,3 +147,31 @@ def connect_cloud(func):
             return func(self, *args, **kwargs)
 
     return init_resource
+
+
+def subpath_required(func):
+    """Make sure that the subpath to the downloaded files exist."""
+
+    @functools.wraps(func)
+    def check_and_create(self, *args, **kwargs):
+
+        # Check that function has correct args
+        if "file" not in kwargs:
+            raise Exception(
+                "Missing key word argument in wrapper over "
+                f"function {func.__name__}: 'file'"
+            )
+        file = kwargs["file"]
+
+        file_info = self.filehandler.data[file]
+        full_subpath = self.filehandler.destination / pathlib.Path(file_info["subpath"])
+        LOG.debug(full_subpath)
+        if not full_subpath.exists():
+            try:
+                full_subpath.mkdir(parents=True, exist_ok=True)
+            except Exception as err:
+                return False, str(err)
+
+        return func(self, *args, **kwargs)
+
+    return check_and_create

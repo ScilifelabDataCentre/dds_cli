@@ -19,7 +19,7 @@ import botocore
 from cli_code import base
 from cli_code import file_handler_remote as fhr
 from cli_code import s3_connector as s3
-from cli_code.cli_decorators import verify_proceed, update_status
+from cli_code.cli_decorators import verify_proceed, update_status, subpath_required
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -89,12 +89,13 @@ class DataGetter(base.DDSBaseClass):
 
     @verify_proceed
     @update_status
+    @subpath_required
     def get(self, file):
         """Downloads files from the cloud."""
 
         downloaded = False
         error = ""
-        file_local = file
+        file_local = str(file)
         file_remote = self.filehandler.data[file]["name_in_bucket"]
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:

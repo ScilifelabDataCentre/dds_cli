@@ -49,7 +49,7 @@ class DDSBaseClass:
     """Data Delivery System base class. For common operations."""
 
     def __init__(self, username=None, password=None, config=None, project=None):
-        # Get attempted operation e.g. put/ls
+        # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
 
         # Verify that user entered enough info
@@ -87,7 +87,7 @@ class DDSBaseClass:
                 password = contents["password"]
 
         # Username and project info is minimum required info
-        if self.method == "put" and project is None:
+        if self.method in ["put", "get"] and project is None:
             sys.exit("Data Delivery System project information is missing.")
         if username is None:
             sys.exit("Data Delivery System options are missing.")

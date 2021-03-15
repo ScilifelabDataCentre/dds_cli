@@ -50,7 +50,6 @@ class User:
     def __authenticate_user(self, password, project):
         """Authenticates the username and password via a call to the API."""
 
-        LOG.debug(project)
         # Project passed in to add it to the token. Can be None.
         response = requests.get(
             DDSEndpoint.AUTH,
@@ -64,7 +63,6 @@ class User:
             os._exit(1)
 
         token = response.json()
-        LOG.debug(token)
         return {"x-access-token": token["token"]}
 
     # Public methods ########################### Public methods #

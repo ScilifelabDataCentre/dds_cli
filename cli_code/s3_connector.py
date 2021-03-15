@@ -68,7 +68,7 @@ class S3Connector:
         """Get information required to connect to cloud."""
 
         if None in [project_id, token]:
-            raise Exception("Project information missing, cannot connect " "to cloud.")
+            raise Exception("Project information missing, cannot connect to cloud.")
 
         response = requests.get(DDSEndpoint.S3KEYS, headers=token)
 

@@ -514,20 +514,49 @@ def get(dds_info, config, username, project, source, source_path_file, num_threa
         destination=dds_info["DDS_DIRS"]["FILES"],
     ) as getter:
 
-        for file in getter.filehandler.data:
-            getter.get(file=file)
         # Keep track of futures
-        # download_threads = {}  # Upload related
+        download_threads = {}
 
-        # # Iterator to keep track of which files have been handled
-        # iterator = iter(getter.filehandler.data.copy())
+        # Iterator to keep track of which files have been handled
+        iterator = iter(getter.filehandler.data.copy())
 
-        # with concurrent.futures.ThreadPoolExecutor() as texec:
+        with concurrent.futures.ThreadPoolExecutor() as texec:
 
-        #     # Schedule the first num_threads futures for download
-        #     for file in itertools.islice(iterator, num_threads):
-        #         LOG.debug("Downloading file %s...", file)
-        #         download_threads[texec.submit(getter.get, file=file)] = file
+            # Schedule the first num_threads futures for upload
+            for file in itertools.islice(iterator, num_threads):
+                LOG.debug("Downloading file %s...", file)
+                download_threads[texec.submit(getter.get, file=file)] = file
 
-        #     # Continue until all files are done
-        #     while download_threads:
+            while download_threads:
+                # Wait for the next future to complete
+                ddone, _ = concurrent.futures.wait(
+                    download_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                )
+
+                for dfut in ddone:
+                    downloaded_file = download_threads.pop(dfut)
+                    LOG.debug("...File %s downloaded!", downloaded_file)
+
+                    # Get result
+                    try:
+                        _ = dfut.result()
+                    except concurrent.futures.BrokenExecutor as err:
+                        LOG.critical(
+                            "Download of file %s failed! Error: %s",
+                            downloaded_file,
+                            err,
+                        )
+                        continue
+
+                    # Schedule file for db update
+                    # TODO (ina): Update download date in db
+
+                # new_tasks = 0
+
+                # Continue until all files are done
+                # TODO (ina): DB threads stuff
+
+                # Schedule the next set of futures for download
+                for dfile in itertools.islice(iterator, len(ddone)):
+                    LOG.debug("Downloading file %s...", dfile)
+                    download_threads[texec.submit(getter.get, file=dfile)] = dfile

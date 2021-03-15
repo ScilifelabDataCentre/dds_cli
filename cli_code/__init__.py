@@ -91,6 +91,7 @@ class DDSEndpoint:
     FILE_NEW = BASE_ENDPOINT + "/file/new"
     FILE_MATCH = BASE_ENDPOINT + "/file/match"
     FILE_INFO = BASE_ENDPOINT + "/file/info"
+    FILE_UPDATE = BASE_ENDPOINT + "/file/update"
 
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
     LIST_FILES = BASE_ENDPOINT + "/files/list"

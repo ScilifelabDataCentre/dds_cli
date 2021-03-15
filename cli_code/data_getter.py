@@ -14,8 +14,10 @@ import os
 # Installed
 import rich
 import botocore
+import requests
 
 # Own modules
+from cli_code import DDSEndpoint
 from cli_code import base
 from cli_code import file_handler_remote as fhr
 from cli_code import s3_connector as s3
@@ -121,8 +123,26 @@ class DataGetter(base.DDSBaseClass):
     @verify_proceed
     @update_status
     def update_db(self, file):
+        """Update file info in db."""
 
         updated_in_db = False
         error = ""
 
+        # Get file info
+        fileinfo = self.filehandler.data[file]
+        params = {"name": fileinfo["name_in_db"]}
+
+        # Send file info to API
+        response = requests.put(
+            DDSEndpoint.FILE_UPDATE, params=params, headers=self.token
+        )
+
+        # Error if failed
+        if not response.ok:
+            error = f"Failed to update file '{file}' in db: {response.text}"
+            LOG.exception(error)
+            return updated_in_db, error
+
+        updated_in_db, error = (True, response.json()["message"])
+        LOG.debug(error)
         return updated_in_db, error

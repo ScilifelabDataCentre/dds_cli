@@ -186,10 +186,18 @@ def put(
                 # progress.update(task, description="Uploading files")
 
                 # Schedule the first num_threads futures for upload
-                for file in itertools.islice(iterator, num_threads):
+                for file in itertools.islice(iterator, 2):
                     # LOG.debug("Uploading file %s...", file)
+
                     upload_threads[
-                        texec.submit(putter.put, file=file, progress=progress)
+                        texec.submit(
+                            putter.put,
+                            file=file,
+                            progress=progress,
+                            task=putter.filehandler.current_task(
+                                file=file, progress=progress
+                            ),
+                        )
                     ] = file
 
                 # Continue until all files are done
@@ -247,7 +255,16 @@ def put(
                     # Schedule the next set of futures for upload
                     for ufile in itertools.islice(iterator, len(done_db)):
                         # LOG.debug("Uploading file %s...", ufile)
-                        upload_threads[texec.submit(putter.put, file=ufile)] = ufile
+                        upload_threads[
+                            texec.submit(
+                                putter.put,
+                                file=ufile,
+                                progress=progress,
+                                task=putter.filehandler.current_task(
+                                    file=ufile, progress=progress
+                                ),
+                            )
+                        ] = ufile
 
 
 ###############################################################################

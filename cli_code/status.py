@@ -63,14 +63,14 @@ class ProgressPercentage(object):
 
     def __call__(self, bytes_amount):
         # To simplify, assume this is hooked up to a single filename
-        with self._lock:
-            self._seen_so_far += bytes_amount
-            percentage = (self._seen_so_far / self._size) * 100
-            # print(self._filename, percentage)
+        # with self._lock:
+        self._seen_so_far += bytes_amount
+        # percentage = (self._seen_so_far / self._size) * 100
+        # print(self._filename, percentage)
 
-            self.progress.update(self.task, advance=bytes_amount)
-            # update_progress_bar(
-            #     file=self._filename,
-            #     status="d" if self._download else "u",
-            #     perc=percentage,
-            # )
+        self.progress.update(self.task, advance=bytes_amount)
+        # update_progress_bar(
+        #     file=self._filename,
+        #     status="d" if self._download else "u",
+        #     perc=percentage,
+        # )

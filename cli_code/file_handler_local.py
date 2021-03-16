@@ -61,7 +61,9 @@ class LocalFileHandler(fh.FileHandler):
             console.print("\n:warning: No data specified. :warning:\n")
             os._exit(os.EX_OK)
 
-        self.data = self.__collect_file_info_local(all_paths=self.data_list)
+        self.data, self.progress_tasks = self.__collect_file_info_local(
+            all_paths=self.data_list
+        )
         self.data_list = None
 
     # Static methods ############## Static methods #
@@ -76,12 +78,15 @@ class LocalFileHandler(fh.FileHandler):
         return str(folder / pathlib.Path(new_name))
 
     # Private methods ############ Private methods #
-    def __collect_file_info_local(self, all_paths, folder=pathlib.Path("")):
+    def __collect_file_info_local(
+        self, all_paths, folder=pathlib.Path(""), task_name=""
+    ):
         """Get info on each file in each path specified."""
 
         file_info = dict()
-
+        progress_tasks = dict()
         for path in all_paths:
+            task_name = path.name if folder == pathlib.Path("") else task_name
             # Get info for all files
             # and feed back to same function for all folders
             if path.is_file():
@@ -93,25 +98,54 @@ class LocalFileHandler(fh.FileHandler):
                     ),
                     "size": path.stat().st_size,
                     "overwrite": False,
+                    "task_name": task_name,
                 }
-            elif path.is_dir():
-                file_info.update(
-                    {
-                        **self.__collect_file_info_local(
-                            all_paths=path.glob("*"),
-                            folder=folder / pathlib.Path(path.name),
-                        )
-                    }
-                )
 
-        return file_info
+            elif path.is_dir():
+                content_info, _ = self.__collect_file_info_local(
+                    all_paths=path.glob("*"),
+                    folder=folder / pathlib.Path(path.name),
+                    task_name=task_name,
+                )
+                file_info.update({**content_info})
+
+            # Info for progress tracking
+            if folder == pathlib.Path("") and path.name not in progress_tasks:
+                size = (
+                    path.stat().st_size
+                    if path.is_file()
+                    else sum(
+                        [x.stat().st_size for x in path.glob("**/*") if x.is_file()]
+                    )
+                )
+                progress_tasks[path.name] = {"task": None, "size": size}
+
+        return file_info, progress_tasks
 
     # Public methods ############## Public methods #
+    def current_task(self, file, progress):
+        """Get task to update progress in."""
+
+        task = None
+        task_name = self.data[file]["task_name"]
+
+        # Create new task for progress if no object exists yet
+        # or get the existing one if there is
+        if self.progress_tasks[task_name]["task"] is None:
+            task = progress.add_task(
+                task_name,
+                total=self.progress_tasks[task_name]["size"],
+            )
+            self.progress_tasks[task_name]["task"] = task
+        else:
+            task = self.progress_tasks[task_name]["task"]
+
+        return task
+
     def create_upload_status_dict(self, existing_files, overwrite=False):
         """Create dict for tracking file delivery status"""
 
         status_dict = {}
-        tasks = status.ProgressTasks()
         for x in list(self.data):
             in_db = bool(x in existing_files)
             if in_db and not overwrite:
@@ -135,7 +169,6 @@ class LocalFileHandler(fh.FileHandler):
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
                 }
-            tasks.add_task(path_name=self.data_list)
 
         return status_dict
 

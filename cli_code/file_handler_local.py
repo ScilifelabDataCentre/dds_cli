@@ -135,7 +135,7 @@ class LocalFileHandler(fh.FileHandler):
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
                 }
-            tasksstatus.ProgressTasks
+            tasks.add_task(path_name=self.data_list)
 
         return status_dict
 

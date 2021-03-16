@@ -14,6 +14,7 @@ import traceback
 # Installed
 import botocore
 import requests
+import rich
 
 # Own modules
 from cli_code import base
@@ -70,20 +71,21 @@ class DataPutter(base.DDSBaseClass):
                 f"Unauthorized method: {self.method} "
                 ":no_entry_sign:\n"
             )
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         # Get file info
         self.filehandler = fhl.LocalFileHandler(user_input=(source, source_path_file))
-        # 2021-03-15 ----- ------ ------ ------ ------- ------ ------
         self.verify_bucket_exist()
         files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
         # Quit if error and flag
         if files_in_db and self.break_on_fail and not self.overwrite:
-            sys.exit(
-                "Some files have already been uploaded and "
-                f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}"
+            # TODO (ina): Fix better print out
+            console.print(
+                "\nSome files have already been uploaded and "
+                f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}\n"
             )
+            os._exit(os.EX_OK)
 
         # Generate status dict
         self.status = self.filehandler.create_upload_status_dict(
@@ -113,7 +115,7 @@ class DataPutter(base.DDSBaseClass):
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
-            if None in [conn.url, conn.keys, conn.bucketname]:
+            if None in [conn.safespring_project, conn.url, conn.keys, conn.bucketname]:
                 error = "No s3 info returned! " + conn.message
             else:
                 # Upload file

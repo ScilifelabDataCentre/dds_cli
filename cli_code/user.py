@@ -48,7 +48,7 @@ class User:
         # Username and password required for user authentication
         if None in [self.username, password]:
             console.print("\n:warning: Missing user information :warning:\n")
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         # Authenticate user and get delivery JWT token
         self.token = self.__authenticate_user(password=password, project=project)
@@ -66,7 +66,7 @@ class User:
 
         if not response.ok:
             console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         token = response.json()
 
@@ -74,7 +74,7 @@ class User:
             console.print(
                 "\n:warning: Missing token in authentication response :warning:\n"
             )
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         return {"x-access-token": token["token"]}
 

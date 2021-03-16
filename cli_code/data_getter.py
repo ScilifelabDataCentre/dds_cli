@@ -31,6 +31,12 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
+# RICH CONFIG ################################################### RICH CONFIG #
+###############################################################################
+
+console = rich.console.Console()
+
+###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
@@ -57,7 +63,10 @@ class DataGetter(base.DDSBaseClass):
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
-            sys.exit(f"Unauthorized method: {self.method}")
+            console.print(
+                f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n"
+            )
+            os._exit(os.EX_OK)
 
         self.filehandler = fhr.RemoteFileHandler(
             user_input=(source, source_path_file),
@@ -65,17 +74,16 @@ class DataGetter(base.DDSBaseClass):
             destination=destination,
         )
 
-        console = rich.console.Console()
         if self.filehandler.failed:
             console.print(
-                "Some specified files were not found in the system\n\n"
-                "Files not found: {self.failed}"
+                "\n:warning: Some specified files were not found in the system :warning:"
+                f"\n\nFiles not found: {self.failed}"
             )
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         if not self.filehandler.data:
-            console.print("No files to download.")
-            os._exit(1)
+            console.print("\nNo files to download.\n")
+            os._exit(os.EX_OK)
 
         self.status = self.filehandler.create_download_status_dict()
 

@@ -26,6 +26,12 @@ LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
+# RICH CONFIG ################################################### RICH CONFIG #
+###############################################################################
+
+console = rich.console.Console()
+
+###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
@@ -44,7 +50,8 @@ class RemoteFileHandler(fh.FileHandler):
         self.data_list = list(set(self.data_list))
 
         if not self.data_list:
-            sys.exit("No data specified.")
+            console.print("\n:warning: No data specified. :warning:\n")
+            os._exit(os.EX_OK)
 
         self.data = self.__collect_file_info_remote(
             all_paths=self.data_list, token=token
@@ -61,18 +68,18 @@ class RemoteFileHandler(fh.FileHandler):
             )
         except requests.ConnectionError as err:
             LOG.fatal(err)
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         # Server error or error in response
-        console = rich.console.Console()
         if not response.ok:
             console.print(response.text)
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         # Get file info from response
         file_info = response.json()
         if not all([x in file_info for x in ["files", "folders"]]):
             console.print("No files in response despite ok request.")
+            os._exit(os.EX_OK)
 
         # Cancel download of those files or folders not found in the db
         self.failed = {

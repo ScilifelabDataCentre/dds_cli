@@ -58,7 +58,7 @@ class LocalFileHandler(fh.FileHandler):
         # No data -- cannot proceed
         if not self.data_list:
             console.print("\n:warning: No data specified. :warning:\n")
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         self.data = self.__collect_file_info_local(all_paths=self.data_list)
         self.data_list = None
@@ -141,19 +141,17 @@ class LocalFileHandler(fh.FileHandler):
 
         # Get files from db
         files = list(x for x in self.data)
-
         response = requests.get(DDSEndpoint.FILE_MATCH, headers=token, json=files)
 
-        console = rich.console.Console()
         if not response.ok:
-            console.print(response.text)
+            console.print(f"\n{response.text}\n")
             os._exit(os.EX_OK)
 
         files_in_db = response.json()
 
         # API failure
         if "files" not in files_in_db:
-            console.print("Files not returned from API.")
+            console.print("\n:warning: Files not returned from API. :warning:\n")
             os._exit(os.EX_OK)
 
         return dict() if files_in_db["files"] is None else files_in_db["files"]

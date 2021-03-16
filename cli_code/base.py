@@ -99,12 +99,12 @@ class DDSBaseClass:
                 "Data Delivery System project information is missing. "
                 ":warning:\n"
             )
-            os._exit(1)
+            os._exit(os.EX_OK)
         if username is None:
             console.print(
                 "\n:warning: Data Delivery System options are missing :warning:\n"
             )
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         # Set password if missing
         if password is None:
@@ -128,13 +128,13 @@ class DDSBaseClass:
                 f"Project access denied: {response.text} "
                 ":no_entry_sign:\n"
             )
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         # Access not granted
         dds_access = response.json()
         if not dds_access["dds-access-granted"] or "token" not in dds_access:
             console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
-            os._exit(1)
+            os._exit(os.EX_OK)
 
         return {"x-access-token": dds_access["token"]}
 
@@ -143,6 +143,10 @@ class DDSBaseClass:
         """Check that s3 connection works, and that bucket exists."""
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+
+            if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
+                console.print(f"\n:warning: {conn.message} :warning:\n")
+                os._exit(os.EX_OK)
 
             bucket_exists = conn.check_bucket_exists()
             if not bucket_exists:

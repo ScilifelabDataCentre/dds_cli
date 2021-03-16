@@ -13,6 +13,7 @@ import os
 
 # Installed
 import rich
+from rich.progress import Progress
 import botocore
 import requests
 
@@ -91,6 +92,7 @@ class DataGetter(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         self.status = self.filehandler.create_download_status_dict()
+        self.progress = Progress()
 
     def __enter__(self):
         return self

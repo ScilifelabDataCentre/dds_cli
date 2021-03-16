@@ -15,6 +15,7 @@ import traceback
 import botocore
 import requests
 import rich
+from rich.progress import Progress
 
 # Own modules
 from cli_code import base
@@ -22,6 +23,7 @@ from cli_code import file_handler_local as fhl
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
 from cli_code.cli_decorators import verify_proceed, update_status
+from cli_code import status
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -91,6 +93,7 @@ class DataPutter(base.DDSBaseClass):
         self.status = self.filehandler.create_upload_status_dict(
             existing_files=files_in_db, overwrite=self.overwrite
         )
+        # self.progress = Progress()
 
     def __enter__(self):
         return self
@@ -105,14 +108,20 @@ class DataPutter(base.DDSBaseClass):
     # General methods ###################### General methods #
     @verify_proceed
     @update_status
-    def put(self, file):
+    def put(self, file, progress):
         """Uploads files to the cloud."""
 
         uploaded = False
         error = ""
         file_local = str(self.filehandler.data[file]["path_local"])
         file_remote = self.filehandler.data[file]["name_in_bucket"]
+        file_size = self.filehandler.data[file]["size"]
 
+        # if
+
+        task = progress.add_task(file, total=file_size)
+        # print(progress.tasks)
+        print(f"file in tasks? {file in progress.tasks}")
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             if None in [conn.safespring_project, conn.url, conn.keys, conn.bucketname]:
@@ -128,6 +137,9 @@ class DataPutter(base.DDSBaseClass):
                             "ACL": "private",  # Access control list
                             "CacheControl": "no-store",  # Don't store cache
                         },
+                        Callback=status.ProgressPercentage(
+                            ud_file_size=file_size, progress=progress, task=task
+                        ),
                     )
                 except botocore.client.ClientError as err:
                     error = f"S3 upload of file '{file}' failed: {err}"

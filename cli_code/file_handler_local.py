@@ -16,6 +16,7 @@ import requests
 import rich
 
 # Own modules
+from cli_code import status
 from cli_code import DDSEndpoint
 from cli_code import file_handler as fh
 
@@ -110,6 +111,7 @@ class LocalFileHandler(fh.FileHandler):
         """Create dict for tracking file delivery status"""
 
         status_dict = {}
+        tasks = status.ProgressTasks()
         for x in list(self.data):
             in_db = bool(x in existing_files)
             if in_db and not overwrite:
@@ -133,6 +135,7 @@ class LocalFileHandler(fh.FileHandler):
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
                 }
+            tasksstatus.ProgressTasks
 
         return status_dict
 

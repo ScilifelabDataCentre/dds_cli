@@ -178,71 +178,76 @@ def put(
         # Iterator to keep track of which files have been handled
         iterator = iter(putter.filehandler.data.copy())
 
-        with concurrent.futures.ThreadPoolExecutor() as texec:
+        with rich.progress.Progress() as progress:
+            print(progress.tasks)
+            # task = progress.add_task("all_files", total=len(putter.filehandler.data))
 
-            # Schedule the first num_threads futures for upload
-            for file in itertools.islice(iterator, num_threads):
-                LOG.debug("Uploading file %s...", file)
-                upload_threads[texec.submit(putter.put, file=file)] = file
+            with concurrent.futures.ThreadPoolExecutor() as texec:
+                # progress.update(task, description="Uploading files")
 
-            # Continue until all files are done
-            while upload_threads:
-                # Wait for the next future to complete
-                udone, _ = concurrent.futures.wait(
-                    upload_threads, return_when=concurrent.futures.FIRST_COMPLETED
-                )
-
-                # Get result from future and schedule database update
-                for ufut in udone:
-                    uploaded_file = upload_threads.pop(ufut)
-                    LOG.debug("...File %s uploaded!", uploaded_file)
-
-                    # Get result
-                    try:
-                        _ = ufut.result()
-                    except concurrent.futures.BrokenExecutor as err:
-                        LOG.critical(
-                            "Upload of file %s failed! Error: %s", uploaded_file, err
-                        )
-                        continue
-
-                    # Schedule file for db update
-                    LOG.debug("Adding to db: %s...", uploaded_file)
-                    db_threads[
-                        texec.submit(putter.add_file_db, file=uploaded_file)
-                    ] = uploaded_file
-
-                new_tasks = 0
+                # Schedule the first num_threads futures for upload
+                for file in itertools.islice(iterator, num_threads):
+                    # LOG.debug("Uploading file %s...", file)
+                    upload_threads[
+                        texec.submit(putter.put, file=file, progress=progress)
+                    ] = file
 
                 # Continue until all files are done
-                while db_threads:
+                while upload_threads:
                     # Wait for the next future to complete
-                    done_db, _ = concurrent.futures.wait(
-                        db_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                    udone, _ = concurrent.futures.wait(
+                        upload_threads, return_when=concurrent.futures.FIRST_COMPLETED
                     )
 
-                    # Get result from future
-                    for fut_db in done_db:
-                        added_file = db_threads.pop(fut_db)
-                        LOG.debug("...File added to db: %s", added_file)
-
-                        new_tasks += 1
-
+                    # Get result from future and schedule database update
+                    for ufut in udone:
+                        uploaded_file = upload_threads.pop(ufut)
+                        # LOG.debug("...File %s uploaded!", uploaded_file)
+                        # progress.update(task, advance=1)
                         # Get result
                         try:
-                            _ = fut_db.result()
+                            _ = ufut.result()
                         except concurrent.futures.BrokenExecutor as err:
                             LOG.critical(
-                                "Adding of file %s to database failed! Error: %s",
+                                "Upload of file %s failed! Error: %s",
                                 uploaded_file,
                                 err,
                             )
                             continue
 
-                # Schedule the next set of futures for upload
-                for ufile in itertools.islice(iterator, len(done_db)):
-                    LOG.debug("Uploading file %s...", ufile)
-                    upload_threads[texec.submit(putter.put, file=ufile)] = ufile
+                        # Schedule file for db update
+                        # LOG.debug("Adding to db: %s...", uploaded_file)
+                        db_threads[
+                            texec.submit(putter.add_file_db, file=uploaded_file)
+                        ] = uploaded_file
+
+                    # Continue until all files are done
+                    while db_threads:
+                        # Wait for the next future to complete
+                        done_db, _ = concurrent.futures.wait(
+                            db_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                        )
+
+                        # Get result from future
+                        for fut_db in done_db:
+                            added_file = db_threads.pop(fut_db)
+                            # LOG.debug("...File added to db: %s", added_file)
+
+                            # Get result
+                            try:
+                                _ = fut_db.result()
+                            except concurrent.futures.BrokenExecutor as err:
+                                LOG.critical(
+                                    "Adding of file %s to database failed! Error: %s",
+                                    uploaded_file,
+                                    err,
+                                )
+                                continue
+
+                    # Schedule the next set of futures for upload
+                    for ufile in itertools.islice(iterator, len(done_db)):
+                        # LOG.debug("Uploading file %s...", ufile)
+                        upload_threads[texec.submit(putter.put, file=ufile)] = ufile
 
 
 ###############################################################################
@@ -348,7 +353,6 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
 
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
-        global console
         console.print("No project specified, cannot remove anything.")
         os._exit(os.EX_OK)
 
@@ -536,8 +540,6 @@ def get(
                         texec.submit(getter.update_db, file=downloaded_file)
                     ] = downloaded_file
 
-                new_tasks = 0
-
                 # Continue until all files are done
                 while db_threads:
                     # Wait for the next future to complete
@@ -549,8 +551,6 @@ def get(
                     for fut_db in done_db:
                         updated_file = db_threads.pop(fut_db)
                         LOG.debug("...File updated: %s", updated_file)
-
-                        new_tasks += 1
 
                         # Get result
                         try:

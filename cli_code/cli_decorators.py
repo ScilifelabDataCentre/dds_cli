@@ -46,7 +46,6 @@ def verify_proceed(func):
         file = kwargs["file"]
 
         # Return if file cancelled by another file
-        LOG.debug("File: %s, Status: %s", file, self.status)
         if self.status[file]["cancel"]:
             message = f"File already cancelled, stopping file {file}"
             LOG.warning(message)

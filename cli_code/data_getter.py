@@ -50,6 +50,7 @@ class DataGetter(base.DDSBaseClass):
         config: pathlib.Path = None,
         project: str = None,
         break_on_fail: bool = False,
+        get_all: bool = False,
         source: tuple = (),
         source_path_file: pathlib.Path = None,
         destination: pathlib.Path = pathlib.Path(""),
@@ -71,6 +72,7 @@ class DataGetter(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         self.filehandler = fhr.RemoteFileHandler(
+            get_all=get_all,
             user_input=(source, source_path_file),
             token=self.token,
             destination=destination,

@@ -40,16 +40,17 @@ class RemoteFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, user_input, token, destination=pathlib.Path("")):
+    def __init__(self, get_all, user_input, token, destination=pathlib.Path("")):
 
         # Initiate FileHandler from inheritance
         super().__init__(user_input=user_input)
 
+        self.get_all = get_all
         self.destination = destination
 
         self.data_list = list(set(self.data_list))
 
-        if not self.data_list:
+        if not self.data_list and not get_all:
             console.print("\n:warning: No data specified. :warning:\n")
             os._exit(os.EX_OK)
 
@@ -64,7 +65,9 @@ class RemoteFileHandler(fh.FileHandler):
         # Get file info from db via API
         try:
             response = requests.get(
-                DDSEndpoint.FILE_INFO, headers=token, json=all_paths
+                DDSEndpoint.FILE_INFO_ALL if self.get_all else DDSEndpoint.FILE_INFO,
+                headers=token,
+                json=all_paths,
             )
         except requests.ConnectionError as err:
             LOG.fatal(err)
@@ -72,30 +75,46 @@ class RemoteFileHandler(fh.FileHandler):
 
         # Server error or error in response
         if not response.ok:
-            console.print(response.text)
+            console.print(f"\n{response.text}\n")
             os._exit(os.EX_OK)
 
         # Get file info from response
         file_info = response.json()
-        if not all([x in file_info for x in ["files", "folders"]]):
-            console.print("No files in response despite ok request.")
+
+        # Folder info required if specific files requested
+        if all_paths and "folders" not in file_info:
+            console.print(
+                "\n:warning: Error in response. "
+                "Not enough info returned despite ok request. :warning:\n"
+            )
             os._exit(os.EX_OK)
+
+        # Files in response always required
+        if "files" not in file_info:
+            console.print(
+                "\n:warning: No files in response despite ok request. :warning:\n"
+            )
+            os._exit(os.EX_OK)
+
+        # files and files in folders from db
+        files = file_info["files"]
+        folders = file_info["folders"] if "folders" in file_info else {}
 
         # Cancel download of those files or folders not found in the db
         self.failed = {
             x: {"error": "Not found in DB."}
             for x in all_paths
-            if x not in file_info["files"] and x not in file_info["folders"]
+            if x not in files and x not in folders
         }
 
         # Save info on files in dict and return
         data = {
             self.destination / pathlib.Path(x): {**y, "name_in_db": x}
-            for x, y in file_info["files"].items()
+            for x, y in files.items()
         }
 
         # Save info on files in a specific folder and return
-        for x, y in file_info["folders"].items():
+        for x, y in folders.items():
             data.update(
                 {
                     self.destination

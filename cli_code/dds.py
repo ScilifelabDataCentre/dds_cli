@@ -13,6 +13,7 @@ import itertools
 
 # Installed
 import click
+import rich
 from rich import pretty
 import rich.console
 import rich.prompt
@@ -26,16 +27,18 @@ from cli_code import data_lister as dl
 from cli_code import data_remover as dr
 from cli_code import data_getter as dg
 
-# Setup
-pretty.install()
-console_main = rich.console.Console()
-
-
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = None
+
+###############################################################################
+# RICH CONFIG ################################################### RICH CONFIG #
+###############################################################################
+
+pretty.install()
+console = rich.console.Console()
 
 ###############################################################################
 # MAIN ################################################################# MAIN #
@@ -283,8 +286,8 @@ def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
     folder = fold_arg if fold_arg is not None else folder
 
     if project is None and size:
-        console = rich.console.Console(stderr=True, style="orange3")
-        console.print(
+        console_ls = rich.console.Console(stderr=True, style="orange3")
+        console_ls.print(
             "\nNB! Showing the project size is not implemented in the "
             "listing command at this time. No size will be displayed.\n"
         )
@@ -343,9 +346,9 @@ def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
 def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     """Delete the files within a project."""
 
-    console = rich.console.Console()
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
+        global console
         console.print("No project specified, cannot remove anything.")
         os._exit(os.EX_OK)
 
@@ -381,8 +384,8 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     with dr.DataRemover(project=project, username=username, config=config) as remover:
 
         if rm_all:
-            console = rich.console.Console(stderr=True, style="orange3")
-            console.print(f"\nRemoving all files in project {project}...\n")
+            console_rm = rich.console.Console(stderr=True, style="orange3")
+            console_rm.print(f"\nRemoving all files in project {project}...\n")
 
             remover.remove_all()
 
@@ -419,6 +422,14 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     required=False,
     type=str,
     help="Project ID to which you're uploading data.",
+)
+@click.option(
+    "--get-all",
+    "-a",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Download all project contents.",
 )
 @click.option(
     "--source",
@@ -459,16 +470,25 @@ def get(
     config,
     username,
     project,
+    get_all,
     source,
     source_path_file,
     break_on_fail,
     num_threads,
 ):
 
+    if get_all and (source or source_path_file):
+        console.print(
+            "\nFlag'--get-all' cannot be used together with options "
+            "'--source'/'--source-path-fail'.\n"
+        )
+        os._exit(os.EX_OK)
+
     with dg.DataGetter(
         username=username,
         config=config,
         project=project,
+        get_all=get_all,
         source=source,
         source_path_file=source_path_file,
         break_on_fail=break_on_fail,

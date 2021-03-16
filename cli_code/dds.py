@@ -437,6 +437,13 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     help="File containing path to files or directories. ",
 )
 @click.option(
+    "--break-on-fail",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Cancel download of all files if one fails",
+)
+@click.option(
     "--num-threads",
     "-nt",
     required=False,
@@ -447,7 +454,16 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     help="Number of parallel threads to perform the download.",
 )
 @click.pass_obj
-def get(dds_info, config, username, project, source, source_path_file, num_threads):
+def get(
+    dds_info,
+    config,
+    username,
+    project,
+    source,
+    source_path_file,
+    break_on_fail,
+    num_threads,
+):
 
     with dg.DataGetter(
         username=username,
@@ -455,6 +471,7 @@ def get(dds_info, config, username, project, source, source_path_file, num_threa
         project=project,
         source=source,
         source_path_file=source_path_file,
+        break_on_fail=break_on_fail,
         destination=dds_info["DDS_DIRS"]["FILES"],
     ) as getter:
 

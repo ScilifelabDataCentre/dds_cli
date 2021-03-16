@@ -58,7 +58,7 @@ def verify_proceed(func):
         # Cancel file(s) if something failed
         if not ok_to_proceed:
             self.status[file].update({"cancel": True, "message": message})
-            if hasattr(self, "break_on_fail") and self.break_on_fail:
+            if self.break_on_fail:
                 message = (
                     f"Cancelling upload due to file '{file}'. "
                     "Break-on-fail specified in call."

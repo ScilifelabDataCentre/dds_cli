@@ -49,6 +49,7 @@ class DataGetter(base.DDSBaseClass):
         username: str = None,
         config: pathlib.Path = None,
         project: str = None,
+        break_on_fail: bool = False,
         source: tuple = (),
         source_path_file: pathlib.Path = None,
         destination: pathlib.Path = pathlib.Path(""),
@@ -58,6 +59,7 @@ class DataGetter(base.DDSBaseClass):
         super().__init__(username=username, config=config, project=project)
 
         # Initiate DataGetter specific attributes
+        self.break_on_fail = break_on_fail
         self.filehandler = None
         self.status = dict()
 
@@ -74,10 +76,11 @@ class DataGetter(base.DDSBaseClass):
             destination=destination,
         )
 
-        if self.filehandler.failed:
+        if self.filehandler.failed and self.break_on_fail:
             console.print(
-                "\n:warning: Some specified files were not found in the system :warning:"
-                f"\n\nFiles not found: {self.failed}"
+                "\n:warning: Some specified files were not found in the system "
+                "and '--break-on-fail' flag used. :warning:\n\n"
+                f"Files not found: {self.filehandler.failed}\n"
             )
             os._exit(os.EX_OK)
 

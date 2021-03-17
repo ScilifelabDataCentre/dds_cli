@@ -61,6 +61,7 @@ class DeliveryProgress(Progress):
                 )
             if task.fields.get("progress_type") == "put":
                 self.columns = (
+                    ":arrow_up:",
                     TextColumn(task.description),
                     BarColumn(
                         bar_width=None,

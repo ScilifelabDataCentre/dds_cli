@@ -9,6 +9,7 @@ import logging
 import threading
 
 # Installed
+from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn
 
 # Own modules
 
@@ -41,36 +42,32 @@ class DeliveryStatus:
         """Cancel the failed file"""
 
 
-class ProgressTasks:
+class DeliveryProgress(Progress):
+    def get_renderables(self):
+        for task in self.tasks:
+            if task.fields.get("progress_type") == "upload":
+                self.columns = (
+                    TextColumn("[bold]{task.description}"),
+                    BarColumn(bar_width=None),
+                    "[progress.percentage]{task.percentage:>3.1f}%",
+                    "•",
+                    DownloadColumn(),
+                )
 
-    TASKS = {}
-
-    def add_task(self, path_name, task_size):
-
-        self.TASKS[path_name] = {"task": None, "total": task_size}
+            yield self.make_tasks_table([task])
 
 
 class ProgressPercentage(object):
-    def __init__(self, ud_file_size, progress, task):
+    def __init__(self, filename, ud_file_size, progress, task):
+        self.filename = filename
         self.progress = progress
         self.task = task
-        # self._filename = filename
         self._size = ud_file_size
         self._seen_so_far = 0
-        # self._download = get
-        self._lock = threading.Lock()
-        # print(f"\n\n\n\n\n{self._filename}\n\n\n\n\n")
 
     def __call__(self, bytes_amount):
-        # To simplify, assume this is hooked up to a single filename
-        # with self._lock:
+
         self._seen_so_far += bytes_amount
         # percentage = (self._seen_so_far / self._size) * 100
-        # print(self._filename, percentage)
 
         self.progress.update(self.task, advance=bytes_amount)
-        # update_progress_bar(
-        #     file=self._filename,
-        #     status="d" if self._download else "u",
-        #     perc=percentage,
-        # )

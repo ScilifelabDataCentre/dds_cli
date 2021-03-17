@@ -61,9 +61,7 @@ class LocalFileHandler(fh.FileHandler):
             console.print("\n:warning: No data specified. :warning:\n")
             os._exit(os.EX_OK)
 
-        self.data, self.progress_tasks = self.__collect_file_info_local(
-            all_paths=self.data_list
-        )
+        self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
         self.data_list = None
 
     # Static methods ############## Static methods #
@@ -98,27 +96,27 @@ class LocalFileHandler(fh.FileHandler):
                     ),
                     "size": path.stat().st_size,
                     "overwrite": False,
-                    "task_name": task_name,
+                    # "task_name": path.name,
                 }
 
             elif path.is_dir():
                 content_info, _ = self.__collect_file_info_local(
                     all_paths=path.glob("*"),
                     folder=folder / pathlib.Path(path.name),
-                    task_name=task_name,
+                    # task_name=task_name,
                 )
                 file_info.update({**content_info})
 
             # Info for progress tracking
-            if folder == pathlib.Path("") and path.name not in progress_tasks:
-                size = (
-                    path.stat().st_size
-                    if path.is_file()
-                    else sum(
-                        [x.stat().st_size for x in path.glob("**/*") if x.is_file()]
-                    )
-                )
-                progress_tasks[path.name] = {"task": None, "size": size}
+            # if folder == pathlib.Path("") and path.name not in progress_tasks:
+            #     size = (
+            #         path.stat().st_size
+            #         if path.is_file()
+            #         else sum(
+            #             [x.stat().st_size for x in path.glob("**/*") if x.is_file()]
+            #         )
+            #     )
+            #     progress_tasks[path.name] = {"task": None, "size": size}
 
         return file_info, progress_tasks
 
@@ -135,6 +133,7 @@ class LocalFileHandler(fh.FileHandler):
             task = progress.add_task(
                 task_name,
                 total=self.progress_tasks[task_name]["size"],
+                progress_type="upload",
             )
             self.progress_tasks[task_name]["task"] = task
         else:

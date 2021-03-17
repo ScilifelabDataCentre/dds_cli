@@ -178,9 +178,13 @@ def put(
         # Iterator to keep track of which files have been handled
         iterator = iter(putter.filehandler.data.copy())
 
-        with rich.progress.Progress() as progress:
-            print(progress.tasks)
-            # task = progress.add_task("all_files", total=len(putter.filehandler.data))
+        with rich.progress.Progress(
+            rich.progress.TextColumn("[bold]{task.description}"),
+            rich.progress.BarColumn(bar_width=None),
+            "[progress.percentage]{task.percentage:>3.1f}%",
+            "•",
+            rich.progress.DownloadColumn(),
+        ) as progress:
 
             with concurrent.futures.ThreadPoolExecutor() as texec:
                 # progress.update(task, description="Uploading files")
@@ -194,9 +198,6 @@ def put(
                             putter.put,
                             file=file,
                             progress=progress,
-                            task=putter.filehandler.current_task(
-                                file=file, progress=progress
-                            ),
                         )
                     ] = file
 
@@ -260,9 +261,6 @@ def put(
                                 putter.put,
                                 file=ufile,
                                 progress=progress,
-                                task=putter.filehandler.current_task(
-                                    file=ufile, progress=progress
-                                ),
                             )
                         ] = ufile
 

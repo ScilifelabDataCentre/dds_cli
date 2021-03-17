@@ -56,26 +56,27 @@ def verify_proceed(func):
 
         # Cancel file(s) if something failed
         if not ok_to_proceed:
+            # TODO (ina): update progress bar -- e.g. folder, change total size?
             self.status[file].update({"cancel": True, "message": message})
             if self.break_on_fail:
                 message = (
                     f"Cancelling upload due to file '{file}'. "
                     "Break-on-fail specified in call."
                 )
+
+                put_or_get = "put" if "put" in self.status[file] else "get"
                 _ = [
                     self.status[x].update({"cancel": True, "message": message})
                     for x in self.status
                     if not self.status[x]["cancel"]
                     and not any(
                         [
-                            self.status[x]["put"]["started"],
-                            self.status[x]["put"]["done"],
+                            self.status[x][put_or_get]["started"],
+                            self.status[x][put_or_get]["done"],
                         ]
                     )
                     and x != file
                 ]
-
-            LOG.debug("Status updated (%s): %s", file, self.status[file])
 
         return ok_to_proceed
 
@@ -118,6 +119,42 @@ def update_status(func):
         return ok_to_continue, message
 
     return wrapped
+
+
+def progress_bar(func):
+    """Decorator for handling the progress bars"""
+
+    @functools.wraps(func)
+    def start_and_cancel(self, *args, **kwargs):
+
+        file = kwargs["file"]
+
+        if "progress" not in kwargs:
+            return False, "Missing progress object when attempting to add task."
+
+        progress = kwargs["progress"]
+
+        task_name = file
+        if len(file) > 30:
+            # print(len(file))
+            file_name = pathlib.Path(file).name
+            task_name = f".../{file_name}"
+            if len(task_name) > 30:
+                # print(len(task_name))
+                task_name = "..." + task_name.split("...", 1)[-1][-30::]
+
+        task = progress.add_task(
+            task_name,
+            total=self.filehandler.data[file]["size"],
+        )
+
+        ok_to_continue, message, *_ = func(self, task=task, *args, **kwargs)
+
+        progress.remove_task(task)
+
+        return ok_to_continue, message
+
+    return start_and_cancel
 
 
 def connect_cloud(func):

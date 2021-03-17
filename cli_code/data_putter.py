@@ -22,7 +22,7 @@ from cli_code import base
 from cli_code import file_handler_local as fhl
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
-from cli_code.cli_decorators import verify_proceed, update_status
+from cli_code.cli_decorators import verify_proceed, update_status, progress_bar
 from cli_code import status
 
 ###############################################################################
@@ -107,6 +107,7 @@ class DataPutter(base.DDSBaseClass):
     # General methods ###################### General methods #
     @verify_proceed
     @update_status
+    @progress_bar
     def put(self, file, progress, task):
         """Uploads files to the cloud."""
 
@@ -134,7 +135,10 @@ class DataPutter(base.DDSBaseClass):
                             "CacheControl": "no-store",  # Don't store cache
                         },
                         Callback=status.ProgressPercentage(
-                            ud_file_size=file_size, progress=progress, task=task
+                            filename=file,
+                            ud_file_size=file_size,
+                            progress=progress,
+                            task=task,
                         ),
                     )
                 except botocore.client.ClientError as err:

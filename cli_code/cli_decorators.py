@@ -146,6 +146,7 @@ def progress_bar(func):
         task = progress.add_task(
             task_name,
             total=self.filehandler.data[file]["size"],
+            progress_type=func.__name__,
         )
 
         ok_to_continue, message, *_ = func(self, task=task, *args, **kwargs)

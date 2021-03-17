@@ -55,6 +55,7 @@ class DataPutter(base.DDSBaseClass):
         overwrite: bool = False,
         source: tuple = (),
         source_path_file: pathlib.Path = None,
+        progress=None,
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -75,6 +76,9 @@ class DataPutter(base.DDSBaseClass):
             )
             os._exit(os.EX_OK)
 
+        # Progress for data collection
+        task = progress.add_task("Collecting and preparing data", progress_type="wait")
+
         # Get file info
         self.filehandler = fhl.LocalFileHandler(user_input=(source, source_path_file))
         self.verify_bucket_exist()
@@ -93,6 +97,9 @@ class DataPutter(base.DDSBaseClass):
         self.status = self.filehandler.create_upload_status_dict(
             existing_files=files_in_db, overwrite=self.overwrite
         )
+
+        # Stop progress for data collection
+        progress.remove_task(task)
 
     def __enter__(self):
         return self

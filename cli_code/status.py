@@ -7,9 +7,10 @@
 # Standard library
 import logging
 import threading
+import os
 
 # Installed
-from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn
+from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn, SpinnerColumn
 
 # Own modules
 
@@ -45,10 +46,27 @@ class DeliveryStatus:
 class DeliveryProgress(Progress):
     def get_renderables(self):
         for task in self.tasks:
-            if task.fields.get("progress_type") == "upload":
+            if task.fields.get("progress_type") == "wait":
                 self.columns = (
-                    TextColumn("[bold]{task.description}"),
-                    BarColumn(bar_width=None),
+                    "[bold]{task.description}",
+                    SpinnerColumn(spinner_name="shark"),
+                )
+            if task.fields.get("progress_type") == "summary":
+                self.columns = (
+                    "[bold red]{task.description}",
+                    BarColumn(bar_width=None, finished_style="bar.complete"),
+                    "[progress.percentage]{task.percentage:>3.0f}%",
+                    "•",
+                    "[green]{task.completed}/{task.total} completed",
+                )
+            if task.fields.get("progress_type") == "put":
+                self.columns = (
+                    TextColumn(task.description),
+                    BarColumn(
+                        bar_width=None,
+                        complete_style="bold cyan",
+                        finished_style="bold cyan",
+                    ),
                     "[progress.percentage]{task.percentage:>3.1f}%",
                     "•",
                     DownloadColumn(),

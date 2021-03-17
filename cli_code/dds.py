@@ -20,6 +20,7 @@ import rich.prompt
 
 # Own modules
 import cli_code
+from cli_code import status
 from cli_code import directory
 from cli_code import timestamp
 from cli_code import data_putter as dp
@@ -160,39 +161,36 @@ def put(
 ):
     """Processes and uploads specified files to the cloud."""
 
-    # Begin delivery
-    with dp.DataPutter(
-        username=username,
-        config=config,
-        project=project,
-        source=source,
-        source_path_file=source_path_file,
-        break_on_fail=break_on_fail,
-        overwrite=overwrite,
-    ) as putter:
+    with status.DeliveryProgress() as progress:
 
-        # Keep track of futures
-        upload_threads = {}  # Upload related
-        db_threads = {}  # Database related
+        # Begin delivery
+        with dp.DataPutter(
+            username=username,
+            config=config,
+            project=project,
+            source=source,
+            source_path_file=source_path_file,
+            break_on_fail=break_on_fail,
+            overwrite=overwrite,
+            progress=progress,
+        ) as putter:
 
-        # Iterator to keep track of which files have been handled
-        iterator = iter(putter.filehandler.data.copy())
+            # Keep track of futures
+            upload_threads = {}  # Upload related
+            db_threads = {}  # Database related
 
-        with rich.progress.Progress(
-            rich.progress.TextColumn("[bold]{task.description}"),
-            rich.progress.BarColumn(bar_width=None),
-            "[progress.percentage]{task.percentage:>3.1f}%",
-            "•",
-            rich.progress.DownloadColumn(),
-        ) as progress:
+            # Iterator to keep track of which files have been handled
+            iterator = iter(putter.filehandler.data.copy())
 
             with concurrent.futures.ThreadPoolExecutor() as texec:
-                # progress.update(task, description="Uploading files")
+                task = progress.add_task(
+                    "Upload",
+                    total=len(putter.filehandler.data),
+                    progress_type="summary",
+                )
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, 2):
-                    # LOG.debug("Uploading file %s...", file)
-
                     upload_threads[
                         texec.submit(
                             putter.put,
@@ -211,8 +209,7 @@ def put(
                     # Get result from future and schedule database update
                     for ufut in udone:
                         uploaded_file = upload_threads.pop(ufut)
-                        # LOG.debug("...File %s uploaded!", uploaded_file)
-                        # progress.update(task, advance=1)
+
                         # Get result
                         try:
                             _ = ufut.result()
@@ -225,7 +222,6 @@ def put(
                             continue
 
                         # Schedule file for db update
-                        # LOG.debug("Adding to db: %s...", uploaded_file)
                         db_threads[
                             texec.submit(putter.add_file_db, file=uploaded_file)
                         ] = uploaded_file
@@ -240,7 +236,7 @@ def put(
                         # Get result from future
                         for fut_db in done_db:
                             added_file = db_threads.pop(fut_db)
-                            # LOG.debug("...File added to db: %s", added_file)
+                            progress.update(task, advance=1)
 
                             # Get result
                             try:
@@ -255,7 +251,6 @@ def put(
 
                     # Schedule the next set of futures for upload
                     for ufile in itertools.islice(iterator, len(done_db)):
-                        # LOG.debug("Uploading file %s...", ufile)
                         upload_threads[
                             texec.submit(
                                 putter.put,
@@ -263,6 +258,8 @@ def put(
                                 progress=progress,
                             )
                         ] = ufile
+
+                progress.remove_task(task)
 
 
 ###############################################################################

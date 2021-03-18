@@ -183,20 +183,11 @@ def put(
             iterator = iter(putter.filehandler.data.copy())
 
             with concurrent.futures.ThreadPoolExecutor() as texec:
-                task = progress.add_task(
-                    "Upload",
-                    total=len(putter.filehandler.data),
-                    progress_type="summary",
-                )
 
                 # Schedule the first num_threads futures for upload
-                for file in itertools.islice(iterator, 2):
+                for file in itertools.islice(iterator, num_threads):
                     upload_threads[
-                        texec.submit(
-                            putter.put,
-                            file=file,
-                            progress=progress,
-                        )
+                        texec.submit(putter.put, file=file, progress=progress)
                     ] = file
 
                 # Continue until all files are done
@@ -235,8 +226,7 @@ def put(
 
                         # Get result from future
                         for fut_db in done_db:
-                            added_file = db_threads.pop(fut_db)
-                            progress.update(task, advance=1)
+                            _ = db_threads.pop(fut_db)
 
                             # Get result
                             try:
@@ -252,14 +242,8 @@ def put(
                     # Schedule the next set of futures for upload
                     for ufile in itertools.islice(iterator, len(done_db)):
                         upload_threads[
-                            texec.submit(
-                                putter.put,
-                                file=ufile,
-                                progress=progress,
-                            )
+                            texec.submit(putter.put, file=ufile, progress=progress)
                         ] = ufile
-
-                progress.remove_task(task)
 
 
 ###############################################################################

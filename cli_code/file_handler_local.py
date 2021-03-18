@@ -96,51 +96,18 @@ class LocalFileHandler(fh.FileHandler):
                     ),
                     "size": path.stat().st_size,
                     "overwrite": False,
-                    # "task_name": path.name,
                 }
 
             elif path.is_dir():
                 content_info, _ = self.__collect_file_info_local(
                     all_paths=path.glob("*"),
                     folder=folder / pathlib.Path(path.name),
-                    # task_name=task_name,
                 )
                 file_info.update({**content_info})
-
-            # Info for progress tracking
-            # if folder == pathlib.Path("") and path.name not in progress_tasks:
-            #     size = (
-            #         path.stat().st_size
-            #         if path.is_file()
-            #         else sum(
-            #             [x.stat().st_size for x in path.glob("**/*") if x.is_file()]
-            #         )
-            #     )
-            #     progress_tasks[path.name] = {"task": None, "size": size}
 
         return file_info, progress_tasks
 
     # Public methods ############## Public methods #
-    def current_task(self, file, progress):
-        """Get task to update progress in."""
-
-        task = None
-        task_name = self.data[file]["task_name"]
-
-        # Create new task for progress if no object exists yet
-        # or get the existing one if there is
-        if self.progress_tasks[task_name]["task"] is None:
-            task = progress.add_task(
-                task_name,
-                total=self.progress_tasks[task_name]["size"],
-                progress_type="upload",
-            )
-            self.progress_tasks[task_name]["task"] = task
-        else:
-            task = self.progress_tasks[task_name]["task"]
-
-        return task
-
     def create_upload_status_dict(self, existing_files, overwrite=False):
         """Create dict for tracking file delivery status"""
 

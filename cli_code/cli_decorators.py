@@ -17,6 +17,7 @@ import botocore
 
 # Own modules
 from cli_code import s3_connector as s3
+from cli_code import text_handler as txt
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -106,9 +107,16 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-
-        # Run function
-        ok_to_continue, message, *_ = func(self, *args, **kwargs)
+        if "progress" in kwargs:
+            file_task = kwargs["progress"].add_task(
+                txt.TextHandler.task_name(file=file),
+                total=self.filehandler.data[file]["size"],
+                progress_type=func.__name__,
+            )
+            ok_to_continue, message, *_ = func(self, task=file_task, *args, **kwargs)
+        else:
+            # Run function
+            ok_to_continue, message, *_ = func(self, *args, **kwargs)
 
         if not ok_to_continue:
             return False, message
@@ -133,15 +141,6 @@ def progress_bar(func):
             return False, "Missing progress object when attempting to add task."
 
         progress = kwargs["progress"]
-
-        task_name = file
-        if len(file) > 30:
-            # print(len(file))
-            file_name = pathlib.Path(file).name
-            task_name = f".../{file_name}"
-            if len(task_name) > 30:
-                # print(len(task_name))
-                task_name = "..." + task_name.split("...", 1)[-1][-30::]
 
         task = progress.add_task(
             task_name,

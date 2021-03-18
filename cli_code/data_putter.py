@@ -22,7 +22,7 @@ from cli_code import base
 from cli_code import file_handler_local as fhl
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
-from cli_code.cli_decorators import verify_proceed, update_status, progress_bar
+from cli_code.cli_decorators import verify_proceed, update_status
 from cli_code import status
 
 ###############################################################################
@@ -76,8 +76,10 @@ class DataPutter(base.DDSBaseClass):
             )
             os._exit(os.EX_OK)
 
-        # Progress for data collection
-        task = progress.add_task("Collecting and preparing data", progress_type="wait")
+        # Start file prep progress
+        wait_task = progress.add_task(
+            "Collecting and preparing data", progress_type="wait"
+        )
 
         # Get file info
         self.filehandler = fhl.LocalFileHandler(user_input=(source, source_path_file))
@@ -98,8 +100,11 @@ class DataPutter(base.DDSBaseClass):
             existing_files=files_in_db, overwrite=self.overwrite
         )
 
-        # Stop progress for data collection
-        progress.remove_task(task)
+        progress.remove_task(wait_task)
+
+        if not self.filehandler.data:
+            console.print("No data to upload.")
+            os._exit(os.EX_OK)
 
     def __enter__(self):
         return self
@@ -114,7 +119,6 @@ class DataPutter(base.DDSBaseClass):
     # General methods ###################### General methods #
     @verify_proceed
     @update_status
-    @progress_bar
     def put(self, file, progress, task):
         """Uploads files to the cloud."""
 
@@ -125,7 +129,6 @@ class DataPutter(base.DDSBaseClass):
         file_remote = self.filehandler.data[file]["name_in_bucket"]
         file_size = self.filehandler.data[file]["size"]
 
-        # print(progress.tasks)
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             if None in [conn.safespring_project, conn.url, conn.keys, conn.bucketname]:
@@ -142,10 +145,7 @@ class DataPutter(base.DDSBaseClass):
                             "CacheControl": "no-store",  # Don't store cache
                         },
                         Callback=status.ProgressPercentage(
-                            filename=file,
-                            ud_file_size=file_size,
-                            progress=progress,
-                            task=task,
+                            progress=progress, task=task
                         ),
                     )
                 except botocore.client.ClientError as err:

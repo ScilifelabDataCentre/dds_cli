@@ -143,7 +143,8 @@ class DataPutter(base.DDSBaseClass):
                             "CacheControl": "no-store",  # Don't store cache
                         },
                         Callback=status.ProgressPercentage(
-                            progress=progress, task=task
+                            progress=progress,
+                            task=task,
                         ),
                     )
                 except botocore.client.ClientError as err:

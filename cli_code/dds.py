@@ -143,7 +143,7 @@ def cli(ctx, debug):
     "-nt",
     required=False,
     multiple=False,
-    default=min(32, os.cpu_count() + 4),
+    default=4,
     show_default=True,
     type=click.IntRange(1, 32),
     help="Number of parallel threads to perform the delivery",
@@ -178,7 +178,6 @@ def put(
 
             # Keep track of futures
             upload_threads = {}  # Upload related
-            db_threads = {}  # Database related
 
             # Iterator to keep track of which files have been handled
             iterator = iter(putter.filehandler.data.copy())
@@ -193,7 +192,6 @@ def put(
                     file_task = progress.add_task(
                         txt.TextHandler.task_name(file=file),
                         total=putter.filehandler.data[file]["size"],
-                        start=False,
                         step="put",
                     )
 
@@ -213,6 +211,7 @@ def put(
 
                     # Get result from future and schedule database update
                     for ufut in udone:
+                        new_tasks = 0
                         uploaded_file, task_id = upload_threads.pop(ufut)
 
                         # Get result
@@ -231,43 +230,19 @@ def put(
                         progress.update(task_id, step="db")
 
                         # Schedule file for db update
-                        db_threads[
-                            texec.submit(putter.add_file_db, file=uploaded_file)
-                        ] = (uploaded_file, task_id)
+                        _ = putter.add_file_db(file=uploaded_file)
 
-                    # Continue until all files are done
-                    while db_threads:
-                        # Wait for the next future to complete
-                        done_db, _ = concurrent.futures.wait(
-                            db_threads, return_when=concurrent.futures.FIRST_COMPLETED
-                        )
-
-                        # Get result from future
-                        for fut_db in done_db:
-                            saved_file, task_id_db = db_threads.pop(fut_db)
-
-                            # Get result
-                            try:
-                                _ = fut_db.result()
-                            except concurrent.futures.BrokenExecutor as err:
-                                LOG.critical(
-                                    "Adding of file %s to database failed! Error: %s",
-                                    saved_file,
-                                    err,
-                                )
-                                continue
-
-                            # Remove progress row
-                            progress.remove_task(task_id_db)
-                            progress.advance(upload_task)
+                        # Remove progress row
+                        progress.remove_task(task_id)
+                        new_tasks += 1
+                        progress.advance(upload_task)
 
                     # Schedule the next set of futures for upload
-                    for ufile in itertools.islice(iterator, len(done_db)):
+                    for ufile in itertools.islice(iterator, new_tasks):
                         # Create progress bar task
                         file_task = progress.add_task(
                             txt.TextHandler.task_name(file=ufile),
                             total=putter.filehandler.data[ufile]["size"],
-                            start=False,
                             step="put",
                         )
 
@@ -495,7 +470,7 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     "-nt",
     required=False,
     multiple=False,
-    default=min(32, os.cpu_count() + 4),
+    default=4,
     show_default=True,
     type=click.IntRange(1, 32),
     help="Number of parallel threads to perform the download.",
@@ -536,7 +511,6 @@ def get(
 
             # Keep track of futures
             download_threads = {}
-            db_threads = {}
 
             # Iterator to keep track of which files have been handled
             iterator = iter(getter.filehandler.data.copy())
@@ -552,7 +526,6 @@ def get(
                     task_file = progress.add_task(
                         txt.TextHandler.task_name(file=file),
                         total=getter.filehandler.data[file]["size"],
-                        start=False,
                         step="get",
                     )
 
@@ -570,6 +543,7 @@ def get(
                     )
 
                     for dfut in ddone:
+                        new_tasks = 0
                         downloaded_file, task_id = download_threads.pop(dfut)
 
                         # Get result
@@ -588,42 +562,18 @@ def get(
                         progress.update(task_id, step="db")
 
                         # Schedule file for db update
-                        db_threads[
-                            texec.submit(getter.update_db, file=downloaded_file)
-                        ] = (downloaded_file, task_id)
+                        _ = getter.update_db(file=downloaded_file)
 
-                    # Continue until all files are done
-                    while db_threads:
-                        # Wait for the next future to complete
-                        done_db, _ = concurrent.futures.wait(
-                            db_threads, return_when=concurrent.futures.FIRST_COMPLETED
-                        )
-
-                        # Get result from future
-                        for fut_db in done_db:
-                            updated_file, task_file_db = db_threads.pop(fut_db)
-
-                            # Get result
-                            try:
-                                _ = fut_db.result()
-                            except concurrent.futures.BrokenExecutor as err:
-                                LOG.critical(
-                                    "Updating of file %s to database failed! Error: %s",
-                                    updated_file,
-                                    err,
-                                )
-                                continue
-
-                            progress.remove_task(task_file_db)
-                            progress.advance(task_dwnld)
+                        progress.remove_task(task_id)
+                        new_tasks += 1
+                        progress.advance(task_dwnld)
 
                     # Schedule the next set of futures for download
-                    for dfile in itertools.islice(iterator, len(ddone)):
+                    for dfile in itertools.islice(iterator, new_tasks):
                         # Create progress bar task
                         task_file = progress.add_task(
                             txt.TextHandler.task_name(file=dfile),
                             total=getter.filehandler.data[dfile]["size"],
-                            start=False,
                             step="get",
                         )
 

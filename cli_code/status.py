@@ -8,6 +8,7 @@
 import logging
 import threading
 import os
+import itertools
 
 # Installed
 from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn, SpinnerColumn
@@ -48,6 +49,7 @@ class DeliveryProgress(Progress):
     """Progress bar formatting."""
 
     def get_renderables(self):
+
         for task in self.tasks:
             if task.fields.get("step") == "prepare":
                 self.columns = (

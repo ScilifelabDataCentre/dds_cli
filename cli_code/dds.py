@@ -148,6 +148,13 @@ def cli(ctx, debug):
     type=click.IntRange(1, 32),
     help="Number of parallel threads to perform the delivery",
 )
+@click.option(
+    "--silent",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Turn off progress bar for each individual file. Summary bars still visible.",
+)
 @click.pass_obj
 def put(
     _,
@@ -159,6 +166,7 @@ def put(
     break_on_fail,
     overwrite,
     num_threads,
+    silent,
 ):
     """Processes and uploads specified files to the cloud."""
 
@@ -193,6 +201,7 @@ def put(
                         txt.TextHandler.task_name(file=file),
                         total=putter.filehandler.data[file]["size"],
                         step="put",
+                        visible=not silent,
                     )
 
                     # Execute upload
@@ -245,6 +254,7 @@ def put(
                             txt.TextHandler.task_name(file=ufile),
                             total=putter.filehandler.data[ufile]["size"],
                             step="put",
+                            visible=not silent,
                         )
 
                         # Execute upload
@@ -476,6 +486,13 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     type=click.IntRange(1, 32),
     help="Number of parallel threads to perform the download.",
 )
+@click.option(
+    "--silent",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Turn off progress bar for each individual file. Summary bars still visible.",
+)
 @click.pass_obj
 def get(
     dds_info,
@@ -487,6 +504,7 @@ def get(
     source_path_file,
     break_on_fail,
     num_threads,
+    silent,
 ):
 
     if get_all and (source or source_path_file):
@@ -528,6 +546,7 @@ def get(
                         txt.TextHandler.task_name(file=file),
                         total=getter.filehandler.data[file]["size"],
                         step="get",
+                        visible=not silent,
                     )
 
                     # Execute download
@@ -577,6 +596,7 @@ def get(
                             txt.TextHandler.task_name(file=dfile),
                             total=getter.filehandler.data[dfile]["size"],
                             step="get",
+                            visible=not silent,
                         )
 
                         # Execute download

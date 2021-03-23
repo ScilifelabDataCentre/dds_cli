@@ -45,16 +45,27 @@ class DeliveryStatus:
 
 
 class DeliveryProgress(Progress):
+    """Progress bar formatting."""
+
     def get_renderables(self):
         for task in self.tasks:
-            if task.fields.get("progress_type") == "wait":
+            if task.fields.get("step") == "prepare":
                 self.columns = (
                     "[bold]{task.description}",
-                    SpinnerColumn(spinner_name="shark"),
+                    SpinnerColumn(spinner_name="dots12", style="white"),
                 )
-
-            elif task.fields.get("progress_type") == "put":
-
+            elif task.fields.get("step") == "summary":
+                self.columns = (
+                    TextColumn(task.description, style="bold cyan"),
+                    BarColumn(
+                        bar_width=None,
+                        complete_style="bold cyan",
+                        finished_style="bold cyan",
+                    ),
+                    " • ",
+                    "[green]{task.completed}/{task.total} completed",
+                )
+            elif task.fields.get("step") in ["put", "get"]:
                 self.columns = (
                     ":arrow_up:",
                     TextColumn(task.description),
@@ -67,6 +78,11 @@ class DeliveryProgress(Progress):
                     "•",
                     DownloadColumn(),
                 )
+            elif task.fields.get("step") == "db":
+                self.columns = (
+                    SpinnerColumn(spinner_name="dots"),
+                    TextColumn(task.description),
+                )
 
             yield self.make_tasks_table([task])
 
@@ -75,12 +91,14 @@ class ProgressPercentage(object):
     def __init__(self, progress, task):
         self.progress = progress
         self.task = task
+        self.progress.start_task(task)
         self._seen_so_far = 0
 
     def __call__(self, bytes_amount):
 
         self._seen_so_far += bytes_amount
-        print(self._seen_so_far)
+        # print(self._seen_so_far)
         # percentage = (self._seen_so_far / self._size) * 100
 
+        # print(self._seen_so_far)
         self.progress.update(self.task, advance=bytes_amount)

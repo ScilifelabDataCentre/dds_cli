@@ -107,16 +107,9 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        if "progress" in kwargs:
-            file_task = kwargs["progress"].add_task(
-                txt.TextHandler.task_name(file=file),
-                total=self.filehandler.data[file]["size"],
-                progress_type=func.__name__,
-            )
-            ok_to_continue, message, *_ = func(self, task=file_task, *args, **kwargs)
-        else:
-            # Run function
-            ok_to_continue, message, *_ = func(self, *args, **kwargs)
+
+        # Run function
+        ok_to_continue, message, *_ = func(self, *args, **kwargs)
 
         if not ok_to_continue:
             return False, message
@@ -127,34 +120,6 @@ def update_status(func):
         return ok_to_continue, message
 
     return wrapped
-
-
-def progress_bar(func):
-    """Decorator for handling the progress bars"""
-
-    @functools.wraps(func)
-    def start_and_cancel(self, *args, **kwargs):
-
-        file = kwargs["file"]
-
-        if "progress" not in kwargs:
-            return False, "Missing progress object when attempting to add task."
-
-        progress = kwargs["progress"]
-
-        task = progress.add_task(
-            task_name,
-            total=self.filehandler.data[file]["size"],
-            progress_type=func.__name__,
-        )
-
-        ok_to_continue, message, *_ = func(self, task=task, *args, **kwargs)
-
-        progress.remove_task(task)
-
-        return ok_to_continue, message
-
-    return start_and_cancel
 
 
 def connect_cloud(func):
@@ -201,7 +166,7 @@ def subpath_required(func):
 
         file_info = self.filehandler.data[file]
         full_subpath = self.filehandler.destination / pathlib.Path(file_info["subpath"])
-        LOG.debug(full_subpath)
+
         if not full_subpath.exists():
             try:
                 full_subpath.mkdir(parents=True, exist_ok=True)

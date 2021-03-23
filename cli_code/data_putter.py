@@ -77,9 +77,7 @@ class DataPutter(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         # Start file prep progress
-        wait_task = progress.add_task(
-            "Collecting and preparing data", progress_type="wait"
-        )
+        wait_task = progress.add_task("Collecting and preparing data", step="prepare")
 
         # Get file info
         self.filehandler = fhl.LocalFileHandler(user_input=(source, source_path_file))

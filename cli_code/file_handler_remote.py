@@ -122,6 +122,7 @@ class RemoteFileHandler(fh.FileHandler):
                         "name_in_db": z[0],
                         "name_in_bucket": z[1],
                         "subpath": z[2],
+                        "size": z[3],
                     }
                     for z in y
                 }

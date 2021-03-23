@@ -23,6 +23,7 @@ from cli_code import base
 from cli_code import file_handler_remote as fhr
 from cli_code import s3_connector as s3
 from cli_code.cli_decorators import verify_proceed, update_status, subpath_required
+from cli_code import status
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -107,7 +108,7 @@ class DataGetter(base.DDSBaseClass):
     @verify_proceed
     @update_status
     @subpath_required
-    def get(self, file):
+    def get(self, file, progress, task):
         """Downloads files from the cloud."""
 
         downloaded = False
@@ -126,6 +127,9 @@ class DataGetter(base.DDSBaseClass):
                         Filename=file_local,
                         Bucket=conn.bucketname,
                         Key=file_remote,
+                        Callback=status.ProgressPercentage(
+                            progress=progress, task=task
+                        ),
                     )
                 except botocore.client.ClientError as err:
                     error = f"S3 download of file '{file}' failed: {err}"
@@ -159,5 +163,4 @@ class DataGetter(base.DDSBaseClass):
             return updated_in_db, error
 
         updated_in_db, error = (True, response.json()["message"])
-        LOG.debug(error)
         return updated_in_db, error

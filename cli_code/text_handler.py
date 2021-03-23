@@ -35,7 +35,7 @@ class TextHandler(StringFormat):
         """Generate display name for progress task"""
 
         task_name = file
-        if len(file) > max_len:
+        if len(str(file)) > max_len:
             file_name = pathlib.Path(file).name
             task_name = f".../{file_name}"
             if len(task_name) > max_len:

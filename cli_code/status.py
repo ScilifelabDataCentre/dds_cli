@@ -76,6 +76,7 @@ class DeliveryProgress(Progress):
                         complete_style="bold white",
                         finished_style="bold white",
                     ),
+                    "•",
                     "[progress.percentage]{task.percentage:>3.1f}%",
                     "•",
                     DownloadColumn(),

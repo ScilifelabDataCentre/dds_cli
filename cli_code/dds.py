@@ -209,9 +209,10 @@ def put(
                         upload_threads, return_when=concurrent.futures.FIRST_COMPLETED
                     )
 
+                    new_tasks = 0
+
                     # Get result from future and schedule database update
                     for ufut in udone:
-                        new_tasks = 0
                         uploaded_file, task_id = upload_threads.pop(ufut)
 
                         # Get result
@@ -542,8 +543,9 @@ def get(
                         download_threads, return_when=concurrent.futures.FIRST_COMPLETED
                     )
 
+                    new_tasks = 0
+
                     for dfut in ddone:
-                        new_tasks = 0
                         downloaded_file, task_id = download_threads.pop(dfut)
 
                         # Get result

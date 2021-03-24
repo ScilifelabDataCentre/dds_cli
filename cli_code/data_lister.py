@@ -18,6 +18,7 @@ from rich.table import Table
 from rich.prompt import Prompt
 from rich.tree import Tree
 from rich.padding import Padding
+import simplejson
 
 # Own modules
 from cli_code import text_handler as th
@@ -87,14 +88,20 @@ class DataLister(base.DDSBaseClass):
         """Gets a list of all projects the user is involved in."""
 
         # Get projects from API
-        response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
+        try:
+            response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         console = Console()
         if not response.ok:
             console.print(f"Failed to get list of projects: {response.text}")
             os._exit(os.EX_OK)
 
-        resp_json = response.json()
+        try:
+            resp_json = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
 
         # Cancel if user not involved in any projects
         if "all_projects" not in resp_json:
@@ -142,17 +149,24 @@ class DataLister(base.DDSBaseClass):
         console = Console()
 
         # Make call to API
-        response = requests.get(
-            DDSEndpoint.LIST_FILES,
-            params={"subpath": folder, "show_size": show_size},
-            headers=self.token,
-        )
+        try:
+            response = requests.get(
+                DDSEndpoint.LIST_FILES,
+                params={"subpath": folder, "show_size": show_size},
+                headers=self.token,
+            )
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
+
         if not response.ok:
             console.print(f"Failed to get list of files: {response.text}")
             os._exit(os.EX_OK)
 
         # Get response
-        resp_json = response.json()
+        try:
+            resp_json = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
 
         # Check if project empty
         if "num_items" in resp_json and resp_json["num_items"] == 0:

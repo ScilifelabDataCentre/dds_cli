@@ -14,6 +14,7 @@ import os
 # Installed
 import requests
 import rich
+import simplejson
 
 # Own modules
 from cli_code import base
@@ -58,7 +59,10 @@ class DataRemover(base.DDSBaseClass):
         """Remove all files in project."""
 
         # Perform request to API to perform deletion
-        response = requests.delete(DDSEndpoint.REMOVE_PROJ_CONT, headers=self.token)
+        try:
+            response = requests.delete(DDSEndpoint.REMOVE_PROJ_CONT, headers=self.token)
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         console = rich.console.Console()
         if not response.ok:
@@ -66,7 +70,11 @@ class DataRemover(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         # Print out response - deleted or not?
-        resp_json = response.json()
+        try:
+            resp_json = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
+
         if resp_json["removed"]:
             console.print(f"All files have been removed from project {self.project}.")
         else:
@@ -78,9 +86,12 @@ class DataRemover(base.DDSBaseClass):
     def remove_file(self, files):
         """Remove specific files."""
 
-        response = requests.delete(
-            DDSEndpoint.REMOVE_FILE, json=files, headers=self.token
-        )
+        try:
+            response = requests.delete(
+                DDSEndpoint.REMOVE_FILE, json=files, headers=self.token
+            )
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         console = rich.console.Console()
         if not response.ok:
@@ -91,16 +102,22 @@ class DataRemover(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         # Get info in response
-        resp_json = response.json()
+        try:
+            resp_json = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
 
         self.__response_delete(resp_json=resp_json)
 
     def remove_folder(self, folder):
         """Remove specific folders."""
 
-        response = requests.delete(
-            DDSEndpoint.REMOVE_FOLDER, json=folder, headers=self.token
-        )
+        try:
+            response = requests.delete(
+                DDSEndpoint.REMOVE_FOLDER, json=folder, headers=self.token
+            )
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         console = rich.console.Console()
         if not response.ok:
@@ -111,7 +128,10 @@ class DataRemover(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         # Make sure required info is returned
-        resp_json = response.json()
+        try:
+            resp_json = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
 
         self.__response_delete(resp_json=resp_json, level="Folder")
 

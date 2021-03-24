@@ -8,3 +8,4 @@ PyNaCl==1.4.0
 requests==2.25.1
 zstandard==0.15.1
 immutabledict
+simplejson

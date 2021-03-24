@@ -13,9 +13,11 @@ import traceback
 
 # Installed
 import botocore
+import boto3
 import requests
 import rich
 from rich.progress import Progress
+import simplejson
 
 # Own modules
 from cli_code import base
@@ -56,6 +58,7 @@ class DataPutter(base.DDSBaseClass):
         source: tuple = (),
         source_path_file: pathlib.Path = None,
         progress=None,
+        silent: bool = False,
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -64,6 +67,7 @@ class DataPutter(base.DDSBaseClass):
         # Initiate DataPutter specific attributes
         self.break_on_fail = break_on_fail
         self.overwrite = overwrite
+        self.silent = silent
         self.filehandler = None
         self.status = dict()
 
@@ -84,6 +88,12 @@ class DataPutter(base.DDSBaseClass):
         self.verify_bucket_exist()
         files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
+        LOG.debug(
+            "Files: {Yes if files_in_db else No} \t Break on fail: %s \t Overwrite: %s",
+            self.break_on_fail,
+            self.overwrite,
+        )
+
         # Quit if error and flag
         if files_in_db and self.break_on_fail and not self.overwrite:
             # TODO (ina): Fix better print out
@@ -100,6 +110,7 @@ class DataPutter(base.DDSBaseClass):
 
         progress.remove_task(wait_task)
 
+        LOG.debug("Data to upload: %s", "Yes" if self.filehandler.data else "No")
         if not self.filehandler.data:
             console.print("No data to upload.")
             os._exit(os.EX_OK)
@@ -127,6 +138,13 @@ class DataPutter(base.DDSBaseClass):
         file_remote = self.filehandler.data[file]["name_in_bucket"]
         file_size = self.filehandler.data[file]["size"]
 
+        LOG.debug(
+            "Local file: %s,\tRemote file: %s,\tFile size: %s",
+            file_local,
+            file_remote,
+            file_size,
+        )
+
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             if None in [conn.safespring_project, conn.url, conn.keys, conn.bucketname]:
@@ -145,9 +163,14 @@ class DataPutter(base.DDSBaseClass):
                         Callback=status.ProgressPercentage(
                             progress=progress,
                             task=task,
-                        ),
+                        )
+                        if not self.silent
+                        else None,
                     )
-                except botocore.client.ClientError as err:
+                except (
+                    botocore.client.ClientError,
+                    boto3.exceptions.Boto3Error,
+                ) as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
                     LOG.exception("%s: %s", file, err)
                 else:
@@ -173,11 +196,15 @@ class DataPutter(base.DDSBaseClass):
         }
         # Send file info to API
         put_or_post = requests.put if fileinfo["overwrite"] else requests.post
-        response = put_or_post(
-            DDSEndpoint.FILE_NEW,
-            params=params,
-            headers=self.token,
-        )
+
+        try:
+            response = put_or_post(
+                DDSEndpoint.FILE_NEW,
+                params=params,
+                headers=self.token,
+            )
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         # Error if failed
         if not response.ok:
@@ -185,6 +212,9 @@ class DataPutter(base.DDSBaseClass):
             LOG.exception(error)
             return added_to_db, error
 
-        added_to_db, error = (True, response.json()["message"])
+        try:
+            added_to_db, error = (True, response.json()["message"])
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
 
         return added_to_db, error

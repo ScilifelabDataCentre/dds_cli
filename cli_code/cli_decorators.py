@@ -122,6 +122,16 @@ def update_status(func):
     return wrapped
 
 
+def progress_bar(func):
+    """Add a progress bar"""
+
+    @functools.wraps(func)
+    def create_new_task(self, *args, **kwargs):
+        return func(self, *args, **kwargs)
+
+    return create_new_task
+
+
 def connect_cloud(func):
     """Connect to S3"""
 

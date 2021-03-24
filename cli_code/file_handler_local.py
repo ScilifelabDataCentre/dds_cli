@@ -14,6 +14,7 @@ import os
 # Installed
 import requests
 import rich
+import simplejson
 
 # Own modules
 from cli_code import status
@@ -44,6 +45,8 @@ class LocalFileHandler(fh.FileHandler):
     # Magic methods ################ Magic methods #
     def __init__(self, user_input):
 
+        LOG.debug("Collecting file info...")
+
         # Initiate FileHandler from inheritance
         super().__init__(user_input=user_input)
 
@@ -63,6 +66,8 @@ class LocalFileHandler(fh.FileHandler):
 
         self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
         self.data_list = None
+
+        LOG.debug("File info computed/collected")
 
     # Static methods ############## Static methods #
     @staticmethod
@@ -111,6 +116,8 @@ class LocalFileHandler(fh.FileHandler):
     def create_upload_status_dict(self, existing_files, overwrite=False):
         """Create dict for tracking file delivery status"""
 
+        LOG.debug("Creating the status dictionary.")
+
         status_dict = {}
         for x in list(self.data):
             in_db = bool(x in existing_files)
@@ -136,24 +143,36 @@ class LocalFileHandler(fh.FileHandler):
                     "add_file_db": {"started": False, "done": False},
                 }
 
+        LOG.debug("Initial statuses created.")
+
         return status_dict
 
     def check_previous_upload(self, token):
         """Do API call and check for the files in the DB."""
 
+        LOG.debug("Checking if files have been previously uploaded.")
+
         # Get files from db
         files = list(x for x in self.data)
-        response = requests.get(DDSEndpoint.FILE_MATCH, headers=token, json=files)
+        try:
+            response = requests.get(DDSEndpoint.FILE_MATCH, headers=token, json=files)
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         if not response.ok:
             console.print(f"\n{response.text}\n")
             os._exit(os.EX_OK)
 
-        files_in_db = response.json()
+        try:
+            files_in_db = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
 
         # API failure
         if "files" not in files_in_db:
             console.print("\n:warning: Files not returned from API. :warning:\n")
             os._exit(os.EX_OK)
+
+        LOG.debug("Previous upload check finished.")
 
         return dict() if files_in_db["files"] is None else files_in_db["files"]

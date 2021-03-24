@@ -16,6 +16,8 @@ import rich
 from rich.progress import Progress
 import botocore
 import requests
+import simplejson
+import boto3
 
 # Own modules
 from cli_code import DDSEndpoint
@@ -131,7 +133,10 @@ class DataGetter(base.DDSBaseClass):
                             progress=progress, task=task
                         ),
                     )
-                except botocore.client.ClientError as err:
+                except (
+                    botocore.client.ClientError,
+                    boto3.exceptions.Boto3Error,
+                ) as err:
                     error = f"S3 download of file '{file}' failed: {err}"
                     LOG.exception("%s: %s", file, err)
                 else:
@@ -152,9 +157,12 @@ class DataGetter(base.DDSBaseClass):
         params = {"name": fileinfo["name_in_db"]}
 
         # Send file info to API
-        response = requests.put(
-            DDSEndpoint.FILE_UPDATE, params=params, headers=self.token
-        )
+        try:
+            response = requests.put(
+                DDSEndpoint.FILE_UPDATE, params=params, headers=self.token
+            )
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         # Error if failed
         if not response.ok:
@@ -162,5 +170,9 @@ class DataGetter(base.DDSBaseClass):
             LOG.exception(error)
             return updated_in_db, error
 
-        updated_in_db, error = (True, response.json()["message"])
+        try:
+            updated_in_db, error = (True, response.json()["message"])
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
+
         return updated_in_db, error

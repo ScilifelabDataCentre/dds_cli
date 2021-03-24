@@ -10,6 +10,7 @@ import sys
 import dataclasses
 import os
 import requests
+import simplejson
 
 # Installed
 import rich
@@ -57,24 +58,34 @@ class User:
     def __authenticate_user(self, password, project):
         """Authenticates the username and password via a call to the API."""
 
+        LOG.debug("Authenticating the user: %s", self.username)
+
         # Project passed in to add it to the token. Can be None.
-        response = requests.get(
-            DDSEndpoint.AUTH,
-            params={"project": project},
-            auth=(self.username, password),
-        )
+        try:
+            response = requests.get(
+                DDSEndpoint.AUTH,
+                params={"project": project},
+                auth=(self.username, password),
+            )
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         if not response.ok:
             console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
             os._exit(os.EX_OK)
 
-        token = response.json()
+        try:
+            token = response.json()
 
-        if "token" not in token:
-            console.print(
-                "\n:warning: Missing token in authentication response :warning:\n"
-            )
-            os._exit(os.EX_OK)
+            if "token" not in token:
+                console.print(
+                    "\n:warning: Missing token in authentication response :warning:\n"
+                )
+                os._exit(os.EX_OK)
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
+
+        LOG.debug("User %s granted access to the DDS", self.username)
 
         return {"x-access-token": token["token"]}
 

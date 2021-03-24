@@ -13,6 +13,7 @@ import itertools
 # Installed
 from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn, SpinnerColumn
 from rich.panel import Panel
+import boto3
 
 # Own modules
 
@@ -20,8 +21,8 @@ from rich.panel import Panel
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -47,6 +48,8 @@ class DeliveryStatus:
 
 class DeliveryProgress(Progress):
     """Progress bar formatting."""
+
+    LOG.debug("Progress bar created.")
 
     def get_renderables(self):
 
@@ -94,14 +97,20 @@ class ProgressPercentage(object):
     def __init__(self, progress, task):
         self.progress = progress
         self.task = task
+
         self.progress.start_task(task)
         self._seen_so_far = 0
+        self._lock = threading.Lock()
 
     def __call__(self, bytes_amount):
 
-        self._seen_so_far += bytes_amount
-        # print(self._seen_so_far)
-        # percentage = (self._seen_so_far / self._size) * 100
+        with self._lock:
+            self._seen_so_far += bytes_amount
+            # print(self._seen_so_far)
+            # percentage = (self._seen_so_far / self._size) * 100
 
-        # print(self._seen_so_far)
-        self.progress.update(self.task, advance=bytes_amount)
+            # print(self._seen_so_far)
+            try:
+                self.progress.update(self.task, advance=bytes_amount)
+            except Exception as err:
+                raise SystemExit from err

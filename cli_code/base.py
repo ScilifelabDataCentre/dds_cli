@@ -13,6 +13,7 @@ import os
 # Installed
 import requests
 import rich
+import simplejson
 
 # Own modules
 from cli_code import file_handler as fh
@@ -79,6 +80,9 @@ class DDSBaseClass:
     # Private methods ############################### Private methods #
     def __verify_input(self, username=None, password=None, config=None, project=None):
         """Verifies that the users input is valid and fully specified."""
+
+        LOG.debug("Verifying the user input...")
+
         # Get contents from file
         if config is not None:
             # Get contents from file
@@ -111,15 +115,24 @@ class DDSBaseClass:
             # password = getpass.getpass()
             password = "password"  # TODO: REMOVE - ONLY FOR DEV
 
+        LOG.debug("...User input verified.")
+
         return username, password, project
 
     def __verify_project_access(self):
         """Verifies that the user has access to the specified project."""
 
+        LOG.debug("Verifying access to project %s...", self.project)
+
         # Perform request to API
-        response = requests.get(
-            DDSEndpoint.AUTH_PROJ, params={"method": self.method}, headers=self.token
-        )
+        try:
+            response = requests.get(
+                DDSEndpoint.AUTH_PROJ,
+                params={"method": self.method},
+                headers=self.token,
+            )
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         # Problem
         if not response.ok:
@@ -130,17 +143,25 @@ class DDSBaseClass:
             )
             os._exit(os.EX_OK)
 
+        try:
+            dds_access = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
+
         # Access not granted
-        dds_access = response.json()
         if not dds_access["dds-access-granted"] or "token" not in dds_access:
             console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
             os._exit(os.EX_OK)
+
+        LOG.debug("User has been granted access to project %s", self.project)
 
         return {"x-access-token": dds_access["token"]}
 
     # Public methods ################################# Public methods #
     def verify_bucket_exist(self):
         """Check that s3 connection works, and that bucket exists."""
+
+        LOG.debug("Verifying and/or creating bucket.")
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -151,5 +172,7 @@ class DDSBaseClass:
             bucket_exists = conn.check_bucket_exists()
             if not bucket_exists:
                 _ = conn.create_bucket()
+
+        LOG.debug("Bucket created.")
 
         return True

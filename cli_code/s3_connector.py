@@ -13,6 +13,7 @@ import requests
 
 # Installed
 import botocore
+import simplejson
 
 # Own modules
 from cli_code import DDSEndpoint
@@ -73,7 +74,10 @@ class S3Connector:
             raise Exception("Project information missing, cannot connect to cloud.")
 
         # Perform request to API
-        response = requests.get(DDSEndpoint.S3KEYS, headers=token)
+        try:
+            response = requests.get(DDSEndpoint.S3KEYS, headers=token)
+        except requests.exceptions.RequestException as err:
+            raise SystemExit from err
 
         # Error
         if not response.ok:
@@ -86,7 +90,11 @@ class S3Connector:
             )
 
         # Get s3 info
-        s3info = response.json()
+        try:
+            s3info = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
+
         if any(value is None for value in s3info.values()):
             error = "Response ok but s3 info missing."
         else:

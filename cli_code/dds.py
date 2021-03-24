@@ -170,7 +170,7 @@ def put(
 ):
     """Processes and uploads specified files to the cloud."""
 
-    with status.DeliveryProgress() as progress:
+    with status.DeliveryProgress(refresh_per_second=5) as progress:
 
         # Begin delivery
         with dp.DataPutter(
@@ -182,6 +182,7 @@ def put(
             break_on_fail=break_on_fail,
             overwrite=overwrite,
             progress=progress,
+            silent=silent,
         ) as putter:
 
             # Keep track of futures
@@ -203,7 +204,7 @@ def put(
                         step="put",
                         visible=not silent,
                     )
-
+                    # file_task = None
                     # Execute upload
                     upload_threads[
                         texec.submit(
@@ -226,7 +227,10 @@ def put(
 
                         # Get result
                         try:
-                            _ = ufut.result()
+                            file_uploaded = ufut.result()
+                            LOG.debug(
+                                "File %s uploaded: %s", uploaded_file, file_uploaded
+                            )
                         except concurrent.futures.BrokenExecutor as err:
                             LOG.critical(
                                 "Upload of file %s failed! Error: %s",
@@ -235,17 +239,16 @@ def put(
                             )
                             continue
 
-                        # Update progress row
-                        progress.reset(task_id)
-                        progress.update(task_id, step="db")
-
                         # Schedule file for db update
                         _ = putter.add_file_db(file=uploaded_file)
 
-                        # Remove progress row
-                        progress.remove_task(task_id)
-                        new_tasks += 1
-                        progress.advance(upload_task)
+                        # # Remove progress row
+                        try:
+                            progress.remove_task(task_id)
+                            new_tasks += 1
+                            progress.advance(upload_task)
+                        except Exception as err:
+                            raise SystemExit from err
 
                     # Schedule the next set of futures for upload
                     for ufile in itertools.islice(iterator, new_tasks):
@@ -256,6 +259,7 @@ def put(
                             step="put",
                             visible=not silent,
                         )
+                        # file_task = None
 
                         # Execute upload
                         upload_threads[

@@ -58,6 +58,7 @@ class DataGetter(base.DDSBaseClass):
         source: tuple = (),
         source_path_file: pathlib.Path = None,
         destination: pathlib.Path = pathlib.Path(""),
+        silent: bool = False,
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -65,6 +66,7 @@ class DataGetter(base.DDSBaseClass):
 
         # Initiate DataGetter specific attributes
         self.break_on_fail = break_on_fail
+        self.silent = silent
         self.filehandler = None
         self.status = dict()
 
@@ -129,9 +131,9 @@ class DataGetter(base.DDSBaseClass):
                         Filename=file_local,
                         Bucket=conn.bucketname,
                         Key=file_remote,
-                        Callback=status.ProgressPercentage(
-                            progress=progress, task=task
-                        ),
+                        Callback=status.ProgressPercentage(progress=progress, task=task)
+                        if not self.silent
+                        else None,
                     )
                 except (
                     botocore.client.ClientError,

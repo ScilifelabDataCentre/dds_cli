@@ -191,10 +191,10 @@ def put(
             # Iterator to keep track of which files have been handled
             iterator = iter(putter.filehandler.data.copy())
 
-            with concurrent.futures.ProcessPoolExecutor() as pexec:
-                processing_task = progress.add_task(
-                    "Encryption", total=len(putter.filehandler.data), step="summary"
-                )
+            # with concurrent.futures.ProcessPoolExecutor() as pexec:
+            #     processing_task = progress.add_task(
+            #         "Encryption", total=len(putter.filehandler.data), step="summary"
+            #     )
 
             with concurrent.futures.ThreadPoolExecutor() as texec:
                 upload_task = progress.add_task(

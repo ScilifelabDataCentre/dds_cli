@@ -145,6 +145,12 @@ class DataPutter(base.DDSBaseClass):
             file_size,
         )
 
+        with pathlib.Path(file_local).open(mode="rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                progress.advance(task_id=task, advance=len(chunk))
+
+        progress.reset(task)
+
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             if None in [conn.safespring_project, conn.url, conn.keys, conn.bucketname]:

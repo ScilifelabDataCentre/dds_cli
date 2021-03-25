@@ -218,68 +218,63 @@ def put(
                     ] = (file, file_task)
 
                 # Continue until all files are done
-                try:
-                    while upload_threads:
-                        # Wait for the next future to complete
-                        udone, _ = concurrent.futures.wait(
-                            upload_threads,
-                            return_when=concurrent.futures.FIRST_COMPLETED,
+                while upload_threads:
+                    # Wait for the next future to complete
+                    udone, _ = concurrent.futures.wait(
+                        upload_threads,
+                        return_when=concurrent.futures.FIRST_COMPLETED,
+                    )
+
+                    new_tasks = 0
+
+                    # Get result from future and schedule database update
+                    for ufut in udone:
+                        uploaded_file, task_id = upload_threads.pop(ufut)
+
+                        # Get result
+                        try:
+                            file_uploaded = ufut.result()
+                            LOG.debug(
+                                "File %s uploaded: %s", uploaded_file, file_uploaded
+                            )
+                        except concurrent.futures.BrokenExecutor as err:
+                            LOG.critical(
+                                "Upload of file %s failed! Error: %s",
+                                uploaded_file,
+                                err,
+                            )
+                            continue
+
+                        # Schedule file for db update
+                        _ = putter.add_file_db(file=uploaded_file)
+
+                        # # Remove progress row
+                        try:
+                            progress.remove_task(task_id)
+                            new_tasks += 1
+                            progress.advance(upload_task)
+                        except Exception as err:
+                            raise SystemExit from err
+
+                    # Schedule the next set of futures for upload
+                    for ufile in itertools.islice(iterator, new_tasks):
+                        # Create progress bar task
+                        file_task = progress.add_task(
+                            txt.TextHandler.task_name(file=ufile),
+                            total=putter.filehandler.data[ufile]["size"],
+                            step="put",
+                            visible=not silent,
                         )
 
-                        new_tasks = 0
-
-                        # Get result from future and schedule database update
-                        for ufut in udone:
-                            uploaded_file, task_id = upload_threads.pop(ufut)
-
-                            # Get result
-                            try:
-                                file_uploaded = ufut.result()
-                                LOG.debug(
-                                    "File %s uploaded: %s", uploaded_file, file_uploaded
-                                )
-                            except concurrent.futures.BrokenExecutor as err:
-                                LOG.critical(
-                                    "Upload of file %s failed! Error: %s",
-                                    uploaded_file,
-                                    err,
-                                )
-                                continue
-
-                            # Schedule file for db update
-                            _ = putter.add_file_db(file=uploaded_file)
-
-                            # # Remove progress row
-                            try:
-                                progress.remove_task(task_id)
-                                new_tasks += 1
-                                progress.advance(upload_task)
-                            except Exception as err:
-                                raise SystemExit from err
-
-                        # Schedule the next set of futures for upload
-                        for ufile in itertools.islice(iterator, new_tasks):
-                            # Create progress bar task
-                            file_task = progress.add_task(
-                                txt.TextHandler.task_name(file=ufile),
-                                total=putter.filehandler.data[ufile]["size"],
-                                step="put",
-                                visible=not silent,
+                        # Execute upload
+                        upload_threads[
+                            texec.submit(
+                                putter.put,
+                                file=ufile,
+                                progress=progress,
+                                task=file_task,
                             )
-
-                            # Execute upload
-                            upload_threads[
-                                texec.submit(
-                                    putter.put,
-                                    file=ufile,
-                                    progress=progress,
-                                    task=file_task,
-                                )
-                            ] = (ufile, file_task)
-                except KeyboardInterrupt:
-                    for future in upload_threads:
-                        future.cancel()
-                    raise
+                        ] = (ufile, file_task)
 
 
 ###############################################################################

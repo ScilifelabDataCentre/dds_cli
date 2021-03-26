@@ -232,9 +232,6 @@ def put(
                             )
                             continue
 
-                        # Schedule file for db update
-                        _ = putter.add_file_db(file=uploaded_file)
-
                         # Remove progress row
                         try:
                             new_tasks += 1

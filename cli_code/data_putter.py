@@ -27,6 +27,8 @@ from cli_code import DDSEndpoint
 from cli_code.cli_decorators import verify_proceed, update_status
 from cli_code import status
 from cli_code import text_handler as txt
+from cli_code import file_encryptor as fe
+from cli_code import file_compressor as fc
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -129,24 +131,45 @@ class DataPutter(base.DDSBaseClass):
     # General methods ###################### General methods #
     @verify_proceed
     def protect_and_upload(self, file, progress):
+        """Processes and uploads the file while handling the progress bars."""
 
-        # Encrypt
+        all_ok, message = (False, "")
+        file_local = self.filehandler.data[file]["path_local"]
 
-        # Upload
-        task = progress.add_task(
-            txt.TextHandler.task_name(file=file),
-            total=self.filehandler.data[file]["size"],
-            step="put",
+        # File task for processing
+
+        # Perform processing
+        with fc.Compressor() as compressor:
+            is_compressed, error = compressor.is_compressed(file=file_local)
+            if not is_compressed:
+                
+            
+
+        # Update file task for upload
+        task = (
+            progress.add_task(
+                txt.TextHandler.task_name(file=file),
+                total=self.filehandler.data[file]["size"],
+                step="put",
+            )
+            if not self.silent
+            else None
         )
 
+        # Perform upload
         file_uploaded, message = self.put(file=file, progress=progress, task=task)
 
-        # Update db
-        _ = self.add_file_db(file=file)
+        # Perform db update
+        if file_uploaded:
+            db_updated, message = self.add_file_db(file=file)
 
+            if db_updated:
+                all_ok = True
+
+        # Remove progress task
         progress.remove_task(task)
 
-        return file_uploaded, message
+        return all_ok, message
 
     @update_status
     def put(self, file, progress, task):
@@ -158,13 +181,6 @@ class DataPutter(base.DDSBaseClass):
         file_local = str(self.filehandler.data[file]["path_local"])
         file_remote = self.filehandler.data[file]["name_in_bucket"]
         file_size = self.filehandler.data[file]["size"]
-
-        LOG.debug(
-            "Local file: %s,\tRemote file: %s,\tFile size: %s",
-            file_local,
-            file_remote,
-            file_size,
-        )
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -185,7 +201,7 @@ class DataPutter(base.DDSBaseClass):
                             progress=progress,
                             task=task,
                         )
-                        if not self.silent
+                        if task is not None
                         else None,
                     )
                 except (
@@ -199,9 +215,8 @@ class DataPutter(base.DDSBaseClass):
 
         return uploaded, error
 
-    @verify_proceed
     @update_status
-    def add_file_db(self, file, *args, **kwargs):
+    def add_file_db(self, file):
         """Make API request to add file to DB."""
 
         added_to_db = False

@@ -192,12 +192,13 @@ def put(
             iterator = iter(putter.filehandler.data.copy())
 
             with concurrent.futures.ThreadPoolExecutor() as texec:
+                # Start main progress bar
                 upload_task = progress.add_task(
                     "Upload", total=len(putter.filehandler.data), step="summary"
                 )
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    # Execute upload
+                    LOG.debug("Starting file %s...", file)
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload, file=file, progress=progress
@@ -207,20 +208,22 @@ def put(
                 # Continue until all files are done
                 while upload_threads:
                     # Wait for the next future to complete
-                    udone, _ = concurrent.futures.wait(
+                    done, _ = concurrent.futures.wait(
                         upload_threads,
                         return_when=concurrent.futures.FIRST_COMPLETED,
                     )
 
+                    # Number of new upload tasks that can be started
                     new_tasks = 0
 
                     # Get result from future and schedule database update
-                    for ufut in udone:
-                        uploaded_file = upload_threads.pop(ufut)
+                    for fut in done:
+                        uploaded_file = upload_threads.pop(fut)
+                        LOG.debug("File %s finished", uploaded_file)
 
                         # Get result
                         try:
-                            file_uploaded = ufut.result()
+                            file_uploaded = fut.result()
                             LOG.debug(
                                 "File %s uploaded: %s", uploaded_file, file_uploaded
                             )
@@ -232,23 +235,24 @@ def put(
                             )
                             continue
 
-                        # Remove progress row
-                        try:
-                            new_tasks += 1
-                            progress.advance(upload_task)
-                        except Exception as err:
-                            raise SystemExit from err
+                        new_tasks += 1
+                        if file_uploaded:
+                            # Increase the main progress bar
+                            try:
+                                progress.advance(upload_task)
+                            except Exception as err:
+                                raise SystemExit from err
 
                     # Schedule the next set of futures for upload
-                    for ufile in itertools.islice(iterator, new_tasks):
+                    for next_file in itertools.islice(iterator, new_tasks):
                         # Execute upload
                         upload_threads[
                             texec.submit(
                                 putter.protect_and_upload,
-                                file=ufile,
+                                file=next_file,
                                 progress=progress,
                             )
-                        ] = ufile
+                        ] = next_file
 
 
 ###############################################################################

@@ -44,6 +44,8 @@ def verify_proceed(func):
             LOG.warning(message)
             return False
 
+        self.status[file]["started"] = True
+
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
 

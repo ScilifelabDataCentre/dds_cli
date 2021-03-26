@@ -54,12 +54,13 @@ class DeliveryProgress(Progress):
     def get_renderables(self):
 
         for task in self.tasks:
-            if task.fields.get("step") == "prepare":
+            step = task.fields.get("step")
+            if step == "prepare":
                 self.columns = (
                     "[bold]{task.description}",
                     SpinnerColumn(spinner_name="dots12", style="white"),
                 )
-            elif task.fields.get("step") == "summary":
+            elif step == "summary":
                 self.columns = (
                     TextColumn(task.description, style="bold cyan"),
                     BarColumn(
@@ -70,10 +71,14 @@ class DeliveryProgress(Progress):
                     " • ",
                     "[green]{task.completed}/{task.total} completed",
                 )
-            elif task.fields.get("step") in ["put", "get", "encrypt", "decrypt"]:
+            elif step in ["put", "get", "encrypt", "decrypt"]:
                 symbol = ""
-                if task.fields.get("step") == "put":
+                if step == "put":
                     symbol = ":arrow_up:"
+                elif step == "get":
+                    symbol = ":arrow_down:"
+                elif step == "encrypt":
+                    symbol = ":lock:"
 
                 self.columns = (
                     symbol,

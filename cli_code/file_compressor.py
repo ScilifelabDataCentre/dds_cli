@@ -1,4 +1,7 @@
 import immutabledict
+import dataclasses
+import traceback
+import sys
 
 
 class CompressionMagic:
@@ -8,20 +11,23 @@ class CompressionMagic:
     LZIP = b"LZIP"
     RAR4 = b"Rar!\x1a\x07\x00"
     RAR5 = b"Rar!\x1a\x07\x01\x00"
-    # SEVENZIP = b"7z¼¯'"
     GZIP = b"\x1F\x8B"
     ZSTANDARD = b"(\xb5/\xfd"
 
 
+@dataclasses.dataclass
 class Compressor:
     """Handles operations relating to file compression."""
 
-    def __init__(self, algorithm="zstandard"):
-        self.algorithm = algorithm
-        self.FMT_MAGIC = immutabledict.immutabledict({
+    algorithm: str = "zstandard"
+    fmt_magic: dict = dataclasses.field(init=False)
+    max_magic_len: int = dataclasses.field(init=False)
+
+    def __post_init__(self):
+        self.fmt_magic = {
             b"\x913HF": "hap",
             b"`\xea": "arj",
-            b"_\'\xa8\x89": "jar",
+            b"_'\xa8\x89": "jar",
             b"ZOO ": "zoo",
             b"PK\x03\x04": "zip",
             b"\x1F\x8B": "gzip",
@@ -37,15 +43,30 @@ class Compressor:
             b"(This fi": "hqx",
             b"!\x12": "ain",
             b"\x1a\x0b": "pak",
-            b"(\xb5/\xfd": "zst"
-        })
-        self.MAX_MAGIC_LEN = max(len(x) for x in self.FMT_MAGIC)
+            b"(\xb5/\xfd": "zst",
+        }
+        self.max_magic_len = max(len(x) for x in self.fmt_magic)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+            return False  # uncomment to pass exception through
+
+        return True
 
     def is_compressed(self, file):
         """Checks if a file is compressed or not."""
 
+        compressed, error = (False, "")
         try:
             with file.open(mode="rb") as f:
-                # file_start = f.read(MAX_MAGIC_LEN)
+                file_start = f.read(self.max_magic_len)
+                if file_start.startswith(tuple(x for x in self.fmt_magic)):
+                    compressed = True
+        except OSError as err:
+            error = str(err)
 
-                for signature, _ in
+        return compressed, error

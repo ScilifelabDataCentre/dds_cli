@@ -36,15 +36,7 @@ def verify_proceed(func):
     Also cancels the upload of all non-started files if break-on-fail."""
 
     @functools.wraps(func)
-    def wrapped(self, *args, **kwargs):
-
-        # Check that function has correct args
-        if "file" not in kwargs:
-            raise Exception(
-                "Missing key word argument in wrapper over "
-                f"function {func.__name__}: 'file'"
-            )
-        file = kwargs["file"]
+    def wrapped(self, file, *args, **kwargs):
 
         # Return if file cancelled by another file
         if self.status[file]["cancel"]:
@@ -53,11 +45,10 @@ def verify_proceed(func):
             return False
 
         # Run function
-        ok_to_proceed, message = func(self, *args, **kwargs)
+        ok_to_proceed, message = func(self, file=file, *args, **kwargs)
 
         # Cancel file(s) if something failed
         if not ok_to_proceed:
-            # TODO (ina): update progress bar -- e.g. folder, change total size?
             self.status[file].update({"cancel": True, "message": message})
             if self.break_on_fail:
                 message = (
@@ -65,17 +56,11 @@ def verify_proceed(func):
                     "Break-on-fail specified in call."
                 )
 
-                put_or_get = "put" if "put" in self.status[file] else "get"
                 _ = [
                     self.status[x].update({"cancel": True, "message": message})
                     for x in self.status
                     if not self.status[x]["cancel"]
-                    and not any(
-                        [
-                            self.status[x][put_or_get]["started"],
-                            self.status[x][put_or_get]["done"],
-                        ]
-                    )
+                    and not self.status[x]["started"]
                     and x != file
                 ]
 
@@ -88,15 +73,7 @@ def update_status(func):
     """Decorator for updating the status of files."""
 
     @functools.wraps(func)
-    def wrapped(self, *args, **kwargs):
-
-        # Check that function has correct args
-        if "file" not in kwargs:
-            raise Exception(
-                "Missing key word argument in wrapper over "
-                f"function {func.__name__}: 'file'"
-            )
-        file = kwargs["file"]
+    def wrapped(self, file, *args, **kwargs):
 
         if func.__name__ not in ["put", "add_file_db", "get", "update_db"]:
             raise Exception(
@@ -109,7 +86,7 @@ def update_status(func):
         self.status[file][func.__name__].update({"started": True})
 
         # Run function
-        ok_to_continue, message, *_ = func(self, *args, **kwargs)
+        ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
 
         if not ok_to_continue:
             return False, message
@@ -120,16 +97,6 @@ def update_status(func):
         return ok_to_continue, message
 
     return wrapped
-
-
-def progress_bar(func):
-    """Add a progress bar"""
-
-    @functools.wraps(func)
-    def create_new_task(self, *args, **kwargs):
-        return func(self, *args, **kwargs)
-
-    return create_new_task
 
 
 def connect_cloud(func):

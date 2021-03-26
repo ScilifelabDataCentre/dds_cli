@@ -138,9 +138,11 @@ class LocalFileHandler(fh.FileHandler):
 
                 status_dict[x] = {
                     "cancel": False,
+                    "started": False,
                     "message": "",
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
+                    "task": None,
                 }
 
         LOG.debug("Initial statuses created.")

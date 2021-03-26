@@ -70,9 +70,13 @@ class DeliveryProgress(Progress):
                     " • ",
                     "[green]{task.completed}/{task.total} completed",
                 )
-            elif task.fields.get("step") in ["put", "get"]:
+            elif task.fields.get("step") in ["put", "get", "encrypt", "decrypt"]:
+                symbol = ""
+                if task.fields.get("step") == "put":
+                    symbol = ":arrow_up:"
+
                 self.columns = (
-                    ":arrow_up:",
+                    symbol,
                     TextColumn(task.description),
                     BarColumn(
                         bar_width=None,

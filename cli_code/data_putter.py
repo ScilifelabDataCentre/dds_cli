@@ -26,6 +26,7 @@ from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
 from cli_code.cli_decorators import verify_proceed, update_status
 from cli_code import status
+from cli_code import text_handler as txt
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -127,6 +128,26 @@ class DataPutter(base.DDSBaseClass):
 
     # General methods ###################### General methods #
     @verify_proceed
+    def protect_and_upload(self, file, progress):
+
+        # Encrypt
+
+        # Upload
+        task = progress.add_task(
+            txt.TextHandler.task_name(file=file),
+            total=self.filehandler.data[file]["size"],
+            step="put",
+        )
+
+        file_uploaded, message = self.put(file=file, progress=progress, task=task)
+
+        # Update db
+        _ = self.add_file_db(file=file)
+
+        progress.remove_task(task)
+
+        return file_uploaded, message
+
     @update_status
     def put(self, file, progress, task):
         """Uploads files to the cloud."""
@@ -144,12 +165,6 @@ class DataPutter(base.DDSBaseClass):
             file_remote,
             file_size,
         )
-
-        with pathlib.Path(file_local).open(mode="rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                progress.advance(task_id=task, advance=len(chunk))
-
-        progress.reset(task)
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -186,7 +201,7 @@ class DataPutter(base.DDSBaseClass):
 
     @verify_proceed
     @update_status
-    def add_file_db(self, file):
+    def add_file_db(self, file, *args, **kwargs):
         """Make API request to add file to DB."""
 
         added_to_db = False

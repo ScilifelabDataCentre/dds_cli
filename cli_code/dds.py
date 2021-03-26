@@ -197,20 +197,12 @@ def put(
                 )
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    # Create progress bar task
-                    file_task = progress.add_task(
-                        txt.TextHandler.task_name(file=file),
-                        total=putter.filehandler.data[file]["size"],
-                        step="put",
-                        visible=not silent,
-                    )
-
                     # Execute upload
                     upload_threads[
                         texec.submit(
-                            putter.put, file=file, progress=progress, task=file_task
+                            putter.protect_and_upload, file=file, progress=progress
                         )
-                    ] = (file, file_task)
+                    ] = file
 
                 # Continue until all files are done
                 while upload_threads:
@@ -224,7 +216,7 @@ def put(
 
                     # Get result from future and schedule database update
                     for ufut in udone:
-                        uploaded_file, task_id = upload_threads.pop(ufut)
+                        uploaded_file = upload_threads.pop(ufut)
 
                         # Get result
                         try:
@@ -243,9 +235,8 @@ def put(
                         # Schedule file for db update
                         _ = putter.add_file_db(file=uploaded_file)
 
-                        # # Remove progress row
+                        # Remove progress row
                         try:
-                            progress.remove_task(task_id)
                             new_tasks += 1
                             progress.advance(upload_task)
                         except Exception as err:
@@ -253,23 +244,14 @@ def put(
 
                     # Schedule the next set of futures for upload
                     for ufile in itertools.islice(iterator, new_tasks):
-                        # Create progress bar task
-                        file_task = progress.add_task(
-                            txt.TextHandler.task_name(file=ufile),
-                            total=putter.filehandler.data[ufile]["size"],
-                            step="put",
-                            visible=not silent,
-                        )
-
                         # Execute upload
                         upload_threads[
                             texec.submit(
-                                putter.put,
+                                putter.protect_and_upload,
                                 file=ufile,
                                 progress=progress,
-                                task=file_task,
                             )
-                        ] = (ufile, file_task)
+                        ] = ufile
 
 
 ###############################################################################

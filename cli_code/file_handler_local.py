@@ -96,15 +96,26 @@ class LocalFileHandler(fh.FileHandler):
             # Get info for all files
             # and feed back to same function for all folders
             if path.is_file():
-                file_info[str(folder / path.name)] = {
-                    "path_local": path,
-                    "subpath": folder,
-                    "name_in_bucket": self.generate_bucket_filepath(
-                        filename=path.name, folder=folder
-                    ),
-                    "size": path.stat().st_size,
-                    "overwrite": False,
-                }
+                with fc.Compressor() as compressor:
+                    is_compressed, error = compressor.is_compressed(file=path)
+
+                    if error != "":
+                        LOG.exception(error)
+                        os._exit(os.EX_OK)
+
+                    file_info[str(folder / path.name)] = {
+                        "path_raw": path,
+                        "path_processed": self.create_encrypted_name(
+                            raw_file=path, subpath=folder, no_compression=is_compressed
+                        ),
+                        "subpath": folder,
+                        "path_remote": self.generate_bucket_filepath(
+                            filename=path.name, folder=folder
+                        ),
+                        "compressed": is_compressed,
+                        "size": path.stat().st_size,
+                        "overwrite": False,
+                    }
 
             elif path.is_dir():
                 content_info, _ = self.__collect_file_info_local(
@@ -182,60 +193,18 @@ class LocalFileHandler(fh.FileHandler):
 
         return dict() if files_in_db["files"] is None else files_in_db["files"]
 
-    def process_file(self, file):
-        """Processes file, including compression and encryption."""
-
-        processing_ok, message = (False, "")
-        is_compressed, new_file_name = (False, pathlib.Path(""))
-
-        file_info = self.data[file]
-
-        # Perform processing
-        with fc.Compressor() as compressor:
-            # Check if file is in compressed format
-            is_compressed, error = compressor.is_compressed(
-                file=file_info["path_local"]
-            )
-
-            # Return if error
-            if error != "":
-                message = error
-                return processing_ok, message
-
-            # Specify new filename
-            new_file_name = self.__create_encrypted_name(
-                file_info=file_info, no_compression=is_compressed
-            )
-
-            # Decide file reader or compress file
-            chunk_streamer = (
-                self.read_file if is_compressed else compressor.compress_file
-            )
-
-            # Execute read or compression
-            streamed_chunks = chunk_streamer(file=file_info["path_local"])
-
-            # User file-creation mode mask
-            original_umask = os.umask(0)
-
-            with new_file_name.open(mode="wb") as outfile:
-                for chunk in streamed_chunks:
-                    outfile.write(chunk)
-                    # progress.advance(task_id=task, advance=FileSegment.SEGMENT_SIZE_CIPHER)
-
-            os.umask(original_umask)
-
-        return new_file_name
-
-    def __create_encrypted_name(self, file_info, no_compression):
+    def create_encrypted_name(
+        self, raw_file: pathlib.Path, subpath: str = "", no_compression: bool = True
+    ):
         """Create new file name to save encrypted file."""
 
-        old_suffix = file_info["path_local"].suffix
+        # New local file name
+        old_suffix = raw_file.suffix
         new_suffix = f".{old_suffix if no_compression else 'zst'}"
         new_file_name = (
             self.local_destination
-            / file_info["subpath"]
-            / file_info["path_local"].with_suffix(new_suffix + ".ccp").name
+            / subpath
+            / raw_file.with_suffix(new_suffix + ".ccp").name
         )
 
         return new_file_name

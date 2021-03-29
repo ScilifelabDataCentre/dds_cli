@@ -74,16 +74,25 @@ class Compressor:
 
         return compressed, error
 
-    def compress_file(
-        self, file: pathlib.Path, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW
+    def read_or_compress(
+        self,
+        file: pathlib.Path,
+        compress: bool = True,
+        chunk_size: int = FileSegment.SEGMENT_SIZE_RAW,
     ) -> (bytes):
         """Compresses file by reading it chunk by chunk."""
 
         with file.open(mode="rb") as infile:
-            # Initiate a Zstandard compressor
-            cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
 
-            # Compress file chunk by chunk while reading
-            with cctzx.stream_reader(infile) as compressor:
-                for chunk in iter(lambda: compressor.read(chunk_size), b""):
+            if compress:
+                # Initiate a Zstandard compressor
+                cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
+
+                # Compress file chunk by chunk while reading
+                with cctzx.stream_reader(infile) as compressor:
+                    for chunk in iter(lambda: compressor.read(chunk_size), b""):
+                        yield chunk
+
+            else:
+                for chunk in iter(lambda: infile.read(chunk_size), b""):
                     yield chunk

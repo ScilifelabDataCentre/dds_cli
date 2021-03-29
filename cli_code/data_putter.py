@@ -28,6 +28,8 @@ from cli_code import FileSegment
 from cli_code.cli_decorators import verify_proceed, update_status, subpath_required
 from cli_code import status
 from cli_code import text_handler as txt
+from cli_code import file_compressor as fc
+from cli_code import file_encryptor as fe
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -139,7 +141,7 @@ class DataPutter(base.DDSBaseClass):
 
         all_ok, message = (False, "")
 
-        file_local = self.filehandler.data[file]["path_local"]
+        file_info = self.filehandler.data[file]
 
         # File task for processing
         task = (
@@ -153,7 +155,16 @@ class DataPutter(base.DDSBaseClass):
         )
 
         # Perform processing
-        _ = self.filehandler.process_file(file=file)
+        with fc.Compressor() as compressor:
+            # Read raw or compressed chunks
+            streamed_chunks = compressor.read_or_compress(
+                file=file_info["path_raw"], compress=not file_info["compressed"]
+            )
+
+            with file_info["path_processed"].open(mode="wb") as outfile:
+                for chunk in streamed_chunks:
+                    outfile.write(chunk)
+                    progress.advance(task_id=task, advance=FileSegment.SEGMENT_SIZE_RAW)
 
         # Update file task for upload
         progress.reset(task, step="put")
@@ -180,9 +191,9 @@ class DataPutter(base.DDSBaseClass):
         uploaded = False
         error = ""
 
-        file_local = str(self.filehandler.data[file]["path_local"])
-        file_remote = self.filehandler.data[file]["name_in_bucket"]
-        file_size = self.filehandler.data[file]["size"]
+        file_local = str(self.filehandler.data[file]["path_processed"])
+        file_remote = self.filehandler.data[file]["path_remote"]
+        # file_size = self.filehandler.data[file]["size"]
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -228,7 +239,7 @@ class DataPutter(base.DDSBaseClass):
         fileinfo = self.filehandler.data[file]
         params = {
             "name": file,
-            "name_in_bucket": fileinfo["name_in_bucket"],
+            "name_in_bucket": fileinfo["path_remote"],
             "subpath": fileinfo["subpath"],
             "size": fileinfo["size"],
         }

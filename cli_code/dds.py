@@ -170,7 +170,7 @@ def put(
 ):
     """Processes and uploads specified files to the cloud."""
 
-    with status.DeliveryProgress(refresh_per_second=5) as progress:
+    with status.DeliveryProgress(refresh_per_second=2) as progress:
 
         # Begin delivery
         with dp.DataPutter(
@@ -228,7 +228,8 @@ def put(
                             LOG.debug(
                                 "File %s uploaded: %s", uploaded_file, file_uploaded
                             )
-                        except concurrent.futures.BrokenExecutor as err:
+                        except Exception as err:
+                            # except concurrent.futures.BrokenExecutor as err:
                             LOG.critical(
                                 "Upload of file %s failed! Error: %s",
                                 uploaded_file,
@@ -559,7 +560,8 @@ def get(
                         # Get result
                         try:
                             _ = dfut.result()
-                        except concurrent.futures.BrokenExecutor as err:
+                        except Exception as err:
+                            # except concurrent.futures.BrokenExecutor as err:
                             LOG.critical(
                                 "Download of file %s failed! Error: %s",
                                 downloaded_file,

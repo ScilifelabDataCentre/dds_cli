@@ -180,3 +180,13 @@ class DataRemover(base.DDSBaseClass):
 
             # Print out table
             console.print(rich.padding.Padding(table, 1))
+
+    @staticmethod
+    def delete_tempfile(file: pathlib.Path):
+        """Deletes the specified file."""
+
+        try:
+            file.unlink()
+        except Exception as err:
+            # except FileNotFoundError as err:
+            LOG.exception(str(err))

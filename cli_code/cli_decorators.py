@@ -117,7 +117,8 @@ def connect_cloud(func):
                 aws_access_key_id=self.keys["access_key"],
                 aws_secret_access_key=self.keys["secret_key"],
             )
-        except botocore.client.ClientError as err:
+        except Exception as err:
+            # except botocore.client.ClientError as err:
             self.url, self.keys, self.message = (
                 None,
                 None,

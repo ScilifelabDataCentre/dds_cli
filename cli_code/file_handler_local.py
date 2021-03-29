@@ -113,7 +113,8 @@ class LocalFileHandler(fh.FileHandler):
                             filename=path.name, folder=folder
                         ),
                         "compressed": is_compressed,
-                        "size": path.stat().st_size,
+                        "size_raw": path.stat().st_size,
+                        "size_processed": 0,
                         "overwrite": False,
                     }
 
@@ -171,8 +172,14 @@ class LocalFileHandler(fh.FileHandler):
         # Get files from db
         files = list(x for x in self.data)
         try:
-            response = requests.get(DDSEndpoint.FILE_MATCH, headers=token, json=files)
+            response = requests.get(
+                DDSEndpoint.FILE_MATCH,
+                headers=token,
+                json=files,
+                timeout=DDSEndpoint.TIMEOUT,
+            )
         except requests.exceptions.RequestException as err:
+            LOG.warning(err)
             raise SystemExit from err
 
         if not response.ok:
@@ -182,6 +189,7 @@ class LocalFileHandler(fh.FileHandler):
         try:
             files_in_db = response.json()
         except simplejson.JSONDecodeError as err:
+            LOG.warning(err)
             raise SystemExit from err
 
         # API failure

@@ -66,8 +66,10 @@ class User:
                 DDSEndpoint.AUTH,
                 params={"project": project},
                 auth=(self.username, password),
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
+            LOG.warning(err)
             raise SystemExit from err
 
         if not response.ok:

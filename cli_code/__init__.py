@@ -101,6 +101,8 @@ class DDSEndpoint:
     REMOVE_FILE = BASE_ENDPOINT + "/file/rm"
     REMOVE_FOLDER = BASE_ENDPOINT + "/file/rmdir"
 
+    TIMEOUT = 5
+
 
 class FileSegment:
     """Defines information on signatures, file chunks, etc."""

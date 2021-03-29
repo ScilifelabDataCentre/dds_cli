@@ -75,10 +75,16 @@ class S3Connector:
 
         # Perform request to API
         try:
-            response = requests.get(DDSEndpoint.S3KEYS, headers=token)
+            response = requests.get(
+                DDSEndpoint.S3KEYS,
+                headers=token,
+                timeout=DDSEndpoint.TIMEOUT,
+            )
         except requests.exceptions.RequestException as err:
+            LOG.warning(err)
             raise SystemExit from err
 
+        print("\ns3\n")
         # Error
         if not response.ok:
             return (

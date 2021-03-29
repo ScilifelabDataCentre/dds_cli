@@ -30,6 +30,7 @@ from cli_code import status
 from cli_code import text_handler as txt
 from cli_code import file_compressor as fc
 from cli_code import file_encryptor as fe
+from cli_code import data_remover as dr
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -147,7 +148,7 @@ class DataPutter(base.DDSBaseClass):
         task = (
             progress.add_task(
                 txt.TextHandler.task_name(file=file),
-                total=self.filehandler.data[file]["size"],
+                total=file_info["size_raw"],
                 step="encrypt",
             )
             if not self.silent
@@ -167,7 +168,12 @@ class DataPutter(base.DDSBaseClass):
                     progress.advance(task_id=task, advance=FileSegment.SEGMENT_SIZE_RAW)
 
         # Update file task for upload
-        progress.reset(task, step="put")
+        self.filehandler.data[file]["size_processed"] = (
+            file_info["path_processed"].stat().st_size
+        )
+        progress.reset(
+            task, step="put", total=self.filehandler.data[file]["size_processed"]
+        )
 
         # Perform upload
         file_uploaded, message = self.put(file=file, progress=progress, task=task)
@@ -178,6 +184,8 @@ class DataPutter(base.DDSBaseClass):
 
             if db_updated:
                 all_ok = True
+
+        dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
         # Remove progress task
         progress.remove_task(task)
@@ -193,7 +201,6 @@ class DataPutter(base.DDSBaseClass):
 
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
-        # file_size = self.filehandler.data[file]["size"]
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
@@ -241,7 +248,7 @@ class DataPutter(base.DDSBaseClass):
             "name": file,
             "name_in_bucket": fileinfo["path_remote"],
             "subpath": fileinfo["subpath"],
-            "size": fileinfo["size"],
+            "size": fileinfo["size_raw"],
         }
         # Send file info to API
         put_or_post = requests.put if fileinfo["overwrite"] else requests.post
@@ -251,8 +258,10 @@ class DataPutter(base.DDSBaseClass):
                 DDSEndpoint.FILE_NEW,
                 params=params,
                 headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
+            LOG.warning(err)
             raise SystemExit from err
 
         # Error if failed
@@ -264,6 +273,7 @@ class DataPutter(base.DDSBaseClass):
         try:
             added_to_db, error = (True, response.json()["message"])
         except simplejson.JSONDecodeError as err:
+            LOG.warning(err)
             raise SystemExit from err
 
         return added_to_db, error

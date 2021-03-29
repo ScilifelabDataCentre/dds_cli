@@ -130,8 +130,10 @@ class DDSBaseClass:
                 DDSEndpoint.AUTH_PROJ,
                 params={"method": self.method},
                 headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
+            LOG.warning(err)
             raise SystemExit from err
 
         # Problem

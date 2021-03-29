@@ -24,11 +24,10 @@ from cli_code import base
 from cli_code import file_handler_local as fhl
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
-from cli_code.cli_decorators import verify_proceed, update_status
+from cli_code import FileSegment
+from cli_code.cli_decorators import verify_proceed, update_status, subpath_required
 from cli_code import status
 from cli_code import text_handler as txt
-from cli_code import file_encryptor as fe
-from cli_code import file_compressor as fc
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -62,6 +61,7 @@ class DataPutter(base.DDSBaseClass):
         source_path_file: pathlib.Path = None,
         progress=None,
         silent: bool = False,
+        temporary_destination: pathlib.Path = pathlib.Path(""),
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -87,7 +87,10 @@ class DataPutter(base.DDSBaseClass):
         wait_task = progress.add_task("Collecting and preparing data", step="prepare")
 
         # Get file info
-        self.filehandler = fhl.LocalFileHandler(user_input=(source, source_path_file))
+        self.filehandler = fhl.LocalFileHandler(
+            user_input=(source, source_path_file),
+            temporary_destination=temporary_destination,
+        )
         self.verify_bucket_exist()
         files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
@@ -130,31 +133,30 @@ class DataPutter(base.DDSBaseClass):
 
     # General methods ###################### General methods #
     @verify_proceed
+    @subpath_required
     def protect_and_upload(self, file, progress):
         """Processes and uploads the file while handling the progress bars."""
 
         all_ok, message = (False, "")
+
         file_local = self.filehandler.data[file]["path_local"]
 
         # File task for processing
-
-        # Perform processing
-        with fc.Compressor() as compressor:
-            is_compressed, error = compressor.is_compressed(file=file_local)
-            if not is_compressed:
-                
-            
-
-        # Update file task for upload
         task = (
             progress.add_task(
                 txt.TextHandler.task_name(file=file),
                 total=self.filehandler.data[file]["size"],
-                step="put",
+                step="encrypt",
             )
             if not self.silent
             else None
         )
+
+        # Perform processing
+        _ = self.filehandler.process_file(file=file)
+
+        # Update file task for upload
+        progress.reset(task, step="put")
 
         # Perform upload
         file_uploaded, message = self.put(file=file, progress=progress, task=task)

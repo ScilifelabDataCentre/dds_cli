@@ -37,10 +37,11 @@ console = rich.console.Console()
 class FileHandler:
     """Main file handler."""
 
-    def __init__(self, user_input):
+    def __init__(self, user_input, local_destination):
         source, source_path_file = user_input
 
         # Get user specified data
+        self.local_destination = local_destination
         self.data_list = list()
         if source is not None:
             self.data_list += list(source)

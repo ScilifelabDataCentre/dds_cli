@@ -133,18 +133,12 @@ def subpath_required(func):
     """Make sure that the subpath to the downloaded files exist."""
 
     @functools.wraps(func)
-    def check_and_create(self, *args, **kwargs):
-
-        # Check that function has correct args
-        if "file" not in kwargs:
-            raise Exception(
-                "Missing key word argument in wrapper over "
-                f"function {func.__name__}: 'file'"
-            )
-        file = kwargs["file"]
+    def check_and_create(self, file, *args, **kwargs):
 
         file_info = self.filehandler.data[file]
-        full_subpath = self.filehandler.destination / pathlib.Path(file_info["subpath"])
+        full_subpath = self.filehandler.local_destination / pathlib.Path(
+            file_info["subpath"]
+        )
 
         if not full_subpath.exists():
             try:
@@ -152,6 +146,6 @@ def subpath_required(func):
             except Exception as err:
                 return False, str(err)
 
-        return func(self, *args, **kwargs)
+        return func(self, file=file, *args, **kwargs)
 
     return check_and_create

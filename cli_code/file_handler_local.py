@@ -18,8 +18,11 @@ import simplejson
 
 # Own modules
 from cli_code import status
+from cli_code import FileSegment
 from cli_code import DDSEndpoint
 from cli_code import file_handler as fh
+from cli_code import file_compressor as fc
+from cli_code.cli_decorators import subpath_required
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -43,12 +46,12 @@ class LocalFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, user_input):
+    def __init__(self, user_input, temporary_destination):
 
         LOG.debug("Collecting file info...")
 
         # Initiate FileHandler from inheritance
-        super().__init__(user_input=user_input)
+        super().__init__(user_input=user_input, local_destination=temporary_destination)
 
         # Get absolute paths to all data and removes duplicates
         self.data_list = list(
@@ -178,3 +181,70 @@ class LocalFileHandler(fh.FileHandler):
         LOG.debug("Previous upload check finished.")
 
         return dict() if files_in_db["files"] is None else files_in_db["files"]
+
+    def process_file(self, file):
+        """Processes file, including compression and encryption."""
+
+        processing_ok, message = (False, "")
+        is_compressed, new_file_name = (False, pathlib.Path(""))
+
+        file_info = self.data[file]
+
+        # Perform processing
+        with fc.Compressor() as compressor:
+            # Check if file is in compressed format
+            is_compressed, error = compressor.is_compressed(
+                file=file_info["path_local"]
+            )
+
+            # Return if error
+            if error != "":
+                message = error
+                return processing_ok, message
+
+            # Specify new filename
+            new_file_name = self.__create_encrypted_name(
+                file_info=file_info, no_compression=is_compressed
+            )
+
+            # Decide file reader or compress file
+            chunk_streamer = (
+                self.read_file if is_compressed else compressor.compress_file
+            )
+
+            # Execute read or compression
+            streamed_chunks = chunk_streamer(file=file_info["path_local"])
+
+            # User file-creation mode mask
+            original_umask = os.umask(0)
+
+            with new_file_name.open(mode="wb") as outfile:
+                for chunk in streamed_chunks:
+                    outfile.write(chunk)
+                    # progress.advance(task_id=task, advance=FileSegment.SEGMENT_SIZE_CIPHER)
+
+            os.umask(original_umask)
+
+        return new_file_name
+
+    def __create_encrypted_name(self, file_info, no_compression):
+        """Create new file name to save encrypted file."""
+
+        old_suffix = file_info["path_local"].suffix
+        new_suffix = f".{old_suffix if no_compression else 'zst'}"
+        new_file_name = (
+            self.local_destination
+            / file_info["subpath"]
+            / file_info["path_local"].with_suffix(new_suffix + ".ccp").name
+        )
+
+        return new_file_name
+
+    def read_file(
+        self, file: pathlib.Path, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW
+    ) -> (bytes):
+        """Yields the file chunk by chunk."""
+
+        with file.open(mode="rb") as infile:
+            for chunk in iter(lambda: infile.read(chunk_size), b""):
+                yield chunk

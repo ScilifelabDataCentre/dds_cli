@@ -157,7 +157,7 @@ def cli(ctx, debug):
 )
 @click.pass_obj
 def put(
-    _,
+    dds_info,
     config,
     username,
     project,
@@ -183,6 +183,7 @@ def put(
             overwrite=overwrite,
             progress=progress,
             silent=silent,
+            temporary_destination=dds_info["DDS_DIRS"]["FILES"],
         ) as putter:
 
             # Keep track of futures

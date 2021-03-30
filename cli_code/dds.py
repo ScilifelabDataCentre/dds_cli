@@ -14,9 +14,12 @@ import itertools
 # Installed
 import click
 import rich
+from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn, SpinnerColumn
 from rich import pretty
 import rich.console
 import rich.prompt
+from rich.live import Live
+from rich.table import Table
 
 # Own modules
 import cli_code
@@ -170,23 +173,27 @@ def put(
 ):
     """Processes and uploads specified files to the cloud."""
 
-    with status.DeliveryProgress(refresh_per_second=2) as progress:
+    # Begin delivery
+    with dp.DataPutter(
+        username=username,
+        config=config,
+        project=project,
+        source=source,
+        source_path_file=source_path_file,
+        break_on_fail=break_on_fail,
+        overwrite=overwrite,
+        silent=silent,
+        temporary_destination=dds_info["DDS_DIRS"]["FILES"],
+    ) as putter:
 
-        # Begin delivery
-        with dp.DataPutter(
-            username=username,
-            config=config,
-            project=project,
-            source=source,
-            source_path_file=source_path_file,
-            break_on_fail=break_on_fail,
-            overwrite=overwrite,
-            progress=progress,
-            silent=silent,
-            temporary_destination=dds_info["DDS_DIRS"]["FILES"],
-        ) as putter:
+        with status.DeliveryProgress(
+            "{task.description}",
+            BarColumn(bar_width=None),
+            " • ",
+            "[progress.percentage]{task.percentage:>3.1f}%",
+        ) as progress:
 
-            # Keep track of futures
+            # Keep tra  ck of futures
             upload_threads = {}  # Upload related
 
             # Iterator to keep track of which files have been handled
@@ -195,16 +202,25 @@ def put(
             with concurrent.futures.ThreadPoolExecutor() as texec:
                 # Start main progress bar
                 upload_task = progress.add_task(
-                    "Upload", total=len(putter.filehandler.data), step="summary"
+                    description="Upload",
+                    total=len(putter.filehandler.data),
+                    step="summary",
                 )
+
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
                     LOG.debug("Starting file %s...", file)
-                    upload_threads[
-                        texec.submit(
-                            putter.protect_and_upload, file=file, progress=progress
-                        )
-                    ] = file
+                    try:
+                        upload_threads[
+                            texec.submit(
+                                putter.protect_and_upload,
+                                file=file,
+                                progress=progress,
+                            )
+                        ] = file
+                    except Exception as err:
+                        LOG.critical(str(err))
+                        raise SystemExit from err
 
                 # Continue until all files are done
                 while upload_threads:
@@ -226,7 +242,9 @@ def put(
                         try:
                             file_uploaded = fut.result()
                             LOG.debug(
-                                "File %s uploaded: %s", uploaded_file, file_uploaded
+                                "File %s uploaded: %s",
+                                uploaded_file,
+                                file_uploaded,
                             )
                         except Exception as err:
                             # except concurrent.futures.BrokenExecutor as err:
@@ -235,6 +253,7 @@ def put(
                                 uploaded_file,
                                 err,
                             )
+                            raise SystemExit from err
                             continue
 
                         new_tasks += 1

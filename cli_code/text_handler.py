@@ -31,7 +31,7 @@ class TextHandler(StringFormat):
         return tab
 
     @staticmethod
-    def task_name(file, max_len=30):
+    def task_name(file, step="", max_len=30):
         """Generate display name for progress task"""
 
         task_name = file
@@ -41,4 +41,9 @@ class TextHandler(StringFormat):
             if len(task_name) > max_len:
                 task_name = "..." + task_name.split("...", 1)[-1][-max_len::]
 
-        return task_name
+        symbol = ""
+        if step == "encrypt":
+            symbol = ":lock:"
+        elif step == "put":
+            symbol = ":arrow_up: "
+        return f"{symbol} {task_name}"

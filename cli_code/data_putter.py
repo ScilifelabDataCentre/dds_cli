@@ -16,7 +16,7 @@ import botocore
 import boto3
 import requests
 import rich
-from rich.progress import Progress
+from rich.progress import Progress, SpinnerColumn
 import simplejson
 
 # Own modules
@@ -62,7 +62,6 @@ class DataPutter(base.DDSBaseClass):
         overwrite: bool = False,
         source: tuple = (),
         source_path_file: pathlib.Path = None,
-        progress=None,
         silent: bool = False,
         temporary_destination: pathlib.Path = pathlib.Path(""),
     ):
@@ -87,37 +86,43 @@ class DataPutter(base.DDSBaseClass):
             os._exit(os.EX_OK)
 
         # Start file prep progress
-        wait_task = progress.add_task("Collecting and preparing data", step="prepare")
-
-        # Get file info
-        self.filehandler = fhl.LocalFileHandler(
-            user_input=(source, source_path_file),
-            temporary_destination=temporary_destination,
-        )
-        self.verify_bucket_exist()
-        files_in_db = self.filehandler.check_previous_upload(token=self.token)
-
-        LOG.debug(
-            "Files: {Yes if files_in_db else No} \t Break on fail: %s \t Overwrite: %s",
-            self.break_on_fail,
-            self.overwrite,
-        )
-
-        # Quit if error and flag
-        if files_in_db and self.break_on_fail and not self.overwrite:
-            # TODO (ina): Fix better print out
-            console.print(
-                "\nSome files have already been uploaded and "
-                f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}\n"
+        with Progress(
+            "[bold]{task.description}",
+            SpinnerColumn(spinner_name="dots12", style="white"),
+        ) as progress:
+            wait_task = progress.add_task(
+                "Collecting and preparing data", step="prepare"
             )
-            os._exit(os.EX_OK)
 
-        # Generate status dict
-        self.status = self.filehandler.create_upload_status_dict(
-            existing_files=files_in_db, overwrite=self.overwrite
-        )
+            # Get file info
+            self.filehandler = fhl.LocalFileHandler(
+                user_input=(source, source_path_file),
+                temporary_destination=temporary_destination,
+            )
+            self.verify_bucket_exist()
+            files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
-        progress.remove_task(wait_task)
+            LOG.debug(
+                "Files: {Yes if files_in_db else No} \t Break on fail: %s \t Overwrite: %s",
+                self.break_on_fail,
+                self.overwrite,
+            )
+
+            # Quit if error and flag
+            if files_in_db and self.break_on_fail and not self.overwrite:
+                # TODO (ina): Fix better print out
+                console.print(
+                    "\nSome files have already been uploaded and "
+                    f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}\n"
+                )
+                os._exit(os.EX_OK)
+
+            # Generate status dict
+            self.status = self.filehandler.create_upload_status_dict(
+                existing_files=files_in_db, overwrite=self.overwrite
+            )
+
+            progress.remove_task(wait_task)
 
         LOG.debug("Data to upload: %s", "Yes" if self.filehandler.data else "No")
         if not self.filehandler.data:
@@ -140,6 +145,7 @@ class DataPutter(base.DDSBaseClass):
     def protect_and_upload(self, file, progress):
         """Processes and uploads the file while handling the progress bars."""
 
+        LOG.debug("Protect and upload: %s", file)
         all_ok, message = (False, "")
 
         file_info = self.filehandler.data[file]
@@ -147,9 +153,8 @@ class DataPutter(base.DDSBaseClass):
         # File task for processing
         task = (
             progress.add_task(
-                txt.TextHandler.task_name(file=file),
+                description=txt.TextHandler.task_name(file=file, step="encrypt"),
                 total=file_info["size_raw"],
-                step="encrypt",
             )
             if not self.silent
             else None
@@ -165,15 +170,21 @@ class DataPutter(base.DDSBaseClass):
             with file_info["path_processed"].open(mode="wb") as outfile:
                 for chunk in streamed_chunks:
                     outfile.write(chunk)
-                    progress.advance(task_id=task, advance=FileSegment.SEGMENT_SIZE_RAW)
+                    if not self.silent:
+                        progress.advance(
+                            task_id=task, advance=FileSegment.SEGMENT_SIZE_RAW
+                        )
 
         # Update file task for upload
         self.filehandler.data[file]["size_processed"] = (
             file_info["path_processed"].stat().st_size
         )
-        progress.reset(
-            task, step="put", total=self.filehandler.data[file]["size_processed"]
-        )
+        if not self.silent:
+            progress.reset(
+                task,
+                description=txt.TextHandler.task_name(file=file, step="put"),
+                total=self.filehandler.data[file]["size_processed"],
+            )
 
         # Perform upload
         file_uploaded, message = self.put(file=file, progress=progress, task=task)
@@ -188,7 +199,8 @@ class DataPutter(base.DDSBaseClass):
         dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
         # Remove progress task
-        progress.remove_task(task)
+        if not self.silent:
+            progress.remove_task(task)
 
         return all_ok, message
 
@@ -198,6 +210,8 @@ class DataPutter(base.DDSBaseClass):
 
         uploaded = False
         error = ""
+
+        LOG.debug("Task: %s", task)
 
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
@@ -227,6 +241,7 @@ class DataPutter(base.DDSBaseClass):
                 except (
                     botocore.client.ClientError,
                     boto3.exceptions.Boto3Error,
+                    Exception,
                 ) as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
                     LOG.exception("%s: %s", file, err)

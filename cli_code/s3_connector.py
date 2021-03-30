@@ -84,7 +84,6 @@ class S3Connector:
             LOG.warning(err)
             raise SystemExit from err
 
-        print("\ns3\n")
         # Error
         if not response.ok:
             return (

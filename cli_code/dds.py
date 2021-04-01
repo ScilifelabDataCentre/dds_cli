@@ -186,7 +186,7 @@ def put(
         temporary_destination=dds_info["DDS_DIRS"]["FILES"],
     ) as putter:
 
-        with status.DeliveryProgress(
+        with Progress(
             "{task.description}",
             BarColumn(bar_width=None),
             " • ",

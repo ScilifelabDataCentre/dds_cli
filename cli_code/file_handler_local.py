@@ -147,7 +147,7 @@ class LocalFileHandler(fh.FileHandler):
                         self.data[x].update(
                             {
                                 "overwrite": True,
-                                "name_in_bucket": existing_files[x],
+                                "path_remote": existing_files[x],
                             }
                         )
 

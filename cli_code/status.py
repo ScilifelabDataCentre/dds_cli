@@ -164,8 +164,4 @@ class ProgressPercentage(object):
     def __call__(self, bytes_amount):
 
         self._seen_so_far += bytes_amount
-        try:
-            self.progress.update(self.task, advance=bytes_amount)
-        except Exception as err:
-            LOG.warning(err)
-            raise SystemExit from err
+        self.progress.update(self.task, advance=bytes_amount)

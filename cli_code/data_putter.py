@@ -145,9 +145,7 @@ class DataPutter(base.DDSBaseClass):
     def protect_and_upload(self, file, progress):
         """Processes and uploads the file while handling the progress bars."""
 
-        LOG.debug("Protect and upload: %s", file)
         all_ok, message = (False, "")
-
         file_info = self.filehandler.data[file]
 
         # File task for processing
@@ -162,18 +160,26 @@ class DataPutter(base.DDSBaseClass):
 
         # Perform processing
         with fc.Compressor() as compressor:
-            # Read raw or compressed chunks
-            streamed_chunks = compressor.read_or_compress(
-                file=file_info["path_raw"], compress=not file_info["compressed"]
+            # Choose chunk streamer
+            stream_func = (
+                self.filehandler.read_file
+                if file_info["compressed"]
+                else compressor.compress_file
             )
 
-            with file_info["path_processed"].open(mode="wb") as outfile:
-                for chunk in streamed_chunks:
-                    outfile.write(chunk)
-                    if not self.silent:
-                        progress.advance(
-                            task_id=task, advance=FileSegment.SEGMENT_SIZE_RAW
-                        )
+            # Execute read or compress
+            streamed_chunks = stream_func(file=file_info["path_raw"])
+
+            with fe.Encryptor() as encryptor:
+
+                encryptor.encrypt_filechunks(
+                    chunks=streamed_chunks, outfile=file_info["path_processed"]
+                )
+
+            # if not self.silent:
+            #     progress.advance(
+            #         task_id=task, advance=FileSegment.SEGMENT_SIZE_RAW
+            #     )
 
         # Update file task for upload
         self.filehandler.data[file]["size_processed"] = (

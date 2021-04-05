@@ -75,6 +75,8 @@ def cli(ctx, debug):
     LOG = logging.getLogger(__name__)
     LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
 
+    LOG.info("Logging started.")
+
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,
@@ -191,6 +193,7 @@ def put(
             BarColumn(bar_width=None),
             " • ",
             "[progress.percentage]{task.percentage:>3.1f}%",
+            refresh_per_second=2,
         ) as progress:
 
             # Keep tra  ck of futures
@@ -204,23 +207,18 @@ def put(
                 upload_task = progress.add_task(
                     description="Upload",
                     total=len(putter.filehandler.data),
-                    step="summary",
                 )
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.debug("Starting file %s...", file)
-                    try:
-                        upload_threads[
-                            texec.submit(
-                                putter.protect_and_upload,
-                                file=file,
-                                progress=progress,
-                            )
-                        ] = file
-                    except Exception as err:
-                        LOG.critical(str(err))
-                        raise SystemExit from err
+                    LOG.info("Starting: %s", file)
+                    upload_threads[
+                        texec.submit(
+                            putter.protect_and_upload,
+                            file=file,
+                            progress=progress,
+                        )
+                    ] = file
 
                 # Continue until all files are done
                 while upload_threads:
@@ -236,37 +234,32 @@ def put(
                     # Get result from future and schedule database update
                     for fut in done:
                         uploaded_file = upload_threads.pop(fut)
-                        LOG.debug("File %s finished", uploaded_file)
+                        LOG.info("Future done: %s", uploaded_file)
 
                         # Get result
                         try:
                             file_uploaded = fut.result()
-                            LOG.debug(
-                                "File %s uploaded: %s",
+                            LOG.info(
+                                "Upload of %s successful: %s",
                                 uploaded_file,
                                 file_uploaded,
                             )
-                        except Exception as err:
-                            # except concurrent.futures.BrokenExecutor as err:
+                        except concurrent.futures.BrokenExecutor as err:
                             LOG.critical(
                                 "Upload of file %s failed! Error: %s",
                                 uploaded_file,
                                 err,
                             )
-                            raise SystemExit from err
                             continue
 
                         new_tasks += 1
                         if file_uploaded:
                             # Increase the main progress bar
-                            try:
-                                progress.advance(upload_task)
-                            except Exception as err:
-                                raise SystemExit from err
+                            progress.advance(upload_task)
 
                     # Schedule the next set of futures for upload
                     for next_file in itertools.islice(iterator, new_tasks):
-                        # Execute upload
+                        LOG.info("Starting: %s", next_file)
                         upload_threads[
                             texec.submit(
                                 putter.protect_and_upload,

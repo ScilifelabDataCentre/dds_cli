@@ -155,10 +155,14 @@ class LocalFileHandler(fh.FileHandler):
                             }
                         )
 
+                filestream_funcname = (
+                    "read_file" if self.data[x]["compressed"] else "compress_file"
+                )
                 status_dict[x] = {
                     "cancel": False,
                     "started": False,
                     "message": "",
+                    filestream_funcname: {"started": False, "done": False},
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
                     "task": None,
@@ -221,8 +225,9 @@ class LocalFileHandler(fh.FileHandler):
 
         return new_file_name
 
+    @staticmethod
     def read_file(
-        self, file: pathlib.Path, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW
+        file: pathlib.Path, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW
     ) -> (bytes):
         """Yields the file chunk by chunk."""
 

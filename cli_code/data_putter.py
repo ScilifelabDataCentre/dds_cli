@@ -147,15 +147,12 @@ class DataPutter(base.DDSBaseClass):
 
         all_ok, message = (False, "")
         file_info = self.filehandler.data[file]
+        salt = ""
 
         # File task for processing
-        task = (
-            progress.add_task(
-                description=txt.TextHandler.task_name(file=file, step="encrypt"),
-                total=file_info["size_raw"],
-            )
-            if not self.silent
-            else None
+        task = progress.add_task(
+            description=txt.TextHandler.task_name(file=file, step="encrypt"),
+            total=file_info["size_raw"],
         )
 
         # Perform processing
@@ -172,41 +169,45 @@ class DataPutter(base.DDSBaseClass):
 
             with fe.Encryptor() as encryptor:
 
+                # Generate shared key
+                key, salt = encryptor.generate_shared_key(peer_public=self.public)
+
                 encryptor.encrypt_filechunks(
-                    chunks=streamed_chunks, outfile=file_info["path_processed"]
+                    chunks=streamed_chunks,
+                    outfile=file_info["path_processed"],
+                    key=key,
+                    progress=(progress, task),
                 )
 
-            # if not self.silent:
-            #     progress.advance(
-            #         task_id=task, advance=FileSegment.SEGMENT_SIZE_RAW
-            #     )
-
-        # Update file task for upload
+        # Update file size
         self.filehandler.data[file]["size_processed"] = (
             file_info["path_processed"].stat().st_size
         )
-        if not self.silent:
-            progress.reset(
-                task,
-                description=txt.TextHandler.task_name(file=file, step="put"),
-                total=self.filehandler.data[file]["size_processed"],
-            )
+
+        # Update progress task for upload
+        progress.reset(
+            task,
+            description=txt.TextHandler.task_name(file=file, step="put"),
+            total=self.filehandler.data[file]["size_processed"],
+        )
 
         # Perform upload
         file_uploaded, message = self.put(file=file, progress=progress, task=task)
 
         # Perform db update
         if file_uploaded:
-            db_updated, message = self.add_file_db(file=file)
+            db_updated, message = self.add_file_db(
+                file=file, additional_info={"key_salt": salt}
+            )
 
             if db_updated:
                 all_ok = True
 
+        # Delete temporary processed file locally
         dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
         # Remove progress task
-        if not self.silent:
-            progress.remove_task(task)
+        progress.remove_task(task)
 
         return all_ok, message
 
@@ -257,7 +258,7 @@ class DataPutter(base.DDSBaseClass):
         return uploaded, error
 
     @update_status
-    def add_file_db(self, file):
+    def add_file_db(self, file, additional_info):
         """Make API request to add file to DB."""
 
         added_to_db = False
@@ -270,6 +271,7 @@ class DataPutter(base.DDSBaseClass):
             "name_in_bucket": fileinfo["path_remote"],
             "subpath": fileinfo["subpath"],
             "size": fileinfo["size_raw"],
+            **additional_info,
         }
         # Send file info to API
         put_or_post = requests.put if fileinfo["overwrite"] else requests.post

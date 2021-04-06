@@ -103,18 +103,22 @@ class LocalFileHandler(fh.FileHandler):
                         LOG.exception(error)
                         os._exit(os.EX_OK)
 
+                    path_processed = self.create_encrypted_name(
+                        raw_file=path,
+                        subpath=folder,
+                        no_compression=is_compressed,
+                    )
+
                     file_info[str(folder / path.name)] = {
                         "path_raw": path,
-                        "path_processed": self.create_encrypted_name(
-                            raw_file=path, subpath=folder, no_compression=is_compressed
-                        ),
                         "subpath": folder,
-                        "path_remote": self.generate_bucket_filepath(
-                            filename=path.name, folder=folder
-                        ),
-                        "compressed": is_compressed,
                         "size_raw": path.stat().st_size,
+                        "compressed": is_compressed,
+                        "path_processed": path_processed,
                         "size_processed": 0,
+                        "path_remote": self.generate_bucket_filepath(
+                            filename=path_processed.name, folder=folder
+                        ),
                         "overwrite": False,
                     }
 

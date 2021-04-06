@@ -147,7 +147,7 @@ class DataPutter(base.DDSBaseClass):
 
         all_ok, message = (False, "")
         file_info = self.filehandler.data[file]
-        salt = ""
+        file_public_key, salt = ("", "")
 
         # File task for processing
         task = progress.add_task(
@@ -179,6 +179,8 @@ class DataPutter(base.DDSBaseClass):
                     progress=(progress, task),
                 )
 
+                file_public_key = encryptor.public_to_hex()
+
         # Update file size
         self.filehandler.data[file]["size_processed"] = (
             file_info["path_processed"].stat().st_size
@@ -197,7 +199,7 @@ class DataPutter(base.DDSBaseClass):
         # Perform db update
         if file_uploaded:
             db_updated, message = self.add_file_db(
-                file=file, additional_info={"key_salt": salt}
+                file=file, key_salt=salt, public_key=file_public_key
             )
 
             if db_updated:
@@ -258,7 +260,7 @@ class DataPutter(base.DDSBaseClass):
         return uploaded, error
 
     @update_status
-    def add_file_db(self, file, additional_info):
+    def add_file_db(self, file, key_salt, public_key):
         """Make API request to add file to DB."""
 
         added_to_db = False
@@ -271,7 +273,9 @@ class DataPutter(base.DDSBaseClass):
             "name_in_bucket": fileinfo["path_remote"],
             "subpath": fileinfo["subpath"],
             "size": fileinfo["size_raw"],
-            **additional_info,
+            "compressed": not fileinfo["compressed"],
+            "salt": key_salt,
+            "public_key": public_key,
         }
         # Send file info to API
         put_or_post = requests.put if fileinfo["overwrite"] else requests.post

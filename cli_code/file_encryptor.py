@@ -10,6 +10,8 @@ from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives.kdf import hkdf
 from cryptography.hazmat.primitives import hashes
 from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt
+from cryptography.hazmat.primitives import serialization
+
 
 from cli_code import FileSegment
 
@@ -102,3 +104,13 @@ class Encryptor:
         ).derive(shared_key)
 
         return derived_shared_key, salt.hex().upper()
+
+    def public_to_hex(self):
+        """Converts public key to hexstring."""
+
+        public = self.private.public_key()
+        public_bytes = public.public_bytes(
+            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        )
+
+        return public_bytes.hex().upper()

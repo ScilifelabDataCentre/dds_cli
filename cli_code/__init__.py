@@ -101,6 +101,8 @@ class DDSEndpoint:
     REMOVE_FILE = BASE_ENDPOINT + "/file/rm"
     REMOVE_FOLDER = BASE_ENDPOINT + "/file/rmdir"
 
+    PROJ_PUBLIC = BASE_ENDPOINT + "/proj/public"
+
     TIMEOUT = 5
 
 

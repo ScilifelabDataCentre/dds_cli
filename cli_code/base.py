@@ -70,12 +70,13 @@ class DDSBaseClass:
 
         # Project access only required if trying to upload, download or list
         # files within project
-        if (
-            self.method == "put"
-            or self.method == "get"
-            or (self.method in ["ls", "rm"] and self.project is not None)
+        if self.method in ["put", "get"] or (
+            self.method in ["ls", "rm"] and self.project is not None
         ):
             self.token = self.__verify_project_access()
+
+            if self.method == "put":
+                self.public = self.__get_project_public()
 
     # Private methods ############################### Private methods #
     def __verify_input(self, username=None, password=None, config=None, project=None):
@@ -159,6 +160,36 @@ class DDSBaseClass:
 
         return {"x-access-token": dds_access["token"]}
 
+    def __get_project_public(self):
+        """Get public key for project."""
+
+        try:
+            response = requests.get(
+                DDSEndpoint.PROJ_PUBLIC, headers=self.token, timeout=DDSEndpoint.TIMEOUT
+            )
+        except requests.exceptions.RequestException as err:
+            LOG.warning(err)
+            raise SystemExit from err
+
+        if not response.ok:
+            console.print(
+                "\n:no_entry_sign: Project access denied: No public key. :no_entry_sign:\n"
+            )
+            os._exit(os.EX_OK)
+
+        try:
+            project_public = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
+
+        if "public" not in project_public:
+            console.print(
+                "\n:no_entry_sign: Project access denied: No public key. :no_entry_sign:\n"
+            )
+            os._exit(os.EX_OK)
+
+        return project_public["public"]
+
     # Public methods ################################# Public methods #
     def verify_bucket_exist(self):
         """Check that s3 connection works, and that bucket exists."""
@@ -175,6 +206,6 @@ class DDSBaseClass:
             if not bucket_exists:
                 _ = conn.create_bucket()
 
-        LOG.debug("Bucket created.")
+        LOG.debug("Bucket verified.")
 
         return True

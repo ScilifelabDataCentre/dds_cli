@@ -515,20 +515,26 @@ def get(
         )
         os._exit(os.EX_OK)
 
-    with status.DeliveryProgress(refresh_per_second=5) as progress:
+    # Begin delivery
+    with dg.DataGetter(
+        username=username,
+        config=config,
+        project=project,
+        get_all=get_all,
+        source=source,
+        source_path_file=source_path_file,
+        break_on_fail=break_on_fail,
+        destination=dds_info["DDS_DIRS"]["FILES"],
+        silent=silent,
+    ) as getter:
 
-        # Begin delivery
-        with dg.DataGetter(
-            username=username,
-            config=config,
-            project=project,
-            get_all=get_all,
-            source=source,
-            source_path_file=source_path_file,
-            break_on_fail=break_on_fail,
-            destination=dds_info["DDS_DIRS"]["FILES"],
-            silent=silent,
-        ) as getter:
+        with Progress(
+            "{task.description}",
+            BarColumn(bar_width=None),
+            " • ",
+            "[progress.percentage]{task.percentage:>3.1f}%",
+            refresh_per_second=2,
+        ) as progress:
 
             # Keep track of futures
             download_threads = {}
@@ -543,20 +549,13 @@ def get(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    # Create progress bar task
-                    task_file = progress.add_task(
-                        txt.TextHandler.task_name(file=file),
-                        total=getter.filehandler.data[file]["size"],
-                        step="get",
-                        visible=not silent,
-                    )
-
+                    LOG.info("Starting: %s", file)
                     # Execute download
                     download_threads[
                         texec.submit(
-                            getter.get, file=file, progress=progress, task=task_file
+                            getter.download_and_verify, file=file, progress=progress
                         )
-                    ] = (file, task_file)
+                    ] = file
 
                 while download_threads:
                     # Wait for the next future to complete
@@ -567,13 +566,18 @@ def get(
                     new_tasks = 0
 
                     for dfut in ddone:
-                        downloaded_file, task_id = download_threads.pop(dfut)
+                        downloaded_file = download_threads.pop(dfut)
+                        LOG.info("Future done: %s", downloaded_file)
 
                         # Get result
                         try:
-                            _ = dfut.result()
-                        except Exception as err:
-                            # except concurrent.futures.BrokenExecutor as err:
+                            file_downloaded = dfut.result()
+                            LOG.info(
+                                "Download of %s successful: %s",
+                                downloaded_file,
+                                file_downloaded,
+                            )
+                        except concurrent.futures.BrokenExecutor as err:
                             LOG.critical(
                                 "Download of file %s failed! Error: %s",
                                 downloaded_file,
@@ -581,29 +585,18 @@ def get(
                             )
                             continue
 
-                        # Schedule file for db update
-                        _ = getter.update_db(file=downloaded_file)
-
-                        progress.remove_task(task_id)
                         new_tasks += 1
-                        progress.advance(task_dwnld)
+                        if file_downloaded:
+                            progress.advance(task_dwnld)
 
                     # Schedule the next set of futures for download
-                    for dfile in itertools.islice(iterator, new_tasks):
-                        # Create progress bar task
-                        task_file = progress.add_task(
-                            txt.TextHandler.task_name(file=dfile),
-                            total=getter.filehandler.data[dfile]["size"],
-                            step="get",
-                            visible=not silent,
-                        )
-
+                    for next_file in itertools.islice(iterator, new_tasks):
+                        LOG.info("Starting: %s", next_file)
                         # Execute download
                         download_threads[
                             texec.submit(
-                                getter.get,
-                                file=dfile,
+                                getter.download_and_verify,
+                                file=next_file,
                                 progress=progress,
-                                task=task_file,
                             )
-                        ] = (dfile, task_file)
+                        ] = next_file

@@ -13,7 +13,7 @@ import os
 
 # Installed
 import rich
-from rich.progress import Progress
+from rich.progress import Progress, SpinnerColumn
 import botocore
 import requests
 import simplejson
@@ -26,6 +26,7 @@ from cli_code import file_handler_remote as fhr
 from cli_code import s3_connector as s3
 from cli_code.cli_decorators import verify_proceed, update_status, subpath_required
 from cli_code import status
+from cli_code import text_handler as txt
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -77,27 +78,36 @@ class DataGetter(base.DDSBaseClass):
             )
             os._exit(os.EX_OK)
 
-        self.filehandler = fhr.RemoteFileHandler(
-            get_all=get_all,
-            user_input=(source, source_path_file),
-            token=self.token,
-            destination=destination,
-        )
-
-        if self.filehandler.failed and self.break_on_fail:
-            console.print(
-                "\n:warning: Some specified files were not found in the system "
-                "and '--break-on-fail' flag used. :warning:\n\n"
-                f"Files not found: {self.filehandler.failed}\n"
+        # Start file prep progress
+        with Progress(
+            "[bold]{task.description}",
+            SpinnerColumn(spinner_name="dots12", style="white"),
+        ) as progress:
+            wait_task = progress.add_task(
+                "Collecting and preparing data", step="prepare"
             )
-            os._exit(os.EX_OK)
+            self.filehandler = fhr.RemoteFileHandler(
+                get_all=get_all,
+                user_input=(source, source_path_file),
+                token=self.token,
+                destination=destination,
+            )
 
-        if not self.filehandler.data:
-            console.print("\nNo files to download.\n")
-            os._exit(os.EX_OK)
+            if self.filehandler.failed and self.break_on_fail:
+                console.print(
+                    "\n:warning: Some specified files were not found in the system "
+                    "and '--break-on-fail' flag used. :warning:\n\n"
+                    f"Files not found: {self.filehandler.failed}\n"
+                )
+                os._exit(os.EX_OK)
 
-        self.status = self.filehandler.create_download_status_dict()
-        self.progress = Progress()
+            if not self.filehandler.data:
+                console.print("\nNo files to download.\n")
+                os._exit(os.EX_OK)
+
+            self.status = self.filehandler.create_download_status_dict()
+
+            progress.remove_task(wait_task)
 
     def __enter__(self):
         return self
@@ -110,8 +120,30 @@ class DataGetter(base.DDSBaseClass):
         return True
 
     @verify_proceed
-    @update_status
     @subpath_required
+    def download_and_verify(self, file, progress):
+        """Downloads the file, reveals the original data and verifies the integrity."""
+
+        all_ok, message = (False, "")
+        file_info = self.filehandler.data[file]
+
+        # File task for downloading
+        task = progress.add_task(
+            description=txt.TextHandler.task_name(file=file, step="get"),
+            total=file_info["size"],
+        )
+
+        # Perform download
+        file_downloaded, message = self.get(file=file, progress=progress, task=task)
+
+        LOG.debug(file_downloaded)
+
+        if file_downloaded:
+            all_ok = True
+
+        return all_ok, message
+
+    @update_status
     def get(self, file, progress, task):
         """Downloads files from the cloud."""
 
@@ -146,7 +178,6 @@ class DataGetter(base.DDSBaseClass):
 
         return downloaded, error
 
-    @verify_proceed
     @update_status
     def update_db(self, file):
         """Update file info in db."""
@@ -178,3 +209,8 @@ class DataGetter(base.DDSBaseClass):
             raise SystemExit from err
 
         return updated_in_db, error
+
+        # # Schedule file for db update
+        # _ = getter.update_db(file=downloaded_file)
+
+        # progress.remove_task(task_id)

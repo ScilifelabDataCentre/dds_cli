@@ -61,6 +61,8 @@ class RemoteFileHandler(fh.FileHandler):
     def __collect_file_info_remote(self, all_paths, token):
         """Get information on files in db."""
 
+        LOG.debug(all_paths)
+
         # Get file info from db via API
         try:
             response = requests.get(
@@ -116,7 +118,7 @@ class RemoteFileHandler(fh.FileHandler):
         for x, y in folders.items():
             data.update(
                 {
-                    self.destination
+                    self.local_destination
                     / pathlib.Path(z[0]): {
                         "name_in_db": z[0],
                         "name_in_bucket": z[1],
@@ -127,6 +129,7 @@ class RemoteFileHandler(fh.FileHandler):
                 }
             )
 
+        LOG.debug(data)
         return data
 
     def create_download_status_dict(self):

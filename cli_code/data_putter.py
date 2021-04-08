@@ -102,12 +102,6 @@ class DataPutter(base.DDSBaseClass):
             self.verify_bucket_exist()
             files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
-            LOG.debug(
-                "Files: {Yes if files_in_db else No} \t Break on fail: %s \t Overwrite: %s",
-                self.break_on_fail,
-                self.overwrite,
-            )
-
             # Quit if error and flag
             if files_in_db and self.break_on_fail and not self.overwrite:
                 # TODO (ina): Fix better print out
@@ -167,21 +161,18 @@ class DataPutter(base.DDSBaseClass):
             # Execute read or compress
             streamed_chunks = stream_func(file=file_info["path_raw"])
 
-            with fe.Encryptor() as encryptor:
-
-                # Generate shared key
-                key, salt = encryptor.generate_shared_key(
-                    peer_public=self.project_public
-                )
+            with fe.Encryptor(project_keys=self.keys) as encryptor:
 
                 encryptor.encrypt_filechunks(
                     chunks=streamed_chunks,
                     outfile=file_info["path_processed"],
-                    key=key,
                     progress=(progress, task),
                 )
 
-                file_public_key = encryptor.public_to_hex()
+                file_public_key = encryptor.get_public_component_hex(
+                    private_key=encryptor.my_private
+                )
+                salt = encryptor.salt
 
         # Update file size
         self.filehandler.data[file]["size_processed"] = (

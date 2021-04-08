@@ -76,10 +76,7 @@ class DDSBaseClass:
             self.token = self.__verify_project_access()
 
             if self.method in ["put", "get"]:
-                self.project_public = self.__get_project_public()
-
-                if self.method == "get":
-                    self.project_private = self.__get_project_private()
+                self.keys = self.__get_project_keys()
 
     # Private methods ############################### Private methods #
     def __verify_input(self, username=None, password=None, config=None, project=None):
@@ -162,6 +159,17 @@ class DDSBaseClass:
         LOG.debug("User has been granted access to project %s", self.project)
 
         return {"x-access-token": dds_access["token"]}
+
+    def __get_project_keys(self):
+        """Get public and private project keys depending on method."""
+
+        # Project public key required for both put and get
+        public = self.__get_project_public()
+
+        # Project private only required for get
+        private = self.__get_project_private() if self.method == "get" else None
+
+        return private, public
 
     def __get_project_public(self):
         """Get public key for project."""

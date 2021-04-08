@@ -94,3 +94,13 @@ class Compressor:
             with cctzx.stream_reader(infile) as compressor:
                 for chunk in iter(lambda: compressor.read(chunk_size), b""):
                     yield chunk
+
+    @staticmethod
+    def decompress_filechunks(chunks, outfile: pathlib.Path):
+
+        with outfile.open(mode="wb") as file:
+
+            dctx = zstd.ZstdDecompressor()
+            with dctx.stream_writer(file) as decompressor:
+                for chunk in chunks:
+                    decompressor.write(chunk)

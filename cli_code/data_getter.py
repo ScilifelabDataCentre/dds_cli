@@ -28,6 +28,7 @@ from cli_code.cli_decorators import verify_proceed, update_status, subpath_requi
 from cli_code import status
 from cli_code import text_handler as txt
 from cli_code import file_encryptor as fe
+from cli_code import file_compressor as fc
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -147,16 +148,25 @@ class DataGetter(base.DDSBaseClass):
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
 
-            with fe.Encryptor(proj_priv_key=self.project_private) as decryptor:
-                LOG.debug(decryptor.private)
+            with fe.Decryptor(
+                project_keys=self.keys,
+                peer_public=file_info["public_key"],
+                key_salt=file_info["key_salt"],
+            ) as decryptor:
 
-                key, _ = decryptor.generate_shared_key(
-                    peer_public=file_info["public_key"], key_salt=file_info["key_salt"]
+                last_nonce, latest_nonce, streamed_chunks = decryptor.decrypt_file(
+                    infile=file_info["path_downloaded"]
                 )
 
-                LOG.debug(key)
+                with fc.Compressor() as decompressor:
+                    decompressor.decompress_file(chunks=streamed_chunks, outfile=file)
 
-                # decryptor.decrypt_file(infile=file_info["path_downloaded"], outfile=file, key=key)
+                    if last_nonce != latest_nonce:
+                        message = (
+                            f"File: {file}. Nonces don't match! "
+                            "File integrity compromised!"
+                        )
+                        LOG.exception(message)
 
         # dr.DataRemover.delete_tempfile(file=file_info["path_downloaded"])
         return all_ok, message

@@ -30,9 +30,15 @@ LOG.setLevel(logging.DEBUG)
 class Encryptor:
     """Handles the encryption of the files."""
 
-    def __init__(self):
-        self.private = x25519.X25519PrivateKey.generate()
+    def __init__(self, proj_priv_key=None):
         self.max_nonce = 2 ** (12 * 8)  # Max mumber of nonces
+        self.private = (
+            x25519.X25519PrivateKey.generate()
+            if proj_priv_key is None
+            else x25519.X25519PrivateKey.from_private_bytes(
+                bytes.fromhex(proj_priv_key)
+            )
+        )
 
     def __enter__(self):
         return self
@@ -83,11 +89,16 @@ class Encryptor:
             # Save last nonce
             out.write(nonce)
 
-    def generate_shared_key(self, peer_public: str):
+    def decrypt_file(self, infile: pathlib.Path, outfile: pathlib.Path, key: bytes):
+        """Decryptes the file."""
+
+        pass
+
+    def generate_shared_key(self, peer_public: str, key_salt: str = None):
         """Derive the shared key for file encryption."""
 
-        # Key salt - save to db
-        salt = os.urandom(16)
+        # Generate or from db
+        salt = os.urandom(16) if key_salt is None else bytes.fromhex(key_salt)
 
         # Project public key
         peer_public_bytes = bytes.fromhex(peer_public)
@@ -103,6 +114,8 @@ class Encryptor:
             backend=backends.default_backend(),
         ).derive(shared_key)
 
+        LOG.debug("Salt: %s", salt)
+        LOG.debug("Derived shared key: %s", derived_shared_key)
         return derived_shared_key, salt.hex().upper()
 
     def public_to_hex(self):

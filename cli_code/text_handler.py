@@ -46,4 +46,8 @@ class TextHandler(StringFormat):
             symbol = ":lock:"
         elif step == "put":
             symbol = ":arrow_up: "
+        elif step == "get":
+            symbol = ":arrow_down: "
+        elif step == "decrypt":
+            symbol = ":unlock:"
         return f"{symbol} {task_name}"

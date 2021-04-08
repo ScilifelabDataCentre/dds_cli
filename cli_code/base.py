@@ -75,8 +75,11 @@ class DDSBaseClass:
         ):
             self.token = self.__verify_project_access()
 
-            if self.method == "put":
-                self.public = self.__get_project_public()
+            if self.method in ["put", "get"]:
+                self.project_public = self.__get_project_public()
+
+                if self.method == "get":
+                    self.project_private = self.__get_project_private()
 
     # Private methods ############################### Private methods #
     def __verify_input(self, username=None, password=None, config=None, project=None):
@@ -189,6 +192,38 @@ class DDSBaseClass:
             os._exit(os.EX_OK)
 
         return project_public["public"]
+
+    def __get_project_private(self):
+        """Get the private key for project"""
+
+        try:
+            response = requests.get(
+                DDSEndpoint.PROJ_PRIVATE,
+                headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
+            )
+        except requests.exceptions.RequestException as err:
+            LOG.warning(err)
+            raise SystemExit from err
+
+        if not response.ok:
+            console.print(
+                "\n:no_entry_sign: Project access denied: No private key. :no_entry_sign:\n"
+            )
+            os._exit(os.EX_OK)
+
+        try:
+            project_private = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise SystemExit from err
+
+        if "private" not in project_private:
+            console.print(
+                "\n:no_entry_sign: Project access denied: No private key. :no_entry_sign:\n"
+            )
+            os._exit(os.EX_OK)
+
+        return project_private["private"]
 
     # Public methods ################################# Public methods #
     def verify_bucket_exist(self):

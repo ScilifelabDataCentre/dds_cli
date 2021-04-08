@@ -170,7 +170,9 @@ class DataPutter(base.DDSBaseClass):
             with fe.Encryptor() as encryptor:
 
                 # Generate shared key
-                key, salt = encryptor.generate_shared_key(peer_public=self.public)
+                key, salt = encryptor.generate_shared_key(
+                    peer_public=self.project_public
+                )
 
                 encryptor.encrypt_filechunks(
                     chunks=streamed_chunks,
@@ -273,6 +275,7 @@ class DataPutter(base.DDSBaseClass):
             "name_in_bucket": fileinfo["path_remote"],
             "subpath": fileinfo["subpath"],
             "size": fileinfo["size_raw"],
+            "size_processed": fileinfo["size_processed"],
             "compressed": not fileinfo["compressed"],
             "salt": key_salt,
             "public_key": public_key,

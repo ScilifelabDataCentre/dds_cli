@@ -110,7 +110,13 @@ class RemoteFileHandler(fh.FileHandler):
 
         # Save info on files in dict and return
         data = {
-            self.destination / pathlib.Path(x): {**y, "name_in_db": x}
+            self.local_destination
+            / pathlib.Path(x): {
+                **y,
+                "name_in_db": x,
+                "path_downloaded": self.local_destination
+                / pathlib.Path(y["name_in_bucket"]),
+            }
             for x, y in files.items()
         }
 
@@ -122,8 +128,12 @@ class RemoteFileHandler(fh.FileHandler):
                     / pathlib.Path(z[0]): {
                         "name_in_db": z[0],
                         "name_in_bucket": z[1],
+                        "path_downloaded": self.local_destination / pathlib.Path(z[1]),
                         "subpath": z[2],
                         "size": z[3],
+                        "size_encrypted": z[4],
+                        "key_salt": z[5],
+                        "public_key": z[6],
                     }
                     for z in y
                 }

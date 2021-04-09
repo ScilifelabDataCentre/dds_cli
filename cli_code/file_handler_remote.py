@@ -134,6 +134,7 @@ class RemoteFileHandler(fh.FileHandler):
                         "size_encrypted": z[4],
                         "key_salt": z[5],
                         "public_key": z[6],
+                        "checksum": z[7],
                     }
                     for z in y
                 }

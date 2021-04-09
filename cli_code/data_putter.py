@@ -150,25 +150,25 @@ class DataPutter(base.DDSBaseClass):
         )
 
         # Perform processing
-        with fc.Compressor() as compressor:
-            # Execute compress
-            streamed_chunks = compressor.compress_file(
-                file=file_info["path_raw"],
-                do=not file_info["compressed"],
+
+        streamed_chunks = self.filehandler.stream_from_file(
+            file=file,
+            raw_file=file_info["path_raw"],
+            do_compression=not file_info["compressed"],
+        )
+
+        with fe.Encryptor(project_keys=self.keys) as encryptor:
+
+            encryptor.encrypt_filechunks(
+                chunks=streamed_chunks,
+                outfile=file_info["path_processed"],
+                progress=(progress, task),
             )
 
-            with fe.Encryptor(project_keys=self.keys) as encryptor:
-
-                encryptor.encrypt_filechunks(
-                    chunks=streamed_chunks,
-                    outfile=file_info["path_processed"],
-                    progress=(progress, task),
-                )
-
-                file_public_key = encryptor.get_public_component_hex(
-                    private_key=encryptor.my_private
-                )
-                salt = encryptor.salt
+            file_public_key = encryptor.get_public_component_hex(
+                private_key=encryptor.my_private
+            )
+            salt = encryptor.salt
 
         # Update file size
         self.filehandler.data[file]["size_processed"] = (
@@ -266,6 +266,7 @@ class DataPutter(base.DDSBaseClass):
             "compressed": not fileinfo["compressed"],
             "salt": key_salt,
             "public_key": public_key,
+            "checksum": fileinfo["checksum"],
         }
         # Send file info to API
         put_or_post = requests.put if fileinfo["overwrite"] else requests.post

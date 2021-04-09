@@ -11,6 +11,7 @@ import sys
 import os
 import pathlib
 import hashlib
+import base64
 
 # Installed
 import boto3
@@ -34,20 +35,22 @@ LOG.setLevel(logging.DEBUG)
 
 def generate_checksum(func):
     @functools.wraps(func)
-    def gen_hash(*args, **kwargs):
+    def gen_hash(self, file, raw_file, *args, **kwargs):
 
         checksum = hashlib.sha256()
 
-        for chunk in func(*args, **kwargs):
+        for chunk in func(self, file=raw_file, *args, **kwargs):
             checksum.update(chunk)
             yield chunk
+
+        self.data[file]["checksum"] = checksum.hexdigest()
 
     return gen_hash
 
 
 def checksum_verification_required(func):
     @functools.wraps(func)
-    def verify_checksum(*args, **kwargs):
+    def verify_checksum(correct_checksum, *args, **kwargs):
 
         checksum = hashlib.sha256()
 
@@ -59,10 +62,18 @@ def checksum_verification_required(func):
             message = str(err)
             LOG.exception(message)
         else:
-            done = True
+            checksum_digest = checksum.hexdigest()
+            LOG.debug(
+                "Correct checksum: %s\nChecksum of downloaded file: %s\nCorrect? %s",
+                correct_checksum,
+                checksum_digest,
+                correct_checksum == checksum_digest,
+            )
 
-        checksum_digest = checksum.digest()
-        LOG.debug("Hash: %s", checksum_digest)
+            if checksum_digest != correct_checksum:
+                message = "Checksum verification failed. File compromised."
+            else:
+                done = True
 
         return done, message
 

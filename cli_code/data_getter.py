@@ -161,7 +161,9 @@ class DataGetter(base.DDSBaseClass):
 
                 with fc.Compressor() as decompressor:
                     file_decompressed, message = decompressor.decompress_filechunks(
-                        chunks=streamed_chunks, outfile=file
+                        chunks=streamed_chunks,
+                        outfile=file,
+                        correct_checksum=file_info["checksum"],
                     )
 
                     if file_decompressed:
@@ -170,6 +172,7 @@ class DataGetter(base.DDSBaseClass):
                             file=file_info["path_downloaded"]
                         )
 
+        progress.remove_task(task)
         return all_ok, message
 
     @update_status

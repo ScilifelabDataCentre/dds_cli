@@ -24,7 +24,7 @@ from cli_code import FileSegment
 from cli_code import DDSEndpoint
 from cli_code import file_handler as fh
 from cli_code import file_compressor as fc
-from cli_code.cli_decorators import subpath_required
+from cli_code.cli_decorators import subpath_required, generate_checksum
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -247,3 +247,20 @@ class LocalFileHandler(fh.FileHandler):
     #                 b"",
     #             ):
     #                 yield chunk
+
+    @generate_checksum
+    def stream_from_file(self, file, do_compression, **_):
+
+        if do_compression:
+            with fc.Compressor() as compressor:
+                for x in compressor.compress_file(file=file):
+                    yield x
+        else:
+            for x in self.read_file(file=file):
+                yield x
+
+    @staticmethod
+    def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
+        with file.open(mode="rb") as infile:
+            for chunk in iter(lambda: infile.read(chunk_size), b""):
+                yield chunk

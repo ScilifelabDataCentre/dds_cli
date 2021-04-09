@@ -109,7 +109,6 @@ class Encryptor(ECDHKeyHandler):
 
         return True
 
-    # @generate_checksum
     def encrypt_filechunks(self, chunks, outfile: pathlib.Path, progress: tuple = None):
         """Encrypts the file in chunks.
 

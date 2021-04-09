@@ -15,6 +15,8 @@ import os
 import requests
 import rich
 import simplejson
+import zstandard as zstd
+
 
 # Own modules
 from cli_code import status
@@ -120,6 +122,7 @@ class LocalFileHandler(fh.FileHandler):
                             filename=path_processed.name, folder=folder
                         ),
                         "overwrite": False,
+                        "checksum": "",
                     }
 
             elif path.is_dir():
@@ -225,12 +228,22 @@ class LocalFileHandler(fh.FileHandler):
 
         return new_file_name
 
-    @staticmethod
-    def read_file(
-        file: pathlib.Path, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW
-    ) -> (bytes):
-        """Yields the file chunk by chunk."""
+    # @staticmethod
+    # def process_file(
+    #     file: pathlib.Path,
+    #     chunk_size: int = FileSegment.SEGMENT_SIZE_RAW,
+    # ) -> (bytes):
+    #     """Yields the file chunk by chunk."""
 
-        with file.open(mode="rb") as infile:
-            for chunk in iter(lambda: infile.read(chunk_size), b""):
-                yield chunk
+    #     with file.open(mode="rb") as infile:
+
+    #         zstdcompressor = zstd.ZstdCompressor(write_checksum=True, level=4)
+    #         with zstdcompressor.stream_reader(infile) as compressor:
+
+    #             for chunk in iter(
+    #                 lambda: compressor.read(chunk_size)
+    #                 if do_compression
+    #                 else infile.read(chunk_size),
+    #                 b"",
+    #             ):
+    #                 yield chunk

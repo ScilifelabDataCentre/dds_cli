@@ -151,15 +151,11 @@ class DataPutter(base.DDSBaseClass):
 
         # Perform processing
         with fc.Compressor() as compressor:
-            # Choose chunk streamer
-            stream_func = (
-                self.filehandler.read_file
-                if file_info["compressed"]
-                else compressor.compress_file
+            # Execute compress
+            streamed_chunks = compressor.compress_file(
+                file=file_info["path_raw"],
+                do=not file_info["compressed"],
             )
-
-            # Execute read or compress
-            streamed_chunks = stream_func(file=file_info["path_raw"])
 
             with fe.Encryptor(project_keys=self.keys) as encryptor:
 

@@ -3,9 +3,10 @@ import pathlib
 import dataclasses
 import traceback
 import sys
-from cli_code import FileSegment
 import zstandard as zstd
+from cli_code import FileSegment
 import logging
+from cli_code.cli_decorators import checksum_verification_required, generate_checksum
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -82,6 +83,7 @@ class Compressor:
     def compress_file(
         file: pathlib.Path,
         chunk_size: int = FileSegment.SEGMENT_SIZE_RAW,
+        do: bool = True,
     ) -> (bytes):
         """Compresses file by reading it chunk by chunk."""
 
@@ -92,15 +94,25 @@ class Compressor:
 
             # Compress file chunk by chunk while reading
             with cctzx.stream_reader(infile) as compressor:
-                for chunk in iter(lambda: compressor.read(chunk_size), b""):
+                for chunk in iter(
+                    lambda: compressor.read(chunk_size)
+                    if do
+                    else infile.read(chunk_size),
+                    b"",
+                ):
                     yield chunk
 
     @staticmethod
+    @checksum_verification_required
     def decompress_filechunks(chunks, outfile: pathlib.Path):
 
+        # Decompressing file and saving
+        LOG.debug("Decompressing...")
         with outfile.open(mode="wb") as file:
 
             dctx = zstd.ZstdDecompressor()
             with dctx.stream_writer(file) as decompressor:
                 for chunk in chunks:
                     decompressor.write(chunk)
+                    yield chunk
+        LOG.debug("Decompression done.")

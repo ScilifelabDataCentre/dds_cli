@@ -14,7 +14,7 @@ from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt
 
 from cryptography.hazmat.primitives import serialization
 
-
+from cli_code.cli_decorators import generate_checksum
 from cli_code import FileSegment
 
 ###############################################################################
@@ -109,6 +109,7 @@ class Encryptor(ECDHKeyHandler):
 
         return True
 
+    # @generate_checksum
     def encrypt_filechunks(self, chunks, outfile: pathlib.Path, progress: tuple = None):
         """Encrypts the file in chunks.
 
@@ -202,6 +203,7 @@ class Decryptor(ECDHKeyHandler):
 
             iv_int = int.from_bytes(first_nonce, "little")
             aad = None
+            nonce = b""
 
             for chunk in iter(lambda: file.read(FileSegment.SEGMENT_SIZE_CIPHER), b""):
                 # Get nonce as bytes for decryption: if the nonce is larger than the
@@ -212,6 +214,11 @@ class Decryptor(ECDHKeyHandler):
 
                 iv_int += 1
 
-                yield last_nonce, nonce, crypto_aead_chacha20poly1305_ietf_decrypt(
+                yield crypto_aead_chacha20poly1305_ietf_decrypt(
                     ciphertext=chunk, aad=aad, nonce=nonce, key=self.key
                 )
+
+            LOG.debug("Testing nonce...")
+            if last_nonce != nonce:
+                raise SystemExit("Nonces do not match!!")
+            LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)

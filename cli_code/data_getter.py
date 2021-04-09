@@ -20,7 +20,7 @@ import simplejson
 import boto3
 
 # Own modules
-from cli_code import DDSEndpoint
+from cli_code import DDSEndpoint, FileSegment
 from cli_code import base
 from cli_code import file_handler_remote as fhr
 from cli_code import s3_connector as s3
@@ -29,6 +29,7 @@ from cli_code import status
 from cli_code import text_handler as txt
 from cli_code import file_encryptor as fe
 from cli_code import file_compressor as fc
+from cli_code import data_remover as dr
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -154,21 +155,21 @@ class DataGetter(base.DDSBaseClass):
                 key_salt=file_info["key_salt"],
             ) as decryptor:
 
-                last_nonce, latest_nonce, streamed_chunks = decryptor.decrypt_file(
+                streamed_chunks = decryptor.decrypt_file(
                     infile=file_info["path_downloaded"]
                 )
 
                 with fc.Compressor() as decompressor:
-                    decompressor.decompress_file(chunks=streamed_chunks, outfile=file)
+                    file_decompressed, message = decompressor.decompress_filechunks(
+                        chunks=streamed_chunks, outfile=file
+                    )
 
-                    if last_nonce != latest_nonce:
-                        message = (
-                            f"File: {file}. Nonces don't match! "
-                            "File integrity compromised!"
+                    if file_decompressed:
+                        all_ok = True
+                        dr.DataRemover.delete_tempfile(
+                            file=file_info["path_downloaded"]
                         )
-                        LOG.exception(message)
 
-        # dr.DataRemover.delete_tempfile(file=file_info["path_downloaded"])
         return all_ok, message
 
     @update_status

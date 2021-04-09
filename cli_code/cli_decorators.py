@@ -10,6 +10,7 @@ import functools
 import sys
 import os
 import pathlib
+import hashlib
 
 # Installed
 import boto3
@@ -29,6 +30,43 @@ LOG.setLevel(logging.DEBUG)
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #
 ###############################################################################
+
+
+def generate_checksum(func):
+    @functools.wraps(func)
+    def gen_hash(*args, **kwargs):
+
+        checksum = hashlib.sha256()
+
+        for chunk in func(*args, **kwargs):
+            checksum.update(chunk)
+            yield chunk
+
+    return gen_hash
+
+
+def checksum_verification_required(func):
+    @functools.wraps(func)
+    def verify_checksum(*args, **kwargs):
+
+        checksum = hashlib.sha256()
+
+        done, message = (False, "")
+        try:
+            for chunk in func(*args, **kwargs):
+                checksum.update(chunk)
+        except Exception as err:
+            message = str(err)
+            LOG.exception(message)
+        else:
+            done = True
+
+        checksum_digest = checksum.digest()
+        LOG.debug("Hash: %s", checksum_digest)
+
+        return done, message
+
+    return verify_checksum
 
 
 def verify_proceed(func):

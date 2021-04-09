@@ -159,18 +159,20 @@ class DataGetter(base.DDSBaseClass):
                     infile=file_info["path_downloaded"]
                 )
 
-                with fc.Compressor() as decompressor:
-                    file_decompressed, message = decompressor.decompress_filechunks(
-                        chunks=streamed_chunks,
-                        outfile=file,
-                        correct_checksum=file_info["checksum"],
-                    )
+                stream_to_file_func = (
+                    fc.Compressor.decompress_filechunks
+                    if file_info["compressed"]
+                    else self.filehandler.write_file
+                )
+                file_saved, message = stream_to_file_func(
+                    chunks=streamed_chunks,
+                    outfile=file,
+                    correct_checksum=file_info["checksum"],
+                )
 
-                    if file_decompressed:
-                        all_ok = True
-                        dr.DataRemover.delete_tempfile(
-                            file=file_info["path_downloaded"]
-                        )
+                if file_saved:
+                    all_ok = True
+                    dr.DataRemover.delete_tempfile(file=file_info["path_downloaded"])
 
         progress.remove_task(task)
         return all_ok, message

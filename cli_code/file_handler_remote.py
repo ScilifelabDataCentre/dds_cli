@@ -17,6 +17,8 @@ import rich
 # Own modules
 from cli_code import DDSEndpoint
 from cli_code import file_handler as fh
+from cli_code import file_compressor as fc
+from cli_code.cli_decorators import checksum_verification_required
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -135,6 +137,7 @@ class RemoteFileHandler(fh.FileHandler):
                         "key_salt": z[5],
                         "public_key": z[6],
                         "checksum": z[7],
+                        "compressed": z[8],
                     }
                     for z in y
                 }
@@ -156,3 +159,14 @@ class RemoteFileHandler(fh.FileHandler):
             }
 
         return status_dict
+
+    @staticmethod
+    @checksum_verification_required
+    def write_file(chunks, outfile: pathlib.Path, **_):
+
+        LOG.debug("Saving file...")
+        with outfile.open(mode="wb+") as new_file:
+            for chunk in chunks:
+                new_file.write(chunk)
+                yield chunk
+        LOG.debug("File saved.")

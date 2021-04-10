@@ -59,6 +59,10 @@ class DDSBaseClass:
         # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
 
+        # Keyboardinterrupt
+        self.stop_doing = False
+        self.force_stop = False
+
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(
             username=username, password=password, config=config, project=project

@@ -220,53 +220,67 @@ def put(
                         )
                     ] = file
 
-                # Continue until all files are done
-                while upload_threads:
-                    # Wait for the next future to complete
-                    done, _ = concurrent.futures.wait(
-                        upload_threads,
-                        return_when=concurrent.futures.FIRST_COMPLETED,
-                    )
+                try:
+                    # Continue until all files are done
+                    while upload_threads:
+                        # Wait for the next future to complete
+                        done, _ = concurrent.futures.wait(
+                            upload_threads,
+                            return_when=concurrent.futures.FIRST_COMPLETED,
+                        )
 
-                    # Number of new upload tasks that can be started
-                    new_tasks = 0
+                        # Number of new upload tasks that can be started
+                        new_tasks = 0
 
-                    # Get result from future and schedule database update
-                    for fut in done:
-                        uploaded_file = upload_threads.pop(fut)
-                        LOG.info("Future done: %s", uploaded_file)
+                        # Get result from future and schedule database update
+                        for fut in done:
+                            uploaded_file = upload_threads.pop(fut)
+                            LOG.info("Future done: %s", uploaded_file)
 
-                        # Get result
-                        try:
-                            file_uploaded = fut.result()
-                            LOG.info(
-                                "Upload of %s successful: %s",
-                                uploaded_file,
-                                file_uploaded,
-                            )
-                        except concurrent.futures.BrokenExecutor as err:
-                            LOG.critical(
-                                "Upload of file %s failed! Error: %s",
-                                uploaded_file,
-                                err,
-                            )
-                            continue
+                            # Get result
+                            try:
+                                file_uploaded = fut.result()
+                                LOG.info(
+                                    "Upload of %s successful: %s",
+                                    uploaded_file,
+                                    file_uploaded,
+                                )
+                            except concurrent.futures.BrokenExecutor as err:
+                                LOG.critical(
+                                    "Upload of file %s failed! Error: %s",
+                                    uploaded_file,
+                                    err,
+                                )
+                                continue
 
-                        new_tasks += 1
-                        if file_uploaded:
-                            # Increase the main progress bar
-                            progress.advance(upload_task)
+                            new_tasks += 1
+                            if file_uploaded:
+                                # Increase the main progress bar
+                                progress.advance(upload_task)
 
-                    # Schedule the next set of futures for upload
-                    for next_file in itertools.islice(iterator, new_tasks):
-                        LOG.info("Starting: %s", next_file)
-                        upload_threads[
-                            texec.submit(
-                                putter.protect_and_upload,
-                                file=next_file,
-                                progress=progress,
-                            )
-                        ] = next_file
+                        # Schedule the next set of futures for upload
+                        for next_file in itertools.islice(iterator, new_tasks):
+                            LOG.info("Starting: %s", next_file)
+                            upload_threads[
+                                texec.submit(
+                                    putter.protect_and_upload,
+                                    file=next_file,
+                                    progress=progress,
+                                )
+                            ] = next_file
+                except KeyboardInterrupt:
+
+                    try:
+                        putter.stop_doing = True
+                        progress.remove_task(upload_task)
+                        _ = [
+                            progress.stop_task(x)
+                            for x in [
+                                y.id
+                                for y in progress.tasks
+                                if y.fields.get("step") != "put"
+                            ]
+                        ]
 
 
 ###############################################################################

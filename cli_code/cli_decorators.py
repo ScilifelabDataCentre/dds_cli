@@ -87,6 +87,11 @@ def verify_proceed(func):
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
 
+        if self.stop_doing:
+            message = "KeyBoardInterrupt - cancelling file {file}"
+            LOG.warning(message)
+            return False
+
         # Return if file cancelled by another file
         if self.status[file]["cancel"]:
             message = f"File already cancelled, stopping file {file}"

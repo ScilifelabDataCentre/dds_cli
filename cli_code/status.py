@@ -161,7 +161,7 @@ class ProgressPercentage(object):
 
         self._seen_so_far = 0
 
-    def __call__(self, bytes_amount):
+    def __call__(self, bytes_amount, **_):
 
         self._seen_so_far += bytes_amount
         self.progress.update(self.task, advance=bytes_amount)

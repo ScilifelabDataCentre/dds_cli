@@ -25,7 +25,11 @@ from cli_code import file_handler_local as fhl
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
 from cli_code import FileSegment
-from cli_code.cli_decorators import verify_proceed, update_status, subpath_required
+from cli_code.cli_decorators import (
+    verify_proceed,
+    update_status,
+    subpath_required,
+)
 from cli_code import status
 from cli_code import text_handler as txt
 from cli_code import file_compressor as fc
@@ -180,6 +184,7 @@ class DataPutter(base.DDSBaseClass):
             task,
             description=txt.TextHandler.task_name(file=file, step="put"),
             total=self.filehandler.data[file]["size_processed"],
+            step="put",
         )
 
         # Perform upload
@@ -209,14 +214,17 @@ class DataPutter(base.DDSBaseClass):
         uploaded = False
         error = ""
 
-        LOG.debug("Task: %s", task)
-
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
-            if None in [conn.safespring_project, conn.url, conn.keys, conn.bucketname]:
+            if None in [
+                conn.safespring_project,
+                conn.url,
+                conn.keys,
+                conn.bucketname,
+            ]:
                 error = "No s3 info returned! " + conn.message
             else:
                 # Upload file
@@ -239,7 +247,6 @@ class DataPutter(base.DDSBaseClass):
                 except (
                     botocore.client.ClientError,
                     boto3.exceptions.Boto3Error,
-                    Exception,
                 ) as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
                     LOG.exception("%s: %s", file, err)

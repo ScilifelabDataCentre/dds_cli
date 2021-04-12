@@ -61,7 +61,6 @@ class DDSBaseClass:
 
         # Keyboardinterrupt
         self.stop_doing = False
-        self.force_stop = False
 
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(

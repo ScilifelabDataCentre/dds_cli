@@ -270,17 +270,16 @@ def put(
                             ] = next_file
                 except KeyboardInterrupt:
 
-                    try:
-                        putter.stop_doing = True
-                        progress.remove_task(upload_task)
-                        _ = [
-                            progress.stop_task(x)
-                            for x in [
-                                y.id
-                                for y in progress.tasks
-                                if y.fields.get("step") != "put"
-                            ]
+                    putter.stop_doing = True
+                    progress.remove_task(upload_task)
+                    _ = [
+                        progress.stop_task(x)
+                        for x in [
+                            y.id
+                            for y in progress.tasks
+                            if y.fields.get("step") != "put"
                         ]
+                    ]
 
 
 ###############################################################################
@@ -508,6 +507,13 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     show_default=True,
     help="Turn off progress bar for each individual file. Summary bars still visible.",
 )
+@click.option(
+    "--verify-checksum",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Perform SHA-256 checksum verification after download (slower).",
+)
 @click.pass_obj
 def get(
     dds_info,
@@ -520,6 +526,7 @@ def get(
     break_on_fail,
     num_threads,
     silent,
+    verify_checksum,
 ):
 
     if get_all and (source or source_path_file):
@@ -540,6 +547,7 @@ def get(
         break_on_fail=break_on_fail,
         destination=dds_info["DDS_DIRS"]["FILES"],
         silent=silent,
+        verify_checksum=verify_checksum,
     ) as getter:
 
         with Progress(

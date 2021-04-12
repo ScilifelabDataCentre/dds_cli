@@ -50,30 +50,38 @@ def generate_checksum(func):
 
 def checksum_verification_required(func):
     @functools.wraps(func)
-    def verify_checksum(correct_checksum, *args, **kwargs):
-
-        checksum = hashlib.sha256()
+    def verify_checksum(correct_checksum, do_verify: bool = False, *args, **kwargs):
 
         done, message = (False, "")
         try:
-            for chunk in func(*args, **kwargs):
-                checksum.update(chunk)
+            chunks = func(*args, **kwargs)
+
+            if do_verify:
+                checksum = hashlib.sha256()
+                try:
+                    for chunk in chunks:
+                        checksum.update(chunk)
+                except Exception as cs_err:
+                    message = str(cs_err)
+                    LOG.exception(message)
+                else:
+                    checksum_digest = checksum.hexdigest()
+                    LOG.debug(
+                        "Correct checksum: %s\nChecksum of downloaded file: %s\nCorrect? %s",
+                        correct_checksum,
+                        checksum_digest,
+                        correct_checksum == checksum_digest,
+                    )
+
+                    if checksum_digest != correct_checksum:
+                        message = "Checksum verification failed. File compromised."
+                    else:
+                        done = True
         except Exception as err:
             message = str(err)
             LOG.exception(message)
         else:
-            checksum_digest = checksum.hexdigest()
-            LOG.debug(
-                "Correct checksum: %s\nChecksum of downloaded file: %s\nCorrect? %s",
-                correct_checksum,
-                checksum_digest,
-                correct_checksum == checksum_digest,
-            )
-
-            if checksum_digest != correct_checksum:
-                message = "Checksum verification failed. File compromised."
-            else:
-                done = True
+            done = True
 
         return done, message
 

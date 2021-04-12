@@ -63,6 +63,7 @@ class DataGetter(base.DDSBaseClass):
         source_path_file: pathlib.Path = None,
         destination: pathlib.Path = pathlib.Path(""),
         silent: bool = False,
+        verify_checksum: bool = False,
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -70,6 +71,7 @@ class DataGetter(base.DDSBaseClass):
 
         # Initiate DataGetter specific attributes
         self.break_on_fail = break_on_fail
+        self.verify_checksum = verify_checksum
         self.silent = silent
         self.filehandler = None
         self.status = dict()
@@ -164,10 +166,12 @@ class DataGetter(base.DDSBaseClass):
                     if file_info["compressed"]
                     else self.filehandler.write_file
                 )
+
                 file_saved, message = stream_to_file_func(
                     chunks=streamed_chunks,
                     outfile=file,
                     correct_checksum=file_info["checksum"],
+                    do_verify=self.verify_checksum,
                 )
 
                 if file_saved:

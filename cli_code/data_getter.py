@@ -136,6 +136,7 @@ class DataGetter(base.DDSBaseClass):
         task = progress.add_task(
             description=txt.TextHandler.task_name(file=file, step="get"),
             total=file_info["size_encrypted"],
+            visible=not self.silent,
         )
 
         # Perform download

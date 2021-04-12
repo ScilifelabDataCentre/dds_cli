@@ -151,10 +151,10 @@ class DataPutter(base.DDSBaseClass):
         task = progress.add_task(
             description=txt.TextHandler.task_name(file=file, step="encrypt"),
             total=file_info["size_raw"],
+            visible=not self.silent,
         )
 
         # Perform processing
-
         streamed_chunks = self.filehandler.stream_from_file(
             file=file,
             raw_file=file_info["path_raw"],

@@ -212,3 +212,22 @@ def subpath_required(func):
         return func(self, file=file, *args, **kwargs)
 
     return check_and_create
+
+
+# def update_progress_tasks(func):
+#     @functools.wraps(func)
+#     def create_or_update(self, file, progress, *args, **kwargs):
+#         if not self.silent:
+#             file_info = self.filehandler.data[file]
+#             if func.__name__ == "protect_and_upload":
+#                 task = progress.add_task(
+#                     description=txt.TextHandler.task_name(file=file, step="encrypt"),
+#                     total=file_info["size_raw"],
+#                 )
+#                 return func(self, file=file, progress=progress, *args, **kwargs)
+#             elif func.__name__ == "encrypt_filechunks":
+#                 for x in func(self,)
+#         LOG.debug("progress decorator")
+#         return func(self, file=file, progress=progress, *args, **kwargs)
+
+#     return create_or_update

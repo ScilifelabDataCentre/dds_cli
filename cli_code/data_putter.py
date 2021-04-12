@@ -18,6 +18,7 @@ import requests
 import rich
 from rich.progress import Progress, SpinnerColumn
 import simplejson
+import textwrap
 
 # Own modules
 from cli_code import base
@@ -35,6 +36,7 @@ from cli_code import text_handler as txt
 from cli_code import file_compressor as fc
 from cli_code import file_encryptor as fe
 from cli_code import data_remover as dr
+from cli_code import data_lister as dl
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -134,6 +136,66 @@ class DataPutter(base.DDSBaseClass):
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
+
+        save_to_log = False
+
+        self.filehandler.failed.update(
+            {
+                file: {**info, "message": self.status[file]["message"]}
+                for file, info in self.filehandler.data.items()
+                if self.status[file]["cancel"]
+            }
+        )
+
+        if len(self.filehandler.failed) > 40:
+            save_to_log = True
+
+        files = {
+            x: self.filehandler.failed.pop(x)
+            for x, y in list(self.filehandler.failed.items())
+            if y["subpath"] == pathlib.Path("")
+        }
+
+        files_table = None
+        if files:
+            files_table = rich.table.Table(
+                title="Files not uploaded",
+                title_justify="left",
+                show_header=True,
+                header_style="bold",
+            )
+            columns = ["File", "Error"]
+            for x in columns:
+                files_table.add_column(x, overflow="fold")
+
+            _ = [
+                files_table.add_row(textwrap.fill(str(y["path_raw"])), y["message"])
+                for _, y in files.items()
+            ]
+
+        folders_table = None
+        if self.filehandler.failed:
+            folders_table = rich.table.Table(
+                title="Incomplete directory uploads",
+                title_justify="left",
+                show_header=True,
+                header_style="bold",
+            )
+            columns = ["Directory", "File", "Error"]
+            for x in columns:
+                folders_table.add_column(x, overflow="fold")
+
+            _ = [
+                folders_table.add_row("Folder here", str(y["path_raw"]), y["message"])
+                for _, y in self.filehandler.failed.items()
+            ]
+
+        if save_to_log:
+            pass
+        else:
+            for x in [files_table, folders_table]:
+                if x is not None:
+                    console.print(rich.padding.Padding(x, 1))
 
         return True
 

@@ -158,7 +158,10 @@ def cli(ctx, debug):
     is_flag=True,
     default=False,
     show_default=True,
-    help="Turn off progress bar for each individual file. Summary bars still visible.",
+    help=(
+        "Turn off progress bar for each individual file. Summary bars still visible."
+        "Suggested for uploads including a large number of files."
+    ),
 )
 @click.pass_obj
 def put(

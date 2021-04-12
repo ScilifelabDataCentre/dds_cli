@@ -16,10 +16,13 @@ import base64
 # Installed
 import boto3
 import botocore
+import rich
+from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn, SpinnerColumn
 
 # Own modules
 from cli_code import s3_connector as s3
 from cli_code import text_handler as txt
+
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -214,20 +217,29 @@ def subpath_required(func):
     return check_and_create
 
 
-# def update_progress_tasks(func):
-#     @functools.wraps(func)
-#     def create_or_update(self, file, progress, *args, **kwargs):
-#         if not self.silent:
-#             file_info = self.filehandler.data[file]
-#             if func.__name__ == "protect_and_upload":
-#                 task = progress.add_task(
-#                     description=txt.TextHandler.task_name(file=file, step="encrypt"),
-#                     total=file_info["size_raw"],
-#                 )
-#                 return func(self, file=file, progress=progress, *args, **kwargs)
-#             elif func.__name__ == "encrypt_filechunks":
-#                 for x in func(self,)
-#         LOG.debug("progress decorator")
-#         return func(self, file=file, progress=progress, *args, **kwargs)
+def removal_spinner(func):
+    @functools.wraps(func)
+    def create_and_remove_task(self, *args, **kwargs):
+        message = ""
+        with Progress(
+            "[bold]{task.description}",
+            SpinnerColumn(spinner_name="dots12", style="white"),
+        ) as progress:
 
-#     return create_or_update
+            if func.__name__ == "remove_all":
+                description = f"Removing all files in project {self.project}..."
+            elif func.__name__ == "remove_file":
+                description = "Removing file(s)..."
+            elif func.__name__ == "remove_folder":
+                description = "Removing folder(s)..."
+
+            task = progress.add_task(description=description)
+
+            message = func(self, *args, **kwargs)
+
+            progress.remove_task(task)
+
+        console = rich.console.Console()
+        console.print(message)
+
+    return create_and_remove_task

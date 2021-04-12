@@ -20,6 +20,7 @@ import simplejson
 from cli_code import base
 from cli_code import data_lister
 from cli_code import DDSEndpoint
+from cli_code.cli_decorators import removal_spinner
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -55,8 +56,11 @@ class DataRemover(base.DDSBaseClass):
 
         return True
 
-    def remove_all(self):
+    @removal_spinner
+    def remove_all(self, *_, **kwargs):
         """Remove all files in project."""
+
+        message = ""
 
         # Perform request to API to perform deletion
         try:
@@ -64,10 +68,8 @@ class DataRemover(base.DDSBaseClass):
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
-        console = rich.console.Console()
         if not response.ok:
-            console.print(f"Failed to delete files in project: {response.text}")
-            os._exit(os.EX_OK)
+            return f"Failed to delete files in project: {response.text}"
 
         # Print out response - deleted or not?
         try:
@@ -76,13 +78,15 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if resp_json["removed"]:
-            console.print(f"All files have been removed from project {self.project}.")
+            message = f"All files have been removed from project {self.project}."
         else:
-            if "error" not in resp_json:
-                sys.exit("No error message returned despite failure.")
+            message = resp_json.get("error")
+            if message is None:
+                message = "No error message returned despite failure."
 
-            console.print(resp_json["error"])
+        return message
 
+    @removal_spinner
     def remove_file(self, files):
         """Remove specific files."""
 
@@ -93,13 +97,11 @@ class DataRemover(base.DDSBaseClass):
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
-        console = rich.console.Console()
         if not response.ok:
-            console.print(
+            return (
                 f"Failed to delete file(s) '{files}' in project {self.project}:"
                 f" {response.text}"
             )
-            os._exit(os.EX_OK)
 
         # Get info in response
         try:
@@ -107,8 +109,9 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        self.__response_delete(resp_json=resp_json)
+        return self.__response_delete(resp_json=resp_json)
 
+    @removal_spinner
     def remove_folder(self, folder):
         """Remove specific folders."""
 
@@ -119,13 +122,11 @@ class DataRemover(base.DDSBaseClass):
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
-        console = rich.console.Console()
         if not response.ok:
-            console.print(
+            return (
                 f"Failed to delete folder(s) '{folder}' "
                 f"in project {self.project}: {response.text}"
             )
-            os._exit(os.EX_OK)
 
         # Make sure required info is returned
         try:
@@ -133,18 +134,18 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        self.__response_delete(resp_json=resp_json, level="Folder")
+        return self.__response_delete(resp_json=resp_json, level="Folder")
 
     @staticmethod
     def __response_delete(resp_json, level="File"):
         """Output a response after deletion."""
 
-        console = rich.console.Console()
+        # console = rich.console.Console()
 
         # Check that enough info
         if not all(x in resp_json for x in ["not_exists", "not_removed"]):
-            console.print("No information returned. Server error.")
-            os._exit(os.EX_OK)
+            return "No information returned. Server error."
+            # os._exit(os.EX_OK)
 
         # Get info
         not_exists = resp_json["not_exists"]
@@ -179,7 +180,7 @@ class DataRemover(base.DDSBaseClass):
             ]
 
             # Print out table
-            console.print(rich.padding.Padding(table, 1))
+            return rich.padding.Padding(table, 1)
 
     @staticmethod
     def delete_tempfile(file: pathlib.Path):

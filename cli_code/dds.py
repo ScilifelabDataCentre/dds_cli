@@ -423,9 +423,6 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     with dr.DataRemover(project=project, username=username, config=config) as remover:
 
         if rm_all:
-            console_rm = rich.console.Console(stderr=True, style="orange3")
-            console_rm.print(f"\nRemoving all files in project {project}...\n")
-
             remover.remove_all()
 
         if file:

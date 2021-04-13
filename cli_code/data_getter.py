@@ -74,7 +74,7 @@ class DataGetter(base.DDSBaseClass):
         self.verify_checksum = verify_checksum
         self.silent = silent
         self.filehandler = None
-        self.status = dict()
+        self.log_location = destination["LOGS"]
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
@@ -95,7 +95,7 @@ class DataGetter(base.DDSBaseClass):
                 get_all=get_all,
                 user_input=(source, source_path_file),
                 token=self.token,
-                destination=destination,
+                destination=destination["FILES"],
             )
 
             if self.filehandler.failed and self.break_on_fail:
@@ -117,10 +117,43 @@ class DataGetter(base.DDSBaseClass):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
+
+        any_failed = self.collect_all_failed()
+
+        self.filehandler.failed.clear()
+
+        LOG.debug(any_failed)
+
+        if any_failed:
+            intro_error_message = "Errors occurred during download"
+
+            outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
+            self.filehandler.save_errors_to_file(file=outfile, info=any_failed)
+
+            if len(any_failed) < max_fileerrs:
+                console.print(f"{intro_error_message}:")
+
+                files_table = self.filehandler.create_summary_table(
+                    all_failed_data=any_failed, upload=False
+                )
+                if files_table is not None:
+                    console.print(rich.padding.Padding(files_table, 1))
+
+                folders_table = self.filehandler.create_summary_table(
+                    all_failed_data=any_failed, get_single_files=False, upload=False
+                )
+                if folders_table is not None:
+                    console.print(rich.padding.Padding(folders_table, 1))
+
+            console.print(f"{intro_error_message}. See {outfile} for more information.")
+
+        else:
+
+            console.print("Download completed!")
 
         return True
 

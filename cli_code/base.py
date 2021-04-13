@@ -55,7 +55,13 @@ def attempted_operation():
 class DDSBaseClass:
     """Data Delivery System base class. For common operations."""
 
-    def __init__(self, username=None, password=None, config=None, project=None):
+    def __init__(
+        self,
+        username=None,
+        password=None,
+        config=None,
+        project=None,
+    ):
         # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
 
@@ -80,6 +86,8 @@ class DDSBaseClass:
 
             if self.method in ["put", "get"]:
                 self.keys = self.__get_project_keys()
+
+                self.status = dict()
 
     # Private methods ############################### Private methods #
     def __verify_input(self, username=None, password=None, config=None, project=None):
@@ -257,18 +265,29 @@ class DDSBaseClass:
         return True
 
     def collect_all_failed(self, sort: bool = True):
+
         # Transform all items to string
-        self.filehandler.data.update(
-            {
-                str(file): {str(x): str(y) for x, y in info.items()}
-                for file, info in list(self.filehandler.data.items())
-            }
-        )
+        self.filehandler.data = {
+            str(file): {str(x): str(y) for x, y in info.items()}
+            for file, info in list(self.filehandler.data.items())
+        }
+
+        self.status = {
+            str(file): {str(x): str(y) for x, y in info.items()}
+            for file, info in list(self.status.items())
+        }
+
+        LOG.debug(self.filehandler.data)
+        LOG.debug(self.status)
 
         # Get cancelled files
         self.filehandler.failed.update(
             {
-                file: {**info, "message": self.status[file]["message"]}
+                file: {
+                    **info,
+                    "message": self.status[file]["message"],
+                    "failed_op": self.status[file]["failed_op"],
+                }
                 for file, info in self.filehandler.data.items()
                 if self.status[file]["cancel"]
             }

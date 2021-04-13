@@ -165,6 +165,7 @@ class LocalFileHandler(fh.FileHandler):
                     "cancel": False,
                     "started": False,
                     "message": "",
+                    "failed_op": None,
                     filestream_funcname: {"started": False, "done": False},
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},

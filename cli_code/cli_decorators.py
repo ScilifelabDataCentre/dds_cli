@@ -115,7 +115,7 @@ def verify_proceed(func):
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
 
         # Cancel file(s) if something failed
-        if ok_to_proceed:
+        if not ok_to_proceed:
             self.status[file].update({"cancel": True, "message": message})
             if self.break_on_fail:
                 message = (
@@ -155,7 +155,8 @@ def update_status(func):
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
 
-        if not ok_to_continue:
+        if ok_to_continue:
+            self.status[file]["failed_op"] = func.__name__
             return False, message
 
         # Update status to done

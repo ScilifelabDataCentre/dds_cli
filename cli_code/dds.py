@@ -257,9 +257,8 @@ def put(
                                 continue
 
                             new_tasks += 1
-                            if file_uploaded:
-                                # Increase the main progress bar
-                                progress.advance(upload_task)
+                            # Increase the main progress bar
+                            progress.advance(upload_task)
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
@@ -545,7 +544,7 @@ def get(
         source=source,
         source_path_file=source_path_file,
         break_on_fail=break_on_fail,
-        destination=dds_info["DDS_DIRS"]["FILES"],
+        destination=dds_info["DDS_DIRS"],
         silent=silent,
         verify_checksum=verify_checksum,
     ) as getter:
@@ -608,8 +607,7 @@ def get(
                             continue
 
                         new_tasks += 1
-                        if file_downloaded:
-                            progress.advance(task_dwnld)
+                        progress.advance(task_dwnld)
 
                     # Schedule the next set of futures for download
                     for next_file in itertools.islice(iterator, new_tasks):

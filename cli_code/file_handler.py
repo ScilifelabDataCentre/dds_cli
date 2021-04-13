@@ -90,11 +90,18 @@ class FileHandler:
     def create_summary_table(
         all_failed_data,
         get_single_files: bool = True,
-        columns: list = ["File", "Error"],
+        upload: bool = True,
     ):
 
+        columns = ["File", "Error"] if upload else ["File", "Location", "Error"]
         curr_table = None
         title = "file" if get_single_files else "directory"
+        up_or_down = "upload" if upload else "download"
+
+        LOG.debug(
+            "Files: %s, Upload: %s, Columns: %s", get_single_files, upload, columns
+        )
+
         if not get_single_files:
             columns = ["Directory"] + columns
 
@@ -110,7 +117,7 @@ class FileHandler:
         ]
         if files:
             curr_table = rich.table.Table(
-                title=f"Incomplete {title} uploads",
+                title=f"Incomplete {title} {up_or_down}s",
                 title_justify="left",
                 show_header=True,
                 header_style="bold",
@@ -120,23 +127,46 @@ class FileHandler:
                 curr_table.add_column(x, overflow="fold")
 
             if get_single_files:
-                _ = [
-                    curr_table.add_row(textwrap.fill(x[1]["path_raw"]), x[1]["message"])
-                    for x in files
-                ]
+                if upload:
+                    _ = [
+                        curr_table.add_row(
+                            textwrap.fill(x[1]["path_raw"]), x[1]["message"]
+                        )
+                        for x in files
+                    ]
+                else:
+                    _ = [
+                        curr_table.add_row(
+                            x[1]["name_in_db"], textwrap.fill(x[0]), x[1]["message"]
+                        )
+                        for x in files
+                    ]
             else:
                 subpath = ""
-                for x in files:
-                    curr_table.add_row(
-                        textwrap.fill(
+                if upload:
+                    for x in files:
+                        curr_table.add_row(
+                            textwrap.fill(
+                                ""
+                                if subpath == x[1]["subpath"]
+                                else str(pathlib.Path(x[1]["path_raw"]).parent)
+                            ),
+                            str(pathlib.Path(x[1]["path_raw"]).name),
+                            x[1]["message"],
+                        )
+
+                        subpath = x[1]["subpath"]
+                else:
+                    for x in files:
+                        curr_table.add_row(
                             ""
                             if subpath == x[1]["subpath"]
-                            else str(pathlib.Path(x[1]["path_raw"]).parent)
-                        ),
-                        str(pathlib.Path(x[1]["path_raw"]).name),
-                        x[1]["message"],
-                    )
+                            else str(pathlib.Path(x[1]["subpath"])),
+                            x[1]["name_in_db"],
+                            textwrap.fill(str(pathlib.Path(x[0]))),
+                            x[1]["message"],
+                        )
 
-                    subpath = x[1]["subpath"]
+                        subpath = x[1]["subpath"]
 
         return curr_table

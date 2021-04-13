@@ -81,7 +81,6 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
-        self.status = dict()
         self.log_location = temporary_destination["LOGS"]
 
         # Only method "put" can use the DataPutter class
@@ -139,38 +138,37 @@ class DataPutter(base.DDSBaseClass):
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        all_failed = self.collect_all_failed()
+        any_failed = self.collect_all_failed()
 
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
-        if all_failed:
+        if any_failed:
             intro_error_message = "Errors occurred during upload"
 
             # Save to file and print message if too many failed files,
             # otherwise create and print tables
-            if len(all_failed) > max_fileerrs:
-                outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
+            # if len(any_failed) > max_fileerrs:
+            outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
+            self.filehandler.save_errors_to_file(file=outfile, info=any_failed)
 
-                self.filehandler.save_errors_to_file(file=outfile, info=all_failed)
-
-                console.print(
-                    f"{intro_error_message}. See {outfile} for more information."
-                )
-            else:
+            if len(any_failed) < max_fileerrs:
                 console.print(f"{intro_error_message}:")
 
                 files_table = self.filehandler.create_summary_table(
-                    all_failed_data=all_failed
+                    all_failed_data=any_failed
                 )
                 if files_table is not None:
                     console.print(rich.padding.Padding(files_table, 1))
 
                 folders_table = self.filehandler.create_summary_table(
-                    all_failed_data=all_failed, get_single_files=False
+                    all_failed_data=any_failed, get_single_files=False
                 )
                 if folders_table is not None:
                     console.print(rich.padding.Padding(folders_table, 1))
+
+            console.print(f"{intro_error_message}. See {outfile} for more information.")
+
         else:
             console.print("Upload completed!")
 

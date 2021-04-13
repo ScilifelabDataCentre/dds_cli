@@ -114,49 +114,6 @@ class DataGetter(base.DDSBaseClass):
 
             progress.remove_task(wait_task)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
-        if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
-            return False  # uncomment to pass exception through
-
-        any_failed = self.collect_all_failed()
-
-        self.filehandler.failed.clear()
-
-        LOG.debug(any_failed)
-
-        if any_failed:
-            intro_error_message = "Errors occurred during download"
-
-            outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
-            self.filehandler.save_errors_to_file(file=outfile, info=any_failed)
-
-            if len(any_failed) < max_fileerrs:
-                console.print(f"{intro_error_message}:")
-
-                files_table = self.filehandler.create_summary_table(
-                    all_failed_data=any_failed, upload=False
-                )
-                if files_table is not None:
-                    console.print(rich.padding.Padding(files_table, 1))
-
-                folders_table = self.filehandler.create_summary_table(
-                    all_failed_data=any_failed, get_single_files=False, upload=False
-                )
-                if folders_table is not None:
-                    console.print(rich.padding.Padding(folders_table, 1))
-
-            console.print(f"{intro_error_message}. See {outfile} for more information.")
-
-        else:
-
-            console.print("Download completed!")
-
-        return True
-
     @verify_proceed
     @subpath_required
     def download_and_verify(self, file, progress):

@@ -9,6 +9,8 @@ import inspect
 import logging
 import sys
 import os
+import traceback
+import pathlib
 
 # Installed
 import requests
@@ -88,7 +90,19 @@ class DDSBaseClass:
                 self.keys = self.__get_project_keys()
 
                 self.status = dict()
+                self.filehandler = None
+    
+    def __enter__(self):
+        return self
 
+    def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
+            return False  # uncomment to pass exception through
+
+        self.printout_delivery_summary()
+
+        return True
     # Private methods ############################### Private methods #
     def __verify_input(self, username=None, password=None, config=None, project=None):
         """Verifies that the users input is valid and fully specified."""
@@ -277,9 +291,6 @@ class DDSBaseClass:
             for file, info in list(self.status.items())
         }
 
-        LOG.debug(self.filehandler.data)
-        LOG.debug(self.status)
-
         # Get cancelled files
         self.filehandler.failed.update(
             {
@@ -302,3 +313,41 @@ class DDSBaseClass:
             if sort
             else self.filehandler.failed
         )
+
+    def printout_delivery_summary(self, max_fileerrs: int = 40):
+        any_failed = self.collect_all_failed()
+
+        # Clear dict to not take up too much space
+        self.filehandler.failed.clear()
+
+        if any_failed:
+            intro_error_message = f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
+
+            # Save to file and print message if too many failed files,
+            # otherwise create and print tables
+            outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
+            fh.FileHandler.save_errors_to_file(file=outfile, info=any_failed)
+
+            if len(any_failed) < max_fileerrs:
+                console.print(f"{intro_error_message}:")
+
+                files_table = fh.FileHandler.create_summary_table(
+                    all_failed_data=any_failed, upload=bool(self.method == "put")
+                )
+                if files_table is not None:
+                    console.print(rich.padding.Padding(files_table, 1))
+
+                folders_table = fh.FileHandler.create_summary_table(
+                    all_failed_data=any_failed,
+                    get_single_files=False,
+                    upload=bool(self.method == "put"),
+                )
+                if folders_table is not None:
+                    console.print(rich.padding.Padding(folders_table, 1))
+
+            console.print(f"{intro_error_message}. See {outfile} for more information.")
+
+        else:
+            console.print(
+                f"{'Upload' if self.method == 'put' else 'Download'} completed!"
+            )

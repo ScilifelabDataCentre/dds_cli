@@ -255,3 +255,31 @@ class DDSBaseClass:
         LOG.debug("Bucket verified.")
 
         return True
+
+    def collect_all_failed(self, sort: bool = True):
+        # Transform all items to string
+        self.filehandler.data.update(
+            {
+                str(file): {str(x): str(y) for x, y in info.items()}
+                for file, info in list(self.filehandler.data.items())
+            }
+        )
+
+        # Get cancelled files
+        self.filehandler.failed.update(
+            {
+                file: {**info, "message": self.status[file]["message"]}
+                for file, info in self.filehandler.data.items()
+                if self.status[file]["cancel"]
+            }
+        )
+
+        # Sort by which directory the files are in
+        return (
+            sorted(
+                sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
+                key=lambda f: f[1]["subpath"],
+            )
+            if sort
+            else self.filehandler.failed
+        )

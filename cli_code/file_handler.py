@@ -10,6 +10,7 @@ import sys
 import pathlib
 import os
 import json
+import textwrap
 
 # Installed
 import rich
@@ -75,3 +76,67 @@ class FileHandler:
             os.umask(original_umask)
 
         return contents
+
+    @staticmethod
+    def save_errors_to_file(file: pathlib.Path, info):
+        with file.open(mode="w") as errfile:
+            json.dump(
+                info,
+                errfile,
+                indent=4,
+            )
+
+    @staticmethod
+    def create_summary_table(
+        all_failed_data,
+        get_single_files: bool = True,
+        columns: list = ["File", "Error"],
+    ):
+
+        curr_table = None
+        title = "file" if get_single_files else "directory"
+        if not get_single_files:
+            columns = ["Directory"] + columns
+
+        files = [
+            x
+            for x in all_failed_data
+            if (
+                get_single_files
+                and x[1]["subpath"] == "."
+                or not get_single_files
+                and x[1]["subpath"] != "."
+            )
+        ]
+        if files:
+            curr_table = rich.table.Table(
+                title=f"Incomplete {title} uploads",
+                title_justify="left",
+                show_header=True,
+                header_style="bold",
+            )
+
+            for x in columns:
+                curr_table.add_column(x, overflow="fold")
+
+            if get_single_files:
+                _ = [
+                    curr_table.add_row(textwrap.fill(x[1]["path_raw"]), x[1]["message"])
+                    for x in files
+                ]
+            else:
+                subpath = ""
+                for x in files:
+                    curr_table.add_row(
+                        textwrap.fill(
+                            ""
+                            if subpath == x[1]["subpath"]
+                            else str(pathlib.Path(x[1]["path_raw"]).parent)
+                        ),
+                        str(pathlib.Path(x[1]["path_raw"]).name),
+                        x[1]["message"],
+                    )
+
+                    subpath = x[1]["subpath"]
+
+        return curr_table

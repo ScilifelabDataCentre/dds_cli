@@ -134,88 +134,45 @@ class DataPutter(base.DDSBaseClass):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 10):
+    def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        save_to_log = False
+        all_failed = self.collect_all_failed()
 
-        self.filehandler.data.update(
-            {
-                str(file): {str(x): str(y) for x, y in info.items()}
-                for file, info in list(self.filehandler.data.items())
-            }
-        )
-        self.filehandler.failed.update(
-            {
-                file: {**info, "message": self.status[file]["message"]}
-                for file, info in self.filehandler.data.items()
-                if self.status[file]["cancel"]
-            }
-        )
+        # Clear dict to not take up too much space
+        self.filehandler.failed.clear()
 
-        # Save to file and print message if too many failed files,
-        # otherwise create and print tables
-        if len(self.filehandler.failed) > max_fileerrs:
-            # sorted(self.filehandler.failed, key=lambda f: )
-            with (self.log_location / pathlib.Path("dds_failed_delivery.txt")).open(
-                mode="w"
-            ) as errfile:
-                json.dump(
-                    sorted(
-                        sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
-                        key=lambda f: f[1]["subpath"],
-                    ),
-                    errfile,
-                    indent=4,
+        if all_failed:
+            intro_error_message = "Errors occurred during upload"
+
+            # Save to file and print message if too many failed files,
+            # otherwise create and print tables
+            if len(all_failed) > max_fileerrs:
+                outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
+
+                self.filehandler.save_errors_to_file(file=outfile, info=all_failed)
+
+                console.print(
+                    f"{intro_error_message}. See {outfile} for more information."
                 )
+            else:
+                console.print(f"{intro_error_message}:")
+
+                files_table = self.filehandler.create_summary_table(
+                    all_failed_data=all_failed
+                )
+                if files_table is not None:
+                    console.print(rich.padding.Padding(files_table, 1))
+
+                folders_table = self.filehandler.create_summary_table(
+                    all_failed_data=all_failed, get_single_files=False
+                )
+                if folders_table is not None:
+                    console.print(rich.padding.Padding(folders_table, 1))
         else:
-            files = {
-                x: self.filehandler.failed.pop(x)
-                for x, y in list(self.filehandler.failed.items())
-                if y["subpath"] == pathlib.Path("")
-            }
-
-            files_table = None
-            if files:
-                files_table = rich.table.Table(
-                    title="Files not uploaded",
-                    title_justify="left",
-                    show_header=True,
-                    header_style="bold",
-                )
-                columns = ["File", "Error"]
-                for x in columns:
-                    files_table.add_column(x, overflow="fold")
-
-                _ = [
-                    files_table.add_row(textwrap.fill(str(y["path_raw"])), y["message"])
-                    for _, y in files.items()
-                ]
-
-            folders_table = None
-            if self.filehandler.failed:
-                folders_table = rich.table.Table(
-                    title="Incomplete directory uploads",
-                    title_justify="left",
-                    show_header=True,
-                    header_style="bold",
-                )
-                columns = ["Directory", "File", "Error"]
-                for x in columns:
-                    folders_table.add_column(x, overflow="fold")
-
-                _ = [
-                    folders_table.add_row(
-                        "Folder here", str(y["path_raw"]), y["message"]
-                    )
-                    for _, y in self.filehandler.failed.items()
-                ]
-
-            for x in [files_table, folders_table]:
-                if x is not None:
-                    console.print(rich.padding.Padding(x, 1))
+            console.print("Upload completed!")
 
         return True
 

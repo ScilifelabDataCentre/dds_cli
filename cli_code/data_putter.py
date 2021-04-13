@@ -10,6 +10,7 @@ import pathlib
 import sys
 import os
 import traceback
+import json
 
 # Installed
 import botocore
@@ -61,6 +62,7 @@ class DataPutter(base.DDSBaseClass):
 
     def __init__(
         self,
+        temporary_destination: dict,
         username: str = None,
         config: pathlib.Path = None,
         project: str = None,
@@ -69,7 +71,6 @@ class DataPutter(base.DDSBaseClass):
         source: tuple = (),
         source_path_file: pathlib.Path = None,
         silent: bool = False,
-        temporary_destination: pathlib.Path = pathlib.Path(""),
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -81,6 +82,7 @@ class DataPutter(base.DDSBaseClass):
         self.silent = silent
         self.filehandler = None
         self.status = dict()
+        self.log_location = temporary_destination["LOGS"]
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
@@ -103,7 +105,7 @@ class DataPutter(base.DDSBaseClass):
             # Get file info
             self.filehandler = fhl.LocalFileHandler(
                 user_input=(source, source_path_file),
-                temporary_destination=temporary_destination,
+                temporary_destination=temporary_destination["FILES"],
             )
             self.verify_bucket_exist()
             files_in_db = self.filehandler.check_previous_upload(token=self.token)
@@ -132,13 +134,19 @@ class DataPutter(base.DDSBaseClass):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 10):
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
         save_to_log = False
 
+        self.filehandler.data.update(
+            {
+                str(file): {str(x): str(y) for x, y in info.items()}
+                for file, info in list(self.filehandler.data.items())
+            }
+        )
         self.filehandler.failed.update(
             {
                 file: {**info, "message": self.status[file]["message"]}
@@ -147,52 +155,64 @@ class DataPutter(base.DDSBaseClass):
             }
         )
 
-        if len(self.filehandler.failed) > 40:
-            save_to_log = True
-
-        files = {
-            x: self.filehandler.failed.pop(x)
-            for x, y in list(self.filehandler.failed.items())
-            if y["subpath"] == pathlib.Path("")
-        }
-
-        files_table = None
-        if files:
-            files_table = rich.table.Table(
-                title="Files not uploaded",
-                title_justify="left",
-                show_header=True,
-                header_style="bold",
-            )
-            columns = ["File", "Error"]
-            for x in columns:
-                files_table.add_column(x, overflow="fold")
-
-            _ = [
-                files_table.add_row(textwrap.fill(str(y["path_raw"])), y["message"])
-                for _, y in files.items()
-            ]
-
-        folders_table = None
-        if self.filehandler.failed:
-            folders_table = rich.table.Table(
-                title="Incomplete directory uploads",
-                title_justify="left",
-                show_header=True,
-                header_style="bold",
-            )
-            columns = ["Directory", "File", "Error"]
-            for x in columns:
-                folders_table.add_column(x, overflow="fold")
-
-            _ = [
-                folders_table.add_row("Folder here", str(y["path_raw"]), y["message"])
-                for _, y in self.filehandler.failed.items()
-            ]
-
-        if save_to_log:
-            pass
+        # Save to file and print message if too many failed files,
+        # otherwise create and print tables
+        if len(self.filehandler.failed) > max_fileerrs:
+            # sorted(self.filehandler.failed, key=lambda f: )
+            with (self.log_location / pathlib.Path("dds_failed_delivery.txt")).open(
+                mode="w"
+            ) as errfile:
+                json.dump(
+                    sorted(
+                        sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
+                        key=lambda f: f[1]["subpath"],
+                    ),
+                    errfile,
+                    indent=4,
+                )
         else:
+            files = {
+                x: self.filehandler.failed.pop(x)
+                for x, y in list(self.filehandler.failed.items())
+                if y["subpath"] == pathlib.Path("")
+            }
+
+            files_table = None
+            if files:
+                files_table = rich.table.Table(
+                    title="Files not uploaded",
+                    title_justify="left",
+                    show_header=True,
+                    header_style="bold",
+                )
+                columns = ["File", "Error"]
+                for x in columns:
+                    files_table.add_column(x, overflow="fold")
+
+                _ = [
+                    files_table.add_row(textwrap.fill(str(y["path_raw"])), y["message"])
+                    for _, y in files.items()
+                ]
+
+            folders_table = None
+            if self.filehandler.failed:
+                folders_table = rich.table.Table(
+                    title="Incomplete directory uploads",
+                    title_justify="left",
+                    show_header=True,
+                    header_style="bold",
+                )
+                columns = ["Directory", "File", "Error"]
+                for x in columns:
+                    folders_table.add_column(x, overflow="fold")
+
+                _ = [
+                    folders_table.add_row(
+                        "Folder here", str(y["path_raw"]), y["message"]
+                    )
+                    for _, y in self.filehandler.failed.items()
+                ]
+
             for x in [files_table, folders_table]:
                 if x is not None:
                     console.print(rich.padding.Padding(x, 1))

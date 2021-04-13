@@ -188,7 +188,7 @@ def put(
         break_on_fail=break_on_fail,
         overwrite=overwrite,
         silent=silent,
-        temporary_destination=dds_info["DDS_DIRS"]["FILES"],
+        temporary_destination=dds_info["DDS_DIRS"],
     ) as putter:
 
         with Progress(

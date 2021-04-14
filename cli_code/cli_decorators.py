@@ -98,10 +98,11 @@ def verify_proceed(func):
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
 
+        # Check if keyboardinterrupt in dds
         if self.stop_doing:
             message = "KeyBoardInterrupt - cancelling file {file}"
             LOG.warning(message)
-            return False
+            return False  # Do not proceed
 
         # Return if file cancelled by another file
         if self.status[file]["cancel"]:
@@ -109,6 +110,7 @@ def verify_proceed(func):
             LOG.warning(message)
             return False
 
+        # Mark as started
         self.status[file]["started"] = True
 
         # Run function
@@ -142,6 +144,7 @@ def update_status(func):
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
 
+        # TODO (ina): add processing?
         if func.__name__ not in ["put", "add_file_db", "get", "update_db"]:
             raise Exception(
                 f"The function {func.__name__} cannot be used with this decorator."
@@ -156,11 +159,11 @@ def update_status(func):
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
 
         if not ok_to_continue:
+            # Save info about which operation failed
             self.status[file]["failed_op"] = func.__name__
-            return False, message
-
-        # Update status to done
-        self.status[file][func.__name__].update({"done": True})
+        else:
+            # Update status to done
+            self.status[file][func.__name__].update({"done": True})
 
         return ok_to_continue, message
 
@@ -197,16 +200,20 @@ def connect_cloud(func):
 
 
 def subpath_required(func):
-    """Make sure that the subpath to the downloaded files exist."""
+    """Make sure that the subpath to the temporary file directory exist."""
 
     @functools.wraps(func)
     def check_and_create(self, file, *args, **kwargs):
+        """Create the sub directory if it does not exist."""
 
         file_info = self.filehandler.data[file]
+
+        # Required path
         full_subpath = self.filehandler.local_destination / pathlib.Path(
             file_info["subpath"]
         )
 
+        # Create path
         if not full_subpath.exists():
             try:
                 full_subpath.mkdir(parents=True, exist_ok=True)
@@ -219,8 +226,12 @@ def subpath_required(func):
 
 
 def removal_spinner(func):
+    """Spinner for the rm command"""
+
     @functools.wraps(func)
     def create_and_remove_task(self, *args, **kwargs):
+        """"""
+
         message = ""
         with Progress(
             "[bold]{task.description}",

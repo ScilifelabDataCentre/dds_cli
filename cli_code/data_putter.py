@@ -7,10 +7,7 @@
 # Standard library
 import logging
 import pathlib
-import sys
 import os
-import traceback
-import json
 
 # Installed
 import botocore
@@ -19,14 +16,12 @@ import requests
 import rich
 from rich.progress import Progress, SpinnerColumn
 import simplejson
-import textwrap
 
 # Own modules
 from cli_code import base
 from cli_code import file_handler_local as fhl
 from cli_code import s3_connector as s3
 from cli_code import DDSEndpoint
-from cli_code import FileSegment
 from cli_code.cli_decorators import (
     verify_proceed,
     update_status,
@@ -34,10 +29,8 @@ from cli_code.cli_decorators import (
 )
 from cli_code import status
 from cli_code import text_handler as txt
-from cli_code import file_compressor as fc
 from cli_code import file_encryptor as fe
 from cli_code import data_remover as dr
-from cli_code import data_lister as dl
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -97,6 +90,7 @@ class DataPutter(base.DDSBaseClass):
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
         ) as progress:
+            # Spinner while collecting file info
             wait_task = progress.add_task(
                 "Collecting and preparing data", step="prepare"
             )
@@ -106,15 +100,20 @@ class DataPutter(base.DDSBaseClass):
                 user_input=(source, source_path_file),
                 temporary_destination=temporary_destination["FILES"],
             )
+
+            # Verify that the Safespring S3 bucket exists
             self.verify_bucket_exist()
+
+            # Check which, if any, files exist in the db
             files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
             # Quit if error and flag
             if files_in_db and self.break_on_fail and not self.overwrite:
                 # TODO (ina): Fix better print out
                 console.print(
-                    "\nSome files have already been uploaded and "
-                    f"'--break-on-fail' flag used. \n\nFiles: {files_in_db}\n"
+                    "Some files have already been uploaded (or have identical names to "
+                    "previously uploaded files) and the '--break-on-fail' flag used. "
+                    "Use '--overwrite' if you want to upload these files again."
                 )
                 os._exit(os.EX_OK)
 
@@ -123,45 +122,49 @@ class DataPutter(base.DDSBaseClass):
                 existing_files=files_in_db, overwrite=self.overwrite
             )
 
+            # Remove spinner
             progress.remove_task(wait_task)
 
-        LOG.debug("Data to upload: %s", "Yes" if self.filehandler.data else "No")
         if not self.filehandler.data:
             console.print("No data to upload.")
             os._exit(os.EX_OK)
 
-    # General methods ###################### General methods #
+    # Public methods ###################### Public methods #
     @verify_proceed
     @subpath_required
     def protect_and_upload(self, file, progress):
         """Processes and uploads the file while handling the progress bars."""
 
-        all_ok, message = (False, "")
-        file_info = self.filehandler.data[file]
-        file_public_key, salt = ("", "")
+        # Variables
+        all_ok, message = (False, "")  # Error catching
+        file_info = self.filehandler.data[file]  # Info on current file
+        file_public_key, salt = ("", "")  # Crypto info
 
-        # File task for processing
+        # Progress bar for processing
         task = progress.add_task(
             description=txt.TextHandler.task_name(file=file, step="encrypt"),
             total=file_info["size_raw"],
             visible=not self.silent,
         )
 
-        # Perform processing
+        # Stream chunks from file
         streamed_chunks = self.filehandler.stream_from_file(
             file=file,
             raw_file=file_info["path_raw"],
             do_compression=not file_info["compressed"],
         )
 
+        # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:
 
+            # Encrypt and save chunks
             encryptor.encrypt_filechunks(
                 chunks=streamed_chunks,
                 outfile=file_info["path_processed"],
                 progress=(progress, task),
             )
 
+            # Get hex version of public key -- saved in db
             file_public_key = encryptor.get_public_component_hex(
                 private_key=encryptor.my_private
             )
@@ -172,7 +175,7 @@ class DataPutter(base.DDSBaseClass):
             file_info["path_processed"].stat().st_size
         )
 
-        # Update progress task for upload
+        # Update progress bar for upload
         progress.reset(
             task,
             description=txt.TextHandler.task_name(file=file, step="put"),
@@ -195,7 +198,7 @@ class DataPutter(base.DDSBaseClass):
         # Delete temporary processed file locally
         dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
-        # Remove progress task
+        # Remove progress bar task
         progress.remove_task(task)
 
         return all_ok, message
@@ -204,14 +207,17 @@ class DataPutter(base.DDSBaseClass):
     def put(self, file, progress, task):
         """Uploads files to the cloud."""
 
+        # Variables
         uploaded = False
         error = ""
 
+        # File info
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
+            # Check that connection ok and upload file
             if None in [
                 conn.safespring_project,
                 conn.url,
@@ -252,10 +258,11 @@ class DataPutter(base.DDSBaseClass):
     def add_file_db(self, file, key_salt, public_key):
         """Make API request to add file to DB."""
 
+        # Variables
         added_to_db = False
         error = ""
 
-        # Get file info
+        # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
         params = {
             "name": file,
@@ -268,9 +275,9 @@ class DataPutter(base.DDSBaseClass):
             "public_key": public_key,
             "checksum": fileinfo["checksum"],
         }
-        # Send file info to API
-        put_or_post = requests.put if fileinfo["overwrite"] else requests.post
 
+        # Send file info to API - post if new file, put if overwrite
+        put_or_post = requests.put if fileinfo["overwrite"] else requests.posta
         try:
             response = put_or_post(
                 DDSEndpoint.FILE_NEW,
@@ -279,19 +286,19 @@ class DataPutter(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            LOG.warning(err)
-            raise SystemExit from err
+            error = str(err)
+            LOG.warning(error)
+        else:
+            # Error if failed
+            if not response.ok:
+                error = f"Failed to add file '{file}' to database: {response.text}"
+                LOG.exception(error)
+                return added_to_db, error
 
-        # Error if failed
-        if not response.ok:
-            error = f"Failed to add file '{file}' to database: {response.text}"
-            LOG.exception(error)
-            return added_to_db, error
-
-        try:
-            added_to_db, error = (True, response.json()["message"])
-        except simplejson.JSONDecodeError as err:
-            LOG.warning(err)
-            raise SystemExit from err
+            try:
+                added_to_db, error = (True, response.json()["message"])
+            except simplejson.JSONDecodeError as err:
+                error = str(err)
+                LOG.warning(error)
 
         return added_to_db, error

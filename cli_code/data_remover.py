@@ -189,5 +189,4 @@ class DataRemover(base.DDSBaseClass):
         try:
             file.unlink()
         except Exception as err:
-            # except FileNotFoundError as err:
             LOG.exception(str(err))

@@ -102,6 +102,7 @@ class DDSBaseClass:
         if self.method in ["put", "get"]:
             self.printout_delivery_summary()
 
+            # Delete temporary file directory if it is empty
             if not next(self.filehandler.local_destination.iterdir(), None):
                 fh.FileHandler.delete_tempdir(
                     directory=self.filehandler.local_destination
@@ -285,14 +286,17 @@ class DDSBaseClass:
         return True
 
     def collect_all_failed(self, sort: bool = True):
+        """Put cancelled files from status in to failed dict and sort the output."""
 
         # Transform all items to string
         self.filehandler.data = {
             str(file): {str(x): str(y) for x, y in info.items()}
             for file, info in list(self.filehandler.data.items())
         }
-
-        self.status = {str(file): info for file, info in list(self.status.items())}
+        self.status = {
+            str(file): {str(x): str(y) for x, y in info.items()}
+            for file, info in list(self.status.items())
+        }
 
         # Get cancelled files
         self.filehandler.failed.update(
@@ -303,7 +307,7 @@ class DDSBaseClass:
                     "failed_op": self.status[file]["failed_op"],
                 }
                 for file, info in self.filehandler.data.items()
-                if self.status[file]["cancel"]
+                if self.status[file]["cancel"] in [True, "True"]
             }
         )
 
@@ -318,6 +322,8 @@ class DDSBaseClass:
         )
 
     def printout_delivery_summary(self, max_fileerrs: int = 40):
+        """Print out the delivery summary if any files were cancelled."""
+
         any_failed = self.collect_all_failed()
 
         # Clear dict to not take up too much space
@@ -325,22 +331,29 @@ class DDSBaseClass:
 
         LOG.debug(any_failed)
         if any_failed:
-            intro_error_message = f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
+            intro_error_message = (
+                "Errors occurred during "
+                f"{'upload' if self.method == 'put' else 'download'}"
+            )
 
             # Save to file and print message if too many failed files,
             # otherwise create and print tables
             outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
+
             fh.FileHandler.save_errors_to_file(file=outfile, info=any_failed)
 
+            # Only print out if the number of cancelled files are below a certain thresh
             if len(any_failed) < max_fileerrs:
                 console.print(f"{intro_error_message}:")
 
+                # Cancelled files in root
                 files_table = fh.FileHandler.create_summary_table(
                     all_failed_data=any_failed, upload=bool(self.method == "put")
                 )
                 if files_table is not None:
                     console.print(rich.padding.Padding(files_table, 1))
 
+                # Cancelled files in different folders
                 folders_table = fh.FileHandler.create_summary_table(
                     all_failed_data=any_failed,
                     get_single_files=False,
@@ -352,6 +365,7 @@ class DDSBaseClass:
             console.print(f"{intro_error_message}. See {outfile} for more information.")
 
         else:
+            # Printout if no cancelled/failed files
             console.print(
                 f"{'Upload' if self.method == 'put' else 'Download'} completed!"
             )

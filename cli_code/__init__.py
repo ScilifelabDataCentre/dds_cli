@@ -30,17 +30,7 @@ LOG = logging.getLogger(__name__)
 
 
 def setup_custom_logger(filename: str = "", debug: bool = False):
-    """Creates log file
-
-    Args:
-        filename:           Path to wished log file
-
-    Returns:
-        Logger:     Configured logger
-
-    Raises:
-        Exception:   Logging to file or console failed
-    """
+    """Creates logger and sets the levels."""
 
     logger = logging.getLogger(__name__)
 
@@ -52,7 +42,7 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
                 "%(asctime)s::%(levelname)s::" + "%(name)s::%(lineno)d::%(message)s"
             )
             file_handler.setFormatter(fh_formatter)
-            file_handler.setLevel(logging.INFO)
+            file_handler.setLevel(logging.DEBUG)
             logger.addHandler(file_handler)
         except OSError as ose:
             sys.exit(f"Logging to file failed: {ose}")
@@ -61,9 +51,12 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
     if debug:
         try:
             richhandler = RichHandler(
-                rich_tracebacks=True, log_time_format="[%Y-%m-%d %H:%M:%S]"
+                rich_tracebacks=True,
+                log_time_format="[%Y-%m-%d %H:%M:%S]",
+                level=logging.DEBUG if debug else logging.WARNING,
             )
             logger.addHandler(richhandler)
+
         except OSError as ose:
             sys.exit(f"Logging to console failed: {ose}")
 

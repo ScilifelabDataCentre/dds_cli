@@ -15,29 +15,25 @@ import sys
 # Installed
 import click
 import rich
-from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn, SpinnerColumn
+from rich.progress import Progress, BarColumn
 from rich import pretty
 import rich.console
 import rich.prompt
-from rich.live import Live
-from rich.table import Table
 
 # Own modules
 import cli_code
-from cli_code import status
 from cli_code import directory
 from cli_code import timestamp
 from cli_code import data_putter as dp
 from cli_code import data_lister as dl
 from cli_code import data_remover as dr
 from cli_code import data_getter as dg
-from cli_code import text_handler as txt
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = None
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #
@@ -72,24 +68,15 @@ def cli(ctx, debug):
     logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
 
     # Create logger
-    cli_code.setup_custom_logger(filename=logfile, debug=debug)
-
     global LOG
-    LOG = logging.getLogger(__name__)
-    LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
-
+    LOG = cli_code.setup_custom_logger(filename=logfile, debug=debug)
     LOG.info("Logging started.")
-
-    LOG.debug(sys.argv)
-    LOG.debug(sys.argv[1:3])
-    LOG.debug("put" in sys.argv[1:3])
 
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,
         "DDS_DIRS": all_dirs,
         "LOGFILE": logfile,
-        # "LOGGER": LOG
     }
 
 
@@ -185,7 +172,7 @@ def put(
 ):
     """Processes and uploads specified files to the cloud."""
 
-    # Begin delivery
+    # Initialize delivery - check user access etc
     with dp.DataPutter(
         username=username,
         config=config,
@@ -198,6 +185,7 @@ def put(
         temporary_destination=dds_info["DDS_DIRS"],
     ) as putter:
 
+        # Progress object to keep track of progress tasks
         with Progress(
             "{task.description}",
             BarColumn(bar_width=None),
@@ -206,14 +194,14 @@ def put(
             refresh_per_second=2,
         ) as progress:
 
-            # Keep tra  ck of futures
-            upload_threads = {}  # Upload related
+            # Keep track of futures
+            upload_threads = {}
 
             # Iterator to keep track of which files have been handled
             iterator = iter(putter.filehandler.data.copy())
 
             with concurrent.futures.ThreadPoolExecutor() as texec:
-                # Start main progress bar
+                # Start main progress bar - total uploaded files
                 upload_task = progress.add_task(
                     description="Upload",
                     total=len(putter.filehandler.data),
@@ -233,7 +221,7 @@ def put(
                 try:
                     # Continue until all files are done
                     while upload_threads:
-                        # Wait for the next future to complete
+                        # Wait for the next future to complete, _ are the unfinished
                         done, _ = concurrent.futures.wait(
                             upload_threads,
                             return_when=concurrent.futures.FIRST_COMPLETED,
@@ -245,7 +233,7 @@ def put(
                         # Get result from future and schedule database update
                         for fut in done:
                             uploaded_file = upload_threads.pop(fut)
-                            LOG.info("Future done: %s", uploaded_file)
+                            LOG.debug("Future done for file: %s", uploaded_file)
 
                             # Get result
                             try:
@@ -263,9 +251,11 @@ def put(
                                 )
                                 continue
 
-                            new_tasks += 1
                             # Increase the main progress bar
                             progress.advance(upload_task)
+
+                            # New available threads
+                            new_tasks += 1
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
@@ -278,9 +268,19 @@ def put(
                                 )
                             ] = next_file
                 except KeyboardInterrupt:
+                    LOG.warning(
+                        "KeyboardInterrupt found - shutting down delivery gracefully. "
+                        "This will finish the ongoing uploads. If you want to force "
+                        "shutdown, repeat `Ctrl+C`. This is not advised. "
+                    )
 
+                    # Flag for threads to find
                     putter.stop_doing = True
+
+                    # Stop and remove main progress bar
                     progress.remove_task(upload_task)
+
+                    # Stop all tasks that are not currently uploading
                     _ = [
                         progress.stop_task(x)
                         for x in [

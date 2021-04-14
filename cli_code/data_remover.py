@@ -46,15 +46,15 @@ class DataRemover(base.DDSBaseClass):
         if self.method != "rm":
             sys.exit(f"Unauthorized method: {self.method}")
 
-    def __enter__(self):
-        return self
+    # def __enter__(self):
+    #     return self
 
-    def __exit__(self, exc_type, exc_value, tb):
-        if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
-            return False  # uncomment to pass exception through
+    # def __exit__(self, exc_type, exc_value, tb):
+    #     if exc_type is not None:
+    #         traceback.print_exception(exc_type, exc_value, tb)
+    #         return False  # uncomment to pass exception through
 
-        return True
+    #     return True
 
     @removal_spinner
     def remove_all(self, *_, **kwargs):

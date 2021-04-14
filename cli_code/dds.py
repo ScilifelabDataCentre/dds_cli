@@ -10,6 +10,7 @@ import pathlib
 import os
 import concurrent.futures
 import itertools
+import sys
 
 # Installed
 import click
@@ -63,7 +64,9 @@ def cli(ctx, debug):
     dds_dir = pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{t_s}")
 
     # Define alldirectories in DDS folder
-    all_dirs = directory.DDSDirectory(path=dds_dir).directories
+    all_dirs = directory.DDSDirectory(
+        path=dds_dir, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
+    ).directories
 
     # Path to log file
     logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
@@ -76,6 +79,10 @@ def cli(ctx, debug):
     LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
 
     LOG.info("Logging started.")
+
+    LOG.debug(sys.argv)
+    LOG.debug(sys.argv[1:3])
+    LOG.debug("put" in sys.argv[1:3])
 
     # Create context object
     ctx.obj = {

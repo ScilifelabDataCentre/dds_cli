@@ -155,7 +155,7 @@ def update_status(func):
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
 
-        if ok_to_continue:
+        if not ok_to_continue:
             self.status[file]["failed_op"] = func.__name__
             return False, message
 

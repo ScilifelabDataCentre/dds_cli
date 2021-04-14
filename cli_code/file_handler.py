@@ -170,3 +170,12 @@ class FileHandler:
                         subpath = x[1]["subpath"]
 
         return curr_table
+
+    @staticmethod
+    def delete_tempdir(directory: pathlib.Path):
+        """Deletes the specified directory."""
+
+        try:
+            directory.rmdir()
+        except Exception as err:
+            LOG.exception(str(err))

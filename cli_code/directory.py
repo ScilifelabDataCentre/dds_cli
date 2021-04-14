@@ -17,20 +17,21 @@ import sys
 class DDSDirectory:
     """Data Delivery System directory class."""
 
-    def __init__(self, path=pathlib.Path):
+    def __init__(self, path=pathlib.Path, add_file_dir: bool = True):
 
         dirs = {
             "ROOT": path,
-            "FILES": path / pathlib.Path("files/"),
             "META": path / pathlib.Path("meta/"),
-            "LOGS": path / pathlib.Path("logs/")
+            "LOGS": path / pathlib.Path("logs/"),
         }
+
+        if add_file_dir:
+            dirs["FILES"] = path / pathlib.Path("files/")
 
         for _, y in dirs.items():
             try:
                 y.mkdir(parents=True)
             except OSError as ose:
-                sys.exit("The temporary directory {y} could not be created: "
-                         f"{ose}")
+                sys.exit("The temporary directory {y} could not be created: " f"{ose}")
 
         self.directories = dirs

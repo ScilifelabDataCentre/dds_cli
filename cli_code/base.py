@@ -23,7 +23,6 @@ from cli_code import user
 from cli_code import DDSEndpoint
 from cli_code import s3_connector as s3
 
-
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
@@ -91,7 +90,7 @@ class DDSBaseClass:
 
                 self.status = dict()
                 self.filehandler = None
-    
+
     def __enter__(self):
         return self
 
@@ -100,9 +99,16 @@ class DDSBaseClass:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
 
-        self.printout_delivery_summary()
+        if self.method in ["put", "get"]:
+            self.printout_delivery_summary()
+
+            if not next(self.filehandler.local_destination.iterdir(), None):
+                fh.FileHandler.delete_tempdir(
+                    directory=self.filehandler.local_destination
+                )
 
         return True
+
     # Private methods ############################### Private methods #
     def __verify_input(self, username=None, password=None, config=None, project=None):
         """Verifies that the users input is valid and fully specified."""
@@ -286,10 +292,7 @@ class DDSBaseClass:
             for file, info in list(self.filehandler.data.items())
         }
 
-        self.status = {
-            str(file): {str(x): str(y) for x, y in info.items()}
-            for file, info in list(self.status.items())
-        }
+        self.status = {str(file): info for file, info in list(self.status.items())}
 
         # Get cancelled files
         self.filehandler.failed.update(
@@ -320,6 +323,7 @@ class DDSBaseClass:
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
+        LOG.debug(any_failed)
         if any_failed:
             intro_error_message = f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
 

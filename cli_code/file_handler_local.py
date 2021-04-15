@@ -10,6 +10,7 @@ import sys
 import pathlib
 import uuid
 import os
+import hashlib
 
 # Installed
 import requests
@@ -229,36 +230,27 @@ class LocalFileHandler(fh.FileHandler):
 
         return new_file_name
 
-    # @staticmethod
-    # def process_file(
-    #     file: pathlib.Path,
-    #     chunk_size: int = FileSegment.SEGMENT_SIZE_RAW,
-    # ) -> (bytes):
-    #     """Yields the file chunk by chunk."""
+    # @generate_checksum
+    def stream_from_file(self, file):
+        """Read raw or compress file depending on if compressed already or not."""
 
-    #     with file.open(mode="rb") as infile:
+        file_info = self.data[file]
+        stream_function = None
 
-    #         zstdcompressor = zstd.ZstdCompressor(write_checksum=True, level=4)
-    #         with zstdcompressor.stream_reader(infile) as compressor:
+        # Decide: Read or compress?
+        stream_function = (
+            self.read_file if file_info["compressed"] else fc.Compressor.compress_file
+        )
 
-    #             for chunk in iter(
-    #                 lambda: compressor.read(chunk_size)
-    #                 if do_compression
-    #                 else infile.read(chunk_size),
-    #                 b"",
-    #             ):
-    #                 yield chunk
+        # Generate checksum
+        checksum = hashlib.sha256()
 
-    @generate_checksum
-    def stream_from_file(self, file, do_compression, **_):
+        for chunk in stream_function(file=file_info["path_raw"]):
+            checksum.update(chunk)
+            yield chunk
 
-        if do_compression:
-            with fc.Compressor() as compressor:
-                for x in compressor.compress_file(file=file):
-                    yield x
-        else:
-            for x in self.read_file(file=file):
-                yield x
+        # Add checksum to file info
+        self.data[file]["checksum"] = checksum.hexdigest()
 
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):

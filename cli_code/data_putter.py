@@ -150,8 +150,6 @@ class DataPutter(base.DDSBaseClass):
         # Stream chunks from file
         streamed_chunks = self.filehandler.stream_from_file(
             file=file,
-            raw_file=file_info["path_raw"],
-            do_compression=not file_info["compressed"],
         )
 
         # Stream the chunks into the encryptor to save the encrypted chunks
@@ -194,7 +192,6 @@ class DataPutter(base.DDSBaseClass):
 
             if db_updated:
                 all_ok = True
-
         # Delete temporary processed file locally
         dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 

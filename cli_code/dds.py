@@ -33,7 +33,7 @@ from cli_code import data_getter as dg
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger(__name__)
+LOG = None
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #
@@ -68,8 +68,12 @@ def cli(ctx, debug):
     logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
 
     # Create logger
+    _ = cli_code.setup_custom_logger(filename=logfile, debug=debug)
+
+    # Create logger
     global LOG
-    LOG = cli_code.setup_custom_logger(filename=logfile, debug=debug)
+    LOG = logging.getLogger(__name__)
+    LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
     LOG.info("Logging started.")
 
     # Create context object
@@ -378,7 +382,7 @@ def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
     required=False,
     type=str,
     multiple=True,
-    help="Path within bucket to file to remove.",
+    help="Path to file to remove.",
 )
 @click.option(
     "--folder",
@@ -386,7 +390,7 @@ def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
     required=False,
     type=str,
     multiple=True,
-    help="Path within bucket to folder to remove.",
+    help="Path to folder to remove.",
 )
 @click.pass_obj
 def rm(_, proj_arg, project, username, config, rm_all, file, folder):

@@ -306,7 +306,6 @@ class DDSBaseClass:
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
-        LOG.debug(any_failed)
         if any_failed:
             intro_error_message = (
                 "Errors occurred during "

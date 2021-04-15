@@ -35,12 +35,15 @@ class TextHandler(StringFormat):
         """Generate display name for progress task"""
 
         task_name = file
+
+        # Keep full file name in progress if short otherwise add ... in the beginning
         if len(str(file)) > max_len:
             file_name = pathlib.Path(file).name
             task_name = f".../{file_name}"
             if len(task_name) > max_len:
                 task_name = "..." + task_name.split("...", 1)[-1][-max_len::]
 
+        # Different symbols to the left depending on current process
         symbol = ""
         if step == "encrypt":
             symbol = ":lock:"

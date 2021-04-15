@@ -6,7 +6,6 @@
 
 # Standard library
 import logging
-import sys
 import dataclasses
 import os
 import requests

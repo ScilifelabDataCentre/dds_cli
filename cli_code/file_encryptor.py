@@ -129,6 +129,7 @@ class Encryptor(ECDHKeyHandler):
             iv_int = int.from_bytes(iv_bytes, "little")
             nonce = b""  # Catch last nonce
             for chunk in chunks:
+
                 # Restart at 0 if nonce number at maximum number of chunks per key
                 nonce = (
                     iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
@@ -145,6 +146,8 @@ class Encryptor(ECDHKeyHandler):
 
             # Save last nonce
             out.write(nonce)
+
+        return None
 
 
 class Decryptor(ECDHKeyHandler):

@@ -43,7 +43,6 @@ def generate_checksum(func):
 
         # Generate checksum
         checksum = hashlib.sha256()
-
         for chunk in func(self, file=raw_file, *args, **kwargs):
             checksum.update(chunk)
             yield chunk

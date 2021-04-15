@@ -196,74 +196,49 @@ class DDSBaseClass:
         """Get public and private project keys depending on method."""
 
         # Project public key required for both put and get
-        public = self.__get_project_public()
+        public = self.__get_key()
 
         # Project private only required for get
-        private = self.__get_project_private() if self.method == "get" else None
+        private = self.__get_key(private=True) if self.method == "get" else None
 
         return private, public
 
-    def __get_project_public(self):
+    def __get_key(self, private: bool = False):
         """Get public key for project."""
 
+        key_type = "private" if private else "public"
+        # Get key from API
         try:
             response = requests.get(
-                DDSEndpoint.PROJ_PUBLIC, headers=self.token, timeout=DDSEndpoint.TIMEOUT
-            )
-        except requests.exceptions.RequestException as err:
-            LOG.warning(err)
-            raise SystemExit from err
-
-        if not response.ok:
-            console.print(
-                "\n:no_entry_sign: Project access denied: No public key. :no_entry_sign:\n"
-            )
-            os._exit(os.EX_OK)
-
-        try:
-            project_public = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        if "public" not in project_public:
-            console.print(
-                "\n:no_entry_sign: Project access denied: No public key. :no_entry_sign:\n"
-            )
-            os._exit(os.EX_OK)
-
-        return project_public["public"]
-
-    def __get_project_private(self):
-        """Get the private key for project"""
-
-        try:
-            response = requests.get(
-                DDSEndpoint.PROJ_PRIVATE,
+                DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
                 headers=self.token,
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            LOG.warning(err)
+            LOG.fatal(str(err))
             raise SystemExit from err
 
         if not response.ok:
             console.print(
-                "\n:no_entry_sign: Project access denied: No private key. :no_entry_sign:\n"
+                "\n:no_entry_sign: Project access denied: "
+                f"No {key_type} key. :no_entry_sign:\n"
             )
             os._exit(os.EX_OK)
 
+        # Get key from response
         try:
-            project_private = response.json()
+            project_public = response.json()
         except simplejson.JSONDecodeError as err:
+            LOG.fatal(str(err))
             raise SystemExit from err
 
-        if "private" not in project_private:
+        if key_type not in project_public:
             console.print(
-                "\n:no_entry_sign: Project access denied: No private key. :no_entry_sign:\n"
+                "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
             )
             os._exit(os.EX_OK)
 
-        return project_private["private"]
+        return project_public[key_type]
 
     # Public methods ################################# Public methods #
     def verify_bucket_exist(self):

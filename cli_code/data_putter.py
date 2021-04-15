@@ -277,7 +277,7 @@ class DataPutter(base.DDSBaseClass):
         }
 
         # Send file info to API - post if new file, put if overwrite
-        put_or_post = requests.put if fileinfo["overwrite"] else requests.posta
+        put_or_post = requests.put if fileinfo["overwrite"] else requests.post
         try:
             response = put_or_post(
                 DDSEndpoint.FILE_NEW,

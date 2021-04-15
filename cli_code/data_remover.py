@@ -8,8 +8,6 @@
 import logging
 import pathlib
 import sys
-import traceback
-import os
 
 # Installed
 import requests
@@ -57,7 +55,7 @@ class DataRemover(base.DDSBaseClass):
     #     return True
 
     @removal_spinner
-    def remove_all(self, *_, **kwargs):
+    def remove_all(self, *_, **_):
         """Remove all files in project."""
 
         message = ""
@@ -188,5 +186,6 @@ class DataRemover(base.DDSBaseClass):
 
         try:
             file.unlink()
-        except Exception as err:
+        except FileNotFoundError as err:
             LOG.exception(str(err))
+            LOG.info("File deletion may have failed. Usage of space may increase.")

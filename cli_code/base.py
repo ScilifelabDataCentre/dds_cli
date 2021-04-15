@@ -7,7 +7,6 @@
 # Standard library
 import inspect
 import logging
-import sys
 import os
 import traceback
 import pathlib

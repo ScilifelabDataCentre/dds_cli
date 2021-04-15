@@ -534,6 +534,7 @@ def get(
     silent,
     verify_checksum,
 ):
+    """Downloads specified files from the cloud and restores the original format."""
 
     if get_all and (source or source_path_file):
         console.print(

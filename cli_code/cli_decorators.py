@@ -7,21 +7,20 @@
 # Standard library
 import logging
 import functools
-import sys
-import os
 import pathlib
 import hashlib
-import base64
+
 
 # Installed
 import boto3
 import botocore
+
+
 import rich
-from rich.progress import Progress, TextColumn, BarColumn, DownloadColumn, SpinnerColumn
+from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-from cli_code import s3_connector as s3
-from cli_code import text_handler as txt
+from cli_code.dds_exceptions import ChecksumError
 
 
 ###############################################################################
@@ -37,54 +36,64 @@ LOG.setLevel(logging.DEBUG)
 
 
 def generate_checksum(func):
+    """Generates the checksum for a file with chunks from a generator function."""
+
     @functools.wraps(func)
     def gen_hash(self, file, raw_file, *args, **kwargs):
 
+        # Generate checksum
         checksum = hashlib.sha256()
 
         for chunk in func(self, file=raw_file, *args, **kwargs):
             checksum.update(chunk)
             yield chunk
 
+        # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()
 
     return gen_hash
 
 
 def checksum_verification_required(func):
+    """
+    Checks if the user has chosen additional checksum verification.
+    If yes, performs the verification.
+    """
+
     @functools.wraps(func)
-    def verify_checksum(correct_checksum, do_verify: bool = False, *args, **kwargs):
+    def verify_checksum(correct_checksum, *args, do_verify: bool = False, **kwargs):
 
         done, message = (False, "")
         try:
+            # Execute function
             chunks = func(*args, **kwargs)
 
+            # Generate checksum and verify if option chosen by user
             if do_verify:
+                LOG.info("Verifying file integrity...")
                 checksum = hashlib.sha256()
                 try:
                     for chunk in chunks:
                         checksum.update(chunk)
-                except Exception as cs_err:
+                except ValueError as cs_err:  # TODO (ina): Find suitable exception
                     message = str(cs_err)
                     LOG.exception(message)
                 else:
                     checksum_digest = checksum.hexdigest()
-                    LOG.debug(
-                        "Correct checksum: %s\nChecksum of downloaded file: %s\nCorrect? %s",
-                        correct_checksum,
-                        checksum_digest,
-                        correct_checksum == checksum_digest,
-                    )
 
                     if checksum_digest != correct_checksum:
                         message = "Checksum verification failed. File compromised."
+                        LOG.warning(message)
                     else:
                         done = True
-        except Exception as err:
+                        LOG.info("File integrity verified.")
+
+        except ChecksumError as err:  # TODO (ina): Find suitable exception
             message = str(err)
             LOG.exception(message)
         else:
             done = True
+            LOG.info("Function %s successfully finished.", func.__name__)
 
         return done, message
 
@@ -100,6 +109,7 @@ def verify_proceed(func):
 
         # Check if keyboardinterrupt in dds
         if self.stop_doing:
+            # TODO (ina): Add save to status here
             message = "KeyBoardInterrupt - cancelling file {file}"
             LOG.warning(message)
             return False  # Do not proceed
@@ -186,8 +196,7 @@ def connect_cloud(func):
                 aws_access_key_id=self.keys["access_key"],
                 aws_secret_access_key=self.keys["secret_key"],
             )
-        except Exception as err:
-            # except botocore.client.ClientError as err:
+        except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
             self.url, self.keys, self.message = (
                 None,
                 None,
@@ -217,7 +226,7 @@ def subpath_required(func):
         if not full_subpath.exists():
             try:
                 full_subpath.mkdir(parents=True, exist_ok=True)
-            except Exception as err:
+            except OSError as err:
                 return False, str(err)
 
         return func(self, file=file, *args, **kwargs)

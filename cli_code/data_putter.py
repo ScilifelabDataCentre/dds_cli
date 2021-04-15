@@ -296,7 +296,7 @@ class DataPutter(base.DDSBaseClass):
                 return added_to_db, error
 
             try:
-                added_to_db, error = (True, response.json()["message"])
+                added_to_db, error = (True, response.json().get("message"))
             except simplejson.JSONDecodeError as err:
                 error = str(err)
                 LOG.warning(error)

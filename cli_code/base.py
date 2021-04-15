@@ -64,6 +64,7 @@ class DDSBaseClass:
     ):
         # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
+        LOG.info("Attempted operation: %s", self.method)
 
         # Keyboardinterrupt
         self.stop_doing = False
@@ -113,7 +114,7 @@ class DDSBaseClass:
     def __verify_input(self, username=None, password=None, config=None, project=None):
         """Verifies that the users input is valid and fully specified."""
 
-        LOG.debug("Verifying the user input...")
+        LOG.info("Verifying the user input...")
 
         # Get contents from file
         if config is not None:
@@ -127,6 +128,8 @@ class DDSBaseClass:
                 project = contents["project"]
             if password is None and "password" in contents:
                 password = contents["password"]
+
+        LOG.info("Username: %s, Project ID: %s", username, project)
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:
@@ -147,7 +150,7 @@ class DDSBaseClass:
             # password = getpass.getpass()
             password = "password"  # TODO: REMOVE - ONLY FOR DEV
 
-        LOG.debug("...User input verified.")
+        LOG.debug("User input verified.")
 
         return username, password, project
 

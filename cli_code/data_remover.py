@@ -55,7 +55,7 @@ class DataRemover(base.DDSBaseClass):
     #     return True
 
     @removal_spinner
-    def remove_all(self, *_, **_):
+    def remove_all(self, *_, **__):
         """Remove all files in project."""
 
         message = ""

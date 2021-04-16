@@ -68,6 +68,9 @@ def checksum_verification_required(func):
                     else:
                         done = True
                         LOG.info("File integrity verified.")
+            else:
+                for chunk in chunks:
+                    pass
 
         except ChecksumError as err:  # TODO (ina): Find suitable exception
             message = str(err)

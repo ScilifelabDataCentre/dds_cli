@@ -162,7 +162,6 @@ class RemoteFileHandler(fh.FileHandler):
         return status_dict
 
     @staticmethod
-    @checksum_verification_required
     def write_file(chunks, outfile: pathlib.Path, **_):
 
         LOG.debug("Saving file...")

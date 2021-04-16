@@ -183,6 +183,9 @@ class FileHandler:
             return ok_to_remove
 
         # Iterate through any existing subdirectories - recursive
+        LOG.debug("Any in directory? %s", any(directory.iterdir()))
+        for x in directory.iterdir():
+            LOG.debug(x)
         if any(directory.iterdir()):
             for p in directory.iterdir():
                 if p.is_dir():
@@ -194,40 +197,3 @@ class FileHandler:
             ok_to_remove = True
 
         return ok_to_remove
-
-        # if any(directory.iterdir()):
-        #     for p in directory.iterdir():
-        #         if p.is_dir():
-        #             FileHandler.delete_tempdir(directory=p)
-        #         else:
-        #             LOG.debug("Do not delete")
-        # LOG.debug(x)
-
-        # if not next(directory.iterdir(), None):
-        #     try:
-        #         directory.rmdir()
-        #     except Exception as err:
-        #         LOG.exception(str(err))
-        #     return True
-
-        # if files:
-        #     return False
-        # else:
-        #     LOG.debug(dirpath)
-        #     LOG.debug(dirnames)
-
-        # else:
-
-        # for p in directory.iterdir():
-        #     if p.is_file():
-        #         LOG.debug("Do not remove")
-        #     if p.is_dir():
-        #         try:
-
-        #         except Exception as err:
-        #             LOG.exception(str(err))
-        # else:
-        # else:
-        #     LOG.exception(
-        #         "Trying to delete path as directory, but is a file or symlink."
-        #     )

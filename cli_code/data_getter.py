@@ -139,9 +139,12 @@ class DataGetter(base.DDSBaseClass):
             total=file_info["size"],
         )
 
+        LOG.debug("File %s downloaded: %s", file, file_downloaded)
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
+            LOG.debug("Database updated: %s", db_updated)
 
+            LOG.info("Beginning decryption of file %s...", file)
             with fe.Decryptor(
                 project_keys=self.keys,
                 peer_public=file_info["public_key"],

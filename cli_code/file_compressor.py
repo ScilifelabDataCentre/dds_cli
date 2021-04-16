@@ -102,7 +102,7 @@ class Compressor:
 
         # Decompressing file and saving
         LOG.debug("Decompressing...")
-        with outfile.open(mode="wb") as file:
+        with outfile.open(mode="wb+") as file:
 
             dctx = zstd.ZstdDecompressor()
             with dctx.stream_writer(file) as decompressor:

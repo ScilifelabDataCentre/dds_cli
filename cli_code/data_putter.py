@@ -185,6 +185,7 @@ class DataPutter(base.DDSBaseClass):
             # Perform upload
             file_uploaded, message = self.put(file=file, progress=progress, task=task)
 
+            LOG.debug("File uploaded: %s", file_uploaded)
             # Perform db update
             if file_uploaded:
                 db_updated, message = self.add_file_db(
@@ -245,6 +246,8 @@ class DataPutter(base.DDSBaseClass):
                 except (
                     botocore.client.ClientError,
                     boto3.exceptions.Boto3Error,
+                    FileNotFoundError,
+                    TypeError,
                 ) as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
                     LOG.exception("%s: %s", file, err)
@@ -288,6 +291,7 @@ class DataPutter(base.DDSBaseClass):
             error = str(err)
             LOG.warning(error)
         else:
+            return False, "test"
             # Error if failed
             if not response.ok:
                 error = f"Failed to add file '{file}' to database: {response.text}"

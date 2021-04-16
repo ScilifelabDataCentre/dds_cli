@@ -148,7 +148,7 @@ class Encryptor(ECDHKeyHandler):
 
                 # Save last nonce
                 out.write(nonce)
-        except Exception as err:
+        except (OSError, TypeError, FileExistsError, InterruptedError) as err:
             message = str(err)
             LOG.exception(message)
         else:

@@ -337,6 +337,16 @@ class DDSBaseClass:
 
             console.print(f"{intro_error_message}. See {outfile} for more information.")
 
+            if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
+                console.print(
+                    rich.padding.Padding(
+                        "One or more files where uploaded but may not have been added to "
+                        "the db. Contact support and supply the logfile found in "
+                        f"{self.log_location}",
+                        1,
+                    )
+                )
+
         else:
             # Printout if no cancelled/failed files
             console.print(

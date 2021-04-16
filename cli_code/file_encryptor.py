@@ -174,9 +174,13 @@ class Encryptor(ECDHKeyHandler):
         else:
             if checksum.hexdigest() == correct_checksum:
                 verified, error = (True, "File integrity verified.")
+                LOG.debug(error)
             else:
                 error = "Checksum verification failed. File compromised."
                 LOG.warning(error)
+                LOG.warning(
+                    "Correct: %s, Got: %s", correct_checksum, checksum.hexdigest()
+                )
 
         return verified, error
 

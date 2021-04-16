@@ -90,6 +90,7 @@ class Compressor:
 
             # Initiate a Zstandard compressor
             cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
+
             # Compress file chunk by chunk while reading
             with cctzx.stream_reader(infile) as compressor:
                 for chunk in iter(lambda: compressor.read(chunk_size), b""):
@@ -101,20 +102,27 @@ class Compressor:
 
         saved, message = (False, "")
 
+        import hashlib
+
+        checksum = hashlib.sha256()
+
         # Decompressing file and saving
         LOG.debug("Decompressing...")
         try:
             with outfile.open(mode="wb+") as file:
-
                 dctx = zstd.ZstdDecompressor()
                 with dctx.stream_writer(file) as decompressor:
                     for chunk in chunks:
+                        checksum.update(chunk)
                         decompressor.write(chunk)
         except OSError as err:
             message = str(err)
             LOG.exception(message)
         else:
+            LOG.debug(checksum.hexdigest())
             saved = True
             LOG.debug("Decompression done.")
 
         return saved, message
+
+        "HERE -------"

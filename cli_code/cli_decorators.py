@@ -35,53 +35,53 @@ LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-def checksum_verification_required(func):
-    """
-    Checks if the user has chosen additional checksum verification.
-    If yes, performs the verification.
-    """
+# def checksum_verification_required(func):
+#     """
+#     Checks if the user has chosen additional checksum verification.
+#     If yes, performs the verification.
+#     """
 
-    @functools.wraps(func)
-    def verify_checksum(correct_checksum, *args, do_verify: bool = False, **kwargs):
+#     @functools.wraps(func)
+#     def verify_checksum(correct_checksum, *args, do_verify: bool = False, **kwargs):
 
-        done, message = (False, "")
-        try:
-            # Execute function
-            chunks = func(*args, **kwargs)
+#         done, message = (False, "")
+#         try:
+#             # Execute function
+#             chunks = func(*args, **kwargs)
 
-            # Generate checksum and verify if option chosen by user
-            if do_verify:
-                LOG.info("Verifying file integrity...")
-                checksum = hashlib.sha256()
-                try:
-                    for chunk in chunks:
-                        checksum.update(chunk)
-                except ValueError as cs_err:  # TODO (ina): Find suitable exception
-                    message = str(cs_err)
-                    LOG.exception(message)
-                else:
-                    checksum_digest = checksum.hexdigest()
+#             # Generate checksum and verify if option chosen by user
+#             if do_verify:
+#                 LOG.info("Verifying file integrity...")
+#                 checksum = hashlib.sha256()
+#                 try:
+#                     for chunk in chunks:
+#                         checksum.update(chunk)
+#                 except ValueError as cs_err:  # TODO (ina): Find suitable exception
+#                     message = str(cs_err)
+#                     LOG.exception(message)
+#                 else:
+#                     checksum_digest = checksum.hexdigest()
 
-                    if checksum_digest != correct_checksum:
-                        message = "Checksum verification failed. File compromised."
-                        LOG.warning(message)
-                    else:
-                        done = True
-                        LOG.info("File integrity verified.")
-            else:
-                for chunk in chunks:
-                    pass
+#                     if checksum_digest != correct_checksum:
+#                         message = "Checksum verification failed. File compromised."
+#                         LOG.warning(message)
+#                     else:
+#                         done = True
+#                         LOG.info("File integrity verified.")
+#             else:
+#                 for chunk in chunks:
+#                     pass
 
-        except ChecksumError as err:  # TODO (ina): Find suitable exception
-            message = str(err)
-            LOG.exception(message)
-        else:
-            done = True
-            LOG.info("Function %s successfully finished.", func.__name__)
+#         except ChecksumError as err:  # TODO (ina): Find suitable exception
+#             message = str(err)
+#             LOG.exception(message)
+#         else:
+#             done = True
+#             LOG.info("Function %s successfully finished.", func.__name__)
 
-        return done, message
+#         return done, message
 
-    return verify_checksum
+#     return verify_checksum
 
 
 def verify_proceed(func):

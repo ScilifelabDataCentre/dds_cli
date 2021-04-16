@@ -291,7 +291,7 @@ class DataPutter(base.DDSBaseClass):
             error = str(err)
             LOG.warning(error)
         else:
-            return False, "test"
+            # return False, "test"
             # Error if failed
             if not response.ok:
                 error = f"Failed to add file '{file}' to database: {response.text}"

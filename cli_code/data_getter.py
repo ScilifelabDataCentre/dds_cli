@@ -145,6 +145,7 @@ class DataGetter(base.DDSBaseClass):
             LOG.debug("Database updated: %s", db_updated)
 
             LOG.info("Beginning decryption of file %s...", file)
+            file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
                 peer_public=file_info["public_key"],
@@ -164,13 +165,18 @@ class DataGetter(base.DDSBaseClass):
                 file_saved, message = stream_to_file_func(
                     chunks=streamed_chunks,
                     outfile=file,
-                    correct_checksum=file_info["checksum"],
-                    do_verify=self.verify_checksum,
                 )
 
-                if file_saved:
-                    all_ok = True
-                    dr.DataRemover.delete_tempfile(file=file_info["path_downloaded"])
+            if file_saved:
+                all_ok, message = (
+                    fe.Encryptor.verify_checksum(
+                        file=file, correct_checksum=file_info["checksum"]
+                    )
+                    if self.verify_checksum
+                    else (True, "")
+                )
+
+            dr.DataRemover.delete_tempfile(file=file_info["path_downloaded"])
 
         progress.remove_task(task)
         return all_ok, message

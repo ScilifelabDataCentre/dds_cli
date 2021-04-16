@@ -5,6 +5,7 @@ import traceback
 import os
 import logging
 import sys
+import hashlib
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives.kdf import hkdf
@@ -15,6 +16,7 @@ from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt
 from cryptography.hazmat.primitives import serialization
 
 from cli_code import FileSegment
+from cli_code.file_handler_local import LocalFileHandler as fh
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -155,6 +157,28 @@ class Encryptor(ECDHKeyHandler):
             encrypted_and_saved = True
 
         return encrypted_and_saved, message
+
+    @staticmethod
+    def verify_checksum(file: pathlib.Path, correct_checksum):
+        """Generate file checksum and verify the integrity"""
+
+        verified, error = (False, "")
+
+        checksum = hashlib.sha256()
+
+        try:
+            for chunk in fh.read_file(file=file):
+                checksum.update(chunk)
+        except OSError as err:
+            error = str(err)
+        else:
+            if checksum.hexdigest() == correct_checksum:
+                verified, error = (True, "File integrity verified.")
+            else:
+                error = "Checksum verification failed. File compromised."
+                LOG.warning(error)
+
+        return verified, error
 
 
 class Decryptor(ECDHKeyHandler):

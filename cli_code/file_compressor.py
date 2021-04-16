@@ -3,10 +3,10 @@ import pathlib
 import dataclasses
 import traceback
 import sys
+import os
 import zstandard as zstd
 from cli_code import FileSegment
 import logging
-from cli_code.cli_decorators import checksum_verification_required
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
@@ -90,23 +90,31 @@ class Compressor:
 
             # Initiate a Zstandard compressor
             cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
-
             # Compress file chunk by chunk while reading
             with cctzx.stream_reader(infile) as compressor:
                 for chunk in iter(lambda: compressor.read(chunk_size), b""):
                     yield chunk
 
     @staticmethod
-    @checksum_verification_required
     def decompress_filechunks(chunks, outfile: pathlib.Path, **_):
+        """Decompress file chunks"""
+
+        saved, message = (False, "")
 
         # Decompressing file and saving
         LOG.debug("Decompressing...")
-        with outfile.open(mode="wb+") as file:
+        try:
+            with outfile.open(mode="wb+") as file:
 
-            dctx = zstd.ZstdDecompressor()
-            with dctx.stream_writer(file) as decompressor:
-                for chunk in chunks:
-                    decompressor.write(chunk)
-                    yield chunk
-        LOG.debug("Decompression done.")
+                dctx = zstd.ZstdDecompressor()
+                with dctx.stream_writer(file) as decompressor:
+                    for chunk in chunks:
+                        decompressor.write(chunk)
+        except OSError as err:
+            message = str(err)
+            LOG.exception(message)
+        else:
+            saved = True
+            LOG.debug("Decompression done.")
+
+        return saved, message

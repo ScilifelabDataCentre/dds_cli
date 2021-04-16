@@ -6,7 +6,7 @@ import sys
 import zstandard as zstd
 from cli_code import FileSegment
 import logging
-from cli_code.cli_decorators import checksum_verification_required, generate_checksum
+from cli_code.cli_decorators import checksum_verification_required
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)

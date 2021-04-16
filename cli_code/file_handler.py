@@ -11,6 +11,7 @@ import pathlib
 import os
 import json
 import textwrap
+import shutil
 
 # Installed
 import rich
@@ -175,7 +176,58 @@ class FileHandler:
     def delete_tempdir(directory: pathlib.Path):
         """Deletes the specified directory."""
 
-        try:
+        ok_to_remove = False
+
+        # If file not ok to remove folder
+        if not directory.is_dir():
+            return ok_to_remove
+
+        # Iterate through any existing subdirectories - recursive
+        if any(directory.iterdir()):
+            for p in directory.iterdir():
+                if p.is_dir():
+                    ok_to_remove = FileHandler.delete_tempdir(directory=p)
+                    if ok_to_remove:
+                        directory.rmdir()
+        else:
             directory.rmdir()
-        except Exception as err:
-            LOG.exception(str(err))
+            ok_to_remove = True
+
+        return ok_to_remove
+
+        # if any(directory.iterdir()):
+        #     for p in directory.iterdir():
+        #         if p.is_dir():
+        #             FileHandler.delete_tempdir(directory=p)
+        #         else:
+        #             LOG.debug("Do not delete")
+        # LOG.debug(x)
+
+        # if not next(directory.iterdir(), None):
+        #     try:
+        #         directory.rmdir()
+        #     except Exception as err:
+        #         LOG.exception(str(err))
+        #     return True
+
+        # if files:
+        #     return False
+        # else:
+        #     LOG.debug(dirpath)
+        #     LOG.debug(dirnames)
+
+        # else:
+
+        # for p in directory.iterdir():
+        #     if p.is_file():
+        #         LOG.debug("Do not remove")
+        #     if p.is_dir():
+        #         try:
+
+        #         except Exception as err:
+        #             LOG.exception(str(err))
+        # else:
+        # else:
+        #     LOG.exception(
+        #         "Trying to delete path as directory, but is a file or symlink."
+        #     )

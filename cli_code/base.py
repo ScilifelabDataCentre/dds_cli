@@ -103,10 +103,7 @@ class DDSBaseClass:
             self.printout_delivery_summary()
 
             # Delete temporary file directory if it is empty
-            if not next(self.filehandler.local_destination.iterdir(), None):
-                fh.FileHandler.delete_tempdir(
-                    directory=self.filehandler.local_destination
-                )
+            fh.FileHandler.delete_tempdir(directory=self.filehandler.local_destination)
 
         return True
 

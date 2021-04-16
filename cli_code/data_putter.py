@@ -136,7 +136,7 @@ class DataPutter(base.DDSBaseClass):
         """Processes and uploads the file while handling the progress bars."""
 
         # Variables
-        all_ok, message = (False, "")  # Error catching
+        all_ok, saved, message = (False, False, "")  # Error catching
         file_info = self.filehandler.data[file]  # Info on current file
         file_public_key, salt = ("", "")  # Crypto info
 
@@ -156,7 +156,7 @@ class DataPutter(base.DDSBaseClass):
         with fe.Encryptor(project_keys=self.keys) as encryptor:
 
             # Encrypt and save chunks
-            encryptor.encrypt_filechunks(
+            saved, message = encryptor.encrypt_filechunks(
                 chunks=streamed_chunks,
                 outfile=file_info["path_processed"],
                 progress=(progress, task),
@@ -173,25 +173,27 @@ class DataPutter(base.DDSBaseClass):
             file_info["path_processed"].stat().st_size
         )
 
-        # Update progress bar for upload
-        progress.reset(
-            task,
-            description=txt.TextHandler.task_name(file=file, step="put"),
-            total=self.filehandler.data[file]["size_processed"],
-            step="put",
-        )
-
-        # Perform upload
-        file_uploaded, message = self.put(file=file, progress=progress, task=task)
-
-        # Perform db update
-        if file_uploaded:
-            db_updated, message = self.add_file_db(
-                file=file, key_salt=salt, public_key=file_public_key
+        if saved:
+            # Update progress bar for upload
+            progress.reset(
+                task,
+                description=txt.TextHandler.task_name(file=file, step="put"),
+                total=self.filehandler.data[file]["size_processed"],
+                step="put",
             )
 
-            if db_updated:
-                all_ok = True
+            # Perform upload
+            file_uploaded, message = self.put(file=file, progress=progress, task=task)
+
+            # Perform db update
+            if file_uploaded:
+                db_updated, message = self.add_file_db(
+                    file=file, key_salt=salt, public_key=file_public_key
+                )
+
+                if db_updated:
+                    all_ok = True
+
         # Delete temporary processed file locally
         dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 

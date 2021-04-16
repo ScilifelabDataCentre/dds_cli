@@ -25,7 +25,7 @@ from cli_code import FileSegment
 from cli_code import DDSEndpoint
 from cli_code import file_handler as fh
 from cli_code import file_compressor as fc
-from cli_code.cli_decorators import subpath_required, generate_checksum
+from cli_code.cli_decorators import subpath_required
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

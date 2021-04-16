@@ -35,24 +35,6 @@ LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-def generate_checksum(func):
-    """Generates the checksum for a file with chunks from a generator function."""
-
-    @functools.wraps(func)
-    def gen_hash(self, file, raw_file, *args, **kwargs):
-
-        # Generate checksum
-        checksum = hashlib.sha256()
-        for chunk in func(self, file=raw_file, *args, **kwargs):
-            checksum.update(chunk)
-            yield chunk
-
-        # Add checksum to file info
-        self.data[file]["checksum"] = checksum.hexdigest()
-
-    return gen_hash
-
-
 def checksum_verification_required(func):
     """
     Checks if the user has chosen additional checksum verification.
@@ -170,7 +152,7 @@ def update_status(func):
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
-
+        # ok_to_continue = False
         if not ok_to_continue:
             # Save info about which operation failed
             self.status[file]["failed_op"] = func.__name__

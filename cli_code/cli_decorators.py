@@ -260,6 +260,11 @@ def removal_spinner(func):
             progress.remove_task(task)
 
         # Printout removal response
+        if message is None:
+            rm_type = "File" if func.__name__ == "remove_file" else "Folder"
+
+            message = f"{rm_type}(s) successfully removed."
+
         console = rich.console.Console()
         console.print(message)
 

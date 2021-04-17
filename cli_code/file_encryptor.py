@@ -178,9 +178,6 @@ class Encryptor(ECDHKeyHandler):
             else:
                 error = "Checksum verification failed. File compromised."
                 LOG.warning(error)
-                LOG.warning(
-                    "Correct: %s, Got: %s", correct_checksum, checksum.hexdigest()
-                )
 
         return verified, error
 

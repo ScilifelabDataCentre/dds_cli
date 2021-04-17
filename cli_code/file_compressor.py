@@ -102,10 +102,6 @@ class Compressor:
 
         saved, message = (False, "")
 
-        import hashlib
-
-        checksum = hashlib.sha256()
-
         # Decompressing file and saving
         LOG.debug("Decompressing...")
         try:
@@ -113,16 +109,13 @@ class Compressor:
                 dctx = zstd.ZstdDecompressor()
                 with dctx.stream_writer(file) as decompressor:
                     for chunk in chunks:
-                        checksum.update(chunk)
                         decompressor.write(chunk)
+
         except OSError as err:
             message = str(err)
             LOG.exception(message)
         else:
-            LOG.debug(checksum.hexdigest())
             saved = True
             LOG.debug("Decompression done.")
 
         return saved, message
-
-        "HERE -------"

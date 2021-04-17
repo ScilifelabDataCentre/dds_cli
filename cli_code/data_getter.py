@@ -168,13 +168,17 @@ class DataGetter(base.DDSBaseClass):
                 )
 
             if file_saved:
-                all_ok, message = (
-                    fe.Encryptor.verify_checksum(
-                        file=file, correct_checksum=file_info["checksum"]
-                    )
-                    if self.verify_checksum
-                    else (True, "")
-                )
+                all_ok = True
+                # TODO (ina): decide on checksum verification method --
+                # this checks original, the other is generated from compressed
+
+                # all_ok, message = (
+                #     fe.Encryptor.verify_checksum(
+                #         file=file, correct_checksum=file_info["checksum"]
+                #     )
+                #     if self.verify_checksum
+                #     else (True, "")
+                # )
 
             dr.DataRemover.delete_tempfile(file=file_info["path_downloaded"])
 

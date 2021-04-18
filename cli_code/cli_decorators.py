@@ -20,7 +20,6 @@ import rich
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-from cli_code.dds_exceptions import ChecksumError
 
 
 ###############################################################################

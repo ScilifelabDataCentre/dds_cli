@@ -83,7 +83,6 @@ class LocalFileHandler(fh.FileHandler):
 
         # Generate new file name
         new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
-
         return str(folder / pathlib.Path(new_name))
 
     # Private methods ############ Private methods #
@@ -221,7 +220,8 @@ class LocalFileHandler(fh.FileHandler):
 
         # New local file name
         old_suffix = raw_file.suffix
-        new_suffix = f".{old_suffix if no_compression else 'zst'}"
+        new_suffix = f"{old_suffix if no_compression else '.zst'}"
+
         new_file_name = (
             self.local_destination
             / subpath
@@ -237,17 +237,18 @@ class LocalFileHandler(fh.FileHandler):
         file_info = self.data[file]
         stream_function = None
 
-        # Decide: Read or compress?
-        stream_function = (
-            self.read_file if file_info["compressed"] else fc.Compressor.compress_file
-        )
-
         # Generate checksum
         checksum = hashlib.sha256()
+        if file_info["compressed"]:
+            for chunk in self.read_file(file=file_info["path_raw"]):
+                checksum.update(chunk)
+                yield chunk
+        else:
+            for chunk in self.read_file(file=file_info["path_raw"]):
+                checksum.update(chunk)
 
-        for chunk in stream_function(file=file_info["path_raw"]):
-            checksum.update(chunk)
-            yield chunk
+            for chunk in fc.Compressor.compress_file(file=file_info["path_raw"]):
+                yield chunk
 
         # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()
@@ -259,32 +260,32 @@ class LocalFileHandler(fh.FileHandler):
                 yield chunk
 
 
-def testing():
-    checksum_original = hashlib.sha256()
-    checksum_downloaded = hashlib.sha256()
-    with open(
-        "/Volumes/Seagate_Backup_Plus_Drive/Data_Delivery_System_notcode/Test-files/testfiles/testfile_16.txt",
-        mode="rb",
-    ) as original, open(
-        "/Users/inaod568/repos/Data-Delivery-System/DS_CLI/DataDelivery_2021-04-16_19-59-51/files/testfile_16.txt",
-        mode="rb",
-    ) as downloaded:
-        for l1, l2 in zip(
-            iter(lambda: original.read(1024), b""),
-            iter(lambda: downloaded.read(1024), b""),
-        ):
-            if l1 != l2:
-                raise Exception("Nope not the same.")
-            else:
-                checksum_original.update(l1)
-                checksum_downloaded.update(l2)
-    return checksum_original.hexdigest(), checksum_downloaded.hexdigest()
-    # original_checksum = checksum_original.hexdigest()
-    # downloaded_checksum = checksum_downloaded.hexdigest()
+# def testing():
+#     checksum_original = hashlib.sha256()
+#     checksum_downloaded = hashlib.sha256()
+#     with open(
+#         "/Volumes/Seagate_Backup_Plus_Drive/Data_Delivery_System_notcode/Test-files/testfiles/testfile_16.txt",
+#         mode="rb",
+#     ) as original, open(
+#         "/Users/inaod568/repos/Data-Delivery-System/DS_CLI/DataDelivery_2021-04-16_19-59-51/files/testfile_16.txt",
+#         mode="rb",
+#     ) as downloaded:
+#         for l1, l2 in zip(
+#             iter(lambda: original.read(1024), b""),
+#             iter(lambda: downloaded.read(1024), b""),
+#         ):
+#             if l1 != l2:
+#                 raise Exception("Nope not the same.")
+#             else:
+#                 checksum_original.update(l1)
+#                 checksum_downloaded.update(l2)
+#     return checksum_original.hexdigest(), checksum_downloaded.hexdigest()
+#     # original_checksum = checksum_original.hexdigest()
+#     # downloaded_checksum = checksum_downloaded.hexdigest()
 
-    # print("Original: ", original_checksum)
-    # print("Downloaded: ", downloaded_checksum)
-    # if original_checksum == downloaded_checksum:
-    #     print("Identical")
-    # else:
-    #     print("Nope.")
+#     # print("Original: ", original_checksum)
+#     # print("Downloaded: ", downloaded_checksum)
+#     # if original_checksum == downloaded_checksum:
+#     #     print("Identical")
+#     # else:
+#     #     print("Nope.")

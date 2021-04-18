@@ -230,12 +230,10 @@ class LocalFileHandler(fh.FileHandler):
 
         return new_file_name
 
-    # @generate_checksum
     def stream_from_file(self, file):
         """Read raw or compress file depending on if compressed already or not."""
 
         file_info = self.data[file]
-        stream_function = None
 
         # Generate checksum
         checksum = hashlib.sha256()
@@ -244,9 +242,11 @@ class LocalFileHandler(fh.FileHandler):
                 checksum.update(chunk)
                 yield chunk
         else:
+            # Generate checksum first
             for chunk in self.read_file(file=file_info["path_raw"]):
                 checksum.update(chunk)
 
+            # Then stream file chunks
             for chunk in fc.Compressor.compress_file(file=file_info["path_raw"]):
                 yield chunk
 
@@ -255,37 +255,8 @@ class LocalFileHandler(fh.FileHandler):
 
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
+        """Read file in chunk_size sized chunks."""
+
         with file.open(mode="rb") as infile:
             for chunk in iter(lambda: infile.read(chunk_size), b""):
                 yield chunk
-
-
-# def testing():
-#     checksum_original = hashlib.sha256()
-#     checksum_downloaded = hashlib.sha256()
-#     with open(
-#         "/Volumes/Seagate_Backup_Plus_Drive/Data_Delivery_System_notcode/Test-files/testfiles/testfile_16.txt",
-#         mode="rb",
-#     ) as original, open(
-#         "/Users/inaod568/repos/Data-Delivery-System/DS_CLI/DataDelivery_2021-04-16_19-59-51/files/testfile_16.txt",
-#         mode="rb",
-#     ) as downloaded:
-#         for l1, l2 in zip(
-#             iter(lambda: original.read(1024), b""),
-#             iter(lambda: downloaded.read(1024), b""),
-#         ):
-#             if l1 != l2:
-#                 raise Exception("Nope not the same.")
-#             else:
-#                 checksum_original.update(l1)
-#                 checksum_downloaded.update(l2)
-#     return checksum_original.hexdigest(), checksum_downloaded.hexdigest()
-#     # original_checksum = checksum_original.hexdigest()
-#     # downloaded_checksum = checksum_downloaded.hexdigest()
-
-#     # print("Original: ", original_checksum)
-#     # print("Downloaded: ", downloaded_checksum)
-#     # if original_checksum == downloaded_checksum:
-#     #     print("Identical")
-#     # else:
-#     #     print("Nope.")

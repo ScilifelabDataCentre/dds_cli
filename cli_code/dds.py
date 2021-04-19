@@ -19,6 +19,7 @@ from rich.progress import Progress, BarColumn
 from rich import pretty
 import rich.console
 import rich.prompt
+import click_pathlib
 
 # Own modules
 import cli_code
@@ -56,12 +57,21 @@ def cli(ctx, debug):
     # Timestamp
     t_s = timestamp.TimeStamp().timestamp
 
-    # Path to new directory
-    dds_dir = pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{t_s}")
+    # Get user defined file destination if any specified
+    dest_index = None
+    if "--destination" in sys.argv:
+        dest_index = sys.argv.index("--destination")
+    elif "-d" in sys.argv:
+        dest_index = sys.argv.index("-d")
+    destination = (
+        pathlib.Path(sys.argv[dest_index + 1])
+        if dest_index is not None
+        else pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{t_s}")
+    )
 
     # Define alldirectories in DDS folder
     all_dirs = directory.DDSDirectory(
-        path=dds_dir, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
+        path=destination, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
     ).directories
 
     # Path to log file
@@ -75,7 +85,7 @@ def cli(ctx, debug):
     LOG = logging.getLogger(__name__)
     LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
     LOG.info("Logging started.")
-
+    LOG.debug(destination)
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,
@@ -494,6 +504,16 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
     help="File containing path to files or directories. ",
 )
 @click.option(
+    "--destination",
+    "-d",
+    required=False,
+    type=click_pathlib.Path(
+        exists=False, file_okay=False, dir_okay=True, resolve_path=True
+    ),
+    multiple=False,
+    help="Destination of downloaded files.",
+)
+@click.option(
     "--break-on-fail",
     is_flag=True,
     default=False,
@@ -533,6 +553,7 @@ def get(
     get_all,
     source,
     source_path_file,
+    destination,
     break_on_fail,
     num_threads,
     silent,
@@ -547,6 +568,8 @@ def get(
         )
         os._exit(os.EX_OK)
 
+    LOG.debug(dds_info)
+    os._exit(os.EX_OK)
     # Begin delivery
     with dg.DataGetter(
         username=username,

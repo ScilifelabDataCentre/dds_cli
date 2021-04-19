@@ -117,6 +117,7 @@ class Encryptor(ECDHKeyHandler):
         construction described in RFC7539.
         """
 
+        LOG.debug("Started encryption...")
         encrypted_and_saved, message = (False, "")
 
         # Additional data

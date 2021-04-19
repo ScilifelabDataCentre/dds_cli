@@ -30,6 +30,7 @@ from cli_code.cli_decorators import (
 from cli_code import status
 from cli_code import text_handler as txt
 from cli_code import file_encryptor as fe
+from cli_code import file_compressor as fc
 from cli_code import data_remover as dr
 
 ###############################################################################
@@ -148,9 +149,17 @@ class DataPutter(base.DDSBaseClass):
         )
 
         # Stream chunks from file
-        streamed_chunks = self.filehandler.stream_from_file(
-            file=file,
+        stream_function = (
+            self.filehandler.read_file
+            if file_info["compressed"]
+            else fc.Compressor.compress_file
         )
+        streamed_chunks = stream_function(
+            file=file_info["path_raw"],
+        )
+
+        for x in streamed_chunks:
+            LOG.debug(len(x))
 
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:

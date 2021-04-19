@@ -34,55 +34,6 @@ LOG.setLevel(logging.DEBUG)
 ###############################################################################
 
 
-# def checksum_verification_required(func):
-#     """
-#     Checks if the user has chosen additional checksum verification.
-#     If yes, performs the verification.
-#     """
-
-#     @functools.wraps(func)
-#     def verify_checksum(correct_checksum, *args, do_verify: bool = False, **kwargs):
-
-#         done, message = (False, "")
-#         try:
-#             # Execute function
-#             chunks = func(*args, **kwargs)
-
-#             # Generate checksum and verify if option chosen by user
-#             if do_verify:
-#                 LOG.info("Verifying file integrity...")
-#                 checksum = hashlib.sha256()
-#                 try:
-#                     for chunk in chunks:
-#                         checksum.update(chunk)
-#                 except ValueError as cs_err:  # TODO (ina): Find suitable exception
-#                     message = str(cs_err)
-#                     LOG.exception(message)
-#                 else:
-#                     checksum_digest = checksum.hexdigest()
-
-#                     if checksum_digest != correct_checksum:
-#                         message = "Checksum verification failed. File compromised."
-#                         LOG.warning(message)
-#                     else:
-#                         done = True
-#                         LOG.info("File integrity verified.")
-#             else:
-#                 for chunk in chunks:
-#                     pass
-
-#         except ChecksumError as err:  # TODO (ina): Find suitable exception
-#             message = str(err)
-#             LOG.exception(message)
-#         else:
-#             done = True
-#             LOG.info("Function %s successfully finished.", func.__name__)
-
-#         return done, message
-
-#     return verify_checksum
-
-
 def verify_proceed(func):
     """Decorator for verifying that the file is not cancelled.
     Also cancels the upload of all non-started files if break-on-fail."""
@@ -118,10 +69,7 @@ def verify_proceed(func):
                 self.status[file]["failed_op"] = "crypto"
 
             if self.break_on_fail:
-                message = (
-                    f"Cancelling upload due to file '{file}'. "
-                    "Break-on-fail specified in call."
-                )
+                message = f"'--break-on-fail'. File causing failure: '{file}'. "
                 LOG.info(message)
 
                 _ = [

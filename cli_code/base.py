@@ -323,20 +323,22 @@ class DDSBaseClass:
                 console.print(f"{intro_error_message}:")
 
                 # Cancelled files in root
-                files_table = fh.FileHandler.create_summary_table(
+                files_table, additional_info = fh.FileHandler.create_summary_table(
                     all_failed_data=any_failed, upload=bool(self.method == "put")
                 )
                 if files_table is not None:
                     console.print(rich.padding.Padding(files_table, 1))
 
                 # Cancelled files in different folders
-                folders_table = fh.FileHandler.create_summary_table(
+                folders_table, additional_info = fh.FileHandler.create_summary_table(
                     all_failed_data=any_failed,
                     get_single_files=False,
                     upload=bool(self.method == "put"),
                 )
                 if folders_table is not None:
                     console.print(rich.padding.Padding(folders_table, 1))
+                if additional_info:
+                    console.print(rich.padding.Padding(additional_info, 1))
 
             console.print(f"{intro_error_message}. See {outfile} for more information.")
 

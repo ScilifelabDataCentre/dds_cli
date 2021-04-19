@@ -116,6 +116,17 @@ class FileHandler:
                 and x[1]["subpath"] != "."
             )
         ]
+
+        additional_message = (
+            (
+                "One or more files were not uploaded due to a issue with another file. "
+                "To ignore issues with other files, remove the `--break-on-fail` "
+                "flag from the call."
+            )
+            if any([1 for x in files if "break-on-fail" in x[1]["message"]])
+            else ""
+        )
+
         if files:
             curr_table = rich.table.Table(
                 title=f"Incomplete {title} {up_or_down}s",
@@ -131,14 +142,21 @@ class FileHandler:
                 if upload:
                     _ = [
                         curr_table.add_row(
-                            textwrap.fill(x[1]["path_raw"]), x[1]["message"]
+                            textwrap.fill(x[1]["path_raw"]),
+                            x[1]["message"]
+                            if "break-on-fail" not in x[1]["message"]
+                            else "",
                         )
                         for x in files
                     ]
                 else:
                     _ = [
                         curr_table.add_row(
-                            x[1]["name_in_db"], textwrap.fill(x[0]), x[1]["message"]
+                            x[1]["name_in_db"],
+                            textwrap.fill(x[0]),
+                            x[1]["message"]
+                            if "break-on-fail" not in x[1]["message"]
+                            else "",
                         )
                         for x in files
                     ]
@@ -153,7 +171,9 @@ class FileHandler:
                                 else str(pathlib.Path(x[1]["path_raw"]).parent)
                             ),
                             str(pathlib.Path(x[1]["path_raw"]).name),
-                            x[1]["message"],
+                            x[1]["message"]
+                            if "break-on-fail" not in x[1]["message"]
+                            else "",
                         )
 
                         subpath = x[1]["subpath"]
@@ -165,12 +185,14 @@ class FileHandler:
                             else str(pathlib.Path(x[1]["subpath"])),
                             x[1]["name_in_db"],
                             textwrap.fill(str(pathlib.Path(x[0]))),
-                            x[1]["message"],
+                            x[1]["message"]
+                            if "break-on-fail" not in x[1]["message"]
+                            else "",
                         )
 
                         subpath = x[1]["subpath"]
 
-        return curr_table
+        return curr_table, additional_message
 
     @staticmethod
     def delete_tempdir(directory: pathlib.Path):

@@ -158,18 +158,18 @@ class LocalFileHandler(fh.FileHandler):
                             }
                         )
 
-                filestream_funcname = (
-                    "read_file" if self.data[x]["compressed"] else "compress_file"
-                )
+                # filestream_funcname = (
+                #     "read_file" if self.data[x]["compressed"] else "compress_file"
+                # )
                 status_dict[x] = {
                     "cancel": False,
                     "started": False,
                     "message": "",
                     "failed_op": None,
-                    filestream_funcname: {"started": False, "done": False},
+                    # filestream_funcname: {"started": False, "done": False},
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
-                    "task": None,
+                    # "task": None,
                 }
 
         LOG.debug("Initial statuses created.")

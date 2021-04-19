@@ -152,6 +152,7 @@ class RemoteFileHandler(fh.FileHandler):
         for x in list(self.data):
             status_dict[x] = {
                 "cancel": False,
+                "started": False,
                 "message": "",
                 "failed_op": None,
                 "get": {"started": False, "done": False},

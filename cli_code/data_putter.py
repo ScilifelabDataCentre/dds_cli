@@ -168,12 +168,18 @@ class DataPutter(base.DDSBaseClass):
             )
             salt = encryptor.salt
 
+        LOG.debug("Updating file processed size: %s", file_info["path_processed"])
         # Update file size
         self.filehandler.data[file]["size_processed"] = (
             file_info["path_processed"].stat().st_size
         )
 
         if saved:
+            LOG.info(
+                "File successfully encrypted: %s. New location: %s",
+                file,
+                file_info["path_processed"],
+            )
             # Update progress bar for upload
             progress.reset(
                 task,
@@ -195,8 +201,14 @@ class DataPutter(base.DDSBaseClass):
                 if db_updated:
                     all_ok = True
 
-        # Delete temporary processed file locally
-        dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
+        if not saved or all_ok:
+            # Delete temporary processed file locally
+            LOG.debug(
+                "Deleting file %s - exists: %s",
+                file_info["path_processed"],
+                file_info["path_processed"].exists(),
+            )
+            dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
         # Remove progress bar task
         progress.remove_task(task)

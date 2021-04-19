@@ -219,9 +219,8 @@ class LocalFileHandler(fh.FileHandler):
         """Create new file name to save encrypted file."""
 
         # New local file name
-        old_suffix = raw_file.suffix
-        new_suffix = f"{old_suffix if no_compression else '.zst'}"
-
+        old_suffix = "".join(raw_file.suffixes)
+        new_suffix = old_suffix if no_compression else f"{old_suffix}.zst"
         new_file_name = (
             self.local_destination
             / subpath

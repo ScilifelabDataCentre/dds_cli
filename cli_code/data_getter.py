@@ -168,7 +168,6 @@ class DataGetter(base.DDSBaseClass):
                 )
 
             if file_saved:
-                # all_ok = True
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
 

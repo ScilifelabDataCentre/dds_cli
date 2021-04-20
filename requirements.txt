@@ -10,3 +10,4 @@ zstandard==0.15.1
 immutabledict
 simplejson
 click-pathlib
+rich

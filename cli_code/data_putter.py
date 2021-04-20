@@ -158,9 +158,6 @@ class DataPutter(base.DDSBaseClass):
             file=file_info["path_raw"],
         )
 
-        for x in streamed_chunks:
-            LOG.debug(len(x))
-
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:
 

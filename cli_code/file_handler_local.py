@@ -236,7 +236,7 @@ class LocalFileHandler(fh.FileHandler):
 
         LOG.debug("Streaming file...")
         # Generate checksum
-        checksum = hashlib.md5()
+        checksum = hashlib.sha256()
         if file_info["compressed"]:
             for chunk in self.read_file(file=file_info["path_raw"]):
                 checksum.update(chunk)
@@ -245,10 +245,10 @@ class LocalFileHandler(fh.FileHandler):
             LOG.debug("File not compressed -- compressing")
             # Generate checksum first
             # total_read = 0
-            # for chunk in self.read_file(file=file_info["path_raw"]):
-            #     checksum.update(chunk)
-            #     total_read += len(chunk)
-            #     LOG.debug(total_read)
+            for chunk in self.read_file(file=file_info["path_raw"]):
+                checksum.update(chunk)
+                # total_read += len(chunk)
+                # LOG.debug(total_read)
 
             # Then stream file chunks
             # LOG.debug(
@@ -259,8 +259,8 @@ class LocalFileHandler(fh.FileHandler):
                 # checksum.update(chunk)
                 # break
                 yield chunk
-        os._exit(os.EX_OK)
-        LOG.debug("Streaming file finished.")
+        # os._exit(os.EX_OK)
+        # LOG.debug("Streaming file finished.")
         # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()
 

@@ -92,7 +92,7 @@ class Compressor:
             # Initiate a Zstandard compressor
             cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
 
-            total_read = 0.0
+            # total_read = 0.0
             # Compress file chunk by chunk while reading
             with cctzx.stream_reader(infile) as compressor:
                 # while True:

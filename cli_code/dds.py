@@ -568,8 +568,6 @@ def get(
         )
         os._exit(os.EX_OK)
 
-    LOG.debug(dds_info)
-    os._exit(os.EX_OK)
     # Begin delivery
     with dg.DataGetter(
         username=username,

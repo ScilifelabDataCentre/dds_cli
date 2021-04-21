@@ -141,9 +141,6 @@ class DataGetter(base.DDSBaseClass):
 
         LOG.debug("File %s downloaded: %s", file, file_downloaded)
 
-        if file.name == "testfile_16.txt":
-            return all_ok, message
-
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
             LOG.debug("Database updated: %s", db_updated)
@@ -171,10 +168,11 @@ class DataGetter(base.DDSBaseClass):
                     outfile=file,
                 )
 
+            LOG.debug("file saved? %s", file_saved)
             if file_saved:
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
-
+                LOG.debug(self.verify_checksum)
                 all_ok, message = (
                     fe.Encryptor.verify_checksum(
                         file=file, correct_checksum=file_info["checksum"]

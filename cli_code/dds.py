@@ -70,22 +70,26 @@ def cli(ctx, debug):
     )
 
     # Define alldirectories in DDS folder
-    all_dirs = directory.DDSDirectory(
-        path=destination, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
-    ).directories
+    all_dirs = None
+    logfile = None
+    if "--help" not in sys.argv:
+        all_dirs = directory.DDSDirectory(
+            path=destination, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
+        ).directories
 
-    # Path to log file
-    logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
+        # Path to log file
+        logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
 
-    # Create logger
-    _ = cli_code.setup_custom_logger(filename=logfile, debug=debug)
+        # Create logger
+        _ = cli_code.setup_custom_logger(filename=logfile, debug=debug)
 
-    # Create logger
-    global LOG
-    LOG = logging.getLogger(__name__)
-    LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
-    LOG.info("Logging started.")
-    LOG.debug(destination)
+        # Create logger
+        global LOG
+        LOG = logging.getLogger(__name__)
+        LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
+        LOG.info("Logging started.")
+        LOG.debug(destination)
+
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,

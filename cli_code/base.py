@@ -125,10 +125,14 @@ class DDSBaseClass:
             # Get user credentials and project info if not already specified
             if username is None and "username" in contents:
                 username = contents["username"]
-            if project is None and "project" in contents:
-                project = contents["project"]
             if password is None and "password" in contents:
                 password = contents["password"]
+            if (
+                project is None
+                and "project" in contents
+                and self.method in ["put", "get", "ls"]
+            ):
+                project = contents["project"]
 
         LOG.info("Username: %s, Project ID: %s", username, project)
 

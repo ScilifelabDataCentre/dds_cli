@@ -15,6 +15,7 @@ import pathlib
 import requests
 import rich
 import simplejson
+import getpass
 
 # Own modules
 from cli_code import file_handler as fh
@@ -147,8 +148,8 @@ class DDSBaseClass:
 
         # Set password if missing
         if password is None:
-            # password = getpass.getpass()
-            password = "password"  # TODO: REMOVE - ONLY FOR DEV
+            password = getpass.getpass()
+            # password = "password"  # TODO: REMOVE - ONLY FOR DEV
 
         LOG.debug("User input verified.")
 

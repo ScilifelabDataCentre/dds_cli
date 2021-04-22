@@ -70,12 +70,15 @@ class Compressor:
 
         compressed, error = (False, "")
         try:
+            original_umask = os.umask(0)  # User file-creation mode mask
             with file.open(mode="rb") as f:
                 file_start = f.read(self.max_magic_len)
                 if file_start.startswith(tuple(x for x in self.fmt_magic)):
                     compressed = True
         except OSError as err:
             error = str(err)
+        finally:
+            os.umask(original_umask)
 
         return compressed, error
 
@@ -87,22 +90,29 @@ class Compressor:
         """Compresses file by reading it chunk by chunk."""
 
         LOG.debug("Started compression...")
-        with file.open(mode="rb") as infile:
 
-            # Initiate a Zstandard compressor
-            cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
+        try:
+            original_umask = os.umask(0)  # User file-creation mode mask
+            with file.open(mode="rb") as infile:
 
-            # total_read = 0.0
-            # Compress file chunk by chunk while reading
-            with cctzx.stream_reader(infile) as compressor:
-                # while True:
-                #     chunk = compressor.read(chunk_size)
-                #     LOG.debug(type(chunk))
-                #     if not chunk:
-                #         break
-                #     yield
-                for chunk in iter(lambda: compressor.read(chunk_size), b""):
-                    yield chunk
+                # Initiate a Zstandard compressor
+                cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
+
+                # total_read = 0.0
+                # Compress file chunk by chunk while reading
+                with cctzx.stream_reader(infile) as compressor:
+                    # while True:
+                    #     chunk = compressor.read(chunk_size)
+                    #     LOG.debug(type(chunk))
+                    #     if not chunk:
+                    #         break
+                    #     yield
+                    for chunk in iter(lambda: compressor.read(chunk_size), b""):
+                        yield chunk
+        except Exception as err:
+            LOG.warning(str(err))
+        finally:
+            os.umask(original_umask)
         LOG.debug("Compression finished.")
 
     @staticmethod
@@ -114,6 +124,7 @@ class Compressor:
         # Decompressing file and saving
         LOG.debug("Decompressing...")
         try:
+            original_umask = os.umask(0)  # User file-creation mode mask
             with outfile.open(mode="wb+") as file:
                 dctx = zstd.ZstdDecompressor()
                 with dctx.stream_writer(file) as decompressor:
@@ -126,5 +137,7 @@ class Compressor:
         else:
             saved = True
             LOG.debug("Decompression done.")
+        finally:
+            os.umask(original_umask)
 
         return saved, message

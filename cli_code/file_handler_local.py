@@ -268,6 +268,12 @@ class LocalFileHandler(fh.FileHandler):
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
         """Read file in chunk_size sized chunks."""
 
-        with file.open(mode="rb") as infile:
-            for chunk in iter(lambda: infile.read(chunk_size), b""):
-                yield chunk
+        try:
+            original_umask = os.umask(0)  # User file-creation mode mask
+            with file.open(mode="rb") as infile:
+                for chunk in iter(lambda: infile.read(chunk_size), b""):
+                    yield chunk
+        except OSError as err:
+            LOG.warning(str(err))
+        finally:
+            os.umask(original_umask)

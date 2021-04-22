@@ -124,6 +124,7 @@ class Encryptor(ECDHKeyHandler):
         aad = None
 
         try:
+            original_umask = os.umask(0)  # User file-creation mode mask
             # Save encryption output to file
             with outfile.open(mode="wb") as out:
                 # Create and save first IV/nonce
@@ -158,6 +159,8 @@ class Encryptor(ECDHKeyHandler):
             encrypted_and_saved = True
             message = f"Encrypted file stored in location: {outfile}"
             LOG.info(message)
+        finally:
+            os.umask(original_umask)
 
         return encrypted_and_saved, message
 
@@ -226,41 +229,49 @@ class Decryptor(ECDHKeyHandler):
     def decrypt_file(self, infile: pathlib.Path):
         """Decrypts the file"""
 
-        with infile.open(mode="rb+") as file:
-            # Get last nonce
-            file.seek(-12, os.SEEK_END)
-            last_nonce = file.read(12)
+        try:
+            original_umask = os.umask(0)  # User file-creation mode mask
+            with infile.open(mode="rb+") as file:
+                # Get last nonce
+                file.seek(-12, os.SEEK_END)
+                last_nonce = file.read(12)
 
-            # Remove last nonce from file
-            file.seek(-12, os.SEEK_END)
-            file.truncate()
+                # Remove last nonce from file
+                file.seek(-12, os.SEEK_END)
+                file.truncate()
 
-            # Jump back to beginning and get first nonce
-            file.seek(0)
-            first_nonce = file.read(12)
+                # Jump back to beginning and get first nonce
+                file.seek(0)
+                first_nonce = file.read(12)
 
-            # Decrypt file
-            if file.tell() != 12:
-                raise SystemExit
+                # Decrypt file
+                if file.tell() != 12:
+                    raise SystemExit
 
-            iv_int = int.from_bytes(first_nonce, "little")
-            aad = None
-            nonce = b""
+                iv_int = int.from_bytes(first_nonce, "little")
+                aad = None
+                nonce = b""
 
-            for chunk in iter(lambda: file.read(FileSegment.SEGMENT_SIZE_CIPHER), b""):
-                # Get nonce as bytes for decryption: if the nonce is larger than the
-                # max number of chunks allowed - wrap to 0 again
-                nonce = (
-                    iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
-                ).to_bytes(length=12, byteorder="little")
+                for chunk in iter(
+                    lambda: file.read(FileSegment.SEGMENT_SIZE_CIPHER), b""
+                ):
+                    # Get nonce as bytes for decryption: if the nonce is larger than the
+                    # max number of chunks allowed - wrap to 0 again
+                    nonce = (
+                        iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
+                    ).to_bytes(length=12, byteorder="little")
 
-                iv_int += 1
+                    iv_int += 1
 
-                yield crypto_aead_chacha20poly1305_ietf_decrypt(
-                    ciphertext=chunk, aad=aad, nonce=nonce, key=self.key
-                )
+                    yield crypto_aead_chacha20poly1305_ietf_decrypt(
+                        ciphertext=chunk, aad=aad, nonce=nonce, key=self.key
+                    )
 
-            LOG.debug("Testing nonce...")
-            if last_nonce != nonce:
-                raise SystemExit("Nonces do not match!!")
-            LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)
+                LOG.debug("Testing nonce...")
+                if last_nonce != nonce:
+                    raise SystemExit("Nonces do not match!!")
+                LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)
+        except Exception as err:
+            LOG.warning(str(err))
+        finally:
+            os.umask(original_umask)

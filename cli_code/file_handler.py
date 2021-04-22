@@ -50,8 +50,18 @@ class FileHandler:
         if source_path_file is not None:
             source_path_file = pathlib.Path(source_path_file)
             if source_path_file.exists():
-                with source_path_file.resolve().open(mode="r") as spf:
-                    self.data_list += spf.read().splitlines()
+                try:
+                    original_umask = os.umask(0)  # User file-creation mode mask
+                    with source_path_file.resolve().open(mode="r") as spf:
+                        self.data_list += spf.read().splitlines()
+                except OSError as err:
+                    console.print(
+                        f"Failed to get files from source-path-file option: {err}"
+                    )
+                    os.umask(original_umask)
+                    os._exit(os.EX_OK)
+                finally:
+                    os.umask(original_umask)
 
         self.failed = {}
 
@@ -80,12 +90,18 @@ class FileHandler:
 
     @staticmethod
     def save_errors_to_file(file: pathlib.Path, info):
-        with file.open(mode="w") as errfile:
-            json.dump(
-                info,
-                errfile,
-                indent=4,
-            )
+        try:
+            original_umask = os.umask(0)  # User file-creation mode mask
+            with file.open(mode="w") as errfile:
+                json.dump(
+                    info,
+                    errfile,
+                    indent=4,
+                )
+        except OSError as err:
+            LOG.warning(str(err))
+        finally:
+            os.umask(original_umask)
 
     @staticmethod
     def create_summary_table(

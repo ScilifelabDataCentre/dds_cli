@@ -7,6 +7,7 @@
 # Standard Library
 import logging
 import sys
+import os
 
 # Installed
 from rich.logging import RichHandler
@@ -37,6 +38,7 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
     # Config file logger
     if filename != "":
         try:
+            original_umask = os.umask(0)  # User file-creation mode mask
             file_handler = logging.FileHandler(filename=filename)
             fh_formatter = logging.Formatter(
                 "%(asctime)s::%(levelname)s::" + "%(name)s::%(lineno)d::%(message)s"
@@ -46,19 +48,21 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
             logger.addHandler(file_handler)
         except OSError as ose:
             sys.exit(f"Logging to file failed: {ose}")
+        finally:
+            os.umask(original_umask)
 
-    # Config file logger
-    if debug:
-        try:
-            richhandler = RichHandler(
-                rich_tracebacks=True,
-                log_time_format="[%Y-%m-%d %H:%M:%S]",
-                level=logging.DEBUG if debug else logging.WARNING,
-            )
-            logger.addHandler(richhandler)
+    # Config stream logger
+    # if debug:
+    try:
+        richhandler = RichHandler(
+            rich_tracebacks=True,
+            log_time_format="[%Y-%m-%d %H:%M:%S]",
+            level=logging.DEBUG if debug else logging.WARNING,
+        )
+        logger.addHandler(richhandler)
 
-        except OSError as ose:
-            sys.exit(f"Logging to console failed: {ose}")
+    except OSError as ose:
+        sys.exit(f"Logging to console failed: {ose}")
 
     return logger
 

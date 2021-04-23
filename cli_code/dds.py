@@ -336,7 +336,7 @@ def put(
 )
 @click.option(
     "--folder",
-    "-f",
+    "-fl",
     required=False,
     multiple=False,
     help="Folder to list files within.",
@@ -414,7 +414,7 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
 )
 @click.option(
     "--folder",
-    "-d",
+    "-fl",
     required=False,
     type=str,
     multiple=True,

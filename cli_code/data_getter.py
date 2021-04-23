@@ -172,7 +172,6 @@ class DataGetter(base.DDSBaseClass):
             if file_saved:
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
-                LOG.debug(self.verify_checksum)
                 all_ok, message = (
                     fe.Encryptor.verify_checksum(
                         file=file, correct_checksum=file_info["checksum"]

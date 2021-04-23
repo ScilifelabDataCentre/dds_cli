@@ -62,7 +62,11 @@ class DDSBaseClass:
         password=None,
         config=None,
         project=None,
+        ignore_config_project=False,
     ):
+
+        LOG.debug("Config: %s", config)
+
         # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
         LOG.info("Attempted operation: %s", self.method)
@@ -72,7 +76,11 @@ class DDSBaseClass:
 
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(
-            username=username, password=password, config=config, project=project
+            username=username,
+            password=password,
+            config=config,
+            project=project,
+            ignore_config_project=ignore_config_project,
         )
 
         # Authenticate the user and get the token
@@ -112,7 +120,14 @@ class DDSBaseClass:
         return True
 
     # Private methods ############################### Private methods #
-    def __verify_input(self, username=None, password=None, config=None, project=None):
+    def __verify_input(
+        self,
+        username=None,
+        password=None,
+        config=None,
+        project=None,
+        ignore_config_project=False,
+    ):
         """Verifies that the users input is valid and fully specified."""
 
         LOG.info("Verifying the user input...")
@@ -127,12 +142,13 @@ class DDSBaseClass:
                 username = contents["username"]
             if password is None and "password" in contents:
                 password = contents["password"]
-            if (
-                project is None
-                and "project" in contents
-                and self.method in ["put", "get", "ls"]
-            ):
-                project = contents["project"]
+            if not ignore_config_project:
+                if (
+                    project is None
+                    and "project" in contents
+                    and self.method in ["put", "get", "ls"]
+                ):
+                    project = contents["project"]
 
         LOG.info("Username: %s, Project ID: %s", username, project)
 

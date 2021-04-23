@@ -54,6 +54,16 @@ console = rich.console.Console()
 def cli(ctx, debug):
     """Main CLI command, sets up DDS info."""
 
+    # Get config file
+    # TODO (ina):
+    config_file = None
+    if not any([x in sys.argv for x in ["--config", "-c"]]):
+        print("test")
+        config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
+        if not config_file.is_file():
+            console.print("Could not find the config file '.dds-cli.json'")
+            os._exit(os.EX_OK)
+
     # Timestamp
     t_s = timestamp.TimeStamp().timestamp
 
@@ -95,6 +105,7 @@ def cli(ctx, debug):
         "TIMESTAMP": t_s,
         "DDS_DIRS": all_dirs,
         "LOGFILE": logfile,
+        "CONFIG": config_file,
     }
 
 
@@ -193,7 +204,7 @@ def put(
     # Initialize delivery - check user access etc
     with dp.DataPutter(
         username=username,
-        config=config,
+        config=dds_info["CONFIG"] if config is None else config,
         project=project,
         source=source,
         source_path_file=source_path_file,
@@ -315,9 +326,15 @@ def put(
 
 
 @cli.command()
+@click.argument("fold_arg", required=False)  # Needs to be before proj_arg
 @click.argument("proj_arg", required=False)
-@click.argument("fold_arg", required=False)
 @click.option("--project", "-p", required=False, help="Project ID.")
+@click.option(
+    "--projects",
+    "-lp",
+    is_flag=True,
+    help="List all project connected to your account.",
+)
 @click.option(
     "--folder",
     "-f",
@@ -329,21 +346,21 @@ def put(
     "--size", "-sz", is_flag=True, default=False, help="Show size of project contents."
 )
 @click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
-)
-@click.option(
     "--username",
     "-u",
     required=False,
     type=str,
     help="Your Data Delivery System username.",
 )
+@click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials, destination, etc.",
+)
 @click.pass_obj
-def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
+def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, config):
     """List the projects and the files within the projects."""
 
     project = proj_arg if proj_arg is not None else project
@@ -356,7 +373,12 @@ def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
             "listing command at this time. No size will be displayed.\n"
         )
 
-    with dl.DataLister(project=project, config=config, username=username) as lister:
+    with dl.DataLister(
+        project=project,
+        project_level=projects,
+        config=dds_info["CONFIG"] if config is None else config,
+        username=username,
+    ) as lister:
 
         # List all projects if project is None and all files if project spec
         if lister.project is None:
@@ -381,13 +403,6 @@ def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
     help="Your Data Delivery System username.",
 )
 @click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
-)
-@click.option(
     "--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents."
 )
 @click.option(
@@ -406,8 +421,15 @@ def ls(_, proj_arg, fold_arg, project, folder, size, config, username):
     multiple=True,
     help="Path to folder to remove.",
 )
+@click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials, destination, etc.",
+)
 @click.pass_obj
-def rm(_, proj_arg, project, username, config, rm_all, file, folder):
+def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     """Delete the files within a project."""
 
     # One of proj_arg or project is required
@@ -444,7 +466,11 @@ def rm(_, proj_arg, project, username, config, rm_all, file, folder):
             == "y"
         )
 
-    with dr.DataRemover(project=project, username=username, config=config) as remover:
+    with dr.DataRemover(
+        project=project,
+        username=username,
+        config=dds_info["CONFIG"] if config is None else config,
+    ) as remover:
 
         if rm_all:
             remover.remove_all()
@@ -575,7 +601,7 @@ def get(
     # Begin delivery
     with dg.DataGetter(
         username=username,
-        config=config,
+        config=dds_info["CONFIG"] if config is None else config,
         project=project,
         get_all=get_all,
         source=source,

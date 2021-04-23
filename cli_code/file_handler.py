@@ -98,7 +98,7 @@ class FileHandler:
                     errfile,
                     indent=4,
                 )
-        except OSError as err:
+        except (OSError, TypeError) as err:
             LOG.warning(str(err))
         finally:
             os.umask(original_umask)

@@ -54,16 +54,6 @@ console = rich.console.Console()
 def cli(ctx, debug):
     """Main CLI command, sets up DDS info."""
 
-    # Get config file
-    # TODO (ina):
-    config_file = None
-    if not any([x in sys.argv for x in ["--config", "-c"]]):
-        print("test")
-        config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
-        if not config_file.is_file():
-            console.print("Could not find the config file '.dds-cli.json'")
-            os._exit(os.EX_OK)
-
     # Timestamp
     t_s = timestamp.TimeStamp().timestamp
 
@@ -80,9 +70,18 @@ def cli(ctx, debug):
     )
 
     # Define alldirectories in DDS folder
+    config_file = None
     all_dirs = None
     logfile = None
     if "--help" not in sys.argv:
+        # Get config file
+        # TODO (ina):
+        if not any([x in sys.argv for x in ["--config", "-c"]]):
+            config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
+            if not config_file.is_file():
+                console.print("Could not find the config file '.dds-cli.json'")
+                os._exit(os.EX_OK)
+
         all_dirs = directory.DDSDirectory(
             path=destination, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
         ).directories

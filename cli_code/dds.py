@@ -76,7 +76,12 @@ def cli(ctx, debug):
     if "--help" not in sys.argv:
         # Get config file
         # TODO (ina):
-        if not any([x in sys.argv for x in ["--config", "-c"]]):
+        if not any(
+            [
+                x in sys.argv
+                for x in ["--config", "-c", "--username", "-u", "--project", "-p"]
+            ]
+        ):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
                 console.print("Could not find the config file '.dds-cli.json'")

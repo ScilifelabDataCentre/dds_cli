@@ -366,7 +366,7 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
     project = proj_arg if proj_arg is not None else project
     folder = fold_arg if fold_arg is not None else folder
 
-    if project is None and size:
+    if projects and size:
         console_ls = rich.console.Console(stderr=True, style="orange3")
         console_ls.print(
             "\nNB! Showing the project size is not implemented in the "

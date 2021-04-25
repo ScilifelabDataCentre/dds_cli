@@ -76,12 +76,7 @@ def cli(ctx, debug):
     if "--help" not in sys.argv:
         # Get config file
         # TODO (ina):
-        if not any(
-            [
-                x in sys.argv
-                for x in ["--config", "-c", "--username", "-u", "--project", "-p"]
-            ]
-        ):
+        if not any([x in sys.argv for x in ["--config", "-c", "--username", "-u"]]):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
                 console.print("Could not find the config file '.dds-cli.json'")
@@ -104,6 +99,7 @@ def cli(ctx, debug):
         LOG.info("Logging started.")
         LOG.debug(destination)
 
+    LOG.debug(config_file)
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,

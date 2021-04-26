@@ -376,5 +376,5 @@ class DDSBaseClass:
         else:
             # Printout if no cancelled/failed files
             console.print(
-                f"{'Upload' if self.method == 'put' else 'Download'} completed!"
+                f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n"
             )

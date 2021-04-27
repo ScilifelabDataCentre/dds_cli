@@ -81,7 +81,7 @@ class DataGetter(base.DDSBaseClass):
             console.print(
                 f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n"
             )
-            os._exit(os.EX_OK)
+            os._exit(0)
 
         # Start file prep progress
         with Progress(
@@ -104,11 +104,11 @@ class DataGetter(base.DDSBaseClass):
                     "and '--break-on-fail' flag used. :warning:\n\n"
                     f"Files not found: {self.filehandler.failed}\n"
                 )
-                os._exit(os.EX_OK)
+                os._exit(0)
 
             if not self.filehandler.data:
                 console.print("\nNo files to download.\n")
-                os._exit(os.EX_OK)
+                os._exit(0)
 
             self.status = self.filehandler.create_download_status_dict()
 

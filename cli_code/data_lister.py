@@ -80,7 +80,7 @@ class DataLister(base.DDSBaseClass):
             )
 
             if not do_continue in ["y", "yes"]:
-                os._exit(os.EX_OK)
+                os._exit(0)
 
     # Public methods ########################### Public methods #
     def list_projects(self):
@@ -95,7 +95,7 @@ class DataLister(base.DDSBaseClass):
         console = Console()
         if not response.ok:
             console.print(f"Failed to get list of projects: {response.text}")
-            os._exit(os.EX_OK)
+            os._exit(0)
 
         try:
             resp_json = response.json()
@@ -105,7 +105,7 @@ class DataLister(base.DDSBaseClass):
         # Cancel if user not involved in any projects
         if "all_projects" not in resp_json:
             console.print("No project info was retrieved. No files to list.")
-            os._exit(os.EX_OK)
+            os._exit(0)
 
         # Warn user if many lines to print
         self.warn_if_many(count=len(resp_json["all_projects"]))
@@ -159,7 +159,7 @@ class DataLister(base.DDSBaseClass):
 
         if not response.ok:
             console.print(f"Failed to get list of files: {response.text}")
-            os._exit(os.EX_OK)
+            os._exit(0)
 
         # Get response
         try:
@@ -170,7 +170,7 @@ class DataLister(base.DDSBaseClass):
         # Check if project empty
         if "num_items" in resp_json and resp_json["num_items"] == 0:
             console.print(f"[i]Project '{self.project}' is empty.[/i]")
-            os._exit(os.EX_OK)
+            os._exit(0)
 
         # Get files
         files_folders = resp_json["files_folders"]

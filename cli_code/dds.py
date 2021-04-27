@@ -80,7 +80,7 @@ def cli(ctx, debug):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
                 console.print("Could not find the config file '.dds-cli.json'")
-                os._exit(os.EX_OK)
+                os._exit(0)
 
         all_dirs = directory.DDSDirectory(
             path=destination, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
@@ -435,14 +435,14 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
         console.print("No project specified, cannot remove anything.")
-        os._exit(os.EX_OK)
+        os._exit(0)
 
     # Either all or a file
     if rm_all and (file or folder):
         console.print(
             "The options '--rm-all' and '--file'/'--folder' " "cannot be used together."
         )
-        os._exit(os.EX_OK)
+        os._exit(0)
 
     project = proj_arg if proj_arg is not None else project
 
@@ -452,7 +452,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
             "One of the options must be specified to perform "
             "data deletion: '--rm-all' / '--file' / '--folder'."
         )
-        os._exit(os.EX_OK)
+        os._exit(0)
 
     # Warn if trying to remove all contents
     if rm_all:
@@ -596,7 +596,7 @@ def get(
             "\nFlag'--get-all' cannot be used together with options "
             "'--source'/'--source-path-fail'.\n"
         )
-        os._exit(os.EX_OK)
+        os._exit(0)
 
     # Begin delivery
     with dg.DataGetter(

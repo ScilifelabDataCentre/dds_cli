@@ -59,7 +59,7 @@ class FileHandler:
                         f"Failed to get files from source-path-file option: {err}"
                     )
                     os.umask(original_umask)
-                    os._exit(os.EX_OK)
+                    os._exit(0)
                 finally:
                     os.umask(original_umask)
 
@@ -73,7 +73,7 @@ class FileHandler:
         configpath = pathlib.Path(configfile).resolve()
         if not configpath.exists():
             console.print("\n:warning: Config file does not exist. :warning:\n")
-            os._exit(os.EX_OK)
+            os._exit(0)
 
         # Open config file and get contents
         try:
@@ -82,7 +82,7 @@ class FileHandler:
                 contents = json.load(cfp)
         except json.decoder.JSONDecodeError as err:
             console.print(f"\nFailed to get config file contents: {err}\n")
-            os._exit(os.EX_OK)
+            os._exit(0)
         finally:
             os.umask(original_umask)
 

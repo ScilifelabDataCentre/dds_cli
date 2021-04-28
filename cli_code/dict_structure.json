@@ -1,0 +1,49 @@
+{
+    PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder/testfile_0.fna'): {
+        'in_directory': True, 
+        'local_dir_name': PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder'), 
+        'directory_path': PosixPath('test-folder'), 
+        'size': 17359820, 
+        'proceed': True, 
+        'compressed': False, 
+        'path_in_bucket': 'test-folder/testfile_0.fna.zst.ccp', 
+        'path_in_db': 'test-folder/testfile_0.fna', 
+        'error': '', 
+        'encrypted_file': PosixPath('.'), 
+        'encrypted_size': 0, 
+        'key': '', 
+        'extension': '.zst.ccp', 
+        'processing': {
+            'in_progress': False, 
+            'finished': False
+        }, 
+        'upload': {
+            'in_progress': False, 
+            'finished': False
+        }, 
+        'database': {
+            'in_progress': False, 
+            'finished': False
+        }
+    }, 
+    PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder/next_folder/testfile_3.txt'):{
+        'in_directory': True, 
+        'local_dir_name': PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder'), 
+        'directory_path': PosixPath('test-folder/next_folder'), 'size': 4194337, 'proceed': True, 'compressed': False, 'path_in_bucket': 'test-folder/next_folder/testfile_3.txt.zst.ccp', 'path_in_db': 'test-folder/next_folder/testfile_3.txt', 'error': '', 'encrypted_file': PosixPath('.'), 'encrypted_size': 0, 'key': '', 'extension': '.zst.ccp', 'processing': {'in_progress': False, 'finished': False
+        }, 'upload': {'in_progress': False, 'finished': False
+        }, 'database': {'in_progress': False, 'finished': False
+        }
+    }, PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder/next_folder/testfile_2.txt'): {'in_directory': True, 'local_dir_name': PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder'), 'directory_path': PosixPath('test-folder/next_folder'), 'size': 2097169, 'proceed': True, 'compressed': False, 'path_in_bucket': 'test-folder/next_folder/testfile_2.txt.zst.ccp', 'path_in_db': 'test-folder/next_folder/testfile_2.txt', 'error': '', 'encrypted_file': PosixPath('.'), 'encrypted_size': 0, 'key': '', 'extension': '.zst.ccp', 'processing': {'in_progress': False, 'finished': False
+        }, 'upload': {'in_progress': False, 'finished': False
+        }, 'database': {'in_progress': False, 'finished': False
+        }
+    }, PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder/next_folder/testfile_1.txt'): {'in_directory': True, 'local_dir_name': PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder'), 'directory_path': PosixPath('test-folder/next_folder'), 'size': 1048585, 'proceed': True, 'compressed': False, 'path_in_bucket': 'test-folder/next_folder/testfile_1.txt.zst.ccp', 'path_in_db': 'test-folder/next_folder/testfile_1.txt', 'error': '', 'encrypted_file': PosixPath('.'), 'encrypted_size': 0, 'key': '', 'extension': '.zst.ccp', 'processing': {'in_progress': False, 'finished': False
+        }, 'upload': {'in_progress': False, 'finished': False
+        }, 'database': {'in_progress': False, 'finished': False
+        }
+    }, PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder/next_folder/testfile_4.txt'): {'in_directory': True, 'local_dir_name': PosixPath('/Users/inaod568/repos/Data-Delivery-System/DS_CLI/demo/test-folder'), 'directory_path': PosixPath('test-folder/next_folder'), 'size': 8388673, 'proceed': True, 'compressed': False, 'path_in_bucket': 'test-folder/next_folder/testfile_4.txt.zst.ccp', 'path_in_db': 'test-folder/next_folder/testfile_4.txt', 'error': '', 'encrypted_file': PosixPath('.'), 'encrypted_size': 0, 'key': '', 'extension': '.zst.ccp', 'processing': {'in_progress': False, 'finished': False
+        }, 'upload': {'in_progress': False, 'finished': False
+        }, 'database': {'in_progress': False, 'finished': False
+        }
+    }
+}

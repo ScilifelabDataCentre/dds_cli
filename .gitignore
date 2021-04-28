@@ -5,6 +5,7 @@ couchdb-data
 dportal.yaml
 dportal.yaml.sample
 venv
+cli_venv
 *.egg*
 .vscode
 .Rproj.user
@@ -20,7 +21,8 @@ S3-Upload-Proxy
 *.c4gh
 dp_testing_group.csv
 sensitive
-test*
+*tests
+*testing*
 not_used*
 encryption.md
 chunk_tester.py
@@ -28,3 +30,7 @@ creds_files
 create_account.py
 *demo*
 *test.py
+old_version_files*
+temp_*
+my_*
+ds.log

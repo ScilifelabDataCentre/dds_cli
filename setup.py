@@ -10,7 +10,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'ds_deliver = cli_code.ds_deliver:cli',
+            'dds = cli_code.dds:cli',
         ],
     },
 )

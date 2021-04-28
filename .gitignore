@@ -33,3 +33,4 @@ create_account.py
 old_version_files*
 temp_*
 my_*
+ds.log

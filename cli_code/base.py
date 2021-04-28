@@ -12,10 +12,10 @@ import traceback
 import pathlib
 
 # Installed
+import getpass
 import requests
 import rich
 import simplejson
-import getpass
 
 # Own modules
 from cli_code import file_handler as fh

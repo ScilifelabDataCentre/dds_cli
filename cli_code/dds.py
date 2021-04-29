@@ -99,7 +99,9 @@ def cli(ctx, debug):
         LOG.info("Logging started.")
         LOG.debug(destination)
 
-    LOG.debug(config_file)
+    if LOG is not None:
+        LOG.debug(config_file)
+
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,

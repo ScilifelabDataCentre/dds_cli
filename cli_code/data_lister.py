@@ -99,6 +99,7 @@ class DataLister(base.DDSBaseClass):
 
         try:
             resp_json = response.json()
+            LOG.warning(resp_json)
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 

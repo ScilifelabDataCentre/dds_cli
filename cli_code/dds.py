@@ -82,9 +82,10 @@ def cli(ctx, debug):
                 console.print("Could not find the config file '.dds-cli.json'")
                 os._exit(0)
 
-        if not any([x in sys.argv for x in ["ls", "rm"]]):
+        if any([x in sys.argv for x in ["put", "get"]]):
             all_dirs = directory.DDSDirectory(
-                path=destination, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
+                path=destination,
+                add_file_dir=any([x in sys.argv for x in ["put", "get"]]),
             ).directories
 
             # Path to log file

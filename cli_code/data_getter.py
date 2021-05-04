@@ -78,9 +78,7 @@ class DataGetter(base.DDSBaseClass):
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
-            console.print(
-                f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n"
-            )
+            console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
             os._exit(0)
 
         # Start file prep progress
@@ -88,9 +86,7 @@ class DataGetter(base.DDSBaseClass):
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
         ) as progress:
-            wait_task = progress.add_task(
-                "Collecting and preparing data", step="prepare"
-            )
+            wait_task = progress.add_task("Collecting and preparing data", step="prepare")
             self.filehandler = fhr.RemoteFileHandler(
                 get_all=get_all,
                 user_input=(source, source_path_file),
@@ -153,14 +149,10 @@ class DataGetter(base.DDSBaseClass):
                 key_salt=file_info["key_salt"],
             ) as decryptor:
 
-                streamed_chunks = decryptor.decrypt_file(
-                    infile=file_info["path_downloaded"]
-                )
+                streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"])
 
                 stream_to_file_func = (
-                    fc.Compressor.decompress_filechunks
-                    if file_info["compressed"]
-                    else self.filehandler.write_file
+                    fc.Compressor.decompress_filechunks if file_info["compressed"] else self.filehandler.write_file
                 )
 
                 file_saved, message = stream_to_file_func(
@@ -173,9 +165,7 @@ class DataGetter(base.DDSBaseClass):
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
                 all_ok, message = (
-                    fe.Encryptor.verify_checksum(
-                        file=file, correct_checksum=file_info["checksum"]
-                    )
+                    fe.Encryptor.verify_checksum(file=file, correct_checksum=file_info["checksum"])
                     if self.verify_checksum
                     else (True, "")
                 )
@@ -205,9 +195,7 @@ class DataGetter(base.DDSBaseClass):
                         Filename=file_local,
                         Bucket=conn.bucketname,
                         Key=file_remote,
-                        Callback=status.ProgressPercentage(progress=progress, task=task)
-                        if not self.silent
-                        else None,
+                        Callback=status.ProgressPercentage(progress=progress, task=task) if not self.silent else None,
                     )
                 except (
                     botocore.client.ClientError,
@@ -233,9 +221,7 @@ class DataGetter(base.DDSBaseClass):
 
         # Send file info to API
         try:
-            response = requests.put(
-                DDSEndpoint.FILE_UPDATE, params=params, headers=self.token
-            )
+            response = requests.put(DDSEndpoint.FILE_UPDATE, params=params, headers=self.token)
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 

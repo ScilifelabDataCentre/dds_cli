@@ -193,9 +193,7 @@ class DataLister(base.DDSBaseClass):
             max_string = max([len(x["name"]) for x in sorted_projects])
 
             # Get max length of size string
-            sizes = [
-                len(x["size"][0]) for x in sorted_projects if show_size and "size" in x
-            ]
+            sizes = [len(x["size"][0]) for x in sorted_projects if show_size and "size" in x]
             max_size = max(sizes) if sizes else 0
 
             # Add items to tree

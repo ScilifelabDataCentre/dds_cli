@@ -40,9 +40,7 @@ def setup_custom_logger(filename: str = "", debug: bool = False):
         try:
             original_umask = os.umask(0)  # User file-creation mode mask
             file_handler = logging.FileHandler(filename=filename)
-            fh_formatter = logging.Formatter(
-                "%(asctime)s::%(levelname)s::" + "%(name)s::%(lineno)d::%(message)s"
-            )
+            fh_formatter = logging.Formatter("%(asctime)s::%(levelname)s::" + "%(name)s::%(lineno)d::%(message)s")
             file_handler.setFormatter(fh_formatter)
             file_handler.setLevel(logging.DEBUG)
             logger.addHandler(file_handler)

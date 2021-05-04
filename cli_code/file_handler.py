@@ -55,9 +55,7 @@ class FileHandler:
                     with source_path_file.resolve().open(mode="r") as spf:
                         self.data_list += spf.read().splitlines()
                 except OSError as err:
-                    console.print(
-                        f"Failed to get files from source-path-file option: {err}"
-                    )
+                    console.print(f"Failed to get files from source-path-file option: {err}")
                     os.umask(original_umask)
                     os._exit(0)
                 finally:
@@ -115,9 +113,7 @@ class FileHandler:
         title = "file" if get_single_files else "directory"
         up_or_down = "upload" if upload else "download"
 
-        LOG.debug(
-            "Files: %s, Upload: %s, Columns: %s", get_single_files, upload, columns
-        )
+        LOG.debug("Files: %s, Upload: %s, Columns: %s", get_single_files, upload, columns)
 
         if not get_single_files:
             columns = ["Directory"] + columns
@@ -125,12 +121,7 @@ class FileHandler:
         files = [
             x
             for x in all_failed_data
-            if (
-                get_single_files
-                and x[1]["subpath"] == "."
-                or not get_single_files
-                and x[1]["subpath"] != "."
-            )
+            if (get_single_files and x[1]["subpath"] == "." or not get_single_files and x[1]["subpath"] != ".")
         ]
 
         additional_message = (
@@ -159,9 +150,7 @@ class FileHandler:
                     _ = [
                         curr_table.add_row(
                             textwrap.fill(x[1]["path_raw"]),
-                            x[1]["message"]
-                            if "break-on-fail" not in x[1]["message"]
-                            else "",
+                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
                         )
                         for x in files
                     ]
@@ -170,9 +159,7 @@ class FileHandler:
                         curr_table.add_row(
                             x[1]["name_in_db"],
                             textwrap.fill(x[0]),
-                            x[1]["message"]
-                            if "break-on-fail" not in x[1]["message"]
-                            else "",
+                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
                         )
                         for x in files
                     ]
@@ -182,28 +169,20 @@ class FileHandler:
                     for x in files:
                         curr_table.add_row(
                             textwrap.fill(
-                                ""
-                                if subpath == x[1]["subpath"]
-                                else str(pathlib.Path(x[1]["path_raw"]).parent)
+                                "" if subpath == x[1]["subpath"] else str(pathlib.Path(x[1]["path_raw"]).parent)
                             ),
                             str(pathlib.Path(x[1]["path_raw"]).name),
-                            x[1]["message"]
-                            if "break-on-fail" not in x[1]["message"]
-                            else "",
+                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
                         )
 
                         subpath = x[1]["subpath"]
                 else:
                     for x in files:
                         curr_table.add_row(
-                            ""
-                            if subpath == x[1]["subpath"]
-                            else str(pathlib.Path(x[1]["subpath"])),
+                            "" if subpath == x[1]["subpath"] else str(pathlib.Path(x[1]["subpath"])),
                             x[1]["name_in_db"],
                             textwrap.fill(str(pathlib.Path(x[0]))),
-                            x[1]["message"]
-                            if "break-on-fail" not in x[1]["message"]
-                            else "",
+                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
                         )
 
                         subpath = x[1]["subpath"]

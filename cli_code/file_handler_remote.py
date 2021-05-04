@@ -54,9 +54,7 @@ class RemoteFileHandler(fh.FileHandler):
             console.print("\n:warning: No data specified. :warning:\n")
             os._exit(0)
 
-        self.data = self.__collect_file_info_remote(
-            all_paths=self.data_list, token=token
-        )
+        self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
         self.data_list = None
 
     def __collect_file_info_remote(self, all_paths, token):
@@ -85,17 +83,12 @@ class RemoteFileHandler(fh.FileHandler):
 
         # Folder info required if specific files requested
         if all_paths and "folders" not in file_info:
-            console.print(
-                "\n:warning: Error in response. "
-                "Not enough info returned despite ok request. :warning:\n"
-            )
+            console.print("\n:warning: Error in response. " "Not enough info returned despite ok request. :warning:\n")
             os._exit(0)
 
         # Files in response always required
         if "files" not in file_info:
-            console.print(
-                "\n:warning: No files in response despite ok request. :warning:\n"
-            )
+            console.print("\n:warning: No files in response despite ok request. :warning:\n")
             os._exit(0)
 
         # files and files in folders from db
@@ -103,11 +96,7 @@ class RemoteFileHandler(fh.FileHandler):
         folders = file_info["folders"] if "folders" in file_info else {}
 
         # Cancel download of those files or folders not found in the db
-        self.failed = {
-            x: {"error": "Not found in DB."}
-            for x in all_paths
-            if x not in files and x not in folders
-        }
+        self.failed = {x: {"error": "Not found in DB."} for x in all_paths if x not in files and x not in folders}
 
         # Save info on files in dict and return
         data = {
@@ -115,8 +104,7 @@ class RemoteFileHandler(fh.FileHandler):
             / pathlib.Path(x): {
                 **y,
                 "name_in_db": x,
-                "path_downloaded": self.local_destination
-                / pathlib.Path(y["name_in_bucket"]),
+                "path_downloaded": self.local_destination / pathlib.Path(y["name_in_bucket"]),
             }
             for x, y in files.items()
         }

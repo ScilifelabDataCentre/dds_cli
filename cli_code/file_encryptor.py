@@ -75,9 +75,7 @@ class ECDHKeyHandler:
         """Gets the public key and converts to hex string."""
 
         public = private_key.public_key()
-        public_bytes = public.public_bytes(
-            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
-        )
+        public_bytes = public.public_bytes(encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw)
 
         return public_bytes.hex().upper()
 
@@ -89,16 +87,12 @@ class Encryptor(ECDHKeyHandler):
         self.max_nonce = 2 ** (12 * 8)  # Max mumber of nonces
 
         # Only peer public needed, private should be None
-        self.peer_public = x25519.X25519PublicKey.from_public_bytes(
-            bytes.fromhex(project_keys[1])
-        )
+        self.peer_public = x25519.X25519PublicKey.from_public_bytes(bytes.fromhex(project_keys[1]))
 
         # This generates public too
         self.my_private = x25519.X25519PrivateKey.generate()
 
-        self.key, self.salt = self.generate_shared_key(
-            my_private=self.my_private, peer_public=self.peer_public
-        )
+        self.key, self.salt = self.generate_shared_key(my_private=self.my_private, peer_public=self.peer_public)
 
     def __enter__(self):
         return self
@@ -137,9 +131,9 @@ class Encryptor(ECDHKeyHandler):
                 for chunk in chunks:
 
                     # Restart at 0 if nonce number at maximum number of chunks per key
-                    nonce = (
-                        iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
-                    ).to_bytes(length=12, byteorder="little")
+                    nonce = (iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce).to_bytes(
+                        length=12, byteorder="little"
+                    )
 
                     # Encrypt chunk
                     encrypted_chunk = crypto_aead_chacha20poly1305_ietf_encrypt(
@@ -201,14 +195,10 @@ class Decryptor(ECDHKeyHandler):
         self.max_nonce = 2 ** (12 * 8)
 
         # Only private needed, public generated from it.
-        self.my_private = x25519.X25519PrivateKey.from_private_bytes(
-            bytes.fromhex(project_keys[0])
-        )
+        self.my_private = x25519.X25519PrivateKey.from_private_bytes(bytes.fromhex(project_keys[0]))
 
         # Only peer public used
-        self.peer_public = x25519.X25519PublicKey.from_public_bytes(
-            bytes.fromhex(peer_public)
-        )
+        self.peer_public = x25519.X25519PublicKey.from_public_bytes(bytes.fromhex(peer_public))
 
         self.key, _ = self.generate_shared_key(
             my_private=self.my_private,
@@ -252,14 +242,12 @@ class Decryptor(ECDHKeyHandler):
                 aad = None
                 nonce = b""
 
-                for chunk in iter(
-                    lambda: file.read(FileSegment.SEGMENT_SIZE_CIPHER), b""
-                ):
+                for chunk in iter(lambda: file.read(FileSegment.SEGMENT_SIZE_CIPHER), b""):
                     # Get nonce as bytes for decryption: if the nonce is larger than the
                     # max number of chunks allowed - wrap to 0 again
-                    nonce = (
-                        iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
-                    ).to_bytes(length=12, byteorder="little")
+                    nonce = (iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce).to_bytes(
+                        length=12, byteorder="little"
+                    )
 
                     iv_int += 1
 

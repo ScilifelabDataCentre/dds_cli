@@ -79,9 +79,7 @@ class User:
             token = response.json()
 
             if "token" not in token:
-                console.print(
-                    "\n:warning: Missing token in authentication response :warning:\n"
-                )
+                console.print("\n:warning: Missing token in authentication response :warning:\n")
                 os._exit(0)
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err

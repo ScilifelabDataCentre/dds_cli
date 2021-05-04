@@ -75,9 +75,7 @@ def verify_proceed(func):
                 _ = [
                     self.status[x].update({"cancel": True, "message": message})
                     for x in self.status
-                    if not self.status[x]["cancel"]
-                    and not self.status[x]["started"]
-                    and x != file
+                    if not self.status[x]["cancel"] and not self.status[x]["started"] and x != file
                 ]
 
         return ok_to_proceed
@@ -93,9 +91,7 @@ def update_status(func):
 
         # TODO (ina): add processing?
         if func.__name__ not in ["put", "add_file_db", "get", "update_db"]:
-            raise Exception(
-                f"The function {func.__name__} cannot be used with this decorator."
-            )
+            raise Exception(f"The function {func.__name__} cannot be used with this decorator.")
         if func.__name__ not in self.status[file]:
             raise Exception(f"No status found for function {func.__name__}.")
 
@@ -161,9 +157,7 @@ def subpath_required(func):
         file_info = self.filehandler.data[file]
 
         # Required path
-        full_subpath = self.filehandler.local_destination / pathlib.Path(
-            file_info["subpath"]
-        )
+        full_subpath = self.filehandler.local_destination / pathlib.Path(file_info["subpath"])
 
         # Create path
         if not full_subpath.exists():

@@ -89,17 +89,12 @@ class DataRemover(base.DDSBaseClass):
         """Remove specific files."""
 
         try:
-            response = requests.delete(
-                DDSEndpoint.REMOVE_FILE, json=files, headers=self.token
-            )
+            response = requests.delete(DDSEndpoint.REMOVE_FILE, json=files, headers=self.token)
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
         if not response.ok:
-            return (
-                f"Failed to delete file(s) '{files}' in project {self.project}:"
-                f" {response.text}"
-            )
+            return f"Failed to delete file(s) '{files}' in project {self.project}:" f" {response.text}"
 
         # Get info in response
         try:
@@ -114,17 +109,12 @@ class DataRemover(base.DDSBaseClass):
         """Remove specific folders."""
 
         try:
-            response = requests.delete(
-                DDSEndpoint.REMOVE_FOLDER, json=folder, headers=self.token
-            )
+            response = requests.delete(DDSEndpoint.REMOVE_FOLDER, json=folder, headers=self.token)
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
         if not response.ok:
-            return (
-                f"Failed to delete folder(s) '{folder}' "
-                f"in project {self.project}: {response.text}"
-            )
+            return f"Failed to delete folder(s) '{folder}' " f"in project {self.project}: {response.text}"
 
         # Make sure required info is returned
         try:
@@ -152,9 +142,7 @@ class DataRemover(base.DDSBaseClass):
         # Create table if any files failed
         if not_exists or delete_failed:
             # Warn if many failed files
-            data_lister.DataLister.warn_if_many(
-                count=len(not_exists) + len(delete_failed)
-            )
+            data_lister.DataLister.warn_if_many(count=len(not_exists) + len(delete_failed))
 
             # Create table and add columns
             table = rich.table.Table(

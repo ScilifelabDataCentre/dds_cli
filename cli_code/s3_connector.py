@@ -129,9 +129,7 @@ class S3Connector:
         LOG.info("Creating bucket '%s'...", self.bucketname)
 
         try:
-            self.resource.meta.client.create_bucket(
-                Bucket=self.bucketname, ACL="private"
-            )
+            self.resource.meta.client.create_bucket(Bucket=self.bucketname, ACL="private")
         except botocore.client.ClientError as err2:
             LOG.critical("Could not create bucket %s! %s", self.bucketname, err2)
             return False

@@ -15,8 +15,8 @@ from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt
 
 from cryptography.hazmat.primitives import serialization
 
-from cli_code import FileSegment
-from cli_code.file_handler_local import LocalFileHandler as fh
+from dds_cli import FileSegment
+from dds_cli.file_handler_local import LocalFileHandler as fh
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

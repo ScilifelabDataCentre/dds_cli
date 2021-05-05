@@ -15,10 +15,10 @@ import rich
 import simplejson
 
 # Own modules
-from cli_code import base
-from cli_code import data_lister
-from cli_code import DDSEndpoint
-from cli_code.cli_decorators import removal_spinner
+from dds_cli import base
+from dds_cli import data_lister
+from dds_cli import DDSEndpoint
+from dds_cli.cli_decorators import removal_spinner
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

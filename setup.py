@@ -9,7 +9,7 @@ with open("requirements.txt") as f:
     requirements = [line.strip() for line in open("requirements.txt").readlines()]
 
 setup(
-    name="dds",
+    name="dds-cli",
     version=version,
     description="Data Delivery Service - Command line tool",
     long_description=readme,
@@ -22,7 +22,7 @@ setup(
     setup_requires=["twine>=1.11.0", "setuptools>=38.6."],
     entry_points={
         "console_scripts": [
-            "dds = src.dds.__main__:dds_cli",
+            "dds = dds_cli.__main__:dds_cli",
         ],
     },
     zip_safe=False,

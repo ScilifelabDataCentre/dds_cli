@@ -82,9 +82,10 @@ def cli(ctx, debug):
                 console.print("Could not find the config file '.dds-cli.json'")
                 os._exit(0)
 
-        if not any([x in sys.argv for x in ["ls", "rm"]]):
+        if any([x in sys.argv for x in ["put", "get"]]):
             all_dirs = directory.DDSDirectory(
-                path=destination, add_file_dir=any([x in sys.argv for x in ["put", "get"]])
+                path=destination,
+                add_file_dir=any([x in sys.argv for x in ["put", "get"]]),
             ).directories
 
             # Path to log file
@@ -313,14 +314,7 @@ def put(
                     progress.remove_task(upload_task)
 
                     # Stop all tasks that are not currently uploading
-                    _ = [
-                        progress.stop_task(x)
-                        for x in [
-                            y.id
-                            for y in progress.tasks
-                            if y.fields.get("step") != "put"
-                        ]
-                    ]
+                    _ = [progress.stop_task(x) for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]]
 
 
 ###############################################################################
@@ -345,9 +339,7 @@ def put(
     multiple=False,
     help="Folder to list files within.",
 )
-@click.option(
-    "--size", "-sz", is_flag=True, default=False, help="Show size of project contents."
-)
+@click.option("--size", "-sz", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
     "--username",
     "-u",
@@ -405,9 +397,7 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
     type=str,
     help="Your Data Delivery System username.",
 )
-@click.option(
-    "--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents."
-)
+@click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
 @click.option(
     "--file",
     "-f",
@@ -442,9 +432,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 
     # Either all or a file
     if rm_all and (file or folder):
-        console.print(
-            "The options '--rm-all' and '--file'/'--folder' " "cannot be used together."
-        )
+        console.print("The options '--rm-all' and '--file'/'--folder' cannot be used together.")
         os._exit(0)
 
     project = proj_arg if proj_arg is not None else project
@@ -452,8 +440,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     # Will not delete anything if no file or folder specified
     if project and not any([rm_all, file, folder]):
         console.print(
-            "One of the options must be specified to perform "
-            "data deletion: '--rm-all' / '--file' / '--folder'."
+            "One of the options must be specified to perform " "data deletion: '--rm-all' / '--file' / '--folder'."
         )
         os._exit(0)
 
@@ -461,8 +448,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     if rm_all:
         rm_all = (
             rich.prompt.Prompt.ask(
-                "> Are you sure you want to delete all files within project "
-                f"{project}?",
+                f"> Are you sure you want to delete all files within project {project}?",
                 choices=["y", "n"],
                 default="n",
             )
@@ -540,9 +526,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     "--destination",
     "-d",
     required=False,
-    type=click_pathlib.Path(
-        exists=False, file_okay=False, dir_okay=True, resolve_path=True
-    ),
+    type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
     multiple=False,
     help="Destination of downloaded files.",
 )
@@ -595,10 +579,7 @@ def get(
     """Downloads specified files from the cloud and restores the original format."""
 
     if get_all and (source or source_path_file):
-        console.print(
-            "\nFlag'--get-all' cannot be used together with options "
-            "'--source'/'--source-path-fail'.\n"
-        )
+        console.print("\nFlag'--get-all' cannot be used together with options '--source'/'--source-path-fail'.\n")
         os._exit(0)
 
     # Begin delivery
@@ -630,25 +611,17 @@ def get(
             iterator = iter(getter.filehandler.data.copy())
 
             with concurrent.futures.ThreadPoolExecutor() as texec:
-                task_dwnld = progress.add_task(
-                    "Download", total=len(getter.filehandler.data), step="summary"
-                )
+                task_dwnld = progress.add_task("Download", total=len(getter.filehandler.data), step="summary")
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
                     LOG.info("Starting: %s", file)
                     # Execute download
-                    download_threads[
-                        texec.submit(
-                            getter.download_and_verify, file=file, progress=progress
-                        )
-                    ] = file
+                    download_threads[texec.submit(getter.download_and_verify, file=file, progress=progress)] = file
 
                 while download_threads:
                     # Wait for the next future to complete
-                    ddone, _ = concurrent.futures.wait(
-                        download_threads, return_when=concurrent.futures.FIRST_COMPLETED
-                    )
+                    ddone, _ = concurrent.futures.wait(download_threads, return_when=concurrent.futures.FIRST_COMPLETED)
 
                     new_tasks = 0
 

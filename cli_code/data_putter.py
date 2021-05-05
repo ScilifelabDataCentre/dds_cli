@@ -79,11 +79,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
-            console.print(
-                "\n:no_entry_sign: "
-                f"Unauthorized method: {self.method} "
-                ":no_entry_sign:\n"
-            )
+            console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
             os._exit(0)
 
         # Start file prep progress
@@ -92,9 +88,7 @@ class DataPutter(base.DDSBaseClass):
             SpinnerColumn(spinner_name="dots12", style="white"),
         ) as progress:
             # Spinner while collecting file info
-            wait_task = progress.add_task(
-                "Collecting and preparing data", step="prepare"
-            )
+            wait_task = progress.add_task("Collecting and preparing data", step="prepare")
 
             # Get file info
             self.filehandler = fhl.LocalFileHandler(
@@ -170,16 +164,14 @@ class DataPutter(base.DDSBaseClass):
             )
 
             # Get hex version of public key -- saved in db
-            file_public_key = encryptor.get_public_component_hex(
+            self.filehandler.data[file]["public_key"] = encryptor.get_public_component_hex(
                 private_key=encryptor.my_private
             )
-            salt = encryptor.salt
+            self.filehandler.data[file]["key_salt"] = encryptor.salt
 
         LOG.debug("Updating file processed size: %s", file_info["path_processed"])
         # Update file size
-        self.filehandler.data[file]["size_processed"] = (
-            file_info["path_processed"].stat().st_size
-        )
+        self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
         if saved:
             LOG.info(
@@ -201,9 +193,7 @@ class DataPutter(base.DDSBaseClass):
             LOG.debug("File uploaded: %s", file_uploaded)
             # Perform db update
             if file_uploaded:
-                db_updated, message = self.add_file_db(
-                    file=file, key_salt=salt, public_key=file_public_key
-                )
+                db_updated, message = self.add_file_db(file=file)
 
                 if db_updated:
                     all_ok = True
@@ -276,7 +266,7 @@ class DataPutter(base.DDSBaseClass):
         return uploaded, error
 
     @update_status
-    def add_file_db(self, file, key_salt, public_key):
+    def add_file_db(self, file):
         """Make API request to add file to DB."""
 
         # Variables
@@ -292,8 +282,8 @@ class DataPutter(base.DDSBaseClass):
             "size": fileinfo["size_raw"],
             "size_processed": fileinfo["size_processed"],
             "compressed": not fileinfo["compressed"],
-            "salt": key_salt,
-            "public_key": public_key,
+            "salt": fileinfo["key_salt"],
+            "public_key": fileinfo["public_key"],
             "checksum": fileinfo["checksum"],
         }
 
@@ -310,7 +300,6 @@ class DataPutter(base.DDSBaseClass):
             error = str(err)
             LOG.warning(error)
         else:
-            # return False, "test"
             # Error if failed
             if not response.ok:
                 error = f"Failed to add file '{file}' to database: {response.text}"

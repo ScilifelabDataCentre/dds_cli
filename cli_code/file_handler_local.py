@@ -57,13 +57,7 @@ class LocalFileHandler(fh.FileHandler):
         super().__init__(user_input=user_input, local_destination=temporary_destination)
 
         # Get absolute paths to all data and removes duplicates
-        self.data_list = list(
-            set(
-                pathlib.Path(x).resolve()
-                for x in self.data_list
-                if pathlib.Path(x).exists()
-            )
-        )
+        self.data_list = list(set(pathlib.Path(x).resolve() for x in self.data_list if pathlib.Path(x).exists()))
 
         # No data -- cannot proceed
         if not self.data_list:
@@ -86,9 +80,7 @@ class LocalFileHandler(fh.FileHandler):
         return str(folder / pathlib.Path(new_name))
 
     # Private methods ############ Private methods #
-    def __collect_file_info_local(
-        self, all_paths, folder=pathlib.Path(""), task_name=""
-    ):
+    def __collect_file_info_local(self, all_paths, folder=pathlib.Path(""), task_name=""):
         """Get info on each file in each path specified."""
 
         file_info = dict()
@@ -118,9 +110,7 @@ class LocalFileHandler(fh.FileHandler):
                         "compressed": is_compressed,
                         "path_processed": path_processed,
                         "size_processed": 0,
-                        "path_remote": self.generate_bucket_filepath(
-                            filename=path_processed.name, folder=folder
-                        ),
+                        "path_remote": self.generate_bucket_filepath(filename=path_processed.name, folder=folder),
                         "overwrite": False,
                         "checksum": "",
                     }
@@ -213,19 +203,13 @@ class LocalFileHandler(fh.FileHandler):
 
         return dict() if files_in_db["files"] is None else files_in_db["files"]
 
-    def create_encrypted_name(
-        self, raw_file: pathlib.Path, subpath: str = "", no_compression: bool = True
-    ):
+    def create_encrypted_name(self, raw_file: pathlib.Path, subpath: str = "", no_compression: bool = True):
         """Create new file name to save encrypted file."""
 
         # New local file name
         old_suffix = "".join(raw_file.suffixes)
         new_suffix = old_suffix if no_compression else f"{old_suffix}.zst"
-        new_file_name = (
-            self.local_destination
-            / subpath
-            / raw_file.with_suffix(new_suffix + ".ccp").name
-        )
+        new_file_name = self.local_destination / subpath / raw_file.with_suffix(new_suffix + ".ccp").name
 
         return new_file_name
 

@@ -6,4 +6,5 @@ import pathlib
 class FileProcessor:
     """Compresses and Encrypts files"""
 
-    file: pathlib.Path() = 
+    # file: pathlib.Path() =
+    pass

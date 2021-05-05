@@ -89,9 +89,7 @@ class DDSBaseClass:
 
         # Project access only required if trying to upload, download or list
         # files within project
-        if self.method in ["put", "get"] or (
-            self.method in ["ls", "rm"] and self.project is not None
-        ):
+        if self.method in ["put", "get"] or (self.method in ["ls", "rm"] and self.project is not None):
             self.token = self.__verify_project_access()
 
             if self.method in ["put", "get"]:
@@ -143,27 +141,17 @@ class DDSBaseClass:
             if password is None and "password" in contents:
                 password = contents["password"]
             if not ignore_config_project:
-                if (
-                    project is None
-                    and "project" in contents
-                    and self.method in ["put", "get", "ls"]
-                ):
+                if project is None and "project" in contents and self.method in ["put", "get", "ls"]:
                     project = contents["project"]
 
         LOG.info("Username: %s, Project ID: %s", username, project)
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:
-            console.print(
-                "\n:warning: "
-                "Data Delivery System project information is missing. "
-                ":warning:\n"
-            )
+            console.print("\n:warning: Data Delivery System project information is missing. :warning:\n")
             os._exit(0)
         if username is None:
-            console.print(
-                "\n:warning: Data Delivery System options are missing :warning:\n"
-            )
+            console.print("\n:warning: Data Delivery System options are missing :warning:\n")
             os._exit(0)
 
         # Set password if missing
@@ -194,11 +182,7 @@ class DDSBaseClass:
 
         # Problem
         if not response.ok:
-            console.print(
-                "\n:no_entry_sign: "
-                f"Project access denied: {response.text} "
-                ":no_entry_sign:\n"
-            )
+            console.print(f"\n:no_entry_sign: Project access denied: {response.text} :no_entry_sign:\n")
             os._exit(0)
 
         try:
@@ -242,10 +226,7 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if not response.ok:
-            console.print(
-                "\n:no_entry_sign: Project access denied: "
-                f"No {key_type} key. :no_entry_sign:\n"
-            )
+            console.print(f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n")
             os._exit(0)
 
         # Get key from response
@@ -256,9 +237,7 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if key_type not in project_public:
-            console.print(
-                "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
-            )
+            console.print("\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n")
             os._exit(0)
 
         return project_public[key_type]
@@ -288,13 +267,9 @@ class DDSBaseClass:
 
         # Transform all items to string
         self.filehandler.data = {
-            str(file): {str(x): str(y) for x, y in info.items()}
-            for file, info in list(self.filehandler.data.items())
+            str(file): {str(x): str(y) for x, y in info.items()} for file, info in list(self.filehandler.data.items())
         }
-        self.status = {
-            str(file): {str(x): str(y) for x, y in info.items()}
-            for file, info in list(self.status.items())
-        }
+        self.status = {str(file): {str(x): str(y) for x, y in info.items()} for file, info in list(self.status.items())}
 
         # Get cancelled files
         self.filehandler.failed.update(
@@ -328,10 +303,7 @@ class DDSBaseClass:
         self.filehandler.failed.clear()
 
         if any_failed:
-            intro_error_message = (
-                "Errors occurred during "
-                f"{'upload' if self.method == 'put' else 'download'}"
-            )
+            intro_error_message = f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
 
             # Save to file and print message if too many failed files,
             # otherwise create and print tables
@@ -375,11 +347,7 @@ class DDSBaseClass:
 
         else:
             # Printout if no cancelled/failed files
-            console.print(
-                f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n"
-            )
+            console.print(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
-            console.print(
-                f"Any downloaded files are located: {self.filehandler.local_destination}."
-            )
+            console.print(f"Any downloaded files are located: {self.filehandler.local_destination}.")

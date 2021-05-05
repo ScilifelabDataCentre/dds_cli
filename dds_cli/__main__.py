@@ -22,13 +22,13 @@ import rich.prompt
 import click_pathlib
 
 # Own modules
-import cli_code
-from cli_code import directory
-from cli_code import timestamp
-from cli_code import data_putter as dp
-from cli_code import data_lister as dl
-from cli_code import data_remover as dr
-from cli_code import data_getter as dg
+import dds_cli
+from dds_cli import directory
+from dds_cli import timestamp
+from dds_cli import data_putter as dp
+from dds_cli import data_lister as dl
+from dds_cli import data_remover as dr
+from dds_cli import data_getter as dg
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -51,7 +51,7 @@ console = rich.console.Console()
 @click.group()
 @click.option("--debug", default=False, is_flag=True)
 @click.pass_context
-def cli(ctx, debug):
+def dds_cli(ctx, debug):
     """Main CLI command, sets up DDS info."""
 
     # Timestamp
@@ -118,7 +118,7 @@ def cli(ctx, debug):
 ###############################################################################
 
 
-@cli.command()
+@dds_cli.command()
 @click.option(
     "--config",
     "-c",
@@ -322,7 +322,7 @@ def put(
 ###############################################################################
 
 
-@cli.command()
+@dds_cli.command()
 @click.argument("fold_arg", required=False)  # Needs to be before proj_arg
 @click.argument("proj_arg", required=False)
 @click.option("--project", "-p", required=False, help="Project ID.")
@@ -387,7 +387,7 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
 ###############################################################################
 
 
-@cli.command()
+@dds_cli.command()
 @click.argument("proj_arg", required=False)
 @click.option("--project", required=False, type=str, help="Project ID.")
 @click.option(
@@ -476,7 +476,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 ###############################################################################
 
 
-@cli.command()
+@dds_cli.command()
 @click.option(
     "--config",
     "-c",
@@ -659,3 +659,7 @@ def get(
                                 progress=progress,
                             )
                         ] = next_file
+
+
+if __name__ == "__main__":
+    dds_cli()

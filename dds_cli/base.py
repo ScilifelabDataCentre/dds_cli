@@ -18,10 +18,10 @@ import rich
 import simplejson
 
 # Own modules
-from cli_code import file_handler as fh
-from cli_code import user
-from cli_code import DDSEndpoint
-from cli_code import s3_connector as s3
+from dds_cli import file_handler as fh
+from dds_cli import user
+from dds_cli import DDSEndpoint
+from dds_cli import s3_connector as s3
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

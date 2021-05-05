@@ -16,8 +16,8 @@ import botocore
 import simplejson
 
 # Own modules
-from cli_code import DDSEndpoint
-from cli_code.cli_decorators import connect_cloud
+from dds_cli import DDSEndpoint
+from dds_cli.cli_decorators import connect_cloud
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #

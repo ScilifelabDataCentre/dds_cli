@@ -21,9 +21,9 @@ from rich.padding import Padding
 import simplejson
 
 # Own modules
-from cli_code import text_handler as th
-from cli_code import base
-from cli_code import DDSEndpoint
+from dds_cli import text_handler as th
+from dds_cli import base
+from dds_cli import DDSEndpoint
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

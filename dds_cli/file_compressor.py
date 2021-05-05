@@ -5,7 +5,7 @@ import traceback
 import sys
 import os
 import zstandard as zstd
-from cli_code import FileSegment
+from dds_cli import FileSegment
 import logging
 
 LOG = logging.getLogger(__name__)

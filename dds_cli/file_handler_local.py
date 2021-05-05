@@ -20,12 +20,12 @@ import zstandard as zstd
 
 
 # Own modules
-from cli_code import status
-from cli_code import FileSegment
-from cli_code import DDSEndpoint
-from cli_code import file_handler as fh
-from cli_code import file_compressor as fc
-from cli_code.cli_decorators import subpath_required
+from dds_cli import status
+from dds_cli import FileSegment
+from dds_cli import DDSEndpoint
+from dds_cli import file_handler as fh
+from dds_cli import file_compressor as fc
+from dds_cli.cli_decorators import subpath_required
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

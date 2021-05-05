@@ -1,50 +1,49 @@
-# Data Delivery System CLI -- **WIP**
-This will be used for data delivery within larger projects
-and/or projects resulting in the production of large amounts of data, e.g. sequence data.
+# SciLifeLab Data Delivery Service - Command line interface
 
----
-## Setup docker environment:
+This tool adds a new terminal command `dds` which you can use to manage data and projects in the SciLifeLab Data Delivery Service over the command line.
 
-**1. Docker installation**
+This will be used for data delivery within larger projects and/or projects resulting in the production of large amounts of data, for example next-generation sequencing data.
 
-	Mac:
-	https://docs.docker.com/v17.12/docker-for-mac/install
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds-cli/)
 
-	Ubuntu:
-	https://docs.docker.com/install/linux/docker-ce/ubuntu/
+## Table of contents
 
-**2. In _DS_CLI_ folder**
-* Setup CLI: `pip3 install --editable .`
+* [Installation](#installation)
+* [Overview of commands](#overview-of-commands)
 
-**3. In root (Data-Delivery-System)** 
-* Build and run containers
-	In the root folder (Data-Delivery-System/), run: 
-	```bash
-	docker-compose up
-	```
+## Installation
 
-	* To use terminal after starting services, use the `-d` option.
+### Python Package Index
 
-		```
-		docker-compose up -d 
-		```
+> :warning: Coming soon after first release
 
-	* To stop service: 
-		```bash 
-		docker-compose down
-		```
+The `dds-cli` package can be installed from [PyPI](https://pypi.python.org/pypi/dds-cli/) using pip as follows:
 
-**4. After changing DB**
-To rebuild the database after a change, you need to: 
-1. Delete the `db-data` folder
-2. Run 
-	```
-	docker rm $(docker ps -a -q) -f
-	docker volume prune
-	```
-3. Run 
-	```
-	docker-compose build --no-cache
-	```
-4. Run `docker-compose up` as described above.
-5. If there are still issues, try deleting the pycache folders and repeat the steps. 
+```bash
+pip install dds-cli
+```
+
+### Development version
+
+If you would like the latest development version of tools, the command is:
+
+```bash
+pip install --upgrade --force-reinstall git+https://github.com/nScilifelabDataCentre/DS_CLI.git@dev
+```
+
+If you intend to make edits to the code, first make a fork of the repository and then clone it locally.
+Go to the cloned directory and install with pip (also installs development requirements):
+
+```bash
+pip install --upgrade -r requirements-dev.txt -e .
+```
+
+## Overview of commands
+
+This package adds a tool `dds` on the command line which has the following subcommands:
+
+* `get` - Download specified files from the cloud and restore the original format.
+* `ls` - List the projects and the files within projects.
+* `put` - Process and upload specified files to the cloud.
+* `rm` - Delete files within a project.

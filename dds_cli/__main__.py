@@ -23,6 +23,7 @@ import click_pathlib
 
 # Own modules
 import dds_cli
+from dds_cli import setup_custom_logger
 from dds_cli import directory
 from dds_cli import timestamp
 from dds_cli import data_putter as dp
@@ -92,7 +93,7 @@ def dds_cli(ctx, debug):
             logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
 
             # Create logger
-            _ = cli_code.setup_custom_logger(filename=logfile, debug=debug)
+            _ = setup_custom_logger(filename=logfile, debug=debug)
 
             # Create logger
             global LOG

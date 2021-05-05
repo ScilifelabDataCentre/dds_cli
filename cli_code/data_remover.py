@@ -94,7 +94,7 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            return f"Failed to delete file(s) '{files}' in project {self.project}:" f" {response.text}"
+            return f"Failed to delete file(s) '{files}' in project {self.project}: {response.text}"
 
         # Get info in response
         try:

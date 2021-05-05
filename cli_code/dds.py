@@ -432,7 +432,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 
     # Either all or a file
     if rm_all and (file or folder):
-        console.print("The options '--rm-all' and '--file'/'--folder' " "cannot be used together.")
+        console.print("The options '--rm-all' and '--file'/'--folder' cannot be used together.")
         os._exit(0)
 
     project = proj_arg if proj_arg is not None else project
@@ -448,7 +448,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     if rm_all:
         rm_all = (
             rich.prompt.Prompt.ask(
-                "> Are you sure you want to delete all files within project " f"{project}?",
+                f"> Are you sure you want to delete all files within project {project}?",
                 choices=["y", "n"],
                 default="n",
             )
@@ -579,7 +579,7 @@ def get(
     """Downloads specified files from the cloud and restores the original format."""
 
     if get_all and (source or source_path_file):
-        console.print("\nFlag'--get-all' cannot be used together with options " "'--source'/'--source-path-fail'.\n")
+        console.print("\nFlag'--get-all' cannot be used together with options '--source'/'--source-path-fail'.\n")
         os._exit(0)
 
     # Begin delivery

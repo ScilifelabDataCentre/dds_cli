@@ -148,7 +148,7 @@ class DDSBaseClass:
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:
-            console.print("\n:warning: " "Data Delivery System project information is missing. " ":warning:\n")
+            console.print("\n:warning: Data Delivery System project information is missing. :warning:\n")
             os._exit(0)
         if username is None:
             console.print("\n:warning: Data Delivery System options are missing :warning:\n")
@@ -182,7 +182,7 @@ class DDSBaseClass:
 
         # Problem
         if not response.ok:
-            console.print("\n:no_entry_sign: " f"Project access denied: {response.text} " ":no_entry_sign:\n")
+            console.print(f"\n:no_entry_sign: Project access denied: {response.text} :no_entry_sign:\n")
             os._exit(0)
 
         try:
@@ -226,7 +226,7 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if not response.ok:
-            console.print("\n:no_entry_sign: Project access denied: " f"No {key_type} key. :no_entry_sign:\n")
+            console.print(f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n")
             os._exit(0)
 
         # Get key from response
@@ -303,7 +303,7 @@ class DDSBaseClass:
         self.filehandler.failed.clear()
 
         if any_failed:
-            intro_error_message = "Errors occurred during " f"{'upload' if self.method == 'put' else 'download'}"
+            intro_error_message = f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
 
             # Save to file and print message if too many failed files,
             # otherwise create and print tables

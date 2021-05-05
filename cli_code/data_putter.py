@@ -79,7 +79,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
-            console.print("\n:no_entry_sign: " f"Unauthorized method: {self.method} " ":no_entry_sign:\n")
+            console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
             os._exit(0)
 
         # Start file prep progress

@@ -15,9 +15,9 @@ import requests
 import rich
 
 # Own modules
-from cli_code import DDSEndpoint
-from cli_code import file_handler as fh
-from cli_code import file_compressor as fc
+from dds_cli import DDSEndpoint
+from dds_cli import file_handler as fh
+from dds_cli import file_compressor as fc
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

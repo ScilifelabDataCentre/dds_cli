@@ -20,16 +20,16 @@ import simplejson
 import boto3
 
 # Own modules
-from cli_code import DDSEndpoint, FileSegment
-from cli_code import base
-from cli_code import file_handler_remote as fhr
-from cli_code import s3_connector as s3
-from cli_code.cli_decorators import verify_proceed, update_status, subpath_required
-from cli_code import status
-from cli_code import text_handler as txt
-from cli_code import file_encryptor as fe
-from cli_code import file_compressor as fc
-from cli_code import data_remover as dr
+from dds_cli import DDSEndpoint, FileSegment
+from dds_cli import base
+from dds_cli import file_handler_remote as fhr
+from dds_cli import s3_connector as s3
+from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
+from dds_cli import status
+from dds_cli import text_handler as txt
+from dds_cli import file_encryptor as fe
+from dds_cli import file_compressor as fc
+from dds_cli import data_remover as dr
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

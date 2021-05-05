@@ -15,7 +15,7 @@ import simplejson
 import rich
 
 # Own modules
-from cli_code import DDSEndpoint
+from dds_cli import DDSEndpoint
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

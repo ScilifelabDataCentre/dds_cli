@@ -35,3 +35,5 @@ old_version_files*
 temp_*
 my_*
 ds.log
+x_cli_code
+timings

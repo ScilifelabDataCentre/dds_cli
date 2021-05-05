@@ -108,7 +108,7 @@ class Encryptor(ECDHKeyHandler):
         """Encrypts the file in chunks.
 
         Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
-        construction described in RFC7539.
+        construction described in RFC8439 (obsoletes 7539).
         """
 
         LOG.debug("Started encryption...")

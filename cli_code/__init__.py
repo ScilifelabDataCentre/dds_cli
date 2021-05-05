@@ -75,11 +75,7 @@ class DDSEndpoint:
 
     BASE_ENDPOINT_LOCAL = "http://127.0.0.1:5000/api/v1"
     BASE_ENDPOINT_REMOTE = "https://dds.dckube.scilifelab.se/api/v1"
-    
-    if os.getenv("DS_CLI_ENV") == "development":
-        BASE_ENDPOINT = BASE_ENDPOINT_LOCAL
-    else:
-        BASE_ENDPOINT = BASE_ENDPOINT_REMOTE
+    BASE_ENDPOINT = BASE_ENDPOINT_LOCAL if os.getenv("DS_CLI_ENV") == "development" else BASE_ENDPOINT_REMOTE
 
     AUTH = BASE_ENDPOINT + "/user/auth"
     AUTH_PROJ = BASE_ENDPOINT + "/proj/auth"

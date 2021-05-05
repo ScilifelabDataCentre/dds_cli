@@ -22,13 +22,13 @@ import rich.prompt
 import click_pathlib
 
 # Own modules
-import cli_code
-from cli_code import directory
-from cli_code import timestamp
-from cli_code import data_putter as dp
-from cli_code import data_lister as dl
-from cli_code import data_remover as dr
-from cli_code import data_getter as dg
+import dds
+from dds import directory
+from dds import timestamp
+from dds import data_putter as dp
+from dds import data_lister as dl
+from dds import data_remover as dr
+from dds import data_getter as dg
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -51,7 +51,7 @@ console = rich.console.Console()
 @click.group()
 @click.option("--debug", default=False, is_flag=True)
 @click.pass_context
-def cli(ctx, debug):
+def dds_cli(ctx, debug):
     """Main CLI command, sets up DDS info."""
 
     # Timestamp
@@ -659,3 +659,7 @@ def get(
                                 progress=progress,
                             )
                         ] = next_file
+
+
+if __name__ == "__main__":
+    dds_cli()

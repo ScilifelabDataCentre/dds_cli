@@ -85,6 +85,7 @@ class Compressor:
 
         return True
 
+    # Public methods ###################### Public methods #
     def is_compressed(self, file):
         """Checks if a file is compressed or not."""
 
@@ -102,6 +103,7 @@ class Compressor:
 
         return compressed, error
 
+    # Static methods ###################### Static methods #
     @staticmethod
     def compress_file(
         file: pathlib.Path,

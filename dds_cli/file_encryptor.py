@@ -40,6 +40,7 @@ LOG.setLevel(logging.DEBUG)
 class ECDHKeyHandler:
     """Generates the shared encryption/decryption key, and transforms the components."""
 
+    # Static methods ###################### Statis methods #
     @staticmethod
     def generate_shared_key(my_private, peer_public, salt: bytes = b""):
         """Derive the shared key for file encryption."""
@@ -115,6 +116,7 @@ class Encryptor(ECDHKeyHandler):
 
         return True
 
+    # Public methods ###################### Public methods #
     def encrypt_filechunks(self, chunks, outfile: pathlib.Path, progress: tuple = None):
         """Encrypts the file in chunks.
 
@@ -169,6 +171,7 @@ class Encryptor(ECDHKeyHandler):
 
         return encrypted_and_saved, message
 
+    # Static methods ###################### Static methods #
     @staticmethod
     def generate_checksum(file):
 
@@ -227,6 +230,7 @@ class Decryptor(ECDHKeyHandler):
 
         return True
 
+    # Public methods ###################### Public methods #
     def decrypt_file(self, infile: pathlib.Path):
         """Decrypts the file"""
 

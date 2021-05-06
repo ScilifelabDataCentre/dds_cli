@@ -44,16 +44,52 @@ class DataRemover(base.DDSBaseClass):
         if self.method != "rm":
             sys.exit(f"Unauthorized method: {self.method}")
 
-    # def __enter__(self):
-    #     return self
+    # Private methods ###################### Private methods #
+    @staticmethod
+    def __response_delete(resp_json, level="File"):
+        """Output a response after deletion."""
 
-    # def __exit__(self, exc_type, exc_value, tb):
-    #     if exc_type is not None:
-    #         traceback.print_exception(exc_type, exc_value, tb)
-    #         return False  # uncomment to pass exception through
+        # console = rich.console.Console()
 
-    #     return True
+        # Check that enough info
+        if not all(x in resp_json for x in ["not_exists", "not_removed"]):
+            return "No information returned. Server error."
+            # os._exit(0)
 
+        # Get info
+        not_exists = resp_json["not_exists"]
+        delete_failed = resp_json["not_removed"]
+
+        # Create table if any files failed
+        if not_exists or delete_failed:
+            # Warn if many failed files
+            data_lister.DataLister.warn_if_many(count=len(not_exists) + len(delete_failed))
+
+            # Create table and add columns
+            table = rich.table.Table(
+                title=f"{level}s not deleted",
+                title_justify="left",
+                show_header=True,
+                header_style="bold",
+            )
+            columns = [level, "Error"]
+            for x in columns:
+                table.add_column(x)
+
+            # Add rows
+            _ = [table.add_row(x, f"No such {level.lower()}") for x in not_exists]
+            _ = [
+                table.add_row(
+                    f"[light_salmon3]{x}[/light_salmon3]",
+                    f"[light_salmon3]{y}[/light_salmon3]",
+                )
+                for x, y in delete_failed.items()
+            ]
+
+            # Print out table
+            return rich.padding.Padding(table, 1)
+
+    # Public methods ###################### Public methods #
     @removal_spinner
     def remove_all(self, *_, **__):
         """Remove all files in project."""
@@ -126,50 +162,6 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         return self.__response_delete(resp_json=resp_json, level="Folder")
-
-    @staticmethod
-    def __response_delete(resp_json, level="File"):
-        """Output a response after deletion."""
-
-        # console = rich.console.Console()
-
-        # Check that enough info
-        if not all(x in resp_json for x in ["not_exists", "not_removed"]):
-            return "No information returned. Server error."
-            # os._exit(0)
-
-        # Get info
-        not_exists = resp_json["not_exists"]
-        delete_failed = resp_json["not_removed"]
-
-        # Create table if any files failed
-        if not_exists or delete_failed:
-            # Warn if many failed files
-            data_lister.DataLister.warn_if_many(count=len(not_exists) + len(delete_failed))
-
-            # Create table and add columns
-            table = rich.table.Table(
-                title=f"{level}s not deleted",
-                title_justify="left",
-                show_header=True,
-                header_style="bold",
-            )
-            columns = [level, "Error"]
-            for x in columns:
-                table.add_column(x)
-
-            # Add rows
-            _ = [table.add_row(x, f"No such {level.lower()}") for x in not_exists]
-            _ = [
-                table.add_row(
-                    f"[light_salmon3]{x}[/light_salmon3]",
-                    f"[light_salmon3]{y}[/light_salmon3]",
-                )
-                for x, y in delete_failed.items()
-            ]
-
-            # Print out table
-            return rich.padding.Padding(table, 1)
 
     @staticmethod
     def delete_tempfile(file: pathlib.Path):

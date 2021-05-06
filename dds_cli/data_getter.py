@@ -241,8 +241,3 @@ class DataGetter(base.DDSBaseClass):
             raise SystemExit from err
 
         return updated_in_db, error
-
-        # # Schedule file for db update
-        # _ = getter.update_db(file=downloaded_file)
-
-        # progress.remove_task(task_id)

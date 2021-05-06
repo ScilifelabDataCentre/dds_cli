@@ -143,15 +143,7 @@ class DataPutter(base.DDSBaseClass):
         )
 
         # Stream chunks from file
-        # stream_function = (
-        #     self.filehandler.read_file
-        #     if file_info["compressed"]
-        #     else fc.Compressor.compress_file
-        # )
         streamed_chunks = self.filehandler.stream_from_file(file=file)
-        # streamed_chunks = stream_function(
-        #     file=file_info["path_raw"],
-        # )
 
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:

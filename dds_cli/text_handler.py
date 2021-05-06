@@ -42,6 +42,7 @@ class StringFormat:
 class TextHandler(StringFormat):
     """Handler for text formatting."""
 
+    # Static methods ############ Static methods #
     @staticmethod
     def format_tabs(string_len, max_string_len, tab_len=4):
         """Format number of tabs to have within string."""

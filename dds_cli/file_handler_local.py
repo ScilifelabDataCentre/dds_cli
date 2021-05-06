@@ -80,6 +80,20 @@ class LocalFileHandler(fh.FileHandler):
         new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
         return str(folder / pathlib.Path(new_name))
 
+    @staticmethod
+    def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
+        """Read file in chunk_size sized chunks."""
+
+        try:
+            original_umask = os.umask(0)  # User file-creation mode mask
+            with file.open(mode="rb") as infile:
+                for chunk in iter(lambda: infile.read(chunk_size), b""):
+                    yield chunk
+        except OSError as err:
+            LOG.warning(str(err))
+        finally:
+            os.umask(original_umask)
+
     # Private methods ############ Private methods #
     def __collect_file_info_local(self, all_paths, folder=pathlib.Path(""), task_name=""):
         """Get info on each file in each path specified."""
@@ -254,17 +268,3 @@ class LocalFileHandler(fh.FileHandler):
         # LOG.debug("Streaming file finished.")
         # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()
-
-    @staticmethod
-    def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
-        """Read file in chunk_size sized chunks."""
-
-        try:
-            original_umask = os.umask(0)  # User file-creation mode mask
-            with file.open(mode="rb") as infile:
-                for chunk in iter(lambda: infile.read(chunk_size), b""):
-                    yield chunk
-        except OSError as err:
-            LOG.warning(str(err))
-        finally:
-            os.umask(original_umask)

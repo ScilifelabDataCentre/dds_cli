@@ -57,6 +57,7 @@ class RemoteFileHandler(fh.FileHandler):
         self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
         self.data_list = None
 
+    # Private methods ############ Private methods #
     def __collect_file_info_remote(self, all_paths, token):
         """Get information on files in db."""
 
@@ -140,6 +141,7 @@ class RemoteFileHandler(fh.FileHandler):
         LOG.debug(data)
         return data
 
+    # Public methods ############ Public methods #
     def create_download_status_dict(self):
         """Create dict for tracking file download status."""
 
@@ -156,6 +158,7 @@ class RemoteFileHandler(fh.FileHandler):
 
         return status_dict
 
+    # Static methods ############ Static methods #
     @staticmethod
     def write_file(chunks, outfile: pathlib.Path, **_):
         """Write file chunks to file"""

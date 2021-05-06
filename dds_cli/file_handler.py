@@ -63,6 +63,7 @@ class FileHandler:
 
         self.failed = {}
 
+    # Static methods ############ Static methods #
     @staticmethod
     def extract_config(configfile):
         """Extracts info from config file."""

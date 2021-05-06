@@ -109,7 +109,7 @@ class DDSBaseClass:
             return False  # uncomment to pass exception through
 
         if self.method in ["put", "get"]:
-            self.printout_delivery_summary()
+            self.__printout_delivery_summary()
 
             # Delete temporary file directory if it is empty
             # if not next(self.filehandler.local_destination.iterdir(), None):
@@ -256,66 +256,10 @@ class DDSBaseClass:
 
         return project_public[key_type]
 
-    # Public methods ################################# Public methods #
-    def verify_bucket_exist(self):
-        """Check that s3 connection works, and that bucket exists."""
-
-        LOG.debug("Verifying and/or creating bucket.")
-
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
-                console.print(f"\n:warning: {conn.message} :warning:\n")
-                os._exit(0)
-
-            bucket_exists = conn.check_bucket_exists()
-            if not bucket_exists:
-                _ = conn.create_bucket()
-
-        LOG.debug("Bucket verified.")
-
-        return True
-
-    def collect_all_failed(self, sort: bool = True):
-        """Put cancelled files from status in to failed dict and sort the output."""
-
-        # Transform all items to string
-        self.filehandler.data = {
-            str(file): {str(x): str(y) for x, y in info.items()}
-            for file, info in list(self.filehandler.data.items())
-        }
-        self.status = {
-            str(file): {str(x): str(y) for x, y in info.items()}
-            for file, info in list(self.status.items())
-        }
-
-        # Get cancelled files
-        self.filehandler.failed.update(
-            {
-                file: {
-                    **info,
-                    "message": self.status[file]["message"],
-                    "failed_op": self.status[file]["failed_op"],
-                }
-                for file, info in self.filehandler.data.items()
-                if self.status[file]["cancel"] in [True, "True"]
-            }
-        )
-
-        # Sort by which directory the files are in
-        return (
-            sorted(
-                sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
-                key=lambda f: f[1]["subpath"],
-            )
-            if sort
-            else self.filehandler.failed
-        )
-
-    def printout_delivery_summary(self, max_fileerrs: int = 40):
+    def __printout_delivery_summary(self, max_fileerrs: int = 40):
         """Print out the delivery summary if any files were cancelled."""
 
-        any_failed = self.collect_all_failed()
+        any_failed = self.__collect_all_failed()
 
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
@@ -373,3 +317,59 @@ class DDSBaseClass:
             console.print(
                 f"Any downloaded files are located: {self.filehandler.local_destination}."
             )
+
+    def __collect_all_failed(self, sort: bool = True):
+        """Put cancelled files from status in to failed dict and sort the output."""
+
+        # Transform all items to string
+        self.filehandler.data = {
+            str(file): {str(x): str(y) for x, y in info.items()}
+            for file, info in list(self.filehandler.data.items())
+        }
+        self.status = {
+            str(file): {str(x): str(y) for x, y in info.items()}
+            for file, info in list(self.status.items())
+        }
+
+        # Get cancelled files
+        self.filehandler.failed.update(
+            {
+                file: {
+                    **info,
+                    "message": self.status[file]["message"],
+                    "failed_op": self.status[file]["failed_op"],
+                }
+                for file, info in self.filehandler.data.items()
+                if self.status[file]["cancel"] in [True, "True"]
+            }
+        )
+
+        # Sort by which directory the files are in
+        return (
+            sorted(
+                sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
+                key=lambda f: f[1]["subpath"],
+            )
+            if sort
+            else self.filehandler.failed
+        )
+
+    # Public methods ################################# Public methods #
+    def verify_bucket_exist(self):
+        """Check that s3 connection works, and that bucket exists."""
+
+        LOG.debug("Verifying and/or creating bucket.")
+
+        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+
+            if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
+                console.print(f"\n:warning: {conn.message} :warning:\n")
+                os._exit(0)
+
+            bucket_exists = conn.check_bucket_exists()
+            if not bucket_exists:
+                _ = conn.create_bucket()
+
+        LOG.debug("Bucket verified.")
+
+        return True

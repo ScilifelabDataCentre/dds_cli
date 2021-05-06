@@ -11,7 +11,7 @@ with open("requirements.txt") as f:
 setup(
     name="dds-cli",
     version=version,
-    description="A command line tool to manage data and projects in the SciLifeLab Data Delivery Service.",
+    description="A command line tool to manage data and projects in the SciLifeLab Data Delivery System.",
     long_description=readme,
     long_description_content_type="text/markdown",
     url="https://github.com/ScilifelabDataCentre/DS_CLI",

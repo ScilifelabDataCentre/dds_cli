@@ -1,4 +1,4 @@
-# SciLifeLab Data Delivery Service - Command line interface
+# SciLifeLab Data Delivery System - Command line interface
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds-cli/)

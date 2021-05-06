@@ -63,6 +63,7 @@ class DDSBaseClass:
         config=None,
         project=None,
         ignore_config_project=False,
+        log_location=pathlib.Path(""),
     ):
 
         LOG.debug("Config: %s", config)
@@ -73,6 +74,9 @@ class DDSBaseClass:
 
         # Keyboardinterrupt
         self.stop_doing = False
+
+        # log location
+        self.log_location = log_location
 
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(

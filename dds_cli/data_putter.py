@@ -68,14 +68,19 @@ class DataPutter(base.DDSBaseClass):
     ):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, config=config, project=project)
+        super().__init__(
+            username=username,
+            config=config,
+            project=project,
+            log_location=temporary_destination["LOGS"],
+        )
 
         # Initiate DataPutter specific attributes
         self.break_on_fail = break_on_fail
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
-        self.log_location = temporary_destination["LOGS"]
+        # self.log_location = temporary_destination["LOGS"]
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
@@ -156,13 +161,14 @@ class DataPutter(base.DDSBaseClass):
             )
 
             # Get hex version of public key -- saved in db
-            self.filehandler.data[file]["public_key"] = encryptor.get_public_component_hex(
-                private_key=encryptor.my_private
-            )
-            self.filehandler.data[file]["key_salt"] = encryptor.salt
+            file_public_key = encryptor.get_public_component_hex(private_key=encryptor.my_private)
+            salt = encryptor.salt
 
         LOG.debug("Updating file processed size: %s", file_info["path_processed"])
-        # Update file size
+
+        # Update file info incl size, public key, salt
+        self.filehandler.data[file]["public_key"] = file_public_key
+        self.filehandler.data[file]["key_salt"] = salt
         self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
         if saved:

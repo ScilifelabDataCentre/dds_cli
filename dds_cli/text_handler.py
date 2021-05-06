@@ -5,6 +5,7 @@
 ###############################################################################
 
 # Standard library
+import logging
 import pathlib
 
 # Installed

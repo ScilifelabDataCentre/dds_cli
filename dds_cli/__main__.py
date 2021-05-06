@@ -52,7 +52,7 @@ console = rich.console.Console()
 @click.group()
 @click.option("--debug", default=False, is_flag=True)
 @click.pass_context
-def dds_cli(ctx, debug):
+def dds_main(ctx, debug=False):
     """Main CLI command, sets up DDS info."""
 
     # Timestamp
@@ -119,7 +119,7 @@ def dds_cli(ctx, debug):
 ###############################################################################
 
 
-@dds_cli.command()
+@dds_main.command()
 @click.option(
     "--config",
     "-c",
@@ -326,7 +326,7 @@ def put(
 ###############################################################################
 
 
-@dds_cli.command()
+@dds_main.command()
 @click.argument("fold_arg", required=False)  # Needs to be before proj_arg
 @click.argument("proj_arg", required=False)
 @click.option("--project", "-p", required=False, help="Project ID.")
@@ -391,7 +391,7 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
 ###############################################################################
 
 
-@dds_cli.command()
+@dds_main.command()
 @click.argument("proj_arg", required=False)
 @click.option("--project", required=False, type=str, help="Project ID.")
 @click.option(
@@ -481,7 +481,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 ###############################################################################
 
 
-@dds_cli.command()
+@dds_main.command()
 @click.option(
     "--config",
     "-c",
@@ -672,7 +672,3 @@ def get(
                                 progress=progress,
                             )
                         ] = next_file
-
-
-if __name__ == "__main__":
-    dds_cli()

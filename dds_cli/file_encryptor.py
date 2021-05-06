@@ -118,11 +118,6 @@ class Encryptor(ECDHKeyHandler):
 
     # Static methods ###################### Static methods #
     @staticmethod
-    def generate_checksum(file):
-
-        checksum = hashlib
-
-    @staticmethod
     def verify_checksum(file: pathlib.Path, correct_checksum):
         """Generate file checksum and verify the integrity"""
 

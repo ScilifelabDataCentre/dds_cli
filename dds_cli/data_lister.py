@@ -6,24 +6,24 @@
 
 # Standard library
 import logging
-import pathlib
-import traceback
-import sys
 import os
+import pathlib
+import sys
+import traceback
 
 # Installed
 import requests
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt
-from rich.tree import Tree
-from rich.padding import Padding
 import simplejson
+from rich.console import Console
+from rich.padding import Padding
+from rich.prompt import Prompt
+from rich.table import Table
+from rich.tree import Tree
 
 # Own modules
-from dds_cli import text_handler as th
 from dds_cli import base
 from dds_cli import DDSEndpoint
+from dds_cli import text_handler as th
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -31,10 +31,6 @@ from dds_cli import DDSEndpoint
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
-
-###############################################################################
-# RICH ################################################################# RICH #
-###############################################################################
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

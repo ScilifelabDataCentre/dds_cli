@@ -22,7 +22,7 @@ setup(
     setup_requires=["twine>=1.11.0", "setuptools>=38.6."],
     entry_points={
         "console_scripts": [
-            "dds = dds_cli.__main__:dds_cli",
+            "dds = dds_cli.__main__:dds_main",
         ],
     },
     zip_safe=False,

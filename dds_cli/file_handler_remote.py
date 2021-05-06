@@ -6,9 +6,9 @@
 
 # Standard library
 import logging
-import sys
 import os
 import pathlib
+import sys
 
 # Installed
 import requests
@@ -16,8 +16,8 @@ import rich
 
 # Own modules
 from dds_cli import DDSEndpoint
-from dds_cli import file_handler as fh
 from dds_cli import file_compressor as fc
+from dds_cli import file_handler as fh
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -57,6 +57,31 @@ class RemoteFileHandler(fh.FileHandler):
         self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
         self.data_list = None
 
+    # Static methods ############ Static methods #
+    @staticmethod
+    def write_file(chunks, outfile: pathlib.Path, **_):
+        """Write file chunks to file"""
+
+        saved, message = (False, "")
+
+        LOG.debug("Saving file...")
+        try:
+            original_umask = os.umask(0)  # User file-creation mode mask
+            with outfile.open(mode="wb+") as new_file:
+                for chunk in chunks:
+                    new_file.write(chunk)
+        except OSError as err:
+            message = str(err)
+            LOG.exception(message)
+        else:
+            saved = True
+            LOG.debug("File saved.")
+        finally:
+            os.umask(original_umask)
+
+        return saved, message
+
+    # Private methods ############ Private methods #
     def __collect_file_info_remote(self, all_paths, token):
         """Get information on files in db."""
 
@@ -83,7 +108,10 @@ class RemoteFileHandler(fh.FileHandler):
 
         # Folder info required if specific files requested
         if all_paths and "folders" not in file_info:
-            console.print("\n:warning: Error in response. " "Not enough info returned despite ok request. :warning:\n")
+            console.print(
+                "\n:warning: Error in response. "
+                "Not enough info returned despite ok request. :warning:\n"
+            )
             os._exit(0)
 
         # Files in response always required
@@ -96,7 +124,11 @@ class RemoteFileHandler(fh.FileHandler):
         folders = file_info["folders"] if "folders" in file_info else {}
 
         # Cancel download of those files or folders not found in the db
-        self.failed = {x: {"error": "Not found in DB."} for x in all_paths if x not in files and x not in folders}
+        self.failed = {
+            x: {"error": "Not found in DB."}
+            for x in all_paths
+            if x not in files and x not in folders
+        }
 
         # Save info on files in dict and return
         data = {
@@ -133,6 +165,7 @@ class RemoteFileHandler(fh.FileHandler):
         LOG.debug(data)
         return data
 
+    # Public methods ############ Public methods #
     def create_download_status_dict(self):
         """Create dict for tracking file download status."""
 
@@ -148,26 +181,3 @@ class RemoteFileHandler(fh.FileHandler):
             }
 
         return status_dict
-
-    @staticmethod
-    def write_file(chunks, outfile: pathlib.Path, **_):
-        """Write file chunks to file"""
-
-        saved, message = (False, "")
-
-        LOG.debug("Saving file...")
-        try:
-            original_umask = os.umask(0)  # User file-creation mode mask
-            with outfile.open(mode="wb+") as new_file:
-                for chunk in chunks:
-                    new_file.write(chunk)
-        except OSError as err:
-            message = str(err)
-            LOG.exception(message)
-        else:
-            saved = True
-            LOG.debug("File saved.")
-        finally:
-            os.umask(original_umask)
-
-        return saved, message

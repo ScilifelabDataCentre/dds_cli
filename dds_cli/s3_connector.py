@@ -5,11 +5,11 @@
 ###############################################################################
 
 # Standard library
-import logging
-import traceback
-import sys
 import dataclasses
+import logging
 import requests
+import sys
+import traceback
 
 # Installed
 import botocore
@@ -64,6 +64,7 @@ class S3Connector:
 
         return True
 
+    # Static methods ############ Static methods #
     @staticmethod
     def get_s3_info(project_id, token):
         """Get information required to connect to cloud."""
@@ -112,6 +113,7 @@ class S3Connector:
 
         return sfsp_proj, keys, url, bucket, error
 
+    # Public methods ############ Public methods #
     def check_bucket_exists(self):
         """Checks if the bucket exists"""
 

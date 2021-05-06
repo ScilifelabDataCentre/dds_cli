@@ -6,30 +6,30 @@
 
 # Standard library
 import logging
-import pathlib
-import traceback
-import sys
 import os
+import pathlib
+import sys
+import traceback
 
 # Installed
-import rich
-from rich.progress import Progress, SpinnerColumn
+import boto3
 import botocore
+import rich
 import requests
 import simplejson
-import boto3
+from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-from dds_cli import DDSEndpoint, FileSegment
 from dds_cli import base
+from dds_cli import DDSEndpoint, FileSegment
 from dds_cli import file_handler_remote as fhr
+from dds_cli import data_remover as dr
+from dds_cli import file_compressor as fc
+from dds_cli import file_encryptor as fe
 from dds_cli import s3_connector as s3
-from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
 from dds_cli import status
 from dds_cli import text_handler as txt
-from dds_cli import file_encryptor as fe
-from dds_cli import file_compressor as fc
-from dds_cli import data_remover as dr
+from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -67,14 +67,16 @@ class DataGetter(base.DDSBaseClass):
     ):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, config=config, project=project)
+        super().__init__(
+            username=username, config=config, project=project, log_location=destination["LOGS"]
+        )
 
         # Initiate DataGetter specific attributes
         self.break_on_fail = break_on_fail
         self.verify_checksum = verify_checksum
         self.silent = silent
         self.filehandler = None
-        self.log_location = destination["LOGS"]
+        # self.log_location = destination["LOGS"]
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
@@ -110,6 +112,7 @@ class DataGetter(base.DDSBaseClass):
 
             progress.remove_task(wait_task)
 
+    # Public methods ############ Public methods #
     @verify_proceed
     @subpath_required
     def download_and_verify(self, file, progress):
@@ -152,7 +155,9 @@ class DataGetter(base.DDSBaseClass):
                 streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"])
 
                 stream_to_file_func = (
-                    fc.Compressor.decompress_filechunks if file_info["compressed"] else self.filehandler.write_file
+                    fc.Compressor.decompress_filechunks
+                    if file_info["compressed"]
+                    else self.filehandler.write_file
                 )
 
                 file_saved, message = stream_to_file_func(
@@ -195,7 +200,9 @@ class DataGetter(base.DDSBaseClass):
                         Filename=file_local,
                         Bucket=conn.bucketname,
                         Key=file_remote,
-                        Callback=status.ProgressPercentage(progress=progress, task=task) if not self.silent else None,
+                        Callback=status.ProgressPercentage(progress=progress, task=task)
+                        if not self.silent
+                        else None,
                     )
                 except (
                     botocore.client.ClientError,
@@ -237,8 +244,3 @@ class DataGetter(base.DDSBaseClass):
             raise SystemExit from err
 
         return updated_in_db, error
-
-        # # Schedule file for db update
-        # _ = getter.update_db(file=downloaded_file)
-
-        # progress.remove_task(task_id)

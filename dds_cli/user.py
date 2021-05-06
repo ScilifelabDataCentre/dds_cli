@@ -5,8 +5,8 @@
 ###############################################################################
 
 # Standard library
-import logging
 import dataclasses
+import logging
 import os
 import requests
 import simplejson
@@ -87,5 +87,3 @@ class User:
         LOG.debug("User %s granted access to the DDS", self.username)
 
         return {"x-access-token": token["token"]}
-
-    # Public methods ########################### Public methods #

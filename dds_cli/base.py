@@ -8,8 +8,8 @@
 import inspect
 import logging
 import os
-import traceback
 import pathlib
+import traceback
 
 # Installed
 import getpass
@@ -18,10 +18,10 @@ import rich
 import simplejson
 
 # Own modules
-from dds_cli import file_handler as fh
-from dds_cli import user
 from dds_cli import DDSEndpoint
+from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
+from dds_cli import user
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -63,6 +63,7 @@ class DDSBaseClass:
         config=None,
         project=None,
         ignore_config_project=False,
+        log_location=pathlib.Path(""),
     ):
 
         LOG.debug("Config: %s", config)
@@ -73,6 +74,9 @@ class DDSBaseClass:
 
         # Keyboardinterrupt
         self.stop_doing = False
+
+        # log location
+        self.log_location = log_location
 
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(
@@ -89,7 +93,9 @@ class DDSBaseClass:
 
         # Project access only required if trying to upload, download or list
         # files within project
-        if self.method in ["put", "get"] or (self.method in ["ls", "rm"] and self.project is not None):
+        if self.method in ["put", "get"] or (
+            self.method in ["ls", "rm"] and self.project is not None
+        ):
             self.token = self.__verify_project_access()
 
             if self.method in ["put", "get"]:
@@ -107,7 +113,7 @@ class DDSBaseClass:
             return False  # uncomment to pass exception through
 
         if self.method in ["put", "get"]:
-            self.printout_delivery_summary()
+            self.__printout_delivery_summary()
 
             # Delete temporary file directory if it is empty
             # if not next(self.filehandler.local_destination.iterdir(), None):
@@ -141,14 +147,20 @@ class DDSBaseClass:
             if password is None and "password" in contents:
                 password = contents["password"]
             if not ignore_config_project:
-                if project is None and "project" in contents and self.method in ["put", "get", "ls"]:
+                if (
+                    project is None
+                    and "project" in contents
+                    and self.method in ["put", "get", "ls"]
+                ):
                     project = contents["project"]
 
         LOG.info("Username: %s, Project ID: %s", username, project)
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:
-            console.print("\n:warning: Data Delivery System project information is missing. :warning:\n")
+            console.print(
+                "\n:warning: Data Delivery System project information is missing. :warning:\n"
+            )
             os._exit(0)
         if username is None:
             console.print("\n:warning: Data Delivery System options are missing :warning:\n")
@@ -182,7 +194,9 @@ class DDSBaseClass:
 
         # Problem
         if not response.ok:
-            console.print(f"\n:no_entry_sign: Project access denied: {response.text} :no_entry_sign:\n")
+            console.print(
+                f"\n:no_entry_sign: Project access denied: {response.text} :no_entry_sign:\n"
+            )
             os._exit(0)
 
         try:
@@ -226,7 +240,9 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if not response.ok:
-            console.print(f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n")
+            console.print(
+                f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
+            )
             os._exit(0)
 
         # Get key from response
@@ -237,73 +253,25 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if key_type not in project_public:
-            console.print("\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n")
+            console.print(
+                "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
+            )
             os._exit(0)
 
         return project_public[key_type]
 
-    # Public methods ################################# Public methods #
-    def verify_bucket_exist(self):
-        """Check that s3 connection works, and that bucket exists."""
-
-        LOG.debug("Verifying and/or creating bucket.")
-
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
-                console.print(f"\n:warning: {conn.message} :warning:\n")
-                os._exit(0)
-
-            bucket_exists = conn.check_bucket_exists()
-            if not bucket_exists:
-                _ = conn.create_bucket()
-
-        LOG.debug("Bucket verified.")
-
-        return True
-
-    def collect_all_failed(self, sort: bool = True):
-        """Put cancelled files from status in to failed dict and sort the output."""
-
-        # Transform all items to string
-        self.filehandler.data = {
-            str(file): {str(x): str(y) for x, y in info.items()} for file, info in list(self.filehandler.data.items())
-        }
-        self.status = {str(file): {str(x): str(y) for x, y in info.items()} for file, info in list(self.status.items())}
-
-        # Get cancelled files
-        self.filehandler.failed.update(
-            {
-                file: {
-                    **info,
-                    "message": self.status[file]["message"],
-                    "failed_op": self.status[file]["failed_op"],
-                }
-                for file, info in self.filehandler.data.items()
-                if self.status[file]["cancel"] in [True, "True"]
-            }
-        )
-
-        # Sort by which directory the files are in
-        return (
-            sorted(
-                sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
-                key=lambda f: f[1]["subpath"],
-            )
-            if sort
-            else self.filehandler.failed
-        )
-
-    def printout_delivery_summary(self, max_fileerrs: int = 40):
+    def __printout_delivery_summary(self, max_fileerrs: int = 40):
         """Print out the delivery summary if any files were cancelled."""
 
-        any_failed = self.collect_all_failed()
+        any_failed = self.__collect_all_failed()
 
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
         if any_failed:
-            intro_error_message = f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
+            intro_error_message = (
+                f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
+            )
 
             # Save to file and print message if too many failed files,
             # otherwise create and print tables
@@ -350,4 +318,62 @@ class DDSBaseClass:
             console.print(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
-            console.print(f"Any downloaded files are located: {self.filehandler.local_destination}.")
+            console.print(
+                f"Any downloaded files are located: {self.filehandler.local_destination}."
+            )
+
+    def __collect_all_failed(self, sort: bool = True):
+        """Put cancelled files from status in to failed dict and sort the output."""
+
+        # Transform all items to string
+        self.filehandler.data = {
+            str(file): {str(x): str(y) for x, y in info.items()}
+            for file, info in list(self.filehandler.data.items())
+        }
+        self.status = {
+            str(file): {str(x): str(y) for x, y in info.items()}
+            for file, info in list(self.status.items())
+        }
+
+        # Get cancelled files
+        self.filehandler.failed.update(
+            {
+                file: {
+                    **info,
+                    "message": self.status[file]["message"],
+                    "failed_op": self.status[file]["failed_op"],
+                }
+                for file, info in self.filehandler.data.items()
+                if self.status[file]["cancel"] in [True, "True"]
+            }
+        )
+
+        # Sort by which directory the files are in
+        return (
+            sorted(
+                sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
+                key=lambda f: f[1]["subpath"],
+            )
+            if sort
+            else self.filehandler.failed
+        )
+
+    # Public methods ################################# Public methods #
+    def verify_bucket_exist(self):
+        """Check that s3 connection works, and that bucket exists."""
+
+        LOG.debug("Verifying and/or creating bucket.")
+
+        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+
+            if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
+                console.print(f"\n:warning: {conn.message} :warning:\n")
+                os._exit(0)
+
+            bucket_exists = conn.check_bucket_exists()
+            if not bucket_exists:
+                _ = conn.create_bucket()
+
+        LOG.debug("Bucket verified.")
+
+        return True

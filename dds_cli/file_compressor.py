@@ -1,15 +1,35 @@
-import immutabledict
-import pathlib
+""""Compressor module. Handles the compression of files."""
+
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
+# Standard library
 import dataclasses
+import logging
+import os
+import pathlib
 import traceback
 import sys
-import os
+
+
+# Installed
+import immutabledict
 import zstandard as zstd
+
+# Own modules
 from dds_cli import FileSegment
-import logging
+
+###############################################################################
+# START LOGGING CONFIG ################################# START LOGGING CONFIG #
+###############################################################################
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
+
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
 
 
 class CompressionMagic:
@@ -65,23 +85,7 @@ class Compressor:
 
         return True
 
-    def is_compressed(self, file):
-        """Checks if a file is compressed or not."""
-
-        compressed, error = (False, "")
-        try:
-            original_umask = os.umask(0)  # User file-creation mode mask
-            with file.open(mode="rb") as f:
-                file_start = f.read(self.max_magic_len)
-                if file_start.startswith(tuple(x for x in self.fmt_magic)):
-                    compressed = True
-        except OSError as err:
-            error = str(err)
-        finally:
-            os.umask(original_umask)
-
-        return compressed, error
-
+    # Static methods ###################### Static methods #
     @staticmethod
     def compress_file(
         file: pathlib.Path,
@@ -141,3 +145,21 @@ class Compressor:
             os.umask(original_umask)
 
         return saved, message
+
+    # Public methods ###################### Public methods #
+    def is_compressed(self, file):
+        """Checks if a file is compressed or not."""
+
+        compressed, error = (False, "")
+        try:
+            original_umask = os.umask(0)  # User file-creation mode mask
+            with file.open(mode="rb") as f:
+                file_start = f.read(self.max_magic_len)
+                if file_start.startswith(tuple(x for x in self.fmt_magic)):
+                    compressed = True
+        except OSError as err:
+            error = str(err)
+        finally:
+            os.umask(original_umask)
+
+        return compressed, error

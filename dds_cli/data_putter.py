@@ -6,12 +6,12 @@
 
 # Standard library
 import logging
-import pathlib
 import os
+import pathlib
 
 # Installed
-import botocore
 import boto3
+import botocore
 import requests
 import rich
 from rich.progress import Progress, SpinnerColumn
@@ -19,19 +19,19 @@ import simplejson
 
 # Own modules
 from dds_cli import base
+from dds_cli import data_remover as dr
+from dds_cli import DDSEndpoint
+from dds_cli import file_compressor as fc
+from dds_cli import file_encryptor as fe
 from dds_cli import file_handler_local as fhl
 from dds_cli import s3_connector as s3
-from dds_cli import DDSEndpoint
+from dds_cli import status
+from dds_cli import text_handler as txt
 from dds_cli.cli_decorators import (
     verify_proceed,
     update_status,
     subpath_required,
 )
-from dds_cli import status
-from dds_cli import text_handler as txt
-from dds_cli import file_encryptor as fe
-from dds_cli import file_compressor as fc
-from dds_cli import data_remover as dr
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -68,14 +68,19 @@ class DataPutter(base.DDSBaseClass):
     ):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, config=config, project=project)
+        super().__init__(
+            username=username,
+            config=config,
+            project=project,
+            log_location=temporary_destination["LOGS"],
+        )
 
         # Initiate DataPutter specific attributes
         self.break_on_fail = break_on_fail
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
-        self.log_location = temporary_destination["LOGS"]
+        # self.log_location = temporary_destination["LOGS"]
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
@@ -143,15 +148,7 @@ class DataPutter(base.DDSBaseClass):
         )
 
         # Stream chunks from file
-        # stream_function = (
-        #     self.filehandler.read_file
-        #     if file_info["compressed"]
-        #     else fc.Compressor.compress_file
-        # )
         streamed_chunks = self.filehandler.stream_from_file(file=file)
-        # streamed_chunks = stream_function(
-        #     file=file_info["path_raw"],
-        # )
 
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:
@@ -164,13 +161,14 @@ class DataPutter(base.DDSBaseClass):
             )
 
             # Get hex version of public key -- saved in db
-            self.filehandler.data[file]["public_key"] = encryptor.get_public_component_hex(
-                private_key=encryptor.my_private
-            )
-            self.filehandler.data[file]["key_salt"] = encryptor.salt
+            file_public_key = encryptor.get_public_component_hex(private_key=encryptor.my_private)
+            salt = encryptor.salt
 
         LOG.debug("Updating file processed size: %s", file_info["path_processed"])
-        # Update file size
+
+        # Update file info incl size, public key, salt
+        self.filehandler.data[file]["public_key"] = file_public_key
+        self.filehandler.data[file]["key_salt"] = salt
         self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
         if saved:

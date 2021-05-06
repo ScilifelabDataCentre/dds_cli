@@ -1,20 +1,27 @@
-"""File encryptor module"""
+"""File encryptor module. Handles the encryption of the files and the generation of the keys."""
 
-import pathlib
-import traceback
-import os
-import logging
-import sys
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
+# Standard library
 import hashlib
+import logging
+import os
+import pathlib
+import sys
+import traceback
+
+# Installed
 from cryptography.hazmat import backends
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives.kdf import hkdf
-from cryptography.hazmat.primitives import hashes
-from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt
 from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt
+from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt
 
-from cryptography.hazmat.primitives import serialization
-
+# Own modules
 from dds_cli import FileSegment
 from dds_cli.file_handler_local import LocalFileHandler as fh
 
@@ -33,6 +40,7 @@ LOG.setLevel(logging.DEBUG)
 class ECDHKeyHandler:
     """Generates the shared encryption/decryption key, and transforms the components."""
 
+    # Static methods ###################### Statis methods #
     @staticmethod
     def generate_shared_key(my_private, peer_public, salt: bytes = b""):
         """Derive the shared key for file encryption."""
@@ -75,7 +83,9 @@ class ECDHKeyHandler:
         """Gets the public key and converts to hex string."""
 
         public = private_key.public_key()
-        public_bytes = public.public_bytes(encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw)
+        public_bytes = public.public_bytes(
+            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        )
 
         return public_bytes.hex().upper()
 
@@ -92,7 +102,9 @@ class Encryptor(ECDHKeyHandler):
         # This generates public too
         self.my_private = x25519.X25519PrivateKey.generate()
 
-        self.key, self.salt = self.generate_shared_key(my_private=self.my_private, peer_public=self.peer_public)
+        self.key, self.salt = self.generate_shared_key(
+            my_private=self.my_private, peer_public=self.peer_public
+        )
 
     def __enter__(self):
         return self
@@ -104,6 +116,31 @@ class Encryptor(ECDHKeyHandler):
 
         return True
 
+    # Static methods ###################### Static methods #
+    @staticmethod
+    def verify_checksum(file: pathlib.Path, correct_checksum):
+        """Generate file checksum and verify the integrity"""
+
+        verified, error = (False, "")
+
+        checksum = hashlib.sha256()
+
+        try:
+            for chunk in fh.read_file(file=file):
+                checksum.update(chunk)
+        except OSError as err:
+            error = str(err)
+        else:
+            if checksum.hexdigest() == correct_checksum:
+                verified, error = (True, "File integrity verified.")
+                LOG.debug(error)
+            else:
+                error = "Checksum verification failed. File compromised."
+                LOG.warning(error)
+
+        return verified, error
+
+    # Public methods ###################### Public methods #
     def encrypt_filechunks(self, chunks, outfile: pathlib.Path, progress: tuple = None):
         """Encrypts the file in chunks.
 
@@ -131,9 +168,9 @@ class Encryptor(ECDHKeyHandler):
                 for chunk in chunks:
 
                     # Restart at 0 if nonce number at maximum number of chunks per key
-                    nonce = (iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce).to_bytes(
-                        length=12, byteorder="little"
-                    )
+                    nonce = (
+                        iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
+                    ).to_bytes(length=12, byteorder="little")
 
                     # Encrypt chunk
                     encrypted_chunk = crypto_aead_chacha20poly1305_ietf_encrypt(
@@ -157,34 +194,6 @@ class Encryptor(ECDHKeyHandler):
             os.umask(original_umask)
 
         return encrypted_and_saved, message
-
-    @staticmethod
-    def generate_checksum(file):
-
-        checksum = hashlib
-
-    @staticmethod
-    def verify_checksum(file: pathlib.Path, correct_checksum):
-        """Generate file checksum and verify the integrity"""
-
-        verified, error = (False, "")
-
-        checksum = hashlib.sha256()
-
-        try:
-            for chunk in fh.read_file(file=file):
-                checksum.update(chunk)
-        except OSError as err:
-            error = str(err)
-        else:
-            if checksum.hexdigest() == correct_checksum:
-                verified, error = (True, "File integrity verified.")
-                LOG.debug(error)
-            else:
-                error = "Checksum verification failed. File compromised."
-                LOG.warning(error)
-
-        return verified, error
 
 
 class Decryptor(ECDHKeyHandler):
@@ -216,6 +225,7 @@ class Decryptor(ECDHKeyHandler):
 
         return True
 
+    # Public methods ###################### Public methods #
     def decrypt_file(self, infile: pathlib.Path):
         """Decrypts the file"""
 
@@ -245,9 +255,9 @@ class Decryptor(ECDHKeyHandler):
                 for chunk in iter(lambda: file.read(FileSegment.SEGMENT_SIZE_CIPHER), b""):
                     # Get nonce as bytes for decryption: if the nonce is larger than the
                     # max number of chunks allowed - wrap to 0 again
-                    nonce = (iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce).to_bytes(
-                        length=12, byteorder="little"
-                    )
+                    nonce = (
+                        iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
+                    ).to_bytes(length=12, byteorder="little")
 
                     iv_int += 1
 

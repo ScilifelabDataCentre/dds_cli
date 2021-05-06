@@ -1,6 +1,27 @@
 """Handles formatting of string."""
 
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
+# Standard library
+import logging
 import pathlib
+
+# Installed
+
+# Own modules
+
+###############################################################################
+# START LOGGING CONFIG ################################# START LOGGING CONFIG #
+###############################################################################
+
+LOG = logging.getLogger(__name__)
+LOG.setLevel(logging.DEBUG)
+
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
 
 
 class StringFormat:
@@ -22,6 +43,7 @@ class StringFormat:
 class TextHandler(StringFormat):
     """Handler for text formatting."""
 
+    # Static methods ############ Static methods #
     @staticmethod
     def format_tabs(string_len, max_string_len, tab_len=4):
         """Format number of tabs to have within string."""

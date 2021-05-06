@@ -5,11 +5,11 @@
 ###############################################################################
 
 # Standard library
-import logging
-import traceback
-import sys
 import dataclasses
+import logging
 import requests
+import sys
+import traceback
 
 # Installed
 import botocore

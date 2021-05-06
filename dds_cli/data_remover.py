@@ -15,10 +15,10 @@ import rich
 import simplejson
 
 # Own modules
+from dds_cli.cli_decorators import removal_spinner
 from dds_cli import base
 from dds_cli import data_lister
 from dds_cli import DDSEndpoint
-from dds_cli.cli_decorators import removal_spinner
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -114,7 +114,10 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            return f"Failed to delete folder(s) '{folder}' " f"in project {self.project}: {response.text}"
+            return (
+                f"Failed to delete folder(s) '{folder}' "
+                f"in project {self.project}: {response.text}"
+            )
 
         # Make sure required info is returned
         try:

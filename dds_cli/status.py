@@ -11,6 +11,8 @@ import os
 import itertools
 
 # Installed
+import boto3
+from rich.panel import Panel
 from rich.progress import (
     Progress,
     TextColumn,
@@ -20,8 +22,6 @@ from rich.progress import (
     Column,
     Table,
 )
-from rich.panel import Panel
-import boto3
 
 # Own modules
 

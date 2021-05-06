@@ -5,22 +5,18 @@
 ###############################################################################
 
 # Standard library
-import logging
 import functools
-import pathlib
 import hashlib
-
+import logging
+import pathlib
 
 # Installed
 import boto3
 import botocore
-
-
 import rich
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

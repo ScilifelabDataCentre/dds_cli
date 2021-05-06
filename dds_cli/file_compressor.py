@@ -1,15 +1,35 @@
-import immutabledict
-import pathlib
+""""Compressor module. Handles the compression of files."""
+
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
+# Standard library
 import dataclasses
+import logging
+import os
+import pathlib
 import traceback
 import sys
-import os
+
+
+# Installed
+import immutabledict
 import zstandard as zstd
+
+# Own modules
 from dds_cli import FileSegment
-import logging
+
+###############################################################################
+# START LOGGING CONFIG ################################# START LOGGING CONFIG #
+###############################################################################
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
+
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
 
 
 class CompressionMagic:

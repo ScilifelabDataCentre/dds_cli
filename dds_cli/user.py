@@ -5,8 +5,8 @@
 ###############################################################################
 
 # Standard library
-import logging
 import dataclasses
+import logging
 import os
 import requests
 import simplejson

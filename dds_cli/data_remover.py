@@ -44,7 +44,7 @@ class DataRemover(base.DDSBaseClass):
         if self.method != "rm":
             sys.exit(f"Unauthorized method: {self.method}")
 
-    # Private methods ###################### Private methods #
+    # Static methods ###################### Static methods #
     @staticmethod
     def __response_delete(resp_json, level="File"):
         """Output a response after deletion."""
@@ -88,6 +88,16 @@ class DataRemover(base.DDSBaseClass):
 
             # Print out table
             return rich.padding.Padding(table, 1)
+
+    @staticmethod
+    def delete_tempfile(file: pathlib.Path):
+        """Deletes the specified file."""
+
+        try:
+            file.unlink()
+        except FileNotFoundError as err:
+            LOG.exception(str(err))
+            LOG.info("File deletion may have failed. Usage of space may increase.")
 
     # Public methods ###################### Public methods #
     @removal_spinner
@@ -162,13 +172,3 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         return self.__response_delete(resp_json=resp_json, level="Folder")
-
-    @staticmethod
-    def delete_tempfile(file: pathlib.Path):
-        """Deletes the specified file."""
-
-        try:
-            file.unlink()
-        except FileNotFoundError as err:
-            LOG.exception(str(err))
-            LOG.info("File deletion may have failed. Usage of space may increase.")

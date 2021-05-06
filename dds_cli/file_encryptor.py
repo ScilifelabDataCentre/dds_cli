@@ -116,6 +116,35 @@ class Encryptor(ECDHKeyHandler):
 
         return True
 
+    # Static methods ###################### Static methods #
+    @staticmethod
+    def generate_checksum(file):
+
+        checksum = hashlib
+
+    @staticmethod
+    def verify_checksum(file: pathlib.Path, correct_checksum):
+        """Generate file checksum and verify the integrity"""
+
+        verified, error = (False, "")
+
+        checksum = hashlib.sha256()
+
+        try:
+            for chunk in fh.read_file(file=file):
+                checksum.update(chunk)
+        except OSError as err:
+            error = str(err)
+        else:
+            if checksum.hexdigest() == correct_checksum:
+                verified, error = (True, "File integrity verified.")
+                LOG.debug(error)
+            else:
+                error = "Checksum verification failed. File compromised."
+                LOG.warning(error)
+
+        return verified, error
+
     # Public methods ###################### Public methods #
     def encrypt_filechunks(self, chunks, outfile: pathlib.Path, progress: tuple = None):
         """Encrypts the file in chunks.
@@ -170,35 +199,6 @@ class Encryptor(ECDHKeyHandler):
             os.umask(original_umask)
 
         return encrypted_and_saved, message
-
-    # Static methods ###################### Static methods #
-    @staticmethod
-    def generate_checksum(file):
-
-        checksum = hashlib
-
-    @staticmethod
-    def verify_checksum(file: pathlib.Path, correct_checksum):
-        """Generate file checksum and verify the integrity"""
-
-        verified, error = (False, "")
-
-        checksum = hashlib.sha256()
-
-        try:
-            for chunk in fh.read_file(file=file):
-                checksum.update(chunk)
-        except OSError as err:
-            error = str(err)
-        else:
-            if checksum.hexdigest() == correct_checksum:
-                verified, error = (True, "File integrity verified.")
-                LOG.debug(error)
-            else:
-                error = "Checksum verification failed. File compromised."
-                LOG.warning(error)
-
-        return verified, error
 
 
 class Decryptor(ECDHKeyHandler):

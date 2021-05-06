@@ -57,6 +57,30 @@ class RemoteFileHandler(fh.FileHandler):
         self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
         self.data_list = None
 
+    # Static methods ############ Static methods #
+    @staticmethod
+    def write_file(chunks, outfile: pathlib.Path, **_):
+        """Write file chunks to file"""
+
+        saved, message = (False, "")
+
+        LOG.debug("Saving file...")
+        try:
+            original_umask = os.umask(0)  # User file-creation mode mask
+            with outfile.open(mode="wb+") as new_file:
+                for chunk in chunks:
+                    new_file.write(chunk)
+        except OSError as err:
+            message = str(err)
+            LOG.exception(message)
+        else:
+            saved = True
+            LOG.debug("File saved.")
+        finally:
+            os.umask(original_umask)
+
+        return saved, message
+
     # Private methods ############ Private methods #
     def __collect_file_info_remote(self, all_paths, token):
         """Get information on files in db."""
@@ -157,27 +181,3 @@ class RemoteFileHandler(fh.FileHandler):
             }
 
         return status_dict
-
-    # Static methods ############ Static methods #
-    @staticmethod
-    def write_file(chunks, outfile: pathlib.Path, **_):
-        """Write file chunks to file"""
-
-        saved, message = (False, "")
-
-        LOG.debug("Saving file...")
-        try:
-            original_umask = os.umask(0)  # User file-creation mode mask
-            with outfile.open(mode="wb+") as new_file:
-                for chunk in chunks:
-                    new_file.write(chunk)
-        except OSError as err:
-            message = str(err)
-            LOG.exception(message)
-        else:
-            saved = True
-            LOG.debug("File saved.")
-        finally:
-            os.umask(original_umask)
-
-        return saved, message

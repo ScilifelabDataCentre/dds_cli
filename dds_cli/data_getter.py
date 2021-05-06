@@ -110,6 +110,7 @@ class DataGetter(base.DDSBaseClass):
 
             progress.remove_task(wait_task)
 
+    # Public methods ############ Public methods #
     @verify_proceed
     @subpath_required
     def download_and_verify(self, file, progress):

@@ -320,7 +320,7 @@ def put(
                         for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]
                     ]
 
-        putter.update_project_size()
+        updated, error = putter.update_project_size()
 
 
 ###############################################################################

@@ -100,6 +100,9 @@ class DDSEndpoint:
     FILE_INFO_ALL = BASE_ENDPOINT + "/file/all/info"
     FILE_UPDATE = BASE_ENDPOINT + "/file/update"
 
+    # Project specific urls
+    PROJECT_SIZE = BASE_ENDPOINT + "/proj/size"
+
     # Listing urls
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
     LIST_FILES = BASE_ENDPOINT + "/files/list"

@@ -311,3 +311,39 @@ class DataPutter(base.DDSBaseClass):
                 LOG.warning(error)
 
         return added_to_db, error
+
+    def update_project_size(self):
+        """Update the project size in one go via a API request."""
+
+        size_updated, error = (False, "")
+
+        # Perform request to DDS API
+        try:
+            response = requests.put(
+                DDSEndpoint.PROJECT_SIZE, headers=self.token, timeout=DDSEndpoint.TIMEOUT
+            )
+        except requests.exceptions.RequestException as err:
+            # Log warning if error
+            # TODO (ina): Add the info to the error log if this happens --> can update manually
+            error = str(err)
+            LOG.warning(error)
+
+        # Verify ok response
+        if not response.ok:
+            error = f"Failed to update project: {response.text}"
+            LOG.exception(response.text)
+        else:
+            # Get response from endpoint
+            try:
+                json_resp = response.json()
+            except simplejson.JSONDecodeError as err:
+                LOG.warning(str(err))
+            else:
+                updated = json_resp.get("updated")
+                error = json_resp.get("error")
+
+                # TODO (ina): Add the info to error log if any error happens --> update manually
+                if not updated:
+                    LOG.warning("The project size could not be updated! Error: %s", error)
+                else:
+                    LOG.info("Project size updated successfully!")

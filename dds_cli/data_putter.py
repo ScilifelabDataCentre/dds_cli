@@ -328,11 +328,12 @@ class DataPutter(base.DDSBaseClass):
             error = str(err)
             LOG.warning(error)
 
-        # Verify
+        # Verify ok response
         if not response.ok:
             error = f"Failed to update project: {response.text}"
             LOG.exception(response.text)
         else:
+            # Get response from endpoint
             try:
                 json_resp = response.json()
             except simplejson.JSONDecodeError as err:
@@ -341,6 +342,7 @@ class DataPutter(base.DDSBaseClass):
                 updated = json_resp.get("updated")
                 error = json_resp.get("error")
 
+                # TODO (ina): Add the info to error log if any error happens --> update manually
                 if not updated:
                     LOG.warning("The project size could not be updated! Error: %s", error)
                 else:

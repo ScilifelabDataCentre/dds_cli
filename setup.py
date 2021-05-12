@@ -14,7 +14,7 @@ setup(
     description="Data Delivery Service - Command line tool",
     long_description=readme,
     long_description_content_type="text/markdown",
-    url="https://github.com/ScilifelabDataCentre/dds_cli",
+    url="https://github.com/ScilifelabDataCentre/DDS_CLI",
     license="MIT",
     packages=find_packages(exclude=("docs")),
     include_package_data=True,

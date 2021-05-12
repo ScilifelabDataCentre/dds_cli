@@ -1,7 +1,7 @@
 # SciLifeLab Data Delivery System - Command line interface
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds-cli/)
+[![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds_cli/)
 
 > **A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery Service.**
 
@@ -20,10 +20,10 @@ This tool is written and maintained by the [SciLifeLab Data Centre](https://www.
 
 > :warning: Not available yet - coming soon after first release :warning:
 
-The `dds-cli` package can be installed from [PyPI](https://pypi.python.org/pypi/dds-cli/) using pip as follows:
+The `dds-cli` package can be installed from [PyPI](https://pypi.python.org/pypi/dds_cli/) using pip as follows:
 
 ```bash
-pip install dds-cli
+pip install dds_cli
 ```
 
 ### Development version
@@ -31,7 +31,7 @@ pip install dds-cli
 If you would like the latest development version of tools, the command is:
 
 ```bash
-pip install --upgrade --force-reinstall git+https://github.com/ScilifelabDataCentre/DS_CLI.git@dev
+pip install --upgrade --force-reinstall git+https://github.com/ScilifelabDataCentre/dds_cli.git@dev
 ```
 
 If you intend to make edits to the code, first make a fork of the repository and then clone it locally.

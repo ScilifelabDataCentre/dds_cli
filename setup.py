@@ -14,7 +14,7 @@ setup(
     description="A command line tool to manage data and projects in the SciLifeLab Data Delivery System.",
     long_description=readme,
     long_description_content_type="text/markdown",
-    url="https://github.com/ScilifelabDataCentre/DS_CLI",
+    url="https://github.com/ScilifelabDataCentre/DDS_CLI",
     license="MIT",
     packages=find_packages(exclude=("docs")),
     include_package_data=True,

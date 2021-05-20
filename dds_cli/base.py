@@ -91,6 +91,7 @@ class DDSBaseClass:
         dds_user = user.User(username=username, password=password, project=self.project)
         self.token = dds_user.token
 
+        LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in ["put", "get"] or (
@@ -241,7 +242,7 @@ class DDSBaseClass:
 
         if not response.ok:
             console.print(
-                f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
+                f"\n:no_entry_sign: Project access denied: No {key_type} key. {response.text} :no_entry_sign:\n"
             )
             os._exit(0)
 

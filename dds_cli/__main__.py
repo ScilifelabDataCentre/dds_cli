@@ -83,24 +83,24 @@ def dds_main(ctx, debug=False):
                 console.print("Could not find the config file '.dds-cli.json'")
                 os._exit(0)
 
-        if any([x in sys.argv for x in ["put", "get"]]):
-            all_dirs = directory.DDSDirectory(
-                path=destination,
-                add_file_dir=any([x in sys.argv for x in ["put", "get"]]),
-            ).directories
+        # if any([x in sys.argv for x in ["put", "get"]]):
+        all_dirs = directory.DDSDirectory(
+            path=destination,
+            add_file_dir=any([x in sys.argv for x in ["put", "get"]]),
+        ).directories
 
-            # Path to log file
-            logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
+        # Path to log file
+        logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
 
-            # Create logger
-            _ = setup_custom_logger(filename=logfile, debug=debug)
+        # Create logger
+        _ = setup_custom_logger(filename=logfile, debug=debug)
 
-            # Create logger
-            global LOG
-            LOG = logging.getLogger(__name__)
-            LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
-            LOG.info("Logging started.")
-            LOG.debug(destination)
+        # Create logger
+        global LOG
+        LOG = logging.getLogger(__name__)
+        LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
+        LOG.info("Logging started.")
+        LOG.debug(destination)
 
     if LOG is not None:
         LOG.debug(config_file)

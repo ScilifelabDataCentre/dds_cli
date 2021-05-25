@@ -372,7 +372,9 @@ class DDSBaseClass:
                 os._exit(0)
 
             bucket_exists = conn.check_bucket_exists()
+            LOG.debug("Bucket exists: %s", bucket_exists)
             if not bucket_exists:
+                LOG.debug("Attempting create...")
                 _ = conn.create_bucket()
 
         LOG.debug("Bucket verified.")

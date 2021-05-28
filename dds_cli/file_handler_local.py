@@ -63,7 +63,7 @@ class LocalFileHandler(fh.FileHandler):
         # No data -- cannot proceed
         if not self.data_list:
             console.print("\n:warning: No data specified. :warning:\n")
-            os._exit(0)
+            os._exit(1)
 
         self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
         self.data_list = None
@@ -110,7 +110,7 @@ class LocalFileHandler(fh.FileHandler):
 
                     if error != "":
                         LOG.exception(error)
-                        os._exit(0)
+                        os._exit(1)
 
                     path_processed = self.create_encrypted_name(
                         raw_file=path,
@@ -203,7 +203,7 @@ class LocalFileHandler(fh.FileHandler):
 
         if not response.ok:
             console.print(f"\n{response.text}\n")
-            os._exit(0)
+            os._exit(1)
 
         try:
             files_in_db = response.json()
@@ -214,7 +214,7 @@ class LocalFileHandler(fh.FileHandler):
         # API failure
         if "files" not in files_in_db:
             console.print("\n:warning: Files not returned from API. :warning:\n")
-            os._exit(0)
+            os._exit(1)
 
         LOG.debug("Previous upload check finished.")
 

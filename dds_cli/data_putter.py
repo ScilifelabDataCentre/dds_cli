@@ -85,7 +85,7 @@ class DataPutter(base.DDSBaseClass):
         # Only method "put" can use the DataPutter class
         if self.method != "put":
             console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
-            os._exit(0)
+            os._exit(1)
 
         # Start file prep progress
         with Progress(
@@ -115,7 +115,7 @@ class DataPutter(base.DDSBaseClass):
                     "previously uploaded files) and the '--break-on-fail' flag used. "
                     "Use '--overwrite' if you want to upload these files again."
                 )
-                os._exit(0)
+                os._exit(1)
 
             # Generate status dict
             self.status = self.filehandler.create_upload_status_dict(

@@ -54,7 +54,7 @@ class DataRemover(base.DDSBaseClass):
         # Check that enough info
         if not all(x in resp_json for x in ["not_exists", "not_removed"]):
             return "No information returned. Server error."
-            # os._exit(0)
+            # os._exit(1)
 
         # Get info
         not_exists = resp_json["not_exists"]

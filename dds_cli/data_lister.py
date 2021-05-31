@@ -91,7 +91,7 @@ class DataLister(base.DDSBaseClass):
         console = Console()
         if not response.ok:
             console.print(f"Failed to get list of projects: {response.text}")
-            os._exit(0)
+            os._exit(1)
 
         try:
             resp_json = response.json()
@@ -155,7 +155,7 @@ class DataLister(base.DDSBaseClass):
 
         if not response.ok:
             console.print(f"Failed to get list of files: {response.text}")
-            os._exit(0)
+            os._exit(1)
 
         # Get response
         try:

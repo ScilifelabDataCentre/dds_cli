@@ -52,7 +52,7 @@ class RemoteFileHandler(fh.FileHandler):
 
         if not self.data_list and not get_all:
             console.print("\n:warning: No data specified. :warning:\n")
-            os._exit(0)
+            os._exit(1)
 
         self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
         self.data_list = None
@@ -96,12 +96,12 @@ class RemoteFileHandler(fh.FileHandler):
             )
         except requests.ConnectionError as err:
             LOG.fatal(err)
-            os._exit(0)
+            os._exit(1)
 
         # Server error or error in response
         if not response.ok:
             console.print(f"\n{response.text}\n")
-            os._exit(0)
+            os._exit(1)
 
         # Get file info from response
         file_info = response.json()
@@ -112,12 +112,12 @@ class RemoteFileHandler(fh.FileHandler):
                 "\n:warning: Error in response. "
                 "Not enough info returned despite ok request. :warning:\n"
             )
-            os._exit(0)
+            os._exit(1)
 
         # Files in response always required
         if "files" not in file_info:
             console.print("\n:warning: No files in response despite ok request. :warning:\n")
-            os._exit(0)
+            os._exit(1)
 
         # files and files in folders from db
         files = file_info["files"]

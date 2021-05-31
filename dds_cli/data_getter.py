@@ -81,7 +81,7 @@ class DataGetter(base.DDSBaseClass):
         # Only method "get" can use the DataGetter class
         if self.method != "get":
             console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
-            os._exit(0)
+            os._exit(1)
 
         # Start file prep progress
         with Progress(
@@ -102,7 +102,7 @@ class DataGetter(base.DDSBaseClass):
                     "and '--break-on-fail' flag used. :warning:\n\n"
                     f"Files not found: {self.filehandler.failed}\n"
                 )
-                os._exit(0)
+                os._exit(1)
 
             if not self.filehandler.data:
                 console.print("\nNo files to download.\n")

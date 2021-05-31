@@ -11,6 +11,7 @@ import logging
 import os
 import pathlib
 import sys
+from logging.config import dictConfig
 
 # Installed
 import click
@@ -35,7 +36,7 @@ from dds_cli import timestamp
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = None
+# LOG = None
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #
@@ -73,6 +74,7 @@ def dds_main(ctx, debug=False):
     # Define alldirectories in DDS folder
     config_file = None
     all_dirs = None
+    LOG = None
     logfile = None
     if "--help" not in sys.argv:
         # Get config file
@@ -93,17 +95,28 @@ def dds_main(ctx, debug=False):
             logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
 
             # Create logger
-            _ = setup_custom_logger(filename=logfile, debug=debug)
+            setup_custom_logger(filename=logfile, debug=debug)
+            logger = logging.getLogger(__name__)
+
+            # dictLogConfig["handlers"]["fileHandler"]["filename"] = logfile
+            # if debug:
+            #     dictLogConfig["handlers"]
+
+            # logging.config.dictConfig(dictLogConfig)
+            logger.debug("test")
+            logger.info(__name__)
+            # LOG = setup_custom_logger(filename=logfile, debug=debug)
 
         # Create logger
-        global LOG
-        LOG = logging.getLogger(__name__)
-        LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
-        LOG.info("Logging started.")
-        LOG.debug(destination)
+        # global LOG
+        # LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
+        # LOG.info("%s version: %s", title, version)
+        # LOG.debug(destination)
 
-    if LOG is not None:
-        LOG.debug(config_file)
+    # LOG.debug("Test")
+    # LOG.warning("warning")
+    # if LOG is not None:
+    #     LOG.debug(config_file)
 
     # Create context object
     ctx.obj = {

@@ -31,7 +31,6 @@ from dds_cli.cli_decorators import subpath_required
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #

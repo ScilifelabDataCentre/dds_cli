@@ -5,11 +5,15 @@
 ###############################################################################
 
 # Standard Library
+import glob
 import logging
-import sys
 import os
+import pathlib
+import sys
 
 # Installed
+import rich
+import yaml
 from rich.logging import RichHandler
 
 # Own modules
@@ -19,7 +23,7 @@ from rich.logging import RichHandler
 ###############################################################################
 
 __title__ = "Data Delivery System"
-__version__ = "0.1"
+__version__ = "0.2"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = ""
 __license__ = "MIT"
@@ -31,44 +35,58 @@ PROG = "dds"
 ###############################################################################
 
 
-LOG = logging.getLogger(__name__)
-
-
-def setup_custom_logger(filename: str = "", debug: bool = False):
+def setup_custom_logger(filename: str = None, debug: bool = False):
     """Creates logger and sets the levels."""
 
-    logger = logging.getLogger(__name__)
+    config = {
+        "version": 1,
+        "formatters": {
+            "logformatter": {"format": "%(asctime)s :: %(name)s - %(lineno)d :: %(message)s"}
+        },
+        "handlers": {},
+    }
 
-    # Config file logger
-    if filename != "":
-        try:
-            original_umask = os.umask(0)  # User file-creation mode mask
-            file_handler = logging.FileHandler(filename=filename)
-            fh_formatter = logging.Formatter(
-                "%(asctime)s::%(levelname)s::" + "%(name)s::%(lineno)d::%(message)s"
-            )
-            file_handler.setFormatter(fh_formatter)
-            file_handler.setLevel(logging.DEBUG)
-            logger.addHandler(file_handler)
-        except OSError as ose:
-            sys.exit(f"Logging to file failed: {ose}")
-        finally:
-            os.umask(original_umask)
-
-    # Config stream logger
-    # if debug:
-    try:
-        richhandler = RichHandler(
-            rich_tracebacks=True,
-            log_time_format="[%Y-%m-%d %H:%M:%S]",
-            level=logging.DEBUG if debug else logging.WARNING,
+    handlers = []
+    if debug:
+        handlers.append("console")
+        config["handlers"].update(
+            **{
+                "console": {
+                    "class": "rich.logging.RichHandler",
+                    "level": "DEBUG",
+                    "formatter": "logformatter",
+                }
+            }
         )
-        logger.addHandler(richhandler)
 
-    except OSError as ose:
-        sys.exit(f"Logging to console failed: {ose}")
+    if filename:
+        handlers.append("file")
+        config["handlers"].update(
+            **{
+                "file": {
+                    "class": "logging.FileHandler",
+                    "level": "DEBUG" if debug else "INFO",
+                    "formatter": "logformatter",
+                    "filename": filename,
+                }
+            }
+        )
 
-    return logger
+    config.update(
+        {
+            "root": {"level": "DEBUG", "handlers": handlers},
+            "loggers": {
+                os.path.splitext(x)[0].replace(os.sep, "."): {
+                    "handlers": handlers,
+                    "propagate": False,
+                }
+                for x in glob.glob(f"{__name__}/*.py")
+                if x != __name__
+            },
+        }
+    )
+
+    logging.config.dictConfig(config)
 
 
 ###############################################################################

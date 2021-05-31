@@ -26,7 +26,6 @@ from dds_cli.cli_decorators import connect_cloud
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #

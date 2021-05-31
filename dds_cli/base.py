@@ -162,10 +162,10 @@ class DDSBaseClass:
             console.print(
                 "\n:warning: Data Delivery System project information is missing. :warning:\n"
             )
-            os._exit(0)
+            os._exit(1)
         if username is None:
             console.print("\n:warning: Data Delivery System options are missing :warning:\n")
-            os._exit(0)
+            os._exit(1)
 
         # Set password if missing
         if password is None:
@@ -198,7 +198,7 @@ class DDSBaseClass:
             console.print(
                 f"\n:no_entry_sign: Project access denied: {response.text} :no_entry_sign:\n"
             )
-            os._exit(0)
+            os._exit(1)
 
         try:
             dds_access = response.json()
@@ -208,7 +208,7 @@ class DDSBaseClass:
         # Access not granted
         if not dds_access["dds-access-granted"] or "token" not in dds_access:
             console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
-            os._exit(0)
+            os._exit(1)
 
         LOG.debug("User has been granted access to project %s", self.project)
 
@@ -244,7 +244,7 @@ class DDSBaseClass:
             console.print(
                 f"\n:no_entry_sign: Project access denied: No {key_type} key. {response.text} :no_entry_sign:\n"
             )
-            os._exit(0)
+            os._exit(1)
 
         # Get key from response
         try:
@@ -257,7 +257,7 @@ class DDSBaseClass:
             console.print(
                 "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
             )
-            os._exit(0)
+            os._exit(1)
 
         return project_public[key_type]
 
@@ -369,7 +369,7 @@ class DDSBaseClass:
 
             if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
                 console.print(f"\n:warning: {conn.message} :warning:\n")
-                os._exit(0)
+                os._exit(1)
 
             bucket_exists = conn.check_bucket_exists()
             LOG.debug("Bucket exists: %s", bucket_exists)

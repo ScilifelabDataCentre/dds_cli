@@ -36,7 +36,7 @@ from dds_cli import timestamp
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = None
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #
@@ -95,11 +95,6 @@ def dds_main(ctx, debug=False):
 
             # Create logger
             setup_custom_logger(filename=logfile, debug=debug)
-
-    global LOG
-    if LOG is not None:
-        LOG = logging.getLogger(__name__)
-        LOG.debug(config_file)
 
     # Create context object
     ctx.obj = {

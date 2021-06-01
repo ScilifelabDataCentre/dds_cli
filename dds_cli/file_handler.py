@@ -9,8 +9,6 @@ import json
 import logging
 import os
 import pathlib
-import shutil
-import sys
 import textwrap
 
 # Installed

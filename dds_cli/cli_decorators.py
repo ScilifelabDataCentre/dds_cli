@@ -6,7 +6,6 @@
 
 # Standard library
 import functools
-import hashlib
 import logging
 import pathlib
 

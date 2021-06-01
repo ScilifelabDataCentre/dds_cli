@@ -8,7 +8,6 @@
 import logging
 import os
 import pathlib
-import sys
 
 # Installed
 import requests

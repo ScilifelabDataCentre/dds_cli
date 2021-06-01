@@ -9,7 +9,6 @@ import logging
 import os
 import pathlib
 import sys
-import traceback
 
 # Installed
 import requests

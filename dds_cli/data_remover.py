@@ -25,7 +25,6 @@ from dds_cli import DDSEndpoint
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -160,10 +159,7 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            return (
-                f"Failed to delete folder(s) '{folder}' "
-                f"in project {self.project}: {response.text}"
-            )
+            return f"Failed to delete folder(s) '{folder}' " f"in project {self.project}: {response.text}"
 
         # Make sure required info is returned
         try:

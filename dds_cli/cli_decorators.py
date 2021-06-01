@@ -23,7 +23,6 @@ from rich.progress import Progress, SpinnerColumn
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #

@@ -36,7 +36,6 @@ from dds_cli.cli_decorators import verify_proceed, update_status, subpath_requir
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #
@@ -67,9 +66,7 @@ class DataGetter(base.DDSBaseClass):
     ):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(
-            username=username, config=config, project=project, log_location=destination["LOGS"]
-        )
+        super().__init__(username=username, config=config, project=project, log_location=destination["LOGS"])
 
         # Initiate DataGetter specific attributes
         self.break_on_fail = break_on_fail
@@ -155,9 +152,7 @@ class DataGetter(base.DDSBaseClass):
                 streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"])
 
                 stream_to_file_func = (
-                    fc.Compressor.decompress_filechunks
-                    if file_info["compressed"]
-                    else self.filehandler.write_file
+                    fc.Compressor.decompress_filechunks if file_info["compressed"] else self.filehandler.write_file
                 )
 
                 file_saved, message = stream_to_file_func(
@@ -200,9 +195,7 @@ class DataGetter(base.DDSBaseClass):
                         Filename=file_local,
                         Bucket=conn.bucketname,
                         Key=file_remote,
-                        Callback=status.ProgressPercentage(progress=progress, task=task)
-                        if not self.silent
-                        else None,
+                        Callback=status.ProgressPercentage(progress=progress, task=task) if not self.silent else None,
                     )
                 except (
                     botocore.client.ClientError,

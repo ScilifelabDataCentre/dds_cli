@@ -69,7 +69,7 @@ class DDSBaseClass:
 
         # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
-        LOG.info("Attempted operation: %s", self.method)
+        LOG.debug("Attempted operation: %s", self.method)
 
         # Keyboardinterrupt
         self.stop_doing = False
@@ -133,7 +133,7 @@ class DDSBaseClass:
     ):
         """Verifies that the users input is valid and fully specified."""
 
-        LOG.info("Verifying the user input...")
+        LOG.debug("Verifying the user input...")
 
         # Get contents from file
         if config is not None:
@@ -153,7 +153,7 @@ class DDSBaseClass:
                 ):
                     project = contents["project"]
 
-        LOG.info("Username: %s, Project ID: %s", username, project)
+        LOG.debug("Username: %s, Project ID: %s", username, project)
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:

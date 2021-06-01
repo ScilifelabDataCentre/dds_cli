@@ -52,6 +52,7 @@ console = rich.console.Console()
 
 @click.group()
 @click.option("--debug", default=False, is_flag=True)
+@click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
 def dds_main(ctx, debug=False):
     """Main CLI command, sets up DDS info."""

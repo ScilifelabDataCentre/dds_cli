@@ -28,12 +28,6 @@ from dds_cli.cli_decorators import connect_cloud
 LOG = logging.getLogger(__name__)
 
 ###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
-
-###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
@@ -138,18 +132,21 @@ class S3Connector:
 
         bnlen = len(self.bucketname)
         if not 3 <= bnlen <= 63:
-            console.print(
+            # Add custom exception
+            LOG.error(
                 f"Invalid bucket name length. Must be between 3 and 63 characters, found {bnlen}"
             )
             os._exit(0)
 
         if "_" in self.bucketname:
-            console.print(f"Invalid bucket name characters. Cannot contain underscores.")
+            # Add custom exception
+            LOG.error(f"Invalid bucket name characters. Cannot contain underscores.")
             os._exit(0)
 
         bucketnamefirst = list(self.bucketname)[0]
         if not (bucketnamefirst.islower() or bucketnamefirst.isdigit()):
-            console.print(
+            # Add custom exception
+            LOG.error(
                 f"Invalid first character. Must be digit or lowercase letter, found '{bucketnamefirst}'",
             )
             os._exit(0)

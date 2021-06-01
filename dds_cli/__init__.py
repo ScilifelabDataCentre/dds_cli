@@ -1,22 +1,8 @@
 """DDS CLI."""
 
-###############################################################################
-# IMPORTS ########################################################### IMPORTS #
-###############################################################################
-
-# Standard Library
-import glob
-import logging
 import os
 import pathlib
 import sys
-
-# Installed
-import rich
-import yaml
-from rich.logging import RichHandler
-
-# Own modules
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
@@ -25,72 +11,8 @@ from rich.logging import RichHandler
 __title__ = "Data Delivery System"
 __version__ = "0.2"
 __author__ = "SciLifeLab Data Centre"
-__author_email__ = ""
+__author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
-
-PROG = "dds"
-
-###############################################################################
-# LOGGING ########################################################### LOGGING #
-###############################################################################
-
-
-def setup_custom_logger(filename: str = None, debug: bool = False):
-    """Creates logger and sets the levels."""
-
-    config = {
-        "version": 1,
-        "formatters": {
-            "logformatter": {"format": "%(asctime)s :: %(name)s - %(lineno)d :: %(message)s"}
-        },
-        "handlers": {},
-    }
-
-    handlers = []
-    if debug:
-        handlers.append("console")
-        config["handlers"].update(
-            **{
-                "console": {
-                    "class": "rich.logging.RichHandler",
-                    "level": "DEBUG",
-                    "formatter": "logformatter",
-                }
-            }
-        )
-
-    if filename:
-        handlers.append("file")
-        config["handlers"].update(
-            **{
-                "file": {
-                    "class": "logging.FileHandler",
-                    "level": "DEBUG" if debug else "INFO",
-                    "formatter": "logformatter",
-                    "filename": filename,
-                }
-            }
-        )
-
-    config.update(
-        {
-            "root": {"level": "DEBUG", "handlers": handlers},
-            "loggers": {
-                os.path.splitext(x)[0].replace(os.sep, "."): {
-                    "handlers": handlers,
-                    "propagate": False,
-                }
-                for x in glob.glob(f"{__name__}/*.py")
-                if x != __name__
-            },
-        }
-    )
-
-    logging.config.dictConfig(config)
-
-    # Log version
-    LOG = logging.getLogger(__name__)
-    LOG.info("DDS Version: %s", __version__)
 
 
 ###############################################################################

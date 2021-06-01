@@ -6,8 +6,6 @@
 
 # Standard library
 import logging
-import threading
-import os
 import itertools
 
 # Installed

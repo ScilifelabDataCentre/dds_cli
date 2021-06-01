@@ -18,25 +18,25 @@ import click
 import click_pathlib
 import rich
 import rich.console
+import rich.logging
 import rich.prompt
 from rich import pretty
 from rich.progress import Progress, BarColumn
 
 # Own modules
 import dds_cli
-from dds_cli import data_getter as dg
-from dds_cli import data_lister as dl
-from dds_cli import data_putter as dp
-from dds_cli import data_remover as dr
-from dds_cli import directory
-from dds_cli import setup_custom_logger
-from dds_cli import timestamp
+import dds_cli.data_getter
+import dds_cli.data_lister
+import dds_cli.data_putter
+import dds_cli.data_remover
+import dds_cli.directory
+import dds_cli.timestamp
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger()
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #
@@ -51,14 +51,41 @@ console = rich.console.Console()
 
 
 @click.group()
-@click.option("--debug", default=False, is_flag=True)
+@click.option(
+    "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
+)
+@click.option(
+    "-l", "--log-file", default=None, help="Save a verbose log to a file.", metavar="<filename>"
+)
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
-def dds_main(ctx, debug=False):
+def dds_main(ctx, verbose, log_file):
     """Main CLI command, sets up DDS info."""
 
+    # Set the base logger to output DEBUG
+    LOG.setLevel(logging.DEBUG)
+
+    # Set up logs to the console
+    LOG.addHandler(
+        rich.logging.RichHandler(
+            level=logging.DEBUG if verbose else logging.INFO,
+            console=rich.console.Console(stderr=True),
+            show_time=False,
+            markup=True,
+        )
+    )
+
+    # Set up logs to a file if we asked for one
+    if log_file:
+        log_fh = logging.FileHandler(log_file, encoding="utf-8")
+        log_fh.setLevel(logging.DEBUG)
+        log_fh.setFormatter(
+            logging.Formatter("[%(asctime)s] %(name)-20s [%(levelname)-7s]  %(message)s")
+        )
+        LOG.addHandler(log_fh)
+
     # Timestamp
-    t_s = timestamp.TimeStamp().timestamp
+    t_s = dds_cli.timestamp.TimeStamp().timestamp
 
     # Get user defined file destination if any specified
     dest_index = None
@@ -75,7 +102,6 @@ def dds_main(ctx, debug=False):
     # Define alldirectories in DDS folder
     config_file = None
     all_dirs = None
-    logfile = None
     if "--help" not in sys.argv:
         # Get config file
         # TODO (ina):
@@ -86,22 +112,15 @@ def dds_main(ctx, debug=False):
                 os._exit(1)
 
         if any([x in sys.argv for x in ["put", "get"]]):
-            all_dirs = directory.DDSDirectory(
+            all_dirs = dds_cli.directory.DDSDirectory(
                 path=destination,
                 add_file_dir=any([x in sys.argv for x in ["put", "get"]]),
             ).directories
-
-            # Path to log file
-            logfile = str(all_dirs["LOGS"] / pathlib.Path("ds.log"))
-
-            # Create logger
-            setup_custom_logger(filename=logfile, debug=debug)
 
     # Create context object
     ctx.obj = {
         "TIMESTAMP": t_s,
         "DDS_DIRS": all_dirs,
-        "LOGFILE": logfile,
         "CONFIG": config_file,
     }
 
@@ -199,7 +218,7 @@ def put(
     """Processes and uploads specified files to the cloud."""
 
     # Initialize delivery - check user access etc
-    with dp.DataPutter(
+    with dds_cli.data_putter.DataPutter(
         username=username,
         config=dds_info["CONFIG"] if config is None else config,
         project=project,
@@ -366,7 +385,7 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
             "listing command at this time. No size will be displayed.\n"
         )
 
-    with dl.DataLister(
+    with dds_cli.data_lister.DataLister(
         project=project,
         project_level=projects,
         config=dds_info["CONFIG"] if config is None else config,
@@ -454,7 +473,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
             == "y"
         )
 
-    with dr.DataRemover(
+    with dds_cli.data_remover.DataRemover(
         project=project,
         username=username,
         config=dds_info["CONFIG"] if config is None else config,
@@ -584,7 +603,7 @@ def get(
         os._exit(1)
 
     # Begin delivery
-    with dg.DataGetter(
+    with dds_cli.data_getter.DataGetter(
         username=username,
         config=dds_info["CONFIG"] if config is None else config,
         project=project,
@@ -666,7 +685,3 @@ def get(
                                 progress=progress,
                             )
                         ] = next_file
-
-
-# if __name__ == "__main__":
-#     dds_main()

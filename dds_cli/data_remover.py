@@ -159,7 +159,10 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            return f"Failed to delete folder(s) '{folder}' " f"in project {self.project}: {response.text}"
+            return (
+                f"Failed to delete folder(s) '{folder}' "
+                f"in project {self.project}: {response.text}"
+            )
 
         # Make sure required info is returned
         try:

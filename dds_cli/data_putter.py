@@ -318,7 +318,9 @@ class DataPutter(base.DDSBaseClass):
 
         # Perform request to DDS API
         try:
-            response = requests.put(DDSEndpoint.PROJECT_SIZE, headers=self.token, timeout=DDSEndpoint.TIMEOUT)
+            response = requests.put(
+                DDSEndpoint.PROJECT_SIZE, headers=self.token, timeout=DDSEndpoint.TIMEOUT
+            )
         except requests.exceptions.RequestException as err:
             # Log warning if error
             # TODO (ina): Add the info to the error log if this happens --> can update manually

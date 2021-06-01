@@ -50,7 +50,9 @@ console = rich.console.Console()
 
 
 @click.group()
-@click.option("-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console.")
+@click.option(
+    "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
+)
 @click.option("-l", "--log-file", help="Save a verbose log to a file.", metavar="<filename>")
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
@@ -74,7 +76,9 @@ def dds_main(ctx, verbose, log_file):
     if log_file:
         log_fh = logging.FileHandler(log_file, encoding="utf-8")
         log_fh.setLevel(logging.DEBUG)
-        log_fh.setFormatter(logging.Formatter("[%(asctime)s] %(name)-20s [%(levelname)-7s]  %(message)s"))
+        log_fh.setFormatter(
+            logging.Formatter("[%(asctime)s] %(name)-20s [%(levelname)-7s]  %(message)s")
+        )
         LOG.addHandler(log_fh)
 
     # Timestamp
@@ -324,7 +328,10 @@ def put(
                     progress.remove_task(upload_task)
 
                     # Stop all tasks that are not currently uploading
-                    _ = [progress.stop_task(x) for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]]
+                    _ = [
+                        progress.stop_task(x)
+                        for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]
+                    ]
 
         putter.update_project_size()
 
@@ -452,7 +459,8 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     # Will not delete anything if no file or folder specified
     if project and not any([rm_all, file, folder]):
         console.print(
-            "One of the options must be specified to perform " "data deletion: '--rm-all' / '--file' / '--folder'."
+            "One of the options must be specified to perform "
+            "data deletion: '--rm-all' / '--file' / '--folder'."
         )
         os._exit(1)
 
@@ -591,7 +599,9 @@ def get(
     """Downloads specified files from the cloud and restores the original format."""
 
     if get_all and (source or source_path_file):
-        console.print("\nFlag'--get-all' cannot be used together with options '--source'/'--source-path-fail'.\n")
+        console.print(
+            "\nFlag'--get-all' cannot be used together with options '--source'/'--source-path-fail'.\n"
+        )
         os._exit(1)
 
     # Begin delivery
@@ -623,17 +633,23 @@ def get(
             iterator = iter(getter.filehandler.data.copy())
 
             with concurrent.futures.ThreadPoolExecutor() as texec:
-                task_dwnld = progress.add_task("Download", total=len(getter.filehandler.data), step="summary")
+                task_dwnld = progress.add_task(
+                    "Download", total=len(getter.filehandler.data), step="summary"
+                )
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
                     LOG.info("Starting: %s", file)
                     # Execute download
-                    download_threads[texec.submit(getter.download_and_verify, file=file, progress=progress)] = file
+                    download_threads[
+                        texec.submit(getter.download_and_verify, file=file, progress=progress)
+                    ] = file
 
                 while download_threads:
                     # Wait for the next future to complete
-                    ddone, _ = concurrent.futures.wait(download_threads, return_when=concurrent.futures.FIRST_COMPLETED)
+                    ddone, _ = concurrent.futures.wait(
+                        download_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                    )
 
                     new_tasks = 0
 

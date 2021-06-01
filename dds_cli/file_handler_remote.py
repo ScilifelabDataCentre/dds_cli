@@ -106,7 +106,10 @@ class RemoteFileHandler(fh.FileHandler):
 
         # Folder info required if specific files requested
         if all_paths and "folders" not in file_info:
-            console.print("\n:warning: Error in response. " "Not enough info returned despite ok request. :warning:\n")
+            console.print(
+                "\n:warning: Error in response. "
+                "Not enough info returned despite ok request. :warning:\n"
+            )
             os._exit(1)
 
         # Files in response always required
@@ -119,7 +122,11 @@ class RemoteFileHandler(fh.FileHandler):
         folders = file_info["folders"] if "folders" in file_info else {}
 
         # Cancel download of those files or folders not found in the db
-        self.failed = {x: {"error": "Not found in DB."} for x in all_paths if x not in files and x not in folders}
+        self.failed = {
+            x: {"error": "Not found in DB."}
+            for x in all_paths
+            if x not in files and x not in folders
+        }
 
         # Save info on files in dict and return
         data = {

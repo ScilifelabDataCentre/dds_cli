@@ -119,7 +119,12 @@ class FileHandler:
         files = [
             x
             for x in all_failed_data
-            if (get_single_files and x[1]["subpath"] == "." or not get_single_files and x[1]["subpath"] != ".")
+            if (
+                get_single_files
+                and x[1]["subpath"] == "."
+                or not get_single_files
+                and x[1]["subpath"] != "."
+            )
         ]
 
         additional_message = (
@@ -167,7 +172,9 @@ class FileHandler:
                     for x in files:
                         curr_table.add_row(
                             textwrap.fill(
-                                "" if subpath == x[1]["subpath"] else str(pathlib.Path(x[1]["path_raw"]).parent)
+                                ""
+                                if subpath == x[1]["subpath"]
+                                else str(pathlib.Path(x[1]["path_raw"]).parent)
                             ),
                             str(pathlib.Path(x[1]["path_raw"]).name),
                             x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
@@ -177,7 +184,9 @@ class FileHandler:
                 else:
                     for x in files:
                         curr_table.add_row(
-                            "" if subpath == x[1]["subpath"] else str(pathlib.Path(x[1]["subpath"])),
+                            ""
+                            if subpath == x[1]["subpath"]
+                            else str(pathlib.Path(x[1]["subpath"])),
                             x[1]["name_in_db"],
                             textwrap.fill(str(pathlib.Path(x[0]))),
                             x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",

@@ -9,8 +9,6 @@ import json
 import logging
 import os
 import pathlib
-import shutil
-import sys
 import textwrap
 
 # Installed
@@ -23,7 +21,6 @@ import rich
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #

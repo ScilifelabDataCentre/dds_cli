@@ -8,7 +8,6 @@
 import logging
 import os
 import pathlib
-import sys
 
 # Installed
 import requests
@@ -24,7 +23,6 @@ from dds_cli import file_handler as fh
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #

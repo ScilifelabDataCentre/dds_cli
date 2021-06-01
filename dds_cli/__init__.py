@@ -1,18 +1,6 @@
 """DDS CLI."""
 
-###############################################################################
-# IMPORTS ########################################################### IMPORTS #
-###############################################################################
-
-# Standard Library
-import logging
-import sys
 import os
-
-# Installed
-from rich.logging import RichHandler
-
-# Own modules
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
@@ -21,54 +9,8 @@ from rich.logging import RichHandler
 __title__ = "Data Delivery System"
 __version__ = "0.1"
 __author__ = "SciLifeLab Data Centre"
-__author_email__ = ""
+__author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
-
-PROG = "dds"
-
-###############################################################################
-# LOGGING ########################################################### LOGGING #
-###############################################################################
-
-
-LOG = logging.getLogger(__name__)
-
-
-def setup_custom_logger(filename: str = "", debug: bool = False):
-    """Creates logger and sets the levels."""
-
-    logger = logging.getLogger(__name__)
-
-    # Config file logger
-    if filename != "":
-        try:
-            original_umask = os.umask(0)  # User file-creation mode mask
-            file_handler = logging.FileHandler(filename=filename)
-            fh_formatter = logging.Formatter(
-                "%(asctime)s::%(levelname)s::" + "%(name)s::%(lineno)d::%(message)s"
-            )
-            file_handler.setFormatter(fh_formatter)
-            file_handler.setLevel(logging.DEBUG)
-            logger.addHandler(file_handler)
-        except OSError as ose:
-            sys.exit(f"Logging to file failed: {ose}")
-        finally:
-            os.umask(original_umask)
-
-    # Config stream logger
-    # if debug:
-    try:
-        richhandler = RichHandler(
-            rich_tracebacks=True,
-            log_time_format="[%Y-%m-%d %H:%M:%S]",
-            level=logging.DEBUG if debug else logging.WARNING,
-        )
-        logger.addHandler(richhandler)
-
-    except OSError as ose:
-        sys.exit(f"Logging to console failed: {ose}")
-
-    return logger
 
 
 ###############################################################################

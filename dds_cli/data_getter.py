@@ -8,8 +8,6 @@
 import logging
 import os
 import pathlib
-import sys
-import traceback
 
 # Installed
 import boto3
@@ -36,7 +34,6 @@ from dds_cli.cli_decorators import verify_proceed, update_status, subpath_requir
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #

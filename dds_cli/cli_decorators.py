@@ -6,7 +6,6 @@
 
 # Standard library
 import functools
-import hashlib
 import logging
 import pathlib
 
@@ -23,7 +22,6 @@ from rich.progress import Progress, SpinnerColumn
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #

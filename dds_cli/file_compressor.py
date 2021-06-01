@@ -10,7 +10,6 @@ import logging
 import os
 import pathlib
 import traceback
-import sys
 
 
 # Installed
@@ -25,7 +24,6 @@ from dds_cli import FileSegment
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

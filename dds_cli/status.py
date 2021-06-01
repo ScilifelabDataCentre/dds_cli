@@ -6,8 +6,6 @@
 
 # Standard library
 import logging
-import threading
-import os
 import itertools
 
 # Installed
@@ -30,7 +28,6 @@ from rich.progress import (
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

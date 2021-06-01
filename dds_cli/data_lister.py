@@ -9,7 +9,6 @@ import logging
 import os
 import pathlib
 import sys
-import traceback
 
 # Installed
 import requests
@@ -30,7 +29,6 @@ from dds_cli import text_handler as th
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

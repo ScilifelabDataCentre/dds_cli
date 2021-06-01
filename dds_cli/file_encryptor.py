@@ -9,7 +9,6 @@ import hashlib
 import logging
 import os
 import pathlib
-import sys
 import traceback
 
 # Installed
@@ -30,7 +29,6 @@ from dds_cli.file_handler_local import LocalFileHandler as fh
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

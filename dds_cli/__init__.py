@@ -88,6 +88,10 @@ def setup_custom_logger(filename: str = None, debug: bool = False):
 
     logging.config.dictConfig(config)
 
+    # Log version
+    LOG = logging.getLogger(__name__)
+    LOG.info("DDS Version: %s", __version__)
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

@@ -96,16 +96,7 @@ def dds_main(ctx, debug=False):
 
             # Create logger
             setup_custom_logger(filename=logfile, debug=debug)
-            logger = logging.getLogger(__name__)
-
-            # dictLogConfig["handlers"]["fileHandler"]["filename"] = logfile
-            # if debug:
-            #     dictLogConfig["handlers"]
-
-            # logging.config.dictConfig(dictLogConfig)
-            logger.debug("test")
-            logger.info(__name__)
-            # LOG = setup_custom_logger(filename=logfile, debug=debug)
+            LOG = logging.getLogger(__name__)
 
         # Create logger
         # global LOG

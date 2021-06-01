@@ -36,7 +36,7 @@ from dds_cli import timestamp
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-# LOG = None
+LOG = None
 
 ###############################################################################
 # RICH CONFIG ################################################### RICH CONFIG #
@@ -74,7 +74,6 @@ def dds_main(ctx, debug=False):
     # Define alldirectories in DDS folder
     config_file = None
     all_dirs = None
-    LOG = None
     logfile = None
     if "--help" not in sys.argv:
         # Get config file
@@ -96,18 +95,11 @@ def dds_main(ctx, debug=False):
 
             # Create logger
             setup_custom_logger(filename=logfile, debug=debug)
-            LOG = logging.getLogger(__name__)
 
-        # Create logger
-        # global LOG
-        # LOG.setLevel(logging.DEBUG if debug else logging.WARNING)
-        # LOG.info("%s version: %s", title, version)
-        # LOG.debug(destination)
-
-    # LOG.debug("Test")
-    # LOG.warning("warning")
-    # if LOG is not None:
-    #     LOG.debug(config_file)
+    global LOG
+    if LOG is not None:
+        LOG = logging.getLogger(__name__)
+        LOG.debug(config_file)
 
     # Create context object
     ctx.obj = {

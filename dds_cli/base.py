@@ -18,6 +18,8 @@ import rich
 import simplejson
 
 # Own modules
+import dds_cli.directory
+import dds_cli.timestamp
 from dds_cli import DDSEndpoint
 from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
@@ -62,20 +64,24 @@ class DDSBaseClass:
         config=None,
         project=None,
         ignore_config_project=False,
-        log_location=pathlib.Path(""),
+        dds_directory: pathlib.Path = None,
     ):
-
-        LOG.debug("Config: %s", config)
 
         # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
         LOG.info("Attempted operation: %s", self.method)
 
+        # Use user defined festination if any specified
+        if self.method in ["get", "put"]:
+            self.dds_directory = dds_cli.directory.DDSDirectory(
+                path=dds_directory
+                if dds_directory
+                else pathlib.Path.cwd()
+                / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
+            )
+
         # Keyboardinterrupt
         self.stop_doing = False
-
-        # log location
-        self.log_location = log_location
 
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(
@@ -114,12 +120,6 @@ class DDSBaseClass:
 
         if self.method in ["put", "get"]:
             self.__printout_delivery_summary()
-
-            # Delete temporary file directory if it is empty
-            # if not next(self.filehandler.local_destination.iterdir(), None):
-            #     fh.FileHandler.delete_tempdir(
-            #         directory=self.filehandler.local_destination
-            #     )
 
         return True
 
@@ -275,7 +275,9 @@ class DDSBaseClass:
 
             # Save to file and print message if too many failed files,
             # otherwise create and print tables
-            outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
+            outfile = self.dds_directory.directories["LOGS"] / pathlib.Path(
+                "dds_failed_delivery.txt"
+            )
 
             fh.FileHandler.save_errors_to_file(file=outfile, info=any_failed)
 
@@ -308,7 +310,7 @@ class DDSBaseClass:
                     rich.padding.Padding(
                         "One or more files where uploaded but may not have been added to "
                         "the db. Contact support and supply the logfile found in "
-                        f"{self.log_location}",
+                        f"{self.dds_directory.directories['LOGS']}",
                         1,
                     )
                 )

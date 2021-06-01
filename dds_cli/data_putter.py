@@ -55,7 +55,6 @@ class DataPutter(base.DDSBaseClass):
 
     def __init__(
         self,
-        temporary_destination: dict,
         username: str = None,
         config: pathlib.Path = None,
         project: str = None,
@@ -71,7 +70,6 @@ class DataPutter(base.DDSBaseClass):
             username=username,
             config=config,
             project=project,
-            log_location=temporary_destination["LOGS"],
         )
 
         # Initiate DataPutter specific attributes
@@ -79,7 +77,6 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
-        # self.log_location = temporary_destination["LOGS"]
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
@@ -97,7 +94,7 @@ class DataPutter(base.DDSBaseClass):
             # Get file info
             self.filehandler = fhl.LocalFileHandler(
                 user_input=(source, source_path_file),
-                temporary_destination=temporary_destination["FILES"],
+                temporary_destination=self.dds_directory.directories["FILES"],
             )
 
             # Verify that the Safespring S3 bucket exists

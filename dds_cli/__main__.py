@@ -84,43 +84,17 @@ def dds_main(ctx, verbose, log_file):
         )
         LOG.addHandler(log_fh)
 
-    # Timestamp
-    t_s = dds_cli.timestamp.TimeStamp().timestamp
-
-    # Get user defined file destination if any specified
-    dest_index = None
-    if "--destination" in sys.argv:
-        dest_index = sys.argv.index("--destination")
-    elif "-d" in sys.argv:
-        dest_index = sys.argv.index("-d")
-    destination = (
-        pathlib.Path(sys.argv[dest_index + 1])
-        if dest_index is not None
-        else pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{t_s}")
-    )
-
-    # Define alldirectories in DDS folder
+    # Check that the config file exists
     config_file = None
-    all_dirs = None
     if "--help" not in sys.argv:
-        # Get config file
-        # TODO (ina):
         if not any([x in sys.argv for x in ["--config", "-c", "--username", "-u"]]):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
                 console.print("Could not find the config file '.dds-cli.json'")
                 os._exit(1)
 
-        if any([x in sys.argv for x in ["put", "get"]]):
-            all_dirs = dds_cli.directory.DDSDirectory(
-                path=destination,
-                add_file_dir=any([x in sys.argv for x in ["put", "get"]]),
-            ).directories
-
     # Create context object
     ctx.obj = {
-        "TIMESTAMP": t_s,
-        "DDS_DIRS": all_dirs,
         "CONFIG": config_file,
     }
 
@@ -227,7 +201,6 @@ def put(
         break_on_fail=break_on_fail,
         overwrite=overwrite,
         silent=silent,
-        temporary_destination=dds_info["DDS_DIRS"],
     ) as putter:
 
         # Progress object to keep track of progress tasks
@@ -611,7 +584,7 @@ def get(
         source=source,
         source_path_file=source_path_file,
         break_on_fail=break_on_fail,
-        destination=dds_info["DDS_DIRS"],
+        destination=destination,
         silent=silent,
         verify_checksum=verify_checksum,
     ) as getter:

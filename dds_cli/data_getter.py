@@ -65,7 +65,7 @@ class DataGetter(base.DDSBaseClass):
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username, config=config, project=project, log_location=destination["LOGS"]
+            username=username, config=config, project=project, dds_directory=destination
         )
 
         # Initiate DataGetter specific attributes
@@ -73,7 +73,6 @@ class DataGetter(base.DDSBaseClass):
         self.verify_checksum = verify_checksum
         self.silent = silent
         self.filehandler = None
-        # self.log_location = destination["LOGS"]
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
@@ -90,7 +89,7 @@ class DataGetter(base.DDSBaseClass):
                 get_all=get_all,
                 user_input=(source, source_path_file),
                 token=self.token,
-                destination=destination["FILES"],
+                destination=self.dds_directory.directories["FILES"],
             )
 
             if self.filehandler.failed and self.break_on_fail:

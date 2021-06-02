@@ -5,6 +5,8 @@
 ###############################################################################
 
 # Standard library
+import concurrent.futures
+import itertools
 import logging
 import os
 import pathlib
@@ -14,7 +16,7 @@ import boto3
 import botocore
 import requests
 import rich
-from rich.progress import Progress, SpinnerColumn
+from rich.progress import Progress, SpinnerColumn, BarColumn
 import simplejson
 
 # Own modules
@@ -44,6 +46,141 @@ LOG = logging.getLogger(__name__)
 ###############################################################################
 
 console = rich.console.Console()
+
+
+###############################################################################
+# MAIN FUNCTION ############################################### MAIN FUNCTION #
+###############################################################################
+
+
+def dds_put(
+    dds_info,
+    config,
+    username,
+    project,
+    source,
+    source_path_file,
+    break_on_fail,
+    overwrite,
+    num_threads,
+    silent,
+):
+    # Initialize delivery - check user access etc
+    with DataPutter(
+        username=username,
+        config=config,
+        project=project,
+        source=source,
+        source_path_file=source_path_file,
+        break_on_fail=break_on_fail,
+        overwrite=overwrite,
+        silent=silent,
+        temporary_destination=dds_info["DDS_DIRS"],
+    ) as putter:
+
+        # Progress object to keep track of progress tasks
+        with Progress(
+            "{task.description}",
+            BarColumn(bar_width=None),
+            " • ",
+            "[progress.percentage]{task.percentage:>3.1f}%",
+            refresh_per_second=2,
+        ) as progress:
+
+            # Keep track of futures
+            upload_threads = {}
+
+            # Iterator to keep track of which files have been handled
+            iterator = iter(putter.filehandler.data.copy())
+
+            with concurrent.futures.ThreadPoolExecutor() as texec:
+                # Start main progress bar - total uploaded files
+                upload_task = progress.add_task(
+                    description="Upload",
+                    total=len(putter.filehandler.data),
+                )
+
+                # Schedule the first num_threads futures for upload
+                for file in itertools.islice(iterator, num_threads):
+                    LOG.info("Starting: %s", file)
+                    upload_threads[
+                        texec.submit(
+                            putter.protect_and_upload,
+                            file=file,
+                            progress=progress,
+                        )
+                    ] = file
+
+                try:
+                    # Continue until all files are done
+                    while upload_threads:
+                        # Wait for the next future to complete, _ are the unfinished
+                        done, _ = concurrent.futures.wait(
+                            upload_threads,
+                            return_when=concurrent.futures.FIRST_COMPLETED,
+                        )
+
+                        # Number of new upload tasks that can be started
+                        new_tasks = 0
+
+                        # Get result from future and schedule database update
+                        for fut in done:
+                            uploaded_file = upload_threads.pop(fut)
+                            LOG.debug("Future done for file: %s", uploaded_file)
+
+                            # Get result
+                            try:
+                                file_uploaded = fut.result()
+                                LOG.info(
+                                    "Upload of %s successful: %s",
+                                    uploaded_file,
+                                    file_uploaded,
+                                )
+                            except concurrent.futures.BrokenExecutor as err:
+                                LOG.critical(
+                                    "Upload of file %s failed! Error: %s",
+                                    uploaded_file,
+                                    err,
+                                )
+                                continue
+
+                            # Increase the main progress bar
+                            progress.advance(upload_task)
+
+                            # New available threads
+                            new_tasks += 1
+
+                        # Schedule the next set of futures for upload
+                        for next_file in itertools.islice(iterator, new_tasks):
+                            LOG.info("Starting: %s", next_file)
+                            upload_threads[
+                                texec.submit(
+                                    putter.protect_and_upload,
+                                    file=next_file,
+                                    progress=progress,
+                                )
+                            ] = next_file
+                except KeyboardInterrupt:
+                    LOG.warning(
+                        "KeyboardInterrupt found - shutting down delivery gracefully. "
+                        "This will finish the ongoing uploads. If you want to force "
+                        "shutdown, repeat `Ctrl+C`. This is not advised. "
+                    )
+
+                    # Flag for threads to find
+                    putter.stop_doing = True
+
+                    # Stop and remove main progress bar
+                    progress.remove_task(upload_task)
+
+                    # Stop all tasks that are not currently uploading
+                    _ = [
+                        progress.stop_task(x)
+                        for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]
+                    ]
+
+        putter.update_project_size()
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

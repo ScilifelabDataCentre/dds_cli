@@ -19,6 +19,5 @@ class NoDataError(Exception):
     """Errors when there is no data to do anything with."""
 
 
-
 class APIError(Exception):
     """Error connecting to the dds web server"""

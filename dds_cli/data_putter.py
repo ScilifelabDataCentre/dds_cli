@@ -14,7 +14,6 @@ import pathlib
 import boto3
 import botocore
 import requests
-import rich
 from rich.progress import Progress, SpinnerColumn, BarColumn
 import simplejson
 
@@ -35,13 +34,6 @@ from dds_cli.cli_decorators import verify_proceed, update_status, subpath_requir
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
-
 
 ###############################################################################
 # MAIN FUNCTION ############################################### MAIN FUNCTION #

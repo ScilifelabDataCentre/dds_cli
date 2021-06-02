@@ -12,6 +12,13 @@ class AuthenticationError(Exception):
 
 
 class UploadError(Exception):
-    """Errores relating to file uploads"""
+    """Errors relating to file uploads"""
 
-    pass
+
+class NoDataError(Exception):
+    """Errors when there is no data to do anything with."""
+
+
+
+class APIError(Exception):
+    """Error connecting to the dds web server"""

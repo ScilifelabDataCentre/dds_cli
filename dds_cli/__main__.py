@@ -295,24 +295,29 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
     folder = fold_arg if fold_arg is not None else folder
 
     if projects and size:
-        console_ls = rich.console.Console(stderr=True, style="orange3")
-        console_ls.print(
+        LOG.warning(
             "\nNB! Showing the project size is not implemented in the "
             "listing command at this time. No size will be displayed.\n"
         )
 
-    with dds_cli.data_lister.DataLister(
-        project=project,
-        project_level=projects,
-        config=dds_info["CONFIG"] if config is None else config,
-        username=username,
-    ) as lister:
-
-        # List all projects if project is None and all files if project spec
-        if lister.project is None:
-            lister.list_projects()
-        else:
-            lister.list_files(folder=folder, show_size=size)
+    try:
+        with dds_cli.data_lister.DataLister(
+            project=project,
+            project_level=projects,
+            config=dds_info["CONFIG"] if config is None else config,
+            username=username,
+        ) as lister:
+            # List all projects if project is None and all files if project spec
+            if lister.project is None:
+                lister.list_projects()
+            else:
+                lister.list_files(folder=folder, show_size=size)
+    except (dds_cli.exceptions.NoDataError) as e:
+        LOG.warning(e)
+        sys.exit(0)
+    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
+        LOG.error(e)
+        sys.exit(1)
 
 
 ###############################################################################

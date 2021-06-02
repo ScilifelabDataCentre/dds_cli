@@ -8,7 +8,6 @@
 import concurrent.futures
 import itertools
 import logging
-import os
 import pathlib
 
 # Installed
@@ -21,19 +20,15 @@ import simplejson
 
 # Own modules
 from dds_cli import base
+from dds_cli import exceptions
 from dds_cli import data_remover as dr
 from dds_cli import DDSEndpoint
-from dds_cli import file_compressor as fc
 from dds_cli import file_encryptor as fe
 from dds_cli import file_handler_local as fhl
 from dds_cli import s3_connector as s3
 from dds_cli import status
 from dds_cli import text_handler as txt
-from dds_cli.cli_decorators import (
-    verify_proceed,
-    update_status,
-    subpath_required,
-)
+from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -137,7 +132,7 @@ def dds_put(
                                     file_uploaded,
                                 )
                             except concurrent.futures.BrokenExecutor as err:
-                                LOG.critical(
+                                LOG.error(
                                     "Upload of file %s failed! Error: %s",
                                     uploaded_file,
                                     err,
@@ -216,12 +211,10 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
-        # self.log_location = temporary_destination["LOGS"]
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
-            console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
-            os._exit(1)
+            raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
         # Start file prep progress
         with Progress(
@@ -245,13 +238,11 @@ class DataPutter(base.DDSBaseClass):
 
             # Quit if error and flag
             if files_in_db and self.break_on_fail and not self.overwrite:
-                # TODO (ina): Fix better print out
-                console.print(
+                raise exceptions.UploadError(
                     "Some files have already been uploaded (or have identical names to "
-                    "previously uploaded files) and the '--break-on-fail' flag used. "
-                    "Use '--overwrite' if you want to upload these files again."
+                    "previously uploaded files) and the '--break-on-fail' flag was used. "
+                    "Try again with the '--overwrite' flag if you want to upload these files."
                 )
-                os._exit(1)
 
             # Generate status dict
             self.status = self.filehandler.create_upload_status_dict(
@@ -262,8 +253,7 @@ class DataPutter(base.DDSBaseClass):
             progress.remove_task(wait_task)
 
         if not self.filehandler.data:
-            console.print("No data to upload.")
-            os._exit(0)
+            raise exceptions.UploadError("No data to upload.")
 
     # Public methods ###################### Public methods #
     @verify_proceed

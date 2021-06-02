@@ -24,6 +24,7 @@ from rich.progress import Progress, BarColumn
 
 # Own modules
 import dds_cli
+import dds_cli.exceptions
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -231,18 +232,22 @@ def put(
     silent,
 ):
     """Processes and uploads specified files to the cloud."""
-    dds_cli.data_putter.dds_put(
-        dds_info,
-        dds_info["CONFIG"] if config is None else config,
-        username,
-        project,
-        source,
-        source_path_file,
-        break_on_fail,
-        overwrite,
-        num_threads,
-        silent,
-    )
+    try:
+        dds_cli.data_putter.dds_put(
+            dds_info,
+            dds_info["CONFIG"] if config is None else config,
+            username,
+            project,
+            source,
+            source_path_file,
+            break_on_fail,
+            overwrite,
+            num_threads,
+            silent,
+        )
+    except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as e:
+        LOG.error(e)
+        sys.exit(1)
 
 
 ###############################################################################

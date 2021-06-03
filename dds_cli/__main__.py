@@ -40,19 +40,11 @@ import dds_cli.timestamp
 LOG = logging.getLogger()
 
 ###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-pretty.install()
-console = rich.console.Console()
-
-###############################################################################
 # MAIN ################################################################# MAIN #
 ###############################################################################
 
 
 # Print header to STDERR
-
 stderr = rich.console.Console(stderr=True)
 stderr.print("\n[green]     ︵", highlight=False)
 stderr.print("[green] ︵ (  )   ︵", highlight=False)
@@ -102,7 +94,7 @@ def dds_main(ctx, verbose, log_file):
         if not any([x in sys.argv for x in ["--config", "-c", "--username", "-u"]]):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
-                console.print("Could not find the config file '.dds-cli.json'")
+                LOG.error("Could not find the config file '.dds-cli.json'")
                 os._exit(1)
 
     # Create context object
@@ -335,21 +327,20 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
-        console.print("No project specified, cannot remove anything.")
+        LOG.error("No project specified, cannot remove anything.")
         os._exit(1)
 
     # Either all or a file
     if rm_all and (file or folder):
-        console.print("The options '--rm-all' and '--file'/'--folder' cannot be used together.")
+        LOG.error("The options '--rm-all' and '--file'/'--folder' cannot be used together.")
         os._exit(1)
 
     project = proj_arg if proj_arg is not None else project
 
     # Will not delete anything if no file or folder specified
     if project and not any([rm_all, file, folder]):
-        console.print(
-            "One of the options must be specified to perform "
-            "data deletion: '--rm-all' / '--file' / '--folder'."
+        LOG.error(
+            "One of the options must be specified to perform data deletion: '--rm-all' / '--file' / '--folder'."
         )
         os._exit(1)
 
@@ -488,8 +479,8 @@ def get(
     """Downloads specified files from the cloud and restores the original format."""
 
     if get_all and (source or source_path_file):
-        console.print(
-            "\nFlag'--get-all' cannot be used together with options '--source'/'--source-path-fail'.\n"
+        LOG.error(
+            "Flag '--get-all' cannot be used together with options '--source'/'--source-path-fail'."
         )
         os._exit(1)
 

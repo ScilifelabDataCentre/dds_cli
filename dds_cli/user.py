@@ -56,7 +56,7 @@ class User:
     def __authenticate_user(self, password, project):
         """Authenticates the username and password via a call to the API."""
 
-        LOG.debug("Authenticating the user: %s", self.username)
+        LOG.debug(f"Authenticating the user: {self.username}")
 
         # Project passed in to add it to the token. Can be None.
         try:
@@ -83,6 +83,6 @@ class User:
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        LOG.debug("User %s granted access to the DDS", self.username)
+        LOG.debug(f"User {self.username} granted access to the DDS")
 
         return {"x-access-token": token["token"]}

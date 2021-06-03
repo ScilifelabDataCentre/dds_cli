@@ -227,7 +227,7 @@ def put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.info("Starting: %s", file)
+                    LOG.info(f"Starting: {file}")
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -251,21 +251,17 @@ def put(
                         # Get result from future and schedule database update
                         for fut in done:
                             uploaded_file = upload_threads.pop(fut)
-                            LOG.debug("Future done for file: %s", uploaded_file)
+                            LOG.debug(
+                                f"Future done for file: {uploaded_file}",
+                            )
 
                             # Get result
                             try:
                                 file_uploaded = fut.result()
-                                LOG.info(
-                                    "Upload of %s successful: %s",
-                                    uploaded_file,
-                                    file_uploaded,
-                                )
+                                LOG.info(f"Upload of {uploaded_file} successful: {file_uploaded}")
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.critical(
-                                    "Upload of file %s failed! Error: %s",
-                                    uploaded_file,
-                                    err,
+                                    f"Upload of file {uploaded_file} failed! Error: {err}",
                                 )
                                 continue
 
@@ -277,7 +273,7 @@ def put(
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.info("Starting: %s", next_file)
+                            LOG.info(f"Starting: {next_file}")
                             upload_threads[
                                 texec.submit(
                                     putter.protect_and_upload,
@@ -610,7 +606,7 @@ def get(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.info("Starting: %s", file)
+                    LOG.info(f"Starting: {file}")
                     # Execute download
                     download_threads[
                         texec.submit(getter.download_and_verify, file=file, progress=progress)
@@ -626,22 +622,16 @@ def get(
 
                     for dfut in ddone:
                         downloaded_file = download_threads.pop(dfut)
-                        LOG.info("Future done: %s", downloaded_file)
+                        LOG.info(
+                            f"Future done: {downloaded_file}",
+                        )
 
                         # Get result
                         try:
                             file_downloaded = dfut.result()
-                            LOG.info(
-                                "Download of %s successful: %s",
-                                downloaded_file,
-                                file_downloaded,
-                            )
+                            LOG.info(f"Download of {downloaded_file} successful: {file_downloaded}")
                         except concurrent.futures.BrokenExecutor as err:
-                            LOG.critical(
-                                "Download of file %s failed! Error: %s",
-                                downloaded_file,
-                                err,
-                            )
+                            LOG.critical(f"Download of file {downloaded_file} failed! Error: {err}")
                             continue
 
                         new_tasks += 1
@@ -649,7 +639,7 @@ def get(
 
                     # Schedule the next set of futures for download
                     for next_file in itertools.islice(iterator, new_tasks):
-                        LOG.info("Starting: %s", next_file)
+                        LOG.info(f"Starting: {next_file}")
                         # Execute download
                         download_threads[
                             texec.submit(

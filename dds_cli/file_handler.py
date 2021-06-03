@@ -111,7 +111,7 @@ class FileHandler:
         title = "file" if get_single_files else "directory"
         up_or_down = "upload" if upload else "download"
 
-        LOG.debug("Files: %s, Upload: %s, Columns: %s", get_single_files, upload, columns)
+        LOG.debug(f"Files: {get_single_files}, Upload: {upload}, Columns: {columns}")
 
         if not get_single_files:
             columns = ["Directory"] + columns
@@ -207,7 +207,7 @@ class FileHandler:
             return ok_to_remove
 
         # Iterate through any existing subdirectories - recursive
-        LOG.debug("Any in directory? %s", any(directory.iterdir()))
+        LOG.debug(f"Any in directory? {any(directory.iterdir())}")
         for x in directory.iterdir():
             LOG.debug(x)
         if any(directory.iterdir()):

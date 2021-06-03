@@ -160,7 +160,7 @@ class DataPutter(base.DDSBaseClass):
             file_public_key = encryptor.get_public_component_hex(private_key=encryptor.my_private)
             salt = encryptor.salt
 
-        LOG.debug("Updating file processed size: %s", file_info["path_processed"])
+        LOG.debug(f"Updating file processed size: {file_info['path_processed']}")
 
         # Update file info incl size, public key, salt
         self.filehandler.data[file]["public_key"] = file_public_key
@@ -169,9 +169,7 @@ class DataPutter(base.DDSBaseClass):
 
         if saved:
             LOG.info(
-                "File successfully encrypted: %s. New location: %s",
-                file,
-                file_info["path_processed"],
+                f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
             )
             # Update progress bar for upload
             progress.reset(
@@ -184,7 +182,7 @@ class DataPutter(base.DDSBaseClass):
             # Perform upload
             file_uploaded, message = self.put(file=file, progress=progress, task=task)
 
-            LOG.debug("File uploaded: %s", file_uploaded)
+            LOG.debug(f"File uploaded: {file_uploaded}")
             # Perform db update
             if file_uploaded:
                 db_updated, message = self.add_file_db(file=file)
@@ -195,9 +193,8 @@ class DataPutter(base.DDSBaseClass):
         if not saved or all_ok:
             # Delete temporary processed file locally
             LOG.debug(
-                "Deleting file %s - exists: %s",
-                file_info["path_processed"],
-                file_info["path_processed"].exists(),
+                f"Deleting file {file_info['path_processed']} - "
+                f"exists: {file_info['path_processed'].exists()}"
             )
             dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
@@ -253,7 +250,7 @@ class DataPutter(base.DDSBaseClass):
                     TypeError,
                 ) as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
-                    LOG.exception("%s: %s", file, err)
+                    LOG.exceptionf("{file}: {err}")
                 else:
                     uploaded = True
 
@@ -340,6 +337,6 @@ class DataPutter(base.DDSBaseClass):
 
                 # TODO (ina): Add the info to error log if any error happens --> update manually
                 if not updated:
-                    LOG.warning("The project size could not be updated! Error: %s", error)
+                    LOG.warning(f"The project size could not be updated! Error: {error}")
                 else:
                     LOG.info("Project size updated successfully!")

@@ -69,7 +69,7 @@ class DDSBaseClass:
 
         # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
-        LOG.info("Attempted operation: %s", self.method)
+        LOG.info(f"Attempted operation: {self.method}")
 
         # Use user defined festination if any specified
         if self.method in ["get", "put"]:
@@ -154,7 +154,7 @@ class DDSBaseClass:
                 ):
                     project = contents["project"]
 
-        LOG.info("Username: %s, Project ID: %s", username, project)
+        LOG.info(f"Username: {username}, Project ID: {project}")
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:
@@ -178,7 +178,7 @@ class DDSBaseClass:
     def __verify_project_access(self):
         """Verifies that the user has access to the specified project."""
 
-        LOG.debug("Verifying access to project %s...", self.project)
+        LOG.debug(f"Verifying access to project {self.project}...")
 
         # Perform request to API
         try:
@@ -209,7 +209,7 @@ class DDSBaseClass:
             console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
             os._exit(1)
 
-        LOG.debug("User has been granted access to project %s", self.project)
+        LOG.debug(f"User has been granted access to project {self.project}")
 
         return {"x-access-token": dds_access["token"]}
 
@@ -373,7 +373,7 @@ class DDSBaseClass:
                 os._exit(1)
 
             bucket_exists = conn.check_bucket_exists()
-            LOG.debug("Bucket exists: %s", bucket_exists)
+            LOG.debug(f"Bucket exists: {bucket_exists}")
             if not bucket_exists:
                 LOG.debug("Attempting create...")
                 _ = conn.create_bucket()

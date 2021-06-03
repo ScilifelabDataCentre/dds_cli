@@ -50,14 +50,14 @@ def verify_proceed(func):
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.info("File %s started %s", file, func.__name__)
+        LOG.info(f"File {file} started {func.__name__}")
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
 
         # Cancel file(s) if something failed
         if not ok_to_proceed:
-            LOG.warning("%s failed: %s", func.__name__, message)
+            LOG.warning(f"{func.__name__} failed: {message}")
             self.status[file].update({"cancel": True, "message": message})
             if self.status[file].get("failed_op") is None:
                 self.status[file]["failed_op"] = "crypto"
@@ -91,7 +91,7 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.info("File %s status updated to %s: started", file, func.__name__)
+        LOG.info(f"File {file} status updated to {func.__name__}: started")
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
@@ -100,12 +100,12 @@ def update_status(func):
         if not ok_to_continue:
             # Save info about which operation failed
             self.status[file]["failed_op"] = func.__name__
-            LOG.warning("%s failed: %s", func.__name__, message)
+            LOG.warning(f"{func.__name__} failed: {message}")
 
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.info("File %s status updated to %s: done", file, func.__name__)
+            LOG.info(f"File {file} status updated to {func.__name__}: done")
 
         return ok_to_continue, message
 
@@ -160,7 +160,7 @@ def subpath_required(func):
             except OSError as err:
                 return False, str(err)
 
-            LOG.info("New directory created: %s", full_subpath)
+            LOG.info(f"New directory created: {full_subpath}")
 
         return func(self, file=file, *args, **kwargs)
 

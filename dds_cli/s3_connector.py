@@ -118,11 +118,11 @@ class S3Connector:
     def check_bucket_exists(self):
         """Checks if the bucket exists"""
 
-        LOG.debug("Bucket name: %s", self.bucketname)
+        LOG.debug(f"Bucket name: {self.bucketname}")
         try:
             self.resource.meta.client.head_bucket(Bucket=self.bucketname)
         except botocore.client.ClientError:
-            LOG.info("Bucket '%s' does not exist!", self.bucketname)
+            LOG.info(f"Bucket '{self.bucketname}' does not exist!")
             return False
 
         return True
@@ -156,16 +156,16 @@ class S3Connector:
 
         self.check_bucketname()
 
-        LOG.info("Creating bucket '%s'...", self.bucketname)
+        LOG.info(f"Creating bucket '{self.bucketname}'...")
         try:
             self.resource.meta.client.create_bucket(Bucket=self.bucketname, ACL="private")
         except botocore.client.ClientError as err2:
-            LOG.critical("Could not create bucket %s! %s", self.bucketname, err2)
+            LOG.critical(f"Could not create bucket {self.bucketname}! {err2}")
 
         bucket_exists = self.check_bucket_exists()
         if not bucket_exists:
             print(f"Bucket '{self.bucketname}' does not exist. Failed second attempt.")
             os._exit(0)
-        LOG.info("Bucket '%s' created!", self.bucketname)
+        LOG.info(f"Bucket '{self.bucketname}' created!")
 
         return True

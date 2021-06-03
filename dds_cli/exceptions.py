@@ -8,7 +8,7 @@ class AuthenticationError(Exception):
     """
 
     def __str__(self):
-        return f"\n:no_entry_sign: {self.message} :no_entry_sign:\n"
+        return f":no_entry_sign: {self.args[0]} :no_entry_sign:"
 
 
 class UploadError(Exception):

@@ -57,7 +57,7 @@ class DataLister(base.DDSBaseClass):
 
         # Only method "ls" can use the DataLister class
         if self.method != "ls":
-            raise exceptions.AuthenticationError(f"Unauthorized method: {self.method}")
+            raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     # Static methods ########################### Static methods #
     @staticmethod

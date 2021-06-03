@@ -11,3 +11,4 @@ requests>=2.25.1
 rich>=10.0.0
 simplejson
 zstandard>=0.15.1
+pyyaml

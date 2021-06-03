@@ -7,12 +7,14 @@
 # Standard library
 import dataclasses
 import logging
+import os
 import requests
 import sys
 import traceback
 
 # Installed
 import botocore
+import rich
 import simplejson
 
 # Own modules
@@ -116,29 +118,54 @@ class S3Connector:
     def check_bucket_exists(self):
         """Checks if the bucket exists"""
 
+        LOG.debug(f"Bucket name: {self.bucketname}")
         try:
             self.resource.meta.client.head_bucket(Bucket=self.bucketname)
         except botocore.client.ClientError:
-            LOG.info("Bucket '%s' does not exist!", self.bucketname)
+            LOG.info(f"Bucket '{self.bucketname}' does not exist!")
             return False
 
         return True
 
+    def check_bucketname(self):
+        """Checks that the bucketname restrictions are met."""
+
+        bnlen = len(self.bucketname)
+        if not 3 <= bnlen <= 63:
+            # Add custom exception
+            LOG.error(
+                f"Invalid bucket name length. Must be between 3 and 63 characters, found {bnlen}"
+            )
+            os._exit(0)
+
+        if "_" in self.bucketname:
+            # Add custom exception
+            LOG.error(f"Invalid bucket name characters. Cannot contain underscores.")
+            os._exit(0)
+
+        bucketnamefirst = list(self.bucketname)[0]
+        if not (bucketnamefirst.islower() or bucketnamefirst.isdigit()):
+            # Add custom exception
+            LOG.error(
+                f"Invalid first character. Must be digit or lowercase letter, found '{bucketnamefirst}'",
+            )
+            os._exit(0)
+
     def create_bucket(self):
         """Creates the bucket"""
 
-        LOG.info("Creating bucket '%s'...", self.bucketname)
+        self.check_bucketname()
 
+        LOG.info(f"Creating bucket '{self.bucketname}'...")
         try:
             self.resource.meta.client.create_bucket(Bucket=self.bucketname, ACL="private")
         except botocore.client.ClientError as err2:
-            LOG.critical("Could not create bucket %s! %s", self.bucketname, err2)
-            return False
+            LOG.critical(f"Could not create bucket {self.bucketname}! {err2}")
 
         bucket_exists = self.check_bucket_exists()
         if not bucket_exists:
-            sys.exit("Bucket '%s' does not exist. Failed second attempt.")
-
-        LOG.info("Bucket '%s' created!", self.bucketname)
+            print(f"Bucket '{self.bucketname}' does not exist. Failed second attempt.")
+            os._exit(0)
+        LOG.info(f"Bucket '{self.bucketname}' created!")
 
         return True

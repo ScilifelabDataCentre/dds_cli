@@ -62,7 +62,6 @@ def dds_put(
         break_on_fail=break_on_fail,
         overwrite=overwrite,
         silent=silent,
-        temporary_destination=dds_info["DDS_DIRS"],
     ) as putter:
 
         # Progress object to keep track of progress tasks
@@ -89,7 +88,7 @@ def dds_put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.info("Starting: %s", file)
+                    LOG.info(f"Starting: {file}")
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -113,22 +112,14 @@ def dds_put(
                         # Get result from future and schedule database update
                         for fut in done:
                             uploaded_file = upload_threads.pop(fut)
-                            LOG.debug("Future done for file: %s", uploaded_file)
+                            LOG.debug(f"Future done for file: {uploaded_file}")
 
                             # Get result
                             try:
                                 file_uploaded = fut.result()
-                                LOG.info(
-                                    "Upload of %s successful: %s",
-                                    uploaded_file,
-                                    file_uploaded,
-                                )
+                                LOG.info(f"Upload of {uploaded_file} successful: {file_uploaded}")
                             except concurrent.futures.BrokenExecutor as err:
-                                LOG.error(
-                                    "Upload of file %s failed! Error: %s",
-                                    uploaded_file,
-                                    err,
-                                )
+                                LOG.error(f"Upload of file {uploaded_file} failed! Error: {err}")
                                 continue
 
                             # Increase the main progress bar
@@ -139,7 +130,7 @@ def dds_put(
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.info("Starting: %s", next_file)
+                            LOG.info(f"Starting: {next_file}")
                             upload_threads[
                                 texec.submit(
                                     putter.protect_and_upload,
@@ -179,7 +170,6 @@ class DataPutter(base.DDSBaseClass):
 
     def __init__(
         self,
-        temporary_destination: dict,
         username: str = None,
         config: pathlib.Path = None,
         project: str = None,
@@ -195,7 +185,6 @@ class DataPutter(base.DDSBaseClass):
             username=username,
             config=config,
             project=project,
-            log_location=temporary_destination["LOGS"],
         )
 
         # Initiate DataPutter specific attributes
@@ -219,7 +208,7 @@ class DataPutter(base.DDSBaseClass):
             # Get file info
             self.filehandler = fhl.LocalFileHandler(
                 user_input=(source, source_path_file),
-                temporary_destination=temporary_destination["FILES"],
+                temporary_destination=self.dds_directory.directories["FILES"],
             )
 
             # Verify that the Safespring S3 bucket exists
@@ -282,7 +271,7 @@ class DataPutter(base.DDSBaseClass):
             file_public_key = encryptor.get_public_component_hex(private_key=encryptor.my_private)
             salt = encryptor.salt
 
-        LOG.debug("Updating file processed size: %s", file_info["path_processed"])
+        LOG.debug(f"Updating file processed size: {file_info['path_processed']}")
 
         # Update file info incl size, public key, salt
         self.filehandler.data[file]["public_key"] = file_public_key
@@ -291,9 +280,7 @@ class DataPutter(base.DDSBaseClass):
 
         if saved:
             LOG.info(
-                "File successfully encrypted: %s. New location: %s",
-                file,
-                file_info["path_processed"],
+                f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
             )
             # Update progress bar for upload
             progress.reset(
@@ -306,7 +293,7 @@ class DataPutter(base.DDSBaseClass):
             # Perform upload
             file_uploaded, message = self.put(file=file, progress=progress, task=task)
 
-            LOG.debug("File uploaded: %s", file_uploaded)
+            LOG.debug(f"File uploaded: {file_uploaded}")
             # Perform db update
             if file_uploaded:
                 db_updated, message = self.add_file_db(file=file)
@@ -317,9 +304,8 @@ class DataPutter(base.DDSBaseClass):
         if not saved or all_ok:
             # Delete temporary processed file locally
             LOG.debug(
-                "Deleting file %s - exists: %s",
-                file_info["path_processed"],
-                file_info["path_processed"].exists(),
+                f"Deleting file {file_info['path_processed']} - "
+                f"exists: {file_info['path_processed'].exists()}"
             )
             dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
@@ -375,7 +361,7 @@ class DataPutter(base.DDSBaseClass):
                     TypeError,
                 ) as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
-                    LOG.exception("%s: %s", file, err)
+                    LOG.exceptionf("{file}: {err}")
                 else:
                     uploaded = True
 
@@ -462,6 +448,6 @@ class DataPutter(base.DDSBaseClass):
 
                 # TODO (ina): Add the info to error log if any error happens --> update manually
                 if not updated:
-                    LOG.warning("The project size could not be updated! Error: %s", error)
+                    LOG.warning(f"The project size could not be updated! Error: {error}")
                 else:
                     LOG.info("Project size updated successfully!")

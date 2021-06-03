@@ -65,7 +65,7 @@ class DataGetter(base.DDSBaseClass):
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username, config=config, project=project, log_location=destination["LOGS"]
+            username=username, config=config, project=project, dds_directory=destination
         )
 
         # Initiate DataGetter specific attributes
@@ -73,7 +73,6 @@ class DataGetter(base.DDSBaseClass):
         self.verify_checksum = verify_checksum
         self.silent = silent
         self.filehandler = None
-        # self.log_location = destination["LOGS"]
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
@@ -90,7 +89,7 @@ class DataGetter(base.DDSBaseClass):
                 get_all=get_all,
                 user_input=(source, source_path_file),
                 token=self.token,
-                destination=destination["FILES"],
+                destination=self.dds_directory.directories["FILES"],
             )
 
             if self.filehandler.failed and self.break_on_fail:
@@ -135,13 +134,13 @@ class DataGetter(base.DDSBaseClass):
             total=file_info["size"],
         )
 
-        LOG.debug("File %s downloaded: %s", file, file_downloaded)
+        LOG.debug(f"File {file} downloaded: {file_downloaded}")
 
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
-            LOG.debug("Database updated: %s", db_updated)
+            LOG.debug(f"Database updated: {db_updated}")
 
-            LOG.info("Beginning decryption of file %s...", file)
+            LOG.info(f"Beginning decryption of file {file}...")
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
@@ -162,7 +161,7 @@ class DataGetter(base.DDSBaseClass):
                     outfile=file,
                 )
 
-            LOG.debug("file saved? %s", file_saved)
+            LOG.debug(f"file saved? {file_saved}")
             if file_saved:
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
@@ -206,7 +205,7 @@ class DataGetter(base.DDSBaseClass):
                     boto3.exceptions.Boto3Error,
                 ) as err:
                     error = f"S3 download of file '{file}' failed: {err}"
-                    LOG.exception("%s: %s", file, err)
+                    LOG.exception(f"{file}: {err}")
                 else:
                     downloaded = True
 

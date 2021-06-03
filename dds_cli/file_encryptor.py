@@ -61,8 +61,7 @@ class ECDHKeyHandler:
             backend=backends.default_backend(),
         ).derive(shared_key)
 
-        LOG.debug("Salt: %s", salt)
-        LOG.debug("Derived shared key: %s", derived_shared_key)
+        LOG.debug(f"Salt: {salt}")
         return derived_shared_key, salt.hex().upper()
 
     @staticmethod
@@ -266,7 +265,7 @@ class Decryptor(ECDHKeyHandler):
                 LOG.debug("Testing nonce...")
                 if last_nonce != nonce:
                     raise SystemExit("Nonces do not match!!")
-                LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)
+                LOG.debug(f"Last nonce should be: {last_nonce}, was: {nonce}")
         except Exception as err:
             LOG.warning(str(err))
         finally:

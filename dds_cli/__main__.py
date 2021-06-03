@@ -46,14 +46,15 @@ LOG = logging.getLogger()
 
 # Print header to STDERR
 stderr = rich.console.Console(stderr=True)
-stderr.print("\n[green]     ︵", highlight=False)
-stderr.print("[green] ︵ (  )   ︵", highlight=False)
-stderr.print("[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System", highlight=False)
 stderr.print(
-    "[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__), highlight=False
+    "\n\n[green]     ︵",
+    "\n[green] ︵ (  )   ︵",
+    "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
+    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
+    f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
+    "\n[green]          ︶\n",
+    highlight=False,
 )
-stderr.print(f"[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}", highlight=False)
-stderr.print("[green]          ︶\n", highlight=False)
 
 
 @click.group()
@@ -176,7 +177,7 @@ def dds_main(ctx, verbose, log_file):
     default=False,
     show_default=True,
     help=(
-        "Turn off progress bar for each individual file. Summary bars still visible."
+        "Turn off progress bar for each individual file. Summary bars still visible. "
         "Suggested for uploads including a large number of files."
     ),
 )
@@ -221,26 +222,13 @@ def put(
 @click.argument("fold_arg", required=False)  # Needs to be before proj_arg
 @click.argument("proj_arg", required=False)
 @click.option("--project", "-p", required=False, help="Project ID.")
+@click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.option(
-    "--projects",
-    "-lp",
-    is_flag=True,
-    help="List all project connected to your account.",
-)
-@click.option(
-    "--folder",
-    "-fl",
-    required=False,
-    multiple=False,
-    help="Folder to list files within.",
+    "--folder", "-fl", required=False, multiple=False, help="Folder to list files within."
 )
 @click.option("--size", "-sz", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
+    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
 @click.option(
     "--config",
@@ -257,10 +245,7 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
     folder = fold_arg if fold_arg is not None else folder
 
     if projects and size:
-        LOG.warning(
-            "\nNB! Showing the project size is not implemented in the "
-            "listing command at this time. No size will be displayed.\n"
-        )
+        LOG.warning("NB! Listing the project size is not yet implemented.")
 
     try:
         with dds_cli.data_lister.DataLister(
@@ -291,28 +276,14 @@ def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, 
 @click.argument("proj_arg", required=False)
 @click.option("--project", required=False, type=str, help="Project ID.")
 @click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
+    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
 @click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
 @click.option(
-    "--file",
-    "-f",
-    required=False,
-    type=str,
-    multiple=True,
-    help="Path to file to remove.",
+    "--file", "-f", required=False, type=str, multiple=True, help="Path to file to remove."
 )
 @click.option(
-    "--folder",
-    "-fl",
-    required=False,
-    type=str,
-    multiple=True,
-    help="Path to folder to remove.",
+    "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
 )
 @click.option(
     "--config",
@@ -346,14 +317,11 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 
     # Warn if trying to remove all contents
     if rm_all:
-        rm_all = (
-            rich.prompt.Prompt.ask(
-                f"> Are you sure you want to delete all files within project {project}?",
-                choices=["y", "n"],
-                default="n",
-            )
-            == "y"
-        )
+        if not rich.prompt.Confirm.ask(
+            f"Are you sure you want to delete all files within project '{project}'?"
+        ):
+            LOG.info("Probably for the best. Exiting.")
+            os._exit(0)
 
     with dds_cli.data_remover.DataRemover(
         project=project,

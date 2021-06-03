@@ -18,6 +18,8 @@ import rich
 import simplejson
 
 # Own modules
+import dds_cli.directory
+import dds_cli.timestamp
 from dds_cli import DDSEndpoint
 from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
@@ -62,20 +64,24 @@ class DDSBaseClass:
         config=None,
         project=None,
         ignore_config_project=False,
-        log_location=pathlib.Path(""),
+        dds_directory: pathlib.Path = None,
     ):
-
-        LOG.debug("Config: %s", config)
 
         # Get attempted operation e.g. put/ls/rm/get
         self.method = attempted_operation()
-        LOG.debug("Attempted operation: %s", self.method)
+        LOG.debug(f"Attempted operation: {self.method}")
+
+        # Use user defined festination if any specified
+        if self.method in ["get", "put"]:
+            self.dds_directory = dds_cli.directory.DDSDirectory(
+                path=dds_directory
+                if dds_directory
+                else pathlib.Path.cwd()
+                / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
+            )
 
         # Keyboardinterrupt
         self.stop_doing = False
-
-        # log location
-        self.log_location = log_location
 
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(
@@ -90,6 +96,7 @@ class DDSBaseClass:
         dds_user = user.User(username=username, password=password, project=self.project)
         self.token = dds_user.token
 
+        LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in ["put", "get"] or (
@@ -113,12 +120,6 @@ class DDSBaseClass:
 
         if self.method in ["put", "get"]:
             self.__printout_delivery_summary()
-
-            # Delete temporary file directory if it is empty
-            # if not next(self.filehandler.local_destination.iterdir(), None):
-            #     fh.FileHandler.delete_tempdir(
-            #         directory=self.filehandler.local_destination
-            #     )
 
         return True
 
@@ -153,7 +154,7 @@ class DDSBaseClass:
                 ):
                     project = contents["project"]
 
-        LOG.debug("Username: %s, Project ID: %s", username, project)
+        LOG.debug(f"Username: {username}, Project ID: {project}")
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:
@@ -177,7 +178,7 @@ class DDSBaseClass:
     def __verify_project_access(self):
         """Verifies that the user has access to the specified project."""
 
-        LOG.debug("Verifying access to project %s...", self.project)
+        LOG.debug(f"Verifying access to project {self.project}...")
 
         # Perform request to API
         try:
@@ -208,7 +209,7 @@ class DDSBaseClass:
             console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
             os._exit(1)
 
-        LOG.debug("User has been granted access to project %s", self.project)
+        LOG.debug(f"User has been granted access to project {self.project}")
 
         return {"x-access-token": dds_access["token"]}
 
@@ -240,7 +241,7 @@ class DDSBaseClass:
 
         if not response.ok:
             console.print(
-                f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
+                f"\n:no_entry_sign: Project access denied: No {key_type} key. {response.text} :no_entry_sign:\n"
             )
             os._exit(1)
 
@@ -274,7 +275,9 @@ class DDSBaseClass:
 
             # Save to file and print message if too many failed files,
             # otherwise create and print tables
-            outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
+            outfile = self.dds_directory.directories["LOGS"] / pathlib.Path(
+                "dds_failed_delivery.txt"
+            )
 
             fh.FileHandler.save_errors_to_file(file=outfile, info=any_failed)
 
@@ -307,7 +310,7 @@ class DDSBaseClass:
                     rich.padding.Padding(
                         "One or more files where uploaded but may not have been added to "
                         "the db. Contact support and supply the logfile found in "
-                        f"{self.log_location}",
+                        f"{self.dds_directory.directories['LOGS']}",
                         1,
                     )
                 )
@@ -370,7 +373,9 @@ class DDSBaseClass:
                 os._exit(1)
 
             bucket_exists = conn.check_bucket_exists()
+            LOG.debug(f"Bucket exists: {bucket_exists}")
             if not bucket_exists:
+                LOG.debug("Attempting to create bucket...")
                 _ = conn.create_bucket()
 
         LOG.debug("Bucket verified.")

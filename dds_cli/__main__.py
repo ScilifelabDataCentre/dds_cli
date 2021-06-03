@@ -52,13 +52,13 @@ console = rich.console.Console()
 
 
 # Print header to STDERR
+
 stderr = rich.console.Console(stderr=True)
 stderr.print("\n[green]     ︵", highlight=False)
 stderr.print("[green] ︵ (  )   ︵", highlight=False)
 stderr.print("[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System", highlight=False)
 stderr.print(
-    "[green] ︶  (  ) ) ([/]    [blue][link=https://www.scilifelab.se/data]https://www.scilifelab.se/data[/link]",
-    highlight=False,
+    "[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__), highlight=False
 )
 stderr.print(f"[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}", highlight=False)
 stderr.print("[green]          ︶\n", highlight=False)

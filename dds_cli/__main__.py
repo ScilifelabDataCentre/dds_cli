@@ -54,9 +54,7 @@ console = rich.console.Console()
 @click.option(
     "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
 )
-@click.option(
-    "-l", "--log-file", help="Save a verbose log to a file.", metavar="<filename>"
-)
+@click.option("-l", "--log-file", help="Save a verbose log to a file.", metavar="<filename>")
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
 def dds_main(ctx, verbose, log_file):

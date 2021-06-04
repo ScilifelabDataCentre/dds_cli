@@ -196,7 +196,7 @@ def put(
 ):
     """Processes and uploads specified files to the cloud."""
     try:
-        dds_cli.data_putter.dds_put(
+        dds_cli.data_putter.put(
             dds_info,
             dds_info["CONFIG"] if config is None else config,
             username,

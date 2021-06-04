@@ -40,7 +40,7 @@ LOG = logging.getLogger(__name__)
 ###############################################################################
 
 
-def dds_put(
+def put(
     dds_info,
     config,
     username,

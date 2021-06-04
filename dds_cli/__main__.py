@@ -16,6 +16,7 @@ from logging.config import dictConfig
 # Installed
 import click
 import click_pathlib
+import questionary
 import rich
 import rich.console
 import rich.logging
@@ -247,17 +248,79 @@ def ls(dds_info, project, folder, size, username, config):
         LOG.warning("NB! Listing the project size is not yet implemented.")
 
     try:
-        with dds_cli.data_lister.DataLister(
-            project=project,
-            project_level=project is None,
-            config=dds_info["CONFIG"] if config is None else config,
-            username=username,
-        ) as lister:
-            # List all projects if project is None and all files if project spec
-            if lister.project is None:
-                lister.list_projects()
-            if lister.project:
-                lister.list_files(folder=folder, show_size=size)
+        # List all projects if project is None and all files if project spec
+        if project is None:
+            with dds_cli.data_lister.DataLister(
+                project=project,
+                project_level=project is None,
+                config=dds_info["CONFIG"] if config is None else config,
+                username=username,
+            ) as lister:
+                projects = lister.list_projects()
+
+                # If an interactive terminal, ask user if they want to view files for a project
+                if sys.stdout.isatty():
+                    project_ids = [p["Project ID"] for p in projects]
+                    LOG.info(
+                        "Would you like to view files in a specific project? Leave blank to exit."
+                    )
+                    # Keep asking until we get a valid response
+                    while project not in project_ids:
+                        try:
+                            project = questionary.autocomplete(
+                                "Project ID:",
+                                choices=project_ids,
+                                validate=lambda x: x in project_ids or x == "",
+                                style=dds_cli.dds_questionary_styles,
+                            ).unsafe_ask()
+                            assert project != ""
+                            assert project is not None
+                        # If didn't enter anything, convert to None and exit
+                        except (KeyboardInterrupt, AssertionError):
+                            break
+
+        # List all files in a project if we know a project ID
+        if project:
+            with dds_cli.data_lister.DataLister(
+                project=project,
+                project_level=project is None,
+                config=dds_info["CONFIG"] if config is None else config,
+                username=username,
+            ) as lister:
+                folders = lister.list_files(folder=folder, show_size=size)
+
+                # If an interactive terminal, ask user if they want to view files for a project
+                if sys.stdout.isatty():
+                    LOG.info(
+                        "Would you like to view files within a directory? Leave blank to exit."
+                    )
+                    last_folder = None
+                    while folder is None or folder != last_folder:
+                        last_folder = folder
+
+                        if not len(folders):
+                            break
+
+                        try:
+                            folder = questionary.autocomplete(
+                                "Folder:",
+                                choices=folders,
+                                validate=lambda x: x in folders or x == "",
+                                style=dds_cli.dds_questionary_styles,
+                            ).unsafe_ask()
+                            assert folder != ""
+                            assert folder is not None
+                        # If didn't enter anything, convert to None and exit
+                        except (KeyboardInterrupt, AssertionError):
+                            break
+
+                        # Prepend existing file path
+                        if last_folder is not None and folder is not None:
+                            folder = os.path.join(last_folder, folder)
+
+                        # List files
+                        folders = lister.list_files(folder=folder, show_size=size)
+
     except (dds_cli.exceptions.NoDataError) as e:
         LOG.warning(e)
         sys.exit(0)

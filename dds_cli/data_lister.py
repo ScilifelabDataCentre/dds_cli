@@ -7,14 +7,12 @@
 # Standard library
 import logging
 import pathlib
-import sys
 
 # Installed
 import requests
 import simplejson
 from rich.console import Console
 from rich.padding import Padding
-from rich.prompt import Confirm
 from rich.table import Table
 from rich.tree import Tree
 
@@ -59,7 +57,7 @@ class DataLister(base.DDSBaseClass):
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     # Public methods ########################### Public methods #
-    def list_projects(self):
+    def list_projects(self, prompt_project=False):
         """Gets a list of all projects the user is involved in."""
 
         # Get projects from API
@@ -110,7 +108,7 @@ class DataLister(base.DDSBaseClass):
         # Print to stdout if there are any lines
         if table.columns:
             # Use a pager if output is taller than the visible terminal
-            if len(resp_json["all_projects"]) + 5 > console.height:
+            if len(sorted_projects) + 5 > console.height:
                 with console.pager():
                     console.print(table)
             else:
@@ -118,14 +116,15 @@ class DataLister(base.DDSBaseClass):
         else:
             raise exceptions.NoDataError(f"No projects found")
 
+        # Return the list of projects
+        return sorted_projects
+
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
 
         LOG.info(f"Listing files for project '{self.project}'")
         if folder:
             LOG.info(f"Showing files in folder '{folder}'")
-
-        console = Console()
 
         # Make call to API
         try:
@@ -135,16 +134,16 @@ class DataLister(base.DDSBaseClass):
                 headers=self.token,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.APIError(f"Problem with database response: {err}")
+            raise exceptions.APIError(f"Problem with database response: '{err}'")
 
         if not response.ok:
-            raise exceptions.APIError(f"Failed to get list of files: {response.text}")
+            raise exceptions.APIError(f"Failed to get list of files: '{response.text}'")
 
         # Get response
         try:
             resp_json = response.json()
         except simplejson.JSONDecodeError as err:
-            raise exceptions.APIError(f"Could not decode JSON response: {err}")
+            raise exceptions.APIError(f"Could not decode JSON response: '{err}'")
 
         # Check if project empty
         if "num_items" in resp_json and resp_json["num_items"] == 0:
@@ -154,52 +153,61 @@ class DataLister(base.DDSBaseClass):
         files_folders = resp_json["files_folders"]
 
         # Sort the file/folders according to names
-        sorted_projects = sorted(files_folders, key=lambda f: f["name"])
+        sorted_files_folders = sorted(files_folders, key=lambda f: f["name"])
 
         # Create tree
         tree_title = folder if folder else f"Files / directories in project: [green]{self.project}"
         tree = Tree(f"[bold magenta]{tree_title}")
 
-        if sorted_projects:
-            # Get max length of file name
-            max_string = max([len(x["name"]) for x in sorted_projects])
+        if not sorted_files_folders:
+            raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
 
-            # Get max length of size string
-            sizes = [len(x["size"][0]) for x in sorted_projects if show_size and "size" in x]
-            max_size = max(sizes) if sizes else 0
+        # Get max length of file name
+        max_string = max([len(x["name"]) for x in sorted_files_folders])
 
-            # Add items to tree
-            for x in sorted_projects:
-                # Check if string is folder
-                is_folder = x.pop("folder")
+        # Get max length of size string
+        sizes = [len(x["size"][0]) for x in sorted_files_folders if show_size and "size" in x]
+        max_size = max(sizes) if sizes else 0
 
-                # Att 1 for folders due to trailing /
-                tab = th.TextHandler.format_tabs(
-                    string_len=len(x["name"]) + (1 if is_folder else 0),
-                    max_string_len=max_string,
+        # Visible folders
+        visible_folders = []
+
+        # Add items to tree
+        for x in sorted_files_folders:
+            # Check if string is folder
+            is_folder = x.pop("folder")
+
+            # Att 1 for folders due to trailing /
+            tab = th.TextHandler.format_tabs(
+                string_len=len(x["name"]) + (1 if is_folder else 0),
+                max_string_len=max_string,
+            )
+
+            # Add formatting if folder and set string name
+            line = ""
+            if is_folder:
+                line = "[bold deep_sky_blue3]"
+                visible_folders.append(x["name"])
+            line += x["name"] + ("/" if is_folder else "")
+
+            # Add size to line if option specified
+            if show_size and "size" in x:
+                line += f"{tab}{x['size'][0]}"
+
+                # Define space between number and size format
+                tabs_bf_format = th.TextHandler.format_tabs(
+                    string_len=len(x["size"][0]), max_string_len=max_size, tab_len=2
                 )
+                line += f"{tabs_bf_format}{x['size'][1]}"
+            tree.add(line)
 
-                # Add formatting if folder and set string name
-                line = ""
-                if is_folder:
-                    line = "[bold deep_sky_blue3]"
-                line += x["name"] + ("/" if is_folder else "")
-
-                # Add size to line if option specified
-                if show_size and "size" in x:
-                    line += f"{tab}{x['size'][0]}"
-
-                    # Define space between number and size format
-                    tabs_bf_format = th.TextHandler.format_tabs(
-                        string_len=len(x["size"][0]), max_string_len=max_size, tab_len=2
-                    )
-                    line += f"{tabs_bf_format}{x['size'][1]}"
-                tree.add(line)
-
-            if len(files_folders) + 5 > console.height:
-                with console.pager():
-                    console.print(Padding(tree, 1))
-            else:
+        # Print output to stdout
+        console = Console()
+        if len(files_folders) + 5 > console.height:
+            with console.pager():
                 console.print(Padding(tree, 1))
         else:
-            raise exceptions.NoDataError(f"Could not find folder folder: '{folder}'")
+            console.print(Padding(tree, 1))
+
+        # Return variable
+        return visible_folders

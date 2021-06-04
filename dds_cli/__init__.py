@@ -1,15 +1,15 @@
 """DDS CLI."""
 
 import os
-import pathlib
-import sys
+import pkg_resources
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
 ###############################################################################
 
 __title__ = "Data Delivery System"
-__version__ = "0.1"
+__version__ = pkg_resources.get_distribution("dds_cli").version
+__url__ = "https://www.scilifelab.se/data"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"

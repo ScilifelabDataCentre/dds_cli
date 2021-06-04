@@ -5,33 +5,29 @@
 ###############################################################################
 
 # Standard library
+import concurrent.futures
+import itertools
 import logging
-import os
 import pathlib
 
 # Installed
 import boto3
 import botocore
 import requests
-import rich
-from rich.progress import Progress, SpinnerColumn
+from rich.progress import Progress, SpinnerColumn, BarColumn
 import simplejson
 
 # Own modules
 from dds_cli import base
+from dds_cli import exceptions
 from dds_cli import data_remover as dr
 from dds_cli import DDSEndpoint
-from dds_cli import file_compressor as fc
 from dds_cli import file_encryptor as fe
 from dds_cli import file_handler_local as fhl
 from dds_cli import s3_connector as s3
 from dds_cli import status
 from dds_cli import text_handler as txt
-from dds_cli.cli_decorators import (
-    verify_proceed,
-    update_status,
-    subpath_required,
-)
+from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -40,10 +36,129 @@ from dds_cli.cli_decorators import (
 LOG = logging.getLogger(__name__)
 
 ###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
+# MAIN FUNCTION ############################################### MAIN FUNCTION #
 ###############################################################################
 
-console = rich.console.Console()
+
+def put(
+    dds_info,
+    config,
+    username,
+    project,
+    source,
+    source_path_file,
+    break_on_fail,
+    overwrite,
+    num_threads,
+    silent,
+):
+    # Initialize delivery - check user access etc
+    with DataPutter(
+        username=username,
+        config=config,
+        project=project,
+        source=source,
+        source_path_file=source_path_file,
+        break_on_fail=break_on_fail,
+        overwrite=overwrite,
+        silent=silent,
+    ) as putter:
+
+        # Progress object to keep track of progress tasks
+        with Progress(
+            "{task.description}",
+            BarColumn(bar_width=None),
+            " • ",
+            "[progress.percentage]{task.percentage:>3.1f}%",
+            refresh_per_second=2,
+        ) as progress:
+
+            # Keep track of futures
+            upload_threads = {}
+
+            # Iterator to keep track of which files have been handled
+            iterator = iter(putter.filehandler.data.copy())
+
+            with concurrent.futures.ThreadPoolExecutor() as texec:
+                # Start main progress bar - total uploaded files
+                upload_task = progress.add_task(
+                    description="Upload",
+                    total=len(putter.filehandler.data),
+                )
+
+                # Schedule the first num_threads futures for upload
+                for file in itertools.islice(iterator, num_threads):
+                    LOG.info(f"Starting: {file}")
+                    upload_threads[
+                        texec.submit(
+                            putter.protect_and_upload,
+                            file=file,
+                            progress=progress,
+                        )
+                    ] = file
+
+                try:
+                    # Continue until all files are done
+                    while upload_threads:
+                        # Wait for the next future to complete, _ are the unfinished
+                        done, _ = concurrent.futures.wait(
+                            upload_threads,
+                            return_when=concurrent.futures.FIRST_COMPLETED,
+                        )
+
+                        # Number of new upload tasks that can be started
+                        new_tasks = 0
+
+                        # Get result from future and schedule database update
+                        for fut in done:
+                            uploaded_file = upload_threads.pop(fut)
+                            LOG.debug(f"Future done for file: {uploaded_file}")
+
+                            # Get result
+                            try:
+                                file_uploaded = fut.result()
+                                LOG.info(f"Upload of {uploaded_file} successful: {file_uploaded}")
+                            except concurrent.futures.BrokenExecutor as err:
+                                LOG.error(f"Upload of file {uploaded_file} failed! Error: {err}")
+                                continue
+
+                            # Increase the main progress bar
+                            progress.advance(upload_task)
+
+                            # New available threads
+                            new_tasks += 1
+
+                        # Schedule the next set of futures for upload
+                        for next_file in itertools.islice(iterator, new_tasks):
+                            LOG.info(f"Starting: {next_file}")
+                            upload_threads[
+                                texec.submit(
+                                    putter.protect_and_upload,
+                                    file=next_file,
+                                    progress=progress,
+                                )
+                            ] = next_file
+                except KeyboardInterrupt:
+                    LOG.warning(
+                        "KeyboardInterrupt found - shutting down delivery gracefully. "
+                        "This will finish the ongoing uploads. If you want to force "
+                        "shutdown, repeat `Ctrl+C`. This is not advised. "
+                    )
+
+                    # Flag for threads to find
+                    putter.stop_doing = True
+
+                    # Stop and remove main progress bar
+                    progress.remove_task(upload_task)
+
+                    # Stop all tasks that are not currently uploading
+                    _ = [
+                        progress.stop_task(x)
+                        for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]
+                    ]
+
+        putter.update_project_size()
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -80,8 +195,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
-            console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
-            os._exit(1)
+            raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
         # Start file prep progress
         with Progress(
@@ -105,13 +219,11 @@ class DataPutter(base.DDSBaseClass):
 
             # Quit if error and flag
             if files_in_db and self.break_on_fail and not self.overwrite:
-                # TODO (ina): Fix better print out
-                console.print(
+                raise exceptions.UploadError(
                     "Some files have already been uploaded (or have identical names to "
-                    "previously uploaded files) and the '--break-on-fail' flag used. "
-                    "Use '--overwrite' if you want to upload these files again."
+                    "previously uploaded files) and the '--break-on-fail' flag was used. "
+                    "Try again with the '--overwrite' flag if you want to upload these files."
                 )
-                os._exit(1)
 
             # Generate status dict
             self.status = self.filehandler.create_upload_status_dict(
@@ -122,8 +234,7 @@ class DataPutter(base.DDSBaseClass):
             progress.remove_task(wait_task)
 
         if not self.filehandler.data:
-            console.print("No data to upload.")
-            os._exit(0)
+            raise exceptions.UploadError("No data to upload.")
 
     # Public methods ###################### Public methods #
     @verify_proceed

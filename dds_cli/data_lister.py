@@ -15,12 +15,13 @@ import requests
 import simplejson
 from rich.console import Console
 from rich.padding import Padding
-from rich.prompt import Prompt
+from rich.prompt import Confirm
 from rich.table import Table
 from rich.tree import Tree
 
 # Own modules
 from dds_cli import base
+from dds_cli import exceptions
 from dds_cli import DDSEndpoint
 from dds_cli import text_handler as th
 
@@ -56,7 +57,7 @@ class DataLister(base.DDSBaseClass):
 
         # Only method "ls" can use the DataLister class
         if self.method != "ls":
-            sys.exit(f"Unauthorized method: {self.method}")
+            raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     # Static methods ########################### Static methods #
     @staticmethod
@@ -64,17 +65,11 @@ class DataLister(base.DDSBaseClass):
         """Warn the user if there are many lines to print out."""
 
         if count > threshold:
-            do_continue = Prompt.ask(
-                f"\nItems to display: {count}. "
-                "The display layout might be affected due to too many entries."
-                f"\nTip: Try the command again with [b]| more[/b] at the end."
-                "\n\nContinue anyway?",
-                choices=["y", "n"],
-                default="n",
-            )
-
-            if not do_continue in ["y", "yes"]:
-                os._exit(0)
+            if not Confirm.ask(
+                f"\nItems to display: {count}. The display layout might be affected due to too many entries."
+                f"\nTip: Try the command again with [b]| more[/b] at the end.\n\nContinue anyway?"
+            ):
+                raise exceptions.NoDataError("Exiting..")
 
     # Public methods ########################### Public methods #
     def list_projects(self):
@@ -84,22 +79,20 @@ class DataLister(base.DDSBaseClass):
         try:
             response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
         except requests.exceptions.RequestException as err:
-            raise SystemExit from err
+            raise exceptions.APIError(f"Problem with database response: {err}")
 
         console = Console()
         if not response.ok:
-            console.print(f"Failed to get list of projects: {response.text}")
-            os._exit(1)
+            raise exceptions.APIError(f"Failed to get list of projects: {response.text}")
 
         try:
             resp_json = response.json()
         except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
+            raise exceptions.APIError(f"Could not decode JSON response: {err}")
 
         # Cancel if user not involved in any projects
         if "all_projects" not in resp_json:
-            console.print("No project info was retrieved. No files to list.")
-            os._exit(0)
+            raise exceptions.NoDataError("No project info was retrieved. No files to list.")
 
         # Warn user if many lines to print
         self.warn_if_many(count=len(resp_json["all_projects"]))
@@ -134,7 +127,7 @@ class DataLister(base.DDSBaseClass):
         if table.columns:
             console.print(table)
         else:
-            console.print("[i]No projects[/i]")
+            raise exceptions.NoDataError(f"No projects found")
 
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
@@ -149,22 +142,20 @@ class DataLister(base.DDSBaseClass):
                 headers=self.token,
             )
         except requests.exceptions.RequestException as err:
-            raise SystemExit from err
+            raise exceptions.APIError(f"Problem with database response: {err}")
 
         if not response.ok:
-            console.print(f"Failed to get list of files: {response.text}")
-            os._exit(1)
+            raise exceptions.APIError(f"Failed to get list of files: {response.text}")
 
         # Get response
         try:
             resp_json = response.json()
         except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
+            raise exceptions.APIError(f"Could not decode JSON response: {err}")
 
         # Check if project empty
         if "num_items" in resp_json and resp_json["num_items"] == 0:
-            console.print(f"[i]Project '{self.project}' is empty.[/i]")
-            os._exit(0)
+            raise exceptions.NoDataError(f"Project '{self.project}' is empty.")
 
         # Get files
         files_folders = resp_json["files_folders"]
@@ -178,8 +169,8 @@ class DataLister(base.DDSBaseClass):
         # Create tree
         tree_title = folder
         if folder is None:
-            tree_title = f"Files/Directories in project: {self.project}"
-        tree = Tree(f"[bold spring_green4]{tree_title}")
+            tree_title = f"Files/Directories in project: [green]{self.project}"
+        tree = Tree(f"[bold magenta]{tree_title}")
 
         if sorted_projects:
             # Get max length of file name
@@ -218,4 +209,4 @@ class DataLister(base.DDSBaseClass):
                 tree.add(line)
             console.print(Padding(tree, 1))
         else:
-            console.print(Padding(f"[i]No folder called '{folder}'[/i]", 1))
+            raise exceptions.NoDataError(f"Could not find folder folder: '{folder}'")

@@ -117,7 +117,7 @@ def put(
                             # Get result
                             try:
                                 file_uploaded = fut.result()
-                                LOG.info(f"Upload of {uploaded_file} successful: {file_uploaded}")
+                                LOG.debug(f"Upload of {uploaded_file} successful: {file_uploaded}")
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.error(f"Upload of file {uploaded_file} failed! Error: {err}")
                                 continue

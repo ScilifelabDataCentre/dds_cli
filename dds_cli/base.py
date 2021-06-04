@@ -318,12 +318,10 @@ class DDSBaseClass:
 
         else:
             # Printout if no cancelled/failed files
-            console.print(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
+            LOG.debug(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
-            console.print(
-                f"Any downloaded files are located: {self.filehandler.local_destination}."
-            )
+            LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
 
     def __collect_all_failed(self, sort: bool = True):
         """Put cancelled files from status in to failed dict and sort the output."""

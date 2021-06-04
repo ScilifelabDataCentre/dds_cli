@@ -186,7 +186,7 @@ class Encryptor(ECDHKeyHandler):
         else:
             encrypted_and_saved = True
             message = f"Encrypted file stored in location: {outfile}"
-            LOG.info(message)
+            LOG.debug(message)
         finally:
             os.umask(original_umask)
 

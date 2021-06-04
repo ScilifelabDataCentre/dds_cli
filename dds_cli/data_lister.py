@@ -6,7 +6,6 @@
 
 # Standard library
 import logging
-import os
 import pathlib
 import sys
 
@@ -59,18 +58,6 @@ class DataLister(base.DDSBaseClass):
         if self.method != "ls":
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
-    # Static methods ########################### Static methods #
-    @staticmethod
-    def warn_if_many(count, threshold=50):
-        """Warn the user if there are many lines to print out."""
-
-        if count > threshold:
-            if not Confirm.ask(
-                f"\nItems to display: {count}. The display layout might be affected due to too many entries."
-                f"\nTip: Try the command again with [b]| more[/b] at the end.\n\nContinue anyway?"
-            ):
-                raise exceptions.NoDataError("Exiting..")
-
     # Public methods ########################### Public methods #
     def list_projects(self):
         """Gets a list of all projects the user is involved in."""
@@ -93,9 +80,6 @@ class DataLister(base.DDSBaseClass):
         # Cancel if user not involved in any projects
         if "all_projects" not in resp_json:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
-
-        # Warn user if many lines to print
-        self.warn_if_many(count=len(resp_json["all_projects"]))
 
         # Sort list of projects by 1. Last updated, 2. Project ID
         sorted_projects = sorted(
@@ -123,14 +107,23 @@ class DataLister(base.DDSBaseClass):
         for proj in sorted_projects:
             table.add_row(*[proj[columns[i]] for i in range(len(columns))])
 
-        # Print if there are any lines
+        # Print to stdout if there are any lines
         if table.columns:
-            console.print(table)
+            # Use a pager if output is taller than the visible terminal
+            if len(resp_json["all_projects"]) + 5 > console.height:
+                with console.pager():
+                    console.print(table)
+            else:
+                console.print(table)
         else:
             raise exceptions.NoDataError(f"No projects found")
 
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
+
+        LOG.info(f"Listing files for project '{self.project}'")
+        if folder:
+            LOG.info(f"Showing files in folder '{folder}'")
 
         console = Console()
 
@@ -160,16 +153,11 @@ class DataLister(base.DDSBaseClass):
         # Get files
         files_folders = resp_json["files_folders"]
 
-        # Warn user if there will be too many rows
-        self.warn_if_many(count=len(files_folders))
-
         # Sort the file/folders according to names
         sorted_projects = sorted(files_folders, key=lambda f: f["name"])
 
         # Create tree
-        tree_title = folder
-        if folder is None:
-            tree_title = f"Files/Directories in project: [green]{self.project}"
+        tree_title = folder if folder else f"Files / directories in project: [green]{self.project}"
         tree = Tree(f"[bold magenta]{tree_title}")
 
         if sorted_projects:
@@ -207,6 +195,11 @@ class DataLister(base.DDSBaseClass):
                     )
                     line += f"{tabs_bf_format}{x['size'][1]}"
                 tree.add(line)
-            console.print(Padding(tree, 1))
+
+            if len(files_folders) + 5 > console.height:
+                with console.pager():
+                    console.print(Padding(tree, 1))
+            else:
+                console.print(Padding(tree, 1))
         else:
             raise exceptions.NoDataError(f"Could not find folder folder: '{folder}'")

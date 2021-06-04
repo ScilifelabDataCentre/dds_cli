@@ -220,7 +220,7 @@ def put(
 
 @dds_main.command()
 @click.argument("project", metavar="[PROJECT ID]", nargs=1, required=False)
-@click.argument("folder", nargs=-1)
+@click.argument("folder", nargs=1, required=False)
 @click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
     "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
@@ -256,7 +256,7 @@ def ls(dds_info, project, folder, size, username, config):
             # List all projects if project is None and all files if project spec
             if lister.project is None:
                 lister.list_projects()
-            else:
+            if lister.project:
                 lister.list_files(folder=folder, show_size=size)
     except (dds_cli.exceptions.NoDataError) as e:
         LOG.warning(e)

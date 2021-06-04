@@ -47,7 +47,7 @@ LOG = logging.getLogger()
 # Print header to STDERR
 stderr = rich.console.Console(stderr=True)
 stderr.print(
-    "\n\n[green]     ︵",
+    "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
     "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
@@ -219,14 +219,9 @@ def put(
 
 
 @dds_main.command()
-@click.argument("fold_arg", required=False)  # Needs to be before proj_arg
-@click.argument("proj_arg", required=False)
-@click.option("--project", "-p", required=False, help="Project ID.")
-@click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
-@click.option(
-    "--folder", "-fl", required=False, multiple=False, help="Folder to list files within."
-)
-@click.option("--size", "-sz", is_flag=True, default=False, help="Show size of project contents.")
+@click.argument("project", metavar="[PROJECT ID]", nargs=1, required=False)
+@click.argument("folder", nargs=-1)
+@click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
     "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
@@ -238,19 +233,23 @@ def put(
     help="Path to file with user credentials, destination, etc.",
 )
 @click.pass_obj
-def ls(dds_info, proj_arg, fold_arg, project, projects, folder, size, username, config):
-    """List the projects and the files within the projects."""
+def ls(dds_info, project, folder, size, username, config):
+    """
+    List your projects and project files.
 
-    project = proj_arg if proj_arg is not None else project
-    folder = fold_arg if fold_arg is not None else folder
+    To list all projects, run `dds ls` without any arguments.
 
-    if projects and size:
+    Specify a Project ID to list the files within a project.
+    You can also follow this with a subfolder path to show files within that folder.
+    """
+
+    if not project and size:
         LOG.warning("NB! Listing the project size is not yet implemented.")
 
     try:
         with dds_cli.data_lister.DataLister(
             project=project,
-            project_level=projects,
+            project_level=project is None,
             config=dds_info["CONFIG"] if config is None else config,
             username=username,
         ) as lister:

@@ -91,7 +91,7 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.info(f"File {file} status updated to {func.__name__}: started")
+        LOG.debug(f"File {file} status updated to {func.__name__}: started")
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
@@ -105,7 +105,7 @@ def update_status(func):
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.info(f"File {file} status updated to {func.__name__}: done")
+            LOG.debug(f"File {file} status updated to {func.__name__}: done")
 
         return ok_to_continue, message
 
@@ -135,7 +135,7 @@ def connect_cloud(func):
                 f"S3 connection failed: {err}",
             )
         else:
-            LOG.info("Connection to S3 established.")
+            LOG.debug("Connection to S3 established.")
             return func(self, *args, **kwargs)
 
     return init_resource

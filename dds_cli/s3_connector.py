@@ -87,14 +87,9 @@ class S3Connector:
             raise SystemExit from err
 
         # Error
-        if not response.ok:
-            return (
-                sfsp_proj,
-                keys,
-                url,
-                bucket,
-                f"Failed retrieving Safespring project name: {response.text}",
-            )
+        assert (
+            response.ok
+        ), f"Failed retrieving Safespring project name. Server response: {response.text}"
 
         # Get s3 info
         try:

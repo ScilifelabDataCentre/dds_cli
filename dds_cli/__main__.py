@@ -222,6 +222,7 @@ def put(
 @dds_main.command()
 @click.argument("project", metavar="[PROJECT ID]", nargs=1, required=False)
 @click.argument("folder", nargs=1, required=False)
+@click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
     "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
@@ -234,7 +235,7 @@ def put(
     help="Path to file with user credentials, destination, etc.",
 )
 @click.pass_obj
-def ls(dds_info, project, folder, size, username, config):
+def ls(dds_info, project, folder, projects, size, username, config):
     """
     List your projects and project files.
 
@@ -252,7 +253,7 @@ def ls(dds_info, project, folder, size, username, config):
         if project is None:
             with dds_cli.data_lister.DataLister(
                 project=project,
-                project_level=project is None,
+                project_level=project is None or projects,
                 config=dds_info["CONFIG"] if config is None else config,
                 username=username,
             ) as lister:

@@ -142,18 +142,11 @@ class DDSBaseClass:
             # Get contents from file
             contents = fh.FileHandler.extract_config(configfile=config)
 
-            # Get user credentials and project info if not already specified
+            # Get user credentials if not already specified
             if username is None and "username" in contents:
                 username = contents["username"]
             if password is None and "password" in contents:
                 password = contents["password"]
-            if not ignore_config_project:
-                if (
-                    project is None
-                    and "project" in contents
-                    and self.method in ["put", "get", "ls"]
-                ):
-                    project = contents["project"]
 
         LOG.debug(f"Username: {username}, Project ID: {project}")
 

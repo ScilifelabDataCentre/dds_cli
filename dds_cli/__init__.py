@@ -2,6 +2,7 @@
 
 import os
 import pkg_resources
+import prompt_toolkit
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
@@ -69,3 +70,23 @@ class FileSegment:
     DDS_SIGNATURE = b"DelSys"
     SEGMENT_SIZE_RAW = 65536  # Size of chunk to read from raw file
     SEGMENT_SIZE_CIPHER = SEGMENT_SIZE_RAW + 16  # Size of chunk to read from encrypted file
+
+
+# Custom styles for questionary
+dds_questionary_styles = prompt_toolkit.styles.Style(
+    [
+        ("qmark", "fg:ansiblue bold"),  # token in front of the question
+        ("question", "bold"),  # question text
+        ("answer", "fg:ansigreen nobold bg:"),  # submitted answer text behind the question
+        ("pointer", "fg:ansiyellow bold"),  # pointer used in select and checkbox prompts
+        ("highlighted", "fg:ansiblue bold"),  # pointed-at choice in select and checkbox prompts
+        ("selected", "fg:ansiyellow noreverse bold"),  # style for a selected item of a checkbox
+        ("separator", "fg:ansiblack"),  # separator in lists
+        ("instruction", ""),  # user instructions for select, rawselect, checkbox
+        ("text", ""),  # plain text
+        ("disabled", "fg:gray italic"),  # disabled choices for select and checkbox prompts
+        ("choice-default", "fg:ansiblack"),
+        ("choice-default-changed", "fg:ansiyellow"),
+        ("choice-required", "fg:ansired"),
+    ]
+)

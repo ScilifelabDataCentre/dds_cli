@@ -63,7 +63,6 @@ class DDSBaseClass:
         password=None,
         config=None,
         project=None,
-        ignore_config_project=False,
         dds_directory: pathlib.Path = None,
     ):
 
@@ -89,7 +88,6 @@ class DDSBaseClass:
             password=password,
             config=config,
             project=project,
-            ignore_config_project=ignore_config_project,
         )
 
         # Authenticate the user and get the token
@@ -131,7 +129,6 @@ class DDSBaseClass:
         password=None,
         config=None,
         project=None,
-        ignore_config_project=False,
     ):
         """Verifies that the users input is valid and fully specified."""
 

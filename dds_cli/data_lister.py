@@ -49,7 +49,6 @@ class DataLister(base.DDSBaseClass):
             username=username,
             config=config,
             project=project,
-            ignore_config_project=project_level,
         )
 
         # Only method "ls" can use the DataLister class

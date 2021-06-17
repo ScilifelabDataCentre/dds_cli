@@ -337,7 +337,7 @@ def ls(dds_info, project, folder, projects, size, username, config):
 
 @dds_main.command()
 @click.argument("proj_arg", required=False)
-@click.option("--project", required=False, type=str, help="Project ID.")
+@click.option("--project", "-p", required=False, type=str, help="Project ID.")
 @click.option(
     "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
@@ -443,7 +443,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     required=False,
     type=str,
     multiple=True,
-    help="Path to file or directory (local).",
+    help="Path to file or directory.",
 )
 @click.option(
     "--source-path-file",

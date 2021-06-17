@@ -234,8 +234,11 @@ def put(
     type=click.Path(exists=True),
     help="Path to file with user credentials, destination, etc.",
 )
+@click.option(
+    "--usage", is_flag=True, default=False, help="Show the usage and cost for a specific facility."
+)
 @click.pass_obj
-def ls(dds_info, project, folder, projects, size, username, config):
+def ls(dds_info, project, folder, projects, size, username, config, usage):
     """
     List your projects and project files.
 
@@ -245,12 +248,22 @@ def ls(dds_info, project, folder, projects, size, username, config):
     You can also follow this with a subfolder path to show files within that folder.
     """
 
-    if not project and size:
+    if (not project or projects) and size:
         LOG.warning("NB! Listing the project size is not yet implemented.")
 
     try:
+        # Show usage for entire facility (only applicable to facility user)
+        if usage:
+            with dds_cli.data_lister.DataLister(
+                project=None,
+                project_level=False,
+                config=dds_info["CONFIG"] if config is None else config,
+                username=username,
+            ) as lister:
+                lister.show_usage()
+
         # List all projects if project is None and all files if project spec
-        if project is None:
+        elif project is None:
             with dds_cli.data_lister.DataLister(
                 project=project,
                 project_level=project is None or projects,
@@ -281,7 +294,7 @@ def ls(dds_info, project, folder, projects, size, username, config):
                             break
 
         # List all files in a project if we know a project ID
-        if project:
+        elif project:
             with dds_cli.data_lister.DataLister(
                 project=project,
                 project_level=project is None,

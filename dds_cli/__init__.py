@@ -61,6 +61,9 @@ class DDSEndpoint:
     PROJ_PUBLIC = BASE_ENDPOINT + "/proj/public"
     PROJ_PRIVATE = BASE_ENDPOINT + "/proj/private"
 
+    # Display facility usage
+    USAGE = BASE_ENDPOINT + "/invoice"
+
     TIMEOUT = 5
 
 

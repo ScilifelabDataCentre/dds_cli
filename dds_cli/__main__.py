@@ -33,6 +33,7 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.timestamp
+import dds_cli.usage_lister
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -234,9 +235,6 @@ def put(
     type=click.Path(exists=True),
     help="Path to file with user credentials, destination, etc.",
 )
-@click.option(
-    "--usage", is_flag=True, default=False, help="Show the usage and cost for a specific facility."
-)
 @click.pass_obj
 def ls(dds_info, project, folder, projects, size, username, config, usage):
     """
@@ -252,18 +250,9 @@ def ls(dds_info, project, folder, projects, size, username, config, usage):
         LOG.warning("NB! Listing the project size is not yet implemented.")
 
     try:
-        # Show usage for entire facility (only applicable to facility user)
-        if usage:
-            with dds_cli.data_lister.DataLister(
-                project=None,
-                project_level=False,
-                config=dds_info["CONFIG"] if config is None else config,
-                username=username,
-            ) as lister:
-                lister.show_usage()
 
         # List all projects if project is None and all files if project spec
-        elif project is None:
+        if project is None:
             with dds_cli.data_lister.DataLister(
                 project=project,
                 project_level=project is None or projects,
@@ -605,3 +594,34 @@ def get(
                                 progress=progress,
                             )
                         ] = next_file
+
+
+# Usage
+@dds_main.command()
+@click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.pass_obj
+def usage(dds_info, config, username):
+
+    try:
+        # Show usage for entire facility (only applicable to facility user)
+        with dds_cli.usage_lister.UsageLister(
+            config=dds_info["CONFIG"] if config is None else config,
+            username=username,
+        ) as lister:
+            lister.show_usage()
+    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
+        LOG.error(e)
+        sys.exit(1)

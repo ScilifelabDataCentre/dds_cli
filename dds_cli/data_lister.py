@@ -56,24 +56,6 @@ class DataLister(base.DDSBaseClass):
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     # Public methods ########################### Public methods #
-    def show_usage(self):
-
-        try:
-            response = requests.get(DDSEndpoint.USAGE, headers=self.token)
-        except requests.exceptions.RequestException as err:
-            raise exceptions.APIError(f"Problem with database response: {err}")
-
-        console = Console()
-        if not response.ok:
-            raise exceptions.APIError(f"Failed to get calculated usage and cost: {response.text}")
-
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise exceptions.APIError(f"Could not decode JSON response: {err}")
-
-        LOG.debug(resp_json)
-
     def list_projects(self, prompt_project=False):
         """Gets a list of all projects the user is involved in."""
 

@@ -91,7 +91,7 @@ class UsageLister(base.DDSBaseClass):
         table.add_column("Project ID", footer="Total")
         table.add_column("GBHours", footer=str(total_usage["gbhours"]))
         table.add_column(
-            "Cost (Approx., kr)",
+            "Approx. Cost (kr)",
             footer=str(total_usage["cost"]) if total_usage["cost"] > 1 else str(0),
         )
 

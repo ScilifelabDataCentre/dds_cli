@@ -612,8 +612,15 @@ def get(
     type=str,
     help="Your Data Delivery System username.",
 )
+@click.option(
+    "--invoice",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Generate report from DDS usage during last invoicing period.",
+)
 @click.pass_obj
-def usage(dds_info, config, username):
+def usage(dds_info, config, username, invoice):
 
     try:
         # Show usage for entire facility (only applicable to facility user)

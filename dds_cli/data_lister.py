@@ -123,12 +123,9 @@ class DataLister(base.DDSBaseClass):
     def list_projects(self, prompt_project=False):
         """Gets a list of all projects the user is involved in."""
 
-        # The columns we want to display
-        columns = ["Project ID", "Title", "PI", "Status", "Last updated"]
-
         # Get projects from API
         try:
-            response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token, json=columns)
+            response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
         except requests.exceptions.RequestException as err:
             raise exceptions.APIError(f"Problem with database response: {err}")
 
@@ -159,10 +156,14 @@ class DataLister(base.DDSBaseClass):
             "PI": default_format,
             "Status": default_format,
             "Last updated": {"justify": "center", "style": default_format.get("style")},
+            "Size": {"justify": "center", "style": default_format.get("style")},
         }
 
         # Create table
         table = Table(title="Your Projects", show_header=True, header_style="bold")
+
+        # The columns we want to display (dict is not ordered)
+        columns = ["Project ID", "Title", "PI", "Status", "Last updated", "Size"]
 
         # Add columns to table
         for col in columns:
@@ -170,7 +171,6 @@ class DataLister(base.DDSBaseClass):
                 col, justify=column_format[col]["justify"], style=column_format[col]["style"]
             )
 
-        LOG.info(sorted_projects)
         # Add all column values for each row to table
         for proj in sorted_projects:
             table.add_row(*[proj[i] for i in columns])

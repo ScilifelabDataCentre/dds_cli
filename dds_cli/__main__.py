@@ -287,7 +287,7 @@ def ls(dds_info, project, folder, projects, size, username, config, usage):
                             break
 
         # List all files in a project if we know a project ID
-        elif project:
+        if project:
             with dds_cli.data_lister.DataLister(
                 project=project,
                 project_level=project is None,

@@ -91,7 +91,7 @@ class DataLister(base.DDSBaseClass):
             title="Data Delivery System usage",
             caption=(
                 "The cost is calculated from the pricing provided by Safespring "
-                "(unit kr/GB/month) and is therefore approximate."
+                "(unit kr/GB/month) and is therefore approximate. Contact the Data Centre for more details."
             ),
             show_header=True,
             header_style="bold",
@@ -125,7 +125,9 @@ class DataLister(base.DDSBaseClass):
 
         # Get projects from API
         try:
-            response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
+            response = requests.get(
+                DDSEndpoint.LIST_PROJ, headers=self.token, params={"usage": self.show_usage}
+            )
         except requests.exceptions.RequestException as err:
             raise exceptions.APIError(f"Problem with database response: {err}")
 
@@ -138,37 +140,70 @@ class DataLister(base.DDSBaseClass):
             raise exceptions.APIError(f"Could not decode JSON response: {err}")
 
         # Cancel if user not involved in any projects
-        if "all_projects" not in resp_json:
+        usage_info = resp_json.get("total_usage")
+        project_info = resp_json.get("project_info")
+        if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
 
-        # Sort list of projects by 1. Last updated, 2. Project ID
         sorted_projects = sorted(
-            sorted(resp_json["all_projects"], key=lambda i: i["Project ID"]),
+            sorted(project_info, key=lambda i: i["Project ID"]),
             key=lambda t: (t["Last updated"] is None, t["Last updated"]),
             reverse=True,
         )
 
         # Column format
-        default_format = {"justify": "left", "style": None}
-        column_format = {
-            "Project ID": {"justify": default_format.get("justify"), "style": "green"},
-            "Title": default_format,
-            "PI": default_format,
-            "Status": default_format,
-            "Last updated": {"justify": "center", "style": default_format.get("style")},
-            "Size": {"justify": "center", "style": default_format.get("style")},
+        default_format = {"justify": "left", "style": "", "footer": ""}
+        columns = {
+            "Project ID": {
+                "justify": default_format.get("justify"),
+                "style": "green",
+                "footer": "Total" if self.show_usage else "",
+            },
+            **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
+            "Size": {
+                "justify": "center",
+                "style": default_format.get("style"),
+                "footer": resp_json.get("total_size"),
+            },
         }
 
-        # Create table
-        table = Table(title="Your Projects", show_header=True, header_style="bold")
+        if usage_info and self.show_usage:
+            columns.update(
+                {
+                    "Usage": {
+                        "justify": "center",
+                        "style": default_format.get("style"),
+                        "footer": str(usage_info["gbhours"]),
+                    },
+                    "Cost": {
+                        "justify": "center",
+                        "style": default_format.get("style"),
+                        "footer": str(usage_info["cost"]),
+                    },
+                }
+            )
 
-        # The columns we want to display (dict is not ordered)
-        columns = ["Project ID", "Title", "PI", "Status", "Last updated", "Size"]
+        # Create table
+        table = Table(
+            title="Your Projects",
+            show_header=True,
+            header_style="bold",
+            show_footer=self.show_usage,
+            caption=(
+                "The cost is calculated from the pricing provided by Safespring (unit kr/GB/month) "
+                "and is therefore approximate. Contact the Data Centre for more details."
+            )
+            if self.show_usage
+            else None,
+        )
 
         # Add columns to table
-        for col in columns:
+        for colname, colformat in columns.items():
             table.add_column(
-                col, justify=column_format[col]["justify"], style=column_format[col]["style"]
+                colname,
+                justify=colformat["justify"],
+                style=colformat["style"],
+                footer=colformat["footer"],
             )
 
         # Add all column values for each row to table

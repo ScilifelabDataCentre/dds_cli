@@ -120,7 +120,7 @@ class DataLister(base.DDSBaseClass):
         console = Console()
         console.print(table)
 
-    def list_projects(self, prompt_project=False):
+    def list_projects(self, prompt_project=False, sort_by="Updated"):
         """Gets a list of all projects the user is involved in."""
 
         # Get projects from API
@@ -145,11 +145,31 @@ class DataLister(base.DDSBaseClass):
         if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
 
-        sorted_projects = sorted(
-            sorted(project_info, key=lambda i: i["Project ID"]),
-            key=lambda t: (t["Last updated"] is None, t["Last updated"]),
-            reverse=True,
-        )
+        # Sort projects according to chosen or default
+        sorted_projects = list()
+        sorting_dict = {
+            "title": "Title",
+            "pi": "PI",
+            "status": "Status",
+            "updated": "Last updated",
+            "size": "Size",
+            "usage": "GBHours",
+            "cost": "Cost",
+        }
+        sort_by = sort_by.lower()
+        if sort_by in ["usage", "cost"] and not self.show_usage:
+            LOG.warning(f"Can only sort by {sort_by} when using the --usage flag.")
+            sort_by = "updated"
+
+        sorted_projects = sorted(project_info, key=lambda i: i["Project ID"])
+
+        if sort_by != "id":
+            sort_by = sorting_dict[sort_by]
+            sorted_projects = sorted(
+                sorted_projects,
+                key=lambda t: (t[sort_by] is None, t[sort_by]),
+                reverse=sort_by == "updated",
+            )
 
         # Column format
         default_format = {"justify": "left", "style": "", "footer": ""}
@@ -170,7 +190,7 @@ class DataLister(base.DDSBaseClass):
         if usage_info and self.show_usage:
             columns.update(
                 {
-                    "Usage": {
+                    "GBHours": {
                         "justify": "center",
                         "style": default_format.get("style"),
                         "footer": str(usage_info["gbhours"]),

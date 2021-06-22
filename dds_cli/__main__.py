@@ -242,8 +242,18 @@ def put(
     show_default=True,
     help="Show the usage for a specific facility, in GBHours and cost.",
 )
+@click.option(
+    "--sort",
+    type=click.Choice(
+        choices=["id", "title", "pi", "status", "updated", "size", "usage", "cost"],
+        case_sensitive=False,
+    ),
+    default="Updated",
+    required=False,
+    help="Which column to sort the project list by.",
+)
 @click.pass_obj
-def ls(dds_info, project, folder, projects, size, username, config, usage):
+def ls(dds_info, project, folder, projects, size, username, config, usage, sort):
     """
     List your projects and project files.
 
@@ -263,7 +273,7 @@ def ls(dds_info, project, folder, projects, size, username, config, usage):
                 config=dds_info["CONFIG"] if config is None else config,
                 username=username,
             ) as lister:
-                projects = lister.list_projects()
+                projects = lister.list_projects(sort_by=sort)
 
                 # If an interactive terminal, ask user if they want to view files for a project
                 if sys.stdout.isatty():

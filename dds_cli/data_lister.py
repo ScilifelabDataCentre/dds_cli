@@ -147,6 +147,7 @@ class DataLister(base.DDSBaseClass):
 
         # Sort projects according to chosen or default
         sorted_projects = list()
+        # TODO (ina): Put this in another class or function?
         sorting_dict = {
             "title": "Title",
             "pi": "PI",
@@ -172,18 +173,21 @@ class DataLister(base.DDSBaseClass):
             )
 
         # Column format
-        default_format = {"justify": "left", "style": "", "footer": ""}
+        # TODO (ina): Put this in another class or function?
+        default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
         columns = {
             "Project ID": {
                 "justify": default_format.get("justify"),
                 "style": "green",
                 "footer": "Total" if self.show_usage else "",
+                "overflow": default_format.get("overflow"),
             },
             **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
             "Size": {
                 "justify": "center",
                 "style": default_format.get("style"),
                 "footer": resp_json.get("total_size"),
+                "overflow": "ellipsis",
             },
         }
 
@@ -194,11 +198,13 @@ class DataLister(base.DDSBaseClass):
                         "justify": "center",
                         "style": default_format.get("style"),
                         "footer": str(usage_info["gbhours"]),
+                        "overflow": "ellipsis",
                     },
                     "Cost": {
                         "justify": "center",
                         "style": default_format.get("style"),
                         "footer": str(usage_info["cost"]),
+                        "overflow": "ellipsis",
                     },
                 }
             )
@@ -224,6 +230,7 @@ class DataLister(base.DDSBaseClass):
                 justify=colformat["justify"],
                 style=colformat["style"],
                 footer=colformat["footer"],
+                overflow=colformat["overflow"],
             )
 
         # Add all column values for each row to table

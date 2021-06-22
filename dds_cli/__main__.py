@@ -235,6 +235,13 @@ def put(
     type=click.Path(exists=True),
     help="Path to file with user credentials, destination, etc.",
 )
+@click.option(
+    "--usage",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Show the usage for a specific facility, in GBHours and cost.",
+)
 @click.pass_obj
 def ls(dds_info, project, folder, projects, size, username, config, usage):
     """
@@ -246,16 +253,13 @@ def ls(dds_info, project, folder, projects, size, username, config, usage):
     You can also follow this with a subfolder path to show files within that folder.
     """
 
-    if (not project or projects) and size:
-        LOG.warning("NB! Listing the project size is not yet implemented.")
-
     try:
-
         # List all projects if project is None and all files if project spec
         if project is None:
             with dds_cli.data_lister.DataLister(
                 project=project,
                 project_level=project is None or projects,
+                show_usage=usage,
                 config=dds_info["CONFIG"] if config is None else config,
                 username=username,
             ) as lister:
@@ -597,38 +601,38 @@ def get(
 
 
 # Usage
-@dds_main.command()
-@click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials.",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--invoice",
-    "-i",
-    is_flag=True,
-    default=False,
-    help="Generate report from DDS usage during last invoicing period.",
-)
-@click.pass_obj
-def usage(dds_info, config, username, invoice):
+# @dds_main.command()
+# @click.option(
+#     "--config",
+#     "-c",
+#     required=False,
+#     type=click.Path(exists=True),
+#     help="Path to file with user credentials.",
+# )
+# @click.option(
+#     "--username",
+#     "-u",
+#     required=False,
+#     type=str,
+#     help="Your Data Delivery System username.",
+# )
+# @click.option(
+#     "--invoice",
+#     "-i",
+#     is_flag=True,
+#     default=False,
+#     help="Generate report from DDS usage during last invoicing period.",
+# )
+# @click.pass_obj
+# def usage(dds_info, config, username, invoice):
 
-    try:
-        # Show usage for entire facility (only applicable to facility user)
-        with dds_cli.usage_lister.UsageLister(
-            config=dds_info["CONFIG"] if config is None else config,
-            username=username,
-        ) as lister:
-            lister.show_usage()
-    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
-        LOG.error(e)
-        sys.exit(1)
+#     try:
+#         # Show usage for entire facility (only applicable to facility user)
+#         with dds_cli.usage_lister.UsageLister(
+#             config=dds_info["CONFIG"] if config is None else config,
+#             username=username,
+#         ) as lister:
+#             lister.show_usage()
+#     except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
+#         LOG.error(e)
+#         sys.exit(1)

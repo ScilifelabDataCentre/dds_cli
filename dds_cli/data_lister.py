@@ -42,6 +42,7 @@ class DataLister(base.DDSBaseClass):
         config: pathlib.Path = None,
         project: str = None,
         project_level: bool = False,
+        show_usage: bool = False,
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -55,7 +56,70 @@ class DataLister(base.DDSBaseClass):
         if self.method != "ls":
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
+        self.show_usage = show_usage
+
     # Public methods ########################### Public methods #
+    def _show_usage(self):
+        """Get the usage for a specific facility"""
+
+        # Call API endpoint to calculate usage
+        try:
+            response = requests.get(DDSEndpoint.USAGE, headers=self.token)
+        except requests.exceptions.RequestException as err:
+            raise exceptions.APIError(f"Problem with database response: {err}")
+
+        # Check that request ok
+        if not response.ok:
+            raise exceptions.APIError(f"Failed to get calculated usage and cost: {response.text}")
+
+        # Get json resposne
+        try:
+            resp_json = response.json()
+            project_usage = resp_json["project_usage"]
+            total_usage = resp_json["total_usage"]
+        except simplejson.JSONDecodeError as err:
+            raise exceptions.APIError(f"Could not decode JSON response: {err}")
+
+        LOG.debug(resp_json)
+
+        # Sort projects according to id
+        sorted_projects = sorted(project_usage, key=lambda i: i)
+        LOG.debug(sorted_projects)
+
+        # Create table
+        table = Table(
+            title="Data Delivery System usage",
+            caption=(
+                "The cost is calculated from the pricing provided by Safespring "
+                "(unit kr/GB/month) and is therefore approximate."
+            ),
+            show_header=True,
+            header_style="bold",
+            show_footer=True,
+        )
+
+        # Add columns
+        table.add_column("Project ID", footer="Total")
+        table.add_column("GBHours", footer=str(total_usage["gbhours"]))
+        table.add_column(
+            "Approx. Cost (kr)",
+            footer=str(total_usage["cost"]) if total_usage["cost"] > 1 else str(0),
+        )
+
+        # Add rows
+        for proj in sorted_projects:
+            table.add_row(
+                *[
+                    proj,
+                    str(project_usage[proj]["gbhours"]),
+                    str(project_usage[proj]["cost"]) if project_usage[proj]["cost"] > 1 else str(0),
+                ],
+            )
+
+        # Print out table
+        console = Console()
+        console.print(table)
+
     def list_projects(self, prompt_project=False):
         """Gets a list of all projects the user is involved in."""
 
@@ -89,16 +153,24 @@ class DataLister(base.DDSBaseClass):
         table = Table(title="Your Projects", show_header=True, header_style="bold")
 
         # Add columns to table
+        default_format = {"justify": "left", "style": None}
+        column_format = {
+            "Project ID": {"justify": default_format.get("justify"), "style": "green"},
+            "Title": default_format,
+            "PI": default_format,
+            "Status": default_format,
+            "Last updated": {"justify": "center", "style": default_format.get("style")},
+        }
         columns = resp_json["columns"]
         for col in columns:
-            just = "left"
-            if col == "Last updated":
-                just = "center"
+            # just = "left"
+            # if col == "Last updated":
+            #     just = "center"
 
-            style = None
-            if "ID" in col:
-                style = "green"
-            table.add_column(col, justify=just, style=style)
+            # style = None
+            # if "ID" in col:
+            #     style = "green"
+            table.add_column(col, justify=column_format["justify"], style=column_format["style"])
 
         # Add all column values for each row to table
         for proj in sorted_projects:

@@ -123,13 +123,15 @@ class DataLister(base.DDSBaseClass):
     def list_projects(self, prompt_project=False):
         """Gets a list of all projects the user is involved in."""
 
+        # The columns we want to display
+        columns = ["Project ID", "Title", "PI", "Status", "Last updated"]
+
         # Get projects from API
         try:
-            response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
+            response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token, json=columns)
         except requests.exceptions.RequestException as err:
             raise exceptions.APIError(f"Problem with database response: {err}")
 
-        console = Console()
         if not response.ok:
             raise exceptions.APIError(f"Failed to get list of projects: {response.text}")
 
@@ -149,10 +151,7 @@ class DataLister(base.DDSBaseClass):
             reverse=True,
         )
 
-        # Create table
-        table = Table(title="Your Projects", show_header=True, header_style="bold")
-
-        # Add columns to table
+        # Column format
         default_format = {"justify": "left", "style": None}
         column_format = {
             "Project ID": {"justify": default_format.get("justify"), "style": "green"},
@@ -161,22 +160,23 @@ class DataLister(base.DDSBaseClass):
             "Status": default_format,
             "Last updated": {"justify": "center", "style": default_format.get("style")},
         }
-        columns = resp_json["columns"]
+
+        # Create table
+        table = Table(title="Your Projects", show_header=True, header_style="bold")
+
+        # Add columns to table
         for col in columns:
-            # just = "left"
-            # if col == "Last updated":
-            #     just = "center"
+            table.add_column(
+                col, justify=column_format[col]["justify"], style=column_format[col]["style"]
+            )
 
-            # style = None
-            # if "ID" in col:
-            #     style = "green"
-            table.add_column(col, justify=column_format["justify"], style=column_format["style"])
-
+        LOG.info(sorted_projects)
         # Add all column values for each row to table
         for proj in sorted_projects:
-            table.add_row(*[proj[columns[i]] for i in range(len(columns))])
+            table.add_row(*[proj[i] for i in columns])
 
         # Print to stdout if there are any lines
+        console = Console()
         if table.columns:
             # Use a pager if output is taller than the visible terminal
             if len(sorted_projects) + 5 > console.height:

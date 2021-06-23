@@ -59,96 +59,12 @@ class DataLister(base.DDSBaseClass):
         self.show_usage = show_usage
 
     # Public methods ########################### Public methods #
-    def _show_usage(self):
-        """Get the usage for a specific facility"""
+    def sort_projects(self, projects, sort_by="id"):
+        """Sort the projects according to ID and either default or chosen column."""
 
-        # Call API endpoint to calculate usage
-        try:
-            response = requests.get(DDSEndpoint.USAGE, headers=self.token)
-        except requests.exceptions.RequestException as err:
-            raise exceptions.APIError(f"Problem with database response: {err}")
-
-        # Check that request ok
-        if not response.ok:
-            raise exceptions.APIError(f"Failed to get calculated usage and cost: {response.text}")
-
-        # Get json resposne
-        try:
-            resp_json = response.json()
-            project_usage = resp_json["project_usage"]
-            total_usage = resp_json["total_usage"]
-        except simplejson.JSONDecodeError as err:
-            raise exceptions.APIError(f"Could not decode JSON response: {err}")
-
-        LOG.debug(resp_json)
-
-        # Sort projects according to id
-        sorted_projects = sorted(project_usage, key=lambda i: i)
-        LOG.debug(sorted_projects)
-
-        # Create table
-        table = Table(
-            title="Data Delivery System usage",
-            caption=(
-                "The cost is calculated from the pricing provided by Safespring "
-                "(unit kr/GB/month) and is therefore approximate. Contact the Data Centre for more details."
-            ),
-            show_header=True,
-            header_style="bold",
-            show_footer=True,
-        )
-
-        # Add columns
-        table.add_column("Project ID", footer="Total")
-        table.add_column("GBHours", footer=str(total_usage["gbhours"]))
-        table.add_column(
-            "Approx. Cost (kr)",
-            footer=str(total_usage["cost"]) if total_usage["cost"] > 1 else str(0),
-        )
-
-        # Add rows
-        for proj in sorted_projects:
-            table.add_row(
-                *[
-                    proj,
-                    str(project_usage[proj]["gbhours"]),
-                    str(project_usage[proj]["cost"]) if project_usage[proj]["cost"] > 1 else str(0),
-                ],
-            )
-
-        # Print out table
-        console = Console()
-        console.print(table)
-
-    def list_projects(self, prompt_project=False, sort_by="Updated"):
-        """Gets a list of all projects the user is involved in."""
-
-        # Get projects from API
-        try:
-            response = requests.get(
-                DDSEndpoint.LIST_PROJ, headers=self.token, params={"usage": self.show_usage}
-            )
-        except requests.exceptions.RequestException as err:
-            raise exceptions.APIError(f"Problem with database response: {err}")
-
-        if not response.ok:
-            raise exceptions.APIError(f"Failed to get list of projects: {response.text}")
-
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise exceptions.APIError(f"Could not decode JSON response: {err}")
-
-        # Cancel if user not involved in any projects
-        usage_info = resp_json.get("total_usage")
-        project_info = resp_json.get("project_info")
-        if not project_info:
-            raise exceptions.NoDataError("No project info was retrieved. No files to list.")
-
-        # Sort projects according to chosen or default
-        sorted_projects = list()
-        # TODO (ina): Put this in another class or function?
+        # Lower case sort_by options and their column title equivalents
         sorting_dict = {
+            "id": "Project ID",
             "title": "Title",
             "pi": "PI",
             "status": "Status",
@@ -157,42 +73,54 @@ class DataLister(base.DDSBaseClass):
             "usage": "GBHours",
             "cost": "Cost",
         }
+
+        # Get lower case option
         sort_by = sort_by.lower()
+
+        # Check if sorting column allowed
         if sort_by in ["usage", "cost"] and not self.show_usage:
             LOG.warning(f"Can only sort by {sort_by} when using the --usage flag.")
             sort_by = "updated"
 
-        sorted_projects = sorted(project_info, key=lambda i: i["Project ID"])
+        # Sort according to ID
+        sorted_projects = sorted(projects, key=lambda i: i["Project ID"])
 
-        if sort_by != "id":
-            sort_by = sorting_dict[sort_by]
+        # Sort again according to chosen of default option
+        sort_by = sorting_dict.get(sort_by)
+        if sort_by:
             sorted_projects = sorted(
                 sorted_projects,
                 key=lambda t: (t[sort_by] is None, t[sort_by]),
-                reverse=sort_by == "updated",
+                reverse=sort_by == sorting_dict.get("updated"),
             )
 
-        # Column format
-        # TODO (ina): Put this in another class or function?
+        return sorted_projects
+
+    def format_columns(self, total_size=None, usage_info=None):
+        """Define the formatting for the project table according to what is returned from API."""
+
         default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
-        columns = {
+
+        # Choose formattting
+        column_formatting = {
             "Project ID": {
                 "justify": default_format.get("justify"),
                 "style": "green",
-                "footer": "Total" if self.show_usage else "",
+                "footer": "Total" if self.show_usage else default_format.get("footer"),
                 "overflow": default_format.get("overflow"),
             },
             **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
             "Size": {
                 "justify": "center",
                 "style": default_format.get("style"),
-                "footer": resp_json.get("total_size"),
+                "footer": total_size,
                 "overflow": "ellipsis",
             },
         }
 
         if usage_info and self.show_usage:
-            columns.update(
+            # Only display costs above 1 kr
+            column_formatting.update(
                 {
                     "GBHours": {
                         "justify": "center",
@@ -209,6 +137,42 @@ class DataLister(base.DDSBaseClass):
                 }
             )
 
+        return column_formatting
+
+    def list_projects(self, prompt_project=False, sort_by="Updated"):
+        """Gets a list of all projects the user is involved in."""
+
+        # Get projects from API
+        try:
+            response = requests.get(
+                DDSEndpoint.LIST_PROJ, headers=self.token, params={"usage": self.show_usage}
+            )
+        except requests.exceptions.RequestException as err:
+            raise exceptions.APIError(f"Problem with database response: {err}")
+
+        # Check resposne
+        if not response.ok:
+            raise exceptions.APIError(f"Failed to get list of projects: {response.text}")
+
+        # Get result from API
+        try:
+            resp_json = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise exceptions.APIError(f"Could not decode JSON response: {err}")
+
+        # Cancel if user not involved in any projects
+        usage_info = resp_json.get("total_usage")
+        total_size = resp_json.get("total_size")
+        project_info = resp_json.get("project_info")
+        if not project_info:
+            raise exceptions.NoDataError("No project info was retrieved. No files to list.")
+
+        # Sort projects according to chosen or default, first ID
+        sorted_projects = self.sort_projects(projects=project_info, sort_by=sort_by)
+
+        # Column format
+        column_formatting = self.format_columns(total_size=total_size, usage_info=usage_info)
+
         # Create table
         table = Table(
             title="Your Projects",
@@ -224,7 +188,7 @@ class DataLister(base.DDSBaseClass):
         )
 
         # Add columns to table
-        for colname, colformat in columns.items():
+        for colname, colformat in column_formatting.items():
             table.add_column(
                 colname,
                 justify=colformat["justify"],
@@ -235,7 +199,7 @@ class DataLister(base.DDSBaseClass):
 
         # Add all column values for each row to table
         for proj in sorted_projects:
-            table.add_row(*[proj[i] for i in columns])
+            table.add_row(*[proj[i] for i in column_formatting])
 
         # Print to stdout if there are any lines
         console = Console()

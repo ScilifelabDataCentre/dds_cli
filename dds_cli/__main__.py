@@ -33,7 +33,6 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.timestamp
-import dds_cli.usage_lister
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

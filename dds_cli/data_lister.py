@@ -42,6 +42,7 @@ class DataLister(base.DDSBaseClass):
         config: pathlib.Path = None,
         project: str = None,
         project_level: bool = False,
+        show_usage: bool = False,
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -55,56 +56,153 @@ class DataLister(base.DDSBaseClass):
         if self.method != "ls":
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
+        self.show_usage = show_usage
+
     # Public methods ########################### Public methods #
-    def list_projects(self, prompt_project=False):
+    def sort_projects(self, projects, sort_by="id"):
+        """Sort the projects according to ID and either default or chosen column."""
+
+        # Lower case sort_by options and their column title equivalents
+        sorting_dict = {
+            "id": "Project ID",
+            "title": "Title",
+            "pi": "PI",
+            "status": "Status",
+            "updated": "Last updated",
+            "size": "Size",
+            "usage": "GBHours",
+            "cost": "Cost",
+        }
+
+        # Get lower case option
+        sort_by = sort_by.lower()
+
+        # Check if sorting column allowed
+        if sort_by in ["usage", "cost"] and not self.show_usage:
+            LOG.warning(f"Can only sort by {sort_by} when using the --usage flag.")
+            sort_by = "updated"
+
+        # Sort according to ID
+        sorted_projects = sorted(projects, key=lambda i: i["Project ID"])
+
+        # Sort again according to chosen of default option
+        sort_by = sorting_dict.get(sort_by)
+        if sort_by:
+            sorted_projects = sorted(
+                sorted_projects,
+                key=lambda t: (t[sort_by] is None, t[sort_by]),
+                reverse=sort_by == sorting_dict.get("updated"),
+            )
+
+        return sorted_projects
+
+    def format_columns(self, total_size=None, usage_info=None):
+        """Define the formatting for the project table according to what is returned from API."""
+
+        default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
+
+        # Choose formattting
+        column_formatting = {
+            "Project ID": {
+                "justify": default_format.get("justify"),
+                "style": "green",
+                "footer": "Total" if self.show_usage else default_format.get("footer"),
+                "overflow": default_format.get("overflow"),
+            },
+            **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
+            "Size": {
+                "justify": "center",
+                "style": default_format.get("style"),
+                "footer": total_size,
+                "overflow": "ellipsis",
+            },
+        }
+
+        if usage_info and self.show_usage:
+            # Only display costs above 1 kr
+            column_formatting.update(
+                {
+                    "GBHours": {
+                        "justify": "center",
+                        "style": default_format.get("style"),
+                        "footer": str(usage_info["gbhours"]),
+                        "overflow": "ellipsis",
+                    },
+                    "Cost": {
+                        "justify": "center",
+                        "style": default_format.get("style"),
+                        "footer": str(usage_info["cost"]),
+                        "overflow": "ellipsis",
+                    },
+                }
+            )
+
+        return column_formatting
+
+    def list_projects(self, prompt_project=False, sort_by="Updated"):
         """Gets a list of all projects the user is involved in."""
 
         # Get projects from API
         try:
-            response = requests.get(DDSEndpoint.LIST_PROJ, headers=self.token)
+            response = requests.get(
+                DDSEndpoint.LIST_PROJ, headers=self.token, params={"usage": self.show_usage}
+            )
         except requests.exceptions.RequestException as err:
             raise exceptions.APIError(f"Problem with database response: {err}")
 
-        console = Console()
+        # Check resposne
         if not response.ok:
             raise exceptions.APIError(f"Failed to get list of projects: {response.text}")
 
+        # Get result from API
         try:
             resp_json = response.json()
         except simplejson.JSONDecodeError as err:
             raise exceptions.APIError(f"Could not decode JSON response: {err}")
 
         # Cancel if user not involved in any projects
-        if "all_projects" not in resp_json:
+        usage_info = resp_json.get("total_usage")
+        total_size = resp_json.get("total_size")
+        project_info = resp_json.get("project_info")
+        if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
 
-        # Sort list of projects by 1. Last updated, 2. Project ID
-        sorted_projects = sorted(
-            sorted(resp_json["all_projects"], key=lambda i: i["Project ID"]),
-            key=lambda t: (t["Last updated"] is None, t["Last updated"]),
-            reverse=True,
-        )
+        # Sort projects according to chosen or default, first ID
+        sorted_projects = self.sort_projects(projects=project_info, sort_by=sort_by)
+
+        # Column format
+        column_formatting = self.format_columns(total_size=total_size, usage_info=usage_info)
 
         # Create table
-        table = Table(title="Your Projects", show_header=True, header_style="bold")
+        table = Table(
+            title="Your Projects",
+            show_header=True,
+            header_style="bold",
+            show_footer=self.show_usage,
+            caption=(
+                "The cost is calculated from the pricing provided by Safespring (unit kr/GB/month) "
+                "and is therefore approximate. Contact the Data Centre for more details."
+            )
+            if self.show_usage
+            else None,
+        )
 
         # Add columns to table
-        columns = resp_json["columns"]
-        for col in columns:
-            just = "left"
-            if col == "Last updated":
-                just = "center"
-
-            style = None
-            if "ID" in col:
-                style = "green"
-            table.add_column(col, justify=just, style=style)
+        for colname, colformat in column_formatting.items():
+            table.add_column(
+                colname,
+                justify=colformat["justify"],
+                style=colformat["style"],
+                footer=colformat["footer"],
+                overflow=colformat["overflow"],
+            )
 
         # Add all column values for each row to table
         for proj in sorted_projects:
-            table.add_row(*[proj[columns[i]] for i in range(len(columns))])
+            table.add_row(*[proj[i] for i in column_formatting])
 
         # Print to stdout if there are any lines
+        console = Console()
         if table.columns:
             # Use a pager if output is taller than the visible terminal
             if len(sorted_projects) + 5 > console.height:

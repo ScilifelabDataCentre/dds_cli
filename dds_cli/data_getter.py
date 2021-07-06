@@ -120,7 +120,7 @@ class DataGetter(base.DDSBaseClass):
         # File task for downloading
         task = progress.add_task(
             description=txt.TextHandler.task_name(file=file, step="get"),
-            total=file_info["size_encrypted"],
+            total=file_info["size_stored"],
             visible=not self.silent,
         )
 
@@ -131,7 +131,7 @@ class DataGetter(base.DDSBaseClass):
         progress.reset(
             task,
             description=txt.TextHandler.task_name(file=file, step="decrypt"),
-            total=file_info["size"],
+            total=file_info["size_original"],
         )
 
         LOG.debug(f"File {file} downloaded: {file_downloaded}")

@@ -234,8 +234,25 @@ def put(
     type=click.Path(exists=True),
     help="Path to file with user credentials, destination, etc.",
 )
+@click.option(
+    "--usage",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Show the usage for a specific facility, in GBHours and cost.",
+)
+@click.option(
+    "--sort",
+    type=click.Choice(
+        choices=["id", "title", "pi", "status", "updated", "size", "usage", "cost"],
+        case_sensitive=False,
+    ),
+    default="Updated",
+    required=False,
+    help="Which column to sort the project list by.",
+)
 @click.pass_obj
-def ls(dds_info, project, folder, projects, size, username, config):
+def ls(dds_info, project, folder, projects, size, username, config, usage, sort):
     """
     List your projects and project files.
 
@@ -245,19 +262,17 @@ def ls(dds_info, project, folder, projects, size, username, config):
     You can also follow this with a subfolder path to show files within that folder.
     """
 
-    if not project and size:
-        LOG.warning("NB! Listing the project size is not yet implemented.")
-
     try:
         # List all projects if project is None and all files if project spec
         if project is None:
             with dds_cli.data_lister.DataLister(
                 project=project,
                 project_level=project is None or projects,
+                show_usage=usage,
                 config=dds_info["CONFIG"] if config is None else config,
                 username=username,
             ) as lister:
-                projects = lister.list_projects()
+                projects = lister.list_projects(sort_by=sort)
 
                 # If an interactive terminal, ask user if they want to view files for a project
                 if sys.stdout.isatty():
@@ -337,7 +352,7 @@ def ls(dds_info, project, folder, projects, size, username, config):
 
 @dds_main.command()
 @click.argument("proj_arg", required=False)
-@click.option("--project", required=False, type=str, help="Project ID.")
+@click.option("--project", "-p", required=False, type=str, help="Project ID.")
 @click.option(
     "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
@@ -443,7 +458,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     required=False,
     type=str,
     multiple=True,
-    help="Path to file or directory (local).",
+    help="Path to file or directory.",
 )
 @click.option(
     "--source-path-file",

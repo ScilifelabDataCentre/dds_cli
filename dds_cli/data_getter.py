@@ -29,17 +29,13 @@ from dds_cli import status
 from dds_cli import text_handler as txt
 from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
 
+import dds_cli.utils
+
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -76,7 +72,9 @@ class DataGetter(base.DDSBaseClass):
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
-            console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
+            dds_cli.utils.console.print(
+                f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n"
+            )
             os._exit(1)
 
         # Start file prep progress
@@ -93,7 +91,7 @@ class DataGetter(base.DDSBaseClass):
             )
 
             if self.filehandler.failed and self.break_on_fail:
-                console.print(
+                dds_cli.utils.console.print(
                     "\n:warning: Some specified files were not found in the system "
                     "and '--break-on-fail' flag used. :warning:\n\n"
                     f"Files not found: {self.filehandler.failed}\n"
@@ -101,7 +99,7 @@ class DataGetter(base.DDSBaseClass):
                 os._exit(1)
 
             if not self.filehandler.data:
-                console.print("\nNo files to download.\n")
+                dds_cli.utils.console.print("\nNo files to download.\n")
                 os._exit(0)
 
             self.status = self.filehandler.create_download_status_dict()

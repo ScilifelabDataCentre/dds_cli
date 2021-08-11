@@ -11,7 +11,6 @@ import pathlib
 # Installed
 import requests
 import simplejson
-from rich.console import Console
 from rich.padding import Padding
 from rich.table import Table
 from rich.tree import Tree
@@ -21,6 +20,8 @@ from dds_cli import base
 from dds_cli import exceptions
 from dds_cli import DDSEndpoint
 from dds_cli import text_handler as th
+
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -202,14 +203,13 @@ class DataLister(base.DDSBaseClass):
             table.add_row(*[proj[i] for i in column_formatting])
 
         # Print to stdout if there are any lines
-        console = Console()
         if table.columns:
             # Use a pager if output is taller than the visible terminal
-            if len(sorted_projects) + 5 > console.height:
-                with console.pager():
-                    console.print(table)
+            if len(sorted_projects) + 5 > dds_cli.utils.console.height:
+                with dds_cli.utils.console.pager():
+                    dds_cli.utils.console.print(table)
             else:
-                console.print(table)
+                dds_cli.utils.console.print(table)
         else:
             raise exceptions.NoDataError(f"No projects found")
 
@@ -299,12 +299,11 @@ class DataLister(base.DDSBaseClass):
             tree.add(line)
 
         # Print output to stdout
-        console = Console()
-        if len(files_folders) + 5 > console.height:
-            with console.pager():
-                console.print(Padding(tree, 1))
+        if len(files_folders) + 5 > dds_cli.utils.console.height:
+            with dds_cli.utils.console.pager():
+                dds_cli.utils.console.print(Padding(tree, 1))
         else:
-            console.print(Padding(tree, 1))
+            dds_cli.utils.console.print(Padding(tree, 1))
 
         # Return variable
         return visible_folders

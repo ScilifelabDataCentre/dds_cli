@@ -13,6 +13,8 @@ import pathlib
 import boto3
 import botocore
 import rich
+import rich.padding
+import rich.table
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
@@ -204,6 +206,23 @@ def removal_spinner(func):
             message = f"{rm_type}(s) successfully removed."
 
         console = rich.console.Console()
-        console.print(message)
+
+        # Compute size of table
+        if isinstance(message, rich.padding.Padding) and isinstance(
+            message.renderable, rich.table.Table
+        ):
+            table_len = message.renderable.row_count + message.top + message.bottom
+        elif isinstance(message, rich.table.Table):
+            table_len = message.row_count
+        else:
+            # The message is probably not a table and should
+            # therefore be printed directly
+            table_len = 0
+
+        if table_len + 5 > console.height:
+            with console.pager():
+                console.print(message)
+        else:
+            console.print(message)
 
     return create_and_remove_task

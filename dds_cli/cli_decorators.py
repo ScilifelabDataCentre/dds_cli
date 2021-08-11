@@ -180,6 +180,7 @@ def removal_spinner(func):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
+            console=dds_cli.utils.console,
         ) as progress:
 
             # Determine spinner text

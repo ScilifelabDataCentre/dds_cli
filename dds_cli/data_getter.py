@@ -81,6 +81,7 @@ class DataGetter(base.DDSBaseClass):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
+            console=dds_cli.utils.console,
         ) as progress:
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")
             self.filehandler = fhr.RemoteFileHandler(

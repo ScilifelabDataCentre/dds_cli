@@ -551,6 +551,7 @@ def get(
             " • ",
             "[progress.percentage]{task.percentage:>3.1f}%",
             refresh_per_second=2,
+            console=dds_cli.utils.console,
         ) as progress:
 
             # Keep track of futures

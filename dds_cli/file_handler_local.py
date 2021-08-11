@@ -58,12 +58,12 @@ class LocalFileHandler(fh.FileHandler):
         # Remove duplicates
         self.data_list = {x for x in self.data_list if pathlib.Path(x).exists()}
 
-        non_existant_files = all_files.difference(self.data_list)
-        if len(non_existant_files) > 0:
+        non_existent_files = all_files.difference(self.data_list)
+        if len(non_existent_files) > 0:
             # Issue warning that some of the files don't exist
             LOG.warning(
                 "The following files from '{}' does not exist: '{}'".format(
-                    user_input[1], "', '".join(non_existant_files)
+                    user_input[1], "', '".join(non_existent_files)
                 )
             )
 

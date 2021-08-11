@@ -53,9 +53,10 @@ class LocalFileHandler(fh.FileHandler):
         # Initiate FileHandler from inheritance
         super().__init__(user_input=user_input, local_destination=temporary_destination)
 
+        # Remove duplicates and save all files for later use
         all_files = set(self.data_list)
 
-        # Remove duplicates
+        # Remove non existent files
         self.data_list = {x for x in self.data_list if pathlib.Path(x).exists()}
 
         non_existent_files = all_files.difference(self.data_list)

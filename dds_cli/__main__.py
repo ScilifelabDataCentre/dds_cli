@@ -411,10 +411,10 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
         if rm_all:
             remover.remove_all()
 
-        if file:
+        elif file:
             remover.remove_file(files=file)
 
-        if folder:
+        elif folder:
             remover.remove_folder(folder=folder)
 
 

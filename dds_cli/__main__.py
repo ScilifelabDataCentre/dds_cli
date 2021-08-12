@@ -307,16 +307,13 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort)
                 folders = lister.list_files(folder=folder, show_size=size)
 
                 # If an interactive terminal, ask user if they want to view files for a project
-                if sys.stdout.isatty():
+                if sys.stdout.isatty() and len(folders) > 0:
                     LOG.info(
                         "Would you like to view files within a directory? Leave blank to exit."
                     )
                     last_folder = None
                     while folder is None or folder != last_folder:
                         last_folder = folder
-
-                        if not len(folders):
-                            break
 
                         try:
                             folder = questionary.autocomplete(
@@ -337,6 +334,9 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort)
 
                         # List files
                         folders = lister.list_files(folder=folder, show_size=size)
+
+                        if len(folders) == 0:
+                            break
 
     except (dds_cli.exceptions.NoDataError) as e:
         LOG.warning(e)

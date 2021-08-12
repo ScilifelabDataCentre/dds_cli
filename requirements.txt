@@ -2,7 +2,7 @@ boto3>=1.16.51
 botocore>=1.19.51
 click-pathlib
 click>=7.1.2
-cryptography>=3.3.2
+cryptography>=3.4.7
 immutabledict
 pandas>=1.2.0
 prettytable>=2.0.0
@@ -14,3 +14,4 @@ rich>=10.0.0
 simplejson
 zstandard>=0.15.1
 pyyaml
+pytest

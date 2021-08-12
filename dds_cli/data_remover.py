@@ -49,8 +49,6 @@ class DataRemover(base.DDSBaseClass):
     def __response_delete(resp_json, level="File"):
         """Output a response after deletion."""
 
-        # console = rich.console.Console()
-
         # Check that enough info
         if not all(x in resp_json for x in ["not_exists", "not_removed"]):
             return "No information returned. Server error."

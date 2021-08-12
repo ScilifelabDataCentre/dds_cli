@@ -15,18 +15,13 @@ import textwrap
 import rich
 
 # Own modules
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -52,7 +47,9 @@ class FileHandler:
                     with source_path_file.resolve().open(mode="r") as spf:
                         self.data_list += spf.read().splitlines()
                 except OSError as err:
-                    console.print(f"Failed to get files from source-path-file option: {err}")
+                    dds_cli.utils.console.print(
+                        f"Failed to get files from source-path-file option: {err}"
+                    )
                     os.umask(original_umask)
                     os._exit(1)
                 finally:
@@ -68,7 +65,7 @@ class FileHandler:
         # Absolute path to config file
         configpath = pathlib.Path(configfile).resolve()
         if not configpath.exists():
-            console.print("\n:warning: Config file does not exist. :warning:\n")
+            dds_cli.utils.console.print("\n:warning: Config file does not exist. :warning:\n")
             os._exit(1)
 
         # Open config file and get contents
@@ -77,7 +74,7 @@ class FileHandler:
             with configpath.open(mode="r") as cfp:
                 contents = json.load(cfp)
         except json.decoder.JSONDecodeError as err:
-            console.print(f"\nFailed to get config file contents: {err}\n")
+            dds_cli.utils.console.print(f"\nFailed to get config file contents: {err}\n")
             os._exit(1)
         finally:
             os.umask(original_umask)

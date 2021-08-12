@@ -17,18 +17,13 @@ import rich
 from dds_cli import DDSEndpoint
 from dds_cli import file_compressor as fc
 from dds_cli import file_handler as fh
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -49,7 +44,7 @@ class RemoteFileHandler(fh.FileHandler):
         self.data_list = list(set(self.data_list))
 
         if not self.data_list and not get_all:
-            console.print("\n:warning: No data specified. :warning:\n")
+            dds_cli.utils.console.print("\n:warning: No data specified. :warning:\n")
             os._exit(1)
 
         self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
@@ -98,7 +93,7 @@ class RemoteFileHandler(fh.FileHandler):
 
         # Server error or error in response
         if not response.ok:
-            console.print(f"\n{response.text}\n")
+            dds_cli.utils.console.print(f"\n{response.text}\n")
             os._exit(1)
 
         # Get file info from response
@@ -106,7 +101,7 @@ class RemoteFileHandler(fh.FileHandler):
 
         # Folder info required if specific files requested
         if all_paths and "folders" not in file_info:
-            console.print(
+            dds_cli.utils.console.print(
                 "\n:warning: Error in response. "
                 "Not enough info returned despite ok request. :warning:\n"
             )
@@ -114,7 +109,9 @@ class RemoteFileHandler(fh.FileHandler):
 
         # Files in response always required
         if "files" not in file_info:
-            console.print("\n:warning: No files in response despite ok request. :warning:\n")
+            dds_cli.utils.console.print(
+                "\n:warning: No files in response despite ok request. :warning:\n"
+            )
             os._exit(1)
 
         # files and files in folders from db

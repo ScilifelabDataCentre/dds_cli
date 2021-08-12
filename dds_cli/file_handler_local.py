@@ -49,10 +49,23 @@ class LocalFileHandler(fh.FileHandler):
         # Initiate FileHandler from inheritance
         super().__init__(user_input=user_input, local_destination=temporary_destination)
 
-        # Get absolute paths to all data and removes duplicates
-        self.data_list = list(
-            set(pathlib.Path(x).resolve() for x in self.data_list if pathlib.Path(x).exists())
-        )
+        # Remove duplicates and save all files for later use
+        all_files = set(self.data_list)
+
+        # Remove non existent files
+        self.data_list = {x for x in self.data_list if pathlib.Path(x).exists()}
+
+        non_existent_files = all_files.difference(self.data_list)
+        if len(non_existent_files) > 0:
+            # Issue warning that some of the files don't exist
+            LOG.warning(
+                "The following files from '{}' does not exist: '{}'".format(
+                    user_input[1], "', '".join(non_existent_files)
+                )
+            )
+
+        # Get absolute paths for all data
+        self.data_list = [pathlib.Path(path).resolve() for path in self.data_list]
 
         # No data -- cannot proceed
         if not self.data_list:

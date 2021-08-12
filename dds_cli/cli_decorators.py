@@ -208,8 +208,6 @@ def removal_spinner(func):
 
             message = f"{rm_type}(s) successfully removed."
 
-        console = rich.console.Console()
-
         # Compute size of table
         if isinstance(message, rich.padding.Padding) and isinstance(
             message.renderable, rich.table.Table
@@ -222,10 +220,10 @@ def removal_spinner(func):
             # therefore be printed directly
             table_len = 0
 
-        if table_len + 5 > console.height:
-            with console.pager():
-                console.print(message)
+        if table_len + 5 > dds_cli.utils.console.height:
+            with dds_cli.utils.console.pager():
+                dds_cli.utils.console.print(message)
         else:
-            console.print(message)
+            dds_cli.utils.console.print(message)
 
     return create_and_remove_task

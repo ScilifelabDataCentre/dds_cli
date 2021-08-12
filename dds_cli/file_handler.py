@@ -36,7 +36,7 @@ class FileHandler:
 
         # Get user specified data
         self.local_destination = local_destination
-        self.data_list = list()
+        self.data_list = []
         if source is not None:
             self.data_list += list(source)
         if source_path_file is not None:

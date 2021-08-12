@@ -16,6 +16,8 @@ import rich
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
+import dds_cli
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -178,6 +180,7 @@ def removal_spinner(func):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
+            console=dds_cli.utils.console,
         ) as progress:
 
             # Determine spinner text
@@ -203,7 +206,6 @@ def removal_spinner(func):
 
             message = f"{rm_type}(s) successfully removed."
 
-        console = rich.console.Console()
-        console.print(message)
+        dds_cli.utils.console.print(message)
 
     return create_and_remove_task

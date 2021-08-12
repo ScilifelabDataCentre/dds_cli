@@ -24,12 +24,6 @@ from dds_cli import DDSEndpoint
 LOG = logging.getLogger(__name__)
 
 ###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
-
-###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
@@ -46,7 +40,7 @@ class User:
     def __post_init__(self, password, project):
         # Username and password required for user authentication
         if None in [self.username, password]:
-            console.print("\n:warning: Missing user information :warning:\n")
+            dds_cli.utils.console.print("\n:warning: Missing user information :warning:\n")
             os._exit(1)
 
         # Authenticate user and get delivery JWT token
@@ -71,14 +65,16 @@ class User:
             raise SystemExit from err
 
         if not response.ok:
-            console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
+            dds_cli.utils.console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
             os._exit(1)
 
         try:
             token = response.json()
 
             if "token" not in token:
-                console.print("\n:warning: Missing token in authentication response :warning:\n")
+                dds_cli.utils.console.print(
+                    "\n:warning: Missing token in authentication response :warning:\n"
+                )
                 os._exit(1)
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err

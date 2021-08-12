@@ -33,6 +33,7 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.timestamp
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -46,7 +47,7 @@ LOG = logging.getLogger()
 
 
 # Print header to STDERR
-stderr = rich.console.Console(stderr=True)
+stderr = dds_cli.utils.console
 stderr.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
@@ -75,7 +76,7 @@ def dds_main(ctx, verbose, log_file):
     LOG.addHandler(
         rich.logging.RichHandler(
             level=logging.DEBUG if verbose else logging.INFO,
-            console=rich.console.Console(stderr=True),
+            console=dds_cli.utils.console,
             show_time=False,
             markup=True,
         )
@@ -550,6 +551,7 @@ def get(
             " • ",
             "[progress.percentage]{task.percentage:>3.1f}%",
             refresh_per_second=2,
+            console=dds_cli.utils.console,
         ) as progress:
 
             # Keep track of futures

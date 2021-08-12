@@ -33,6 +33,7 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.timestamp
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -46,7 +47,7 @@ LOG = logging.getLogger()
 
 
 # Print header to STDERR
-stderr = rich.console.Console(stderr=True)
+stderr = dds_cli.utils.console
 stderr.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
@@ -75,7 +76,7 @@ def dds_main(ctx, verbose, log_file):
     LOG.addHandler(
         rich.logging.RichHandler(
             level=logging.DEBUG if verbose else logging.INFO,
-            console=rich.console.Console(stderr=True),
+            console=dds_cli.utils.console,
             show_time=False,
             markup=True,
         )
@@ -306,16 +307,13 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort)
                 folders = lister.list_files(folder=folder, show_size=size)
 
                 # If an interactive terminal, ask user if they want to view files for a project
-                if sys.stdout.isatty():
+                if sys.stdout.isatty() and len(folders) > 0:
                     LOG.info(
                         "Would you like to view files within a directory? Leave blank to exit."
                     )
                     last_folder = None
                     while folder is None or folder != last_folder:
                         last_folder = folder
-
-                        if not len(folders):
-                            break
 
                         try:
                             folder = questionary.autocomplete(
@@ -336,6 +334,9 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort)
 
                         # List files
                         folders = lister.list_files(folder=folder, show_size=size)
+
+                        if len(folders) == 0:
+                            break
 
     except (dds_cli.exceptions.NoDataError) as e:
         LOG.warning(e)
@@ -410,10 +411,10 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
         if rm_all:
             remover.remove_all()
 
-        if file:
+        elif file:
             remover.remove_file(files=file)
 
-        if folder:
+        elif folder:
             remover.remove_folder(folder=folder)
 
 
@@ -550,6 +551,7 @@ def get(
             " • ",
             "[progress.percentage]{task.percentage:>3.1f}%",
             refresh_per_second=2,
+            console=dds_cli.utils.console,
         ) as progress:
 
             # Keep track of futures

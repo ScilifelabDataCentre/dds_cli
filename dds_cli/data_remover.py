@@ -12,12 +12,13 @@ import sys
 # Installed
 import requests
 import rich
+import rich.table
+import rich.padding
 import simplejson
 
 # Own modules
 from dds_cli.cli_decorators import removal_spinner
 from dds_cli import base
-from dds_cli import data_lister
 from dds_cli import DDSEndpoint
 
 ###############################################################################
@@ -48,8 +49,6 @@ class DataRemover(base.DDSBaseClass):
     def __response_delete(resp_json, level="File"):
         """Output a response after deletion."""
 
-        # console = rich.console.Console()
-
         # Check that enough info
         if not all(x in resp_json for x in ["not_exists", "not_removed"]):
             return "No information returned. Server error."
@@ -61,8 +60,6 @@ class DataRemover(base.DDSBaseClass):
 
         # Create table if any files failed
         if not_exists or delete_failed:
-            # Warn if many failed files
-            data_lister.DataLister.warn_if_many(count=len(not_exists) + len(delete_failed))
 
             # Create table and add columns
             table = rich.table.Table(
@@ -76,14 +73,14 @@ class DataRemover(base.DDSBaseClass):
                 table.add_column(x)
 
             # Add rows
-            _ = [table.add_row(x, f"No such {level.lower()}") for x in not_exists]
-            _ = [
+            for x in not_exists:
+                table.add_row(x, f"No such {level.lower()}")
+
+            for x, y in delete_failed.items():
                 table.add_row(
                     f"[light_salmon3]{x}[/light_salmon3]",
                     f"[light_salmon3]{y}[/light_salmon3]",
                 )
-                for x, y in delete_failed.items()
-            ]
 
             # Print out table
             return rich.padding.Padding(table, 1)

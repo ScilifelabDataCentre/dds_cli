@@ -25,17 +25,13 @@ from dds_cli import FileSegment
 from dds_cli import status
 from dds_cli.cli_decorators import subpath_required
 
+import dds_cli.utils
+
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -73,7 +69,7 @@ class LocalFileHandler(fh.FileHandler):
 
         # No data -- cannot proceed
         if not self.data_list:
-            console.print("\n:warning: No data specified. :warning:\n")
+            dds_cli.utils.console.print("\n:warning: No data specified. :warning:\n")
             os._exit(1)
 
         self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
@@ -213,7 +209,7 @@ class LocalFileHandler(fh.FileHandler):
             raise SystemExit from err
 
         if not response.ok:
-            console.print(f"\n{response.text}\n")
+            dds_cli.utils.console.print(f"\n{response.text}\n")
             os._exit(1)
 
         try:
@@ -224,7 +220,7 @@ class LocalFileHandler(fh.FileHandler):
 
         # API failure
         if "files" not in files_in_db:
-            console.print("\n:warning: Files not returned from API. :warning:\n")
+            dds_cli.utils.console.print("\n:warning: Files not returned from API. :warning:\n")
             os._exit(1)
 
         LOG.debug("Previous upload check finished.")

@@ -20,6 +20,8 @@ import simplejson
 # Own modules
 import dds_cli.directory
 import dds_cli.timestamp
+import dds_cli.utils
+
 from dds_cli import DDSEndpoint
 from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
@@ -30,12 +32,6 @@ from dds_cli import user
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
 
 ###############################################################################
 # FUNCTIONS ####################################################### FUNCTIONS #
@@ -149,12 +145,14 @@ class DDSBaseClass:
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and project is None:
-            console.print(
+            dds_cli.utils.console.print(
                 "\n:warning: Data Delivery System project information is missing. :warning:\n"
             )
             os._exit(1)
         if username is None:
-            console.print("\n:warning: Data Delivery System options are missing :warning:\n")
+            dds_cli.utils.console.print(
+                "\n:warning: Data Delivery System options are missing :warning:\n"
+            )
             os._exit(1)
 
         # Set password if missing
@@ -185,7 +183,7 @@ class DDSBaseClass:
 
         # Problem
         if not response.ok:
-            console.print(
+            dds_cli.utils.console.print(
                 f"\n:no_entry_sign: Project access denied: {response.text} :no_entry_sign:\n"
             )
             os._exit(1)
@@ -197,7 +195,7 @@ class DDSBaseClass:
 
         # Access not granted
         if not dds_access["dds-access-granted"] or "token" not in dds_access:
-            console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
+            dds_cli.utils.console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
             os._exit(1)
 
         LOG.debug(f"User has been granted access to project {self.project}")
@@ -231,7 +229,7 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if not response.ok:
-            console.print(
+            dds_cli.utils.console.print(
                 f"\n:no_entry_sign: Project access denied: No {key_type} key. {response.text} :no_entry_sign:\n"
             )
             os._exit(1)
@@ -244,7 +242,7 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if key_type not in project_public:
-            console.print(
+            dds_cli.utils.console.print(
                 "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
             )
             os._exit(1)
@@ -274,14 +272,14 @@ class DDSBaseClass:
 
             # Only print out if the number of cancelled files are below a certain thresh
             if len(any_failed) < max_fileerrs:
-                console.print(f"{intro_error_message}:")
+                dds_cli.utils.console.print(f"{intro_error_message}:")
 
                 # Cancelled files in root
                 files_table, additional_info = fh.FileHandler.create_summary_table(
                     all_failed_data=any_failed, upload=bool(self.method == "put")
                 )
                 if files_table is not None:
-                    console.print(rich.padding.Padding(files_table, 1))
+                    dds_cli.utils.console.print(rich.padding.Padding(files_table, 1))
 
                 # Cancelled files in different folders
                 folders_table, additional_info = fh.FileHandler.create_summary_table(
@@ -290,14 +288,16 @@ class DDSBaseClass:
                     upload=bool(self.method == "put"),
                 )
                 if folders_table is not None:
-                    console.print(rich.padding.Padding(folders_table, 1))
+                    dds_cli.utils.console.print(rich.padding.Padding(folders_table, 1))
                 if additional_info:
-                    console.print(rich.padding.Padding(additional_info, 1))
+                    dds_cli.utils.console.print(rich.padding.Padding(additional_info, 1))
 
-            console.print(f"{intro_error_message}. See {outfile} for more information.")
+            dds_cli.utils.console.print(
+                f"{intro_error_message}. See {outfile} for more information."
+            )
 
             if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
-                console.print(
+                dds_cli.utils.console.print(
                     rich.padding.Padding(
                         "One or more files where uploaded but may not have been added to "
                         "the db. Contact support and supply the logfile found in "
@@ -358,7 +358,7 @@ class DDSBaseClass:
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
-                console.print(f"\n:warning: {conn.message} :warning:\n")
+                dds_cli.utils.console.print(f"\n:warning: {conn.message} :warning:\n")
                 os._exit(1)
 
             bucket_exists = conn.check_bucket_exists()

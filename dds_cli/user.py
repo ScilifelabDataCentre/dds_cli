@@ -16,6 +16,7 @@ import rich
 
 # Own modules
 from dds_cli import DDSEndpoint
+import dds_cli
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

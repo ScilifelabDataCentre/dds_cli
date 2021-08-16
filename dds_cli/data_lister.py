@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import logging
 import os
 import pathlib
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 # Installed
 import requests
@@ -327,7 +327,7 @@ class DataLister(base.DDSBaseClass):
             Container class for holding information about the remote file tree
             """
 
-            subtrees: list[Union["FileTree", Tuple[str, str]]] = None
+            subtrees: List[Union["FileTree", Tuple[str, str]]] = None
             name: str = None
 
         def _construct_file_tree(folder: str, basename: str) -> Tuple[FileTree, int, int]:

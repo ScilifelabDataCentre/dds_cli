@@ -364,7 +364,7 @@ class DataLister(base.DDSBaseClass):
                 ],
                 default=0,
             )
-            # Rich outputs precisely one line per
+            # Rich outputs precisely one line per file/folder
             for f in sorted_files_folders:
                 is_folder = f.pop("folder")
 

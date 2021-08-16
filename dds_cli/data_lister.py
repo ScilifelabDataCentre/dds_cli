@@ -5,8 +5,11 @@
 ###############################################################################
 
 # Standard library
+from dataclasses import dataclass
 import logging
+import os
 import pathlib
+from typing import Tuple, Union, List
 
 # Installed
 import requests
@@ -44,6 +47,7 @@ class DataLister(base.DDSBaseClass):
         project: str = None,
         project_level: bool = False,
         show_usage: bool = False,
+        tree: bool = False,
     ):
 
         # Initiate DDSBaseClass to authenticate user
@@ -58,6 +62,7 @@ class DataLister(base.DDSBaseClass):
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
         self.show_usage = show_usage
+        self.tree = tree
 
     # Public methods ########################### Public methods #
     def sort_projects(self, projects, sort_by="id"):
@@ -239,6 +244,7 @@ class DataLister(base.DDSBaseClass):
         # Get response
         try:
             resp_json = response.json()
+            print(resp_json)
         except simplejson.JSONDecodeError as err:
             raise exceptions.APIError(f"Could not decode JSON response: '{err}'")
 
@@ -253,7 +259,7 @@ class DataLister(base.DDSBaseClass):
         sorted_files_folders = sorted(files_folders, key=lambda f: f["name"])
 
         # Create tree
-        tree_title = folder if folder else f"Files / directories in project: [green]{self.project}"
+        tree_title = folder or f"Files / directories in project: [green]{self.project}"
         tree = Tree(f"[bold magenta]{tree_title}")
 
         if not sorted_files_folders:
@@ -263,8 +269,14 @@ class DataLister(base.DDSBaseClass):
         max_string = max([len(x["name"]) for x in sorted_files_folders])
 
         # Get max length of size string
-        sizes = [len(x["size"][0]) for x in sorted_files_folders if show_size and "size" in x]
-        max_size = max(sizes) if sizes else 0
+        max_size = max(
+            [
+                len(x["size"].split(" ")[0])
+                for x in sorted_files_folders
+                if show_size and "size" in x
+            ],
+            default=0,
+        )
 
         # Visible folders
         visible_folders = []
@@ -289,13 +301,13 @@ class DataLister(base.DDSBaseClass):
 
             # Add size to line if option specified
             if show_size and "size" in x:
-                line += f"{tab}{x['size'][0]}"
+                line += f"{tab}{x['size'].split()[0]}"
 
                 # Define space between number and size format
                 tabs_bf_format = th.TextHandler.format_tabs(
-                    string_len=len(x["size"][0]), max_string_len=max_size, tab_len=2
+                    string_len=len(x["size"]), max_string_len=max_size, tab_len=2
                 )
-                line += f"{tabs_bf_format}{x['size'][1]}"
+                line += f"{tabs_bf_format}{x['size'].split()[1]}"
             tree.add(line)
 
         # Print output to stdout
@@ -307,3 +319,130 @@ class DataLister(base.DDSBaseClass):
 
         # Return variable
         return visible_folders
+
+    def list_recursive(self, show_size: bool = False):
+        @dataclass
+        class FileTree:
+            """
+            Container class for holding information about the remote file tree
+            """
+
+            subtrees: List[Union["FileTree", Tuple[str, str]]] = None
+            name: str = None
+
+        def _construct_file_tree(folder: str, basename: str) -> Tuple[FileTree, int, int]:
+            """
+            Recurses through the project directories and constructs a file tree
+            by subsequent calls to the API
+            """
+            # Make call to API
+            try:
+                resp_json = requests.get(
+                    DDSEndpoint.LIST_FILES,
+                    params={"subpath": folder, "show_size": show_size},
+                    headers=self.token,
+                )
+            except requests.exceptions.RequestException as err:
+                raise exceptions.APIError(f"Problem with database response: '{err}'")
+
+            resp_json = resp_json.json()
+            tree = FileTree([], f"{basename}/")
+            sorted_files_folders = sorted(resp_json["files_folders"], key=lambda f: f["name"])
+
+            if not sorted_files_folders:
+                raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
+
+            # Get max length of file name
+            max_string = max([len(x["name"]) for x in sorted_files_folders])
+
+            # Get max length of size string
+            max_size = max(
+                [
+                    len(x["size"].split(" ")[0])
+                    for x in sorted_files_folders
+                    if show_size and "size" in x
+                ],
+                default=0,
+            )
+            # Rich outputs precisely one line per file/folder
+            for f in sorted_files_folders:
+                is_folder = f.pop("folder")
+
+                if not is_folder:
+                    tree.subtrees.append((f["name"], f.get("size") if show_size else None))
+                else:
+                    subtree, _max_string, _max_size = _construct_file_tree(
+                        os.path.join(folder, f["name"]) if folder else f["name"],
+                        f"[bold deep_sky_blue3]{f['name']}",
+                    )
+                    # Due to indentation, the filename strings of
+                    # subdirectories are 4 characters deeper than
+                    # their parent directories
+                    max_string = max(max_string, _max_string + 4)
+                    max_size = max(max_size, _max_size)
+                    tree.subtrees.append(subtree)
+
+            return tree, max_string, max_size
+
+        def _construct_rich_tree(
+            file_tree: FileTree, max_str: int, max_size: int, depth: int
+        ) -> Tuple[Tree, int]:
+            """
+            Construct the rich tree from the file tree
+            """
+            tree = Tree(file_tree.name)
+            tree_length = len(file_tree.subtrees)
+            for node in file_tree.subtrees:
+                if isinstance(node, FileTree):
+                    subtree, length = _construct_rich_tree(node, max_str, max_size, depth + 1)
+                    tree.add(subtree)
+                    tree_length += length
+                else:
+                    line = node[0]
+                    if show_size and node[1] is not None:
+                        tab = th.TextHandler.format_tabs(
+                            string_len=len(node[0]),
+                            max_string_len=max_str - 4 * depth,
+                        )
+                        line += f"{tab}{node[1].split()[0]}"
+
+                        # Define space between number and size format
+                        tabs_bf_format = th.TextHandler.format_tabs(
+                            string_len=len(node[1].split()[1]),
+                            max_string_len=max_size,
+                            tab_len=2,
+                        )
+                        line += f"{tabs_bf_format}{node[1].split()[1]}"
+                    tree.add(line)
+
+            return tree, tree_length
+
+        # We use two tree walks, one for file search and one for Rich tree
+        # constructing, since it is difficult to compute the correct size
+        # indentation without the whole tree
+        file_tree, max_string, max_size = _construct_file_tree(
+            None, f"[bold magenta]Files & directories in project: [green]{self.project}"
+        )
+
+        tree, tree_length = _construct_rich_tree(file_tree, max_string, max_size, 0)
+
+        # The first header is not accounted for by the recursion
+        tree_length += 1
+
+        # Check if the tree is t0o large to be printed directly
+        # and use a pager if that is the case
+        if tree_length > dds_cli.utils.console.height:
+            with dds_cli.util.console.pager():
+                dds_cli.utils.console.print(
+                    Padding(
+                        tree,
+                        1,
+                    )
+                )
+        else:
+            dds_cli.utils.console.print(
+                Padding(
+                    tree,
+                    1,
+                )
+            )

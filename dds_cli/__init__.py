@@ -15,6 +15,10 @@ __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
 
+# Valid methods
+
+DDS_METHODS = ["ls"]
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

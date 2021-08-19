@@ -42,6 +42,7 @@ class DataLister(base.DDSBaseClass):
 
     def __init__(
         self,
+        method: str = "ls",
         username: str = None,
         config: pathlib.Path = None,
         project: str = None,
@@ -51,11 +52,7 @@ class DataLister(base.DDSBaseClass):
     ):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(
-            username=username,
-            config=config,
-            project=project,
-        )
+        super().__init__(username=username, config=config, project=project, method=method)
 
         # Only method "ls" can use the DataLister class
         if self.method != "ls":

@@ -1,4 +1,4 @@
-import dds_cli
-import rich
+import rich.console
 
 console = rich.console.Console(stderr=True)
+# console = rich.console.Console()

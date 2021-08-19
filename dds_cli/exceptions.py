@@ -1,6 +1,7 @@
 """Custom Exception classes"""
 
 import click
+import dds_cli
 
 
 class ConfigFileNotFoundError(click.ClickException):
@@ -17,6 +18,18 @@ class ConfigFileNotFoundError(click.ClickException):
 
     def show(self):
         click.echo(self)
+
+
+class InvalidMethodError(Exception):
+    """Valid methods are only ls, put, get, rm. Anything else should raise errors."""
+
+    def __init__(self, attempted_method, message="Attempting an invalid method in the DDS"):
+        self.method = attempted_method
+        self.message = message
+        super().__init__(message)
+
+    def __str__(self):
+        return f"{self.message}: {self.method}"
 
 
 class AuthenticationError(Exception):

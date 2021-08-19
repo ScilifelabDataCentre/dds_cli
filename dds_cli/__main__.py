@@ -45,7 +45,6 @@ LOG = logging.getLogger()
 # MAIN ################################################################# MAIN #
 ###############################################################################
 
-
 # Print header to STDERR
 stderr = dds_cli.utils.console
 stderr.print(
@@ -70,6 +69,7 @@ def dds_main(ctx, verbose, log_file):
     """Main CLI command, sets up DDS info."""
 
     if "--help" not in sys.argv:
+
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
 
@@ -199,7 +199,7 @@ def put(
     try:
         dds_cli.data_putter.put(
             dds_info,
-            dds_info["CONFIG"] if config is None else config,
+            dds_info.get("CONFIG") if config is None else config,
             username,
             project,
             source,
@@ -350,6 +350,8 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
     except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
         LOG.error(e)
         sys.exit(1)
+
+    print("TESTING")
 
 
 ###############################################################################

@@ -26,23 +26,13 @@ from dds_cli import DDSEndpoint
 from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
 from dds_cli import user
+from dds_cli import exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-###############################################################################
-# FUNCTIONS ####################################################### FUNCTIONS #
-###############################################################################
-
-
-def attempted_operation():
-    """Gets the command entered by the user (e.g. put)."""
-
-    curframe = inspect.currentframe()
-    return inspect.getouterframes(curframe, 2)[3].function
 
 
 ###############################################################################
@@ -60,11 +50,13 @@ class DDSBaseClass:
         config=None,
         project=None,
         dds_directory: pathlib.Path = None,
+        method: str = None,
     ):
 
         # Get attempted operation e.g. put/ls/rm/get
-        self.method = attempted_operation()
-        LOG.debug(f"Attempted operation: {self.method}")
+        self.method = method
+        if self.method not in ["put", "get", "ls", "rm"]:
+            raise exceptions.InvalidMethodError(attempted_method=self.method)
 
         # Use user defined festination if any specified
         if self.method in ["get", "put"]:

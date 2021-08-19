@@ -118,7 +118,7 @@ class DDSBaseClass:
         password=None,
         config=None,
         project=None,
-    ):
+    ) -> tuple:
         """Verifies that the users input is valid and fully specified."""
 
         LOG.debug("Verifying the user input...")
@@ -143,10 +143,11 @@ class DDSBaseClass:
             )
             os._exit(1)
         if username is None:
-            dds_cli.utils.console.print(
-                "\n:warning: Data Delivery System options are missing :warning:\n"
-            )
-            os._exit(1)
+            raise exceptions.AuthenticationError("testing")
+            # dds_cli.utils.console.print(
+            #     "\n:warning: Data Delivery System options are missing :warning:\n"
+            # )
+            # os._exit(1)
 
         # Set password if missing
         if password is None:

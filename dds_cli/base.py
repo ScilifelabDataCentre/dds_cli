@@ -57,6 +57,7 @@ class DDSBaseClass:
         self.method = method
         if self.method not in ["put", "get", "ls", "rm"]:
             raise exceptions.InvalidMethodError(attempted_method=self.method)
+        LOG.debug(f"Attempted operation: {self.method}")
 
         # Use user defined festination if any specified
         if self.method in ["get", "put"]:

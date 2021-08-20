@@ -50,13 +50,14 @@ class DataLister(base.DDSBaseClass):
         show_usage: bool = False,
         tree: bool = False,
     ):
+        # Only method "ls" can use the DataLister class
+        if method != "ls":
+            raise exceptions.InvalidMethodError(
+                attempted_method=method, message="DataLister attempting unauthorized method"
+            )
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, project=project, method=method)
-
-        # Only method "ls" can use the DataLister class
-        if self.method != "ls":
-            raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
         self.show_usage = show_usage
         self.tree = tree

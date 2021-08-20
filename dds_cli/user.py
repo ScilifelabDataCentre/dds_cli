@@ -10,6 +10,7 @@ import logging
 import os
 import requests
 import simplejson
+import inspect
 
 # Installed
 import rich
@@ -43,10 +44,8 @@ class User:
         # Username and password required for user authentication
         if None in [self.username, password]:
             raise exceptions.MissingCredentialsException(
-                missing="username" if not self.username else "password"
+                missing="username" if not self.username else "password",
             )
-            # dds_cli.utils.console.print("\n:warning: Missing user information :warning:\n")
-            # os._exit(1)
 
         # Authenticate user and get delivery JWT token
         self.token = self.__authenticate_user(password=password, project=project)
@@ -66,15 +65,16 @@ class User:
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(str(err)) from err
-            # LOG.warning(err)
-            # raise SystemExit from err
+            raise exceptions.ApiRequestError(message=str(err)) from err
 
+        # Get response from api
         try:
             response_json = response.json()
         except simplejson.JSONDecodeError as err:
+            LOG.exception(str(err))
             raise
 
+        # Raise exceptions to log info if not ok response
         if not response.ok:
             message = response_json.get("message", "Unexpected error!")
             if response.status_code == 400:
@@ -82,20 +82,10 @@ class User:
             else:
                 raise exceptions.ApiResponseError(message=message)
 
+        # Get token from response
         token = response_json.get("token")
         if not token:
             raise exceptions.TokenNotFoundError(message="Missing token in authentication response.")
-
-        # try:
-        #     token = response.json()
-
-        #     if "token" not in token:
-        #         dds_cli.utils.console.print(
-        #             "\n:warning: Missing token in authentication response :warning:\n"
-        #         )
-        #         os._exit(1)
-        # except simplejson.JSONDecodeError as err:
-        #     raise SystemExit from err
 
         LOG.debug(f"User {self.username} granted access to the DDS")
 

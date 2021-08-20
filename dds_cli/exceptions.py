@@ -2,12 +2,16 @@
 
 # Standard library
 import requests
+import logging
 
 # Installed
 import click
 
 # Own modules
 import dds_cli
+
+# Logger
+LOG = logging.getLogger(__name__)
 
 
 class ConfigFileNotFoundError(click.ClickException):
@@ -57,28 +61,24 @@ class MissingCredentialsException(AuthenticationError):
     """All user options not specified"""
 
     def __init__(self, missing, message="Data Delivery System options are missing"):
-
-        self.message = f"{message}: {missing}"
-        super().__init__(message)
+        self.message = f"{message}: [red]{missing}[/red]"
+        LOG.error(self.message)
+        super().__init__(self.message)
 
 
 class TokenNotFoundError(AuthenticationError):
     """No token retrieved from REST API"""
 
     def __init__(self, message, sign=":warning:"):
+        LOG.error(message)
         super().__init__(message=message, sign=sign)
-
-
-# class DDSAccessDeniedException(AuthenticationError):
-#     """REST API failed to authenticate the user."""
-
-#     def __init__(self, message="")
 
 
 class ApiRequestError(requests.exceptions.RequestException):
     """Request to REST API failed."""
 
     def __init__(self, message):
+        LOG.exception(message)
         super().__init__(message)
 
 
@@ -86,6 +86,7 @@ class ApiResponseError(Exception):
     """REST API Request does not return code 200 in response"""
 
     def __init__(self, message):
+        LOG.exception(message)
         super().__init__(message)
 
 

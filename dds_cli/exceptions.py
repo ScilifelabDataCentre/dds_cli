@@ -61,6 +61,12 @@ class MissingCredentialsException(AuthenticationError):
         super().__init__(message)
 
 
+# class DDSAccessDeniedException(AuthenticationError):
+#     """REST API failed to authenticate the user."""
+
+#     def __init__(self, message="")
+
+
 class ApiRequestError(requests.exceptions.RequestException):
     """Request to REST API failed."""
 
@@ -68,15 +74,11 @@ class ApiRequestError(requests.exceptions.RequestException):
         super().__init__(message)
 
 
-# class ApiResponseError(Exception):
-#     """REST API Request does not return code 200 in response"""
+class ApiResponseError(Exception):
+    """REST API Request does not return code 200 in response"""
 
-#     def __init__(self, message=""):
-#         self.message = message
-#         super().__init__(message)
-
-#     def __str__(self):
-#         return f":no_entry_sign: {self}"
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class UploadError(Exception):

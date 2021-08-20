@@ -70,9 +70,12 @@ class User:
             # LOG.warning(err)
             # raise SystemExit from err
 
-        raise exceptions.AuthenticationError(message=response.text)
+        print(response.reason)
         if not response.ok:
-            raise exceptions.AuthenticationError(message=response.text)
+            if response.status_code == 400:
+                raise exceptions.AuthenticationError(message=response.text)
+            else:
+                raise exceptions.ApiResponseError(message=response.text)
             # dds_cli.utils.console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
             # os._exit(1)
 

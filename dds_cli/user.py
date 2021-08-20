@@ -70,9 +70,11 @@ class User:
             # LOG.warning(err)
             # raise SystemExit from err
 
+        raise exceptions.AuthenticationError(message=response.text)
         if not response.ok:
-            dds_cli.utils.console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
-            os._exit(1)
+            raise exceptions.AuthenticationError(message=response.text)
+            # dds_cli.utils.console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
+            # os._exit(1)
 
         try:
             token = response.json()

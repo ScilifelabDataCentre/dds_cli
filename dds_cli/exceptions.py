@@ -68,6 +68,17 @@ class ApiRequestError(requests.exceptions.RequestException):
         super().__init__(message)
 
 
+# class ApiResponseError(Exception):
+#     """REST API Request does not return code 200 in response"""
+
+#     def __init__(self, message=""):
+#         self.message = message
+#         super().__init__(message)
+
+#     def __str__(self):
+#         return f":no_entry_sign: {self}"
+
+
 class UploadError(Exception):
     """Errors relating to file uploads"""
 

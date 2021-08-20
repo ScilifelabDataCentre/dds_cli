@@ -44,12 +44,13 @@ class AuthenticationError(Exception):
     Return the message with Rich no-entry-sign emoji either side.
     """
 
-    def __init__(self, message):
+    def __init__(self, message, sign=":no_entry_sign:"):
         self.message = message
+        self.sign = sign
         super().__init__(message)
 
     def __str__(self):
-        return f":no_entry_sign: {self.message} :no_entry_sign:"
+        return f"{self.sign} {self.message} {self.sign}"
 
 
 class MissingCredentialsException(AuthenticationError):
@@ -59,6 +60,13 @@ class MissingCredentialsException(AuthenticationError):
 
         self.message = f"{message}: {missing}"
         super().__init__(message)
+
+
+class TokenNotFoundError(AuthenticationError):
+    """No token retrieved from REST API"""
+
+    def __init__(self, message, sign=":warning:"):
+        super().__init__(message=message, sign=sign)
 
 
 # class DDSAccessDeniedException(AuthenticationError):

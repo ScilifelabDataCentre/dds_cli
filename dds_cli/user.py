@@ -70,26 +70,33 @@ class User:
             # LOG.warning(err)
             # raise SystemExit from err
 
-        print(response.reason)
-        if not response.ok:
-            if response.status_code == 400:
-                raise exceptions.AuthenticationError(message=response.text)
-            else:
-                raise exceptions.ApiResponseError(message=response.text)
-            # dds_cli.utils.console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
-            # os._exit(1)
-
         try:
-            token = response.json()
-
-            if "token" not in token:
-                dds_cli.utils.console.print(
-                    "\n:warning: Missing token in authentication response :warning:\n"
-                )
-                os._exit(1)
+            response_json = response.json()
         except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
+            raise
+
+        if not response.ok:
+            message = response_json.get("message", "Unexpected error!")
+            if response.status_code == 400:
+                raise exceptions.AuthenticationError(message=message)
+            else:
+                raise exceptions.ApiResponseError(message=message)
+
+        token = response_json.get("token")
+        if not token:
+            raise exceptions.TokenNotFoundError(message="Missing token in authentication response.")
+
+        # try:
+        #     token = response.json()
+
+        #     if "token" not in token:
+        #         dds_cli.utils.console.print(
+        #             "\n:warning: Missing token in authentication response :warning:\n"
+        #         )
+        #         os._exit(1)
+        # except simplejson.JSONDecodeError as err:
+        #     raise SystemExit from err
 
         LOG.debug(f"User {self.username} granted access to the DDS")
 
-        return {"x-access-token": token["token"]}
+        return {"x-access-token": token}

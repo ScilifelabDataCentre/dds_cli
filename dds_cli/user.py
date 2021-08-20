@@ -17,6 +17,7 @@ import rich
 # Own modules
 from dds_cli import DDSEndpoint
 import dds_cli
+from dds_cli import exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -41,8 +42,11 @@ class User:
     def __post_init__(self, password, project):
         # Username and password required for user authentication
         if None in [self.username, password]:
-            dds_cli.utils.console.print("\n:warning: Missing user information :warning:\n")
-            os._exit(1)
+            raise exceptions.MissingCredentialsException(
+                missing="username" if not self.username else "password"
+            )
+            # dds_cli.utils.console.print("\n:warning: Missing user information :warning:\n")
+            # os._exit(1)
 
         # Authenticate user and get delivery JWT token
         self.token = self.__authenticate_user(password=password, project=project)
@@ -62,8 +66,9 @@ class User:
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            LOG.warning(err)
-            raise SystemExit from err
+            raise exceptions.ApiRequestError(str(err)) from err
+            # LOG.warning(err)
+            # raise SystemExit from err
 
         if not response.ok:
             dds_cli.utils.console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")

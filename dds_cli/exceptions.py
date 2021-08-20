@@ -1,6 +1,12 @@
 """Custom Exception classes"""
 
+# Standard library
+import requests
+
+# Installed
 import click
+
+# Own modules
 import dds_cli
 
 
@@ -38,21 +44,28 @@ class AuthenticationError(Exception):
     Return the message with Rich no-entry-sign emoji either side.
     """
 
-    # def __init__(self, message):
-    #     self.message = message
-    #     super().__init__(message)
+    def __init__(self, message):
+        self.message = message
+        super().__init__(message)
 
     def __str__(self):
-        return f":no_entry_sign: {self.args[0]} :no_entry_sign:"
+        return f":no_entry_sign: {self.message} :no_entry_sign:"
 
 
-# class MissingCredentialsException(AuthenticationError):
-#     """All user options not specified"""
+class MissingCredentialsException(AuthenticationError):
+    """All user options not specified"""
 
-#     def __init__(self, missing, message="Data Delivery System options are missing"):
+    def __init__(self, missing, message="Data Delivery System options are missing"):
 
-#         self.message = f"{message}: {missing}"
-#         # super().__init__(message)
+        self.message = f"{message}: {missing}"
+        super().__init__(message)
+
+
+class ApiRequestError(requests.exceptions.RequestException):
+    """Request to REST API failed."""
+
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class UploadError(Exception):

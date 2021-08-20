@@ -143,7 +143,7 @@ class DDSBaseClass:
             )
             os._exit(1)
         if username is None:
-            raise exceptions.AuthenticationError("testing")
+            raise exceptions.MissingCredentialsException(missing="username")
             # dds_cli.utils.console.print(
             #     "\n:warning: Data Delivery System options are missing :warning:\n"
             # )

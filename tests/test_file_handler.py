@@ -26,6 +26,14 @@ def test_filehandler_extract_config_nosuchfile():
         _ = file_handler.FileHandler.extract_config(configfile=configfile)
 
 
+def test_filehandler_extract_config_empty():
+    """Empty config should raise exception"""
+
+    configfile = CONFIG_PATH / pathlib.Path("empty_config.json")
+    with pytest.raises(exceptions.ConfigFileExtractionError):
+        _ = file_handler.FileHandler.extract_config(configfile=configfile)
+
+
 # def test_filehandler_config_empty():
 #     """Empty config should result in extractionerror"""
 

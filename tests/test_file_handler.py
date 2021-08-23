@@ -41,6 +41,18 @@ def test_filehandler_extract_config_no_fields():
     _ = file_handler.FileHandler.extract_config(configfile=configfile)
 
 
+def test_filehandler_extract_config_with_fields():
+    """Config file with fields should return the contents"""
+
+    configfile = CONFIG_PATH / pathlib.Path("with_fields_config.json")
+    config_contents = file_handler.FileHandler.extract_config(configfile=configfile)
+    assert config_contents == {
+        "username": "test_username",
+        "password": "test_password",
+        "project": "test_project",
+    }
+
+
 # def test_filehandler_config_empty():
 #     """Empty config should result in extractionerror"""
 

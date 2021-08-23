@@ -23,7 +23,6 @@ S3-Upload-Proxy
 *.c4gh
 dp_testing_group.csv
 sensitive
-*tests
 *testing*
 not_used*
 encryption.md

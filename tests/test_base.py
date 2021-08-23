@@ -1,4 +1,7 @@
+# IMPORTS ################################################################################ IMPORTS #
+
 # Standard library
+import pathlib
 
 # Installed
 import pytest
@@ -8,6 +11,10 @@ from dds_cli import base
 from dds_cli import exceptions
 
 
+# TESTS #################################################################################### TESTS #
+
+
+# Only credentials
 def test_ddsbaseclass_no_method(monkeypatch):
     """No method should raise an error indicating an invalid method."""
 

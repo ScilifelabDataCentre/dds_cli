@@ -142,12 +142,9 @@ class DDSBaseClass:
                 "\n:warning: Data Delivery System project information is missing. :warning:\n"
             )
             os._exit(1)
+
         if username is None:
             raise exceptions.MissingCredentialsException(missing="username")
-            # dds_cli.utils.console.print(
-            #     "\n:warning: Data Delivery System options are missing :warning:\n"
-            # )
-            # os._exit(1)
 
         # Set password if missing
         if password is None:

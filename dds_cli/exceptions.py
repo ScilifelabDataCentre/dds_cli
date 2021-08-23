@@ -3,6 +3,7 @@
 # Standard library
 import requests
 import logging
+import json
 
 # Installed
 import click
@@ -17,7 +18,7 @@ LOG = logging.getLogger(__name__)
 class ConfigFileNotFoundError(click.ClickException):
     """The file containing user credentials not found."""
 
-    def __init__(self, filepath, message="Could not find the config file"):
+    def __init__(self, filepath, message: str = "Could not find the config file"):
 
         self.filepath = filepath
         self.message = message
@@ -28,6 +29,26 @@ class ConfigFileNotFoundError(click.ClickException):
 
     def show(self):
         click.echo(self)
+
+
+class ConfigFileExtractionError(Exception):
+    """Could not extract any info from the config file."""
+
+    def __init__(
+        self,
+        filepath,
+        message: str = "Could not extract info from config file",
+        caught_exception=None,
+    ):
+        self.filepath = filepath
+        self.message = message
+        super().__init__(message)
+
+        if caught_exception:
+            LOG.exception(caught_exception.__traceback__)
+
+    def __str__(self):
+        return f"{self.message}: {self.filepath}"
 
 
 class InvalidMethodError(Exception):

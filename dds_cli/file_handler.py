@@ -16,6 +16,7 @@ import rich
 
 # Own modules
 import dds_cli.utils
+import dds_cli.exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -65,8 +66,7 @@ class FileHandler:
         # Absolute path to config file
         configpath = pathlib.Path(configfile).resolve()
         if not configpath.exists():
-            dds_cli.utils.console.print("\n:warning: Config file does not exist. :warning:\n")
-            os._exit(1)
+            raise dds_cli.exceptions.ConfigFileNotFoundError(filepath=configpath)
 
         # Open config file and get contents
         try:
@@ -74,8 +74,9 @@ class FileHandler:
             with configpath.open(mode="r") as cfp:
                 contents = json.load(cfp)
         except json.decoder.JSONDecodeError as err:
-            dds_cli.utils.console.print(f"\nFailed to get config file contents: {err}\n")
-            os._exit(1)
+            raise dds_cli.exceptions.ConfigFileExtractionError(
+                filepath=configpath, caught_exception=err
+            )
         finally:
             os.umask(original_umask)
 

@@ -34,6 +34,13 @@ def test_filehandler_extract_config_empty():
         _ = file_handler.FileHandler.extract_config(configfile=configfile)
 
 
+def test_filehandler_extract_config_no_fields():
+    """Config file with no fields in should work"""
+
+    configfile = CONFIG_PATH / pathlib.Path("no_fields_config.json")
+    _ = file_handler.FileHandler.extract_config(configfile=configfile)
+
+
 # def test_filehandler_config_empty():
 #     """Empty config should result in extractionerror"""
 

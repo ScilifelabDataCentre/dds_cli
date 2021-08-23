@@ -51,27 +51,3 @@ def test_filehandler_extract_config_with_fields():
         "password": "test_password",
         "project": "test_project",
     }
-
-
-# def test_filehandler_config_empty():
-#     """Empty config should result in extractionerror"""
-
-#     configfile = CONFIG_PATH / pathlib.Path("empty_config.json")
-#     _ = file_handler.FileHandler.extract_config(configfile=configfile)
-
-
-# def test_ddsbaseclass_method_ls_config_no_fields():
-#     """No contents ({} in file) config should result in extractionerror"""
-
-#     with pytest.raises(exceptions.MissingCredentialsException) as miserr:
-#         _ = base.DDSBaseClass(
-#             method="ls", config=CONFIG_PATH / pathlib.Path("no_fields_config.json")
-#         )
-
-#     assert "options are missing" in str(miserr.value)
-
-
-# def test_ddsbaseclass_method_ls_config_username(monkeypatch):
-#     """Only username in config file"""
-
-# with pytest.raises(exceptions.)

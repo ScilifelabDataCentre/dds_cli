@@ -124,30 +124,33 @@ class DDSBaseClass:
         LOG.debug("Verifying the user input...")
 
         # Get contents from file
-        if config is not None:
+        if config:
             # Get contents from file
             contents = fh.FileHandler.extract_config(configfile=config)
 
             # Get user credentials if not already specified
-            if username is None and "username" in contents:
+            if not username and "username" in contents:
                 username = contents["username"]
-            if password is None and "password" in contents:
-                password = contents["password"]
+
+                # TODO (ina): Remove password field?
+                # Only get password from config if username also in config
+                if not password and "password" in contents:
+                    password = contents["password"]
 
         LOG.debug(f"Username: {username}, Project ID: {project}")
 
         # Username and project info is minimum required info
-        if self.method in ["put", "get"] and project is None:
+        if self.method in ["put", "get"] and not project:
             dds_cli.utils.console.print(
                 "\n:warning: Data Delivery System project information is missing. :warning:\n"
             )
             os._exit(1)
 
-        if username is None:
+        if not username:
             raise exceptions.MissingCredentialsException(missing="username")
 
         # Set password if missing
-        if password is None:
+        if not password:
             password = getpass.getpass()
             # password = "password"  # TODO: REMOVE - ONLY FOR DEV
 

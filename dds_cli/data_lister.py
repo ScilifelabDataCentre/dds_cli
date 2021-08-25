@@ -143,7 +143,7 @@ class DataLister(base.DDSBaseClass):
 
         return column_formatting
 
-    def list_projects(self, prompt_project=False, sort_by="Updated"):
+    def list_projects(self, sort_by="Updated"):
         """Gets a list of all projects the user is involved in."""
 
         # Get projects from API
@@ -152,7 +152,7 @@ class DataLister(base.DDSBaseClass):
                 DDSEndpoint.LIST_PROJ, headers=self.token, params={"usage": self.show_usage}
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.APIError(f"Problem with database response: {err}")
+            raise exceptions.ApiRequestError(message=str(err))
 
         # Check resposne
         if not response.ok:

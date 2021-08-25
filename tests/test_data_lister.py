@@ -60,3 +60,9 @@ def test_datalister_init_valid(monkeypatch):
 
 
 # DataLister.list_projects
+def test_datalister_listprojects(monkeypatch):
+
+    monkeypatch.setattr("getpass.getpass", lambda: str("password"))
+    datalister_object = data_lister.DataLister(username="username")
+
+    datalister_object.list_projects()

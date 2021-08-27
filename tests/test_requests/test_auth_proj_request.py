@@ -11,23 +11,17 @@ import tests.tools.tools_for_testing
 
 # VARIABLES ############################################################################ VARIABLES #
 
-correct_project = "public_project_id"
-incorrect_project = "incorrect_project_id"
-no_access_project = "unused_project_id"
-
 # username
 valid_token_no_project = tests.tools.tools_for_testing.get_valid_token()
-valid_token_invalid_project = tests.tools.tools_for_testing.get_valid_token(
-    project=incorrect_project
-)
+valid_token_invalid_project = tests.tools.tools_for_testing.get_valid_token(project="incorrect")
 valid_token_valid_project_no_access = tests.tools.tools_for_testing.get_valid_token(
-    project=no_access_project
+    project="access_denied"
 )
-valid_token_valid_project = tests.tools.tools_for_testing.get_valid_token(project=correct_project)
+valid_token_valid_project = tests.tools.tools_for_testing.get_valid_token(project="correct")
 
 # facility
 valid_token_valid_project_facility = tests.tools.tools_for_testing.get_valid_token(
-    project=correct_project, facility=True
+    project="correct", facility=True
 )
 
 # TESTS #################################################################################### TESTS #

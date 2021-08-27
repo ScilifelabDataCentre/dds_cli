@@ -26,7 +26,7 @@ from rich.progress import Progress, BarColumn
 
 # Own modules
 import dds_cli
-import dds_cli.exceptions
+import dds_cli.exceptions as exc
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -44,7 +44,6 @@ LOG = logging.getLogger()
 ###############################################################################
 # MAIN ################################################################# MAIN #
 ###############################################################################
-
 
 # Print header to STDERR
 stderr = dds_cli.utils.console
@@ -69,41 +68,41 @@ stderr.print(
 def dds_main(ctx, verbose, log_file):
     """Main CLI command, sets up DDS info."""
 
-    # Set the base logger to output DEBUG
-    LOG.setLevel(logging.DEBUG)
-
-    # Set up logs to the console
-    LOG.addHandler(
-        rich.logging.RichHandler(
-            level=logging.DEBUG if verbose else logging.INFO,
-            console=dds_cli.utils.console,
-            show_time=False,
-            markup=True,
-        )
-    )
-
-    # Set up logs to a file if we asked for one
-    if log_file:
-        log_fh = logging.FileHandler(log_file, encoding="utf-8")
-        log_fh.setLevel(logging.DEBUG)
-        log_fh.setFormatter(
-            logging.Formatter("[%(asctime)s] %(name)-20s [%(levelname)-7s]  %(message)s")
-        )
-        LOG.addHandler(log_fh)
-
-    # Check that the config file exists
-    config_file = None
     if "--help" not in sys.argv:
+
+        # Set the base logger to output DEBUG
+        LOG.setLevel(logging.DEBUG)
+
+        # Set up logs to the console
+        LOG.addHandler(
+            rich.logging.RichHandler(
+                level=logging.DEBUG if verbose else logging.INFO,
+                console=dds_cli.utils.console,
+                show_time=False,
+                markup=True,
+            )
+        )
+
+        # Set up logs to a file if we asked for one
+        if log_file:
+            log_fh = logging.FileHandler(log_file, encoding="utf-8")
+            log_fh.setLevel(logging.DEBUG)
+            log_fh.setFormatter(
+                logging.Formatter("[%(asctime)s] %(name)-20s [%(levelname)-7s]  %(message)s")
+            )
+            LOG.addHandler(log_fh)
+
+        # Check that the config file exists
+        config_file = None
         if not any([x in sys.argv for x in ["--config", "-c", "--username", "-u"]]):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
-                LOG.error("Could not find the config file '.dds-cli.json'")
-                os._exit(1)
+                raise exc.ConfigFileNotFoundError(config_file)
 
-    # Create context object
-    ctx.obj = {
-        "CONFIG": config_file,
-    }
+        # Create context object
+        ctx.obj = {
+            "CONFIG": config_file,
+        }
 
 
 ###############################################################################
@@ -200,7 +199,7 @@ def put(
     try:
         dds_cli.data_putter.put(
             dds_info,
-            dds_info["CONFIG"] if config is None else config,
+            dds_info.get("CONFIG") if config is None else config,
             username,
             project,
             source,
@@ -351,6 +350,8 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
     except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
         LOG.error(e)
         sys.exit(1)
+
+    print("TESTING")
 
 
 ###############################################################################

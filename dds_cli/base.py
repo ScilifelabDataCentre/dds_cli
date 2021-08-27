@@ -26,23 +26,13 @@ from dds_cli import DDSEndpoint
 from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
 from dds_cli import user
+from dds_cli import exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-###############################################################################
-# FUNCTIONS ####################################################### FUNCTIONS #
-###############################################################################
-
-
-def attempted_operation():
-    """Gets the command entered by the user (e.g. put)."""
-
-    curframe = inspect.currentframe()
-    return inspect.getouterframes(curframe, 2)[3].function
 
 
 ###############################################################################
@@ -60,10 +50,13 @@ class DDSBaseClass:
         config=None,
         project=None,
         dds_directory: pathlib.Path = None,
+        method: str = None,
     ):
 
         # Get attempted operation e.g. put/ls/rm/get
-        self.method = attempted_operation()
+        self.method = method
+        if self.method not in ["put", "get", "ls", "rm"]:
+            raise exceptions.InvalidMethodError(attempted_method=self.method)
         LOG.debug(f"Attempted operation: {self.method}")
 
         # Use user defined festination if any specified
@@ -125,38 +118,39 @@ class DDSBaseClass:
         password=None,
         config=None,
         project=None,
-    ):
+    ) -> tuple:
         """Verifies that the users input is valid and fully specified."""
 
         LOG.debug("Verifying the user input...")
 
         # Get contents from file
-        if config is not None:
+        if config:
             # Get contents from file
             contents = fh.FileHandler.extract_config(configfile=config)
 
             # Get user credentials if not already specified
-            if username is None and "username" in contents:
+            if not username and "username" in contents:
                 username = contents["username"]
-            if password is None and "password" in contents:
-                password = contents["password"]
+
+                # TODO (ina): Remove password field?
+                # Only get password from config if username also in config
+                if not password and "password" in contents:
+                    password = contents["password"]
 
         LOG.debug(f"Username: {username}, Project ID: {project}")
 
         # Username and project info is minimum required info
-        if self.method in ["put", "get"] and project is None:
+        if self.method in ["put", "get"] and not project:
             dds_cli.utils.console.print(
                 "\n:warning: Data Delivery System project information is missing. :warning:\n"
             )
             os._exit(1)
-        if username is None:
-            dds_cli.utils.console.print(
-                "\n:warning: Data Delivery System options are missing :warning:\n"
-            )
-            os._exit(1)
+
+        if not username:
+            raise exceptions.MissingCredentialsException(missing="username")
 
         # Set password if missing
-        if password is None:
+        if not password:
             password = getpass.getpass()
             # password = "password"  # TODO: REMOVE - ONLY FOR DEV
 

@@ -42,6 +42,7 @@ class DataLister(base.DDSBaseClass):
 
     def __init__(
         self,
+        method: str = "ls",
         username: str = None,
         config: pathlib.Path = None,
         project: str = None,
@@ -49,17 +50,14 @@ class DataLister(base.DDSBaseClass):
         show_usage: bool = False,
         tree: bool = False,
     ):
+        # Only method "ls" can use the DataLister class
+        if method != "ls":
+            raise exceptions.InvalidMethodError(
+                attempted_method=method, message="DataLister attempting unauthorized method"
+            )
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(
-            username=username,
-            config=config,
-            project=project,
-        )
-
-        # Only method "ls" can use the DataLister class
-        if self.method != "ls":
-            raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
+        super().__init__(username=username, config=config, project=project, method=method)
 
         self.show_usage = show_usage
         self.tree = tree
@@ -145,7 +143,7 @@ class DataLister(base.DDSBaseClass):
 
         return column_formatting
 
-    def list_projects(self, prompt_project=False, sort_by="Updated"):
+    def list_projects(self, sort_by="Updated"):
         """Gets a list of all projects the user is involved in."""
 
         # Get projects from API
@@ -154,7 +152,7 @@ class DataLister(base.DDSBaseClass):
                 DDSEndpoint.LIST_PROJ, headers=self.token, params={"usage": self.show_usage}
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.APIError(f"Problem with database response: {err}")
+            raise exceptions.ApiRequestError(message=str(err))
 
         # Check resposne
         if not response.ok:

@@ -10,6 +10,7 @@ import logging
 import os
 import requests
 import simplejson
+import inspect
 
 # Installed
 import rich
@@ -17,6 +18,7 @@ import rich
 # Own modules
 from dds_cli import DDSEndpoint
 import dds_cli
+from dds_cli import exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -41,8 +43,9 @@ class User:
     def __post_init__(self, password, project):
         # Username and password required for user authentication
         if None in [self.username, password]:
-            dds_cli.utils.console.print("\n:warning: Missing user information :warning:\n")
-            os._exit(1)
+            raise exceptions.MissingCredentialsException(
+                missing="username" if not self.username else "password",
+            )
 
         # Authenticate user and get delivery JWT token
         self.token = self.__authenticate_user(password=password, project=project)
@@ -62,24 +65,28 @@ class User:
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            LOG.warning(err)
-            raise SystemExit from err
+            raise exceptions.ApiRequestError(message=str(err)) from err
 
-        if not response.ok:
-            dds_cli.utils.console.print(f"\n:no_entry_sign: {response.text} :no_entry_sign:\n")
-            os._exit(1)
-
+        # Get response from api
         try:
-            token = response.json()
-
-            if "token" not in token:
-                dds_cli.utils.console.print(
-                    "\n:warning: Missing token in authentication response :warning:\n"
-                )
-                os._exit(1)
+            response_json = response.json()
         except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
+            LOG.exception(str(err))
+            raise
+
+        # Raise exceptions to log info if not ok response
+        if not response.ok:
+            message = response_json.get("message", "Unexpected error!")
+            if response.status_code == 401:
+                raise exceptions.AuthenticationError(message=message)
+            else:
+                raise exceptions.ApiResponseError(message=message)
+
+        # Get token from response
+        token = response_json.get("token")
+        if not token:
+            raise exceptions.TokenNotFoundError(message="Missing token in authentication response.")
 
         LOG.debug(f"User {self.username} granted access to the DDS")
 
-        return {"x-access-token": token["token"]}
+        return {"x-access-token": token}

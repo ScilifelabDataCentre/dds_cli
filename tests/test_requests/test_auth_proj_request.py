@@ -13,12 +13,22 @@ import tests.tools.tools_for_testing
 
 correct_project = "public_project_id"
 incorrect_project = "incorrect_project_id"
+no_access_project = "unused_project_id"
 
+# username
 valid_token_no_project = tests.tools.tools_for_testing.get_valid_token()
 valid_token_invalid_project = tests.tools.tools_for_testing.get_valid_token(
     project=incorrect_project
 )
+valid_token_valid_project_no_access = tests.tools.tools_for_testing.get_valid_token(
+    project=no_access_project
+)
 valid_token_valid_project = tests.tools.tools_for_testing.get_valid_token(project=correct_project)
+
+# facility
+valid_token_valid_project_facility = tests.tools.tools_for_testing.get_valid_token(
+    project=correct_project, facility=True
+)
 
 # TESTS #################################################################################### TESTS #
 
@@ -82,3 +92,121 @@ def test_auth_proj_incorrect_project():
     response_json = response.json()
     assert response_json.get("message")
     assert "The specified project does not exist" in response_json.get("message")
+
+
+def test_auth_proj_correct_project_put_researcher():
+    """Researcher (current user) should not have upload permissions"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ, headers=valid_token_valid_project, params={"method": "put"}
+    )
+    assert response.status_code == 400
+    response_json = response.json()
+    assert response_json.get("message")
+    assert "User does not have permission to `put`" in response_json.get("message")
+
+
+def test_auth_proj_correct_project_rm_researcher():
+    """Researcher (current user) should not have upload permissions"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ, headers=valid_token_valid_project, params={"method": "rm"}
+    )
+    assert response.status_code == 400
+    response_json = response.json()
+    assert response_json.get("message")
+    assert "User does not have permission to `rm`" in response_json.get("message")
+
+
+def test_auth_proj_no_access_to_project():
+    """Researcher should not be granted access to project"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ,
+        headers=valid_token_valid_project_no_access,
+        params={"method": "ls"},
+    )
+    assert response.status_code == 400
+    response_json = response.json()
+    assert response_json.get("message")
+    assert "Project access denied" in response_json.get("message")
+
+
+def test_auth_proj_access_granted_ls():
+    """Researcher should be able to list"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ, headers=valid_token_valid_project, params={"method": "ls"}
+    )
+    assert response.status_code == 200
+    response_json = response.json()
+    assert response_json.get("dds-access-granted")
+    assert response_json.get("token")
+
+
+def test_auth_proj_access_granted_get():
+    """Researcher should be able to list"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ, headers=valid_token_valid_project, params={"method": "get"}
+    )
+    assert response.status_code == 200
+    response_json = response.json()
+    assert response_json.get("dds-access-granted")
+    assert response_json.get("token")
+
+
+def test_auth_proj_access_not_granted_get_facility():
+    """Facility user should not be able to get"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ,
+        headers=valid_token_valid_project_facility,
+        params={"method": "get"},
+    )
+    assert response.status_code == 400
+    response_json = response.json()
+    assert response_json.get("message")
+    assert "User does not have permission to `get`" in response_json.get("message")
+
+
+def test_auth_proj_access_granted_facility_ls():
+    """Facility user should not be able to ls"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ,
+        headers=valid_token_valid_project_facility,
+        params={"method": "ls"},
+    )
+    assert response.status_code == 200
+    response_json = response.json()
+    assert response_json.get("dds-access-granted")
+    assert response_json.get("token")
+
+
+def test_auth_proj_access_granted_facility_put():
+    """Facility user should not be able to put"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ,
+        headers=valid_token_valid_project_facility,
+        params={"method": "put"},
+    )
+    assert response.status_code == 200
+    response_json = response.json()
+    assert response_json.get("dds-access-granted")
+    assert response_json.get("token")
+
+
+def test_auth_proj_access_granted_facility_rm():
+    """Facility user should not be able to rm"""
+
+    response = requests.get(
+        dds_cli.DDSEndpoint.AUTH_PROJ,
+        headers=valid_token_valid_project_facility,
+        params={"method": "rm"},
+    )
+    assert response.status_code == 200
+    response_json = response.json()
+    assert response_json.get("dds-access-granted")
+    assert response_json.get("token")

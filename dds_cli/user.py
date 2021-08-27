@@ -77,7 +77,7 @@ class User:
         # Raise exceptions to log info if not ok response
         if not response.ok:
             message = response_json.get("message", "Unexpected error!")
-            if response.status_code == 400:
+            if response.status_code == 401:
                 raise exceptions.AuthenticationError(message=message)
             else:
                 raise exceptions.ApiResponseError(message=message)

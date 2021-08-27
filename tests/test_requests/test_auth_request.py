@@ -1,20 +1,16 @@
-# IMPORTS
+# IMPORTS ################################################################################ IMPORTS #
 # Standard library
 
 # Installed
-import pytest
 import requests
 
 # Own modules
 import dds_cli
 
-# Variables
-correct_project = "public_project_id"
-incorrect_project = "incorrect_project_id"
 
-# Tests
+# TESTS #################################################################################### TESTS #
 
-# Auth
+
 def test_auth_check_statuscode_400_missing_info():
     """
     Test that the auth endpoint returns:
@@ -82,6 +78,3 @@ def test_auth_correctauth_check_statuscode_400_correct_info():
     response_json = response.json()
     assert response_json.get("token")
     assert response_json.get("token") != ""
-
-
-#

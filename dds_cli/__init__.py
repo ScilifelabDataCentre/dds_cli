@@ -16,8 +16,7 @@ __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
 
 # Valid methods
-
-DDS_METHODS = ["ls"]
+DDS_METHODS = ["ls", "put", "get", "rm"]
 
 
 ###############################################################################

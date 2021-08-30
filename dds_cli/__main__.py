@@ -11,18 +11,15 @@ import logging
 import os
 import pathlib
 import sys
-from logging.config import dictConfig
 
 # Installed
 import click
 import click_pathlib
 import questionary
 import rich
-import rich.console
 import rich.logging
 import rich.prompt
-from rich import pretty
-from rich.progress import Progress, BarColumn
+import rich.progress
 
 # Own modules
 import dds_cli
@@ -32,7 +29,6 @@ import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
-import dds_cli.timestamp
 import dds_cli.utils
 
 ###############################################################################
@@ -553,9 +549,9 @@ def get(
         verify_checksum=verify_checksum,
     ) as getter:
 
-        with Progress(
+        with rich.progress.Progress(
             "{task.description}",
-            BarColumn(bar_width=None),
+            rich.progress.BarColumn(bar_width=None),
             " • ",
             "[progress.percentage]{task.percentage:>3.1f}%",
             refresh_per_second=2,

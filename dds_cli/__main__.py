@@ -105,30 +105,11 @@ def dds_main(ctx, verbose, log_file):
 # ADMIN #################################################################################### ADMIN #
 ####################################################################################################
 
-
 @dds_main.command()
-@click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials.",
-)
-@click.option("--username", "-u", required=False, type=str, help="Your Data Delivery username.")
 @click.pass_obj
-def admin(dds_info, config, username):
-    """Handle admin related tasks, e.g. add users"""
+def add_user(dds_info):
 
-    LOG.info(dds_info)
-    LOG.info(config)
-    LOG.info(username)
-
-    # 1. Get available options e.g. add users
-    # 2. Choose option --> catch input
-    # 3. Get required info
-    # 4. Catch input
-    # 5. Print out result
-    # 6. Ask if more
+    
 
 
 ####################################################################################################

@@ -11,6 +11,8 @@ import logging
 import requests
 
 # Own modules
+from dds_cli import DDSEndpoint
+import dds_cli.exceptions
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -40,3 +42,10 @@ class Admin:
 
     def add_user(self):
         LOG.info(self)
+
+        try:
+            response = requests.post(DDSEndpoint.ADD_USER)
+        except requests.exceptions.RequestException as reqerr:
+            raise dds_cli.exceptions.ApiRequestError(message=str(reqerr))
+
+        LOG.info(response.json())

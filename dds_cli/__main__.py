@@ -23,6 +23,7 @@ import rich.prompt
 
 # Own modules
 import dds_cli
+import dds_cli.admin
 import dds_cli.exceptions as exc
 import dds_cli.data_getter
 import dds_cli.data_lister
@@ -108,8 +109,11 @@ def dds_main(ctx, verbose, log_file):
 
 @dds_main.command()
 @click.pass_obj
-def add_user(dds_info):
+def add_user(_):
     """Add user to database"""
+
+    with dds_cli.admin.Admin() as admin:
+        admin.add_user()
 
 
 ####################################################################################################

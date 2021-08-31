@@ -34,6 +34,9 @@ class DDSEndpoint:
         BASE_ENDPOINT_LOCAL if os.getenv("DDS_CLI_ENV") == "development" else BASE_ENDPOINT_REMOTE
     )
 
+    # Admin
+    ADD_USER = BASE_ENDPOINT + "/user/add"
+
     # Authentication - user and project
     AUTH = BASE_ENDPOINT + "/user/auth"
     AUTH_PROJ = BASE_ENDPOINT + "/proj/auth"

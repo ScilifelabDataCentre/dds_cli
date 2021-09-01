@@ -112,13 +112,29 @@ def dds_main(ctx, verbose, log_file):
 
 @dds_main.command()
 @click.option(
+    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
+)
+@click.pass_obj
+def add_user(_, email):
+    """Add user to DDS, sending an invitation email to that person."""
+
+    try:
+        response = requests.post(dds_cli.DDSEndpoint.USER_INVITE, params={"email": email})
+    except requests.exceptions.RequestException:
+        raise
+
+    LOG.info(response.json())
+
+
+@dds_main.command()
+@click.option(
     "--username", "-u", required=True, type=str, help="The username you would like to register."
 )
 @click.pass_obj
 def register(_, username):
     """Add user to database"""
 
-    password = getpass.getpass()
+    password = getpass.getpass("Password [At least]")
     try:
         response = requests.post(dds_cli.DDSEndpoint.REGISTER_USER, params={"username": username})
         LOG.debug(response.request)

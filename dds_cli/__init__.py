@@ -35,6 +35,7 @@ class DDSEndpoint:
     )
 
     # User creation
+    USER_INVITE = BASE_ENDPOINT + "/user/invite"
     REGISTER_USER = BASE_ENDPOINT + "/user/register"
 
     # Authentication - user and project

@@ -20,6 +20,7 @@ import rich
 import rich.logging
 import rich.progress
 import rich.prompt
+import simplejson
 import questionary
 
 # Own modules
@@ -109,16 +110,35 @@ def dds_main(ctx, verbose, log_file):
 
 
 @dds_main.command()
+@click.option(
+    "--username", "-u", required=True, type=str, help="The username you would like to register."
+)
 @click.pass_obj
-def register(_):
+def register(_, username):
     """Add user to database"""
 
     try:
-        response = requests.post(dds_cli.DDSEndpoint.REGISTER_USER)
+        response = requests.post(dds_cli.DDSEndpoint.REGISTER_USER, params={"username": username})
+        LOG.debug(response.request)
+
+        response_json = response.json()
+
+        if not response.ok:
+            message = response_json.get("message")
+
+            if response.status_code == 403:
+                raise dds_cli.exceptions.DDSCLIException(message)
+
+            raise dds_cli.exceptions.ApiResponseError(
+                message=message if message else response.reason
+            )
+
     except requests.exceptions.RequestException as reqerr:
         raise dds_cli.exceptions.ApiRequestError(message=str(reqerr))
+    except simplejson.JSONDecodeError as jsonerr:
+        raise dds_cli.exceptions.ApiResponseError(message=str(jsonerr))
 
-    LOG.info(response.json())
+    LOG.info("User created!")
 
 
 ####################################################################################################

@@ -15,6 +15,7 @@ import sys
 # Installed
 import click
 import click_pathlib
+import getpass
 import requests
 import rich
 import rich.logging
@@ -117,6 +118,7 @@ def dds_main(ctx, verbose, log_file):
 def register(_, username):
     """Add user to database"""
 
+    password = getpass.getpass()
     try:
         response = requests.post(dds_cli.DDSEndpoint.REGISTER_USER, params={"username": username})
         LOG.debug(response.request)

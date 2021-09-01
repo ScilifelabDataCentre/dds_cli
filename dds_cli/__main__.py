@@ -114,12 +114,21 @@ def dds_main(ctx, verbose, log_file):
 @click.option(
     "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
 )
+@click.option(
+    "--account-type",
+    "-t",
+    required=True,
+    type=click.Choice(choices=["Data_Producer", "Recipient"]),
+    help="Type of account. Units: Data producers. Research groups: Recipients.",
+)
 @click.pass_obj
-def add_user(_, email):
+def add_user(_, email, account_type):
     """Add user to DDS, sending an invitation email to that person."""
 
     try:
-        response = requests.post(dds_cli.DDSEndpoint.USER_INVITE, params={"email": email})
+        response = requests.post(
+            dds_cli.DDSEndpoint.USER_INVITE, params={"email": email, "account_type": account_type}
+        )
     except requests.exceptions.RequestException:
         raise
 

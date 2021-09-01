@@ -15,11 +15,12 @@ import sys
 # Installed
 import click
 import click_pathlib
-import questionary
+import requests
 import rich
 import rich.logging
 import rich.progress
 import rich.prompt
+import questionary
 
 # Own modules
 import dds_cli
@@ -109,11 +110,15 @@ def dds_main(ctx, verbose, log_file):
 
 @dds_main.command()
 @click.pass_obj
-def add_user(_):
+def register(_):
     """Add user to database"""
 
-    with dds_cli.admin.Admin() as admin:
-        admin.add_user()
+    try:
+        response = requests.post(dds_cli.DDSEndpoint.REGISTER_USER)
+    except requests.exceptions.RequestException as reqerr:
+        raise dds_cli.exceptions.ApiRequestError(message=str(reqerr))
+
+    LOG.info(response.json())
 
 
 ####################################################################################################

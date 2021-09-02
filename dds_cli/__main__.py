@@ -94,7 +94,7 @@ def dds_main(ctx, verbose, log_file):
 
         # Check that the config file exists
         config_file = None
-        if not any([x in sys.argv for x in ["--config", "-c", "--username", "-u"]]):
+        if not any(x in sys.argv for x in ["--config", "-c", "--username", "-u"]):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
                 raise exc.ConfigFileNotFoundError(config_file)
@@ -125,14 +125,20 @@ def dds_main(ctx, verbose, log_file):
 def add_user(_, email, account_type):
     """Add user to DDS, sending an invitation email to that person."""
 
+    # Invite user
     try:
         response = requests.post(
             dds_cli.DDSEndpoint.USER_INVITE, params={"email": email, "account_type": account_type}
         )
-    except requests.exceptions.RequestException:
-        raise
 
-    LOG.info(response.json())
+        response_json = response.json()
+
+        LOG.info(response_json)
+
+    except requests.exceptions.RequestException as reqerr:
+        raise exc.ApiRequestError(str(reqerr))
+    except simplejson.JSONDecodeError as jsonerr:
+        raise exc.ApiResponseError(str(jsonerr))
 
 
 ####################################################################################################

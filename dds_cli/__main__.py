@@ -110,25 +110,52 @@ def dds_main(ctx, verbose, log_file):
 ####################################################################################################
 
 
+class RequiredIf(click.Option):
+    def __init__(self, *args, **kwargs):
+        self.required_if = kwargs.pop("required_if")
+        self.required_value = kwargs.pop("required_value")
+        assert self.required_if, "'required_if' parameter required"
+        assert self.required_value, "'required_value' parameter required"
+
+        kwargs["help"] = (
+            kwargs.get("help", "") + f"This argument is required if {self.required_if} is specified"
+        ).strip()
+        super(RequiredIf, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+
+        # required option value present
+        required_option_present = opts.get(self.required_if) == self.required_value
+
+        if required_option_present:
+            if not self.name in opts:
+                raise click.UsageError(
+                    f"Illegal usage: '{self.name}'  is required if '{self.required_if}' is specified."
+                )
+
+        return super(RequiredIf, self).handle_parse_result(ctx, opts, args)
+
+
 @dds_main.command()
 @click.option(
     "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
 )
 @click.option(
-    "--account-type",
-    "-t",
+    "--role",
+    "-r",
     required=True,
-    type=click.Choice(choices=["Data_Producer", "Recipient"]),
+    type=click.Choice(choices=["facility", "researcher"]),
     help="Type of account. Units: Data producers. Research groups: Recipients.",
 )
+@click.option("--facility", "-f", cls=RequiredIf, required_if="role", required_value="facility")
 @click.pass_obj
-def add_user(_, email, account_type):
+def add_user(_, email, role, facility):
     """Add user to DDS, sending an invitation email to that person."""
 
     # Invite user
     try:
         response = requests.post(
-            dds_cli.DDSEndpoint.USER_INVITE, params={"email": email, "account_type": account_type}
+            dds_cli.DDSEndpoint.USER_INVITE, params={"email": email, "role": role}
         )
 
         response_json = response.json()

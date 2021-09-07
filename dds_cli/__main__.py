@@ -132,7 +132,6 @@ def dds_main(ctx, verbose, log_file):
 @click.pass_obj
 def add_user(_, email, role, facility):
     """Add user to DDS, sending an invitation email to that person."""
-
     # Invite user
     try:
         response = requests.post(

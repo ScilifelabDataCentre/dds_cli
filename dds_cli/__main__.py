@@ -15,7 +15,6 @@ import sys
 # Installed
 import click
 import click_pathlib
-import getpass
 import requests
 import rich
 import rich.logging
@@ -132,6 +131,12 @@ def dds_main(ctx, verbose, log_file):
 @click.pass_obj
 def add_user(_, email, role, facility):
     """Add user to DDS, sending an invitation email to that person."""
+
+    # NOTE: Facility option will be removed once authentication has been fixed
+    # Facility ID will be retrieved from db in endpoint, not specified by admin
+
+    # TODO: Change roles
+
     # Invite user
     try:
         response = requests.post(

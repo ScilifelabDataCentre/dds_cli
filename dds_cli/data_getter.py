@@ -57,11 +57,16 @@ class DataGetter(base.DDSBaseClass):
         destination: pathlib.Path = pathlib.Path(""),
         silent: bool = False,
         verify_checksum: bool = False,
+        method: str = "get",
     ):
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username, config=config, project=project, dds_directory=destination
+            username=username,
+            config=config,
+            project=project,
+            dds_directory=destination,
+            method=method,
         )
 
         # Initiate DataGetter specific attributes

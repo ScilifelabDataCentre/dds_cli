@@ -182,14 +182,11 @@ class DataPutter(base.DDSBaseClass):
         source: tuple = (),
         source_path_file: pathlib.Path = None,
         silent: bool = False,
+        method: str = "put",
     ):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(
-            username=username,
-            config=config,
-            project=project,
-        )
+        super().__init__(username=username, config=config, project=project, method=method)
 
         # Initiate DataPutter specific attributes
         self.break_on_fail = break_on_fail

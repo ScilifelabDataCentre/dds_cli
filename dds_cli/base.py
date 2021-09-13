@@ -5,11 +5,9 @@
 ###############################################################################
 
 # Standard library
-import inspect
 import logging
 import os
 import pathlib
-import traceback
 
 # Installed
 import getpass
@@ -80,7 +78,7 @@ class DDSBaseClass:
         )
 
         # Authenticate the user and get the token
-        dds_user = user.User(username=username, password=password, project=self.project)
+        dds_user = user.User(username=username, password=password)
         self.token = dds_user.token
 
         LOG.debug(f"Method: {self.method}, Project: {self.project}")

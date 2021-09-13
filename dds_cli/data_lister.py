@@ -430,7 +430,7 @@ class DataLister(base.DDSBaseClass):
         # Check if the tree is t0o large to be printed directly
         # and use a pager if that is the case
         if tree_length > dds_cli.utils.console.height:
-            with dds_cli.util.console.pager():
+            with dds_cli.utils.console.pager():
                 dds_cli.utils.console.print(
                     Padding(
                         tree,

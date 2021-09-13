@@ -22,4 +22,5 @@ jobs:
         python-version: 3.8
     - name: Test with pytest
       run: |
+        pip install pytest
         pytest

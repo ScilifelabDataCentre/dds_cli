@@ -35,10 +35,12 @@ LOG = logging.getLogger(__name__)
 class DataRemover(base.DDSBaseClass):
     """Data remover class."""
 
-    def __init__(self, project: str, username: str = None, config: pathlib.Path = None):
+    def __init__(
+        self, project: str, username: str = None, config: pathlib.Path = None, method: str = "rm"
+    ):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, config=config, project=project)
+        super().__init__(username=username, config=config, project=project, method=method)
 
         # Only method "ls" can use the DataLister class
         if self.method != "rm":

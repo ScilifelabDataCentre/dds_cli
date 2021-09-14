@@ -106,7 +106,7 @@ def dds_main(ctx, verbose, log_file):
 
 
 ####################################################################################################
-# ADMIN #################################################################################### ADMIN #
+# INVITE USER #################################################################################### INVITE USER #
 ####################################################################################################
 
 
@@ -118,20 +118,14 @@ def dds_main(ctx, verbose, log_file):
     "--role",
     "-r",
     required=True,
-    type=click.Choice(choices=["facility", "researcher"]),
-    help="Type of account. Units: Data producers. Research groups: Recipients.",
-)
-@click.option(
-    "--facility",
-    "-f",
-    cls=dds_cli.option_classes.RequiredIf,
-    required_if="role",
-    required_value="facility",
+    type=click.Choice(
+        choices=["UnitAdmin", "UnitPersonnel", "ProjectOwner", "Researcher"], case_sensitive=False
+    ),
+    help="Type of account. UnitAdmin: ",
 )
 @click.pass_obj
-def add_user(_, email, role, facility):
+def invite(_, email, role):
     """Add user to DDS, sending an invitation email to that person."""
-
     # NOTE: Facility option will be removed once authentication has been fixed
     # Facility ID will be retrieved from db in endpoint, not specified by admin
 
@@ -141,7 +135,7 @@ def add_user(_, email, role, facility):
     try:
         response = requests.post(
             dds_cli.DDSEndpoint.USER_INVITE,
-            params={"email": email, "role": role, "facility_name": facility},
+            params={"email": email, "role": role},
         )
 
         response_json = response.json()

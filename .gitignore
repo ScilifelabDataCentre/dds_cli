@@ -38,3 +38,5 @@ ds.log
 x_cli_code
 timings
 *dict_structure.json
+*.code-workspace
+.DDS_CLI.env

@@ -14,6 +14,33 @@ __url__ = "https://www.scilifelab.se/data"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
+__all__ = [
+    "DDS_METHODS",
+    "DDS_DIR_REQUIRED_METHODS",
+    "DDS_PROJ_REQUIRED_METHODS",
+    "DDS_PROJ_NOT_REQUIRED_METHODS",
+    "DDSEndpoint",
+    "FileSegment",
+    "dds_questionary_styles",
+]
+
+
+###############################################################################
+# VARIABLES ####################################################### VARIABLES #
+###############################################################################
+
+# Keep track of all allowed methods
+DDS_METHODS = ["put", "get", "ls", "rm"]
+
+# Methods to which a directory created by DDS
+DDS_DIR_REQUIRED_METHODS = ["put", "get"]
+
+# Methods which require a project ID
+DDS_PROJ_REQUIRED_METHODS = ["put", "get"]
+
+# Methods which do not require a project ID
+DDS_PROJ_NOT_REQUIRED_METHODS = ["ls", "rm"]
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -34,7 +61,7 @@ class DDSEndpoint:
     USER_INVITE = BASE_ENDPOINT + "/user/invite"
 
     # Authentication - user and project
-    AUTH = BASE_ENDPOINT + "/user/auth"
+    TOKEN = BASE_ENDPOINT + "/user/token"
     AUTH_PROJ = BASE_ENDPOINT + "/proj/auth"
 
     # S3Connector keys

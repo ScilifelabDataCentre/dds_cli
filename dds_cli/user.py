@@ -59,7 +59,7 @@ class User:
         # Project passed in to add it to the token. Can be None.
         try:
             response = requests.get(
-                DDSEndpoint.AUTH,
+                DDSEndpoint.TOKEN,
                 params={"project": project},
                 auth=(self.username, password),
                 timeout=DDSEndpoint.TIMEOUT,
@@ -79,8 +79,8 @@ class User:
             message = response_json.get("message", "Unexpected error!")
             if response.status_code == 401:
                 raise exceptions.AuthenticationError(message=message)
-            else:
-                raise exceptions.ApiResponseError(message=message)
+
+            raise exceptions.ApiResponseError(message=message)
 
         # Get token from response
         token = response_json.get("token")

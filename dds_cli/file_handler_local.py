@@ -13,17 +13,13 @@ import uuid
 
 # Installed
 import requests
-import rich
 import simplejson
-import zstandard as zstd
 
 # Own modules
 from dds_cli import DDSEndpoint
 from dds_cli import file_compressor as fc
 from dds_cli import file_handler as fh
 from dds_cli import FileSegment
-from dds_cli import status
-from dds_cli.cli_decorators import subpath_required
 
 import dds_cli.utils
 
@@ -190,7 +186,7 @@ class LocalFileHandler(fh.FileHandler):
 
         return status_dict
 
-    def check_previous_upload(self, token):
+    def check_previous_upload(self, token, project):
         """Do API call and check for the files in the DB."""
 
         LOG.debug("Checking if files have been previously uploaded.")
@@ -200,6 +196,7 @@ class LocalFileHandler(fh.FileHandler):
         try:
             response = requests.get(
                 DDSEndpoint.FILE_MATCH,
+                params={"project": project},
                 headers=token,
                 json=files,
                 timeout=DDSEndpoint.TIMEOUT,

@@ -217,7 +217,9 @@ class DataPutter(base.DDSBaseClass):
             self.verify_bucket_exist()
 
             # Check which, if any, files exist in the db
-            files_in_db = self.filehandler.check_previous_upload(token=self.token)
+            files_in_db = self.filehandler.check_previous_upload(
+                token=self.token, project=self.project
+            )
 
             # Quit if error and flag
             if files_in_db and self.break_on_fail and not self.overwrite:
@@ -380,6 +382,7 @@ class DataPutter(base.DDSBaseClass):
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
         params = {
+            "project": self.project,
             "name": file,
             "name_in_bucket": fileinfo["path_remote"],
             "subpath": fileinfo["subpath"],
@@ -426,7 +429,10 @@ class DataPutter(base.DDSBaseClass):
         # Perform request to DDS API
         try:
             response = requests.put(
-                DDSEndpoint.PROJECT_SIZE, headers=self.token, timeout=DDSEndpoint.TIMEOUT
+                DDSEndpoint.PROJECT_SIZE,
+                params={"project": self.project},
+                headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             # Log warning if error

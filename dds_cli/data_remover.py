@@ -106,7 +106,9 @@ class DataRemover(base.DDSBaseClass):
 
         # Perform request to API to perform deletion
         try:
-            response = requests.delete(DDSEndpoint.REMOVE_PROJ_CONT, headers=self.token)
+            response = requests.delete(
+                DDSEndpoint.REMOVE_PROJ_CONT, params={"project": self.project}, headers=self.token
+            )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
@@ -133,7 +135,12 @@ class DataRemover(base.DDSBaseClass):
         """Remove specific files."""
 
         try:
-            response = requests.delete(DDSEndpoint.REMOVE_FILE, json=files, headers=self.token)
+            response = requests.delete(
+                DDSEndpoint.REMOVE_FILE,
+                params={"project": self.project},
+                json=files,
+                headers=self.token,
+            )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
@@ -153,7 +160,12 @@ class DataRemover(base.DDSBaseClass):
         """Remove specific folders."""
 
         try:
-            response = requests.delete(DDSEndpoint.REMOVE_FOLDER, json=folder, headers=self.token)
+            response = requests.delete(
+                DDSEndpoint.REMOVE_FOLDER,
+                params={"project": self.project},
+                json=folder,
+                headers=self.token,
+            )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 

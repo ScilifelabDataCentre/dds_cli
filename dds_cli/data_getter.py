@@ -19,7 +19,7 @@ from rich.progress import Progress, SpinnerColumn
 
 # Own modules
 from dds_cli import base
-from dds_cli import DDSEndpoint, FileSegment
+from dds_cli import DDSEndpoint
 from dds_cli import file_handler_remote as fhr
 from dds_cli import data_remover as dr
 from dds_cli import file_compressor as fc
@@ -93,6 +93,7 @@ class DataGetter(base.DDSBaseClass):
                 get_all=get_all,
                 user_input=(source, source_path_file),
                 token=self.token,
+                project=self.project,
                 destination=self.dds_directory.directories["FILES"],
             )
 
@@ -224,7 +225,7 @@ class DataGetter(base.DDSBaseClass):
 
         # Get file info
         fileinfo = self.filehandler.data[file]
-        params = {"name": fileinfo["name_in_db"]}
+        params = {"name": fileinfo["name_in_db"], "project": self.project}
 
         # Send file info to API
         try:

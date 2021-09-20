@@ -230,7 +230,7 @@ class DataLister(base.DDSBaseClass):
         try:
             response = requests.get(
                 DDSEndpoint.LIST_FILES,
-                params={"subpath": folder, "show_size": show_size},
+                params={"project": self.project, "subpath": folder, "show_size": show_size},
                 headers=self.token,
             )
         except requests.exceptions.RequestException as err:
@@ -337,7 +337,7 @@ class DataLister(base.DDSBaseClass):
             try:
                 resp_json = requests.get(
                     DDSEndpoint.LIST_FILES,
-                    params={"subpath": folder, "show_size": show_size},
+                    params={"project": self.project, "subpath": folder, "show_size": show_size},
                     headers=self.token,
                 )
             except requests.exceptions.RequestException as err:

@@ -2,12 +2,12 @@
 # Standard library
 
 # Installed
-import pytest
+import http
 import requests
 
 # Own modules
 import dds_cli
-import tests.tools.tools_for_testing
+from dds_cli import user
 
 # VARIABLES ############################################################################ VARIABLES #
 
@@ -16,41 +16,44 @@ import tests.tools.tools_for_testing
 
 
 def test_proj_public_no_token():
-    """Attempting to get the public key without a project id should not work"""
+    """Attempting to get the public key without a token should not work"""
 
     response = requests.get(dds_cli.DDSEndpoint.PROJ_PUBLIC)
-    assert response.status_code == 400
+    assert response.status_code == http.HTTPStatus.UNAUTHORIZED
     response_json = response.json()
-    assert "JWT Token not found" in response_json.get("message")
+    assert "Missing or incorrect credentials" in response_json.get("message")
 
 
 def test_proj_public_no_project():
-    """Attempting to get public key for none project should be caught in the
-    project_access_required decorator"""
+    """Attempting to get public key without a project should not work"""
 
-    token = tests.tools.tools_for_testing.get_valid_token(project=None)
+    token = user.User(username="username", password="password").token
     response = requests.get(dds_cli.DDSEndpoint.PROJ_PUBLIC, headers=token)
-    assert response.status_code == 500
+    assert response.status_code == http.HTTPStatus.BAD_REQUEST
     response_json = response.json()
-    assert "Project ID not found." in response_json.get("message")
+    assert "without project ID" in response_json.get("message")
 
 
-def test_proj_public_not_yet_verified():
+def test_proj_public_insufficient_credentials():
     """If the project access has not been granted, the public key should not be provided."""
 
-    token = tests.tools.tools_for_testing.get_valid_token(project="correct")
-    response = requests.get(dds_cli.DDSEndpoint.PROJ_PUBLIC, headers=token)
-    assert response.status_code == 500
+    token = user.User(username="admin", password="password").token
+    response = requests.get(
+        dds_cli.DDSEndpoint.PROJ_PUBLIC, params={"project": "public_project_id"}, headers=token
+    )
+    assert response.status_code == http.HTTPStatus.FORBIDDEN
     response_json = response.json()
-    assert "not yet verified" in response_json.get("message")
+    assert "not have permission" in response_json.get("message")
 
 
 def test_project_public_researcher_get():
     """User should get access to public key"""
 
-    token = tests.tools.tools_for_testing.get_valid_token_project_included_get()
-    response = requests.get(dds_cli.DDSEndpoint.PROJ_PUBLIC, headers=token)
-    assert response.status_code == 200
+    token = user.User(username="username", password="password").token
+    response = requests.get(
+        dds_cli.DDSEndpoint.PROJ_PUBLIC, params={"project": "public_project_id"}, headers=token
+    )
+    assert response.status_code == http.HTTPStatus.OK
     response_json = response.json()
     assert response_json.get("public")
 
@@ -58,8 +61,10 @@ def test_project_public_researcher_get():
 def test_project_public_facility_put():
     """User should get access to public key"""
 
-    token = tests.tools.tools_for_testing.get_valid_token_project_included_put()
-    response = requests.get(dds_cli.DDSEndpoint.PROJ_PUBLIC, headers=token)
-    assert response.status_code == 200
+    token = user.User(username="facility", password="password").token
+    response = requests.get(
+        dds_cli.DDSEndpoint.PROJ_PUBLIC, params={"project": "public_project_id"}, headers=token
+    )
+    assert response.status_code == http.HTTPStatus.OK
     response_json = response.json()
     assert response_json.get("public")

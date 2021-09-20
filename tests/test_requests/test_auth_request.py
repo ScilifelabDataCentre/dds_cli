@@ -47,7 +47,9 @@ def test_auth_incorrect_username_and_password_check_statuscode_400_incorrect_inf
     Message: Missing or incorrect credentials
     """
 
-    response = requests.get(dds_cli.DDSEndpoint.TOKEN, auth=("incorrect_username", "incorrect_password"))
+    response = requests.get(
+        dds_cli.DDSEndpoint.TOKEN, auth=("incorrect_username", "incorrect_password")
+    )
     assert response.status_code == http.HTTPStatus.UNAUTHORIZED
     response_json = response.json()
     assert response_json.get("message")

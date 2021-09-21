@@ -43,7 +43,9 @@ class LocalFileHandler(fh.FileHandler):
         LOG.debug("Collecting file info...")
 
         # Initiate FileHandler from inheritance
-        super().__init__(user_input=user_input, local_destination=temporary_destination, project=project)
+        super().__init__(
+            user_input=user_input, local_destination=temporary_destination, project=project
+        )
 
         # Remove duplicates and save all files for later use
         all_files = set(self.data_list)

@@ -38,12 +38,14 @@ class LocalFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, user_input, temporary_destination):
+    def __init__(self, user_input, project, temporary_destination):
 
         LOG.debug("Collecting file info...")
 
         # Initiate FileHandler from inheritance
-        super().__init__(user_input=user_input, local_destination=temporary_destination)
+        super().__init__(
+            user_input=user_input, project=project, local_destination=temporary_destination
+        )
 
         # Remove duplicates and save all files for later use
         all_files = set(self.data_list)

@@ -210,6 +210,7 @@ class DataPutter(base.DDSBaseClass):
             # Get file info
             self.filehandler = fhl.LocalFileHandler(
                 user_input=(source, source_path_file),
+                project=self.project,
                 temporary_destination=self.dds_directory.directories["FILES"],
             )
 

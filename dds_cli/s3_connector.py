@@ -9,12 +9,10 @@ import dataclasses
 import logging
 import os
 import requests
-import sys
 import traceback
 
 # Installed
 import botocore
-import rich
 import simplejson
 
 # Own modules
@@ -79,6 +77,7 @@ class S3Connector:
         try:
             response = requests.get(
                 DDSEndpoint.S3KEYS,
+                params={"project": project_id},
                 headers=token,
                 timeout=DDSEndpoint.TIMEOUT,
             )

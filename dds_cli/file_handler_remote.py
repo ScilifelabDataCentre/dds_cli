@@ -11,11 +11,9 @@ import pathlib
 
 # Installed
 import requests
-import rich
 
 # Own modules
 from dds_cli import DDSEndpoint
-from dds_cli import file_compressor as fc
 from dds_cli import file_handler as fh
 import dds_cli.utils
 
@@ -34,10 +32,10 @@ class RemoteFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, get_all, user_input, token, destination=pathlib.Path("")):
+    def __init__(self, get_all, user_input, token, project, destination=pathlib.Path("")):
 
         # Initiate FileHandler from inheritance
-        super().__init__(user_input=user_input, local_destination=destination)
+        super().__init__(user_input=user_input, local_destination=destination, project=project)
 
         self.get_all = get_all
 
@@ -84,6 +82,7 @@ class RemoteFileHandler(fh.FileHandler):
         try:
             response = requests.get(
                 DDSEndpoint.FILE_INFO_ALL if self.get_all else DDSEndpoint.FILE_INFO,
+                params={"project": self.project},
                 headers=token,
                 json=all_paths,
             )

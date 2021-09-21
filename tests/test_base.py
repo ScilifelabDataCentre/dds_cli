@@ -53,7 +53,7 @@ def test_ddsbaseclass_method_ls_and_incorrect_username(monkeypatch):
     with pytest.raises(exceptions.AuthenticationError) as autherr:
         _ = base.DDSBaseClass(method="ls", username="test")
 
-    assert "Incorrect" in str(autherr.value)
+    assert "incorrect" in str(autherr.value)
 
 
 def test_ddsbaseclass_method_ls_and_incorrect_password(monkeypatch):
@@ -63,7 +63,7 @@ def test_ddsbaseclass_method_ls_and_incorrect_password(monkeypatch):
     with pytest.raises(exceptions.AuthenticationError) as autherr:
         _ = base.DDSBaseClass(method="ls", username="username")
 
-    assert "Incorrect" in str(autherr.value)
+    assert "incorrect" in str(autherr.value)
 
 
 def test_ddsbaseclass_method_ls_and_correct_info(monkeypatch):
@@ -90,7 +90,7 @@ def test_ddsbaseclass_method_ls_and_incorrect_in_config():
     with pytest.raises(exceptions.AuthenticationError) as autherr:
         _ = base.DDSBaseClass(method="ls", config=configfile)
 
-    assert "Incorrect" in str(autherr.value)
+    assert "incorrect" in str(autherr.value)
 
 
 def test_ddsbaseclass_method_ls_and_incorrect_in_config_and_username(monkeypatch):
@@ -101,7 +101,7 @@ def test_ddsbaseclass_method_ls_and_incorrect_in_config_and_username(monkeypatch
     with pytest.raises(exceptions.AuthenticationError) as autherr:
         _ = base.DDSBaseClass(method="ls", config=configfile)
 
-    assert "Incorrect" in str(autherr.value)
+    assert "incorrect" in str(autherr.value)
 
 
 def test_ddsbaseclass_method_ls_and_incorrect_in_config_and_username_password(monkeypatch):

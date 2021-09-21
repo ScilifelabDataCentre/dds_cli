@@ -210,6 +210,7 @@ class DataPutter(base.DDSBaseClass):
             # Get file info
             self.filehandler = fhl.LocalFileHandler(
                 user_input=(source, source_path_file),
+                project=self.project,
                 temporary_destination=self.dds_directory.directories["FILES"],
             )
 
@@ -380,6 +381,7 @@ class DataPutter(base.DDSBaseClass):
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
         params = {
+            "project": self.project,
             "name": file,
             "name_in_bucket": fileinfo["path_remote"],
             "subpath": fileinfo["subpath"],
@@ -426,7 +428,10 @@ class DataPutter(base.DDSBaseClass):
         # Perform request to DDS API
         try:
             response = requests.put(
-                DDSEndpoint.PROJECT_SIZE, headers=self.token, timeout=DDSEndpoint.TIMEOUT
+                DDSEndpoint.PROJECT_SIZE,
+                params={"project": self.project},
+                headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             # Log warning if error

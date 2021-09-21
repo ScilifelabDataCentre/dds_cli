@@ -32,10 +32,11 @@ LOG = logging.getLogger(__name__)
 class FileHandler:
     """Main file handler."""
 
-    def __init__(self, user_input, local_destination):
+    def __init__(self, user_input, local_destination, project=None):
         source, source_path_file = user_input
 
         # Get user specified data
+        self.project = project
         self.local_destination = local_destination
         self.data_list = []
         if source is not None:

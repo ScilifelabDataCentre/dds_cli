@@ -35,7 +35,7 @@ class RemoteFileHandler(fh.FileHandler):
     def __init__(self, get_all, user_input, token, project, destination=pathlib.Path("")):
 
         # Initiate FileHandler from inheritance
-        super().__init__(user_input=user_input, project=project, local_destination=destination)
+        super().__init__(user_input=user_input, local_destination=destination, project=project)
 
         self.get_all = get_all
 

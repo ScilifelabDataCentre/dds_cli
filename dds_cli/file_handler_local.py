@@ -38,14 +38,12 @@ class LocalFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, user_input, project, temporary_destination):
+    def __init__(self, user_input, temporary_destination, project):
 
         LOG.debug("Collecting file info...")
 
         # Initiate FileHandler from inheritance
-        super().__init__(
-            user_input=user_input, project=project, local_destination=temporary_destination
-        )
+        super().__init__(user_input=user_input, local_destination=temporary_destination, project=project)
 
         # Remove duplicates and save all files for later use
         all_files = set(self.data_list)
@@ -188,7 +186,7 @@ class LocalFileHandler(fh.FileHandler):
 
         return status_dict
 
-    def check_previous_upload(self, token, project):
+    def check_previous_upload(self, token):
         """Do API call and check for the files in the DB."""
 
         LOG.debug("Checking if files have been previously uploaded.")
@@ -198,7 +196,7 @@ class LocalFileHandler(fh.FileHandler):
         try:
             response = requests.get(
                 DDSEndpoint.FILE_MATCH,
-                params={"project": project},
+                params={"project": self.project},
                 headers=token,
                 json=files,
                 timeout=DDSEndpoint.TIMEOUT,

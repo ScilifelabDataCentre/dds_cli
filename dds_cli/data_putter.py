@@ -218,9 +218,7 @@ class DataPutter(base.DDSBaseClass):
             self.verify_bucket_exist()
 
             # Check which, if any, files exist in the db
-            files_in_db = self.filehandler.check_previous_upload(
-                token=self.token, project=self.project
-            )
+            files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
             # Quit if error and flag
             if files_in_db and self.break_on_fail and not self.overwrite:

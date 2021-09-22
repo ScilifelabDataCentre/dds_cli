@@ -7,6 +7,7 @@
 # Standard library
 import logging
 import pathlib
+import rich.console
 
 # Installed
 
@@ -66,12 +67,23 @@ class TextHandler(StringFormat):
 
         # Different symbols to the left depending on current process
         symbol = ""
-        if step == "encrypt":
-            symbol = ":lock:"
-        elif step == "put":
-            symbol = ":arrow_up: "
-        elif step == "get":
-            symbol = ":arrow_down: "
-        elif step == "decrypt":
-            symbol = ":unlock:"
+        # only an approximation, because it does not actually detect Unicode support.
+        if  rich.console.detect_legacy_windows():
+            if step == "encrypt":
+                symbol = "[bold]seal "
+            elif step == "put":
+                symbol = "[bold]put "
+            elif step == "get":
+                symbol = "[bold]get "
+            elif step == "decrypt":
+                symbol = "[bold]open "
+        else:
+            if step == "encrypt":
+                symbol = ":lock:"
+            elif step == "put":
+                symbol = ":arrow_up: "
+            elif step == "get":
+                symbol = ":arrow_down: "
+            elif step == "decrypt":
+                symbol = ":unlock:"
         return f"{symbol} {task_name}"

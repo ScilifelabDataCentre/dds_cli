@@ -7,7 +7,7 @@
 # Standard library
 import logging
 import pathlib
-import rich.console
+from dds_cli import dds_on_legacy_console
 
 # Installed
 
@@ -66,24 +66,18 @@ class TextHandler(StringFormat):
                 task_name = "..." + task_name.split("...", 1)[-1][-max_len::]
 
         # Different symbols to the left depending on current process
-        symbol = ""
-        # only an approximation, because it does not actually detect Unicode support.
-        if  rich.console.detect_legacy_windows():
-            if step == "encrypt":
-                symbol = "[bold]seal "
-            elif step == "put":
-                symbol = "[bold]put "
-            elif step == "get":
-                symbol = "[bold]get "
-            elif step == "decrypt":
-                symbol = "[bold]open "
+        if dds_on_legacy_console:
+            symbols = {
+                "encrypt": "[bold]seal",
+                "put": "[bold]put",
+                "get": "[bold]get",
+                "decrypt": "[bold]open",
+            }
         else:
-            if step == "encrypt":
-                symbol = ":lock:"
-            elif step == "put":
-                symbol = ":arrow_up: "
-            elif step == "get":
-                symbol = ":arrow_down: "
-            elif step == "decrypt":
-                symbol = ":unlock:"
-        return f"{symbol} {task_name}"
+            symbols = {
+                "encrypt": ":lock:",
+                "put": ":arrow_up:",
+                "get": ":arrow_down:",
+                "decrypt": ":unlock:",
+            }
+        return f"{symbols.get(step, '')} {task_name}"

@@ -3,6 +3,8 @@
 import os
 import pkg_resources
 import prompt_toolkit
+import rich.console
+
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
@@ -92,3 +94,6 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
         ("choice-required", "fg:ansired"),
     ]
 )
+
+# Determine if the user is on an old terminal without proper Unicode support
+dds_on_legacy_console = rich.console.detect_legacy_windows()

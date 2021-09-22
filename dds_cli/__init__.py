@@ -62,7 +62,6 @@ class DDSEndpoint:
 
     # Authentication - user and project
     TOKEN = BASE_ENDPOINT + "/user/token"
-    AUTH_PROJ = BASE_ENDPOINT + "/proj/auth"
 
     # S3Connector keys
     S3KEYS = BASE_ENDPOINT + "/s3/proj"

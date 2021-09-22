@@ -13,17 +13,13 @@ import uuid
 
 # Installed
 import requests
-import rich
 import simplejson
-import zstandard as zstd
 
 # Own modules
 from dds_cli import DDSEndpoint
 from dds_cli import file_compressor as fc
 from dds_cli import file_handler as fh
 from dds_cli import FileSegment
-from dds_cli import status
-from dds_cli.cli_decorators import subpath_required
 
 import dds_cli.utils
 
@@ -42,12 +38,14 @@ class LocalFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, user_input, temporary_destination):
+    def __init__(self, user_input, temporary_destination, project):
 
         LOG.debug("Collecting file info...")
 
         # Initiate FileHandler from inheritance
-        super().__init__(user_input=user_input, local_destination=temporary_destination)
+        super().__init__(
+            user_input=user_input, local_destination=temporary_destination, project=project
+        )
 
         # Remove duplicates and save all files for later use
         all_files = set(self.data_list)
@@ -200,6 +198,7 @@ class LocalFileHandler(fh.FileHandler):
         try:
             response = requests.get(
                 DDSEndpoint.FILE_MATCH,
+                params={"project": self.project},
                 headers=token,
                 json=files,
                 timeout=DDSEndpoint.TIMEOUT,

@@ -5,11 +5,9 @@
 ###############################################################################
 
 # Standard library
-import inspect
 import logging
 import os
 import pathlib
-import traceback
 
 # Installed
 import getpass
@@ -86,7 +84,7 @@ class DDSBaseClass:
         )
 
         # Authenticate the user and get the token
-        dds_user = user.User(username=username, password=password, project=self.project)
+        dds_user = user.User(username=username, password=password)
         self.token = dds_user.token
 
         LOG.debug(f"Method: {self.method}, Project: {self.project}")
@@ -95,8 +93,6 @@ class DDSBaseClass:
         if self.method in DDS_PROJ_REQUIRED_METHODS or (
             self.method in DDS_PROJ_NOT_REQUIRED_METHODS and self.project
         ):
-            self.token = self.__verify_project_access()
-
             if self.method in ["put", "get"]:
                 self.keys = self.__get_project_keys()
 
@@ -165,44 +161,6 @@ class DDSBaseClass:
 
         return username, password, project
 
-    def __verify_project_access(self):
-        """Verifies that the user has access to the specified project."""
-
-        LOG.debug(f"Verifying access to project {self.project}...")
-
-        # Perform request to API
-        try:
-            response = requests.get(
-                DDSEndpoint.AUTH_PROJ,
-                params={"method": self.method},
-                headers=self.token,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            LOG.warning(err)
-            raise SystemExit from err
-
-        # Problem
-        if not response.ok:
-            dds_cli.utils.console.print(
-                f"\n:no_entry_sign: Project access denied: {response.text} :no_entry_sign:\n"
-            )
-            os._exit(1)
-
-        try:
-            dds_access = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        # Access not granted
-        if not dds_access["dds-access-granted"] or "token" not in dds_access:
-            dds_cli.utils.console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
-            os._exit(1)
-
-        LOG.debug(f"User has been granted access to project {self.project}")
-
-        return {"x-access-token": dds_access["token"]}
-
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""
 
@@ -222,6 +180,7 @@ class DDSBaseClass:
         try:
             response = requests.get(
                 DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
+                params={"project": self.project},
                 headers=self.token,
                 timeout=DDSEndpoint.TIMEOUT,
             )

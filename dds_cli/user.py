@@ -7,16 +7,10 @@
 # Standard library
 import dataclasses
 import logging
-import os
 import requests
 import simplejson
-import inspect
-
-# Installed
-import rich
 
 # Own modules
-from dds_cli import DDSEndpoint
 import dds_cli
 from dds_cli import exceptions
 
@@ -37,10 +31,9 @@ class User:
 
     username: str = None
     password: dataclasses.InitVar[str] = None
-    project: dataclasses.InitVar[str] = None
     token: dict = dataclasses.field(init=False)
 
-    def __post_init__(self, password, project):
+    def __post_init__(self, password):
         # Username and password required for user authentication
         if None in [self.username, password]:
             raise exceptions.MissingCredentialsException(
@@ -48,10 +41,10 @@ class User:
             )
 
         # Authenticate user and get delivery JWT token
-        self.token = self.__authenticate_user(password=password, project=project)
+        self.token = self.__authenticate_user(password=password)
 
     # Private methods ######################### Private methods #
-    def __authenticate_user(self, password, project):
+    def __authenticate_user(self, password):
         """Authenticates the username and password via a call to the API."""
 
         LOG.debug(f"Authenticating the user: {self.username}")
@@ -59,10 +52,9 @@ class User:
         # Project passed in to add it to the token. Can be None.
         try:
             response = requests.get(
-                DDSEndpoint.TOKEN,
-                params={"project": project},
+                dds_cli.DDSEndpoint.TOKEN,
                 auth=(self.username, password),
-                timeout=DDSEndpoint.TIMEOUT,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err)) from err
@@ -89,4 +81,4 @@ class User:
 
         LOG.debug(f"User {self.username} granted access to the DDS")
 
-        return {"x-access-token": token}
+        return {"Authorization": f"Bearer {token}"}

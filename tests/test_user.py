@@ -7,6 +7,7 @@ import pytest
 from dds_cli import user
 from dds_cli import exceptions
 
+
 # Tests
 def test_user_missing_user_options():
     """Exception should be raised due to missing user credentials."""
@@ -42,7 +43,7 @@ def test_user_incorrect_username():
     with pytest.raises(exceptions.AuthenticationError) as autherr:
         _ = user.User(username="test", password="password")
 
-    assert "Incorrect" in str(autherr.value)
+    assert "incorrect" in str(autherr.value)
 
 
 def test_user_incorrect_password():
@@ -51,7 +52,7 @@ def test_user_incorrect_password():
     with pytest.raises(exceptions.AuthenticationError) as autherr:
         _ = user.User(username="username", password="incorrect_password")
 
-    assert "Incorrect" in str(autherr.value)
+    assert "incorrect" in str(autherr.value)
 
 
 def test_user_correct_credentials():
@@ -63,5 +64,4 @@ def test_user_correct_credentials():
     assert test_user
     assert test_user.username == username
     assert test_user.password is None
-    assert test_user.project is None
     assert test_user.token and test_user.token != ""

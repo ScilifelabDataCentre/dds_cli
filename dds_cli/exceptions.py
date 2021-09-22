@@ -45,7 +45,7 @@ class ConfigFileExtractionError(Exception):
         super().__init__(message)
 
         if caught_exception:
-            LOG.exception(caught_exception.__traceback__)
+            LOG.exception(caught_exception.args[0] + "\n" + self.__str__())
 
     def __str__(self):
         return f"{self.message}: {self.filepath}"

@@ -7,7 +7,7 @@
 # Standard library
 import logging
 import pathlib
-from dds_cli import dds_on_legacy_console
+import dds_cli
 
 # Installed
 
@@ -66,7 +66,7 @@ class TextHandler(StringFormat):
                 task_name = "..." + task_name.split("...", 1)[-1][-max_len::]
 
         # Different symbols to the left depending on current process
-        if dds_on_legacy_console:
+        if dds_cli.dds_on_legacy_console:
             symbols = {
                 "encrypt": "[bold]seal",
                 "put": "[bold]put",

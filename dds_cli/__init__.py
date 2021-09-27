@@ -16,6 +16,7 @@ __url__ = "https://www.scilifelab.se/data"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
+__all__ = ['DDSEndpoint','FileSegment','dds_questionary_styles', 'dds_on_legacy_console']
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

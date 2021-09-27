@@ -3,6 +3,8 @@
 import os
 import pkg_resources
 import prompt_toolkit
+import rich.console
+
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
@@ -14,6 +16,7 @@ __url__ = "https://www.scilifelab.se/data"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
+__all__ = ["DDSEndpoint", "FileSegment", "dds_questionary_styles", "dds_on_legacy_console"]
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -92,3 +95,6 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
         ("choice-required", "fg:ansired"),
     ]
 )
+
+# Determine if the user is on an old terminal without proper Unicode support
+dds_on_legacy_console = rich.console.detect_legacy_windows()

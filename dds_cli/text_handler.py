@@ -68,10 +68,10 @@ class TextHandler(StringFormat):
         # Different symbols to the left depending on current process
         if dds_cli.dds_on_legacy_console:
             symbols = {
-                "encrypt": "[bold]seal",
+                "encrypt": "[bold]encrypt",
                 "put": "[bold]put",
                 "get": "[bold]get",
-                "decrypt": "[bold]open",
+                "decrypt": "[bold]decrypt",
             }
         else:
             symbols = {

@@ -180,7 +180,7 @@ class DDSBaseClass:
         try:
             response = requests.get(
                 DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
-                params={"project": self.project},
+                params={"project": self.project, "method": self.method},
                 headers=self.token,
                 timeout=DDSEndpoint.TIMEOUT,
             )

@@ -9,6 +9,7 @@ import concurrent.futures
 import itertools
 import logging
 import pathlib
+import json
 
 # Installed
 import boto3
@@ -380,11 +381,11 @@ class DataPutter(base.DDSBaseClass):
 
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
-        params = {
-            "project": self.project,
+        params = {"project": self.project}
+        file_info = {
             "name": file,
-            "name_in_bucket": fileinfo["path_remote"],
-            "subpath": fileinfo["subpath"],
+            "name_in_bucket": str(fileinfo["path_remote"]),
+            "subpath": str(fileinfo["subpath"]),
             "size": fileinfo["size_raw"],
             "size_processed": fileinfo["size_processed"],
             "compressed": not fileinfo["compressed"],
@@ -399,6 +400,7 @@ class DataPutter(base.DDSBaseClass):
             response = put_or_post(
                 DDSEndpoint.FILE_NEW,
                 params=params,
+                json=file_info,
                 headers=self.token,
                 timeout=DDSEndpoint.TIMEOUT,
             )

@@ -14,6 +14,7 @@ import getpass
 import requests
 import rich
 import simplejson
+import http
 
 # Own modules
 import dds_cli.directory
@@ -189,10 +190,13 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if not response.ok:
-            dds_cli.utils.console.print(
-                f"\n:no_entry_sign: Project access denied: No {key_type} key. {response.text} :no_entry_sign:\n"
+            message = "Failed getting key from DDS API"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise exceptions.DDSCLIException(
+                message=f"Failed getting key from DDS API: {response.json().get('message')}"
             )
-            os._exit(1)
 
         # Get key from response
         try:

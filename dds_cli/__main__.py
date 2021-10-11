@@ -662,11 +662,7 @@ def get(
 )
 @click.pass_obj
 def create(dds_info, config, username, title, description, principal_investigator):
-    """
-    Create a project.
-
-    """
-
+    """Create a project."""
     try:
         with dds_cli.project_creator.ProjectCreator(
             config=dds_info["CONFIG"] if config is None else config,

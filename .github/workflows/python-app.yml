@@ -20,9 +20,9 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: Install CLI requirements.txt
+    - name: Install dds_cli
       run: |
-        pip install -r requirements.txt
+        pip install .
     - name: Test with pytest
       run: |
         pip install pytest

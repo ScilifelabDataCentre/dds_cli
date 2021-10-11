@@ -22,11 +22,7 @@ jobs:
       - name: Install dds_cli
         run: |
           pip install .
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
       - name: Test with pytest
         run: |
           pip install pytest
           pytest
-

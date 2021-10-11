@@ -1,7 +1,9 @@
 """DDS CLI."""
 
 import os
-import pkg_resources
+
+# import pkg_resources
+import importlib
 import prompt_toolkit
 import rich.console
 
@@ -11,7 +13,8 @@ import rich.console
 ###############################################################################
 
 __title__ = "Data Delivery System"
-__version__ = pkg_resources.get_distribution("dds_cli").version
+# __version__ = pkg_resources.get_distribution("dds_cli").version
+__version__ = importlib.metadata.version("dds_cli")
 __url__ = "https://www.scilifelab.se/data"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"

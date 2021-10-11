@@ -53,7 +53,7 @@ class DDSBaseClass:
 
         # Get attempted operation e.g. put/ls/rm/get
         self.method = method
-        if self.method not in ["put", "get", "ls", "rm"]:
+        if self.method not in ["put", "get", "ls", "rm", "create"]:
             raise exceptions.InvalidMethodError(attempted_method=self.method)
         LOG.debug(f"Attempted operation: {self.method}")
 

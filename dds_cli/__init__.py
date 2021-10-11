@@ -66,6 +66,9 @@ class DDSEndpoint:
     USAGE = BASE_ENDPOINT + "/usage"
     INVOICE = BASE_ENDPOINT + "/invoice"
 
+    # Project creation urls
+    CREATE_PROJ = BASE_ENDPOINT + "/proj/create"
+
     TIMEOUT = 5
 
 

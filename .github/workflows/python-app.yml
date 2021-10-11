@@ -21,7 +21,7 @@ jobs:
       with:
         python-version: 3.8
     - name: Install CLI requirements.txt
-    run: |
+      run: |
         pip install -r requirements.txt
     - name: Test with pytest
       run: |

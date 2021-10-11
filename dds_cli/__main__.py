@@ -34,6 +34,7 @@ import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.option_classes
 import dds_cli.utils
+import dds_cli.project_creator
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -660,3 +661,67 @@ def get(
                                 progress=progress,
                             )
                         ] = next_file
+
+
+###################################################################################
+# CREATE ################################################################# CREATE #
+###################################################################################
+@dds_main.command(no_args_is_help=True)
+@click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials, destination, etc.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--title",
+    "-t",
+    required=True,
+    type=str,
+    help="The title of the project",
+)
+@click.option(
+    "--description",
+    "-d",
+    required=True,
+    type=str,
+    help="A description of the project",
+)
+@click.option(
+    "--principal-investigator",
+    "-pi",
+    required=False,
+    type=str,
+    help="The name of the Principal Investigator",
+    default="",
+)
+@click.pass_obj
+def create(dds_info, config, username, title, description, principal_investigator):
+    """
+    Create a project.
+
+    """
+
+    try:
+        with dds_cli.project_creator.ProjectCreator(
+            config=dds_info["CONFIG"] if config is None else config,
+            username=username,
+        ) as creator:
+            created, project_id, err = creator.create_project(
+                title=title, description=description, principal_investigator=principal_investigator
+            )
+            if created:
+                LOG.info(
+                    f"Project created with id: {project_id}",
+                )
+    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
+        LOG.error(e)
+        sys.exit(1)

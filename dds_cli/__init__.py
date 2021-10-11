@@ -3,6 +3,8 @@
 import os
 import pkg_resources
 import prompt_toolkit
+import rich.console
+
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
@@ -30,7 +32,7 @@ __all__ = [
 ###############################################################################
 
 # Keep track of all allowed methods
-DDS_METHODS = ["put", "get", "ls", "rm"]
+DDS_METHODS = ["put", "get", "ls", "rm", "create"]
 
 # Methods to which a directory created by DDS
 DDS_DIR_REQUIRED_METHODS = ["put", "get"]
@@ -93,6 +95,9 @@ class DDSEndpoint:
     USAGE = BASE_ENDPOINT + "/usage"
     INVOICE = BASE_ENDPOINT + "/invoice"
 
+    # Project creation urls
+    CREATE_PROJ = BASE_ENDPOINT + "/proj/create"
+
     TIMEOUT = 5
 
 
@@ -122,3 +127,6 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
         ("choice-required", "fg:ansired"),
     ]
 )
+
+# Determine if the user is on an old terminal without proper Unicode support
+dds_on_legacy_console = rich.console.detect_legacy_windows()

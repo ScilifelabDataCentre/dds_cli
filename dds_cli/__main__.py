@@ -25,14 +25,12 @@ import questionary
 
 # Own modules
 import dds_cli
-import dds_cli.admin
 import dds_cli.exceptions as exc
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
-import dds_cli.option_classes
 import dds_cli.utils
 import dds_cli.project_creator
 

@@ -660,8 +660,14 @@ def get(
     help="The name of the Principal Investigator",
     default="",
 )
+@click.option(
+    "--is_sensitive",
+    required=False,
+    is_flag=True,
+    help="Indicate if the Project includes sensitive data",
+)
 @click.pass_obj
-def create(dds_info, config, username, title, description, principal_investigator):
+def create(dds_info, config, username, title, description, principal_investigator, is_sensitive):
     """
     Create a project.
 
@@ -673,7 +679,10 @@ def create(dds_info, config, username, title, description, principal_investigato
             username=username,
         ) as creator:
             created, project_id, err = creator.create_project(
-                title=title, description=description, principal_investigator=principal_investigator
+                title=title,
+                description=description,
+                principal_investigator=principal_investigator,
+                sensitive=is_sensitive,
             )
             if created:
                 LOG.info(

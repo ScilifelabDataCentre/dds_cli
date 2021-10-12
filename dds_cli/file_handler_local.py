@@ -214,9 +214,7 @@ class LocalFileHandler(fh.FileHandler):
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
-            raise exceptions.DDSCLIException(
-                message=f"Failed getting key from DDS API: {response.json().get('message')}"
-            )
+            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
 
         try:
             files_in_db = response.json()

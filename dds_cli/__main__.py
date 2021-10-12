@@ -107,49 +107,6 @@ def dds_main(ctx, verbose, log_file):
 
 
 ####################################################################################################
-# INVITE USER #################################################################################### INVITE USER #
-####################################################################################################
-
-
-@dds_main.command()
-@click.option(
-    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
-)
-@click.option(
-    "--role",
-    "-r",
-    required=True,
-    type=click.Choice(
-        choices=["UnitAdmin", "UnitPersonnel", "ProjectOwner", "Researcher"], case_sensitive=False
-    ),
-    help="Type of account. UnitAdmin: ",
-)
-@click.pass_obj
-def invite(_, email, role):
-    """Add user to DDS, sending an invitation email to that person."""
-    # NOTE: Facility option will be removed once authentication has been fixed
-    # Facility ID will be retrieved from db in endpoint, not specified by admin
-
-    # TODO: Change roles
-
-    # Invite user
-    try:
-        response = requests.post(
-            dds_cli.DDSEndpoint.USER_INVITE,
-            params={"email": email, "role": role},
-        )
-
-        response_json = response.json()
-
-        LOG.info(response_json)
-
-    except requests.exceptions.RequestException as reqerr:
-        raise exc.ApiRequestError(str(reqerr))
-    except simplejson.JSONDecodeError as jsonerr:
-        raise exc.ApiResponseError(str(jsonerr))
-
-
-####################################################################################################
 # PUT ######################################################################################## PUT #
 ####################################################################################################
 

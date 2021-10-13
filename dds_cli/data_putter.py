@@ -9,7 +9,6 @@ import concurrent.futures
 import itertools
 import logging
 import pathlib
-import json
 
 # Installed
 import boto3

@@ -15,7 +15,7 @@ import http
 
 
 # Own modules
-from dds_cli import DDSEndpoint
+import dds_cli
 import dds_cli.exceptions
 import dds_cli.base
 
@@ -46,8 +46,7 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
 
     def add_user(self, email, role):
         """Invite user."""
-
-        # Invite user
+        # Perform request to API
         try:
             response = requests.post(
                 dds_cli.DDSEndpoint.USER_ADD,
@@ -57,12 +56,12 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
 
             # Get response
             response_json = response.json()
-
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+        # Format response message
         if not response.ok:
             message = "Could not add user"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:

@@ -14,12 +14,18 @@ import getpass
 import requests
 import rich
 import simplejson
+import http
 
 # Own modules
 import dds_cli.directory
 import dds_cli.timestamp
 import dds_cli.utils
 
+from dds_cli import (
+    DDS_METHODS,
+    DDS_DIR_REQUIRED_METHODS,
+    DDS_KEYS_REQUIRED_METHODS,
+)
 from dds_cli import DDSEndpoint
 from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
@@ -53,12 +59,12 @@ class DDSBaseClass:
 
         # Get attempted operation e.g. put/ls/rm/get
         self.method = method
-        if self.method not in ["put", "get", "ls", "rm", "create"]:
+        if self.method not in DDS_METHODS:
             raise exceptions.InvalidMethodError(attempted_method=self.method)
         LOG.debug(f"Attempted operation: {self.method}")
 
         # Use user defined festination if any specified
-        if self.method in ["get", "put"]:
+        if self.method in DDS_DIR_REQUIRED_METHODS:
             self.dds_directory = dds_cli.directory.DDSDirectory(
                 path=dds_directory
                 if dds_directory
@@ -84,16 +90,14 @@ class DDSBaseClass:
         LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list
         # files within project
-        if self.method in ["put", "get"] or (
-            self.method in ["ls", "rm"] and self.project is not None
-        ):
-            if self.method in ["put", "get"]:
-                self.keys = self.__get_project_keys()
+        if self.method in DDS_KEYS_REQUIRED_METHODS:
+            self.keys = self.__get_project_keys()
 
-                self.status = dict()
-                self.filehandler = None
+            self.status = dict()
+            self.filehandler = None
 
     def __enter__(self):
+        """Return self when using context manager."""
         return self
 
     def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
@@ -182,10 +186,11 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if not response.ok:
-            dds_cli.utils.console.print(
-                f"\n:no_entry_sign: Project access denied: No {key_type} key. {response.text} :no_entry_sign:\n"
-            )
-            os._exit(1)
+            message = "Failed getting key from DDS API"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
 
         # Get key from response
         try:
@@ -305,7 +310,6 @@ class DDSBaseClass:
     # Public methods ################################# Public methods #
     def verify_bucket_exist(self):
         """Check that s3 connection works, and that bucket exists."""
-
         LOG.debug("Verifying and/or creating bucket.")
 
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:

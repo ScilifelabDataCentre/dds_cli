@@ -177,6 +177,8 @@ class DataLister(base.DDSBaseClass):
         # Column format
         column_formatting = self.format_columns(total_size=total_size, usage_info=usage_info)
 
+        LOG.info(column_formatting)
+
         # Create table
         table = Table(
             title="Your Projects",
@@ -203,7 +205,9 @@ class DataLister(base.DDSBaseClass):
 
         # Add all column values for each row to table
         for proj in sorted_projects:
-            table.add_row(*[proj[i] for i in column_formatting])
+            # TODO: The excluding of GBHours and Cost below is due to errors after changes in API,
+            # Fix these errors and add the print out of this again
+            table.add_row(*[proj[i] for i in column_formatting if i not in ["GBHours", "Cost"]])
 
         # Print to stdout if there are any lines
         if table.columns:
@@ -230,7 +234,8 @@ class DataLister(base.DDSBaseClass):
         try:
             response = requests.get(
                 DDSEndpoint.LIST_FILES,
-                params={"project": self.project, "subpath": folder, "show_size": show_size},
+                params={"project": self.project},
+                json={"subpath": folder, "show_size": show_size},
                 headers=self.token,
             )
         except requests.exceptions.RequestException as err:

@@ -10,6 +10,8 @@ import logging
 import os
 import pathlib
 import uuid
+import http
+import sys
 
 # Installed
 import requests
@@ -20,7 +22,7 @@ from dds_cli import DDSEndpoint
 from dds_cli import file_compressor as fc
 from dds_cli import file_handler as fh
 from dds_cli import FileSegment
-
+from dds_cli import exceptions
 import dds_cli.utils
 
 ###############################################################################
@@ -208,8 +210,11 @@ class LocalFileHandler(fh.FileHandler):
             raise SystemExit from err
 
         if not response.ok:
-            dds_cli.utils.console.print(f"\n{response.text}\n")
-            os._exit(1)
+            message = "Failed getting information about previously uploaded files"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
 
         try:
             files_in_db = response.json()

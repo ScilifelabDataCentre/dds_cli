@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class S3Connector:
-    """Connects to Simple Storage Service."""
+    """Connect to Simple Storage Service."""
 
     project_id: dataclasses.InitVar[str]
     token: dataclasses.InitVar[dict]

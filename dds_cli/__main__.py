@@ -1,8 +1,8 @@
 """CLI for the Data Delivery System."""
 
-###############################################################################
-# IMPORTS ########################################################### IMPORTS #
-###############################################################################
+####################################################################################################
+# IMPORTS ################################################################################ IMPORTS #
+####################################################################################################
 
 # Standard library
 import concurrent.futures
@@ -11,18 +11,17 @@ import logging
 import os
 import pathlib
 import sys
-from logging.config import dictConfig
 
 # Installed
 import click
 import click_pathlib
-import questionary
+import requests
 import rich
-import rich.console
 import rich.logging
+import rich.progress
 import rich.prompt
-from rich import pretty
-from rich.progress import Progress, BarColumn
+import simplejson
+import questionary
 
 # Own modules
 import dds_cli
@@ -32,19 +31,18 @@ import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
-import dds_cli.timestamp
 import dds_cli.utils
 import dds_cli.project_creator
 
-###############################################################################
-# START LOGGING CONFIG ################################# START LOGGING CONFIG #
-###############################################################################
+####################################################################################################
+# START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
+####################################################################################################
 
 LOG = logging.getLogger()
 
-###############################################################################
-# MAIN ################################################################# MAIN #
-###############################################################################
+####################################################################################################
+# MAIN ###################################################################################### MAIN #
+####################################################################################################
 
 # Print header to STDERR
 stderr = dds_cli.utils.console
@@ -95,7 +93,7 @@ def dds_main(ctx, verbose, log_file):
 
         # Check that the config file exists
         config_file = None
-        if not any([x in sys.argv for x in ["--config", "-c", "--username", "-u"]]):
+        if not any(x in sys.argv for x in ["--config", "-c", "--username", "-u"]):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
                 raise exc.ConfigFileNotFoundError(config_file)
@@ -106,9 +104,9 @@ def dds_main(ctx, verbose, log_file):
         }
 
 
-###############################################################################
-# PUT ################################################################### PUT #
-###############################################################################
+####################################################################################################
+# PUT ######################################################################################## PUT #
+####################################################################################################
 
 
 @dds_main.command()
@@ -215,9 +213,9 @@ def put(
         sys.exit(1)
 
 
-###############################################################################
-# LIST ################################################################# LIST #
-###############################################################################
+####################################################################################################
+# LIST ###################################################################################### LIST #
+####################################################################################################
 
 
 @dds_main.command()
@@ -293,8 +291,8 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
                                 validate=lambda x: x in project_ids or x == "",
                                 style=dds_cli.dds_questionary_styles,
                             ).unsafe_ask()
-                            assert project != ""
-                            assert project is not None
+                            assert project and project != ""
+
                         # If didn't enter anything, convert to None and exit
                         except (KeyboardInterrupt, AssertionError):
                             break
@@ -355,9 +353,9 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
     print("TESTING")
 
 
-###############################################################################
-# DELETE ############################################################# DELETE #
-###############################################################################
+####################################################################################################
+# DELETE ################################################################################## DELETE #
+####################################################################################################
 
 
 @dds_main.command()
@@ -427,9 +425,9 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
             remover.remove_folder(folder=folder)
 
 
-###############################################################################
-# GET ################################################################### GET #
-###############################################################################
+####################################################################################################
+# GET ######################################################################################## GET #
+####################################################################################################
 
 
 @dds_main.command()
@@ -554,9 +552,9 @@ def get(
         verify_checksum=verify_checksum,
     ) as getter:
 
-        with Progress(
+        with rich.progress.Progress(
             "{task.description}",
-            BarColumn(bar_width=None),
+            rich.progress.BarColumn(bar_width=None),
             " • ",
             "[progress.percentage]{task.percentage:>3.1f}%",
             refresh_per_second=2,

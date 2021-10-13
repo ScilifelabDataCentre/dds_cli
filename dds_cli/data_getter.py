@@ -225,11 +225,14 @@ class DataGetter(base.DDSBaseClass):
 
         # Get file info
         fileinfo = self.filehandler.data[file]
-        params = {"name": fileinfo["name_in_db"], "project": self.project}
+        filename = {"name": fileinfo["name_in_db"]}
+        params = {"project": self.project}
 
         # Send file info to API
         try:
-            response = requests.put(DDSEndpoint.FILE_UPDATE, params=params, headers=self.token)
+            response = requests.put(
+                DDSEndpoint.FILE_UPDATE, params=params, json=filename, headers=self.token
+            )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 

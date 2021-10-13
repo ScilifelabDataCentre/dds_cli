@@ -16,7 +16,29 @@ __url__ = "https://www.scilifelab.se/data"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
-__all__ = ["DDSEndpoint", "FileSegment", "dds_questionary_styles", "dds_on_legacy_console"]
+__all__ = [
+    "DDS_METHODS",
+    "DDS_DIR_REQUIRED_METHODS",
+    "DDS_KEYS_REQUIRED_METHODS",
+    "DDSEndpoint",
+    "FileSegment",
+    "dds_questionary_styles",
+]
+
+
+###############################################################################
+# VARIABLES ####################################################### VARIABLES #
+###############################################################################
+
+# Keep track of all allowed methods
+DDS_METHODS = ["put", "get", "ls", "rm", "create"]
+
+# Methods to which a directory created by DDS
+DDS_DIR_REQUIRED_METHODS = ["put", "get"]
+
+# Methods which require a project ID
+DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -32,6 +54,9 @@ class DDSEndpoint:
     BASE_ENDPOINT = (
         BASE_ENDPOINT_LOCAL if os.getenv("DDS_CLI_ENV") == "development" else BASE_ENDPOINT_REMOTE
     )
+
+    # User creation
+    USER_INVITE = BASE_ENDPOINT + "/user/invite"
 
     # Authentication - user and project
     TOKEN = BASE_ENDPOINT + "/user/token"

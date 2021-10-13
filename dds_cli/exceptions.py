@@ -63,6 +63,11 @@ class InvalidMethodError(Exception):
         return f"{self.message}: {self.method}"
 
 
+class DDSCLIException(click.ClickException):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class AuthenticationError(Exception):
     """Errors due to user authentication.
 

@@ -25,14 +25,15 @@ import questionary
 
 # Own modules
 import dds_cli
+import dds_cli.admin
 import dds_cli.exceptions as exc
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
+import dds_cli.option_classes
 import dds_cli.utils
-import dds_cli.project_creator
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -102,6 +103,49 @@ def dds_main(ctx, verbose, log_file):
         ctx.obj = {
             "CONFIG": config_file,
         }
+
+
+####################################################################################################
+# INVITE USER #################################################################################### INVITE USER #
+####################################################################################################
+
+
+@dds_main.command()
+@click.option(
+    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
+)
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(
+        choices=["UnitAdmin", "UnitPersonnel", "ProjectOwner", "Researcher"], case_sensitive=False
+    ),
+    help="Type of account. UnitAdmin: ",
+)
+@click.pass_obj
+def invite(_, email, role):
+    """Add user to DDS, sending an invitation email to that person."""
+    # NOTE: Facility option will be removed once authentication has been fixed
+    # Facility ID will be retrieved from db in endpoint, not specified by admin
+
+    # TODO: Change roles
+
+    # Invite user
+    try:
+        response = requests.post(
+            dds_cli.DDSEndpoint.USER_INVITE,
+            params={"email": email, "role": role},
+        )
+
+        response_json = response.json()
+
+        LOG.info(response_json)
+
+    except requests.exceptions.RequestException as reqerr:
+        raise exc.ApiRequestError(str(reqerr))
+    except simplejson.JSONDecodeError as jsonerr:
+        raise exc.ApiResponseError(str(jsonerr))
 
 
 ####################################################################################################
@@ -616,76 +660,3 @@ def get(
                                 progress=progress,
                             )
                         ] = next_file
-
-
-###################################################################################
-# CREATE ################################################################# CREATE #
-###################################################################################
-@dds_main.command(no_args_is_help=True)
-@click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--title",
-    "-t",
-    required=True,
-    type=str,
-    help="The title of the project",
-)
-@click.option(
-    "--description",
-    "-d",
-    required=True,
-    type=str,
-    help="A description of the project",
-)
-@click.option(
-    "--principal-investigator",
-    "-pi",
-    required=False,
-    type=str,
-    help="The name of the Principal Investigator",
-    default="",
-)
-@click.option(
-    "--is_sensitive",
-    required=False,
-    is_flag=True,
-    help="Indicate if the Project includes sensitive data",
-)
-@click.pass_obj
-def create(dds_info, config, username, title, description, principal_investigator, is_sensitive):
-    """
-    Create a project.
-
-    """
-
-    try:
-        with dds_cli.project_creator.ProjectCreator(
-            config=dds_info["CONFIG"] if config is None else config,
-            username=username,
-        ) as creator:
-            created, project_id, err = creator.create_project(
-                title=title,
-                description=description,
-                principal_investigator=principal_investigator,
-                sensitive=is_sensitive,
-            )
-            if created:
-                LOG.info(
-                    f"Project created with id: {project_id}",
-                )
-    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
-        LOG.error(e)
-        sys.exit(1)

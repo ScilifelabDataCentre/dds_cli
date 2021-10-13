@@ -141,7 +141,7 @@ def dds_main(ctx, verbose, log_file):
 @click.pass_obj
 def add_user(dds_info, username, config, email, role):
     """Add user to DDS, sending an invitation email to that person."""
-
+    # All exceptions caught within
     with dds_cli.account_adder.AccountAdder(
         username=username, config=dds_info.get("CONFIG") if config is None else config
     ) as inviter:

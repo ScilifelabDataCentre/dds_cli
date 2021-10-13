@@ -112,6 +112,20 @@ def dds_main(ctx, verbose, log_file):
 
 @dds_main.command()
 @click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials, destination, etc.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
     "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
 )
 @click.option(
@@ -122,31 +136,29 @@ def dds_main(ctx, verbose, log_file):
         choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
         case_sensitive=False,
     ),
-    help="Type of account. UnitAdmin: ",
+    help="Type of account.",
 )
 @click.pass_obj
-def invite(_, email, role):
+def invite(dds_info, username, config, email, role):
     """Add user to DDS, sending an invitation email to that person."""
     # NOTE: Facility option will be removed once authentication has been fixed
     # Facility ID will be retrieved from db in endpoint, not specified by admin
 
     # TODO: Change roles
 
-    # Invite user
     try:
-        response = requests.post(
-            dds_cli.DDSEndpoint.USER_INVITE,
-            params={"email": email, "role": role},
-        )
-
-        response_json = response.json()
-
-        LOG.info(response_json)
-
-    except requests.exceptions.RequestException as reqerr:
-        raise exc.ApiRequestError(str(reqerr))
-    except simplejson.JSONDecodeError as jsonerr:
-        raise exc.ApiResponseError(str(jsonerr))
+        with dds_cli.admin.UserInviter(
+            username=username, config=dds_info.get("CONFIG") if config is None else config
+        ) as inviter:
+            inviter.add_user(email=email, role=role)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.ApiResponseError,
+    ) as e:
+        LOG.error(e)
+        sys.exit(1)
 
 
 ####################################################################################################

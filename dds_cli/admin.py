@@ -6,13 +6,17 @@
 
 # Standard library
 import logging
+import pathlib
 
 # Installed
 import requests
+import simplejson
+
 
 # Own modules
 from dds_cli import DDSEndpoint
 import dds_cli.exceptions
+import dds_cli.base
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -26,26 +30,33 @@ LOG = logging.getLogger(__name__)
 ####################################################################################################
 
 
-class Admin:
+class UserInviter(dds_cli.base.DDSBaseClass):
     """Admin class for adding users, etc."""
 
-    def __enter__(self):
-        return self
+    def __init__(self, username: str = None, config: pathlib.Path = None, method: str = "invite"):
 
-    def __exit__(self, exc_type, exc_value, tb):
+        # Initiate DDSBaseClass to authenticate user
+        super().__init__(username=username, config=config, method=method)
 
-        # Don't clean up if we hit an exception
-        if exc_type is not None:
-            return False
+        # Only method "create" can use the ProjectCreator class
+        if self.method != "invite":
+            raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
-        return True
+    def add_user(self, email, role):
+        """Invite user."""
 
-    def add_user(self):
-        LOG.info(self)
-
+        # Invite user
         try:
-            response = requests.post(DDSEndpoint.USER_INVITE)
-        except requests.exceptions.RequestException as reqerr:
-            raise dds_cli.exceptions.ApiRequestError(message=str(reqerr))
+            response = requests.post(
+                dds_cli.DDSEndpoint.USER_INVITE,
+                headers=self.token,
+                params={"email": email, "role": role},
+            )
 
-        LOG.info(response.json())
+            response_json = response.json()
+
+            LOG.info(response_json)
+        except requests.exceptions.RequestException as reqerr:
+            raise dds_cli.exceptions.ApiRequestError(str(reqerr))
+        except simplejson.JSONDecodeError as jsonerr:
+            raise dds_cli.exceptions.ApiResponseError(str(jsonerr))

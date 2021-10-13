@@ -3,6 +3,8 @@
 import os
 import pkg_resources
 import prompt_toolkit
+import rich.console
+
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
@@ -17,8 +19,7 @@ __license__ = "MIT"
 __all__ = [
     "DDS_METHODS",
     "DDS_DIR_REQUIRED_METHODS",
-    "DDS_PROJ_REQUIRED_METHODS",
-    "DDS_PROJ_NOT_REQUIRED_METHODS",
+    "DDS_KEYS_REQUIRED_METHODS",
     "DDSEndpoint",
     "FileSegment",
     "dds_questionary_styles",
@@ -30,16 +31,13 @@ __all__ = [
 ###############################################################################
 
 # Keep track of all allowed methods
-DDS_METHODS = ["put", "get", "ls", "rm"]
+DDS_METHODS = ["put", "get", "ls", "rm", "create"]
 
 # Methods to which a directory created by DDS
 DDS_DIR_REQUIRED_METHODS = ["put", "get"]
 
 # Methods which require a project ID
-DDS_PROJ_REQUIRED_METHODS = ["put", "get"]
-
-# Methods which do not require a project ID
-DDS_PROJ_NOT_REQUIRED_METHODS = ["ls", "rm"]
+DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
 
 
 ###############################################################################
@@ -93,6 +91,9 @@ class DDSEndpoint:
     USAGE = BASE_ENDPOINT + "/usage"
     INVOICE = BASE_ENDPOINT + "/invoice"
 
+    # Project creation urls
+    CREATE_PROJ = BASE_ENDPOINT + "/proj/create"
+
     TIMEOUT = 5
 
 
@@ -122,3 +123,6 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
         ("choice-required", "fg:ansired"),
     ]
 )
+
+# Determine if the user is on an old terminal without proper Unicode support
+dds_on_legacy_console = rich.console.detect_legacy_windows()

@@ -14,6 +14,7 @@ import getpass
 import requests
 import rich
 import simplejson
+import http
 
 # Own modules
 import dds_cli.directory
@@ -23,8 +24,7 @@ import dds_cli.utils
 from dds_cli import (
     DDS_METHODS,
     DDS_DIR_REQUIRED_METHODS,
-    DDS_PROJ_REQUIRED_METHODS,
-    DDS_PROJ_NOT_REQUIRED_METHODS,
+    DDS_KEYS_REQUIRED_METHODS,
 )
 from dds_cli import DDSEndpoint
 from dds_cli import file_handler as fh
@@ -90,14 +90,11 @@ class DDSBaseClass:
         LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list
         # files within project
-        if self.method in DDS_PROJ_REQUIRED_METHODS or (
-            self.method in DDS_PROJ_NOT_REQUIRED_METHODS and self.project
-        ):
-            if self.method in ["put", "get"]:
-                self.keys = self.__get_project_keys()
+        if self.method in DDS_KEYS_REQUIRED_METHODS:
+            self.keys = self.__get_project_keys()
 
-                self.status = dict()
-                self.filehandler = None
+            self.status = dict()
+            self.filehandler = None
 
     def __enter__(self):
         """Return self when using context manager."""
@@ -189,10 +186,11 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if not response.ok:
-            dds_cli.utils.console.print(
-                f"\n:no_entry_sign: Project access denied: No {key_type} key. {response.text} :no_entry_sign:\n"
-            )
-            os._exit(1)
+            message = "Failed getting key from DDS API"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
 
         # Get key from response
         try:

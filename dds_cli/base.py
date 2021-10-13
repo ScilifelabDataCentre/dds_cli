@@ -101,13 +101,12 @@ class DDSBaseClass:
         return self
 
     def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
-
-        # Don't clean up if we hit an exception
-        if exc_type is not None:
-            return False
-
         if self.method in ["put", "get"]:
             self.__printout_delivery_summary()
+
+        # Exception is not handled
+        if exc_type is not None:
+            return False
 
         return True
 

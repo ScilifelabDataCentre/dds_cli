@@ -1,0 +1,73 @@
+"""Admin class, adds ."""
+
+####################################################################################################
+# IMPORTS ################################################################################ IMPORTS #
+###################################################################################################
+
+# Standard library
+import logging
+import pathlib
+
+# Installed
+import requests
+import simplejson
+import http
+
+
+# Own modules
+from dds_cli import DDSEndpoint
+import dds_cli.exceptions
+import dds_cli.base
+
+####################################################################################################
+# START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
+####################################################################################################
+
+LOG = logging.getLogger(__name__)
+
+
+####################################################################################################
+# CLASSES ################################################################################ CLASSES #
+####################################################################################################
+
+
+class AccountAdder(dds_cli.base.DDSBaseClass):
+    """Admin class for adding users, etc."""
+
+    def __init__(self, username: str = None, config: pathlib.Path = None, method: str = "invite"):
+        """Initialize, incl. user authentication."""
+
+        # Initiate DDSBaseClass to authenticate user
+        super().__init__(username=username, config=config, method=method)
+
+        # Only method "create" can use the ProjectCreator class
+        if self.method != "invite":
+            raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
+
+    def add_user(self, email, role):
+        """Invite user."""
+
+        # Invite user
+        try:
+            response = requests.post(
+                dds_cli.DDSEndpoint.USER_ADD,
+                headers=self.token,
+                params={"email": email, "role": role},
+            )
+
+            # Get response
+            response_json = response.json()
+
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        if not response.ok:
+            message = "Could not add user"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise dds_cli.exceptions.DDSCLIException(
+                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            )

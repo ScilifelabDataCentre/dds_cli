@@ -25,7 +25,7 @@ import questionary
 
 # Own modules
 import dds_cli
-import dds_cli.admin
+import dds_cli.account_adder
 import dds_cli.exceptions as exc
 import dds_cli.data_getter
 import dds_cli.data_lister
@@ -139,7 +139,7 @@ def dds_main(ctx, verbose, log_file):
     help="Type of account.",
 )
 @click.pass_obj
-def invite(dds_info, username, config, email, role):
+def add_user(dds_info, username, config, email, role):
     """Add user to DDS, sending an invitation email to that person."""
     # NOTE: Facility option will be removed once authentication has been fixed
     # Facility ID will be retrieved from db in endpoint, not specified by admin
@@ -147,7 +147,7 @@ def invite(dds_info, username, config, email, role):
     # TODO: Change roles
 
     try:
-        with dds_cli.admin.UserInviter(
+        with dds_cli.account_adder.AccountAdder(
             username=username, config=dds_info.get("CONFIG") if config is None else config
         ) as inviter:
             inviter.add_user(email=email, role=role)

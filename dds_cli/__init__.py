@@ -19,8 +19,7 @@ __license__ = "MIT"
 __all__ = [
     "DDS_METHODS",
     "DDS_DIR_REQUIRED_METHODS",
-    "DDS_PROJ_REQUIRED_METHODS",
-    "DDS_PROJ_NOT_REQUIRED_METHODS",
+    "DDS_KEYS_REQUIRED_METHODS",
     "DDSEndpoint",
     "FileSegment",
     "dds_questionary_styles",
@@ -38,10 +37,7 @@ DDS_METHODS = ["put", "get", "ls", "rm", "create"]
 DDS_DIR_REQUIRED_METHODS = ["put", "get"]
 
 # Methods which require a project ID
-DDS_PROJ_REQUIRED_METHODS = ["put", "get"]
-
-# Methods which do not require a project ID
-DDS_PROJ_NOT_REQUIRED_METHODS = ["ls", "rm"]
+DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
 
 
 ###############################################################################

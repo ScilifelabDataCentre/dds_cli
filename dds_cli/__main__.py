@@ -141,24 +141,11 @@ def dds_main(ctx, verbose, log_file):
 @click.pass_obj
 def add_user(dds_info, username, config, email, role):
     """Add user to DDS, sending an invitation email to that person."""
-    # NOTE: Facility option will be removed once authentication has been fixed
-    # Facility ID will be retrieved from db in endpoint, not specified by admin
 
-    # TODO: Change roles
-
-    try:
-        with dds_cli.account_adder.AccountAdder(
-            username=username, config=dds_info.get("CONFIG") if config is None else config
-        ) as inviter:
-            inviter.add_user(email=email, role=role)
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.ApiRequestError,
-        dds_cli.exceptions.ApiResponseError,
-    ) as e:
-        LOG.error(e)
-        sys.exit(1)
+    with dds_cli.account_adder.AccountAdder(
+        username=username, config=dds_info.get("CONFIG") if config is None else config
+    ) as inviter:
+        inviter.add_user(email=email, role=role)
 
 
 ####################################################################################################

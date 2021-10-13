@@ -56,15 +56,11 @@ class User:
                 auth=(self.username, password),
                 timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
+            response_json = response.json()
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err)) from err
-
-        # Get response from api
-        try:
-            response_json = response.json()
         except simplejson.JSONDecodeError as err:
-            LOG.exception(str(err))
-            raise
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
         # Raise exceptions to log info if not ok response
         if not response.ok:

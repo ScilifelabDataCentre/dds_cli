@@ -34,14 +34,14 @@ LOG = logging.getLogger(__name__)
 class AccountAdder(dds_cli.base.DDSBaseClass):
     """Admin class for adding users, etc."""
 
-    def __init__(self, username: str = None, config: pathlib.Path = None, method: str = "invite"):
+    def __init__(self, username: str = None, config: pathlib.Path = None, method: str = "add"):
         """Initialize, incl. user authentication."""
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, method=method)
 
         # Only method "create" can use the ProjectCreator class
-        if self.method != "invite":
+        if self.method != "add":
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     def add_user(self, email, role):

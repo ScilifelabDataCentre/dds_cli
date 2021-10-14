@@ -56,6 +56,7 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
 
             # Get response
             response_json = response.json()
+            LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
         except simplejson.JSONDecodeError as err:
@@ -70,3 +71,5 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
             raise dds_cli.exceptions.DDSCLIException(
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
+
+        LOG.info(response_json.get("message", "User successfully added."))

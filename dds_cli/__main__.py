@@ -394,8 +394,6 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
         LOG.error(e)
         sys.exit(1)
 
-    print("TESTING")
-
 
 ####################################################################################################
 # DELETE ################################################################################## DELETE #

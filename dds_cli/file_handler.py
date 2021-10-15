@@ -84,15 +84,18 @@ class FileHandler:
         return contents
 
     @staticmethod
-    def save_errors_to_file(file: pathlib.Path, info):
+    def append_errors_to_file(file: pathlib.Path, info):
         try:
             original_umask = os.umask(0)  # User file-creation mode mask
-            with file.open(mode="w") as errfile:
-                json.dump(
+            with file.open(mode="a") as errfile:
+                json_output = json.dumps(
                     info,
-                    errfile,
-                    indent=4,
+                    indent=None,
                 )
+                # Each line is valid json, but the entire file is not.
+                # Multiple threads are appending to this file, so valid json for
+                # the entire file is not trivial.
+                errfile.write(json_output + "\n")
         except (OSError, TypeError) as err:
             LOG.warning(str(err))
         finally:

@@ -296,13 +296,13 @@ class DataPutter(base.DDSBaseClass):
             # Perform upload
             file_uploaded, message = self.put(file=file, progress=progress, task=task)
 
-            LOG.debug(f"File uploaded: {file_uploaded}")
             # Perform db update
             if file_uploaded:
                 db_updated, message = self.add_file_db(file=file)
 
                 if db_updated:
                     all_ok = True
+                    LOG.info(f"File successfully uploaded and added to the database: {file}")
 
         if not saved or all_ok:
             # Delete temporary processed file locally
@@ -364,7 +364,7 @@ class DataPutter(base.DDSBaseClass):
                     TypeError,
                 ) as err:
                     error = f"S3 upload of file '{file}' failed: {err}"
-                    LOG.exceptionf("{file}: {err}")
+                    LOG.exception(f"{file}: {err}")
                 else:
                     uploaded = True
 

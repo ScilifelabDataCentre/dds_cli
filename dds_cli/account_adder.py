@@ -51,7 +51,7 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
             response = requests.post(
                 dds_cli.DDSEndpoint.USER_ADD,
                 headers=self.token,
-                params={"email": email, "role": role},
+                json={"email": email, "role": role},
             )
 
             # Get response

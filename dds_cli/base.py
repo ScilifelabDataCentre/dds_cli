@@ -63,13 +63,17 @@ class DDSBaseClass:
             raise exceptions.InvalidMethodError(attempted_method=self.method)
         LOG.debug(f"Attempted operation: {self.method}")
 
-        # Use user defined festination if any specified
+        # Use user defined destination if any specified
         if self.method in DDS_DIR_REQUIRED_METHODS:
             self.dds_directory = dds_cli.directory.DDSDirectory(
                 path=dds_directory
                 if dds_directory
                 else pathlib.Path.cwd()
                 / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
+            )
+
+            self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
+                "dds_failed_delivery.txt"
             )
 
         # Keyboardinterrupt
@@ -219,15 +223,7 @@ class DDSBaseClass:
                 f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
             )
 
-            # Save to file and print message if too many failed files,
-            # otherwise create and print tables
-            outfile = self.dds_directory.directories["LOGS"] / pathlib.Path(
-                "dds_failed_delivery.txt"
-            )
-
-            fh.FileHandler.save_errors_to_file(file=outfile, info=any_failed)
-
-            # Only print out if the number of cancelled files are below a certain thresh
+            # Print message if any failed files, print summary table unless too many failed files
             if len(any_failed) < max_fileerrs:
                 dds_cli.utils.console.print(f"{intro_error_message}:")
 
@@ -250,7 +246,7 @@ class DDSBaseClass:
                     dds_cli.utils.console.print(rich.padding.Padding(additional_info, 1))
 
             dds_cli.utils.console.print(
-                f"{intro_error_message}. See {outfile} for more information."
+                f"{intro_error_message}. See {self.failed_delivery_log} for more information."
             )
 
             if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):

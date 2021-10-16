@@ -113,7 +113,7 @@ class DataLister(base.DDSBaseClass):
                 "footer": "Total" if self.show_usage else default_format.get("footer"),
                 "overflow": default_format.get("overflow"),
             },
-            **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
+            **{x: default_format for x in ["Title", "PI", "Status", "Last updated", "Users"]},
             "Size": {
                 "justify": "center",
                 "style": default_format.get("style"),
@@ -143,20 +143,26 @@ class DataLister(base.DDSBaseClass):
 
         return column_formatting
 
-    def list_projects(self, sort_by="Updated"):
-        """Gets a list of all projects the user is involved in."""
+    def list_projects(self, sort_by="Updated", show_emails="False"):
+        """Gets a list of project(s) the user is involved in."""
 
         # Get projects from API
         try:
             response = requests.get(
-                DDSEndpoint.LIST_PROJ, headers=self.token, params={"usage": self.show_usage}
+                DDSEndpoint.LIST_PROJ,
+                headers=self.token,
+                params={
+                    "usage": self.show_usage,
+                    "show_emails": show_emails,
+                    "project": self.project,
+                },
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
 
         # Check resposne
         if not response.ok:
-            raise exceptions.APIError(f"Failed to get list of projects: {response.text}")
+            raise exceptions.APIError(f"Failed to get any projects: {response.text}")
 
         # Get result from API
         try:
@@ -181,7 +187,7 @@ class DataLister(base.DDSBaseClass):
 
         # Create table
         table = Table(
-            title="Your Projects",
+            title="Your Project(s)",
             show_header=True,
             header_style="bold",
             show_footer=self.show_usage,
@@ -342,7 +348,8 @@ class DataLister(base.DDSBaseClass):
             try:
                 resp_json = requests.get(
                     DDSEndpoint.LIST_FILES,
-                    params={"project": self.project, "subpath": folder, "show_size": show_size},
+                    params={"project": self.project},
+                    json={"subpath": folder, "show_size": show_size},
                     headers=self.token,
                 )
             except requests.exceptions.RequestException as err:

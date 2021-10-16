@@ -253,8 +253,15 @@ def put(
 @click.option(
     "-t", "--tree", is_flag=True, default=False, help="Display the entire project(s) directory tree"
 )
+@click.option(
+    "-e",
+    "--show_emails",
+    is_flag=True,
+    default=False,
+    help="Display emails associated with the usernames",
+)
 @click.pass_obj
-def ls(dds_info, project, folder, projects, size, username, config, usage, sort, tree):
+def ls(dds_info, project, folder, projects, size, username, config, usage, sort, tree, show_emails):
     """
     List your projects and project files.
 
@@ -274,7 +281,7 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
                 config=dds_info["CONFIG"] if config is None else config,
                 username=username,
             ) as lister:
-                projects = lister.list_projects(sort_by=sort)
+                projects = lister.list_projects(sort_by=sort, show_emails=show_emails)
 
                 # If an interactive terminal, ask user if they want to view files for a project
                 if sys.stdout.isatty():
@@ -306,6 +313,7 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
                 username=username,
                 tree=tree,
             ) as lister:
+                projects = lister.list_projects(sort_by=sort, show_emails=show_emails)
                 if tree:
                     lister.list_recursive(show_size=size)
                 else:

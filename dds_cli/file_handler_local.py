@@ -147,9 +147,16 @@ class LocalFileHandler(fh.FileHandler):
                 file_info.update({**content_info})
             else:
                 if path.is_symlink():
-                    LOG.warning(
-                        f"IGNORED: Link: {path} -> {path.resolve()} seems to be broken, will be ignored."
-                    )
+                    try:
+                        resolved = path.resolve()
+                    except RuntimeError:
+                        LOG.warning(
+                            f"IGNORED: Link: {path} seems to contain infinite loop, will be ignored."
+                        )
+                    else:
+                        LOG.warning(
+                            f"IGNORED: Link: {path} -> {resolved} seems to be broken, will be ignored."
+                        )
                 else:
                     LOG.warning(
                         f"IGNORED: Path of unsupported/unknown type: {path}, will be ignored."

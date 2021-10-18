@@ -177,8 +177,6 @@ class DataLister(base.DDSBaseClass):
         # Column format
         column_formatting = self.format_columns(total_size=total_size, usage_info=usage_info)
 
-        LOG.info(column_formatting)
-
         # Create table
         table = Table(
             title="Your Projects",

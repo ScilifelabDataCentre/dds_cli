@@ -145,6 +145,15 @@ class LocalFileHandler(fh.FileHandler):
                     folder=folder / pathlib.Path(path.name),
                 )
                 file_info.update({**content_info})
+            else:
+                if path.is_symlink():
+                    LOG.warning(
+                        f"IGNORED: Link: {path} -> {path.resolve()} seems to be broken, will be ignored."
+                    )
+                else:
+                    LOG.warning(
+                        f"IGNORED: Path of unsupported/unknown type: {path}, will be ignored."
+                    )
 
         return file_info, progress_tasks
 

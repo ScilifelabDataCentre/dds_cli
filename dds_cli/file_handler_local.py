@@ -65,7 +65,7 @@ class LocalFileHandler(fh.FileHandler):
             )
 
         # Get absolute paths for all data
-        self.data_list = [pathlib.Path(path).resolve() for path in self.data_list]
+        self.data_list = [pathlib.Path(os.path.abspath(path)) for path in self.data_list]
 
         # No data -- cannot proceed
         if not self.data_list:

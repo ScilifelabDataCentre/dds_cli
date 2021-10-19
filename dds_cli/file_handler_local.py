@@ -65,7 +65,7 @@ class LocalFileHandler(fh.FileHandler):
             )
 
         # Get absolute paths for all data
-        self.data_list = [pathlib.Path(path).resolve() for path in self.data_list]
+        self.data_list = [pathlib.Path(os.path.abspath(path)) for path in self.data_list]
 
         # No data -- cannot proceed
         if not self.data_list:
@@ -145,6 +145,22 @@ class LocalFileHandler(fh.FileHandler):
                     folder=folder / pathlib.Path(path.name),
                 )
                 file_info.update({**content_info})
+            else:
+                if path.is_symlink():
+                    try:
+                        resolved = path.resolve()
+                    except RuntimeError:
+                        LOG.warning(
+                            f"IGNORED: Link: {path} seems to contain infinite loop, will be ignored."
+                        )
+                    else:
+                        LOG.warning(
+                            f"IGNORED: Link: {path} -> {resolved} seems to be broken, will be ignored."
+                        )
+                else:
+                    LOG.warning(
+                        f"IGNORED: Path of unsupported/unknown type: {path}, will be ignored."
+                    )
 
         return file_info, progress_tasks
 

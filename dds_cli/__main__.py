@@ -25,6 +25,7 @@ import questionary
 
 # Own modules
 import dds_cli
+import dds_cli.account_adder
 import dds_cli.exceptions as exc
 import dds_cli.data_getter
 import dds_cli.data_lister
@@ -32,7 +33,6 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.utils
-import dds_cli.project_creator
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -102,6 +102,49 @@ def dds_main(ctx, verbose, log_file):
         ctx.obj = {
             "CONFIG": config_file,
         }
+
+
+####################################################################################################
+# INVITE USER #################################################################################### INVITE USER #
+####################################################################################################
+
+
+@dds_main.command()
+@click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials, destination, etc.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
+)
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(
+        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
+        case_sensitive=False,
+    ),
+    help="Type of account.",
+)
+@click.pass_obj
+def add_user(dds_info, username, config, email, role):
+    """Add user to DDS, sending an invitation email to that person."""
+    # All exceptions caught within
+    with dds_cli.account_adder.AccountAdder(
+        username=username, config=dds_info.get("CONFIG") if config is None else config
+    ) as inviter:
+        inviter.add_user(email=email, role=role)
 
 
 ####################################################################################################
@@ -680,7 +723,6 @@ def get(
 def create(dds_info, config, username, title, description, principal_investigator, is_sensitive):
     """
     Create a project.
-
     """
 
     try:

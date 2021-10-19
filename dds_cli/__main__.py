@@ -32,7 +32,6 @@ import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
-import dds_cli.option_classes
 import dds_cli.utils
 
 ####################################################################################################

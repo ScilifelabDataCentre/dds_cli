@@ -40,7 +40,7 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, method=method)
 
-        # Only method "create" can use the ProjectCreator class
+        # Only method "add" can use the AccountAdder class
         if self.method != "add":
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 

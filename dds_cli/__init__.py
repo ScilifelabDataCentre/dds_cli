@@ -77,6 +77,7 @@ class DDSEndpoint:
     # Listing urls
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
     LIST_FILES = BASE_ENDPOINT + "/files/list"
+    LIST_PROJ_USERS = BASE_ENDPOINT + "/proj/users"
 
     # Deleting urls
     REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm"

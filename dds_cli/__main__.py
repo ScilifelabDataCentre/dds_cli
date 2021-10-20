@@ -425,7 +425,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 
             elif folder:
                 remover.remove_folder(folder=folder)
-    except (dds_cli.exceptions.AuthenticationError) as e:
+    except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.APIError) as e:
         LOG.error(e)
         sys.exit(1)
 

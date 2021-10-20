@@ -126,3 +126,4 @@ class NoDataError(Exception):
 
 class APIError(Exception):
     """Error connecting to the dds web server"""
+

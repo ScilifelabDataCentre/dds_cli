@@ -154,7 +154,7 @@ class DataLister(base.DDSBaseClass):
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
 
-        # Check resposne
+        # Check response
         if not response.ok:
             raise exceptions.APIError(f"Failed to get list of projects: {response.text}")
 

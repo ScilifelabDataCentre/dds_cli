@@ -17,6 +17,7 @@ import rich.padding
 import simplejson
 
 # Own modules
+import dds_cli
 from dds_cli.cli_decorators import removal_spinner
 from dds_cli import base
 from dds_cli import DDSEndpoint
@@ -42,19 +43,22 @@ class DataRemover(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, project=project, method=method)
 
-        # Only method "ls" can use the DataLister class
-        if self.method != "rm":
-            sys.exit(f"Unauthorized method: {self.method}")
+        self.failed_table = None
 
-    # Static methods ###################### Static methods #
-    @staticmethod
-    def __response_delete(resp_json, level="File"):
+        # Only method "rm" can use the DataRemover class
+        if self.method != "rm":
+            raise dds_cli.exceptions.InvalidMethodError(
+                attempted_method=method, message="DataRemover attempting unauthorized method"
+            )
+
+    def __response_delete(self, resp_json, level="File"):
         """Output a response after deletion."""
 
         # Check that enough info
         if not all(x in resp_json for x in ["not_exists", "not_removed"]):
-            return "No information returned. Server error."
-            # os._exit(1)
+            raise dds_cli.exception.ApiResponseError(
+                f"Malformatted response detected when attempting remove action on {self.project}."
+            )
 
         # Get info
         not_exists = resp_json["not_exists"]
@@ -85,7 +89,7 @@ class DataRemover(base.DDSBaseClass):
                 )
 
             # Print out table
-            return rich.padding.Padding(table, 1)
+            self.failed_table = rich.padding.Padding(table, 1)
 
     @staticmethod
     def delete_tempfile(file: pathlib.Path):
@@ -102,8 +106,6 @@ class DataRemover(base.DDSBaseClass):
     def remove_all(self, *_, **__):
         """Remove all files in project."""
 
-        message = ""
-
         # Perform request to API to perform deletion
         try:
             response = requests.delete(
@@ -113,7 +115,9 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            return f"Failed to delete files in project: {response.text}"
+            raise dds_cli.exceptions.ApiResponseError(
+                f"Failed to delete files in project: {response.text}"
+            )
 
         # Print out response - deleted or not?
         try:
@@ -121,14 +125,10 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        if resp_json["removed"]:
-            message = f"All files have been removed from project {self.project}."
-        else:
-            message = resp_json.get("error")
-            if message is None:
-                message = "No error message returned despite failure."
-
-        return message
+        if "removed" not in resp_json:
+            raise dds_cli.exception.ApiResponseError(
+                f"Malformatted response detected when attempting to remove all files from {self.project}."
+            )
 
     @removal_spinner
     def remove_file(self, files):
@@ -145,7 +145,9 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            return f"Failed to delete file(s) '{files}' in project {self.project}: {response.text}"
+            raise dds_cli.exceptions.ApiResponseError(
+                f"Failed to delete file(s) '{files}' in project {self.project}: {response.text}"
+            )
 
         # Get info in response
         try:
@@ -153,7 +155,7 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        return self.__response_delete(resp_json=resp_json)
+        self.__response_delete(resp_json=resp_json)
 
     @removal_spinner
     def remove_folder(self, folder):
@@ -170,7 +172,7 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            return (
+            raise dds_cli.exceptions.ApiResponseError(
                 f"Failed to delete folder(s) '{folder}' "
                 f"in project {self.project}: {response.text}"
             )
@@ -181,4 +183,4 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        return self.__response_delete(resp_json=resp_json, level="Folder")
+        self.__response_delete(resp_json=resp_json, level="Folder")

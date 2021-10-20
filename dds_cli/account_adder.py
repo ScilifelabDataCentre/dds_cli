@@ -36,7 +36,6 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
 
     def __init__(self, username: str = None, config: pathlib.Path = None, method: str = "add"):
         """Initialize, incl. user authentication."""
-
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, config=config, method=method)
 

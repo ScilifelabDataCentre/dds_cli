@@ -79,6 +79,7 @@ def dds_main(ctx, verbose, log_file):
                 console=dds_cli.utils.console,
                 show_time=False,
                 markup=True,
+                show_path=verbose,
             )
         )
 

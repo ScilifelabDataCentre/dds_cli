@@ -56,7 +56,7 @@ class DataRemover(base.DDSBaseClass):
 
         # Check that enough info
         if not all(x in resp_json for x in ["not_exists", "not_removed"]):
-            raise dds_cli.exception.ApiResponseError(
+            raise dds_cli.exception.APIError(
                 f"Malformatted response detected when attempting remove action on {self.project}."
             )
 
@@ -115,9 +115,7 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            raise dds_cli.exceptions.ApiResponseError(
-                f"Failed to delete files in project: {response.text}"
-            )
+            raise dds_cli.exceptions.APIError(f"Failed to delete files in project: {response.text}")
 
         # Print out response - deleted or not?
         try:
@@ -126,7 +124,7 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if "removed" not in resp_json:
-            raise dds_cli.exception.ApiResponseError(
+            raise dds_cli.exception.APIError(
                 f"Malformatted response detected when attempting to remove all files from {self.project}."
             )
 
@@ -145,7 +143,7 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            raise dds_cli.exceptions.ApiResponseError(
+            raise dds_cli.exceptions.APIError(
                 f"Failed to delete file(s) '{files}' in project {self.project}: {response.text}"
             )
 
@@ -172,7 +170,7 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if not response.ok:
-            raise dds_cli.exceptions.ApiResponseError(
+            raise dds_cli.exceptions.APIError(
                 f"Failed to delete folder(s) '{folder}' "
                 f"in project {self.project}: {response.text}"
             )

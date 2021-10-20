@@ -110,6 +110,7 @@ def dds_main(ctx, verbose, log_file):
 
 
 @dds_main.command()
+@click.argument("new_user", metavar="[INVITED EMAIL]", nargs=1, required=False)
 @click.option(
     "--config",
     "-c",
@@ -127,6 +128,7 @@ def dds_main(ctx, verbose, log_file):
 @click.option(
     "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
 )
+@click.option("--")
 @click.option(
     "--role",
     "-r",

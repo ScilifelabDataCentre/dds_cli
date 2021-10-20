@@ -31,26 +31,6 @@ class ConfigFileNotFoundError(click.ClickException):
         click.echo(self)
 
 
-class ConfigFileExtractionError(Exception):
-    """Could not extract any info from the config file."""
-
-    def __init__(
-        self,
-        filepath,
-        message: str = "Could not extract info from config file",
-        caught_exception=None,
-    ):
-        self.filepath = filepath
-        self.message = message
-        super().__init__(message)
-
-        if caught_exception:
-            LOG.exception(caught_exception.args[0] + "\n" + self.__str__())
-
-    def __str__(self):
-        return f"{self.message}: {self.filepath}"
-
-
 class InvalidMethodError(Exception):
     """Valid methods are only ls, put, get, rm. Anything else should raise errors."""
 
@@ -126,4 +106,3 @@ class NoDataError(Exception):
 
 class APIError(Exception):
     """Error connecting to the dds web server"""
-

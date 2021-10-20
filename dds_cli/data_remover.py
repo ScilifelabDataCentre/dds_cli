@@ -51,7 +51,7 @@ class DataRemover(base.DDSBaseClass):
                 attempted_method=method, message="DataRemover attempting unauthorized method"
             )
 
-    def __response_delete(self, resp_json, level="File"):
+    def __create_failed_table(self, resp_json, level="File"):
         """Output a response after deletion."""
 
         # Check that enough info
@@ -155,7 +155,7 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        self.__response_delete(resp_json=resp_json)
+        self.__create_failed_table(resp_json=resp_json)
 
     @removal_spinner
     def remove_folder(self, folder):
@@ -183,4 +183,4 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        self.__response_delete(resp_json=resp_json, level="Folder")
+        self.__create_failed_table(resp_json=resp_json, level="Folder")

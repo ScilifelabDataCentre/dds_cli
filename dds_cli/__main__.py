@@ -97,7 +97,10 @@ def dds_main(ctx, verbose, log_file):
         if not any(x in sys.argv for x in ["--config", "-c", "--username", "-u"]):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
-                raise exc.ConfigFileNotFoundError(config_file)
+                LOG.error(
+                    f"Username omitted and config file not specified nor found at default path: {config_file}"
+                )
+                sys.exit(1)
 
         # Create context object
         ctx.obj = {
@@ -480,7 +483,11 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 
             elif folder:
                 remover.remove_folder(folder=folder)
-    except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.APIError) as e:
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as e:
         LOG.error(e)
         sys.exit(1)
 
@@ -745,6 +752,10 @@ def create(dds_info, config, username, title, description, principal_investigato
                 LOG.info(
                     f"Project created with id: {project_id}",
                 )
-    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as e:
         LOG.error(e)
         sys.exit(1)

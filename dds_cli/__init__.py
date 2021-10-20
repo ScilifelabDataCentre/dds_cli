@@ -31,7 +31,7 @@ __all__ = [
 ###############################################################################
 
 # Keep track of all allowed methods
-DDS_METHODS = ["put", "get", "ls", "rm", "create"]
+DDS_METHODS = ["put", "get", "ls", "rm", "create", "add"]
 
 # Methods to which a directory created by DDS
 DDS_DIR_REQUIRED_METHODS = ["put", "get"]
@@ -56,7 +56,7 @@ class DDSEndpoint:
     )
 
     # User creation
-    USER_INVITE = BASE_ENDPOINT + "/user/invite"
+    USER_ADD = BASE_ENDPOINT + "/user/add"
 
     # Authentication - user and project
     TOKEN = BASE_ENDPOINT + "/user/token"
@@ -77,6 +77,7 @@ class DDSEndpoint:
     # Listing urls
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
     LIST_FILES = BASE_ENDPOINT + "/files/list"
+    LIST_PROJ_USERS = BASE_ENDPOINT + "/proj/users"
 
     # Deleting urls
     REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm"

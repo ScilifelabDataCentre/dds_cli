@@ -25,6 +25,7 @@ import questionary
 
 # Own modules
 import dds_cli
+import dds_cli.account_adder
 import dds_cli.exceptions as exc
 import dds_cli.data_getter
 import dds_cli.data_lister
@@ -32,7 +33,6 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.utils
-import dds_cli.project_creator
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -103,6 +103,49 @@ def dds_main(ctx, verbose, log_file):
         ctx.obj = {
             "CONFIG": config_file,
         }
+
+
+####################################################################################################
+# INVITE USER #################################################################################### INVITE USER #
+####################################################################################################
+
+
+@dds_main.command()
+@click.option(
+    "--config",
+    "-c",
+    required=False,
+    type=click.Path(exists=True),
+    help="Path to file with user credentials, destination, etc.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
+)
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(
+        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
+        case_sensitive=False,
+    ),
+    help="Type of account.",
+)
+@click.pass_obj
+def add_user(dds_info, username, config, email, role):
+    """Add user to DDS, sending an invitation email to that person."""
+    # All exceptions caught within
+    with dds_cli.account_adder.AccountAdder(
+        username=username, config=dds_info.get("CONFIG") if config is None else config
+    ) as inviter:
+        inviter.add_user(email=email, role=role)
 
 
 ####################################################################################################
@@ -254,8 +297,14 @@ def put(
 @click.option(
     "-t", "--tree", is_flag=True, default=False, help="Display the entire project(s) directory tree"
 )
+@click.option(
+    "--users",
+    is_flag=True,
+    default=False,
+    help="Display users associated with a project(Requires a project id)",
+)
 @click.pass_obj
-def ls(dds_info, project, folder, projects, size, username, config, usage, sort, tree):
+def ls(dds_info, project, folder, projects, size, username, config, usage, sort, tree, users):
     """
     List your projects and project files.
 
@@ -307,42 +356,50 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
                 username=username,
                 tree=tree,
             ) as lister:
-                if tree:
-                    lister.list_recursive(show_size=size)
+                if users:
+                    user_list = lister.list_users()
+                    if not sys.stdout.isatty():
+                        if user_list:
+                            LOG.info("Project has the following users")
+                            for user in user_list:
+                                LOG.info(user["User Name"], user["Primary email"])
                 else:
-                    folders = lister.list_files(folder=folder, show_size=size)
+                    if tree:
+                        lister.list_recursive(show_size=size)
+                    else:
+                        folders = lister.list_files(folder=folder, show_size=size)
 
-                    # If an interactive terminal, ask user if they want to view files for a project
-                    if sys.stdout.isatty() and len(folders) > 0:
-                        LOG.info(
-                            "Would you like to view files within a directory? Leave blank to exit."
-                        )
-                        last_folder = None
-                        while folder is None or folder != last_folder:
-                            last_folder = folder
+                        # If an interactive terminal, ask user if they want to view files for a project
+                        if sys.stdout.isatty() and len(folders) > 0:
+                            LOG.info(
+                                "Would you like to view files within a directory? Leave blank to exit."
+                            )
+                            last_folder = None
+                            while folder is None or folder != last_folder:
+                                last_folder = folder
 
-                            try:
-                                folder = questionary.autocomplete(
-                                    "Folder:",
-                                    choices=folders,
-                                    validate=lambda x: x in folders or x == "",
-                                    style=dds_cli.dds_questionary_styles,
-                                ).unsafe_ask()
-                                assert folder != ""
-                                assert folder is not None
-                            # If didn't enter anything, convert to None and exit
-                            except (KeyboardInterrupt, AssertionError):
-                                break
+                                try:
+                                    folder = questionary.autocomplete(
+                                        "Folder:",
+                                        choices=folders,
+                                        validate=lambda x: x in folders or x == "",
+                                        style=dds_cli.dds_questionary_styles,
+                                    ).unsafe_ask()
+                                    assert folder != ""
+                                    assert folder is not None
+                                # If didn't enter anything, convert to None and exit
+                                except (KeyboardInterrupt, AssertionError):
+                                    break
 
-                            # Prepend existing file path
-                            if last_folder is not None and folder is not None:
-                                folder = os.path.join(last_folder, folder)
+                                # Prepend existing file path
+                                if last_folder is not None and folder is not None:
+                                    folder = os.path.join(last_folder, folder)
 
-                            # List files
-                            folders = lister.list_files(folder=folder, show_size=size)
+                                # List files
+                                folders = lister.list_files(folder=folder, show_size=size)
 
-                            if len(folders) == 0:
-                                break
+                                if len(folders) == 0:
+                                    break
 
     except (dds_cli.exceptions.NoDataError) as e:
         LOG.warning(e)
@@ -350,8 +407,6 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
     except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
         LOG.error(e)
         sys.exit(1)
-
-    print("TESTING")
 
 
 ####################################################################################################
@@ -673,7 +728,6 @@ def get(
 def create(dds_info, config, username, title, description, principal_investigator, is_sensitive):
     """
     Create a project.
-
     """
 
     try:

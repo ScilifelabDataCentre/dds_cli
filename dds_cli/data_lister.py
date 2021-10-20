@@ -144,19 +144,24 @@ class DataLister(base.DDSBaseClass):
         return column_formatting
 
     def list_projects(self, sort_by="Updated"):
-        """Gets a list of all projects the user is involved in."""
+        """Gets a list of project(s) the user is involved in."""
 
         # Get projects from API
         try:
             response = requests.get(
-                DDSEndpoint.LIST_PROJ, headers=self.token, params={"usage": self.show_usage}
+                DDSEndpoint.LIST_PROJ,
+                headers=self.token,
+                params={
+                    "usage": self.show_usage,
+                    "project": self.project,
+                },
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
 
         # Check response
         if not response.ok:
-            raise exceptions.APIError(f"Failed to get list of projects: {response.text}")
+            raise exceptions.APIError(f"Failed to get any projects: {response.text}")
 
         # Get result from API
         try:
@@ -179,7 +184,7 @@ class DataLister(base.DDSBaseClass):
 
         # Create table
         table = Table(
-            title="Your Projects",
+            title="Your Project(s)",
             show_header=True,
             header_style="bold",
             show_footer=self.show_usage,
@@ -340,7 +345,8 @@ class DataLister(base.DDSBaseClass):
             try:
                 resp_json = requests.get(
                     DDSEndpoint.LIST_FILES,
-                    params={"project": self.project, "subpath": folder, "show_size": show_size},
+                    params={"project": self.project},
+                    json={"subpath": folder, "show_size": show_size},
                     headers=self.token,
                 )
             except requests.exceptions.RequestException as err:
@@ -447,3 +453,65 @@ class DataLister(base.DDSBaseClass):
                     1,
                 )
             )
+
+    def list_users(self):
+        """Gets a list of user(s) involved in a project."""
+
+        # Get user list from API
+        try:
+            response = requests.get(
+                DDSEndpoint.LIST_PROJ_USERS,
+                headers=self.token,
+                params={
+                    "project": self.project,
+                },
+            )
+        except requests.exceptions.RequestException as err:
+            raise exceptions.ApiRequestError(message=str(err))
+
+        # Check resposne
+        if not response.ok:
+            raise exceptions.APIError(f"Failed to get any users: {response.text}")
+
+        # Get result from API
+        try:
+            resp_json = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise exceptions.APIError(f"Could not decode JSON response: {err}")
+
+        research_users = resp_json.get("research_users")
+        default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
+        column_formatting = {
+            **{x: default_format for x in ["User Name", "Primary email"]},
+        }
+        table = Table(
+            title="Project User(s)",
+            show_header=True,
+            header_style="bold",
+        )
+        # Add columns to table
+        for colname, colformat in column_formatting.items():
+            table.add_column(
+                colname,
+                justify=colformat["justify"],
+                style=colformat["style"],
+                footer=colformat["footer"],
+                overflow=colformat["overflow"],
+            )
+
+        # Add all column values for each row to table
+        for user in research_users:
+            table.add_row(*[user[i] for i in column_formatting])
+
+        # Print to stdout if there are any lines
+        if table.rows:
+            # Use a pager if output is taller than the visible terminal
+            if len(research_users) + 5 > dds_cli.utils.console.height:
+                with dds_cli.utils.console.pager():
+                    dds_cli.utils.console.print(table)
+            else:
+                dds_cli.utils.console.print(table)
+        else:
+            raise exceptions.NoDataError(f"No users found")
+
+        return research_users

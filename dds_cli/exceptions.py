@@ -68,7 +68,7 @@ class DDSCLIException(click.ClickException):
         super().__init__(message)
 
 
-class AuthenticationError(Exception):
+class AuthenticationError(click.ClickException):
     """Errors due to user authentication.
 
     Return the message with Rich no-entry-sign emoji either side.

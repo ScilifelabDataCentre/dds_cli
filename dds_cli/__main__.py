@@ -15,12 +15,10 @@ import sys
 # Installed
 import click
 import click_pathlib
-import requests
 import rich
 import rich.logging
 import rich.progress
 import rich.prompt
-import simplejson
 import questionary
 
 # Own modules
@@ -80,6 +78,7 @@ def dds_main(ctx, verbose, log_file):
                 console=dds_cli.utils.console,
                 show_time=False,
                 markup=True,
+                show_path=verbose,
             )
         )
 
@@ -97,7 +96,10 @@ def dds_main(ctx, verbose, log_file):
         if not any(x in sys.argv for x in ["--config", "-c", "--username", "-u"]):
             config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
             if not config_file.is_file():
-                raise exc.ConfigFileNotFoundError(config_file)
+                LOG.error(
+                    f"Username omitted and config file not specified nor found at default path: {config_file}"
+                )
+                sys.exit(1)
 
         # Create context object
         ctx.obj = {
@@ -441,12 +443,12 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
         LOG.error("No project specified, cannot remove anything.")
-        os._exit(1)
+        sys.exit(1)
 
     # Either all or a file
     if rm_all and (file or folder):
         LOG.error("The options '--rm-all' and '--file'/'--folder' cannot be used together.")
-        os._exit(1)
+        sys.exit(1)
 
     project = proj_arg if proj_arg is not None else project
 
@@ -455,7 +457,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
         LOG.error(
             "One of the options must be specified to perform data deletion: '--rm-all' / '--file' / '--folder'."
         )
-        os._exit(1)
+        sys.exit(1)
 
     # Warn if trying to remove all contents
     if rm_all:
@@ -463,22 +465,30 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
             f"Are you sure you want to delete all files within project '{project}'?"
         ):
             LOG.info("Probably for the best. Exiting.")
-            os._exit(0)
+            sys.exit(0)
 
-    with dds_cli.data_remover.DataRemover(
-        project=project,
-        username=username,
-        config=dds_info["CONFIG"] if config is None else config,
-    ) as remover:
+    try:
+        with dds_cli.data_remover.DataRemover(
+            project=project,
+            username=username,
+            config=dds_info["CONFIG"] if config is None else config,
+        ) as remover:
 
-        if rm_all:
-            remover.remove_all()
+            if rm_all:
+                remover.remove_all()
 
-        elif file:
-            remover.remove_file(files=file)
+            elif file:
+                remover.remove_file(files=file)
 
-        elif folder:
-            remover.remove_folder(folder=folder)
+            elif folder:
+                remover.remove_folder(folder=folder)
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as e:
+        LOG.error(e)
+        sys.exit(1)
 
 
 ####################################################################################################
@@ -741,6 +751,10 @@ def create(dds_info, config, username, title, description, principal_investigato
                 LOG.info(
                     f"Project created with id: {project_id}",
                 )
-    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as e:
         LOG.error(e)
         sys.exit(1)

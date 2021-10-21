@@ -191,43 +191,36 @@ def removal_spinner(func):
 
             # Determine spinner text
             if func.__name__ == "remove_all":
-                description = f"Removing all files in project {self.project}..."
+                description = f"Removing all files in project {self.project}"
             elif func.__name__ == "remove_file":
-                description = "Removing file(s)..."
+                description = "Removing file(s)"
             elif func.__name__ == "remove_folder":
-                description = "Removing folder(s)..."
+                description = "Removing folder(s)"
 
             # Add progress task
-            task = progress.add_task(description=description)
+            task = progress.add_task(description=f"{description}...")
 
-            # Execute function
-            message = func(self, *args, **kwargs)
-
-            # Remove progress task
-            progress.remove_task(task)
+            # Execute function, exceptions are caught in __main__.py
+            try:
+                func(self, *args, **kwargs)
+            finally:
+                # Remove progress task
+                progress.remove_task(task)
 
         # Printout removal response
-        if message is None:
-            rm_type = "File" if func.__name__ == "remove_file" else "Folder"
 
-            message = f"{rm_type}(s) successfully removed."
+        # reuse the description but don't want the capital letter in the middle of the sentence.
+        description_lc = description[0].lower() + description[1:]
+        if self.failed_table is not None:
+            table_len = self.failed_table.renderable.row_count
 
-        # Compute size of table
-        if isinstance(message, rich.padding.Padding) and isinstance(
-            message.renderable, rich.table.Table
-        ):
-            table_len = message.renderable.row_count + message.top + message.bottom
-        elif isinstance(message, rich.table.Table):
-            table_len = message.row_count
+            if table_len + 5 > dds_cli.utils.console.height:
+                with dds_cli.utils.console.pager():
+                    dds_cli.utils.console.print(self.failed_table)
+            else:
+                dds_cli.utils.console.print(self.failed_table)
+            LOG.warning(f"Finished {description_lc} with errors, see table above")
         else:
-            # The message is probably not a table and should
-            # therefore be printed directly
-            table_len = 0
-
-        if table_len + 5 > dds_cli.utils.console.height:
-            with dds_cli.utils.console.pager():
-                dds_cli.utils.console.print(message)
-        else:
-            dds_cli.utils.console.print(message)
+            LOG.info(f"Successfully finished {description_lc}")
 
     return create_and_remove_task

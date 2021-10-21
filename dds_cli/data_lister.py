@@ -159,7 +159,7 @@ class DataLister(base.DDSBaseClass):
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
 
-        # Check resposne
+        # Check response
         if not response.ok:
             raise exceptions.APIError(f"Failed to get any projects: {response.text}")
 
@@ -181,8 +181,6 @@ class DataLister(base.DDSBaseClass):
 
         # Column format
         column_formatting = self.format_columns(total_size=total_size, usage_info=usage_info)
-
-        LOG.info(column_formatting)
 
         # Create table
         table = Table(

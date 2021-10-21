@@ -75,8 +75,8 @@ class FileHandler:
             with configpath.open(mode="r") as cfp:
                 contents = json.load(cfp)
         except json.decoder.JSONDecodeError as err:
-            raise dds_cli.exceptions.ConfigFileExtractionError(
-                filepath=configpath, caught_exception=err
+            raise dds_cli.exceptions.DDSCLIException(
+                f"Could not extract info from config file: {configpath}, please make sure it is in valid json format."
             )
         finally:
             os.umask(original_umask)

@@ -30,7 +30,7 @@ def test_filehandler_extract_config_empty():
     """Empty config should raise exception"""
 
     configfile = CONFIG_PATH / pathlib.Path("empty_config.json")
-    with pytest.raises(exceptions.ConfigFileExtractionError):
+    with pytest.raises(exceptions.DDSCLIException):
         _ = file_handler.FileHandler.extract_config(configfile=configfile)
 
 

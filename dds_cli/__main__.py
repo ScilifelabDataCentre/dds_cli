@@ -33,6 +33,7 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.utils
+import dds_cli.project_creator
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #

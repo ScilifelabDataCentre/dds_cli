@@ -7,7 +7,6 @@
 # Standard Library
 import logging
 import pathlib
-import sys
 
 # Installed
 import requests

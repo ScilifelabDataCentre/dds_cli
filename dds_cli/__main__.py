@@ -15,12 +15,10 @@ import sys
 # Installed
 import click
 import click_pathlib
-import requests
 import rich
 import rich.logging
 import rich.progress
 import rich.prompt
-import simplejson
 import questionary
 
 # Own modules

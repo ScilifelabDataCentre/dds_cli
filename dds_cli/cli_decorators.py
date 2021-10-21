@@ -201,10 +201,11 @@ def removal_spinner(func):
             task = progress.add_task(description=f"{description}...")
 
             # Execute function, exceptions are caught in __main__.py
-            func(self, *args, **kwargs)
-
-            # Remove progress task
-            progress.remove_task(task)
+            try:
+                func(self, *args, **kwargs)
+            finally:
+                # Remove progress task
+                progress.remove_task(task)
 
         # Printout removal response
 

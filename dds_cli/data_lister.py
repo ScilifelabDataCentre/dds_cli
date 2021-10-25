@@ -208,9 +208,7 @@ class DataLister(base.DDSBaseClass):
 
         # Add all column values for each row to table
         for proj in sorted_projects:
-            # TODO: The excluding of GBHours and Cost below is due to errors after changes in API,
-            # Fix these errors and add the print out of this again
-            table.add_row(*[proj[i] for i in column_formatting if i not in ["GBHours", "Cost"]])
+            table.add_row(*[proj[i] for i in column_formatting])
 
         # Print to stdout if there are any lines
         if table.columns:

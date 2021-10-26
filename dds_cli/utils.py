@@ -39,11 +39,14 @@ def format_api_response(response, key):
                 unit = "SEK"
                 prefixlist[1] = "K"  # for currencies, the capital K is more common.
 
-            return "{}{}{}".format(
-                "{:.3g}".format(response).rstrip("0").rstrip("."),
-                spacerA,
-                prefixlist[magnitude] + spacerB + unit,
-            )
+            if response > 0:
+                return "{}{}{}".format(
+                    "{:.3g}".format(response).rstrip("0").rstrip("."),
+                    spacerA,
+                    prefixlist[magnitude] + spacerB + unit,
+                )
+            else:
+                return f"0 {unit}"
         else:
             # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
             return str(response)

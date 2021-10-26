@@ -21,6 +21,7 @@ from rich.tree import Tree
 # Own modules
 from dds_cli import base
 from dds_cli import exceptions
+from dds_cli import utils
 from dds_cli import DDSEndpoint
 from dds_cli import text_handler as th
 
@@ -74,7 +75,7 @@ class DataLister(base.DDSBaseClass):
             "status": "Status",
             "updated": "Last updated",
             "size": "Size",
-            "usage": "GBHours",
+            "usage": "Usage",
             "cost": "Cost",
         }
 
@@ -117,7 +118,7 @@ class DataLister(base.DDSBaseClass):
             "Size": {
                 "justify": "center",
                 "style": default_format.get("style"),
-                "footer": str(total_size),
+                "footer": utils.format_api_response(total_size, key="Size"),
                 "overflow": "ellipsis",
             },
         }
@@ -126,16 +127,16 @@ class DataLister(base.DDSBaseClass):
             # Only display costs above 1 kr
             column_formatting.update(
                 {
-                    "GBHours": {
+                    "Usage": {
                         "justify": "center",
                         "style": default_format.get("style"),
-                        "footer": str(usage_info["gbhours"]),
+                        "footer": utils.format_api_response(usage_info["usage"], key="Usage"),
                         "overflow": "ellipsis",
                     },
                     "Cost": {
                         "justify": "center",
                         "style": default_format.get("style"),
-                        "footer": str(usage_info["cost"]),
+                        "footer": utils.format_api_response(usage_info["cost"], key="Cost"),
                         "overflow": "ellipsis",
                     },
                 }
@@ -208,9 +209,7 @@ class DataLister(base.DDSBaseClass):
 
         # Add all column values for each row to table
         for proj in sorted_projects:
-            # TODO: The excluding of GBHours and Cost below is due to errors after changes in API,
-            # Fix these errors and add the print out of this again
-            table.add_row(*[str(proj[i]) for i in column_formatting])
+            table.add_row(*[utils.format_api_response(proj[i], i) for i in column_formatting])
 
         # Print to stdout if there are any lines
         if table.columns:

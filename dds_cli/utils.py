@@ -4,6 +4,34 @@ import numbers
 console = rich.console.Console(stderr=True)
 
 
+def calculate_magnitude(projects, keys, iec_standard=False):
+    """Uses the project list, obtains the values assigned to a particular key iteratively and calculates the best magnitude to format this set of values consistently"""
+
+    # initialize the dictionary to be returned
+    magnitudes = dict(zip(keys, [None] * len(keys)))
+
+    for key in keys:
+
+        values = [proj[key] for proj in projects]
+
+        if all(isinstance(x, numbers.Number) for x in values):
+
+            minimum = min(values)
+            mag = 0
+
+            if key in ["Size", "Usage"] and iec_standard:
+                base = 1024.0
+            else:
+                base = 1000.0
+
+            while abs(minimum) >= base:
+                mag += 1
+                minimum /= base
+
+            magnitudes[key] = mag
+    return magnitudes
+
+
 def format_api_response(response, key, magnitude=None, iec_standard=False):
     """Takes a value e.g. bytes and reformats it to include a unit prefix"""
     if isinstance(response, str):
@@ -37,7 +65,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
                 response /= base
         else:
             # utilize the given magnitude
-            response /= base * magnitude
+            response /= base ** magnitude
             mag = magnitude
 
         if key == "Size":

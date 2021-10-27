@@ -116,7 +116,7 @@ class DataLister(base.DDSBaseClass):
             },
             **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
             "Size": {
-                "justify": "center",
+                "justify": "right",
                 "style": default_format.get("style"),
                 "footer": utils.format_api_response(total_size, key="Size"),
                 "overflow": "ellipsis",
@@ -128,13 +128,13 @@ class DataLister(base.DDSBaseClass):
             column_formatting.update(
                 {
                     "Usage": {
-                        "justify": "center",
+                        "justify": "right",
                         "style": default_format.get("style"),
                         "footer": utils.format_api_response(usage_info["usage"], key="Usage"),
                         "overflow": "ellipsis",
                     },
                     "Cost": {
-                        "justify": "center",
+                        "justify": "right",
                         "style": default_format.get("style"),
                         "footer": utils.format_api_response(usage_info["cost"], key="Cost"),
                         "overflow": "ellipsis",
@@ -207,9 +207,14 @@ class DataLister(base.DDSBaseClass):
                 overflow=colformat["overflow"],
             )
 
+        # calculate the magnitudes for keeping the unit prefix constant across all projects
+        magnitudes = utils.calculate_magnitude(sorted_projects, column_formatting.keys())
+
         # Add all column values for each row to table
         for proj in sorted_projects:
-            table.add_row(*[utils.format_api_response(proj[i], i) for i in column_formatting])
+            table.add_row(
+                *[utils.format_api_response(proj[i], i, magnitudes[i]) for i in column_formatting]
+            )
 
         # Print to stdout if there are any lines
         if table.columns:

@@ -16,13 +16,14 @@ def calculate_magnitude(projects, keys, iec_standard=False):
 
         if all(isinstance(x, numbers.Number) for x in values):
 
-            minimum = min(values)
-            mag = 0
-
             if key in ["Size", "Usage"] and iec_standard:
                 base = 1024.0
             else:
                 base = 1000.0
+
+            # exclude values smaller than base, such that empty projects don't interfer with the calculation
+            minimum = min([val for val in values if val >= base])
+            mag = 0
 
             while abs(minimum) >= base:
                 mag += 1
@@ -66,7 +67,6 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
         else:
             # utilize the given magnitude
             response /= base ** magnitude
-            mag = magnitude
 
         if key == "Size":
             unit = "B"  # lock
@@ -77,11 +77,20 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
             prefixlist[1] = "K"  # for currencies, the capital K is more common.
 
         if response > 0:
-            return "{}{}{}".format(
-                "{:.3g}".format(response).rstrip("0").rstrip("."),
-                spacerA,
-                prefixlist[mag] + spacerB + unit,
-            )
+            if (
+                magnitude
+            ):  # if magnitude was given, then use fixed number of digits to allow for easier comparisons across projects
+                return "{}{}{}".format(
+                    "{:.2f}".format(response),
+                    spacerA,
+                    prefixlist[magnitude] + spacerB + unit,
+                )
+            else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
+                return "{}{}{}".format(
+                    "{:.3g}".format(response).rstrip("0").rstrip("."),
+                    spacerA,
+                    prefixlist[mag] + spacerB + unit,
+                )
         else:
             return f"0 {unit}"
     else:

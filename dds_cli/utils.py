@@ -22,7 +22,8 @@ def calculate_magnitude(projects, keys, iec_standard=False):
                 base = 1000.0
 
             # exclude values smaller than base, such that empty projects don't interfer with the calculation
-            minimum = min([val for val in values if val >= base])
+            # concatenating [base - 1] ensures that a minimum can be calculated if no val is larger than base
+            minimum = min([val for val in values if val >= base] + [base - 1])
             mag = 0
 
             while abs(minimum) >= base:

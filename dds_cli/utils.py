@@ -23,7 +23,7 @@ def calculate_magnitude(projects, keys, iec_standard=False):
 
             # exclude values smaller than base, such that empty projects don't interfer with the calculation
             # ensures that a minimum can be calculated if no val is larger than base
-            minimum = (lambda x: min(x) if bool(x) else 1)([val for val in values if val >= base])
+            minimum = (lambda x: min(x) if x else 1)([val for val in values if val >= base])
             mag = 0
 
             while abs(minimum) >= base:

@@ -75,6 +75,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
         elif key == "Cost":
             unit = "SEK"
             prefixlist[1] = "K"  # for currencies, the capital K is more common.
+            prefixlist[3] = "B"  # for currencies, Billions are used instead of Giga
 
         if response > 0:
             if (

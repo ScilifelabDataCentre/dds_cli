@@ -89,7 +89,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
                 )
             else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
                 return "{}{}{}".format(
-                    "{:.3g}".format(response).rstrip("0").rstrip("."),
+                    "{:.2f}".format(response).rstrip("0").rstrip("."),
                     spacerA,
                     prefixlist[mag] + spacerB + unit,
                 )

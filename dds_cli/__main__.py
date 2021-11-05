@@ -155,6 +155,10 @@ def add_user(dds_info, username, config, email, role, project):
         username=username, config=dds_info.get("CONFIG") if config is None else config
     ) as inviter:
         inviter.add_user(email=email, role=role, project=project)
+        if project:
+            LOG.info(
+                "Any user shown as invited would need to be added to the project once the user has accepted the invitation and created an account in the system."
+            )
 
 
 ####################################################################################################
@@ -770,10 +774,17 @@ def create(
             username=username,
         ) as creator:
             emails_roles = []
-            if owner:
-                emails_roles.extend([{"email": x, "role": "Project Owner"} for x in owner])
-            if researcher:
-                emails_roles.extend([{"email": x, "role": "Researcher"} for x in researcher])
+            if owner or researcher:
+                email_overlap = set(owner) & set(researcher)
+                if email_overlap:
+                    LOG.info(
+                        f"The email(s) {email_overlap} specified as both owner and researcher! Please specify a unique role for each email."
+                    )
+                    sys.exit(1)
+                if owner:
+                    emails_roles.extend([{"email": x, "role": "Project Owner"} for x in owner])
+                if researcher:
+                    emails_roles.extend([{"email": x, "role": "Researcher"} for x in researcher])
 
             created, project_id, user_addition_messages, err = creator.create_project(
                 title=title,
@@ -789,6 +800,9 @@ def create(
                 if user_addition_messages:
                     for msg in user_addition_messages:
                         LOG.info(msg)
+                        LOG.info(
+                            "Any user shown as invited would need to be added to the project once the user has accepted the invitation and created an account in the system."
+                        )
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

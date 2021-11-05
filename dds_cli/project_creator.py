@@ -27,7 +27,7 @@ class ProjectCreator(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str = None,
+        username: str,
         method: str = "create",
     ):
         """Handle actions regarding project creation in the cli."""

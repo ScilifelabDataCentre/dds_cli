@@ -41,8 +41,8 @@ class DataLister(base.DDSBaseClass):
 
     def __init__(
         self,
+        username: str,
         method: str = "ls",
-        username: str = None,
         project: str = None,
         show_usage: bool = False,
         tree: bool = False,

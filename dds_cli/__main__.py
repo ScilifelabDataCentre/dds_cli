@@ -276,7 +276,6 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
         if project is None:
             with dds_cli.data_lister.DataLister(
                 project=project,
-                project_level=project is None or projects,
                 show_usage=usage,
                 username=username,
             ) as lister:
@@ -307,7 +306,6 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
         if project:
             with dds_cli.data_lister.DataLister(
                 project=project,
-                project_level=project is None,
                 username=username,
                 tree=tree,
             ) as lister:

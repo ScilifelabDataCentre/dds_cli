@@ -49,8 +49,7 @@ class DDSBaseClass:
 
     def __init__(
         self,
-        username=None,
-        password=None,
+        username,
         project=None,
         dds_directory: pathlib.Path = None,
         method: str = None,
@@ -81,7 +80,6 @@ class DDSBaseClass:
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(
             username=username,
-            password=password,
             project=project,
         )
 
@@ -117,7 +115,6 @@ class DDSBaseClass:
     def __verify_input(
         self,
         username=None,
-        password=None,
         project=None,
     ) -> tuple:
         """Verify that the users input is valid and fully specified."""
@@ -133,9 +130,7 @@ class DDSBaseClass:
         if not username:
             raise exceptions.MissingCredentialsException(missing="username")
 
-        # Set password if missing
-        if not password:
-            password = getpass.getpass()
+        password = getpass.getpass()
 
         LOG.debug("User input verified.")
 

@@ -170,7 +170,7 @@ class DataPutter(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str = None,
+        username: str,
         project: str = None,
         break_on_fail: bool = False,
         overwrite: bool = False,

@@ -51,7 +51,6 @@ class DDSBaseClass:
         self,
         username=None,
         password=None,
-        config=None,
         project=None,
         dds_directory: pathlib.Path = None,
         method: str = None,
@@ -83,7 +82,6 @@ class DDSBaseClass:
         username, password, self.project = self.__verify_input(
             username=username,
             password=password,
-            config=config,
             project=project,
         )
 
@@ -119,28 +117,11 @@ class DDSBaseClass:
         self,
         username=None,
         password=None,
-        config=None,
         project=None,
     ) -> tuple:
         """Verifies that the users input is valid and fully specified."""
 
         LOG.debug("Verifying the user input...")
-
-        # Get contents from file
-        if config:
-            # Get contents from file
-            contents = fh.FileHandler.extract_config(configfile=config)
-
-            # Get user credentials if not already specified
-            if not username and "username" in contents:
-                username = contents["username"]
-
-                # TODO (ina): Remove password field?
-                # Only get password from config if username also in config
-                if not password and "password" in contents:
-                    password = contents["password"]
-
-        LOG.debug(f"Username: {username}, Project ID: {project}")
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and not project:

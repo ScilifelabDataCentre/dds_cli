@@ -15,22 +15,6 @@ import dds_cli
 LOG = logging.getLogger(__name__)
 
 
-class ConfigFileNotFoundError(click.ClickException):
-    """The file containing user credentials not found."""
-
-    def __init__(self, filepath, message: str = "Could not find the config file"):
-
-        self.filepath = filepath
-        self.message = message
-        super().__init__(message)
-
-    def __str__(self):
-        return f"{self.message}: {self.filepath}"
-
-    def show(self):
-        click.echo(self)
-
-
 class InvalidMethodError(Exception):
     """Valid methods are only ls, put, get, rm. Anything else should raise errors."""
 

@@ -28,12 +28,11 @@ class ProjectCreator(base.DDSBaseClass):
     def __init__(
         self,
         username: str = None,
-        config: pathlib.Path = None,
         method: str = "create",
     ):
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, config=config, method=method)
+        super().__init__(username=username, method=method)
 
         # Only method "create" can use the ProjectCreator class
         if self.method != "create":

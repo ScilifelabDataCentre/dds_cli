@@ -61,29 +61,6 @@ class FileHandler:
 
     # Static methods ############ Static methods #
     @staticmethod
-    def extract_config(configfile):
-        """Extracts info from config file."""
-
-        # Absolute path to config file
-        configpath = pathlib.Path(configfile).resolve()
-        if not configpath.exists():
-            raise dds_cli.exceptions.ConfigFileNotFoundError(filepath=configpath)
-
-        # Open config file and get contents
-        try:
-            original_umask = os.umask(0)
-            with configpath.open(mode="r") as cfp:
-                contents = json.load(cfp)
-        except json.decoder.JSONDecodeError as err:
-            raise dds_cli.exceptions.DDSCLIException(
-                f"Could not extract info from config file: {configpath}, please make sure it is in valid json format."
-            )
-        finally:
-            os.umask(original_umask)
-
-        return contents
-
-    @staticmethod
     def append_errors_to_file(file: pathlib.Path, info):
         try:
             original_umask = os.umask(0)  # User file-creation mode mask

@@ -48,7 +48,6 @@ class DataGetter(base.DDSBaseClass):
     def __init__(
         self,
         username: str = None,
-        config: pathlib.Path = None,
         project: str = None,
         break_on_fail: bool = False,
         get_all: bool = False,
@@ -63,7 +62,6 @@ class DataGetter(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             username=username,
-            config=config,
             project=project,
             dds_directory=destination,
             method=method,

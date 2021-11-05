@@ -179,7 +179,7 @@ class DataPutter(base.DDSBaseClass):
         silent: bool = False,
         method: str = "put",
     ):
-
+        """Handle actions regarding upload of data."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, project=project, method=method)
 
@@ -238,8 +238,7 @@ class DataPutter(base.DDSBaseClass):
     @verify_proceed
     @subpath_required
     def protect_and_upload(self, file, progress):
-        """Processes and uploads the file while handling the progress bars."""
-
+        """Process and upload the file while handling the progress bars."""
         # Variables
         all_ok, saved, message = (False, False, "")  # Error catching
         file_info = self.filehandler.data[file]  # Info on current file
@@ -314,8 +313,7 @@ class DataPutter(base.DDSBaseClass):
 
     @update_status
     def put(self, file, progress, task):
-        """Uploads files to the cloud."""
-
+        """Upload files to the cloud."""
         # Variables
         uploaded = False
         error = ""
@@ -368,7 +366,6 @@ class DataPutter(base.DDSBaseClass):
     @update_status
     def add_file_db(self, file):
         """Make API request to add file to DB."""
-
         # Variables
         added_to_db = False
         error = ""

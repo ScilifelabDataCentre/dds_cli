@@ -36,7 +36,7 @@ class DataRemover(base.DDSBaseClass):
     """Data remover class."""
 
     def __init__(self, project: str, username: str = None, method: str = "rm"):
-
+        """Handle actions regarding data deletion in the cli."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, project=project, method=method)
 
@@ -50,10 +50,9 @@ class DataRemover(base.DDSBaseClass):
 
     def __create_failed_table(self, resp_json, level="File"):
         """Output a response after deletion."""
-
         # Check that enough info
         if not all(x in resp_json for x in ["not_exists", "not_removed"]):
-            raise dds_cli.exception.APIError(
+            raise dds_cli.exceptions.APIError(
                 f"Malformatted response detected when attempting remove action on {self.project}."
             )
 
@@ -90,8 +89,7 @@ class DataRemover(base.DDSBaseClass):
 
     @staticmethod
     def delete_tempfile(file: pathlib.Path):
-        """Deletes the specified file."""
-
+        """Delete the specified file."""
         try:
             file.unlink()
         except FileNotFoundError as err:
@@ -102,7 +100,6 @@ class DataRemover(base.DDSBaseClass):
     @removal_spinner
     def remove_all(self, *_, **__):
         """Remove all files in project."""
-
         # Perform request to API to perform deletion
         try:
             response = requests.delete(
@@ -121,14 +118,14 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         if "removed" not in resp_json:
-            raise dds_cli.exception.APIError(
-                f"Malformatted response detected when attempting to remove all files from {self.project}."
+            raise dds_cli.exceptions.APIError(
+                "Malformatted response detected when attempting "
+                f"to remove all files from {self.project}."
             )
 
     @removal_spinner
     def remove_file(self, files):
         """Remove specific files."""
-
         try:
             response = requests.delete(
                 DDSEndpoint.REMOVE_FILE,
@@ -155,7 +152,6 @@ class DataRemover(base.DDSBaseClass):
     @removal_spinner
     def remove_folder(self, folder):
         """Remove specific folders."""
-
         try:
             response = requests.delete(
                 DDSEndpoint.REMOVE_FOLDER,

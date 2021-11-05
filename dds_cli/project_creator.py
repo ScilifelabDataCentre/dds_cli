@@ -1,5 +1,5 @@
+"""Data Delivery System Project Creator."""
 import logging
-import pathlib
 
 # Installed
 import requests
@@ -30,7 +30,7 @@ class ProjectCreator(base.DDSBaseClass):
         username: str = None,
         method: str = "create",
     ):
-
+        """Handle actions regarding project creation in the cli."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(username=username, method=method)
 
@@ -40,8 +40,7 @@ class ProjectCreator(base.DDSBaseClass):
 
     # Public methods ###################### Public methods #
     def create_project(self, title, description, principal_investigator, sensitive):
-        """Creates project with title and description"""
-
+        """Create project with title and description."""
         # Variables
         created = False
         error = ""

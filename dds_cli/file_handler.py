@@ -33,6 +33,7 @@ class FileHandler:
     """Main file handler."""
 
     def __init__(self, user_input, local_destination, project=None):
+        """Initiate file handler."""
         source, source_path_file = user_input
 
         # Get user specified data
@@ -62,6 +63,7 @@ class FileHandler:
     # Static methods ############ Static methods #
     @staticmethod
     def append_errors_to_file(file: pathlib.Path, info):
+        """Save errors to specific json file."""
         try:
             original_umask = os.umask(0)  # User file-creation mode mask
             with file.open(mode="a") as errfile:
@@ -84,7 +86,7 @@ class FileHandler:
         get_single_files: bool = True,
         upload: bool = True,
     ):
-
+        """Create summary of files and errors."""
         columns = ["File", "Error"] if upload else ["File", "Location", "Error"]
         curr_table = None
         title = "file" if get_single_files else "directory"
@@ -177,8 +179,7 @@ class FileHandler:
 
     @staticmethod
     def delete_tempdir(directory: pathlib.Path):
-        """Deletes the specified directory."""
-
+        """Delete the specified directory."""
         ok_to_remove = False
 
         # If file not ok to remove folder

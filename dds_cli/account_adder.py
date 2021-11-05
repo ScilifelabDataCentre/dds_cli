@@ -6,12 +6,11 @@
 
 # Standard library
 import logging
-import pathlib
 
 # Installed
+import http
 import requests
 import simplejson
-import http
 
 
 # Own modules

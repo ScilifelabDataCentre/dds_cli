@@ -43,14 +43,17 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
         if self.method != "add":
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
-    def add_user(self, email, role):
+    def add_user(self, email, role, project):
         """Invite user."""
         # Perform request to API
+        json = {"email": email, "role": role}
+        if project:
+            json["project"] = project
         try:
             response = requests.post(
                 dds_cli.DDSEndpoint.USER_ADD,
                 headers=self.token,
-                json={"email": email, "role": role},
+                json=json,
             )
 
             # Get response

@@ -140,14 +140,25 @@ def dds_main(ctx, verbose, log_file):
     ),
     help="Type of account.",
 )
+@click.option(
+    "--project",
+    "-p",
+    required=False,
+    type=str,
+    help="Existing Project you want the user to be associated to.",
+)
 @click.pass_obj
-def add_user(dds_info, username, config, email, role):
+def add_user(dds_info, username, config, email, role, project):
     """Add user to DDS, sending an invitation email to that person."""
     # All exceptions caught within
     with dds_cli.account_adder.AccountAdder(
         username=username, config=dds_info.get("CONFIG") if config is None else config
     ) as inviter:
-        inviter.add_user(email=email, role=role)
+        inviter.add_user(email=email, role=role, project=project)
+        if project:
+            LOG.info(
+                "Any user shown as invited would need to be added to the project once the user has accepted the invitation and created an account in the system."
+            )
 
 
 ####################################################################################################
@@ -719,10 +730,9 @@ def get(
 @click.option(
     "--principal-investigator",
     "-pi",
-    required=False,
+    required=True,
     type=str,
     help="The name of the Principal Investigator",
-    default="",
 )
 @click.option(
     "--is_sensitive",
@@ -730,8 +740,30 @@ def get(
     is_flag=True,
     help="Indicate if the Project includes sensitive data",
 )
+@click.option(
+    "--owner",
+    required=False,
+    multiple=True,
+    help="Email of a user to be added to the project as Project Owner",
+)
+@click.option(
+    "--researcher",
+    required=False,
+    multiple=True,
+    help="Email of a user to be added to the project as Researcher",
+)
 @click.pass_obj
-def create(dds_info, config, username, title, description, principal_investigator, is_sensitive):
+def create(
+    dds_info,
+    config,
+    username,
+    title,
+    description,
+    principal_investigator,
+    is_sensitive,
+    owner,
+    researcher,
+):
     """
     Create a project.
     """
@@ -741,16 +773,36 @@ def create(dds_info, config, username, title, description, principal_investigato
             config=dds_info["CONFIG"] if config is None else config,
             username=username,
         ) as creator:
-            created, project_id, err = creator.create_project(
+            emails_roles = []
+            if owner or researcher:
+                email_overlap = set(owner) & set(researcher)
+                if email_overlap:
+                    LOG.info(
+                        f"The email(s) {email_overlap} specified as both owner and researcher! Please specify a unique role for each email."
+                    )
+                    sys.exit(1)
+                if owner:
+                    emails_roles.extend([{"email": x, "role": "Project Owner"} for x in owner])
+                if researcher:
+                    emails_roles.extend([{"email": x, "role": "Researcher"} for x in researcher])
+
+            created, project_id, user_addition_messages, err = creator.create_project(
                 title=title,
                 description=description,
                 principal_investigator=principal_investigator,
                 sensitive=is_sensitive,
+                users_to_add=emails_roles,
             )
             if created:
                 LOG.info(
                     f"Project created with id: {project_id}",
                 )
+                if user_addition_messages:
+                    for msg in user_addition_messages:
+                        LOG.info(msg)
+                        LOG.info(
+                            "Any user shown as invited would need to be added to the project once the user has accepted the invitation and created an account in the system."
+                        )
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

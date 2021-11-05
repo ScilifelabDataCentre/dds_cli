@@ -114,7 +114,7 @@ class DDSBaseClass:
     # Private methods ############################### Private methods #
     def __verify_input(
         self,
-        username=None,
+        username,
         project=None,
     ) -> tuple:
         """Verify that the users input is valid and fully specified."""

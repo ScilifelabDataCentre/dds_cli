@@ -123,7 +123,7 @@ def dds_main(_, verbose, log_file):
     help="Existing Project you want the user to be associated to.",
 )
 @click.pass_obj
-def add_user(dds_info, username, email, role, project):
+def add_user(_, username, email, role, project):
     """Add user to DDS, sending an invitation email to that person."""
     # All exceptions caught within
     with dds_cli.account_adder.AccountAdder(username=username) as inviter:
@@ -682,7 +682,7 @@ def get(
 )
 @click.pass_obj
 def create(
-    dds_info,
+    _,
     username,
     title,
     description,
@@ -691,10 +691,7 @@ def create(
     owner,
     researcher,
 ):
-    """
-    Create a project.
-    """
-
+    """Create a project."""
     try:
         with dds_cli.project_creator.ProjectCreator(username=username) as creator:
             emails_roles = []
@@ -702,7 +699,8 @@ def create(
                 email_overlap = set(owner) & set(researcher)
                 if email_overlap:
                     LOG.info(
-                        f"The email(s) {email_overlap} specified as both owner and researcher! Please specify a unique role for each email."
+                        f"The email(s) {email_overlap} specified as both owner and researcher! "
+                        "Please specify a unique role for each email."
                     )
                     sys.exit(1)
                 if owner:
@@ -725,7 +723,9 @@ def create(
                     for msg in user_addition_messages:
                         LOG.info(msg)
                         LOG.info(
-                            "Any user shown as invited would need to be added to the project once the user has accepted the invitation and created an account in the system."
+                            "Any user shown as invited would need to be "
+                            "added to the project once the user has accepted "
+                            "the invitation and created an account in the system."
                         )
     except (
         dds_cli.exceptions.APIError,

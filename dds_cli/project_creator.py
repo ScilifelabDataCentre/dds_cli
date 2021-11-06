@@ -40,8 +40,7 @@ class ProjectCreator(base.DDSBaseClass):
 
     # Public methods ###################### Public methods #
     def create_project(self, title, description, principal_investigator, sensitive, users_to_add):
-        """Creates project with title and description"""
-
+        """Create project with title and description."""
         # Variables
         created = False
         error = ""

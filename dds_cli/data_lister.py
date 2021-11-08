@@ -8,7 +8,6 @@
 from dataclasses import dataclass
 import logging
 import os
-import pathlib
 from typing import Tuple, Union, List
 
 # Installed
@@ -21,11 +20,10 @@ from rich.tree import Tree
 # Own modules
 from dds_cli import base
 from dds_cli import exceptions
-from dds_cli import utils
+import dds_cli.utils
 from dds_cli import DDSEndpoint
 from dds_cli import text_handler as th
 
-import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -43,14 +41,13 @@ class DataLister(base.DDSBaseClass):
 
     def __init__(
         self,
+        username: str,
         method: str = "ls",
-        username: str = None,
-        config: pathlib.Path = None,
         project: str = None,
-        project_level: bool = False,
         show_usage: bool = False,
         tree: bool = False,
     ):
+        """Handle actions regarding data listing in the cli."""
         # Only method "ls" can use the DataLister class
         if method != "ls":
             raise exceptions.InvalidMethodError(
@@ -58,7 +55,7 @@ class DataLister(base.DDSBaseClass):
             )
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, config=config, project=project, method=method)
+        super().__init__(username=username, project=project, method=method)
 
         self.show_usage = show_usage
         self.tree = tree
@@ -66,7 +63,6 @@ class DataLister(base.DDSBaseClass):
     # Public methods ########################### Public methods #
     def sort_projects(self, projects, sort_by="id"):
         """Sort the projects according to ID and either default or chosen column."""
-
         # Lower case sort_by options and their column title equivalents
         sorting_dict = {
             "id": "Project ID",
@@ -103,7 +99,6 @@ class DataLister(base.DDSBaseClass):
 
     def format_columns(self, total_size=None, usage_info=None):
         """Define the formatting for the project table according to what is returned from API."""
-
         default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
 
         # Choose formattting
@@ -118,7 +113,7 @@ class DataLister(base.DDSBaseClass):
             "Size": {
                 "justify": "right",
                 "style": default_format.get("style"),
-                "footer": utils.format_api_response(total_size, key="Size"),
+                "footer": dds_cli.utils.format_api_response(total_size, key="Size"),
                 "overflow": "ellipsis",
             },
         }
@@ -130,13 +125,15 @@ class DataLister(base.DDSBaseClass):
                     "Usage": {
                         "justify": "right",
                         "style": default_format.get("style"),
-                        "footer": utils.format_api_response(usage_info["usage"], key="Usage"),
+                        "footer": dds_cli.utils.format_api_response(
+                            usage_info["usage"], key="Usage"
+                        ),
                         "overflow": "ellipsis",
                     },
                     "Cost": {
                         "justify": "right",
                         "style": default_format.get("style"),
-                        "footer": utils.format_api_response(usage_info["cost"], key="Cost"),
+                        "footer": dds_cli.utils.format_api_response(usage_info["cost"], key="Cost"),
                         "overflow": "ellipsis",
                     },
                 }
@@ -145,8 +142,7 @@ class DataLister(base.DDSBaseClass):
         return column_formatting
 
     def list_projects(self, sort_by="Updated"):
-        """Gets a list of project(s) the user is involved in."""
-
+        """Get a list of project(s) the user is involved in."""
         # Get projects from API
         try:
             response = requests.get(
@@ -208,12 +204,15 @@ class DataLister(base.DDSBaseClass):
             )
 
         # calculate the magnitudes for keeping the unit prefix constant across all projects
-        magnitudes = utils.calculate_magnitude(sorted_projects, column_formatting.keys())
+        magnitudes = dds_cli.utils.calculate_magnitude(sorted_projects, column_formatting.keys())
 
         # Add all column values for each row to table
         for proj in sorted_projects:
             table.add_row(
-                *[utils.format_api_response(proj[i], i, magnitudes[i]) for i in column_formatting]
+                *[
+                    dds_cli.utils.format_api_response(proj[i], i, magnitudes[i])
+                    for i in column_formatting
+                ]
             )
 
         # Print to stdout if there are any lines
@@ -225,14 +224,13 @@ class DataLister(base.DDSBaseClass):
             else:
                 dds_cli.utils.console.print(table)
         else:
-            raise exceptions.NoDataError(f"No projects found")
+            raise exceptions.NoDataError("No projects found.")
 
         # Return the list of projects
         return sorted_projects
 
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
-
         LOG.info(f"Listing files for project '{self.project}'")
         if folder:
             LOG.info(f"Showing files in folder '{folder}'")
@@ -331,19 +329,20 @@ class DataLister(base.DDSBaseClass):
         return visible_folders
 
     def list_recursive(self, show_size: bool = False):
+        """Recursively list project contents."""
+
         @dataclass
         class FileTree:
-            """
-            Container class for holding information about the remote file tree
-            """
+            """Container class for holding information about the remote file tree."""
 
             subtrees: List[Union["FileTree", Tuple[str, str]]] = None
             name: str = None
 
         def _construct_file_tree(folder: str, basename: str) -> Tuple[FileTree, int, int]:
             """
-            Recurses through the project directories and constructs a file tree
-            by subsequent calls to the API
+            Recurses through the project directories.
+
+            Constructs a file tree by subsequent calls to the API
             """
             # Make call to API
             try:
@@ -398,9 +397,7 @@ class DataLister(base.DDSBaseClass):
         def _construct_rich_tree(
             file_tree: FileTree, max_str: int, max_size: int, depth: int
         ) -> Tuple[Tree, int]:
-            """
-            Construct the rich tree from the file tree
-            """
+            """Construct the rich tree from the file tree."""
             tree = Tree(file_tree.name)
             tree_length = len(file_tree.subtrees)
             for node in file_tree.subtrees:
@@ -459,8 +456,7 @@ class DataLister(base.DDSBaseClass):
             )
 
     def list_users(self):
-        """Gets a list of user(s) involved in a project."""
-
+        """Get a list of user(s) involved in a project."""
         # Get user list from API
         try:
             response = requests.get(
@@ -516,6 +512,6 @@ class DataLister(base.DDSBaseClass):
             else:
                 dds_cli.utils.console.print(table)
         else:
-            raise exceptions.NoDataError(f"No users found")
+            raise exceptions.NoDataError("No users found.")
 
         return research_users

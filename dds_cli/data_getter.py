@@ -12,13 +12,11 @@ import pathlib
 # Installed
 import boto3
 import botocore
-import rich
 import requests
 import simplejson
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-from dds_cli import base
 from dds_cli import DDSEndpoint
 from dds_cli import file_handler_remote as fhr
 from dds_cli import data_remover as dr
@@ -28,7 +26,7 @@ from dds_cli import s3_connector as s3
 from dds_cli import status
 from dds_cli import text_handler as txt
 from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
-
+from dds_cli import base
 import dds_cli.utils
 
 ###############################################################################
@@ -47,8 +45,7 @@ class DataGetter(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str = None,
-        config: pathlib.Path = None,
+        username: str,
         project: str = None,
         break_on_fail: bool = False,
         get_all: bool = False,
@@ -59,11 +56,10 @@ class DataGetter(base.DDSBaseClass):
         verify_checksum: bool = False,
         method: str = "get",
     ):
-
+        """Handle actions regarding downloading data."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             username=username,
-            config=config,
             project=project,
             dds_directory=destination,
             method=method,
@@ -117,8 +113,7 @@ class DataGetter(base.DDSBaseClass):
     @verify_proceed
     @subpath_required
     def download_and_verify(self, file, progress):
-        """Downloads the file, reveals the original data and verifies the integrity."""
-
+        """Download the file, reveals the original data and verifies the integrity."""
         all_ok, message = (False, "")
         file_info = self.filehandler.data[file]
 
@@ -183,8 +178,7 @@ class DataGetter(base.DDSBaseClass):
 
     @update_status
     def get(self, file, progress, task):
-        """Downloads files from the cloud."""
-
+        """Download files from the cloud."""
         downloaded = False
         error = ""
         file_local = str(self.filehandler.data[file]["path_downloaded"])
@@ -219,7 +213,6 @@ class DataGetter(base.DDSBaseClass):
     @update_status
     def update_db(self, file):
         """Update file info in db."""
-
         updated_in_db = False
         error = ""
 

@@ -42,6 +42,7 @@ class User:
 
         # Authenticate user and get delivery JWT token
         self.token = self.__authenticate_user(password=password)
+        LOG.info(f"Token from {dds_cli.DDSEndpoint.TOKEN}: {self.token}")
 
     # Private methods ######################### Private methods #
     def __authenticate_user(self, password):

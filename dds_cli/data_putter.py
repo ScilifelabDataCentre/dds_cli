@@ -44,8 +44,6 @@ LOG = logging.getLogger(__name__)
 
 
 def put(
-    dds_info,
-    config,
     username,
     project,
     source,
@@ -55,10 +53,10 @@ def put(
     num_threads,
     silent,
 ):
+    """Handle upload of data."""
     # Initialize delivery - check user access etc
     with DataPutter(
         username=username,
-        config=config,
         project=project,
         source=source,
         source_path_file=source_path_file,
@@ -172,8 +170,7 @@ class DataPutter(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str = None,
-        config: pathlib.Path = None,
+        username: str,
         project: str = None,
         break_on_fail: bool = False,
         overwrite: bool = False,
@@ -182,9 +179,9 @@ class DataPutter(base.DDSBaseClass):
         silent: bool = False,
         method: str = "put",
     ):
-
+        """Handle actions regarding upload of data."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, config=config, project=project, method=method)
+        super().__init__(username=username, project=project, method=method)
 
         # Initiate DataPutter specific attributes
         self.break_on_fail = break_on_fail
@@ -241,8 +238,7 @@ class DataPutter(base.DDSBaseClass):
     @verify_proceed
     @subpath_required
     def protect_and_upload(self, file, progress):
-        """Processes and uploads the file while handling the progress bars."""
-
+        """Process and upload the file while handling the progress bars."""
         # Variables
         all_ok, saved, message = (False, False, "")  # Error catching
         file_info = self.filehandler.data[file]  # Info on current file
@@ -317,8 +313,7 @@ class DataPutter(base.DDSBaseClass):
 
     @update_status
     def put(self, file, progress, task):
-        """Uploads files to the cloud."""
-
+        """Upload files to the cloud."""
         # Variables
         uploaded = False
         error = ""
@@ -371,7 +366,6 @@ class DataPutter(base.DDSBaseClass):
     @update_status
     def add_file_db(self, file):
         """Make API request to add file to DB."""
-
         # Variables
         added_to_db = False
         error = ""

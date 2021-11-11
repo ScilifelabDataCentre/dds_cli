@@ -9,7 +9,6 @@ import concurrent.futures
 import itertools
 import logging
 import os
-import pathlib
 import sys
 
 # Installed
@@ -24,7 +23,6 @@ import questionary
 # Own modules
 import dds_cli
 import dds_cli.account_adder
-import dds_cli.exceptions as exc
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -63,9 +61,8 @@ stderr.print(
 @click.option("-l", "--log-file", help="Save a verbose log to a file.", metavar="<filename>")
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
-def dds_main(ctx, verbose, log_file):
-    """Main CLI command, sets up DDS info."""
-
+def dds_main(_, verbose, log_file):
+    """Set up DDS main command."""
     if "--help" not in sys.argv:
 
         # Set the base logger to output DEBUG
@@ -91,39 +88,17 @@ def dds_main(ctx, verbose, log_file):
             )
             LOG.addHandler(log_fh)
 
-        # Check that the config file exists
-        config_file = None
-        if not any(x in sys.argv for x in ["--config", "-c", "--username", "-u"]):
-            config_file = pathlib.Path().home() / pathlib.Path(".dds-cli.json")
-            if not config_file.is_file():
-                LOG.error(
-                    f"Username omitted and config file not specified nor found at default path: {config_file}"
-                )
-                sys.exit(1)
-
-        # Create context object
-        ctx.obj = {
-            "CONFIG": config_file,
-        }
-
 
 ####################################################################################################
-# INVITE USER #################################################################################### INVITE USER #
+# INVITE USER ######################################################################## INVITE USER #
 ####################################################################################################
 
 
 @dds_main.command()
 @click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
-)
-@click.option(
     "--username",
     "-u",
-    required=False,
+    required=True,
     type=str,
     help="Your Data Delivery System username.",
 )
@@ -148,16 +123,15 @@ def dds_main(ctx, verbose, log_file):
     help="Existing Project you want the user to be associated to.",
 )
 @click.pass_obj
-def add_user(dds_info, username, config, email, role, project):
+def add_user(_, username, email, role, project):
     """Add user to DDS, sending an invitation email to that person."""
     # All exceptions caught within
-    with dds_cli.account_adder.AccountAdder(
-        username=username, config=dds_info.get("CONFIG") if config is None else config
-    ) as inviter:
+    with dds_cli.account_adder.AccountAdder(username=username) as inviter:
         inviter.add_user(email=email, role=role, project=project)
         if project:
             LOG.info(
-                "Any user shown as invited would need to be added to the project once the user has accepted the invitation and created an account in the system."
+                "Any user shown as invited would need to be added to the project "
+                "once the user has accepted the invitation and created an account in the system."
             )
 
 
@@ -168,16 +142,9 @@ def add_user(dds_info, username, config, email, role, project):
 
 @dds_main.command()
 @click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
-)
-@click.option(
     "--username",
     "-u",
-    required=False,
+    required=True,
     type=str,
     help="Your Data Delivery System username",
 )
@@ -240,8 +207,7 @@ def add_user(dds_info, username, config, email, role, project):
 )
 @click.pass_obj
 def put(
-    dds_info,
-    config,
+    _,
     username,
     project,
     source,
@@ -251,22 +217,20 @@ def put(
     num_threads,
     silent,
 ):
-    """Processes and uploads specified files to the cloud."""
+    """Process and upload specified files to the cloud."""
     try:
         dds_cli.data_putter.put(
-            dds_info,
-            dds_info.get("CONFIG") if config is None else config,
-            username,
-            project,
-            source,
-            source_path_file,
-            break_on_fail,
-            overwrite,
-            num_threads,
-            silent,
+            username=username,
+            project=project,
+            source=source,
+            source_path_file=source_path_file,
+            break_on_fail=break_on_fail,
+            overwrite=overwrite,
+            num_threads=num_threads,
+            silent=silent,
         )
-    except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as e:
-        LOG.error(e)
+    except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as err:
+        LOG.error(err)
         sys.exit(1)
 
 
@@ -281,14 +245,7 @@ def put(
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
-    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
-)
-@click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
+    "--username", "-u", required=True, type=str, help="Your Data Delivery System username."
 )
 @click.option(
     "--usage",
@@ -317,7 +274,7 @@ def put(
     help="Display users associated with a project(Requires a project id)",
 )
 @click.pass_obj
-def ls(dds_info, project, folder, projects, size, username, config, usage, sort, tree, users):
+def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
     """
     List your projects and project files.
 
@@ -326,15 +283,12 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
     Specify a Project ID to list the files within a project.
     You can also follow this with a subfolder path to show files within that folder.
     """
-
     try:
         # List all projects if project is None and all files if project spec
         if project is None:
             with dds_cli.data_lister.DataLister(
                 project=project,
-                project_level=project is None or projects,
                 show_usage=usage,
-                config=dds_info["CONFIG"] if config is None else config,
                 username=username,
             ) as lister:
                 projects = lister.list_projects(sort_by=sort)
@@ -364,8 +318,6 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
         if project:
             with dds_cli.data_lister.DataLister(
                 project=project,
-                project_level=project is None,
-                config=dds_info["CONFIG"] if config is None else config,
                 username=username,
                 tree=tree,
             ) as lister:
@@ -382,10 +334,11 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
                     else:
                         folders = lister.list_files(folder=folder, show_size=size)
 
-                        # If an interactive terminal, ask user if they want to view files for a project
+                        # If an interactive terminal, ask user if they want to view files for a proj
                         if sys.stdout.isatty() and len(folders) > 0:
                             LOG.info(
-                                "Would you like to view files within a directory? Leave blank to exit."
+                                "Would you like to view files within a directory? "
+                                "Leave blank to exit."
                             )
                             last_folder = None
                             while folder is None or folder != last_folder:
@@ -414,11 +367,11 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
                                 if len(folders) == 0:
                                     break
 
-    except (dds_cli.exceptions.NoDataError) as e:
-        LOG.warning(e)
+    except (dds_cli.exceptions.NoDataError) as err:
+        LOG.warning(err)
         sys.exit(0)
-    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as e:
-        LOG.error(e)
+    except (dds_cli.exceptions.APIError, dds_cli.exceptions.AuthenticationError) as err:
+        LOG.error(err)
         sys.exit(1)
 
 
@@ -431,7 +384,7 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
 @click.argument("proj_arg", required=False)
 @click.option("--project", "-p", required=False, type=str, help="Project ID.")
 @click.option(
-    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
+    "--username", "-u", required=True, type=str, help="Your Data Delivery System username."
 )
 @click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
 @click.option(
@@ -440,17 +393,9 @@ def ls(dds_info, project, folder, projects, size, username, config, usage, sort,
 @click.option(
     "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
 )
-@click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
-)
 @click.pass_obj
-def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
+def rm(_, proj_arg, project, username, rm_all, file, folder):
     """Delete the files within a project."""
-
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
         LOG.error("No project specified, cannot remove anything.")
@@ -466,7 +411,8 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
     # Will not delete anything if no file or folder specified
     if project and not any([rm_all, file, folder]):
         LOG.error(
-            "One of the options must be specified to perform data deletion: '--rm-all' / '--file' / '--folder'."
+            "One of the options must be specified to perform data deletion: "
+            "'--rm-all' / '--file' / '--folder'."
         )
         sys.exit(1)
 
@@ -482,7 +428,6 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
         with dds_cli.data_remover.DataRemover(
             project=project,
             username=username,
-            config=dds_info["CONFIG"] if config is None else config,
         ) as remover:
 
             if rm_all:
@@ -497,8 +442,8 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.DDSCLIException,
-    ) as e:
-        LOG.error(e)
+    ) as err:
+        LOG.error(err)
         sys.exit(1)
 
 
@@ -509,16 +454,9 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 
 @dds_main.command()
 @click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
-)
-@click.option(
     "--username",
     "-u",
-    required=False,
+    required=True,
     type=str,
     help="Your Data Delivery System username.",
 )
@@ -594,8 +532,7 @@ def rm(dds_info, proj_arg, project, username, rm_all, file, folder, config):
 )
 @click.pass_obj
 def get(
-    dds_info,
-    config,
+    _,
     username,
     project,
     get_all,
@@ -607,8 +544,7 @@ def get(
     silent,
     verify_checksum,
 ):
-    """Downloads specified files from the cloud and restores the original format."""
-
+    """Download specified files from the cloud and restores the original format."""
     if get_all and (source or source_path_file):
         LOG.error(
             "Flag '--get-all' cannot be used together with options '--source'/'--source-path-fail'."
@@ -618,7 +554,6 @@ def get(
     # Begin delivery
     with dds_cli.data_getter.DataGetter(
         username=username,
-        config=dds_info["CONFIG"] if config is None else config,
         project=project,
         get_all=get_all,
         source=source,
@@ -700,16 +635,9 @@ def get(
 ###################################################################################
 @dds_main.command(no_args_is_help=True)
 @click.option(
-    "--config",
-    "-c",
-    required=False,
-    type=click.Path(exists=True),
-    help="Path to file with user credentials, destination, etc.",
-)
-@click.option(
     "--username",
     "-u",
-    required=False,
+    required=True,
     type=str,
     help="Your Data Delivery System username.",
 )
@@ -754,8 +682,7 @@ def get(
 )
 @click.pass_obj
 def create(
-    dds_info,
-    config,
+    _,
     username,
     title,
     description,
@@ -764,21 +691,16 @@ def create(
     owner,
     researcher,
 ):
-    """
-    Create a project.
-    """
-
+    """Create a project."""
     try:
-        with dds_cli.project_creator.ProjectCreator(
-            config=dds_info["CONFIG"] if config is None else config,
-            username=username,
-        ) as creator:
+        with dds_cli.project_creator.ProjectCreator(username=username) as creator:
             emails_roles = []
             if owner or researcher:
                 email_overlap = set(owner) & set(researcher)
                 if email_overlap:
                     LOG.info(
-                        f"The email(s) {email_overlap} specified as both owner and researcher! Please specify a unique role for each email."
+                        f"The email(s) {email_overlap} specified as both owner and researcher! "
+                        "Please specify a unique role for each email."
                     )
                     sys.exit(1)
                 if owner:
@@ -801,12 +723,14 @@ def create(
                     for msg in user_addition_messages:
                         LOG.info(msg)
                         LOG.info(
-                            "Any user shown as invited would need to be added to the project once the user has accepted the invitation and created an account in the system."
+                            "Any user shown as invited would need to be "
+                            "added to the project once the user has accepted "
+                            "the invitation and created an account in the system."
                         )
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
-    ) as e:
-        LOG.error(e)
+    ) as err:
+        LOG.error(err)
         sys.exit(1)

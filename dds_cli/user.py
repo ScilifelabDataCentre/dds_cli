@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 class User:
     """Authenticates the DDS user."""
 
-    username: str = None
+    username: str
     password: dataclasses.InitVar[str] = None
     token: dict = dataclasses.field(init=False)
 

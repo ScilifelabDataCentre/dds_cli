@@ -110,8 +110,7 @@ class S3Connector:
 
     # Public methods ############ Public methods #
     def check_bucket_exists(self):
-        """Checks if the bucket exists"""
-
+        """Check if the bucket exists."""
         LOG.debug(f"Bucket name: {self.bucketname}")
         try:
             self.resource.meta.client.head_bucket(Bucket=self.bucketname)
@@ -122,8 +121,7 @@ class S3Connector:
         return True
 
     def check_bucketname(self):
-        """Checks that the bucketname restrictions are met."""
-
+        """Check that the bucketname restrictions are met."""
         bnlen = len(self.bucketname)
         if not 3 <= bnlen <= 63:
             # Add custom exception

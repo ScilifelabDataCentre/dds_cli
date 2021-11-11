@@ -11,10 +11,10 @@ import pathlib
 
 # Installed
 import getpass
+import http
 import requests
 import rich
 import simplejson
-import http
 
 # Own modules
 import dds_cli.directory
@@ -49,14 +49,12 @@ class DDSBaseClass:
 
     def __init__(
         self,
-        username=None,
-        password=None,
-        config=None,
+        username,
         project=None,
         dds_directory: pathlib.Path = None,
         method: str = None,
     ):
-
+        """Initialize Base class for authenticating the user and preparing for DDS action."""
         # Get attempted operation e.g. put/ls/rm/get
         self.method = method
         if self.method not in DDS_METHODS:
@@ -82,8 +80,6 @@ class DDSBaseClass:
         # Verify that user entered enough info
         username, password, self.project = self.__verify_input(
             username=username,
-            password=password,
-            config=config,
             project=project,
         )
 
@@ -105,6 +101,7 @@ class DDSBaseClass:
         return self
 
     def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
+        """Finish and print out delivery summary."""
         if self.method in ["put", "get"]:
             self.__printout_delivery_summary()
 
@@ -117,30 +114,11 @@ class DDSBaseClass:
     # Private methods ############################### Private methods #
     def __verify_input(
         self,
-        username=None,
-        password=None,
-        config=None,
+        username,
         project=None,
     ) -> tuple:
-        """Verifies that the users input is valid and fully specified."""
-
+        """Verify that the users input is valid and fully specified."""
         LOG.debug("Verifying the user input...")
-
-        # Get contents from file
-        if config:
-            # Get contents from file
-            contents = fh.FileHandler.extract_config(configfile=config)
-
-            # Get user credentials if not already specified
-            if not username and "username" in contents:
-                username = contents["username"]
-
-                # TODO (ina): Remove password field?
-                # Only get password from config if username also in config
-                if not password and "password" in contents:
-                    password = contents["password"]
-
-        LOG.debug(f"Username: {username}, Project ID: {project}")
 
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and not project:
@@ -152,10 +130,7 @@ class DDSBaseClass:
         if not username:
             raise exceptions.MissingCredentialsException(missing="username")
 
-        # Set password if missing
-        if not password:
-            password = getpass.getpass()
-            # password = "password"  # TODO: REMOVE - ONLY FOR DEV
+        password = getpass.getpass()
 
         LOG.debug("User input verified.")
 
@@ -163,7 +138,6 @@ class DDSBaseClass:
 
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""
-
         # Project public key required for both put and get
         public = self.__get_key()
 
@@ -174,7 +148,6 @@ class DDSBaseClass:
 
     def __get_key(self, private: bool = False):
         """Get public key for project."""
-
         key_type = "private" if private else "public"
         # Get key from API
         try:
@@ -212,7 +185,6 @@ class DDSBaseClass:
 
     def __printout_delivery_summary(self, max_fileerrs: int = 40):
         """Print out the delivery summary if any files were cancelled."""
-
         any_failed = self.__collect_all_failed()
 
         # Clear dict to not take up too much space
@@ -268,7 +240,6 @@ class DDSBaseClass:
 
     def __collect_all_failed(self, sort: bool = True):
         """Put cancelled files from status in to failed dict and sort the output."""
-
         # Transform all items to string
         self.filehandler.data = {
             str(file): {str(x): str(y) for x, y in info.items()}

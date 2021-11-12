@@ -13,6 +13,9 @@ import requests
 import simplejson
 import stat
 
+# Installed
+import getpass
+
 # Own modules
 import dds_cli
 from dds_cli import exceptions
@@ -28,52 +31,52 @@ LOG = logging.getLogger(__name__)
 ###############################################################################
 
 
-@dataclasses.dataclass
 class User:
     """Represents a DDS user.
 
     when instantiating, an authentication token will be read from a file or
     renewed from the DDS API if the saved token is not found or has expired."""
 
-    username: str
-    password: dataclasses.InitVar[str] = None
-    token: dict = dataclasses.field(init=False)
-
-    def __post_init__(self, password):
+    def __init__(self, username: str, force_renew_token: bool = False):
+        self.username = username
+        self.force_renew_token = force_renew_token
+        self.token = None
 
         # Fetch encrypted JWT token
-        self.__retrieve_token(password)
+        self.__retrieve_token()
 
     @property
     def token_dict(self):
         return {"Authorization": f"Bearer {self.token}"}
 
     # Private methods ######################### Private methods #
-    def __retrieve_token(self, password):
+    def __retrieve_token(self):
         """Attempts to fetch saved token from file otherwise authenticate user and saves the new token."""
-
-        LOG.debug(f"Retrieving token for user {self.username}")
-
         token_file = dds_cli.TOKEN_FILE
-        # Get token from file
-        try:
-            LOG.debug(f"Checking if token file exists for user {self.username}")
-            self.token = self.__get_token_from_file(token_file)
-        except dds_cli.exceptions.TokenNotFoundError as err:
-            self.token = None
 
-        # If token is not found, authenticate user and save token
+        if not self.force_renew_token:
+            LOG.debug(f"Retrieving token for user {self.username}")
+
+            # Get token from file
+            try:
+                LOG.debug(f"Checking if token file exists for user {self.username}")
+                self.token = self.__get_token_from_file(token_file)
+            except dds_cli.exceptions.TokenNotFoundError as err:
+                self.token = None
+
+        # Authenticate user and save token
         if not self.token:
-            LOG.debug(f"No token retrieved from file, will fetch new token from api")
-            self.token = self.__authenticate_user(password)
+            self.token = self.__authenticate_user()
             self.__save_token(token_file)
 
         return self.token
 
-    def __authenticate_user(self, password):
+    def __authenticate_user(self):
         """Authenticates the username and password via a call to the API."""
 
         LOG.debug(f"Authenticating the user: {self.username}")
+
+        password = getpass.getpass()
         # Username and password required for user authentication
         if None in [self.username, password]:
             raise exceptions.MissingCredentialsException(
@@ -113,6 +116,7 @@ class User:
     def __get_token_from_file(self, token_file):
 
         if not token_file.is_file():
+            LOG.debug(f"No token retrieved from file, will fetch new token from api")
             return None
 
         # Verify permissions for token file
@@ -123,6 +127,7 @@ class User:
             )
 
         if not self.__token_not_expired(token_file):
+            LOG.debug(f"No token retrieved from file, will fetch new token from api")
             return None
 
         # Read token from file

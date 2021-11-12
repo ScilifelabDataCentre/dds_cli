@@ -62,7 +62,10 @@ stderr.print(
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
 def dds_main(_, verbose, log_file):
-    """Set up DDS main command."""
+    """The SciLifeLab Data Delivery System (DDS) command line interface
+
+    Access token is saved in a .dds_cli_token file in the home directory.
+    """
     if "--help" not in sys.argv:
 
         # Set the base logger to output DEBUG
@@ -727,6 +730,37 @@ def create(
                             "added to the project once the user has accepted "
                             "the invitation and created an account in the system."
                         )
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+###################################################################################
+# SESSION ############################################################### SESSION #
+###################################################################################
+@dds_main.command()
+@click.option(
+    "--username",
+    "-u",
+    required=True,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.pass_obj
+def session(_, username):
+    """Renew the access token stored in the '.dds_cli_token'. Run this command before
+    running the cli in a non interactive fashion as this enables the longest possible session time
+    before a password needs to be entered again.
+    """
+    try:
+        with dds_cli.base.DDSBaseClass(
+            username=username, method_check=False, force_renew_token=True
+        ) as session:
+            LOG.info("Session renewed")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

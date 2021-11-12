@@ -85,7 +85,7 @@ class DDSBaseClass:
 
         # Authenticate the user and get the token
         dds_user = user.User(username=username, password=password)
-        self.token = dds_user.token
+        self.token = dds_user.token_dict
 
         LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list

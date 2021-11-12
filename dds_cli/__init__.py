@@ -1,6 +1,7 @@
 """DDS CLI."""
 
 import os
+import pathlib
 import pkg_resources
 import prompt_toolkit
 import rich.console
@@ -39,6 +40,9 @@ DDS_DIR_REQUIRED_METHODS = ["put", "get"]
 # Methods which require a project ID
 DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
 
+# TOKEN storage file
+TOKEN_FILE = pathlib.Path(os.path.expanduser("~/.dds_cli_token"))
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -59,7 +63,7 @@ class DDSEndpoint:
     USER_ADD = BASE_ENDPOINT + "/user/add"
 
     # Authentication - user and project
-    TOKEN = BASE_ENDPOINT + "/user/encrypted_token"
+    ENCRYPTED_TOKEN = BASE_ENDPOINT + "/user/encrypted_token"
 
     # S3Connector keys
     S3KEYS = BASE_ENDPOINT + "/s3/proj"

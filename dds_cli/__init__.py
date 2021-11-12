@@ -1,5 +1,6 @@
 """DDS CLI."""
 
+import datetime
 import os
 import pathlib
 import pkg_resources
@@ -40,8 +41,10 @@ DDS_DIR_REQUIRED_METHODS = ["put", "get"]
 # Methods which require a project ID
 DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
 
-# TOKEN storage file
+# Token related variables
 TOKEN_FILE = pathlib.Path(os.path.expanduser("~/.dds_cli_token"))
+TOKEN_MAX_AGE = datetime.timedelta(days=2)
+TOKEN_WARNING_AGE = datetime.timedelta(days=1, hours=18)
 
 
 ###############################################################################

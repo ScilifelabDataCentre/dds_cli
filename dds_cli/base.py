@@ -107,6 +107,7 @@ class DDSBaseClass:
 
         # Exception is not handled
         if exc_type is not None:
+            LOG.debug(f"Exception: {exc_type} with value {exc_value}")
             return False
 
         return True

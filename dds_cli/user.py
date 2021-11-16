@@ -73,7 +73,7 @@ class User:
     def __authenticate_user(self):
         """Authenticates the username and password via a call to the API."""
 
-        LOG.info(f"Re-authenticating the user: {self.username} on the api")
+        LOG.info(f"Authenticating the user: {self.username} on the api")
 
         password = getpass.getpass(prompt="DDS Password: ")
         # Username and password required for user authentication
@@ -128,7 +128,6 @@ class TokenFile:
             LOG.debug(f"Token file {self.token_file} does not exist.")
             return None
 
-        # Verify permissions for token file
         self.check_token_file_permissions()
 
         if self.token_expired():
@@ -200,7 +199,7 @@ class TokenFile:
         return False
 
     def token_report(self):
-        """Reports age of the token"""
+        """Produce report of token status."""
         age, expiration_time = self.__token_dates()
 
         age_hours, rem = divmod(age.seconds, 3600)
@@ -236,7 +235,7 @@ class TokenFile:
         else:
             LOG.info(f"[{markup_color}]Token expires: {expiration_time}[/{markup_color}]")
 
-    # Private methods ######################### Private methods #
+    # Private methods ############################################################ Private methods #
     def __token_dates(self):
         modification_time = datetime.datetime.fromtimestamp(os.path.getmtime(self.token_file))
         age = datetime.datetime.now() - modification_time

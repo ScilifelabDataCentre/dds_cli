@@ -98,7 +98,7 @@ def dds_main(_, verbose, log_file):
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
     help="Your Data Delivery System username.",
 )
@@ -144,7 +144,7 @@ def add_user(_, username, email, role, project):
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
     help="Your Data Delivery System username",
 )
@@ -245,7 +245,7 @@ def put(
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
-    "--username", "-u", required=True, type=str, help="Your Data Delivery System username."
+    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
 @click.option(
     "--usage",
@@ -384,7 +384,7 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
 @click.argument("proj_arg", required=False)
 @click.option("--project", "-p", required=False, type=str, help="Project ID.")
 @click.option(
-    "--username", "-u", required=True, type=str, help="Your Data Delivery System username."
+    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
 @click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
 @click.option(
@@ -456,7 +456,7 @@ def rm(_, proj_arg, project, username, rm_all, file, folder):
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
     help="Your Data Delivery System username.",
 )
@@ -637,7 +637,7 @@ def get(
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
     help="Your Data Delivery System username.",
 )

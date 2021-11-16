@@ -28,8 +28,10 @@ import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
-import dds_cli.utils
 import dds_cli.project_creator
+import dds_cli.session
+import dds_cli.utils
+
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -750,17 +752,26 @@ def create(
     type=str,
     help="Your Data Delivery System username.",
 )
+@click.option(
+    "--check",
+    "-c",
+    required=False,
+    is_flag=True,
+    help="Instead of renewing the session, only check if the session is valid and report the token age.",
+)
 @click.pass_obj
-def session(_, username):
+def session(_, username, check):
     """Renew the access token stored in the '.dds_cli_token'. Run this command before
     running the cli in a non interactive fashion as this enables the longest possible session time
     before a password needs to be entered again.
     """
     try:
-        with dds_cli.base.DDSBaseClass(
-            username=username, method_check=False, force_renew_token=True
-        ) as session:
-            LOG.info("Session renewed")
+        with dds_cli.session.Session(username=username, check=check) as session:
+            if check:
+                session.check()
+            else:
+                # Session renewed in the init method.
+                LOG.info("[green] :white_check_mark: Session renewed![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

@@ -42,7 +42,7 @@ class User:
         self.force_renew_token = force_renew_token
         self.token = None
 
-        # Fetch encrypted JWT token
+        # Fetch encrypted JWT token or authenticate against API
         self.__retrieve_token()
 
     @property
@@ -52,7 +52,8 @@ class User:
     # Private methods ######################### Private methods #
     def __retrieve_token(self):
         """Attempts to fetch saved token from file otherwise authenticate user and saves the new token."""
-        token_file = dds_cli.TOKEN_FILE
+
+        token_file = TokenFile()
 
         if not self.force_renew_token:
             LOG.debug(f"Retrieving token for user {self.username}")
@@ -60,23 +61,21 @@ class User:
             # Get token from file
             try:
                 LOG.debug(f"Checking if token file exists for user {self.username}")
-                self.token = self.__get_token_from_file(token_file)
+                self.token = token_file.read_token()
             except dds_cli.exceptions.TokenNotFoundError as err:
                 self.token = None
 
         # Authenticate user and save token
         if not self.token:
             self.token = self.__authenticate_user()
-            self.__save_token(token_file)
-
-        return self.token
+            token_file.save_token(self.token)
 
     def __authenticate_user(self):
         """Authenticates the username and password via a call to the API."""
 
-        LOG.debug(f"Authenticating the user: {self.username}")
+        LOG.info(f"Re-authenticating the user: {self.username} on the api")
 
-        password = getpass.getpass()
+        password = getpass.getpass(prompt="DDS Password: ")
         # Username and password required for user authentication
         if None in [self.username, password]:
             raise exceptions.MissingCredentialsException(
@@ -113,25 +112,31 @@ class User:
 
         return token
 
-    def __get_token_from_file(self, token_file):
 
-        if not token_file.is_file():
-            LOG.debug(f"No token retrieved from file, will fetch new token from api")
+class TokenFile:
+    """A class to manage the saved token."""
+
+    def __init__(self):
+        self.token_file = dds_cli.TOKEN_FILE
+
+    def read_token(self):
+        """Attempts to fetch a valid token from the token file.
+
+        Returns None if no valid token can be found."""
+
+        if not self.token_file.is_file():
+            LOG.debug(f"Token file {self.token_file} does not exist.")
             return None
 
         # Verify permissions for token file
-        permissions_ok, _ = self.__check_token_file_permissions(token_file)
-        if not permissions_ok:
-            raise exceptions.DDSCLIException(
-                message=f"Token file permissions are not properly set. Please remove {token_file} and rerun the command."
-            )
+        self.check_token_file_permissions()
 
-        if not self.__token_not_expired(token_file):
+        if self.token_expired():
             LOG.debug(f"No token retrieved from file, will fetch new token from api")
             return None
 
         # Read token from file
-        with token_file.open() as file:
+        with self.token_file.open() as file:
             token = file.read()
             if not token:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
@@ -139,52 +144,102 @@ class User:
         LOG.debug(f"Token retrieved from file.")
         return token
 
-    def __save_token(self, token_file):
+    def save_token(self, token):
         """Saves the token to the token file."""
 
-        if not token_file.is_file():
-            token_file.touch(mode=0o600)
+        if not self.token_file.is_file():
+            self.token_file.touch(mode=0o600)
 
-        permissions_ok, permissions = self.__check_token_file_permissions(token_file)
-        if not permissions_ok:
+        self.check_token_file_permissions()
+
+        with self.token_file.open("w") as file:
+            file.write(token)
+
+        LOG.debug("New token saved to file.")
+
+    def check_token_file_permissions(self):
+        """Verify permissions for token file. Raises dds_cli.exceptions.DDSCLIException if
+        permissions are not properly set.
+
+        Returns None otherwise.
+        """
+        st_mode = os.stat(self.token_file).st_mode
+        permissions_octal = oct(stat.S_IMODE(st_mode))
+        permissions_readable = stat.filemode(st_mode)
+        if permissions_octal != "0o600":
             raise exceptions.DDSCLIException(
-                message=f"Token file permissions are not 600. Got {permissions}."
+                message=f"Token file permissions are not properly set, (got {permissions_readable} instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."
             )
 
-        with token_file.open("w") as file:
-            file.write(self.token)
-
-    def __check_token_file_permissions(self, token_file):
-        # Verify permissions for token file
-        st_mode = os.stat(token_file).st_mode
-        permissions = oct(stat.S_IMODE(st_mode))
-        return permissions != 0o600, permissions
-
-    def __token_not_expired(self, token_file):
+    def token_expired(self):
         """Check how old the token is based on the modification time of the token file.
 
-        It comparse the age with the dds variables TOKEN_MAX_AGE and TOKEN_WARNING_AGE to decide
+        It compares the age with the dds variables TOKEN_MAX_AGE and TOKEN_WARNING_AGE to decide
         what to do.
 
-        Returns True if the token is not expired, False otherwise.
+        Returns True if the token has expired, False otherwise.
 
         ** Notice, this does not actually know the expiration time of the token, it's possible that the
         expiration time has changed upstream in which case the variables need to be updated.
-        """
-        token_modification_time = datetime.datetime.fromtimestamp(os.path.getmtime(token_file))
-        token_age = datetime.datetime.now() - token_modification_time
 
-        LOG.debug(f"Token file age: {token_age}")
-        if token_age > dds_cli.TOKEN_MAX_AGE:
+        if check is True, token age will be reported to stdout
+        """
+        age, expiration_time = self.__token_dates()
+        LOG.debug(f"Token file age: {age}")
+        if age > dds_cli.TOKEN_MAX_AGE:
             LOG.debug(
                 f"Token file is too old so token has likely expired. Now deleting it and fetching new token."
             )
-            token_file.unlink()
-            return False
-        elif token_age > dds_cli.TOKEN_WARNING_AGE:
-            expiration_time = token_modification_time + dds_cli.TOKEN_MAX_AGE
+            self.token_file.unlink()
+            return True
+        elif age > dds_cli.TOKEN_WARNING_AGE:
             LOG.warning(
                 f"Saved token will soon expire: {expiration_time.strftime('%Y-%m-%d %H:%M:%S')}, please consider renewing the session using the 'dds session' command."
             )
 
-        return True
+        return False
+
+    def token_report(self):
+        """Reports age of the token"""
+        age, expiration_time = self.__token_dates()
+
+        age_hours, rem = divmod(age.seconds, 3600)
+        age_minutes, _ = divmod(rem, 60)
+        expiration_time = expiration_time.strftime("%Y-%m-%d %H:%M:%S")
+
+        if age > dds_cli.TOKEN_MAX_AGE:
+            markup_color = "red"
+            sign = ":no_entry_sign:"
+            message = "Token has expired!"
+        elif age > dds_cli.TOKEN_WARNING_AGE:
+            markup_color = "yellow"
+            sign = ":warning-emoji:"
+            message = "Token will expire soon!"
+        else:
+            markup_color = "green"
+            sign = ":white_check_mark:"
+            message = "Token is OK!"
+
+        # Heading
+        LOG.info(f"[{markup_color}]{sign}  {message} {sign} [/{markup_color}]")
+        if age.days > 0:
+            LOG.info(
+                f"[{markup_color}]Token age: {age.days} days {age_hours} hours[/{markup_color}]"
+            )
+        else:
+            LOG.info(
+                f"[{markup_color}]Token age: {age_hours} hours {age_minutes} minutes[/{markup_color}]"
+            )
+
+        if age > dds_cli.TOKEN_MAX_AGE:
+            LOG.info(f"[{markup_color}]Token expired: {expiration_time}[/{markup_color}]")
+        else:
+            LOG.info(f"[{markup_color}]Token expires: {expiration_time}[/{markup_color}]")
+
+    # Private methods ######################### Private methods #
+    def __token_dates(self):
+        modification_time = datetime.datetime.fromtimestamp(os.path.getmtime(self.token_file))
+        age = datetime.datetime.now() - modification_time
+        expiration_time = modification_time + dds_cli.TOKEN_MAX_AGE
+
+        return age, expiration_time

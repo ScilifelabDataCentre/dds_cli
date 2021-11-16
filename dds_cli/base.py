@@ -52,6 +52,7 @@ class DDSBaseClass:
         project=None,
         dds_directory: pathlib.Path = None,
         method: str = None,
+        authenticate: bool = True,
         method_check: bool = True,
         force_renew_token: bool = False,
     ):
@@ -87,8 +88,9 @@ class DDSBaseClass:
         )
 
         # Authenticate the user and get the token
-        dds_user = user.User(username=username, force_renew_token=force_renew_token)
-        self.token = dds_user.token_dict
+        if authenticate:
+            dds_user = user.User(username=username, force_renew_token=force_renew_token)
+            self.token = dds_user.token_dict
 
         LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list

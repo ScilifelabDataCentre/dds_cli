@@ -73,14 +73,15 @@ class User:
     def __authenticate_user(self):
         """Authenticates the username and password via a call to the API."""
 
+        if self.username is None:
+            raise exceptions.MissingCredentialsException(missing="username")
+
         LOG.info(f"Authenticating the user: {self.username} on the api")
 
         password = getpass.getpass(prompt="DDS Password: ")
-        # Username and password required for user authentication
-        if None in [self.username, password]:
-            raise exceptions.MissingCredentialsException(
-                missing="username" if not self.username else "password",
-            )
+
+        if self.password is None:
+            raise exceptions.MissingCredentialsException(missing="password")
 
         # Project passed in to add it to the token. Can be None.
         try:

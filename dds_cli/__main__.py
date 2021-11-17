@@ -269,7 +269,7 @@ def put(
     is_flag=True,
     default=False,
     show_default=True,
-    help="Show the usage for a specific facility, in GBHours and cost.",
+    help="Show the usage for available projects, in GBHours and cost. No effect when specifying a project id.",
 )
 @click.option(
     "--sort",
@@ -291,7 +291,7 @@ def put(
     help="Display users associated with a project(Requires a project id)",
 )
 @click.pass_obj
-def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
+def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users):
     """
     List your projects and project files.
 
@@ -307,11 +307,12 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
                 project=project,
                 show_usage=usage,
                 username=username,
+                non_interactive=click_ctx.get("NON_INTERACTIVE", False),
             ) as lister:
                 projects = lister.list_projects(sort_by=sort)
 
                 # If an interactive terminal, ask user if they want to view files for a project
-                if sys.stdout.isatty():
+                if sys.stdout.isatty() and not lister.non_interactive:
                     project_ids = [p["Project ID"] for p in projects]
                     LOG.info(
                         "Would you like to view files in a specific project? Leave blank to exit."
@@ -337,52 +338,53 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
                 project=project,
                 username=username,
                 tree=tree,
+                non_interactive=click_ctx.get("NON_INTERACTIVE", False),
             ) as lister:
                 if users:
                     user_list = lister.list_users()
-                    if not sys.stdout.isatty():
+                    if not sys.stdout.isatty() and not lister.non_interactive:
                         if user_list:
                             LOG.info("Project has the following users")
                             for user in user_list:
                                 LOG.info(user["User Name"], user["Primary email"])
+
+                if tree:
+                    lister.list_recursive(show_size=size)
                 else:
-                    if tree:
-                        lister.list_recursive(show_size=size)
-                    else:
-                        folders = lister.list_files(folder=folder, show_size=size)
+                    folders = lister.list_files(folder=folder, show_size=size)
 
-                        # If an interactive terminal, ask user if they want to view files for a proj
-                        if sys.stdout.isatty() and len(folders) > 0:
-                            LOG.info(
-                                "Would you like to view files within a directory? "
-                                "Leave blank to exit."
-                            )
-                            last_folder = None
-                            while folder is None or folder != last_folder:
-                                last_folder = folder
+                    # If an interactive terminal, ask user if they want to view files for a proj
+                    if sys.stdout.isatty() and (not lister.non_interactive) and len(folders) > 0:
+                        LOG.info(
+                            "Would you like to view files within a directory? "
+                            "Leave blank to exit."
+                        )
+                        last_folder = None
+                        while folder is None or folder != last_folder:
+                            last_folder = folder
 
-                                try:
-                                    folder = questionary.autocomplete(
-                                        "Folder:",
-                                        choices=folders,
-                                        validate=lambda x: x in folders or x == "",
-                                        style=dds_cli.dds_questionary_styles,
-                                    ).unsafe_ask()
-                                    assert folder != ""
-                                    assert folder is not None
-                                # If didn't enter anything, convert to None and exit
-                                except (KeyboardInterrupt, AssertionError):
-                                    break
+                            try:
+                                folder = questionary.autocomplete(
+                                    "Folder:",
+                                    choices=folders,
+                                    validate=lambda x: x in folders or x == "",
+                                    style=dds_cli.dds_questionary_styles,
+                                ).unsafe_ask()
+                                assert folder != ""
+                                assert folder is not None
+                            # If didn't enter anything, convert to None and exit
+                            except (KeyboardInterrupt, AssertionError):
+                                break
 
-                                # Prepend existing file path
-                                if last_folder is not None and folder is not None:
-                                    folder = os.path.join(last_folder, folder)
+                            # Prepend existing file path
+                            if last_folder is not None and folder is not None:
+                                folder = os.path.join(last_folder, folder)
 
-                                # List files
-                                folders = lister.list_files(folder=folder, show_size=size)
+                            # List files
+                            folders = lister.list_files(folder=folder, show_size=size)
 
-                                if len(folders) == 0:
-                                    break
+                            if len(folders) == 0:
+                                break
 
     except (dds_cli.exceptions.NoDataError) as err:
         LOG.warning(err)

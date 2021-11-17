@@ -131,7 +131,7 @@ class TokenFile:
         self.check_token_file_permissions()
 
         if self.token_expired():
-            LOG.debug(f"No token retrieved from file, will fetch new token from api")
+            LOG.debug("No token retrieved from file, will fetch new token from api")
             return None
 
         # Read token from file
@@ -140,7 +140,7 @@ class TokenFile:
             if not token:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
 
-        LOG.debug(f"Token retrieved from file.")
+        LOG.debug("Token retrieved from file.")
         return token
 
     def save_token(self, token):
@@ -187,7 +187,7 @@ class TokenFile:
         LOG.debug(f"Token file age: {age}")
         if age > dds_cli.TOKEN_MAX_AGE:
             LOG.debug(
-                f"Token file is too old so token has likely expired. Now deleting it and fetching new token."
+                "Token file is too old so token has likely expired. Now deleting it and fetching new token."
             )
             self.token_file.unlink()
             return True

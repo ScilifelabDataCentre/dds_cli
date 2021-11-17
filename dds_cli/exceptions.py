@@ -45,15 +45,6 @@ class AuthenticationError(click.ClickException):
         return f"{self.sign} {self.message} {self.sign}"
 
 
-class MissingCredentialsException(AuthenticationError):
-    """All user options not specified."""
-
-    def __init__(self, missing, message="Data Delivery System options are missing"):
-        """Reformat error message."""
-        self.message = f"{message}: [red]{missing}[/red]"
-        super().__init__(self.message)
-
-
 class TokenNotFoundError(AuthenticationError):
     """No token retrieved from REST API or from File."""
 

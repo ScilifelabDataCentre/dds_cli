@@ -81,13 +81,21 @@ class LocalFileHandler(fh.FileHandler):
 
     # Static methods ############## Static methods #
     @staticmethod
-    def generate_bucket_filepath(filename="", folder=pathlib.Path("")):
+    def generate_bucket_filepath(filename="", folder=pathlib.Path(""), project=""):
         """Generates filename and new path which the file will be
         called in the bucket."""
 
         # Generate new file name
-        new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
-        return str(folder / pathlib.Path(new_name))
+        new_name = (
+            project
+            + "/"
+            + str(folder / pathlib.Path(str(uuid.uuid5(uuid.NAMESPACE_X500, filename))))
+        )
+        # max length of S3 key is 1024 bytes in UTF-8
+        # because UTF-8 is a variable length encoding, some characters take up 4 bytes.
+        # Umlauts like ö or å will be encoded to 2 bytes each in Windows/Linux but to 3 bytes each on Mac,
+        # because Windows/Linux use Normal-Form-Composed (NFC) Unicode, MacOS uses Normal-Form-Decomposed (NFD) Unicode.
+        return new_name.encode("utf-8")[:1024].decode()
 
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
@@ -135,7 +143,7 @@ class LocalFileHandler(fh.FileHandler):
                         "path_processed": path_processed,
                         "size_processed": 0,
                         "path_remote": self.generate_bucket_filepath(
-                            filename=path_processed.name, folder=folder
+                            filename=path_processed.name, folder=folder, project=self.project
                         ),
                         "overwrite": False,
                         "checksum": "",

@@ -67,19 +67,30 @@ class User:
 
         # Authenticate user and save token
         if not self.token:
+            if not self.force_renew_token:
+                LOG.info(
+                    "No saved token found, or token has expired, proceeding with authentication"
+                )
+            else:
+                LOG.info("Attempting to renew the session token")
             self.token = self.__authenticate_user()
             token_file.save_token(self.token)
 
     def __authenticate_user(self):
         """Authenticates the username and password via a call to the API."""
 
-        LOG.info(f"Authenticating the user: {self.username} on the api")
+        if self.username is None:
+            raise exceptions.AuthenticationError(
+                message="Please supply username (--username) to be able to authenticate."
+            )
+
+        LOG.debug(f"Authenticating the user: {self.username} on the api")
 
         password = getpass.getpass(prompt="DDS Password: ")
-        # Username and password required for user authentication
-        if None in [self.username, password]:
-            raise exceptions.MissingCredentialsException(
-                missing="username" if not self.username else "password",
+
+        if password == "":
+            raise exceptions.AuthenticationError(
+                message="Non-empty password needed to be able to authenticate."
             )
 
         # Project passed in to add it to the token. Can be None.
@@ -106,7 +117,9 @@ class User:
         # Get token from response
         token = response_json.get("token")
         if not token:
-            raise exceptions.TokenNotFoundError(message="Missing token in authentication response.")
+            raise exceptions.AuthenticationError(
+                message="Missing token in authentication response."
+            )
 
         LOG.debug(f"User {self.username} granted access to the DDS")
 

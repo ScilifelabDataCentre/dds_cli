@@ -103,7 +103,7 @@ def dds_main(_, verbose, log_file):
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
     help="Your Data Delivery System username.",
 )
@@ -149,14 +149,14 @@ def add_user(_, username, email, role, project):
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
     help="Your Data Delivery System username",
 )
 @click.option(
     "--project",
     "-p",
-    required=False,
+    required=True,
     type=str,
     help="Project ID to which you're uploading data",
 )
@@ -250,7 +250,7 @@ def put(
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
-    "--username", "-u", required=True, type=str, help="Your Data Delivery System username."
+    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
 @click.option(
     "--usage",
@@ -387,9 +387,9 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
 
 @dds_main.command()
 @click.argument("proj_arg", required=False)
-@click.option("--project", "-p", required=False, type=str, help="Project ID.")
+@click.option("--project", "-p", required=True, type=str, help="Project ID.")
 @click.option(
-    "--username", "-u", required=True, type=str, help="Your Data Delivery System username."
+    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
 @click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
 @click.option(
@@ -461,16 +461,16 @@ def rm(_, proj_arg, project, username, rm_all, file, folder):
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
     help="Your Data Delivery System username.",
 )
 @click.option(
     "--project",
     "-p",
-    required=False,
+    required=True,
     type=str,
-    help="Project ID to which you're uploading data.",
+    help="Project ID from which you're downloading data.",
 )
 @click.option(
     "--get-all",
@@ -642,7 +642,7 @@ def get(
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
     help="Your Data Delivery System username.",
 )
@@ -748,9 +748,9 @@ def create(
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
-    help="Your Data Delivery System username.",
+    help="Your Data Delivery System username. Required unless the `--check` flag is used.",
 )
 @click.option(
     "--check",
@@ -761,7 +761,7 @@ def create(
 )
 @click.pass_obj
 def session(_, username, check):
-    """Renew the access token stored in the '.dds_cli_token'. Run this command before
+    """Renew the access token stored in the '.dds_cli_token' file. Run this command before
     running the cli in a non interactive fashion as this enables the longest possible session time
     before a password needs to be entered again.
     """

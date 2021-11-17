@@ -156,7 +156,7 @@ def add_user(_, username, email, role, project):
 @click.option(
     "--project",
     "-p",
-    required=False,
+    required=True,
     type=str,
     help="Project ID to which you're uploading data",
 )
@@ -387,7 +387,7 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
 
 @dds_main.command()
 @click.argument("proj_arg", required=False)
-@click.option("--project", "-p", required=False, type=str, help="Project ID.")
+@click.option("--project", "-p", required=True, type=str, help="Project ID.")
 @click.option(
     "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
 )
@@ -468,7 +468,7 @@ def rm(_, proj_arg, project, username, rm_all, file, folder):
 @click.option(
     "--project",
     "-p",
-    required=False,
+    required=True,
     type=str,
     help="Project ID to which you're uploading data.",
 )
@@ -748,9 +748,9 @@ def create(
 @click.option(
     "--username",
     "-u",
-    required=True,
+    required=False,
     type=str,
-    help="Your Data Delivery System username.",
+    help="Your Data Delivery System username. Required unless the `--check` flag is used.",
 )
 @click.option(
     "--check",
@@ -761,7 +761,7 @@ def create(
 )
 @click.pass_obj
 def session(_, username, check):
-    """Renew the access token stored in the '.dds_cli_token'. Run this command before
+    """Renew the access token stored in the '.dds_cli_token' file. Run this command before
     running the cli in a non interactive fashion as this enables the longest possible session time
     before a password needs to be entered again.
     """

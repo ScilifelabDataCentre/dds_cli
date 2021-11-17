@@ -60,7 +60,9 @@ dds_cli.utils.console.print(
     "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
 )
 @click.option("-l", "--log-file", help="Save a log to a file.", metavar="<filename>")
-@click.option("--non-interactive", help="Run without any interactive features.")
+@click.option(
+    "--non-interactive", is_flag=True, default=False, help="Run without any interactive features."
+)
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
 def dds_main(click_ctx, verbose, log_file, non_interactive):
@@ -221,7 +223,7 @@ def add_user(click_ctx, username, email, role, project):
 )
 @click.pass_obj
 def put(
-    _,
+    click_ctx,
     username,
     project,
     source,
@@ -242,6 +244,7 @@ def put(
             overwrite=overwrite,
             num_threads=num_threads,
             silent=silent,
+            non_interactive=click_ctx.get("NON_INTERACTIVE", False),
         )
     except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as err:
         LOG.error(err)

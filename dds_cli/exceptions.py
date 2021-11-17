@@ -51,7 +51,6 @@ class MissingCredentialsException(AuthenticationError):
     def __init__(self, missing, message="Data Delivery System options are missing"):
         """Reformat error message."""
         self.message = f"{message}: [red]{missing}[/red]"
-        LOG.error(self.message)
         super().__init__(self.message)
 
 
@@ -60,7 +59,6 @@ class TokenNotFoundError(AuthenticationError):
 
     def __init__(self, message, sign=":warning:"):
         """Reformat error message."""
-        LOG.error(message)
         super().__init__(message=message, sign=sign)
 
 

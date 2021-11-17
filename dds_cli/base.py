@@ -10,7 +10,6 @@ import os
 import pathlib
 
 # Installed
-import getpass
 import http
 import requests
 import rich
@@ -53,39 +52,45 @@ class DDSBaseClass:
         project=None,
         dds_directory: pathlib.Path = None,
         method: str = None,
+        authenticate: bool = True,
+        method_check: bool = True,
+        force_renew_token: bool = False,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
-        # Get attempted operation e.g. put/ls/rm/get
+        self.method_check = method_check
         self.method = method
-        if self.method not in DDS_METHODS:
-            raise exceptions.InvalidMethodError(attempted_method=self.method)
-        LOG.debug(f"Attempted operation: {self.method}")
+        if self.method_check:
+            # Get attempted operation e.g. put/ls/rm/get
+            if self.method not in DDS_METHODS:
+                raise exceptions.InvalidMethodError(attempted_method=self.method)
+            LOG.debug(f"Attempted operation: {self.method}")
 
-        # Use user defined destination if any specified
-        if self.method in DDS_DIR_REQUIRED_METHODS:
-            self.dds_directory = dds_cli.directory.DDSDirectory(
-                path=dds_directory
-                if dds_directory
-                else pathlib.Path.cwd()
-                / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
-            )
+            # Use user defined destination if any specified
+            if self.method in DDS_DIR_REQUIRED_METHODS:
+                self.dds_directory = dds_cli.directory.DDSDirectory(
+                    path=dds_directory
+                    if dds_directory
+                    else pathlib.Path.cwd()
+                    / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
+                )
 
-            self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
-                "dds_failed_delivery.txt"
-            )
+                self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
+                    "dds_failed_delivery.txt"
+                )
 
         # Keyboardinterrupt
         self.stop_doing = False
 
         # Verify that user entered enough info
-        username, password, self.project = self.__verify_input(
+        username, self.project = self.__verify_input(
             username=username,
             project=project,
         )
 
         # Authenticate the user and get the token
-        dds_user = user.User(username=username, password=password)
-        self.token = dds_user.token
+        if authenticate:
+            dds_user = user.User(username=username, force_renew_token=force_renew_token)
+            self.token = dds_user.token_dict
 
         LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list
@@ -107,6 +112,7 @@ class DDSBaseClass:
 
         # Exception is not handled
         if exc_type is not None:
+            LOG.debug(f"Exception: {exc_type} with value {exc_value}")
             return False
 
         return True
@@ -130,11 +136,9 @@ class DDSBaseClass:
         if not username:
             raise exceptions.MissingCredentialsException(missing="username")
 
-        password = getpass.getpass()
-
         LOG.debug("User input verified.")
 
-        return username, password, project
+        return username, project
 
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""

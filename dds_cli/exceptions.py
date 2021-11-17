@@ -56,7 +56,7 @@ class MissingCredentialsException(AuthenticationError):
 
 
 class TokenNotFoundError(AuthenticationError):
-    """No token retrieved from REST API."""
+    """No token retrieved from REST API or from File."""
 
     def __init__(self, message, sign=":warning:"):
         """Reformat error message."""

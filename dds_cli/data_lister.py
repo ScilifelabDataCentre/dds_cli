@@ -252,7 +252,6 @@ class DataLister(base.DDSBaseClass):
         # Get response
         try:
             resp_json = response.json()
-            print(resp_json)
         except simplejson.JSONDecodeError as err:
             raise exceptions.APIError(f"Could not decode JSON response: '{err}'")
 

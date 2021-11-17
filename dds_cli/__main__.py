@@ -28,8 +28,10 @@ import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
-import dds_cli.utils
 import dds_cli.project_creator
+import dds_cli.session
+import dds_cli.utils
+
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -62,7 +64,10 @@ stderr.print(
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
 def dds_main(_, verbose, log_file):
-    """Set up DDS main command."""
+    """The SciLifeLab Data Delivery System (DDS) command line interface
+
+    Access token is saved in a .dds_cli_token file in the home directory.
+    """
     if "--help" not in sys.argv:
 
         # Set the base logger to output DEBUG
@@ -727,6 +732,46 @@ def create(
                             "added to the project once the user has accepted "
                             "the invitation and created an account in the system."
                         )
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+###################################################################################
+# SESSION ############################################################### SESSION #
+###################################################################################
+@dds_main.command()
+@click.option(
+    "--username",
+    "-u",
+    required=True,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--check",
+    "-c",
+    required=False,
+    is_flag=True,
+    help="Instead of renewing the session, only check if the session is valid and report the token age.",
+)
+@click.pass_obj
+def session(_, username, check):
+    """Renew the access token stored in the '.dds_cli_token'. Run this command before
+    running the cli in a non interactive fashion as this enables the longest possible session time
+    before a password needs to be entered again.
+    """
+    try:
+        with dds_cli.session.Session(username=username, check=check) as session:
+            if check:
+                session.check()
+            else:
+                # Session renewed in the init method.
+                LOG.info("[green] :white_check_mark: Session renewed![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

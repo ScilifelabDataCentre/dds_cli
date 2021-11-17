@@ -470,7 +470,7 @@ def rm(_, proj_arg, project, username, rm_all, file, folder):
     "-p",
     required=True,
     type=str,
-    help="Project ID to which you're uploading data.",
+    help="Project ID from which you're downloading data.",
 )
 @click.option(
     "--get-all",

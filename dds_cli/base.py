@@ -55,10 +55,12 @@ class DDSBaseClass:
         authenticate: bool = True,
         method_check: bool = True,
         force_renew_token: bool = False,
+        non_interactive: bool = False,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.method_check = method_check
         self.method = method
+        self.non_interactive = non_interactive
         if self.method_check:
             # Get attempted operation e.g. put/ls/rm/get
             if self.method not in DDS_METHODS:
@@ -89,7 +91,11 @@ class DDSBaseClass:
 
         # Authenticate the user and get the token
         if authenticate:
-            dds_user = user.User(username=username, force_renew_token=force_renew_token)
+            dds_user = user.User(
+                username=username,
+                force_renew_token=force_renew_token,
+                non_interactive=non_interactive,
+            )
             self.token = dds_user.token_dict
 
         LOG.debug(f"Method: {self.method}, Project: {self.project}")

@@ -33,10 +33,10 @@ LOG = logging.getLogger(__name__)
 class AccountAdder(dds_cli.base.DDSBaseClass):
     """Admin class for adding users, etc."""
 
-    def __init__(self, username: str, method: str = "add"):
+    def __init__(self, username: str, method: str = "add", non_interactive: bool = False):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, method=method)
+        super().__init__(username=username, method=method, non_interactive=non_interactive)
 
         # Only method "add" can use the AccountAdder class
         if self.method != "add":

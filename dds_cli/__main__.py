@@ -44,8 +44,7 @@ LOG = logging.getLogger()
 ####################################################################################################
 
 # Print header to STDERR
-stderr = dds_cli.utils.console
-stderr.print(
+dds_cli.utils.console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
@@ -60,19 +59,16 @@ stderr.print(
 @click.option(
     "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
 )
-@click.option("-l", "--log-file", help="Save a verbose log to a file.", metavar="<filename>")
+@click.option("-l", "--log-file", help="Save a log to a file.", metavar="<filename>")
+@click.option("--non-interactive", help="Run without any interactive features.")
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
-def dds_main(_, verbose, log_file):
+def dds_main(click_ctx, verbose, log_file, non_interactive):
     """The SciLifeLab Data Delivery System (DDS) command line interface
 
     Access token is saved in a .dds_cli_token file in the home directory.
     """
     if "--help" not in sys.argv:
-
-        # Set the base logger to output DEBUG
-        LOG.setLevel(logging.DEBUG)
-
         # Set up logs to the console
         LOG.addHandler(
             rich.logging.RichHandler(
@@ -92,6 +88,9 @@ def dds_main(_, verbose, log_file):
                 logging.Formatter("[%(asctime)s] %(name)-20s [%(levelname)-7s]  %(message)s")
             )
             LOG.addHandler(log_fh)
+
+        # Create context object
+        click_ctx.obj = {"NON_INTERACTIVE": non_interactive}
 
 
 ####################################################################################################
@@ -128,16 +127,26 @@ def dds_main(_, verbose, log_file):
     help="Existing Project you want the user to be associated to.",
 )
 @click.pass_obj
-def add_user(_, username, email, role, project):
+def add_user(click_ctx, username, email, role, project):
     """Add user to DDS, sending an invitation email to that person."""
-    # All exceptions caught within
-    with dds_cli.account_adder.AccountAdder(username=username) as inviter:
-        inviter.add_user(email=email, role=role, project=project)
-        if project:
-            LOG.info(
-                "Any user shown as invited would need to be added to the project "
-                "once the user has accepted the invitation and created an account in the system."
-            )
+    try:
+        with dds_cli.account_adder.AccountAdder(
+            username=username, non_interactive=click_ctx.get("NON_INTERACTIVE", False)
+        ) as inviter:
+            inviter.add_user(email=email, role=role, project=project)
+            if project:
+                LOG.info(
+                    "Any user shown as invited would need to be added to the project "
+                    "once the user has accepted the invitation and created an account in the system."
+                )
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
 
 
 ####################################################################################################

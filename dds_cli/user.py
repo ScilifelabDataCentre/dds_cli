@@ -37,9 +37,12 @@ class User:
     when instantiating, an authentication token will be read from a file or
     renewed from the DDS API if the saved token is not found or has expired."""
 
-    def __init__(self, username: str, force_renew_token: bool = False):
+    def __init__(
+        self, username: str, force_renew_token: bool = False, non_interactive: bool = False
+    ):
         self.username = username
         self.force_renew_token = force_renew_token
+        self.non_interactive = non_interactive
         self.token = None
 
         # Fetch encrypted JWT token or authenticate against API
@@ -75,6 +78,13 @@ class User:
 
         LOG.info(f"Authenticating the user: {self.username} on the api")
 
+        if self.non_interactive:
+            raise exceptions.AuthenticationError(
+                message=(
+                    "Authentication not possible when running as non-interactive. "
+                    "Please run the `dds session` command and authenticate interactively."
+                )
+            )
         password = getpass.getpass(prompt="DDS Password: ")
         # Username and password required for user authentication
         if None in [self.username, password]:

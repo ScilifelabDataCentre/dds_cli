@@ -61,11 +61,11 @@ dds_cli.utils.stderr_console.print(
 )
 @click.option("-l", "--log-file", help="Save a log to a file.", metavar="<filename>")
 @click.option(
-    "--non-interactive", is_flag=True, default=False, help="Run without any interactive features."
+    "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
 )
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
-def dds_main(click_ctx, verbose, log_file, non_interactive):
+def dds_main(click_ctx, verbose, log_file, no_prompt):
     """The SciLifeLab Data Delivery System (DDS) command line interface
 
     Access token is saved in a .dds_cli_token file in the home directory.
@@ -95,7 +95,7 @@ def dds_main(click_ctx, verbose, log_file, non_interactive):
             LOG.addHandler(log_fh)
 
         # Create context object
-        click_ctx.obj = {"NON_INTERACTIVE": non_interactive}
+        click_ctx.obj = {"NO_PROMPT": no_prompt}
 
 
 ####################################################################################################
@@ -136,7 +136,7 @@ def add_user(click_ctx, username, email, role, project):
     """Add user to DDS, sending an invitation email to that person."""
     try:
         with dds_cli.account_adder.AccountAdder(
-            username=username, non_interactive=click_ctx.get("NON_INTERACTIVE", False)
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as inviter:
             inviter.add_user(email=email, role=role, project=project)
             if project:
@@ -247,7 +247,7 @@ def put(
             overwrite=overwrite,
             num_threads=num_threads,
             silent=silent,
-            non_interactive=click_ctx.get("NON_INTERACTIVE", False),
+            no_prompt=click_ctx.get("NO_PROMPT", False),
         )
     except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as err:
         LOG.error(err)
@@ -310,12 +310,12 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
                 project=project,
                 show_usage=usage,
                 username=username,
-                non_interactive=click_ctx.get("NON_INTERACTIVE", False),
+                no_prompt=click_ctx.get("NO_PROMPT", False),
             ) as lister:
                 projects = lister.list_projects(sort_by=sort)
 
                 # If an interactive terminal, ask user if they want to view files for a project
-                if sys.stdout.isatty() and not lister.non_interactive:
+                if sys.stdout.isatty() and not lister.no_prompt:
                     project_ids = [p["Project ID"] for p in projects]
                     LOG.info(
                         "Would you like to view files in a specific project? Leave blank to exit."
@@ -341,11 +341,11 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
                 project=project,
                 username=username,
                 tree=tree,
-                non_interactive=click_ctx.get("NON_INTERACTIVE", False),
+                no_prompt=click_ctx.get("NO_PROMPT", False),
             ) as lister:
                 if users:
                     user_list = lister.list_users()
-                    if not sys.stdout.isatty() and not lister.non_interactive:
+                    if not sys.stdout.isatty() and not lister.no_prompt:
                         if user_list:
                             LOG.info("Project has the following users")
                             for user in user_list:
@@ -357,7 +357,7 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
                     folders = lister.list_files(folder=folder, show_size=size)
 
                     # If an interactive terminal, ask user if they want to view files for a proj
-                    if sys.stdout.isatty() and (not lister.non_interactive) and len(folders) > 0:
+                    if sys.stdout.isatty() and (not lister.no_prompt) and len(folders) > 0:
                         LOG.info(
                             "Would you like to view files within a directory? "
                             "Leave blank to exit."
@@ -418,7 +418,7 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
 @click.pass_obj
 def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
     """Delete the files within a project."""
-    non_interactive = click_ctx.get("NON_INTERACTIVE", False)
+    no_prompt = click_ctx.get("NO_PROMPT", False)
 
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
@@ -442,7 +442,7 @@ def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
 
     # Warn if trying to remove all contents
     if rm_all:
-        if non_interactive:
+        if no_prompt:
             LOG.warning(f"Deleting all files within project '{project}'")
         else:
             if not rich.prompt.Confirm.ask(
@@ -455,7 +455,7 @@ def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
         with dds_cli.data_remover.DataRemover(
             project=project,
             username=username,
-            non_interactive=non_interactive,
+            no_prompt=no_prompt,
         ) as remover:
 
             if rm_all:

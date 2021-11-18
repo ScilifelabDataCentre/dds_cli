@@ -58,9 +58,12 @@ class DDSBaseClass:
         non_interactive: bool = False,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
+        self.username = username
+        self.project = project
         self.method_check = method_check
         self.method = method
         self.non_interactive = non_interactive
+
         if self.method_check:
             # Get attempted operation e.g. put/ls/rm/get
             if self.method not in DDS_METHODS:
@@ -82,12 +85,6 @@ class DDSBaseClass:
 
         # Keyboardinterrupt
         self.stop_doing = False
-
-        # Verify that user entered enough info
-        username, self.project = self.__verify_input(
-            username=username,
-            project=project,
-        )
 
         # Authenticate the user and get the token
         if authenticate:
@@ -124,28 +121,6 @@ class DDSBaseClass:
         return True
 
     # Private methods ############################### Private methods #
-    def __verify_input(
-        self,
-        username,
-        project=None,
-    ) -> tuple:
-        """Verify that the users input is valid and fully specified."""
-        LOG.debug("Verifying the user input...")
-
-        # Username and project info is minimum required info
-        if self.method in ["put", "get"] and not project:
-            dds_cli.utils.console.print(
-                "\n:warning-emoji: Data Delivery System project information is missing. :warning-emoji:\n"
-            )
-            os._exit(1)
-
-        if not username:
-            raise exceptions.MissingCredentialsException(missing="username")
-
-        LOG.debug("User input verified.")
-
-        return username, project
-
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""
         # Project public key required for both put and get

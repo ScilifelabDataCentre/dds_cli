@@ -44,7 +44,7 @@ LOG = logging.getLogger()
 ####################################################################################################
 
 # Print header to STDERR
-dds_cli.utils.console.print(
+dds_cli.utils.stderr_console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
@@ -71,11 +71,14 @@ def dds_main(click_ctx, verbose, log_file, non_interactive):
     Access token is saved in a .dds_cli_token file in the home directory.
     """
     if "--help" not in sys.argv:
+        # Set the base logger to output DEBUG
+        LOG.setLevel(logging.DEBUG)
+
         # Set up logs to the console
         LOG.addHandler(
             rich.logging.RichHandler(
                 level=logging.DEBUG if verbose else logging.INFO,
-                console=dds_cli.utils.console,
+                console=dds_cli.utils.stderr_console,
                 show_time=False,
                 markup=True,
                 show_path=verbose,

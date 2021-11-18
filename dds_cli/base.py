@@ -135,7 +135,7 @@ class DDSBaseClass:
         # Username and project info is minimum required info
         if self.method in ["put", "get"] and not project:
             dds_cli.utils.console.print(
-                "\n:warning: Data Delivery System project information is missing. :warning:\n"
+                "\n:warning-emoji: Data Delivery System project information is missing. :warning-emoji:\n"
             )
             os._exit(1)
 
@@ -291,7 +291,7 @@ class DDSBaseClass:
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
-                dds_cli.utils.console.print(f"\n:warning: {conn.message} :warning:\n")
+                dds_cli.utils.console.print(f"\n:warning-emoji: {conn.message} :warning-emoji:\n")
                 os._exit(1)
 
             bucket_exists = conn.check_bucket_exists()

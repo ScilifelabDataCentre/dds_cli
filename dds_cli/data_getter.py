@@ -95,8 +95,8 @@ class DataGetter(base.DDSBaseClass):
 
             if self.filehandler.failed and self.break_on_fail:
                 dds_cli.utils.console.print(
-                    "\n:warning: Some specified files were not found in the system "
-                    "and '--break-on-fail' flag used. :warning:\n\n"
+                    "\n:warning-emoji: Some specified files were not found in the system "
+                    "and '--break-on-fail' flag used. :warning-emoji:\n\n"
                     f"Files not found: {self.filehandler.failed}\n"
                 )
                 os._exit(1)

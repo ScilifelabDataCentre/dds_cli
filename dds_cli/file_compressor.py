@@ -18,8 +18,6 @@ import zstandard as zstd
 
 # Own modules
 from dds_cli import FileSegment
-from dds_cli import exceptions
-import dds_cli
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

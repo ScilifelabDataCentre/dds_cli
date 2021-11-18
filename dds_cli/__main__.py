@@ -413,8 +413,10 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
     "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
 )
 @click.pass_obj
-def rm(_, proj_arg, project, username, rm_all, file, folder):
+def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
     """Delete the files within a project."""
+    non_interactive = click_ctx.get("NON_INTERACTIVE", False)
+
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
         LOG.error("No project specified, cannot remove anything.")
@@ -437,16 +439,20 @@ def rm(_, proj_arg, project, username, rm_all, file, folder):
 
     # Warn if trying to remove all contents
     if rm_all:
-        if not rich.prompt.Confirm.ask(
-            f"Are you sure you want to delete all files within project '{project}'?"
-        ):
-            LOG.info("Probably for the best. Exiting.")
-            sys.exit(0)
+        if non_interactive:
+            LOG.warning(f"Deleting all files within project '{project}'")
+        else:
+            if not rich.prompt.Confirm.ask(
+                f"Are you sure you want to delete all files within project '{project}'?"
+            ):
+                LOG.info("Probably for the best. Exiting.")
+                sys.exit(0)
 
     try:
         with dds_cli.data_remover.DataRemover(
             project=project,
             username=username,
+            non_interactive=non_interactive,
         ) as remover:
 
             if rm_all:

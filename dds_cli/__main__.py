@@ -560,7 +560,7 @@ def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
 )
 @click.pass_obj
 def get(
-    _,
+    click_ctx,
     username,
     project,
     get_all,
@@ -577,7 +577,7 @@ def get(
         LOG.error(
             "Flag '--get-all' cannot be used together with options '--source'/'--source-path-fail'."
         )
-        os._exit(1)
+        sys.exit(1)
 
     # Begin delivery
     with dds_cli.data_getter.DataGetter(
@@ -590,6 +590,7 @@ def get(
         destination=destination,
         silent=silent,
         verify_checksum=verify_checksum,
+        no_prompt=click_ctx.get("NO_PROMPT", False),
     ) as getter:
 
         with rich.progress.Progress(

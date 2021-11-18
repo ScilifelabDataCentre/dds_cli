@@ -234,11 +234,7 @@ def put(
             num_threads=num_threads,
             silent=silent,
         )
-    except (
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.UploadError,
-        dds_cli.exceptions.S3KeyLengthExceeded,
-    ) as err:
+    except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as err:
         LOG.error(err)
         sys.exit(1)
 

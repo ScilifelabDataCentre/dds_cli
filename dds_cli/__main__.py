@@ -711,7 +711,7 @@ def get(
 )
 @click.pass_obj
 def create(
-    _,
+    click_ctx,
     username,
     title,
     description,
@@ -722,7 +722,9 @@ def create(
 ):
     """Create a project."""
     try:
-        with dds_cli.project_creator.ProjectCreator(username=username) as creator:
+        with dds_cli.project_creator.ProjectCreator(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as creator:
             emails_roles = []
             if owner or researcher:
                 email_overlap = set(owner) & set(researcher)
@@ -784,11 +786,14 @@ def create(
     help="Instead of renewing the session, only check if the session is valid and report the token age.",
 )
 @click.pass_obj
-def session(_, username, check):
+def session(click_ctx, username, check):
     """Renew the access token stored in the '.dds_cli_token' file. Run this command before
     running the cli in a non interactive fashion as this enables the longest possible session time
     before a password needs to be entered again.
     """
+    no_prompt = click_ctx.get("NO_PROMPT", False)
+    if no_prompt and not check:
+        LOG.warning("The --no-prompt flag is ignored for `dds session`")
     try:
         with dds_cli.session.Session(username=username, check=check) as session:
             if check:

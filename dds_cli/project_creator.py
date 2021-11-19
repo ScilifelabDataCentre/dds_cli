@@ -29,10 +29,11 @@ class ProjectCreator(base.DDSBaseClass):
         self,
         username: str,
         method: str = "create",
+        no_prompt: bool = False,
     ):
         """Handle actions regarding project creation in the cli."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, method=method)
+        super().__init__(username=username, method=method, no_prompt=no_prompt)
 
         # Only method "create" can use the ProjectCreator class
         if self.method != "create":

@@ -86,8 +86,16 @@ class LocalFileHandler(fh.FileHandler):
         called in the bucket."""
 
         # Generate new file name
-        new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
-        return str(folder / pathlib.Path(new_name))
+        new_name = str(folder / pathlib.Path(str(uuid.uuid5(uuid.NAMESPACE_X500, filename))))
+
+        # maximum allowed length of S3 object key is 1024 bytes in UTF-8
+        if len(new_name.encode("utf-8")) > 1024:
+            # because UTF-8 is a variable length encoding, some characters may take up 4 bytes.
+            # Also mind that umlauts like ö or å will be encoded to 2 bytes each in Windows/Linux but to 3 bytes each on Mac,
+            # because Windows/Linux use Normal-Form-Composed (NFC) Unicode, MacOS uses Normal-Form-Decomposed (NFD) Unicode.
+            raise exceptions.S3KeyLengthExceeded(str(folder / pathlib.Path(filename)))
+        else:
+            return new_name
 
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
@@ -121,25 +129,25 @@ class LocalFileHandler(fh.FileHandler):
                         LOG.exception(error)
                         os._exit(1)
 
-                    path_processed = self.create_encrypted_name(
-                        raw_file=path,
-                        subpath=folder,
-                        no_compression=is_compressed,
-                    )
+                path_processed = self.create_encrypted_name(
+                    raw_file=path,
+                    subpath=folder,
+                    no_compression=is_compressed,
+                )
 
-                    file_info[str(folder / path.name)] = {
-                        "path_raw": path,
-                        "subpath": folder,
-                        "size_raw": path.stat().st_size,
-                        "compressed": is_compressed,
-                        "path_processed": path_processed,
-                        "size_processed": 0,
-                        "path_remote": self.generate_bucket_filepath(
-                            filename=path_processed.name, folder=folder
-                        ),
-                        "overwrite": False,
-                        "checksum": "",
-                    }
+                file_info[str(folder / path.name)] = {
+                    "path_raw": path,
+                    "subpath": folder,
+                    "size_raw": path.stat().st_size,
+                    "compressed": is_compressed,
+                    "path_processed": path_processed,
+                    "size_processed": 0,
+                    "path_remote": self.generate_bucket_filepath(
+                        filename=path_processed.name, folder=folder
+                    ),
+                    "overwrite": False,
+                    "checksum": "",
+                }
 
             elif path.is_dir():
                 content_info, _ = self.__collect_file_info_local(

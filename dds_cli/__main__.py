@@ -14,7 +14,6 @@ import sys
 # Installed
 import click
 import click_pathlib
-from pkg_resources import parse_requirements
 import rich
 import rich.logging
 import rich.progress

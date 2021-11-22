@@ -809,7 +809,22 @@ def login(click_ctx, username):
 
 
 @auth.command()
+def logout():
+    """Remove the saved authentication token by deleting the '.dds_cli_token' file."""
+    try:
+        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+            authenticator.logout()
+    except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@auth.command()
 def info():
     """Print info on saved authentication token validity and age."""
-    with dds_cli.auth.Auth(username=None, check=True) as authenticator:
-        authenticator.check()
+    try:
+        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+            authenticator.check()
+    except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)

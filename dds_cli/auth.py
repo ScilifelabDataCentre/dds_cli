@@ -1,9 +1,5 @@
-"""Data Delivery System Session Manager."""
+"""Data Delivery System saved authentication token manager."""
 import logging
-
-# Installed
-import requests
-import simplejson
 
 # Own modules
 from dds_cli import base
@@ -21,8 +17,8 @@ LOG = logging.getLogger(__name__)
 ###############################################################################
 
 
-class Session(base.DDSBaseClass):
-    """Session manager class."""
+class Auth(base.DDSBaseClass):
+    """Authentication manager class."""
 
     def __init__(
         self,

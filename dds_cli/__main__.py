@@ -14,6 +14,7 @@ import sys
 # Installed
 import click
 import click_pathlib
+from pkg_resources import parse_requirements
 import rich
 import rich.logging
 import rich.progress
@@ -29,7 +30,7 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.project_creator
-import dds_cli.session
+import dds_cli.auth
 import dds_cli.utils
 
 
@@ -768,9 +769,16 @@ def create(
 
 
 ###################################################################################
-# SESSION ############################################################### SESSION #
+# AUTH ##################################################################### AUTH #
 ###################################################################################
-@dds_main.command()
+@dds_main.group()
+@click.pass_obj
+def auth(click_ctx):
+    """Manage the saved authentication token."""
+    pass
+
+
+@auth.command()
 @click.option(
     "--username",
     "-u",
@@ -778,29 +786,19 @@ def create(
     type=str,
     help="Your Data Delivery System username. Required unless the `--check` flag is used.",
 )
-@click.option(
-    "--check",
-    "-c",
-    required=False,
-    is_flag=True,
-    help="Instead of renewing the session, only check if the session is valid and report the token age.",
-)
 @click.pass_obj
-def session(click_ctx, username, check):
-    """Renew the access token stored in the '.dds_cli_token' file. Run this command before
+def login(click_ctx, username):
+    """Renew the authentication token stored in the '.dds_cli_token' file. Run this command before
     running the cli in a non interactive fashion as this enables the longest possible session time
     before a password needs to be entered again.
     """
     no_prompt = click_ctx.get("NO_PROMPT", False)
-    if no_prompt and not check:
-        LOG.warning("The --no-prompt flag is ignored for `dds session`")
+    if no_prompt:
+        LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.session.Session(username=username, check=check) as session:
-            if check:
-                session.check()
-            else:
-                # Session renewed in the init method.
-                LOG.info("[green] :white_check_mark: Session renewed![/green]")
+        with dds_cli.auth.Auth(username=username) as authenticator:
+            # Authentication token renewed in the init method.
+            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -808,3 +806,10 @@ def session(click_ctx, username, check):
     ) as err:
         LOG.error(err)
         sys.exit(1)
+
+
+@auth.command()
+def info():
+    """Print info on saved authentication token validity and age."""
+    with dds_cli.auth.Auth(username=None, check=True) as authenticator:
+        authenticator.check()

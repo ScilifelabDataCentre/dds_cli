@@ -120,35 +120,6 @@ def update_status(func):
     return wrapped
 
 
-def connect_cloud(func):
-    """Connect to S3"""
-
-    @functools.wraps(func)
-    def init_resource(self, *args, **kwargs):
-
-        # Connect to service
-        try:
-            session = boto3.session.Session()
-
-            self.resource = session.resource(
-                service_name="s3",
-                endpoint_url=self.url,
-                aws_access_key_id=self.keys["access_key"],
-                aws_secret_access_key=self.keys["secret_key"],
-            )
-        except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
-            self.url, self.keys, self.message = (
-                None,
-                None,
-                f"S3 connection failed: {err}",
-            )
-        else:
-            LOG.debug("Connection to S3 established.")
-            return func(self, *args, **kwargs)
-
-    return init_resource
-
-
 def subpath_required(func):
     """Make sure that the subpath to the temporary file directory exist."""
 

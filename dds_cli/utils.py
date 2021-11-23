@@ -11,7 +11,7 @@ def get_json_response(response):
     try:
         json_response = response.json()
     except simplejson.JSONDecodeError as err:
-        raise SystemExit from err
+        raise SystemExit from err  # TODO: Change?
 
     return json_response
 

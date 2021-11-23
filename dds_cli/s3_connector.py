@@ -1,4 +1,4 @@
-"""S3 Connector module"""
+"""S3 Connector module."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -6,21 +6,18 @@
 
 # Standard library
 import dataclasses
+import gc
 import logging
 import os
-import requests
 import traceback
-import sys
-import gc
+import requests
 
 # Installed
 import boto3
 import botocore
-import simplejson
 
 # Own modules
 from dds_cli import DDSEndpoint
-from dds_cli.cli_decorators import connect_cloud
 from dds_cli import utils
 
 ###############################################################################
@@ -126,57 +123,3 @@ class S3Connector:
             raise SystemExit("Missing safespring information in response.")  # TODO: change
 
         return safespring_project, keys, url, bucket
-
-    # Public methods ############ Public methods #
-    def check_bucket_exists(self):
-        """Check if the bucket exists."""
-        LOG.debug(f"Bucket name: {self.bucketname}")
-        try:
-            self.resource.meta.client.head_bucket(Bucket=self.bucketname)
-        except botocore.client.ClientError:
-            LOG.info(f"Bucket '{self.bucketname}' does not exist!")
-            return False
-
-        return True
-
-    def check_bucketname(self):
-        """Check that the bucketname restrictions are met."""
-        bnlen = len(self.bucketname)
-        if not 3 <= bnlen <= 63:
-            # Add custom exception
-            LOG.error(
-                f"Invalid bucket name length. Must be between 3 and 63 characters, found {bnlen}"
-            )
-            os._exit(0)
-
-        if "_" in self.bucketname:
-            # Add custom exception
-            LOG.error(f"Invalid bucket name characters. Cannot contain underscores.")
-            os._exit(0)
-
-        bucketnamefirst = list(self.bucketname)[0]
-        if not (bucketnamefirst.islower() or bucketnamefirst.isdigit()):
-            # Add custom exception
-            LOG.error(
-                f"Invalid first character. Must be digit or lowercase letter, found '{bucketnamefirst}'",
-            )
-            os._exit(0)
-
-    def create_bucket(self):
-        """Creates the bucket"""
-
-        self.check_bucketname()
-
-        LOG.info(f"Creating bucket '{self.bucketname}'...")
-        try:
-            self.resource.meta.client.create_bucket(Bucket=self.bucketname, ACL="private")
-        except botocore.client.ClientError as err2:
-            LOG.critical(f"Could not create bucket {self.bucketname}! {err2}")
-
-        bucket_exists = self.check_bucket_exists()
-        if not bucket_exists:
-            print(f"Bucket '{self.bucketname}' does not exist. Failed second attempt.")
-            os._exit(0)
-        LOG.info(f"Bucket '{self.bucketname}' created!")
-
-        return True

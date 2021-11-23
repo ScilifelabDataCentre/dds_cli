@@ -2,46 +2,20 @@
 import unittest.mock
 
 # Installed
-import click.testing
 import pytest
 import requests
 
-
 # Own modules
 import dds_cli
-from dds_cli.__main__ import dds_main
-from dds_cli.user import User
 
 ADD_JSON = {"email": "test.testsson@example.com", "role": "Researcher"}
 ADD_JSON_PROJECT = {**{"project": "test_project"}, **ADD_JSON}
 
 
 @pytest.fixture
-def retrieve_token():
-    """A fixture to mock authentication by having a None token for every user"""
-    with unittest.mock.patch.object(User, "_User__retrieve_token") as mock_A:
-        mock_A.return_value = None
-        yield mock_A
-
-
-@pytest.fixture
-def runner(retrieve_token):
-    """A fixture that returns the click cli runner. The runner is invoked
-    when the function returned by this fixture is called."""
-    runner = click.testing.CliRunner(mix_stderr=False)
-
-    def _run(cmd):
-        return runner.invoke(
-            dds_main,
-            cmd,
-            catch_exceptions=False,
-        )
-
-    yield _run
-
-
-@pytest.fixture
 def runner_with_project(runner):
+    """Run dds add-user with a project specified."""
+
     def _run():
         return runner(
             [
@@ -62,6 +36,8 @@ def runner_with_project(runner):
 
 @pytest.fixture
 def runner_no_project(runner):
+    """Run dds add-user without a project specified."""
+
     def _run():
         return runner(
             ["add-user", "-u", "unituser", "-e", ADD_JSON["email"], "-r", ADD_JSON["role"]]

@@ -795,7 +795,7 @@ def login(click_ctx, username):
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.auth.Auth(username=username) as authenticator:
+        with dds_cli.auth.Auth(username=username):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
     except (

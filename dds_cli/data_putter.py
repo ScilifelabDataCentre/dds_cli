@@ -326,9 +326,9 @@ class DataPutter(base.DDSBaseClass):
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
 
-        with self.s3connector as conn:
-            # Upload file
-            try:
+        try:
+            with self.s3connector as conn:
+                # Upload file
                 conn.resource.meta.client.upload_file(
                     Filename=file_local,
                     Bucket=conn.bucketname,
@@ -344,16 +344,17 @@ class DataPutter(base.DDSBaseClass):
                     if task is not None
                     else None,
                 )
-            except (
-                botocore.client.ClientError,
-                boto3.exceptions.Boto3Error,
-                FileNotFoundError,
-                TypeError,
-            ) as err:
-                error = f"S3 upload of file '{file}' failed: {err}"
-                LOG.exception(f"{file}: {err}")
-            else:
-                uploaded = True
+        except (
+            botocore.client.ClientError,
+            boto3.exceptions.Boto3Error,
+            botocore.exceptions.BotoCoreError,
+            FileNotFoundError,
+            TypeError,
+        ) as err:
+            error = f"S3 upload of file '{file}' failed: {err}"
+            LOG.exception(f"{file}: {err}")
+        else:
+            uploaded = True
 
         return uploaded, error
 

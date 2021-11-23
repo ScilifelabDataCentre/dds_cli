@@ -186,9 +186,9 @@ class DataGetter(base.DDSBaseClass):
         file_local = str(self.filehandler.data[file]["path_downloaded"])
         file_remote = self.filehandler.data[file]["name_in_bucket"]
 
-        with self.s3connector as conn:
-            # Upload file
-            try:
+        try:
+            with self.s3connector as conn:
+                # Upload file
                 conn.resource.meta.client.download_file(
                     Filename=file_local,
                     Bucket=conn.bucketname,
@@ -197,14 +197,15 @@ class DataGetter(base.DDSBaseClass):
                     if not self.silent
                     else None,
                 )
-            except (
-                botocore.client.ClientError,
-                boto3.exceptions.Boto3Error,
-            ) as err:
-                error = f"S3 download of file '{file}' failed: {err}"
-                LOG.exception(f"{file}: {err}")
-            else:
-                downloaded = True
+        except (
+            botocore.client.ClientError,
+            boto3.exceptions.Boto3Error,
+            botocore.exceptions.BotoCoreError,
+        ) as err:
+            error = f"S3 download of file '{file}' failed: {err}"
+            LOG.exception(f"{file}: {err}")
+        else:
+            downloaded = True
 
         return downloaded, error
 

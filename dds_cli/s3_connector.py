@@ -11,6 +11,7 @@ import os
 import requests
 import traceback
 import sys
+import gc
 
 # Installed
 import boto3
@@ -62,6 +63,8 @@ class S3Connector:
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
+        del self.resource
+        gc.collect()
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through
@@ -80,16 +83,15 @@ class S3Connector:
                 aws_secret_access_key=self.keys["secret_key"],
             )
         except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
-            self.url, self.keys, self.message = (
-                None,
-                None,
-                f"S3 connection failed: {err}",
-            )
+            LOG.warning(f"S3 connection failed: {err}")
+            raise
+
         LOG.info(f"Resource :{self.resource}")
         return resource
 
     # Static methods ############ Static methods #
-    def __get_s3_info(self, project_id, token):
+    @staticmethod
+    def __get_s3_info(project_id, token):
         """Get information required to connect to cloud."""
         # Perform request to API
         try:

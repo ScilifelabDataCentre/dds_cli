@@ -267,21 +267,3 @@ class DDSBaseClass:
             if sort
             else self.filehandler.failed
         )
-
-    # Public methods ################################# Public methods #
-    # def verify_bucket_exist(self):
-    #     """Check that s3 connection works, and that bucket exists."""
-    #     LOG.debug("Verifying and/or creating bucket.")
-
-    #     with self.s3connector as conn:
-    #         LOG.info(conn)
-    #         sys.exit(1)
-    #         bucket_exists = conn.check_bucket_exists()
-    #         LOG.debug(f"Bucket exists: {bucket_exists}")
-    #         if not bucket_exists:
-    #             LOG.debug("Attempting to create bucket...")
-    #             _ = conn.create_bucket()
-
-    #     LOG.debug("Bucket verified.")
-
-    #     return True

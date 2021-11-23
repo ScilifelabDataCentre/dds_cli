@@ -8,6 +8,7 @@
 import logging
 import os
 import pathlib
+import sys
 
 # Installed
 import http
@@ -30,6 +31,7 @@ from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
 from dds_cli import user
 from dds_cli import exceptions
+from dds_cli import utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -99,6 +101,10 @@ class DDSBaseClass:
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in DDS_KEYS_REQUIRED_METHODS:
+            if self.method == "put":
+                self.s3connector = self.__get_safespring_keys()
+                LOG.info(self.s3connector)
+
             self.keys = self.__get_project_keys()
 
             self.status = dict()
@@ -121,6 +127,10 @@ class DDSBaseClass:
         return True
 
     # Private methods ############################### Private methods #
+    def __get_safespring_keys(self):
+        """Get safespring keys."""
+        return s3.S3Connector(project_id=self.project, token=self.token)
+
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""
         # Project public key required for both put and get
@@ -259,22 +269,19 @@ class DDSBaseClass:
         )
 
     # Public methods ################################# Public methods #
-    def verify_bucket_exist(self):
-        """Check that s3 connection works, and that bucket exists."""
-        LOG.debug("Verifying and/or creating bucket.")
+    # def verify_bucket_exist(self):
+    #     """Check that s3 connection works, and that bucket exists."""
+    #     LOG.debug("Verifying and/or creating bucket.")
 
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
+    #     with self.s3connector as conn:
+    #         LOG.info(conn)
+    #         sys.exit(1)
+    #         bucket_exists = conn.check_bucket_exists()
+    #         LOG.debug(f"Bucket exists: {bucket_exists}")
+    #         if not bucket_exists:
+    #             LOG.debug("Attempting to create bucket...")
+    #             _ = conn.create_bucket()
 
-            if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
-                dds_cli.utils.console.print(f"\n:warning-emoji: {conn.message} :warning-emoji:\n")
-                os._exit(1)
+    #     LOG.debug("Bucket verified.")
 
-            bucket_exists = conn.check_bucket_exists()
-            LOG.debug(f"Bucket exists: {bucket_exists}")
-            if not bucket_exists:
-                LOG.debug("Attempting to create bucket...")
-                _ = conn.create_bucket()
-
-        LOG.debug("Bucket verified.")
-
-        return True
+    #     return True

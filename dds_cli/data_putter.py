@@ -213,7 +213,7 @@ class DataPutter(base.DDSBaseClass):
             )
 
             # Verify that the Safespring S3 bucket exists
-            self.verify_bucket_exist()
+            # self.verify_bucket_exist()
 
             # Check which, if any, files exist in the db
             files_in_db = self.filehandler.check_previous_upload(token=self.token)

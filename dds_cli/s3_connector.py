@@ -10,14 +10,17 @@ import logging
 import os
 import requests
 import traceback
+import sys
 
 # Installed
+import boto3
 import botocore
 import simplejson
 
 # Own modules
 from dds_cli import DDSEndpoint
 from dds_cli.cli_decorators import connect_cloud
+from dds_cli import utils
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -49,11 +52,12 @@ class S3Connector:
             self.keys,
             self.url,
             self.bucketname,
-            self.message,
         ) = self.get_s3_info(project_id=project_id, token=token)
 
-    @connect_cloud
+    # @connect_cloud
     def __enter__(self):
+        self.resource = self.connect()
+
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
@@ -63,16 +67,30 @@ class S3Connector:
 
         return True
 
+    def connect(self):
+        # Connect to service
+        try:
+            session = boto3.session.Session()
+
+            resource = session.resource(
+                service_name="s3",
+                endpoint_url=self.url,
+                aws_access_key_id=self.keys["access_key"],
+                aws_secret_access_key=self.keys["secret_key"],
+            )
+        except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
+            self.url, self.keys, self.message = (
+                None,
+                None,
+                f"S3 connection failed: {err}",
+            )
+        LOG.info(f"Resource :{self.resource}")
+        return resource
+
     # Static methods ############ Static methods #
     @staticmethod
     def get_s3_info(project_id, token):
         """Get information required to connect to cloud."""
-
-        sfsp_proj, keys, url, bucket, error = (None, None, None, None, "")
-
-        if None in [project_id, token]:
-            raise Exception("Project information missing, cannot connect to cloud.")
-
         # Perform request to API
         try:
             response = requests.get(
@@ -86,27 +104,24 @@ class S3Connector:
             raise SystemExit from err
 
         # Error
-        assert (
-            response.ok
-        ), f"Failed retrieving Safespring project name. Server response: {response.text}"
+        if not response.ok:
+            message = f"Failed retrieving Safespring project name. Server response: {response.text}"
+            LOG.warning(message)
+            raise SystemExit(message)  # TODO: Change
 
         # Get s3 info
-        try:
-            s3info = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
+        s3info = utils.get_json_response(response=response)
 
-        if any(value is None for value in s3info.values()):
-            error = "Response ok but s3 info missing."
-        else:
-            sfsp_proj, keys, url, bucket = (
-                s3info["safespring_project"],
-                s3info["keys"],
-                s3info["url"],
-                s3info["bucket"],
-            )
+        safespring_project, keys, url, bucket = (
+            s3info.get("safespring_project"),
+            s3info.get("keys"),
+            s3info.get("url"),
+            s3info.get("bucket"),
+        )
+        if None in [safespring_project, keys, url, bucket]:
+            raise SystemExit("Missing safespring information in response.")  # TODO: change
 
-        return sfsp_proj, keys, url, bucket, error
+        return safespring_project, keys, url, bucket
 
     # Public methods ############ Public methods #
     def check_bucket_exists(self):

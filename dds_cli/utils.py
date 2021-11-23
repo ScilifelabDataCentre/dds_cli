@@ -1,8 +1,19 @@
 import rich.console
 import numbers
+import simplejson
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
+
+
+def get_json_response(response):
+    """Get json output from requests response."""
+    try:
+        json_response = response.json()
+    except simplejson.JSONDecodeError as err:
+        raise SystemExit from err
+
+    return json_response
 
 
 def calculate_magnitude(projects, keys, iec_standard=False):

@@ -46,16 +46,17 @@ class S3Connector:
     resource = None
 
     def __post_init__(self, project_id, token):
-
+        LOG.info("starting.....")
         (
             self.safespring_project,
             self.keys,
             self.url,
             self.bucketname,
-        ) = self.get_s3_info(project_id=project_id, token=token)
+        ) = self.__get_s3_info(project_id=project_id, token=token)
 
     # @connect_cloud
     def __enter__(self):
+        LOG.info("entering...")
         self.resource = self.connect()
 
         return self
@@ -88,8 +89,7 @@ class S3Connector:
         return resource
 
     # Static methods ############ Static methods #
-    @staticmethod
-    def get_s3_info(project_id, token):
+    def __get_s3_info(self, project_id, token):
         """Get information required to connect to cloud."""
         # Perform request to API
         try:

@@ -9,6 +9,7 @@ import concurrent.futures
 import itertools
 import logging
 import pathlib
+import sys
 
 # Installed
 import boto3
@@ -325,44 +326,34 @@ class DataPutter(base.DDSBaseClass):
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
 
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            # Check that connection ok and upload file
-            if None in [
-                conn.safespring_project,
-                conn.url,
-                conn.keys,
-                conn.bucketname,
-            ]:
-                error = "No s3 info returned! " + conn.message
-            else:
-                # Upload file
-                try:
-                    conn.resource.meta.client.upload_file(
-                        Filename=file_local,
-                        Bucket=conn.bucketname,
-                        Key=file_remote,
-                        ExtraArgs={
-                            "ACL": "private",  # Access control list
-                            "CacheControl": "no-store",  # Don't store cache
-                        },
-                        Callback=status.ProgressPercentage(
-                            progress=progress,
-                            task=task,
-                        )
-                        if task is not None
-                        else None,
+        with self.s3connector as conn:
+            # Upload file
+            try:
+                conn.resource.meta.client.upload_file(
+                    Filename=file_local,
+                    Bucket=conn.bucketname,
+                    Key=file_remote,
+                    ExtraArgs={
+                        "ACL": "private",  # Access control list
+                        "CacheControl": "no-store",  # Don't store cache
+                    },
+                    Callback=status.ProgressPercentage(
+                        progress=progress,
+                        task=task,
                     )
-                except (
-                    botocore.client.ClientError,
-                    boto3.exceptions.Boto3Error,
-                    FileNotFoundError,
-                    TypeError,
-                ) as err:
-                    error = f"S3 upload of file '{file}' failed: {err}"
-                    LOG.exception(f"{file}: {err}")
-                else:
-                    uploaded = True
+                    if task is not None
+                    else None,
+                )
+            except (
+                botocore.client.ClientError,
+                boto3.exceptions.Boto3Error,
+                FileNotFoundError,
+                TypeError,
+            ) as err:
+                error = f"S3 upload of file '{file}' failed: {err}"
+                LOG.exception(f"{file}: {err}")
+            else:
+                uploaded = True
 
         return uploaded, error
 

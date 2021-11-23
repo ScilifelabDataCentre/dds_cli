@@ -15,6 +15,7 @@ import stat
 
 # Installed
 import getpass
+import rich
 
 # Own modules
 import dds_cli
@@ -37,9 +38,10 @@ class User:
     when instantiating, an authentication token will be read from a file or
     renewed from the DDS API if the saved token is not found or has expired."""
 
-    def __init__(self, username: str, force_renew_token: bool = False):
+    def __init__(self, username: str, force_renew_token: bool = False, no_prompt: bool = False):
         self.username = username
         self.force_renew_token = force_renew_token
+        self.no_prompt = no_prompt
         self.token = None
 
         # Fetch encrypted JWT token or authenticate against API
@@ -79,12 +81,17 @@ class User:
     def __authenticate_user(self):
         """Authenticates the username and password via a call to the API."""
 
-        if self.username is None:
-            raise exceptions.AuthenticationError(
-                message="Please supply username (--username) to be able to authenticate."
-            )
-
         LOG.debug(f"Authenticating the user: {self.username} on the api")
+
+        if self.no_prompt:
+            raise exceptions.AuthenticationError(
+                message=(
+                    "Authentication not possible when running with --no-prompt. "
+                    "Please run the `dds auth login` command and authenticate interactively."
+                )
+            )
+        if self.username is None:
+            self.username = rich.prompt.Prompt.ask("DDS username")
 
         password = getpass.getpass(prompt="DDS Password: ")
 
@@ -137,7 +144,7 @@ class TokenFile:
 
         Returns None if no valid token can be found."""
 
-        if not self.token_file.is_file():
+        if not self.file_exists():
             LOG.debug(f"Token file {self.token_file} does not exist.")
             return None
 
@@ -156,6 +163,10 @@ class TokenFile:
         LOG.debug("Token retrieved from file.")
         return token
 
+    def file_exists(self):
+        """Returns True if the token file exists."""
+        return self.token_file.is_file()
+
     def save_token(self, token):
         """Saves the token to the token file."""
 
@@ -168,6 +179,12 @@ class TokenFile:
             file.write(token)
 
         LOG.debug("New token saved to file.")
+
+    def delete_token(self):
+        """Deletes the token file."""
+
+        if self.file_exists():
+            self.token_file.unlink()
 
     def check_token_file_permissions(self):
         """Verify permissions for token file. Raises dds_cli.exceptions.DDSCLIException if
@@ -202,7 +219,7 @@ class TokenFile:
             LOG.debug(
                 "Token file is too old so token has likely expired. Now deleting it and fetching new token."
             )
-            self.token_file.unlink()
+            self.delete_token()
             return True
         elif age > dds_cli.TOKEN_WARNING_AGE:
             LOG.warning(

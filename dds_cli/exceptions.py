@@ -48,7 +48,7 @@ class AuthenticationError(click.ClickException):
 class TokenNotFoundError(AuthenticationError):
     """No token retrieved from REST API or from File."""
 
-    def __init__(self, message, sign=":warning:"):
+    def __init__(self, message, sign=":warning-emoji:"):
         """Reformat error message."""
         super().__init__(message=message, sign=sign)
 

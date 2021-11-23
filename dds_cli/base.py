@@ -55,12 +55,14 @@ class DDSBaseClass:
         authenticate: bool = True,
         method_check: bool = True,
         force_renew_token: bool = False,
+        no_prompt: bool = False,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.username = username
         self.project = project
         self.method_check = method_check
         self.method = method
+        self.no_prompt = no_prompt
 
         if self.method_check:
             # Get attempted operation e.g. put/ls/rm/get
@@ -86,7 +88,11 @@ class DDSBaseClass:
 
         # Authenticate the user and get the token
         if authenticate:
-            dds_user = user.User(username=username, force_renew_token=force_renew_token)
+            dds_user = user.User(
+                username=username,
+                force_renew_token=force_renew_token,
+                no_prompt=no_prompt,
+            )
             self.token = dds_user.token_dict
 
         LOG.debug(f"Method: {self.method}, Project: {self.project}")
@@ -115,7 +121,6 @@ class DDSBaseClass:
         return True
 
     # Private methods ############################### Private methods #
-
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""
         # Project public key required for both put and get
@@ -261,7 +266,7 @@ class DDSBaseClass:
         with s3.S3Connector(project_id=self.project, token=self.token) as conn:
 
             if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
-                dds_cli.utils.console.print(f"\n:warning: {conn.message} :warning:\n")
+                dds_cli.utils.console.print(f"\n:warning-emoji: {conn.message} :warning-emoji:\n")
                 os._exit(1)
 
             bucket_exists = conn.check_bucket_exists()

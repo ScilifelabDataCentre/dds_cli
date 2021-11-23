@@ -46,6 +46,7 @@ class DataLister(base.DDSBaseClass):
         project: str = None,
         show_usage: bool = False,
         tree: bool = False,
+        no_prompt: bool = False,
     ):
         """Handle actions regarding data listing in the cli."""
         # Only method "ls" can use the DataLister class
@@ -55,7 +56,7 @@ class DataLister(base.DDSBaseClass):
             )
 
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, project=project, method=method)
+        super().__init__(username=username, project=project, method=method, no_prompt=no_prompt)
 
         self.show_usage = show_usage
         self.tree = tree

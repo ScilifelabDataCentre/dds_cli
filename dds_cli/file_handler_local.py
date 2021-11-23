@@ -71,7 +71,7 @@ class LocalFileHandler(fh.FileHandler):
 
         # No data -- cannot proceed
         if not self.data_list:
-            dds_cli.utils.console.print("\n:warning: No data specified. :warning:\n")
+            dds_cli.utils.console.print("\n:warning-emoji: No data specified. :warning-emoji:\n")
             os._exit(1)
 
         self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
@@ -250,7 +250,9 @@ class LocalFileHandler(fh.FileHandler):
 
         # API failure
         if "files" not in files_in_db:
-            dds_cli.utils.console.print("\n:warning: Files not returned from API. :warning:\n")
+            dds_cli.utils.console.print(
+                "\n:warning-emoji: Files not returned from API. :warning-emoji:\n"
+            )
             os._exit(1)
 
         LOG.debug("Previous upload check finished.")

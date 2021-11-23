@@ -55,6 +55,7 @@ class DataGetter(base.DDSBaseClass):
         silent: bool = False,
         verify_checksum: bool = False,
         method: str = "get",
+        no_prompt: bool = False,
     ):
         """Handle actions regarding downloading data."""
         # Initiate DDSBaseClass to authenticate user
@@ -63,6 +64,7 @@ class DataGetter(base.DDSBaseClass):
             project=project,
             dds_directory=destination,
             method=method,
+            no_prompt=no_prompt,
         )
 
         # Initiate DataGetter specific attributes
@@ -95,8 +97,8 @@ class DataGetter(base.DDSBaseClass):
 
             if self.filehandler.failed and self.break_on_fail:
                 dds_cli.utils.console.print(
-                    "\n:warning: Some specified files were not found in the system "
-                    "and '--break-on-fail' flag used. :warning:\n\n"
+                    "\n:warning-emoji: Some specified files were not found in the system "
+                    "and '--break-on-fail' flag used. :warning-emoji:\n\n"
                     f"Files not found: {self.filehandler.failed}\n"
                 )
                 os._exit(1)

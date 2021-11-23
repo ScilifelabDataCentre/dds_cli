@@ -42,7 +42,7 @@ class RemoteFileHandler(fh.FileHandler):
         self.data_list = list(set(self.data_list))
 
         if not self.data_list and not get_all:
-            dds_cli.utils.console.print("\n:warning: No data specified. :warning:\n")
+            dds_cli.utils.console.print("\n:warning-emoji: No data specified. :warning-emoji:\n")
             os._exit(1)
 
         self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
@@ -101,15 +101,15 @@ class RemoteFileHandler(fh.FileHandler):
         # Folder info required if specific files requested
         if all_paths and "folders" not in file_info:
             dds_cli.utils.console.print(
-                "\n:warning: Error in response. "
-                "Not enough info returned despite ok request. :warning:\n"
+                "\n:warning-emoji: Error in response. "
+                "Not enough info returned despite ok request. :warning-emoji:\n"
             )
             os._exit(1)
 
         # Files in response always required
         if "files" not in file_info:
             dds_cli.utils.console.print(
-                "\n:warning: No files in response despite ok request. :warning:\n"
+                "\n:warning-emoji: No files in response despite ok request. :warning-emoji:\n"
             )
             os._exit(1)
 

@@ -1,7 +1,8 @@
 import rich.console
 import numbers
 
-console = rich.console.Console(stderr=True)
+console = rich.console.Console()
+stderr_console = rich.console.Console(stderr=True)
 
 
 def calculate_magnitude(projects, keys, iec_standard=False):

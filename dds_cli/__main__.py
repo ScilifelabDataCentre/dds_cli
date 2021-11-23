@@ -29,7 +29,7 @@ import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.project_creator
-import dds_cli.session
+import dds_cli.auth
 import dds_cli.utils
 
 
@@ -44,8 +44,7 @@ LOG = logging.getLogger()
 ####################################################################################################
 
 # Print header to STDERR
-stderr = dds_cli.utils.console
-stderr.print(
+dds_cli.utils.stderr_console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
@@ -60,16 +59,18 @@ stderr.print(
 @click.option(
     "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
 )
-@click.option("-l", "--log-file", help="Save a verbose log to a file.", metavar="<filename>")
+@click.option("-l", "--log-file", help="Save a log to a file.", metavar="<filename>")
+@click.option(
+    "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
+)
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
-def dds_main(_, verbose, log_file):
+def dds_main(click_ctx, verbose, log_file, no_prompt):
     """The SciLifeLab Data Delivery System (DDS) command line interface
 
     Access token is saved in a .dds_cli_token file in the home directory.
     """
     if "--help" not in sys.argv:
-
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
 
@@ -77,7 +78,7 @@ def dds_main(_, verbose, log_file):
         LOG.addHandler(
             rich.logging.RichHandler(
                 level=logging.DEBUG if verbose else logging.INFO,
-                console=dds_cli.utils.console,
+                console=dds_cli.utils.stderr_console,
                 show_time=False,
                 markup=True,
                 show_path=verbose,
@@ -92,6 +93,9 @@ def dds_main(_, verbose, log_file):
                 logging.Formatter("[%(asctime)s] %(name)-20s [%(levelname)-7s]  %(message)s")
             )
             LOG.addHandler(log_fh)
+
+        # Create context object
+        click_ctx.obj = {"NO_PROMPT": no_prompt}
 
 
 ####################################################################################################
@@ -128,16 +132,26 @@ def dds_main(_, verbose, log_file):
     help="Existing Project you want the user to be associated to.",
 )
 @click.pass_obj
-def add_user(_, username, email, role, project):
+def add_user(click_ctx, username, email, role, project):
     """Add user to DDS, sending an invitation email to that person."""
-    # All exceptions caught within
-    with dds_cli.account_adder.AccountAdder(username=username) as inviter:
-        inviter.add_user(email=email, role=role, project=project)
-        if project:
-            LOG.info(
-                "Any user shown as invited would need to be added to the project "
-                "once the user has accepted the invitation and created an account in the system."
-            )
+    try:
+        with dds_cli.account_adder.AccountAdder(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as inviter:
+            inviter.add_user(email=email, role=role, project=project)
+            if project:
+                LOG.info(
+                    "Any user shown as invited would need to be added to the project "
+                    "once the user has accepted the invitation and created an account in the system."
+                )
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
 
 
 ####################################################################################################
@@ -212,7 +226,7 @@ def add_user(_, username, email, role, project):
 )
 @click.pass_obj
 def put(
-    _,
+    click_ctx,
     username,
     project,
     source,
@@ -233,6 +247,7 @@ def put(
             overwrite=overwrite,
             num_threads=num_threads,
             silent=silent,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
         )
     except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as err:
         LOG.error(err)
@@ -257,7 +272,7 @@ def put(
     is_flag=True,
     default=False,
     show_default=True,
-    help="Show the usage for a specific facility, in GBHours and cost.",
+    help="Show the usage for available projects, in GBHours and cost. No effect when specifying a project id.",
 )
 @click.option(
     "--sort",
@@ -279,7 +294,7 @@ def put(
     help="Display users associated with a project(Requires a project id)",
 )
 @click.pass_obj
-def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
+def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users):
     """
     List your projects and project files.
 
@@ -295,11 +310,12 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
                 project=project,
                 show_usage=usage,
                 username=username,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
             ) as lister:
                 projects = lister.list_projects(sort_by=sort)
 
                 # If an interactive terminal, ask user if they want to view files for a project
-                if sys.stdout.isatty():
+                if sys.stdout.isatty() and not lister.no_prompt:
                     project_ids = [p["Project ID"] for p in projects]
                     LOG.info(
                         "Would you like to view files in a specific project? Leave blank to exit."
@@ -325,52 +341,53 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
                 project=project,
                 username=username,
                 tree=tree,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
             ) as lister:
                 if users:
                     user_list = lister.list_users()
-                    if not sys.stdout.isatty():
+                    if not sys.stdout.isatty() and not lister.no_prompt:
                         if user_list:
                             LOG.info("Project has the following users")
                             for user in user_list:
                                 LOG.info(user["User Name"], user["Primary email"])
+
+                if tree:
+                    lister.list_recursive(show_size=size)
                 else:
-                    if tree:
-                        lister.list_recursive(show_size=size)
-                    else:
-                        folders = lister.list_files(folder=folder, show_size=size)
+                    folders = lister.list_files(folder=folder, show_size=size)
 
-                        # If an interactive terminal, ask user if they want to view files for a proj
-                        if sys.stdout.isatty() and len(folders) > 0:
-                            LOG.info(
-                                "Would you like to view files within a directory? "
-                                "Leave blank to exit."
-                            )
-                            last_folder = None
-                            while folder is None or folder != last_folder:
-                                last_folder = folder
+                    # If an interactive terminal, ask user if they want to view files for a proj
+                    if sys.stdout.isatty() and (not lister.no_prompt) and len(folders) > 0:
+                        LOG.info(
+                            "Would you like to view files within a directory? "
+                            "Leave blank to exit."
+                        )
+                        last_folder = None
+                        while folder is None or folder != last_folder:
+                            last_folder = folder
 
-                                try:
-                                    folder = questionary.autocomplete(
-                                        "Folder:",
-                                        choices=folders,
-                                        validate=lambda x: x in folders or x == "",
-                                        style=dds_cli.dds_questionary_styles,
-                                    ).unsafe_ask()
-                                    assert folder != ""
-                                    assert folder is not None
-                                # If didn't enter anything, convert to None and exit
-                                except (KeyboardInterrupt, AssertionError):
-                                    break
+                            try:
+                                folder = questionary.autocomplete(
+                                    "Folder:",
+                                    choices=folders,
+                                    validate=lambda x: x in folders or x == "",
+                                    style=dds_cli.dds_questionary_styles,
+                                ).unsafe_ask()
+                                assert folder != ""
+                                assert folder is not None
+                            # If didn't enter anything, convert to None and exit
+                            except (KeyboardInterrupt, AssertionError):
+                                break
 
-                                # Prepend existing file path
-                                if last_folder is not None and folder is not None:
-                                    folder = os.path.join(last_folder, folder)
+                            # Prepend existing file path
+                            if last_folder is not None and folder is not None:
+                                folder = os.path.join(last_folder, folder)
 
-                                # List files
-                                folders = lister.list_files(folder=folder, show_size=size)
+                            # List files
+                            folders = lister.list_files(folder=folder, show_size=size)
 
-                                if len(folders) == 0:
-                                    break
+                            if len(folders) == 0:
+                                break
 
     except (dds_cli.exceptions.NoDataError) as err:
         LOG.warning(err)
@@ -399,8 +416,10 @@ def ls(_, project, folder, projects, size, username, usage, sort, tree, users):
     "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
 )
 @click.pass_obj
-def rm(_, proj_arg, project, username, rm_all, file, folder):
+def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
     """Delete the files within a project."""
+    no_prompt = click_ctx.get("NO_PROMPT", False)
+
     # One of proj_arg or project is required
     if all(x is None for x in [proj_arg, project]):
         LOG.error("No project specified, cannot remove anything.")
@@ -423,16 +442,20 @@ def rm(_, proj_arg, project, username, rm_all, file, folder):
 
     # Warn if trying to remove all contents
     if rm_all:
-        if not rich.prompt.Confirm.ask(
-            f"Are you sure you want to delete all files within project '{project}'?"
-        ):
-            LOG.info("Probably for the best. Exiting.")
-            sys.exit(0)
+        if no_prompt:
+            LOG.warning(f"Deleting all files within project '{project}'")
+        else:
+            if not rich.prompt.Confirm.ask(
+                f"Are you sure you want to delete all files within project '{project}'?"
+            ):
+                LOG.info("Probably for the best. Exiting.")
+                sys.exit(0)
 
     try:
         with dds_cli.data_remover.DataRemover(
             project=project,
             username=username,
+            no_prompt=no_prompt,
         ) as remover:
 
             if rm_all:
@@ -537,7 +560,7 @@ def rm(_, proj_arg, project, username, rm_all, file, folder):
 )
 @click.pass_obj
 def get(
-    _,
+    click_ctx,
     username,
     project,
     get_all,
@@ -554,7 +577,7 @@ def get(
         LOG.error(
             "Flag '--get-all' cannot be used together with options '--source'/'--source-path-fail'."
         )
-        os._exit(1)
+        sys.exit(1)
 
     # Begin delivery
     with dds_cli.data_getter.DataGetter(
@@ -567,6 +590,7 @@ def get(
         destination=destination,
         silent=silent,
         verify_checksum=verify_checksum,
+        no_prompt=click_ctx.get("NO_PROMPT", False),
     ) as getter:
 
         with rich.progress.Progress(
@@ -687,7 +711,7 @@ def get(
 )
 @click.pass_obj
 def create(
-    _,
+    click_ctx,
     username,
     title,
     description,
@@ -698,7 +722,9 @@ def create(
 ):
     """Create a project."""
     try:
-        with dds_cli.project_creator.ProjectCreator(username=username) as creator:
+        with dds_cli.project_creator.ProjectCreator(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as creator:
             emails_roles = []
             if owner or researcher:
                 email_overlap = set(owner) & set(researcher)
@@ -742,9 +768,16 @@ def create(
 
 
 ###################################################################################
-# SESSION ############################################################### SESSION #
+# AUTH ##################################################################### AUTH #
 ###################################################################################
-@dds_main.command()
+@dds_main.group()
+@click.pass_obj
+def auth(click_ctx):
+    """Manage the saved authentication token."""
+    pass
+
+
+@auth.command()
 @click.option(
     "--username",
     "-u",
@@ -752,30 +785,46 @@ def create(
     type=str,
     help="Your Data Delivery System username. Required unless the `--check` flag is used.",
 )
-@click.option(
-    "--check",
-    "-c",
-    required=False,
-    is_flag=True,
-    help="Instead of renewing the session, only check if the session is valid and report the token age.",
-)
 @click.pass_obj
-def session(_, username, check):
-    """Renew the access token stored in the '.dds_cli_token' file. Run this command before
+def login(click_ctx, username):
+    """Renew the authentication token stored in the '.dds_cli_token' file. Run this command before
     running the cli in a non interactive fashion as this enables the longest possible session time
     before a password needs to be entered again.
     """
+    no_prompt = click_ctx.get("NO_PROMPT", False)
+    if no_prompt:
+        LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.session.Session(username=username, check=check) as session:
-            if check:
-                session.check()
-            else:
-                # Session renewed in the init method.
-                LOG.info("[green] :white_check_mark: Session renewed![/green]")
+        with dds_cli.auth.Auth(username=username):
+            # Authentication token renewed in the init method.
+            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
     ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@auth.command()
+def logout():
+    """Remove the saved authentication token by deleting the '.dds_cli_token' file."""
+    try:
+        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+            authenticator.logout()
+            LOG.info(f"[green]Successfully logged out![/green]")
+    except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@auth.command()
+def info():
+    """Print info on saved authentication token validity and age."""
+    try:
+        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+            authenticator.check()
+    except dds_cli.exceptions.DDSCLIException as err:
         LOG.error(err)
         sys.exit(1)

@@ -97,13 +97,11 @@ class DDSBaseClass:
             )
             self.token = dds_user.token_dict
 
-        LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in DDS_KEYS_REQUIRED_METHODS:
             if self.method == "put":
                 self.s3connector = self.__get_safespring_keys()
-                LOG.info(self.s3connector)
 
             self.keys = self.__get_project_keys()
 

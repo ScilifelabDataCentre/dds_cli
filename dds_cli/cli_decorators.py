@@ -126,7 +126,6 @@ def subpath_required(func):
     @functools.wraps(func)
     def check_and_create(self, file, *args, **kwargs):
         """Create the sub directory if it does not exist."""
-
         file_info = self.filehandler.data[file]
 
         # Required path

@@ -8,6 +8,7 @@
 import logging
 import os
 import pathlib
+import sys
 
 # Installed
 import requests
@@ -33,7 +34,7 @@ class RemoteFileHandler(fh.FileHandler):
 
     # Magic methods ################ Magic methods #
     def __init__(self, get_all, user_input, token, project, destination=pathlib.Path("")):
-
+        """Initialize FileHandler for collecting remote files."""
         # Initiate FileHandler from inheritance
         super().__init__(user_input=user_input, local_destination=destination, project=project)
 
@@ -51,8 +52,7 @@ class RemoteFileHandler(fh.FileHandler):
     # Static methods ############ Static methods #
     @staticmethod
     def write_file(chunks, outfile: pathlib.Path, **_):
-        """Write file chunks to file"""
-
+        """Write file chunks to file."""
         saved, message = (False, "")
 
         LOG.debug("Saving file...")
@@ -75,9 +75,6 @@ class RemoteFileHandler(fh.FileHandler):
     # Private methods ############ Private methods #
     def __collect_file_info_remote(self, all_paths, token):
         """Get information on files in db."""
-
-        LOG.debug(all_paths)
-
         # Get file info from db via API
         try:
             response = requests.get(
@@ -115,6 +112,7 @@ class RemoteFileHandler(fh.FileHandler):
 
         # files and files in folders from db
         files = file_info["files"]
+        LOG.info(files)
         folders = file_info["folders"] if "folders" in file_info else {}
 
         # Cancel download of those files or folders not found in the db

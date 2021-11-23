@@ -47,7 +47,7 @@ class S3Connector:
     resource = None
 
     def __post_init__(self, project_id, token):
-        LOG.info("starting.....")
+        """Initiate S3Connector object by getting s3 info from API."""
         (
             self.safespring_project,
             self.keys,
@@ -57,12 +57,13 @@ class S3Connector:
 
     # @connect_cloud
     def __enter__(self):
-        LOG.info("entering...")
+        """Enter context."""
         self.resource = self.connect()
 
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
+        """Close context manager, incl. connection."""
         del self.resource
         gc.collect()
         if exc_type is not None:
@@ -72,6 +73,7 @@ class S3Connector:
         return True
 
     def connect(self):
+        """Connect to S3 resource."""
         # Connect to service
         try:
             session = boto3.session.Session()

@@ -293,8 +293,14 @@ def put(
     default=False,
     help="Display users associated with a project(Requires a project id)",
 )
+@click.option(
+    "--json",
+    is_flag=True,
+    default=False,
+    help="Output in JSON format",
+)
 @click.pass_obj
-def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users):
+def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users, json):
     """
     List your projects and project files.
 
@@ -311,6 +317,7 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
                 show_usage=usage,
                 username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
+                json=json,
             ) as lister:
                 projects = lister.list_projects(sort_by=sort)
 

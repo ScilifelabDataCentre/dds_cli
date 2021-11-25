@@ -47,6 +47,7 @@ class DataLister(base.DDSBaseClass):
         show_usage: bool = False,
         tree: bool = False,
         no_prompt: bool = False,
+        json: bool = False,
     ):
         """Handle actions regarding data listing in the cli."""
         # Only method "ls" can use the DataLister class
@@ -60,6 +61,7 @@ class DataLister(base.DDSBaseClass):
 
         self.show_usage = show_usage
         self.tree = tree
+        self.json = json
 
     # Public methods ########################### Public methods #
     def sort_projects(self, projects, sort_by="id"):
@@ -142,41 +144,7 @@ class DataLister(base.DDSBaseClass):
 
         return column_formatting
 
-    def list_projects(self, sort_by="Updated"):
-        """Get a list of project(s) the user is involved in."""
-        # Get projects from API
-        try:
-            response = requests.get(
-                DDSEndpoint.LIST_PROJ,
-                headers=self.token,
-                params={
-                    "usage": self.show_usage,
-                    "project": self.project,
-                },
-            )
-        except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
-
-        # Check response
-        if not response.ok:
-            raise exceptions.APIError(f"Failed to get any projects: {response.text}")
-
-        # Get result from API
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise exceptions.APIError(f"Could not decode JSON response: {err}")
-
-        # Cancel if user not involved in any projects
-        usage_info = resp_json.get("total_usage")
-        total_size = resp_json.get("total_size")
-        project_info = resp_json.get("project_info")
-        if not project_info:
-            raise exceptions.NoDataError("No project info was retrieved. No files to list.")
-
-        # Sort projects according to chosen or default, first ID
-        sorted_projects = self.sort_projects(projects=project_info, sort_by=sort_by)
-
+    def print_project_table(self, sorted_projects, usage_info, total_size):
         # Column format
         column_formatting = self.format_columns(total_size=total_size, usage_info=usage_info)
 
@@ -226,6 +194,54 @@ class DataLister(base.DDSBaseClass):
                 dds_cli.utils.console.print(table)
         else:
             raise exceptions.NoDataError("No projects found.")
+
+    def print_project_json(self, sorted_projects):
+        """Print the projects in JSON format."""
+        if sorted_projects:
+            dds_cli.utils.console.print(simplejson.dumps(sorted_projects, indent=4))
+        else:
+            raise exceptions.NoDataError("No projects found.")
+
+    def list_projects(self, sort_by="Updated"):
+        """Get a list of project(s) the user is involved in."""
+        # Get projects from API
+        try:
+            response = requests.get(
+                DDSEndpoint.LIST_PROJ,
+                headers=self.token,
+                params={
+                    "usage": self.show_usage,
+                    "project": self.project,
+                },
+            )
+        except requests.exceptions.RequestException as err:
+            raise exceptions.ApiRequestError(message=str(err))
+
+        # Check response
+        if not response.ok:
+            raise exceptions.APIError(f"Failed to get any projects: {response.text}")
+
+        # Get result from API
+        try:
+            resp_json = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise exceptions.APIError(f"Could not decode JSON response: {err}")
+
+        # Cancel if user not involved in any projects
+        usage_info = resp_json.get("total_usage")
+        total_size = resp_json.get("total_size")
+        project_info = resp_json.get("project_info")
+        if not project_info:
+            raise exceptions.NoDataError("No project info was retrieved. No files to list.")
+
+        # Sort projects according to chosen or default, first ID
+        sorted_projects = self.sort_projects(projects=project_info, sort_by=sort_by)
+
+        # Output JSON:
+        if self.json:
+            self.print_project_json(sorted_projects)
+        else:
+            self.print_project_table(sorted_projects, usage_info, total_size)
 
         # Return the list of projects
         return sorted_projects

@@ -1,5 +1,6 @@
 # Standard library
 import unittest.mock
+import copy
 
 # Installed
 import pytest
@@ -43,27 +44,8 @@ RETURNED_FILES_JSON = {
     ]
 }
 
-
-RETURNED_FILES_RECURSIVE_START = {
-    "files_folders": [
-        {"folder": False, "name": "simple_file.txt"},
-        {"folder": False, "name": "simple_file2.txt"},
-        {"folder": False, "name": "simple_file3.txt"},
-        {"folder": True, "name": "subdir1"},
-        {"folder": True, "name": "subdir2"},
-    ]
-}
-
 # Need to have two different ones since the dds code modifies the dictionary object
 RETURNED_FILES_RECURSIVE_BOTTOM = {
-    "files_folders": [
-        {"folder": False, "name": "simple_file4.txt"},
-        {"folder": False, "name": "simple_file5.txt"},
-    ]
-}
-
-
-RETURNED_FILES_RECURSIVE_BOTTOM_2 = {
     "files_folders": [
         {"folder": False, "name": "simple_file4.txt"},
         {"folder": False, "name": "simple_file5.txt"},
@@ -151,8 +133,9 @@ def test_list_no_project_specified(ls_runner, list_request):
 
 def test_list_with_project(ls_runner, list_request):
     """Test that the list command works when a project is specified."""
-
-    list_request_OK = list_request(200, return_json=RETURNED_FILES_JSON)
+    # Need to use deepcopy to be able to reuse the JSON object for other tests
+    # since the DataLister.list_recursive uses pop on this dictionary
+    list_request_OK = list_request(200, return_json=copy.deepcopy(RETURNED_FILES_JSON))
     result = ls_runner(["ls", "project_1"])
 
     assert result.exit_code == 0
@@ -181,15 +164,15 @@ def test_list_with_project_and_tree(ls_runner, list_request):
     list_request_OK = list_request(
         200,
         side_effect=[
-            RETURNED_FILES_RECURSIVE_START,
-            RETURNED_FILES_RECURSIVE_BOTTOM,
-            RETURNED_FILES_RECURSIVE_BOTTOM_2,
+            copy.deepcopy(RETURNED_FILES_JSON),
+            copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
+            copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
+            copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
         ],
     )
 
     result = ls_runner(["ls", "--tree", "project_1"])
 
-    print(result.stdout)
     assert result.exit_code == 0
     list_request_OK.assert_any_call(
         dds_cli.DDSEndpoint.LIST_FILES,

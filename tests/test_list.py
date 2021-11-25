@@ -68,7 +68,7 @@ def list_request():
     """A fixture that mocks the requests.get method.
 
     The functioned returned by this fixture takes parameters that adjust the status_code,
-    ok, and json message.
+    return_json, ok, and side_effect.
     """
     with unittest.mock.patch.object(requests, "get") as mock_obj:
 

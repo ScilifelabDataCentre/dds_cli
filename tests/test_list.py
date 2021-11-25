@@ -151,7 +151,32 @@ def test_list_no_project_specified_json(ls_runner, list_request):
         assert False, "stdout is not JSON"
 
     project_ids = [project["Project ID"] for project in json_output]
-    assert ["project_1", "project_2"] == project_ids
+    assert [
+        "project_2",
+        "project_1",
+    ] == project_ids, "Default sorting of json should be last updated"
+
+
+def test_list_no_project_specified_json_sort(ls_runner, list_request):
+    """Test that the list command works when no project is specified with json output and non-default sorting."""
+
+    list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
+    result = ls_runner(["ls", "--json", "--sort", "id"])
+
+    assert result.exit_code == 0
+    list_request_OK.assert_called_with(
+        dds_cli.DDSEndpoint.LIST_PROJ,
+        headers=unittest.mock.ANY,
+        params={"usage": False, "project": None},
+    )
+
+    try:
+        json_output = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        assert False, "stdout is not JSON"
+
+    project_ids = [project["Project ID"] for project in json_output]
+    assert ["project_1", "project_2"] == project_ids, "Sorting json on project id failed"
 
 
 def test_list_with_project(ls_runner, list_request):

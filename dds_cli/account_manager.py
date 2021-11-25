@@ -30,16 +30,20 @@ LOG = logging.getLogger(__name__)
 ####################################################################################################
 
 
-class AccountAdder(dds_cli.base.DDSBaseClass):
+class AccountManager(dds_cli.base.DDSBaseClass):
     """Admin class for adding users, etc."""
 
-    def __init__(self, username: str, method: str = "add", no_prompt: bool = False):
+    def __init__(
+        self, username: str, authenticate: bool = True, method: str = "add", no_prompt: bool = False
+    ):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, method=method, no_prompt=no_prompt)
+        super().__init__(
+            username=username, authenticate=authenticate, method=method, no_prompt=no_prompt
+        )
 
-        # Only method "add" can use the AccountAdder class
-        if self.method != "add":
+        # Only methods "add" and "delete" can use the AccountManager class
+        if self.method not in ["add", "delete"]:
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     def add_user(self, email, role, project):
@@ -74,3 +78,35 @@ class AccountAdder(dds_cli.base.DDSBaseClass):
             )
 
         LOG.info(response_json.get("message", "User successfully added."))
+
+    def delete_user(self, accounts):
+        """Delete users from the system"""
+        # Perform request to API
+        json = {"accounts": accounts, "username": self.username}
+
+        try:
+            response = requests.post(
+                dds_cli.DDSEndpoint.USER_DELETE,
+                headers=self.token,
+                json=json,
+            )
+
+            # Get response
+            response_json = response.json()
+            LOG.debug(response_json)
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        # Format response message
+        if not response.ok:
+            message = "Could not delete user(s)"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise dds_cli.exceptions.DDSCLIException(
+                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            )
+
+        LOG.info(response_json.get("message", f"User {accounts} successfully deleted."))

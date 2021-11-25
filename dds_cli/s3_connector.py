@@ -61,8 +61,6 @@ class S3Connector:
 
     def __exit__(self, exc_type, exc_value, tb):
         """Close context manager, incl. connection."""
-        del self.resource
-        gc.collect()
         if exc_type is not None:
             traceback.print_exception(exc_type, exc_value, tb)
             return False  # uncomment to pass exception through

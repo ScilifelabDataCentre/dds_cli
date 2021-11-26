@@ -48,7 +48,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     def add_user(self, email, role, project):
-        """Invite user."""
+        """Invite new user or associate existing users with projects."""
         # Perform request to API
         json = {"email": email, "role": role}
         if project:
@@ -84,7 +84,8 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         """Delete users from the system"""
 
         # Perform request to API
-        json = {"email": email, "username": self.username, "ownaccount": ownaccount}
+        json = {"email": email, "ownaccount": ownaccount}
+        LOG.info(json)
 
         try:
             response = requests.post(
@@ -103,7 +104,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Format response message
         if not response.ok:
-            message = "Could not delete usee"
+            message = "Could not delete user"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
@@ -112,6 +113,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             )
 
         if ownaccount:
-            LOG.info(response_json.get("message", f"An email asking for confirmation was sent to your inbox."))
-        else: 
+            LOG.info(
+                response_json.get(
+                    "message", f"An email asking for confirmation was sent to your inbox."
+                )
+            )
+        else:
             LOG.info(response_json.get("message", f"User {email} successfully deleted."))

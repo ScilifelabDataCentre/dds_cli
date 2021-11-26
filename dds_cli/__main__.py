@@ -1014,8 +1014,15 @@ def user(click_ctx):
     help="Existing Project you want the user to be associated to.",
 )
 @click.pass_obj
-def invite(click_ctx, username, email, role, project):
-    """Add a user to DDS, sending an invitation email to that person."""
+def add(click_ctx, username, email, role, project):
+    """
+    Add a user to the DDS system or hosted projects.
+
+    Specify an user's email and role to associate it with projects.
+    If the user doesn't exist in the system yet, an invitation email
+    will be sent automatically to that person.
+
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -1073,7 +1080,6 @@ def delete(click_ctx, email, self):
     try:
         with dds_cli.account_manager.AccountManager(
             username=None,
-            authenticate=True,
             method="delete",
             no_prompt=click_ctx.get("NO_PROMPT", False),
         ) as manager:

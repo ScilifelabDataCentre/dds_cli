@@ -296,4 +296,10 @@ def test_list_with_project_and_tree_json(ls_runner, list_request):
     except json.JSONDecodeError:
         assert False, "stdout is not JSON"
 
-    assert json_output.has_key("simple_file.txt")
+    try:
+        file = json_output["project_files_and_directories"]["subdir1"]["children"][
+            "simple_file4.txt"
+        ]
+    except KeyError:
+        assert False, f"wrong JSON structure: {json_output}"
+    assert file["name"] == "simple_file4.txt"

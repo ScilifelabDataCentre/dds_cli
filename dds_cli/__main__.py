@@ -982,15 +982,19 @@ def user(click_ctx):
 
 ## Invite new users to the system
 @user.command()
+@click.argument(
+    "email",
+    nargs=1,
+    type=str,
+    required=True,
+    callback=dds_cli.utils.email_validator,
+)
 @click.option(
     "--username",
     "-u",
     required=False,
     type=str,
     help="Your Data Delivery System username.",
-)
-@click.option(
-    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
 )
 @click.option(
     "--role",
@@ -1033,8 +1037,14 @@ def invite(click_ctx, username, email, role, project):
 
 
 ## Delete users from the system
-@user.command()
-@click.argument("accounts", nargs=-1)
+@user.command(no_args_is_help=True)
+@click.argument(
+    "email",
+    nargs=1,
+    type=str,
+    required=False,
+    callback=dds_cli.utils.email_validator,
+)
 @click.option(
     "--self",
     required=False,
@@ -1042,7 +1052,7 @@ def invite(click_ctx, username, email, role, project):
     help="Decommission your own user account",
 )
 @click.pass_obj
-def delete(click_ctx, accounts, self):
+def delete(click_ctx, email, self):
     """
     Delete user accounts from the Data Delivery System.
 
@@ -1050,51 +1060,30 @@ def delete(click_ctx, accounts, self):
     An e-mail will be sent to you asking to confirm the deletion.
 
     If you have sufficient administrative privileges, you may also delete the accounts of other users.
-    Specify one or more usernames as arguments to the main command to initiate the removal process.
+    Specify the e-mail address as argument to the main command to initiate the removal process.
     """
-
-    if self:
-        # if the --self flag is specified, arguments are ignored
-        try:
-            LOG.info(
-                f"[red]Are you sure? Deleted accounts can't be restored[/red]"
-                f"Please confirm your login to proceed with account deletion"
-            )
-            with dds_cli.auth.Auth(username=None, authenticate=True) as authenticator:
-                pass
-
-        except (
-            dds_cli.exceptions.AuthenticationError,
-            dds_cli.exceptions.ApiResponseError,
-            dds_cli.exceptions.ApiRequestError,
-            dds_cli.exceptions.DDSCLIException,
-        ) as err:
-            LOG.error(err)
-            sys.exit(1)
-
-    # --self flag has not been specified
+    if email:
+        # Click.confirm unfortunately doesn't support formatted or colored strings, so use Log to warn.
+        LOG.info(f"[red]Delete Data Delivery System user account associated with {email}?[/red]")
     else:
-        # check if arguments have been specified
-        if accounts:
+        LOG.info(f"[red]Are you sure? Deleted accounts can't be restored![/red]")
 
-            try:
-                with dds_cli.account_manager.AccountManager(
-                    username=None,
-                    authenticate=True,
-                    method="delete",
-                    no_prompt=click_ctx.get("NO_PROMPT", False),
-                ) as manager:
-                    manager.delete_user(accounts=accounts)
+    click.confirm("Proceed with account deletion?", abort=True)
 
-            except (
-                dds_cli.exceptions.AuthenticationError,
-                dds_cli.exceptions.ApiResponseError,
-                dds_cli.exceptions.ApiRequestError,
-                dds_cli.exceptions.DDSCLIException,
-            ) as err:
-                LOG.error(err)
-                sys.exit(1)
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=None,
+            authenticate=True,
+            method="delete",
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+        ) as manager:
+            manager.delete_user(email=email, ownaccount=self)
 
-        else:
-            LOG.error("You need to specify one or more username(s) to delete")
-            sys.exit(1)
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)

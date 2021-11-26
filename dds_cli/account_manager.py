@@ -15,8 +15,9 @@ import simplejson
 
 # Own modules
 import dds_cli
-import dds_cli.exceptions
+import dds_cli.auth
 import dds_cli.base
+import dds_cli.exceptions
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -79,10 +80,11 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         LOG.info(response_json.get("message", "User successfully added."))
 
-    def delete_user(self, accounts):
+    def delete_user(self, email, ownaccount):
         """Delete users from the system"""
+
         # Perform request to API
-        json = {"accounts": accounts, "username": self.username}
+        json = {"email": email, "username": self.username, "ownaccount": ownaccount}
 
         try:
             response = requests.post(
@@ -101,7 +103,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Format response message
         if not response.ok:
-            message = "Could not delete user(s)"
+            message = "Could not delete usee"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
@@ -109,4 +111,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(response_json.get("message", f"User {accounts} successfully deleted."))
+        if ownaccount:
+            LOG.info(response_json.get("message", f"An email asking for confirmation was sent to your inbox."))
+        else: 
+            LOG.info(response_json.get("message", f"User {email} successfully deleted."))

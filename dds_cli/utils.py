@@ -1,8 +1,15 @@
+<<<<<<< HEAD
 """DDS CLI utils module."""
 
 import numbers
 import rich.console
 import simplejson
+=======
+import click
+import rich.console
+import numbers
+import re
+>>>>>>> 411efc1 (Add validator function for emails (only Regex, not functional))
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
@@ -105,16 +112,16 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
                     spacerA,
                     prefixlist[magnitude] + spacerB + unit,
                 )
+            else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
+                return "{}{}{}".format(
+                    "{:.2f}".format(response).rstrip("0").rstrip("."),
+                    spacerA,
+                    prefixlist[mag] + spacerB + unit,
+                )
+        else:
+            return f"0 {unit}"
+    else:
+        # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
+        return str(response)
 
-            # if values are anyway prefixed individually, then strip trailing 0 for readability
-            return "{}{}{}".format(
-                "{:.2f}".format(response).rstrip("0").rstrip("."),
-                spacerA,
-                prefixlist[mag] + spacerB + unit,
-            )
 
-        return f"0 {unit}"
-
-    # Since table.add.row() expects a string,
-    # try to return whatever is not yet a string but also not numeric as string
-    return str(response)

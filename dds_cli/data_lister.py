@@ -228,6 +228,9 @@ class DataLister(base.DDSBaseClass):
 
             resp_json = resp_json.json()
 
+            if not "files_folders" in resp_json:
+                raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
+
             sorted_files_folders = sorted(resp_json["files_folders"], key=lambda f: f["name"])
 
             if not sorted_files_folders:
@@ -242,7 +245,15 @@ class DataLister(base.DDSBaseClass):
             Constructs a file tree by subsequent calls to the API
             """
             tree = FileTree([], f"{basename}/")
-            sorted_files_folders = __api_call_list_files(folder)
+            try:
+                sorted_files_folders = __api_call_list_files(folder)
+            except exceptions.NoDataError as e:
+                if folder is None:
+                    raise exceptions.NoDataError(
+                        "No files or folders found for the specified project"
+                    )
+                else:
+                    raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
 
             # Get max length of file name
             max_string = max([len(x["name"]) for x in sorted_files_folders])
@@ -282,7 +293,15 @@ class DataLister(base.DDSBaseClass):
 
             Constructs a file tree by subsequent calls to the API
             """
-            sorted_files_folders = __api_call_list_files(folder)
+            try:
+                sorted_files_folders = __api_call_list_files(folder)
+            except exceptions.NoDataError as e:
+                if folder is None:
+                    raise exceptions.NoDataError(
+                        "No files or folders found for the specified project"
+                    )
+                else:
+                    raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
 
             tree = {}
 

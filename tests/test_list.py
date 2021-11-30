@@ -5,6 +5,7 @@ import copy
 # Installed
 import pytest
 import requests
+import json
 
 # Own modules
 import dds_cli
@@ -131,6 +132,53 @@ def test_list_no_project_specified(ls_runner, list_request):
     assert "" == result.stderr  # Click testing framework aborts any interactivity
 
 
+def test_list_no_project_specified_json(ls_runner, list_request):
+    """Test that the list command works when no project is specified with json output."""
+
+    list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
+    result = ls_runner(["ls", "--json"])
+
+    assert result.exit_code == 0
+    list_request_OK.assert_called_with(
+        dds_cli.DDSEndpoint.LIST_PROJ,
+        headers=unittest.mock.ANY,
+        params={"usage": False, "project": None},
+    )
+
+    try:
+        json_output = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        assert False, "stdout is not JSON"
+
+    project_ids = [project["Project ID"] for project in json_output]
+    assert [
+        "project_2",
+        "project_1",
+    ] == project_ids, "Default sorting of json should be last updated"
+
+
+def test_list_no_project_specified_json_sort(ls_runner, list_request):
+    """Test that the list command works when no project is specified with json output and non-default sorting."""
+
+    list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
+    result = ls_runner(["ls", "--json", "--sort", "id"])
+
+    assert result.exit_code == 0
+    list_request_OK.assert_called_with(
+        dds_cli.DDSEndpoint.LIST_PROJ,
+        headers=unittest.mock.ANY,
+        params={"usage": False, "project": None},
+    )
+
+    try:
+        json_output = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        assert False, "stdout is not JSON"
+
+    project_ids = [project["Project ID"] for project in json_output]
+    assert ["project_1", "project_2"] == project_ids, "Sorting json on project id failed"
+
+
 def test_list_with_project(ls_runner, list_request):
     """Test that the list command works when a project is specified."""
     # Need to use deepcopy to be able to reuse the JSON object for other tests
@@ -195,7 +243,6 @@ def test_list_with_project_and_tree(ls_runner, list_request):
         headers=unittest.mock.ANY,
     )
 
-    print(result.stdout)
     for substring in [
         "Files & directories in project: project_1",
         "simple_file.txt",
@@ -205,3 +252,54 @@ def test_list_with_project_and_tree(ls_runner, list_request):
         "subdir2",
     ]:
         assert substring in result.stdout
+
+
+def test_list_with_project_and_tree_json(ls_runner, list_request):
+    """Test that the list command works when a project is specified."""
+
+    list_request_OK = list_request(
+        200,
+        side_effect=[
+            copy.deepcopy(RETURNED_FILES_JSON),
+            copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
+            copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
+            copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
+        ],
+    )
+
+    result = ls_runner(["ls", "--tree", "--json", "project_1"])
+
+    assert result.exit_code == 0
+    list_request_OK.assert_any_call(
+        dds_cli.DDSEndpoint.LIST_FILES,
+        params={"project": "project_1"},
+        json={"subpath": None, "show_size": False},
+        headers=unittest.mock.ANY,
+    )
+
+    list_request_OK.assert_any_call(
+        dds_cli.DDSEndpoint.LIST_FILES,
+        params={"project": "project_1"},
+        json={"subpath": "subdir1", "show_size": False},
+        headers=unittest.mock.ANY,
+    )
+
+    list_request_OK.assert_any_call(
+        dds_cli.DDSEndpoint.LIST_FILES,
+        params={"project": "project_1"},
+        json={"subpath": "subdir2", "show_size": False},
+        headers=unittest.mock.ANY,
+    )
+
+    try:
+        json_output = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        assert False, "stdout is not JSON"
+
+    try:
+        file = json_output["project_files_and_directories"]["subdir1"]["children"][
+            "simple_file4.txt"
+        ]
+    except KeyError:
+        assert False, f"wrong JSON structure: {json_output}"
+    assert file["name"] == "simple_file4.txt"

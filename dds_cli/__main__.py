@@ -293,8 +293,14 @@ def put(
     default=False,
     help="Display users associated with a project(Requires a project id)",
 )
+@click.option(
+    "--json",
+    is_flag=True,
+    default=False,
+    help="Output in JSON format",
+)
 @click.pass_obj
-def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users):
+def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users, json):
     """
     List your projects and project files.
 
@@ -311,29 +317,32 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
                 show_usage=usage,
                 username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
+                json=json,
             ) as lister:
                 projects = lister.list_projects(sort_by=sort)
+                if json:
+                    dds_cli.utils.console.print_json(data=projects)
+                else:
+                    # If an interactive terminal, ask user if they want to view files for a project
+                    if sys.stdout.isatty() and not lister.no_prompt:
+                        project_ids = [p["Project ID"] for p in projects]
+                        LOG.info(
+                            "Would you like to view files in a specific project? Leave blank to exit."
+                        )
+                        # Keep asking until we get a valid response
+                        while project not in project_ids:
+                            try:
+                                project = questionary.autocomplete(
+                                    "Project ID:",
+                                    choices=project_ids,
+                                    validate=lambda x: x in project_ids or x == "",
+                                    style=dds_cli.dds_questionary_styles,
+                                ).unsafe_ask()
+                                assert project and project != ""
 
-                # If an interactive terminal, ask user if they want to view files for a project
-                if sys.stdout.isatty() and not lister.no_prompt:
-                    project_ids = [p["Project ID"] for p in projects]
-                    LOG.info(
-                        "Would you like to view files in a specific project? Leave blank to exit."
-                    )
-                    # Keep asking until we get a valid response
-                    while project not in project_ids:
-                        try:
-                            project = questionary.autocomplete(
-                                "Project ID:",
-                                choices=project_ids,
-                                validate=lambda x: x in project_ids or x == "",
-                                style=dds_cli.dds_questionary_styles,
-                            ).unsafe_ask()
-                            assert project and project != ""
-
-                        # If didn't enter anything, convert to None and exit
-                        except (KeyboardInterrupt, AssertionError):
-                            break
+                            # If didn't enter anything, convert to None and exit
+                            except (KeyboardInterrupt, AssertionError):
+                                break
 
         # List all files in a project if we know a project ID
         if project:
@@ -342,52 +351,65 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
                 username=username,
                 tree=tree,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
+                json=json,
             ) as lister:
-                if users:
-                    user_list = lister.list_users()
-                    if not sys.stdout.isatty() and not lister.no_prompt:
-                        if user_list:
-                            LOG.info("Project has the following users")
-                            for user in user_list:
-                                LOG.info(user["User Name"], user["Primary email"])
+                if json:
+                    json_output = {"project_name": project}
+                    if users:
+                        user_list = lister.list_users()
+                        json_output["users"] = user_list
 
-                if tree:
-                    lister.list_recursive(show_size=size)
-                else:
-                    folders = lister.list_files(folder=folder, show_size=size)
-
-                    # If an interactive terminal, ask user if they want to view files for a proj
-                    if sys.stdout.isatty() and (not lister.no_prompt) and len(folders) > 0:
-                        LOG.info(
-                            "Would you like to view files within a directory? "
-                            "Leave blank to exit."
+                    if tree:
+                        folders = lister.list_recursive(show_size=size)
+                        json_output["project_files_and_directories"] = folders
+                    else:
+                        LOG.warning(
+                            "JSON output for file listing only possible for the complete file tree. "
+                            "Please use the '--tree' option to view complete contens in JSON or remove the '--json' "
+                            "option to list files interactively"
                         )
-                        last_folder = None
-                        while folder is None or folder != last_folder:
-                            last_folder = folder
+                    dds_cli.utils.console.print_json(data=json_output)
+                else:
+                    if users:
+                        user_list = lister.list_users()
 
-                            try:
-                                folder = questionary.autocomplete(
-                                    "Folder:",
-                                    choices=folders,
-                                    validate=lambda x: x in folders or x == "",
-                                    style=dds_cli.dds_questionary_styles,
-                                ).unsafe_ask()
-                                assert folder != ""
-                                assert folder is not None
-                            # If didn't enter anything, convert to None and exit
-                            except (KeyboardInterrupt, AssertionError):
-                                break
+                    if tree:
+                        folders = lister.list_recursive(show_size=size)
+                    else:
+                        folders = lister.list_files(folder=folder, show_size=size)
 
-                            # Prepend existing file path
-                            if last_folder is not None and folder is not None:
-                                folder = os.path.join(last_folder, folder)
+                        # If an interactive terminal, ask user if they want to view files for a proj
+                        if sys.stdout.isatty() and (not lister.no_prompt) and len(folders) > 0:
+                            LOG.info(
+                                "Would you like to view files within a directory? "
+                                "Leave blank to exit."
+                            )
+                            last_folder = None
+                            while folder is None or folder != last_folder:
+                                last_folder = folder
 
-                            # List files
-                            folders = lister.list_files(folder=folder, show_size=size)
+                                try:
+                                    folder = questionary.autocomplete(
+                                        "Folder:",
+                                        choices=folders,
+                                        validate=lambda x: x in folders or x == "",
+                                        style=dds_cli.dds_questionary_styles,
+                                    ).unsafe_ask()
+                                    assert folder != ""
+                                    assert folder is not None
+                                # If didn't enter anything, convert to None and exit
+                                except (KeyboardInterrupt, AssertionError):
+                                    break
 
-                            if len(folders) == 0:
-                                break
+                                # Prepend existing file path
+                                if last_folder is not None and folder is not None:
+                                    folder = os.path.join(last_folder, folder)
+
+                                # List files
+                                folders = lister.list_files(folder=folder, show_size=size)
+
+                                if len(folders) == 0:
+                                    break
 
     except (dds_cli.exceptions.NoDataError) as err:
         LOG.warning(err)

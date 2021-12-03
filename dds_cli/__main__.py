@@ -77,7 +77,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
         # Set up logs to the console
         LOG.addHandler(
             rich.logging.RichHandler(
-                level=logging.DEBUG if verbose else logging.INFO,
+                level=logging.DEBUG if verbose else logging.WARNING,
                 console=dds_cli.utils.stderr_console,
                 show_time=False,
                 markup=True,

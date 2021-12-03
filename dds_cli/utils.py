@@ -17,8 +17,8 @@ def get_json_response(response):
 
 
 def calculate_magnitude(projects, keys, iec_standard=False):
-    """Uses the project list, obtains the values assigned to a particular key iteratively and calculates the best magnitude to format this set of values consistently"""
-
+    """Uses the project list, obtains the values assigned to a particular key iteratively and
+    calculates the best magnitude to format this set of values consistently"""
     # initialize the dictionary to be returned
     magnitudes = dict(zip(keys, [None] * len(keys)))
 

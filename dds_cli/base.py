@@ -8,18 +8,15 @@
 import logging
 import os
 import pathlib
-import sys
 
 # Installed
 import http
 import requests
-import rich
 import simplejson
 
 # Own modules
 import dds_cli.directory
 import dds_cli.timestamp
-import dds_cli.utils
 
 from dds_cli import (
     DDS_METHODS,
@@ -27,7 +24,6 @@ from dds_cli import (
     DDS_KEYS_REQUIRED_METHODS,
 )
 from dds_cli import DDSEndpoint
-from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
 from dds_cli import user
 from dds_cli import exceptions
@@ -169,14 +165,14 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if key_type not in project_public:
-            dds_cli.utils.console.print(
+            utils.console.print(
                 "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
             )
             os._exit(1)
 
         return project_public[key_type]
 
-    def __printout_delivery_summary(self, max_fileerrs: int = 40):
+    def __printout_delivery_summary(self, _: int = 40):
         """Print out the delivery summary if any files were cancelled."""
         any_failed = self.__collect_all_failed()
 
@@ -192,14 +188,14 @@ class DDSBaseClass:
 
         #     # Print message if any failed files, print summary table unless too many failed files
         #     if len(any_failed) < max_fileerrs:
-        #         dds_cli.utils.console.print(f"{intro_error_message}:")
+        #         utils.console.print(f"{intro_error_message}:")
 
         #         # Cancelled files in root
         #         files_table, additional_info = fh.FileHandler.create_summary_table(
         #             all_failed_data=any_failed, upload=bool(self.method == "put")
         #         )
         #         if files_table is not None:
-        #             dds_cli.utils.console.print(rich.padding.Padding(files_table, 1))
+        #             utils.console.print(rich.padding.Padding(files_table, 1))
 
         #         # Cancelled files in different folders
         #         folders_table, additional_info = fh.FileHandler.create_summary_table(
@@ -208,16 +204,16 @@ class DDSBaseClass:
         #             upload=bool(self.method == "put"),
         #         )
         #         if folders_table is not None:
-        #             dds_cli.utils.console.print(rich.padding.Padding(folders_table, 1))
+        #             utils.console.print(rich.padding.Padding(folders_table, 1))
         #         if additional_info:
-        #             dds_cli.utils.console.print(rich.padding.Padding(additional_info, 1))
+        #             utils.console.print(rich.padding.Padding(additional_info, 1))
 
-        #     dds_cli.utils.console.print(
+        #     utils.console.print(
         #         f"{intro_error_message}. See {self.failed_delivery_log} for more information."
         #     )
 
         #     if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
-        #         dds_cli.utils.console.print(
+        #         utils.console.print(
         #             rich.padding.Padding(
         #                 "One or more files where uploaded but may not have been added to "
         #                 "the db. Contact support and supply the logfile found in "

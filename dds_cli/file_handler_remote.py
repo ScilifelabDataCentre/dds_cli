@@ -1,4 +1,4 @@
-"""Remote file handler module"""
+"""Remote file handler module."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -8,7 +8,6 @@
 import logging
 import os
 import pathlib
-import sys
 
 # Installed
 import requests

@@ -10,8 +10,6 @@ import os
 import pathlib
 
 # Installed
-import boto3
-import botocore
 import requests
 import simplejson
 from rich.progress import Progress, SpinnerColumn
@@ -22,8 +20,6 @@ from dds_cli import file_handler_remote as fhr
 from dds_cli import data_remover as dr
 from dds_cli import file_compressor as fc
 from dds_cli import file_encryptor as fe
-from dds_cli import s3_connector as s3
-from dds_cli import status
 from dds_cli import text_handler as txt
 from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
 from dds_cli import base
@@ -192,34 +188,13 @@ class DataGetter(base.DDSBaseClass):
                     for chunk in r.iter_content(chunk_size=8192):
                         progress.update(task, advance=len(chunk))
                         f.write(chunk)
-        except requests.exceptions.HTTPError:
-            raise
+        except requests.exceptions.HTTPError as err:
+            error = str(err)
+            LOG.exception(f"{file}: {error}")
         else:
             downloaded = True
 
         return downloaded, error
-        # try:
-        #     with self.s3connector as conn:
-        #         # Upload file
-        #         conn.resource.meta.client.download_file(
-        #             Filename=file_local,
-        #             Bucket=conn.bucketname,
-        #             Key=file_remote,
-        #             Callback=status.ProgressPercentage(progress=progress, task=task)
-        #             if not self.silent
-        #             else None,
-        #         )
-        # except (
-        #     botocore.client.ClientError,
-        #     boto3.exceptions.Boto3Error,
-        #     botocore.exceptions.BotoCoreError,
-        # ) as err:
-        #     error = f"S3 download of file '{file}' failed: {err}"
-        #     LOG.exception(f"{file}: {err}")
-        # else:
-        #     downloaded = True
-
-        # return downloaded, error
 
     @update_status
     def update_db(self, file):

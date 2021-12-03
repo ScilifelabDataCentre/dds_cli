@@ -114,7 +114,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
             )
 
         return f"0 {unit}"
-    else:
-        # Since table.add.row() expects a string,
-        # try to return whatever is not yet a string but also not numeric as string
-        return str(response)
+
+    # Since table.add.row() expects a string,
+    # try to return whatever is not yet a string but also not numeric as string
+    return str(response)

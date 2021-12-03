@@ -97,6 +97,8 @@ class FileHandler:
         if not get_single_files:
             columns = ["Directory"] + columns
 
+        LOG.debug(all_failed_data)
+
         files = [
             x
             for x in all_failed_data

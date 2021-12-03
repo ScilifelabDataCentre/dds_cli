@@ -61,6 +61,9 @@ class ProgressPercentage(object):
 
         self._seen_so_far = 0
 
+    def __enter__(self):
+        return self
+
     def __call__(self, bytes_amount, **_):
 
         self._seen_so_far += bytes_amount

@@ -184,52 +184,54 @@ class DDSBaseClass:
         self.filehandler.failed.clear()
 
         if any_failed:
-            intro_error_message = (
-                f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
-            )
+            LOG.info(f"Errors occurred during {'upload' if self.method == 'put' else 'download'}")
+            LOG.info(f"Failed: \n{any_failed}")
+        #     intro_error_message = (
+        #         f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
+        #     )
 
-            # Print message if any failed files, print summary table unless too many failed files
-            if len(any_failed) < max_fileerrs:
-                dds_cli.utils.console.print(f"{intro_error_message}:")
+        #     # Print message if any failed files, print summary table unless too many failed files
+        #     if len(any_failed) < max_fileerrs:
+        #         dds_cli.utils.console.print(f"{intro_error_message}:")
 
-                # Cancelled files in root
-                files_table, additional_info = fh.FileHandler.create_summary_table(
-                    all_failed_data=any_failed, upload=bool(self.method == "put")
-                )
-                if files_table is not None:
-                    dds_cli.utils.console.print(rich.padding.Padding(files_table, 1))
+        #         # Cancelled files in root
+        #         files_table, additional_info = fh.FileHandler.create_summary_table(
+        #             all_failed_data=any_failed, upload=bool(self.method == "put")
+        #         )
+        #         if files_table is not None:
+        #             dds_cli.utils.console.print(rich.padding.Padding(files_table, 1))
 
-                # Cancelled files in different folders
-                folders_table, additional_info = fh.FileHandler.create_summary_table(
-                    all_failed_data=any_failed,
-                    get_single_files=False,
-                    upload=bool(self.method == "put"),
-                )
-                if folders_table is not None:
-                    dds_cli.utils.console.print(rich.padding.Padding(folders_table, 1))
-                if additional_info:
-                    dds_cli.utils.console.print(rich.padding.Padding(additional_info, 1))
+        #         # Cancelled files in different folders
+        #         folders_table, additional_info = fh.FileHandler.create_summary_table(
+        #             all_failed_data=any_failed,
+        #             get_single_files=False,
+        #             upload=bool(self.method == "put"),
+        #         )
+        #         if folders_table is not None:
+        #             dds_cli.utils.console.print(rich.padding.Padding(folders_table, 1))
+        #         if additional_info:
+        #             dds_cli.utils.console.print(rich.padding.Padding(additional_info, 1))
 
-            dds_cli.utils.console.print(
-                f"{intro_error_message}. See {self.failed_delivery_log} for more information."
-            )
+        #     dds_cli.utils.console.print(
+        #         f"{intro_error_message}. See {self.failed_delivery_log} for more information."
+        #     )
 
-            if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
-                dds_cli.utils.console.print(
-                    rich.padding.Padding(
-                        "One or more files where uploaded but may not have been added to "
-                        "the db. Contact support and supply the logfile found in "
-                        f"{self.dds_directory.directories['LOGS']}",
-                        1,
-                    )
-                )
+        #     if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
+        #         dds_cli.utils.console.print(
+        #             rich.padding.Padding(
+        #                 "One or more files where uploaded but may not have been added to "
+        #                 "the db. Contact support and supply the logfile found in "
+        #                 f"{self.dds_directory.directories['LOGS']}",
+        #                 1,
+        #             )
+        #         )
 
-        else:
-            # Printout if no cancelled/failed files
-            LOG.debug(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
+        # else:
+        #     # Printout if no cancelled/failed files
+        #     LOG.debug(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
 
-        if self.method == "get" and len(self.filehandler.data) > len(any_failed):
-            LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
+        # if self.method == "get" and len(self.filehandler.data) > len(any_failed):
+        #     LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
 
     def __collect_all_failed(self, sort: bool = True):
         """Put cancelled files from status in to failed dict and sort the output."""
@@ -257,11 +259,19 @@ class DDSBaseClass:
         )
 
         # Sort by which directory the files are in
+        LOG.debug(self.filehandler.failed)
+        # os._exit(1)
+
         return (
-            sorted(
-                sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
-                key=lambda f: f[1]["subpath"],
-            )
+            sorted(self.filehandler.failed.items(), key=lambda g: g[0])
             if sort
             else self.filehandler.failed
         )
+        # return (
+        #     sorted(
+        #         sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
+        #         key=lambda f: f[1]["subpath"],
+        #     )
+        #     if sort
+        #     else self.filehandler.failed
+        # )

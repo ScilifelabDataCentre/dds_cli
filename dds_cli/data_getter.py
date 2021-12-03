@@ -181,31 +181,45 @@ class DataGetter(base.DDSBaseClass):
         """Download files from the cloud."""
         downloaded = False
         error = ""
-        file_local = str(self.filehandler.data[file]["path_downloaded"])
-        file_remote = self.filehandler.data[file]["name_in_bucket"]
+        # file_local = str(self.filehandler.data[file]["path_downloaded"])
+        file_local = self.filehandler.data[file]["path_downloaded"]
+        file_remote = self.filehandler.data[file]["url"]
 
         try:
-            with self.s3connector as conn:
-                # Upload file
-                conn.resource.meta.client.download_file(
-                    Filename=file_local,
-                    Bucket=conn.bucketname,
-                    Key=file_remote,
-                    Callback=status.ProgressPercentage(progress=progress, task=task)
-                    if not self.silent
-                    else None,
-                )
-        except (
-            botocore.client.ClientError,
-            boto3.exceptions.Boto3Error,
-            botocore.exceptions.BotoCoreError,
-        ) as err:
-            error = f"S3 download of file '{file}' failed: {err}"
-            LOG.exception(f"{file}: {err}")
+            with requests.get(file_remote, stream=True) as r:
+                r.raise_for_status()
+                with file_local.open(mode="wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        progress.update(task, advance=len(chunk))
+                        f.write(chunk)
+        except requests.exceptions.HTTPError:
+            raise
         else:
             downloaded = True
 
         return downloaded, error
+        # try:
+        #     with self.s3connector as conn:
+        #         # Upload file
+        #         conn.resource.meta.client.download_file(
+        #             Filename=file_local,
+        #             Bucket=conn.bucketname,
+        #             Key=file_remote,
+        #             Callback=status.ProgressPercentage(progress=progress, task=task)
+        #             if not self.silent
+        #             else None,
+        #         )
+        # except (
+        #     botocore.client.ClientError,
+        #     boto3.exceptions.Boto3Error,
+        #     botocore.exceptions.BotoCoreError,
+        # ) as err:
+        #     error = f"S3 download of file '{file}' failed: {err}"
+        #     LOG.exception(f"{file}: {err}")
+        # else:
+        #     downloaded = True
+
+        # return downloaded, error
 
     @update_status
     def update_db(self, file):

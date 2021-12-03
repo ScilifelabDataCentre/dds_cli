@@ -30,6 +30,9 @@ class InvalidMethodError(Exception):
 class DDSCLIException(click.ClickException):
     """Base exception for click in DDS."""
 
+    def __init__(self, message, sign=":warning-emoji:"):
+        super().__init__(f"{sign} {message} {sign}")
+
 
 class AuthenticationError(click.ClickException):
     """Errors due to user authentication."""
@@ -73,6 +76,10 @@ class ApiResponseError(Exception):
 
 class UploadError(Exception):
     """Errors relating to file uploads."""
+
+
+class DownloadError(Exception):
+    """Errors relating to file download."""
 
 
 class S3KeyLengthExceeded(UploadError):

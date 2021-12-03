@@ -12,6 +12,7 @@ import sys
 
 # Installed
 import requests
+import simplejson
 
 # Own modules
 from dds_cli import DDSEndpoint
@@ -83,44 +84,43 @@ class RemoteFileHandler(fh.FileHandler):
                 headers=token,
                 json=all_paths,
             )
-        except requests.ConnectionError as err:
-            LOG.fatal(err)
-            os._exit(1)
+
+            # Get file info from response
+            file_info = response.json()
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
         # Server error or error in response
         if not response.ok:
-            dds_cli.utils.console.print(f"\n{response.text}\n")
-            os._exit(1)
+            raise dds_cli.exceptions.ApiResponseError(response.text)
 
-        # Get file info from response
-        file_info = response.json()
+        files = file_info.get("files")
+        folder_contents = file_info.get("folder_contents", {})
 
         # Folder info required if specific files requested
-        if all_paths and "folders" not in file_info:
-            dds_cli.utils.console.print(
-                "\n:warning-emoji: Error in response. "
-                "Not enough info returned despite ok request. :warning-emoji:\n"
+        if all_paths and not folder_contents:
+            raise dds_cli.exceptions.DDSCLIException(
+                "Error in response. Not enough info returned despite ok request."
             )
-            os._exit(1)
 
         # Files in response always required
-        if "files" not in file_info:
-            dds_cli.utils.console.print(
-                "\n:warning-emoji: No files in response despite ok request. :warning-emoji:\n"
-            )
-            os._exit(1)
+        if not files:
+            raise dds_cli.exceptions.DDSCLIException("No files in response despite ok request.")
 
-        # files and files in folders from db
-        files = file_info["files"]
-        LOG.info(files)
-        folders = file_info["folders"] if "folders" in file_info else {}
+        LOG.debug(f"Attempted: \n{all_paths}")
+        LOG.debug(f"Files: \n{files}")
+        LOG.debug(f"Folder contents: \n{folder_contents}")
 
         # Cancel download of those files or folders not found in the db
         self.failed = {
             x: {"error": "Not found in DB."}
             for x in all_paths
-            if x not in files and x not in folders
+            if x not in files and x not in folder_contents
         }
+
+        LOG.debug(f"Not found: {self.failed}")
 
         # Save info on files in dict and return
         data = {
@@ -132,29 +132,25 @@ class RemoteFileHandler(fh.FileHandler):
             }
             for x, y in files.items()
         }
+        LOG.debug(f"Data (files):\n {data}")
 
         # Save info on files in a specific folder and return
-        for x, y in folders.items():
+        for x, y in folder_contents.items():
+            LOG.debug(f"{x}")
             data.update(
                 {
                     self.local_destination
-                    / pathlib.Path(z[0]): {
-                        "name_in_db": z[0],
-                        "name_in_bucket": z[1],
-                        "path_downloaded": self.local_destination / pathlib.Path(z[1]),
-                        "subpath": z[2],
-                        "size": z[3],
-                        "size_encrypted": z[4],
-                        "key_salt": z[5],
-                        "public_key": z[6],
-                        "checksum": z[7],
-                        "compressed": z[8],
+                    / pathlib.Path(j): {
+                        **k,
+                        "name_in_db": j,
+                        "path_downloaded": self.local_destination
+                        / pathlib.Path(k["name_in_bucket"]),
                     }
-                    for z in y
+                    for j, k in y.items()
                 }
             )
 
-        LOG.debug(data)
+        LOG.debug(f"Data (files and folders):\n {data}")
         return data
 
     # Public methods ############ Public methods #

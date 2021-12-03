@@ -375,7 +375,7 @@ class DataPutter(base.DDSBaseClass):
             "size": fileinfo["size_raw"],
             "size_processed": fileinfo["size_processed"],
             "compressed": not fileinfo["compressed"],
-            "salt": fileinfo["key_salt"],
+            "salt": fileinfo["salt"],
             "public_key": fileinfo["public_key"],
             "checksum": fileinfo["checksum"],
         }

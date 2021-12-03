@@ -96,12 +96,11 @@ class DataGetter(base.DDSBaseClass):
             )
 
             if self.filehandler.failed and self.break_on_fail:
-                dds_cli.utils.console.print(
+                raise dds_cli.exceptions.DownloadError(
                     "\n:warning-emoji: Some specified files were not found in the system "
                     "and '--break-on-fail' flag used. :warning-emoji:\n\n"
                     f"Files not found: {self.filehandler.failed}\n"
                 )
-                os._exit(1)
 
             if not self.filehandler.data:
                 dds_cli.utils.console.print("\nNo files to download.\n")
@@ -147,7 +146,7 @@ class DataGetter(base.DDSBaseClass):
             with fe.Decryptor(
                 project_keys=self.keys,
                 peer_public=file_info["public_key"],
-                key_salt=file_info["key_salt"],
+                key_salt=file_info["salt"],
             ) as decryptor:
 
                 streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"])

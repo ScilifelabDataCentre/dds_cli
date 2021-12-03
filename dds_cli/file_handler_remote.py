@@ -156,10 +156,8 @@ class RemoteFileHandler(fh.FileHandler):
     # Public methods ############ Public methods #
     def create_download_status_dict(self):
         """Create dict for tracking file download status."""
-
-        status_dict = {}
-        for x in list(self.data):
-            status_dict[x] = {
+        status_dict = {
+            x: {
                 "cancel": False,
                 "started": False,
                 "message": "",
@@ -167,5 +165,7 @@ class RemoteFileHandler(fh.FileHandler):
                 "get": {"started": False, "done": False},
                 "update_db": {"started": False, "done": False},
             }
+            for x in self.data
+        }
 
         return status_dict

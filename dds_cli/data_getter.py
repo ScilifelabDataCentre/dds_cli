@@ -97,14 +97,13 @@ class DataGetter(base.DDSBaseClass):
 
             if self.filehandler.failed and self.break_on_fail:
                 raise dds_cli.exceptions.DownloadError(
-                    "\n:warning-emoji: Some specified files were not found in the system "
-                    "and '--break-on-fail' flag used. :warning-emoji:\n\n"
-                    f"Files not found: {self.filehandler.failed}\n"
+                    ":warning-emoji: Some specified files were not found in the system "
+                    "and '--break-on-fail' flag used. :warning-emoji:"
+                    f"Files not found: {self.filehandler.failed}"
                 )
 
             if not self.filehandler.data:
-                dds_cli.utils.console.print("\nNo files to download.\n")
-                os._exit(0)
+                raise dds_cli.exceptions.DownloadError("No files to download.")
 
             self.status = self.filehandler.create_download_status_dict()
 

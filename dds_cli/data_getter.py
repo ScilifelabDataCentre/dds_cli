@@ -71,10 +71,10 @@ class DataGetter(base.DDSBaseClass):
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
-            dds_cli.utils.console.print(
-                f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n"
+            raise dds_cli.exceptions.InvalidMethodError(
+                attempted_method=self.method,
+                message="DataGetter attempting unauthorized method",
             )
-            os._exit(1)
 
         # Start file prep progress
         with Progress(

@@ -43,8 +43,9 @@ class RemoteFileHandler(fh.FileHandler):
         self.data_list = list(set(self.data_list))
 
         if not self.data_list and not get_all:
-            dds_cli.utils.console.print("\n:warning-emoji: No data specified. :warning-emoji:\n")
-            os._exit(1)
+            raise dds_cli.exceptions.NoDataError(
+                "\n:warning-emoji: No data specified. :warning-emoji:\n"
+            )
 
         self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
         self.data_list = None

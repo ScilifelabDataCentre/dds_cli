@@ -665,7 +665,18 @@ def get(
                                     progress=progress,
                                 )
                             ] = next_file
-    except dds_cli.exceptions.DDSCLIException as err:
+    except (
+        dds_cli.exceptions.InvalidMethodError,
+        OSError,
+        dds_cli.exceptions.TokenNotFoundError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.ApiResponseError,
+        SystemExit,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.NoDataError,
+        dds_cli.exceptions.DownloadError,
+    ) as err:
         LOG.error(err)
         sys.exit(1)
 

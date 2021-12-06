@@ -181,19 +181,19 @@ class DataGetter(base.DDSBaseClass):
         file_local = self.filehandler.data[file]["path_downloaded"]
         file_remote = self.filehandler.data[file]["url"]
 
-        try:
-            with requests.get(file_remote, stream=True) as r:
-                r.raise_for_status()
-                with file_local.open(mode="wb") as f:
-                    for chunk in r.iter_content(chunk_size=8192):
-                        progress.update(task, advance=len(chunk))
-                        f.write(chunk)
-        except requests.exceptions.HTTPError as err:
-            error = str(err)
-            LOG.exception(f"{file}: {error}")
-        else:
-            downloaded = True
-
+        # try:
+        #     with requests.get(file_remote, stream=True) as r:
+        #         r.raise_for_status()
+        #         with file_local.open(mode="wb") as f:
+        #             for chunk in r.iter_content(chunk_size=8192):
+        #                 progress.update(task, advance=len(chunk))
+        #                 f.write(chunk)
+        # except requests.exceptions.HTTPError as err:
+        #     error = str(err)
+        #     LOG.exception(f"{file}: {error}")
+        # else:
+        #     downloaded = True
+        error = "testing"
         return downloaded, error
 
     @update_status

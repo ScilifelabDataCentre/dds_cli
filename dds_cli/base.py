@@ -8,11 +8,13 @@
 import logging
 import os
 import pathlib
+import collections
 
 # Installed
 import http
 import requests
 import simplejson
+import rich
 
 # Own modules
 import dds_cli.directory
@@ -28,6 +30,7 @@ from dds_cli import s3_connector as s3
 from dds_cli import user
 from dds_cli import exceptions
 from dds_cli import utils
+from dds_cli import file_handler as fh
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -172,7 +175,7 @@ class DDSBaseClass:
 
         return project_public[key_type]
 
-    def __printout_delivery_summary(self, _: int = 40):
+    def __printout_delivery_summary(self, max_fileerrs: int = 40):
         """Print out the delivery summary if any files were cancelled."""
         any_failed = self.__collect_all_failed()
 
@@ -180,54 +183,53 @@ class DDSBaseClass:
         self.filehandler.failed.clear()
 
         if any_failed:
-            LOG.info(f"Errors occurred during {'upload' if self.method == 'put' else 'download'}")
             LOG.info(f"Failed: \n{any_failed}")
-        #     intro_error_message = (
-        #         f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
-        #     )
+            intro_error_message = (
+                f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
+            )
 
-        #     # Print message if any failed files, print summary table unless too many failed files
-        #     if len(any_failed) < max_fileerrs:
-        #         utils.console.print(f"{intro_error_message}:")
+            # Print message if any failed files, print summary table unless too many failed files
+            if len(any_failed) < max_fileerrs:
+                utils.console.print(f"{intro_error_message}:")
 
-        #         # Cancelled files in root
-        #         files_table, additional_info = fh.FileHandler.create_summary_table(
-        #             all_failed_data=any_failed, upload=bool(self.method == "put")
-        #         )
-        #         if files_table is not None:
-        #             utils.console.print(rich.padding.Padding(files_table, 1))
+                # Cancelled files in root
+                files_table, additional_info = fh.FileHandler.create_summary_table(
+                    all_failed_data=any_failed, upload=bool(self.method == "put")
+                )
+                if files_table is not None:
+                    utils.console.print(rich.padding.Padding(files_table, 1))
 
-        #         # Cancelled files in different folders
-        #         folders_table, additional_info = fh.FileHandler.create_summary_table(
-        #             all_failed_data=any_failed,
-        #             get_single_files=False,
-        #             upload=bool(self.method == "put"),
-        #         )
-        #         if folders_table is not None:
-        #             utils.console.print(rich.padding.Padding(folders_table, 1))
-        #         if additional_info:
-        #             utils.console.print(rich.padding.Padding(additional_info, 1))
+                # Cancelled files in different folders
+                folders_table, additional_info = fh.FileHandler.create_summary_table(
+                    all_failed_data=any_failed,
+                    get_single_files=False,
+                    upload=bool(self.method == "put"),
+                )
+                if folders_table is not None:
+                    utils.console.print(rich.padding.Padding(folders_table, 1))
+                if additional_info:
+                    utils.console.print(rich.padding.Padding(additional_info, 1))
 
-        #     utils.console.print(
-        #         f"{intro_error_message}. See {self.failed_delivery_log} for more information."
-        #     )
+            utils.console.print(
+                f"{intro_error_message}. See {self.failed_delivery_log} for more information."
+            )
 
-        #     if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
-        #         utils.console.print(
-        #             rich.padding.Padding(
-        #                 "One or more files where uploaded but may not have been added to "
-        #                 "the db. Contact support and supply the logfile found in "
-        #                 f"{self.dds_directory.directories['LOGS']}",
-        #                 1,
-        #             )
-        #         )
+            if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
+                utils.console.print(
+                    rich.padding.Padding(
+                        "One or more files where uploaded but may not have been added to "
+                        "the db. Contact support and supply the logfile found in "
+                        f"{self.dds_directory.directories['LOGS']}",
+                        1,
+                    )
+                )
 
-        # else:
-        #     # Printout if no cancelled/failed files
-        #     LOG.debug(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
+        else:
+            # Printout if no cancelled/failed files
+            LOG.debug(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
 
-        # if self.method == "get" and len(self.filehandler.data) > len(any_failed):
-        #     LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
+        if self.method == "get" and len(self.filehandler.data) > len(any_failed):
+            LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
 
     def __collect_all_failed(self, sort: bool = True):
         """Put cancelled files from status in to failed dict and sort the output."""
@@ -259,7 +261,7 @@ class DDSBaseClass:
         # os._exit(1)
 
         return (
-            sorted(self.filehandler.failed.items(), key=lambda g: g[0])
+            sorted(self.filehandler.failed.items(), key=lambda g: g)
             if sort
             else self.filehandler.failed
         )

@@ -87,6 +87,7 @@ class FileHandler:
         upload: bool = True,
     ):
         """Create summary of files and errors."""
+
         columns = ["File", "Error"] if upload else ["File", "Location", "Error"]
         curr_table = None
         title = "file" if get_single_files else "directory"
@@ -97,29 +98,44 @@ class FileHandler:
         if not get_single_files:
             columns = ["Directory"] + columns
 
-        LOG.debug(all_failed_data)
+        LOG.warning(all_failed_data)
 
-        files = [
-            x
-            for x in all_failed_data
-            if (
-                get_single_files
-                and x[1]["subpath"] == "."
-                or not get_single_files
-                and x[1]["subpath"] != "."
-            )
-        ]
+        # files = [
+        #     x
+        #     for x in all_failed_data
+        #     if (
+        #         get_single_files
+        #         and x[1]["subpath"] == "."
+        #         or not get_single_files
+        #         and x[1]["subpath"] != "."
+        #     )
+        # ]
 
-        additional_message = (
-            (
-                "One or more files were not uploaded due to a issue with another file. "
-                "To ignore issues with other files, remove the `--break-on-fail` "
-                "flag from the call."
-            )
-            if any([1 for x in files if "break-on-fail" in x[1]["message"]])
-            else ""
+        # additional_message = (
+        #     (
+        #         "One or more files were not uploaded due to a issue with another file. "
+        #         "To ignore issues with other files, remove the `--break-on-fail` "
+        #         "flag from the call."
+        #     )
+        #     if any([1 for x in files if "break-on-fail" in x[1]["message"]])
+        #     else ""
+        # )
+
+        curr_table = rich.table.Table(
+            title=f"Incomplete {title} {up_or_down}s",
+            title_justify="left",
+            show_header=True,
+            header_style="bold",
         )
 
+        [curr_table.add_column(x, overflow="fold") for x in columns]
+
+        # for x, y in all_failed_data:
+        #     LOG.warning(x)
+        # if x["subpath"] == ".":
+        #     curr_table.add_row(x)
+        dds_cli.utils.console.print(curr_table)
+        os._exit(1)
         if files:
             curr_table = rich.table.Table(
                 title=f"Incomplete {title} {up_or_down}s",

@@ -1,0 +1,1142 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>dds_cli package &#8212; Data Delivery System  documentation</title>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="All modules" href="modules.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="All modules"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Data Delivery System  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" accesskey="U">All modules</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">dds_cli package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dds-cli-package">
+<h1>dds_cli package<a class="headerlink" href="#dds-cli-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-dds_cli.account_adder">
+<span id="dds-cli-account-adder"></span><h2>dds_cli.account_adder<a class="headerlink" href="#module-dds_cli.account_adder" title="Permalink to this headline">¶</a></h2>
+<p>Admin class, adds .</p>
+<dl class="py class">
+<dt id="dds_cli.account_adder.AccountAdder">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.account_adder.</span></code><code class="sig-name descname"><span class="pre">AccountAdder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'add'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.account_adder.AccountAdder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.base.DDSBaseClass" title="dds_cli.base.DDSBaseClass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.base.DDSBaseClass</span></code></a></p>
+<p>Admin class for adding users, etc.</p>
+<dl class="py method">
+<dt id="dds_cli.account_adder.AccountAdder.add_user">
+<code class="sig-name descname"><span class="pre">add_user</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">email</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.account_adder.AccountAdder.add_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invite user.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.auth">
+<span id="dds-cli-auth"></span><h2>dds_cli.auth<a class="headerlink" href="#module-dds_cli.auth" title="Permalink to this headline">¶</a></h2>
+<p>Data Delivery System saved authentication token manager.</p>
+<dl class="py class">
+<dt id="dds_cli.auth.Auth">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.auth.</span></code><code class="sig-name descname"><span class="pre">Auth</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authenticate</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.auth.Auth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.base.DDSBaseClass" title="dds_cli.base.DDSBaseClass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.base.DDSBaseClass</span></code></a></p>
+<p>Authentication manager class.</p>
+<dl class="py method">
+<dt id="dds_cli.auth.Auth.check">
+<code class="sig-name descname"><span class="pre">check</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.auth.Auth.check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.auth.Auth.logout">
+<code class="sig-name descname"><span class="pre">logout</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.auth.Auth.logout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.base">
+<span id="dds-cli-base"></span><h2>dds_cli.base<a class="headerlink" href="#module-dds_cli.base" title="Permalink to this headline">¶</a></h2>
+<p>Base class for the DDS CLI. Verifies the users access to the DDS.</p>
+<dl class="py class">
+<dt id="dds_cli.base.DDSBaseClass">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.base.</span></code><code class="sig-name descname"><span class="pre">DDSBaseClass</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dds_directory</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authenticate</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_check</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_renew_token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.base.DDSBaseClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Data Delivery System base class. For common operations.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.cli_decorators">
+<span id="dds-cli-cli-decorators"></span><h2>dds_cli.cli_decorators<a class="headerlink" href="#module-dds_cli.cli_decorators" title="Permalink to this headline">¶</a></h2>
+<p>Module for all decorators related to the execution of the DDS CLI.</p>
+<dl class="py function">
+<dt id="dds_cli.cli_decorators.removal_spinner">
+<code class="sig-prename descclassname"><span class="pre">dds_cli.cli_decorators.</span></code><code class="sig-name descname"><span class="pre">removal_spinner</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.cli_decorators.removal_spinner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spinner for the rm command</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dds_cli.cli_decorators.subpath_required">
+<code class="sig-prename descclassname"><span class="pre">dds_cli.cli_decorators.</span></code><code class="sig-name descname"><span class="pre">subpath_required</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.cli_decorators.subpath_required" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure that the subpath to the temporary file directory exist.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dds_cli.cli_decorators.update_status">
+<code class="sig-prename descclassname"><span class="pre">dds_cli.cli_decorators.</span></code><code class="sig-name descname"><span class="pre">update_status</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.cli_decorators.update_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for updating the status of files.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dds_cli.cli_decorators.verify_proceed">
+<code class="sig-prename descclassname"><span class="pre">dds_cli.cli_decorators.</span></code><code class="sig-name descname"><span class="pre">verify_proceed</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.cli_decorators.verify_proceed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator for verifying that the file is not cancelled.
+Also cancels the upload of all non-started files if break-on-fail.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.data_getter">
+<span id="dds-cli-data-getter"></span><h2>dds_cli.data_getter<a class="headerlink" href="#module-dds_cli.data_getter" title="Permalink to this headline">¶</a></h2>
+<p>Data getter.</p>
+<dl class="py class">
+<dt id="dds_cli.data_getter.DataGetter">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.data_getter.</span></code><code class="sig-name descname"><span class="pre">DataGetter</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">break_on_fail</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_all</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tuple</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_path_file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">PosixPath('.')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify_checksum</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'get'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_getter.DataGetter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.base.DDSBaseClass" title="dds_cli.base.DDSBaseClass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.base.DDSBaseClass</span></code></a></p>
+<p>Data getter class.</p>
+<dl class="py method">
+<dt id="dds_cli.data_getter.DataGetter.download_and_verify">
+<code class="sig-name descname"><span class="pre">download_and_verify</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_getter.DataGetter.download_and_verify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download the file, reveals the original data and verifies the integrity.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_getter.DataGetter.get">
+<code class="sig-name descname"><span class="pre">get</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_getter.DataGetter.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download files from the cloud.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_getter.DataGetter.update_db">
+<code class="sig-name descname"><span class="pre">update_db</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_getter.DataGetter.update_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update file info in db.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.data_lister">
+<span id="dds-cli-data-lister"></span><h2>dds_cli.data_lister<a class="headerlink" href="#module-dds_cli.data_lister" title="Permalink to this headline">¶</a></h2>
+<p>Data Lister – Lists the projects and project content.</p>
+<dl class="py class">
+<dt id="dds_cli.data_lister.DataLister">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.data_lister.</span></code><code class="sig-name descname"><span class="pre">DataLister</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'ls'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_usage</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tree</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_lister.DataLister" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.base.DDSBaseClass" title="dds_cli.base.DDSBaseClass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.base.DDSBaseClass</span></code></a></p>
+<p>Data lister class.</p>
+<dl class="py method">
+<dt id="dds_cli.data_lister.DataLister.format_columns">
+<code class="sig-name descname"><span class="pre">format_columns</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usage_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_lister.DataLister.format_columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the formatting for the project table according to what is returned from API.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_lister.DataLister.list_files">
+<code class="sig-name descname"><span class="pre">list_files</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_lister.DataLister.list_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a tree displaying the files within the project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_lister.DataLister.list_projects">
+<code class="sig-name descname"><span class="pre">list_projects</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Updated'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_lister.DataLister.list_projects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of project(s) the user is involved in.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_lister.DataLister.list_recursive">
+<code class="sig-name descname"><span class="pre">list_recursive</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">show_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_lister.DataLister.list_recursive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively list project contents.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_lister.DataLister.list_users">
+<code class="sig-name descname"><span class="pre">list_users</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_lister.DataLister.list_users" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of user(s) involved in a project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_lister.DataLister.sort_projects">
+<code class="sig-name descname"><span class="pre">sort_projects</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'id'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_lister.DataLister.sort_projects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort the projects according to ID and either default or chosen column.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.data_putter">
+<span id="dds-cli-data-putter"></span><h2>dds_cli.data_putter<a class="headerlink" href="#module-dds_cli.data_putter" title="Permalink to this headline">¶</a></h2>
+<p>Data putter.</p>
+<dl class="py class">
+<dt id="dds_cli.data_putter.DataPutter">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.data_putter.</span></code><code class="sig-name descname"><span class="pre">DataPutter</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">break_on_fail</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tuple</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_path_file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">pathlib.Path</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'put'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_putter.DataPutter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.base.DDSBaseClass" title="dds_cli.base.DDSBaseClass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.base.DDSBaseClass</span></code></a></p>
+<p>Data putter class.</p>
+<dl class="py method">
+<dt id="dds_cli.data_putter.DataPutter.add_file_db">
+<code class="sig-name descname"><span class="pre">add_file_db</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_putter.DataPutter.add_file_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make API request to add file to DB.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_putter.DataPutter.protect_and_upload">
+<code class="sig-name descname"><span class="pre">protect_and_upload</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_putter.DataPutter.protect_and_upload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process and upload the file while handling the progress bars.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_putter.DataPutter.put">
+<code class="sig-name descname"><span class="pre">put</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_putter.DataPutter.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload files to the cloud.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="dds_cli.data_putter.put">
+<code class="sig-prename descclassname"><span class="pre">dds_cli.data_putter.</span></code><code class="sig-name descname"><span class="pre">put</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_path_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">break_on_fail</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_threads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_putter.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle upload of data.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.data_remover">
+<span id="dds-cli-data-remover"></span><h2>dds_cli.data_remover<a class="headerlink" href="#module-dds_cli.data_remover" title="Permalink to this headline">¶</a></h2>
+<p>Data Remover – Removes files from projects.</p>
+<dl class="py class">
+<dt id="dds_cli.data_remover.DataRemover">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.data_remover.</span></code><code class="sig-name descname"><span class="pre">DataRemover</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'rm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_remover.DataRemover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.base.DDSBaseClass" title="dds_cli.base.DDSBaseClass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.base.DDSBaseClass</span></code></a></p>
+<p>Data remover class.</p>
+<dl class="py method">
+<dt id="dds_cli.data_remover.DataRemover.delete_tempfile">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">delete_tempfile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_remover.DataRemover.delete_tempfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_remover.DataRemover.remove_all">
+<code class="sig-name descname"><span class="pre">remove_all</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">_</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">__</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_remover.DataRemover.remove_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all files in project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_remover.DataRemover.remove_file">
+<code class="sig-name descname"><span class="pre">remove_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_remover.DataRemover.remove_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove specific files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.data_remover.DataRemover.remove_folder">
+<code class="sig-name descname"><span class="pre">remove_folder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.data_remover.DataRemover.remove_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove specific folders.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.directory">
+<span id="dds-cli-directory"></span><h2>dds_cli.directory<a class="headerlink" href="#module-dds_cli.directory" title="Permalink to this headline">¶</a></h2>
+<p>Directory module. Creates the DDS directory during delivery.</p>
+<dl class="py class">
+<dt id="dds_cli.directory.DDSDirectory">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.directory.</span></code><code class="sig-name descname"><span class="pre">DDSDirectory</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">path=&lt;class</span> <span class="pre">'pathlib.Path'&gt;</span></em>, <em class="sig-param"><span class="pre">add_file_dir:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.directory.DDSDirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Data Delivery System directory class.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.exceptions">
+<span id="dds-cli-exceptions"></span><h2>dds_cli.exceptions<a class="headerlink" href="#module-dds_cli.exceptions" title="Permalink to this headline">¶</a></h2>
+<p>Custom Exception classes.</p>
+<dl class="py exception">
+<dt id="dds_cli.exceptions.APIError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">APIError</span></code><a class="headerlink" href="#dds_cli.exceptions.APIError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Error connecting to the dds web server.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.ApiRequestError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">ApiRequestError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.exceptions.ApiRequestError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">requests.exceptions.RequestException</span></code></p>
+<p>Request to REST API failed.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.ApiResponseError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">ApiResponseError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.exceptions.ApiResponseError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>REST API Request does not return code 200 in response.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.AuthenticationError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">AuthenticationError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">':no_entry_sign:'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.exceptions.AuthenticationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">click.exceptions.ClickException</span></code></p>
+<p>Errors due to user authentication.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.DDSCLIException">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">DDSCLIException</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">':warning-emoji:'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.exceptions.DDSCLIException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">click.exceptions.ClickException</span></code></p>
+<p>Base exception for click in DDS.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.DownloadError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">DownloadError</span></code><a class="headerlink" href="#dds_cli.exceptions.DownloadError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Errors relating to file download.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.InvalidMethodError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">InvalidMethodError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attempted_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Attempting</span> <span class="pre">an</span> <span class="pre">invalid</span> <span class="pre">method</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">DDS'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.exceptions.InvalidMethodError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Valid methods are only ls, put, get, rm. Anything else should raise errors.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.NoDataError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">NoDataError</span></code><a class="headerlink" href="#dds_cli.exceptions.NoDataError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Errors when there is no data to do anything with.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.S3KeyLengthExceeded">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">S3KeyLengthExceeded</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&quot;Exceeds</span> <span class="pre">allowed</span> <span class="pre">limit</span> <span class="pre">for</span> <span class="pre">combined</span> <span class="pre">path</span> <span class="pre">and</span> <span class="pre">name</span> <span class="pre">length</span> <span class="pre">and</span> <span class="pre">can't</span> <span class="pre">be</span> <span class="pre">stored</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">system.&quot;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.exceptions.S3KeyLengthExceeded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.exceptions.UploadError" title="dds_cli.exceptions.UploadError"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.exceptions.UploadError</span></code></a></p>
+<p>The name in bucket exceeded the allowed 1024 bytes.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.TokenNotFoundError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">TokenNotFoundError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">':warning-emoji:'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.exceptions.TokenNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.exceptions.AuthenticationError" title="dds_cli.exceptions.AuthenticationError"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.exceptions.AuthenticationError</span></code></a></p>
+<p>No token retrieved from REST API or from File.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="dds_cli.exceptions.UploadError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.exceptions.</span></code><code class="sig-name descname"><span class="pre">UploadError</span></code><a class="headerlink" href="#dds_cli.exceptions.UploadError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Errors relating to file uploads.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.file_compressor">
+<span id="dds-cli-file-compressor"></span><h2>dds_cli.file_compressor<a class="headerlink" href="#module-dds_cli.file_compressor" title="Permalink to this headline">¶</a></h2>
+<p>“Compressor module. Handles the compression of files.</p>
+<dl class="py class">
+<dt id="dds_cli.file_compressor.CompressionMagic">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.file_compressor.</span></code><code class="sig-name descname"><span class="pre">CompressionMagic</span></code><a class="headerlink" href="#dds_cli.file_compressor.CompressionMagic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compression format signatures</p>
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.CompressionMagic.BZIP2">
+<code class="sig-name descname"><span class="pre">BZIP2</span></code><em class="property"> <span class="pre">=</span> <span class="pre">b'BZh'</span></em><a class="headerlink" href="#dds_cli.file_compressor.CompressionMagic.BZIP2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.CompressionMagic.GZIP">
+<code class="sig-name descname"><span class="pre">GZIP</span></code><em class="property"> <span class="pre">=</span> <span class="pre">b'\x1f\x8b'</span></em><a class="headerlink" href="#dds_cli.file_compressor.CompressionMagic.GZIP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.CompressionMagic.LZIP">
+<code class="sig-name descname"><span class="pre">LZIP</span></code><em class="property"> <span class="pre">=</span> <span class="pre">b'LZIP'</span></em><a class="headerlink" href="#dds_cli.file_compressor.CompressionMagic.LZIP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.CompressionMagic.RAR4">
+<code class="sig-name descname"><span class="pre">RAR4</span></code><em class="property"> <span class="pre">=</span> <span class="pre">b'Rar!\x1a\x07\x00'</span></em><a class="headerlink" href="#dds_cli.file_compressor.CompressionMagic.RAR4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.CompressionMagic.RAR5">
+<code class="sig-name descname"><span class="pre">RAR5</span></code><em class="property"> <span class="pre">=</span> <span class="pre">b'Rar!\x1a\x07\x01\x00'</span></em><a class="headerlink" href="#dds_cli.file_compressor.CompressionMagic.RAR5" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.CompressionMagic.ZSTANDARD">
+<code class="sig-name descname"><span class="pre">ZSTANDARD</span></code><em class="property"> <span class="pre">=</span> <span class="pre">b'(\xb5/\xfd'</span></em><a class="headerlink" href="#dds_cli.file_compressor.CompressionMagic.ZSTANDARD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dds_cli.file_compressor.Compressor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.file_compressor.</span></code><code class="sig-name descname"><span class="pre">Compressor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'zstandard'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_compressor.Compressor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Handles operations relating to file compression.</p>
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.Compressor.algorithm">
+<code class="sig-name descname"><span class="pre">algorithm</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><em class="property"> <span class="pre">=</span> <span class="pre">'zstandard'</span></em><a class="headerlink" href="#dds_cli.file_compressor.Compressor.algorithm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_compressor.Compressor.compress_file">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">compress_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">65536</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">bytes</span><a class="headerlink" href="#dds_cli.file_compressor.Compressor.compress_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compresses file by reading it chunk by chunk.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_compressor.Compressor.decompress_filechunks">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">decompress_filechunks</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_compressor.Compressor.decompress_filechunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decompress file chunks</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.Compressor.fmt_magic">
+<code class="sig-name descname"><span class="pre">fmt_magic</span></code><em class="property"><span class="pre">:</span> <span class="pre">dict</span></em><a class="headerlink" href="#dds_cli.file_compressor.Compressor.fmt_magic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_compressor.Compressor.is_compressed">
+<code class="sig-name descname"><span class="pre">is_compressed</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_compressor.Compressor.is_compressed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a file is compressed or not.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.file_compressor.Compressor.max_magic_len">
+<code class="sig-name descname"><span class="pre">max_magic_len</span></code><em class="property"><span class="pre">:</span> <span class="pre">int</span></em><a class="headerlink" href="#dds_cli.file_compressor.Compressor.max_magic_len" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.file_encryptor">
+<span id="dds-cli-file-encryptor"></span><h2>dds_cli.file_encryptor<a class="headerlink" href="#module-dds_cli.file_encryptor" title="Permalink to this headline">¶</a></h2>
+<p>File encryptor module. Handles the encryption of the files and the generation of the keys.</p>
+<dl class="py class">
+<dt id="dds_cli.file_encryptor.Decryptor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.file_encryptor.</span></code><code class="sig-name descname"><span class="pre">Decryptor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_keys</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peer_public</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key_salt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_encryptor.Decryptor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.file_encryptor.ECDHKeyHandler" title="dds_cli.file_encryptor.ECDHKeyHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.file_encryptor.ECDHKeyHandler</span></code></a></p>
+<p>Handles the decryption of the files.</p>
+<dl class="py method">
+<dt id="dds_cli.file_encryptor.Decryptor.decrypt_file">
+<code class="sig-name descname"><span class="pre">decrypt_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">infile</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_encryptor.Decryptor.decrypt_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrypts the file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dds_cli.file_encryptor.ECDHKeyHandler">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.file_encryptor.</span></code><code class="sig-name descname"><span class="pre">ECDHKeyHandler</span></code><a class="headerlink" href="#dds_cli.file_encryptor.ECDHKeyHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Generates the shared encryption/decryption key, and transforms the components.</p>
+<dl class="py method">
+<dt id="dds_cli.file_encryptor.ECDHKeyHandler.generate_shared_key">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">generate_shared_key</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">my_private</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peer_public</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">salt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bytes</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">b''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_encryptor.ECDHKeyHandler.generate_shared_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derive the shared key for file encryption.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_encryptor.ECDHKeyHandler.get_public_component_hex">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">get_public_component_hex</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">private_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_encryptor.ECDHKeyHandler.get_public_component_hex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the public key and converts to hex string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_encryptor.ECDHKeyHandler.public_to_hex">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">public_to_hex</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">public_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_encryptor.ECDHKeyHandler.public_to_hex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts public key to hexstring.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dds_cli.file_encryptor.Encryptor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.file_encryptor.</span></code><code class="sig-name descname"><span class="pre">Encryptor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_keys</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_encryptor.Encryptor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.file_encryptor.ECDHKeyHandler" title="dds_cli.file_encryptor.ECDHKeyHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.file_encryptor.ECDHKeyHandler</span></code></a></p>
+<p>Handles the encryption of the files.</p>
+<dl class="py method">
+<dt id="dds_cli.file_encryptor.Encryptor.encrypt_filechunks">
+<code class="sig-name descname"><span class="pre">encrypt_filechunks</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_encryptor.Encryptor.encrypt_filechunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Encrypts the file in chunks.</p>
+<p>Encrypts the file in chunks using the IETF ratified ChaCha20-Poly1305
+construction described in RFC8439 (obsoletes 7539).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_encryptor.Encryptor.verify_checksum">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">verify_checksum</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_checksum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_encryptor.Encryptor.verify_checksum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate file checksum and verify the integrity</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.file_handler">
+<span id="dds-cli-file-handler"></span><h2>dds_cli.file_handler<a class="headerlink" href="#module-dds_cli.file_handler" title="Permalink to this headline">¶</a></h2>
+<p>File handler module. Base class for LocalFileHandler and RemoteFileHandler.</p>
+<dl class="py class">
+<dt id="dds_cli.file_handler.FileHandler">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.file_handler.</span></code><code class="sig-name descname"><span class="pre">FileHandler</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler.FileHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Main file handler.</p>
+<dl class="py method">
+<dt id="dds_cli.file_handler.FileHandler.append_errors_to_file">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">append_errors_to_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler.FileHandler.append_errors_to_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save errors to specific json file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_handler.FileHandler.create_summary_table">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">create_summary_table</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">all_failed_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_single_files</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler.FileHandler.create_summary_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create summary of files and errors.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_handler.FileHandler.delete_tempdir">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">delete_tempdir</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler.FileHandler.delete_tempdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified directory.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.file_handler_local">
+<span id="dds-cli-file-handler-local"></span><h2>dds_cli.file_handler_local<a class="headerlink" href="#module-dds_cli.file_handler_local" title="Permalink to this headline">¶</a></h2>
+<p>Local file handler module</p>
+<dl class="py class">
+<dt id="dds_cli.file_handler_local.LocalFileHandler">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.file_handler_local.</span></code><code class="sig-name descname"><span class="pre">LocalFileHandler</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temporary_destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_local.LocalFileHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.file_handler.FileHandler" title="dds_cli.file_handler.FileHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.file_handler.FileHandler</span></code></a></p>
+<p>Collects the files specified by the user.</p>
+<dl class="py method">
+<dt id="dds_cli.file_handler_local.LocalFileHandler.check_previous_upload">
+<code class="sig-name descname"><span class="pre">check_previous_upload</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_local.LocalFileHandler.check_previous_upload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do API call and check for the files in the DB.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_handler_local.LocalFileHandler.create_encrypted_name">
+<code class="sig-name descname"><span class="pre">create_encrypted_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_file</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subpath</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_compression</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_local.LocalFileHandler.create_encrypted_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create new file name to save encrypted file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_handler_local.LocalFileHandler.create_upload_status_dict">
+<code class="sig-name descname"><span class="pre">create_upload_status_dict</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">existing_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_local.LocalFileHandler.create_upload_status_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create dict for tracking file delivery status</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_handler_local.LocalFileHandler.generate_bucket_filepath">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">generate_bucket_filepath</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('.')</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_local.LocalFileHandler.generate_bucket_filepath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates filename and new path which the file will be
+called in the bucket.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_handler_local.LocalFileHandler.read_file">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">read_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">65536</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_local.LocalFileHandler.read_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read file in chunk_size sized chunks.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_handler_local.LocalFileHandler.stream_from_file">
+<code class="sig-name descname"><span class="pre">stream_from_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_local.LocalFileHandler.stream_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read raw or compress file depending on if compressed already or not.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.file_handler_remote">
+<span id="dds-cli-file-handler-remote"></span><h2>dds_cli.file_handler_remote<a class="headerlink" href="#module-dds_cli.file_handler_remote" title="Permalink to this headline">¶</a></h2>
+<p>Remote file handler module.</p>
+<dl class="py class">
+<dt id="dds_cli.file_handler_remote.RemoteFileHandler">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.file_handler_remote.</span></code><code class="sig-name descname"><span class="pre">RemoteFileHandler</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">get_all</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PosixPath('.')</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_remote.RemoteFileHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.file_handler.FileHandler" title="dds_cli.file_handler.FileHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.file_handler.FileHandler</span></code></a></p>
+<p>Collects the files specified by the user.</p>
+<dl class="py method">
+<dt id="dds_cli.file_handler_remote.RemoteFileHandler.create_download_status_dict">
+<code class="sig-name descname"><span class="pre">create_download_status_dict</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_remote.RemoteFileHandler.create_download_status_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create dict for tracking file download status.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.file_handler_remote.RemoteFileHandler.write_file">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">write_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.file_handler_remote.RemoteFileHandler.write_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write file chunks to file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.project_creator">
+<span id="dds-cli-project-creator"></span><h2>dds_cli.project_creator<a class="headerlink" href="#module-dds_cli.project_creator" title="Permalink to this headline">¶</a></h2>
+<p>Data Delivery System Project Creator.</p>
+<dl class="py class">
+<dt id="dds_cli.project_creator.ProjectCreator">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.project_creator.</span></code><code class="sig-name descname"><span class="pre">ProjectCreator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'create'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.project_creator.ProjectCreator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.base.DDSBaseClass" title="dds_cli.base.DDSBaseClass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.base.DDSBaseClass</span></code></a></p>
+<p>Project creator class.</p>
+<dl class="py method">
+<dt id="dds_cli.project_creator.ProjectCreator.create_project">
+<code class="sig-name descname"><span class="pre">create_project</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">principal_investigator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitive</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">users_to_add</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.project_creator.ProjectCreator.create_project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create project with title and description.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.s3_connector">
+<span id="dds-cli-s3-connector"></span><h2>dds_cli.s3_connector<a class="headerlink" href="#module-dds_cli.s3_connector" title="Permalink to this headline">¶</a></h2>
+<p>S3 Connector module.</p>
+<dl class="py class">
+<dt id="dds_cli.s3_connector.S3Connector">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.s3_connector.</span></code><code class="sig-name descname"><span class="pre">S3Connector</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dataclasses.InitVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dataclasses.InitVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.s3_connector.S3Connector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Connect to Simple Storage Service.</p>
+<dl class="py attribute">
+<dt id="dds_cli.s3_connector.S3Connector.bucketname">
+<code class="sig-name descname"><span class="pre">bucketname</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#dds_cli.s3_connector.S3Connector.bucketname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.s3_connector.S3Connector.connect">
+<code class="sig-name descname"><span class="pre">connect</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.s3_connector.S3Connector.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to S3 resource.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.s3_connector.S3Connector.keys">
+<code class="sig-name descname"><span class="pre">keys</span></code><em class="property"><span class="pre">:</span> <span class="pre">dict</span></em><a class="headerlink" href="#dds_cli.s3_connector.S3Connector.keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.s3_connector.S3Connector.project_id">
+<code class="sig-name descname"><span class="pre">project_id</span></code><em class="property"><span class="pre">:</span> <span class="pre">dataclasses.InitVar</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dds_cli.s3_connector.S3Connector.project_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.s3_connector.S3Connector.resource">
+<code class="sig-name descname"><span class="pre">resource</span></code><em class="property"> <span class="pre">=</span> <span class="pre">None</span></em><a class="headerlink" href="#dds_cli.s3_connector.S3Connector.resource" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.s3_connector.S3Connector.safespring_project">
+<code class="sig-name descname"><span class="pre">safespring_project</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#dds_cli.s3_connector.S3Connector.safespring_project" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.s3_connector.S3Connector.token">
+<code class="sig-name descname"><span class="pre">token</span></code><em class="property"><span class="pre">:</span> <span class="pre">dataclasses.InitVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#dds_cli.s3_connector.S3Connector.token" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.s3_connector.S3Connector.url">
+<code class="sig-name descname"><span class="pre">url</span></code><em class="property"><span class="pre">:</span> <span class="pre">str</span></em><a class="headerlink" href="#dds_cli.s3_connector.S3Connector.url" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.status">
+<span id="dds-cli-status"></span><h2>dds_cli.status<a class="headerlink" href="#module-dds_cli.status" title="Permalink to this headline">¶</a></h2>
+<p>Status module.</p>
+<dl class="py class">
+<dt id="dds_cli.status.DeliveryStatus">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.status.</span></code><code class="sig-name descname"><span class="pre">DeliveryStatus</span></code><a class="headerlink" href="#dds_cli.status.DeliveryStatus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Delivery status class.</p>
+<dl class="py attribute">
+<dt id="dds_cli.status.DeliveryStatus.UPLOAD_STATUS">
+<code class="sig-name descname"><span class="pre">UPLOAD_STATUS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">{'database':</span> <span class="pre">{'finished':</span> <span class="pre">False,</span> <span class="pre">'in_progress':</span> <span class="pre">False},</span> <span class="pre">'processing':</span> <span class="pre">{'finished':</span> <span class="pre">False,</span> <span class="pre">'in_progress':</span> <span class="pre">False},</span> <span class="pre">'upload':</span> <span class="pre">{'finished':</span> <span class="pre">False,</span> <span class="pre">'in_progress':</span> <span class="pre">False}}</span></em><a class="headerlink" href="#dds_cli.status.DeliveryStatus.UPLOAD_STATUS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.status.DeliveryStatus.cancel_all">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">cancel_all</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.status.DeliveryStatus.cancel_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel upload all files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.status.DeliveryStatus.cancel_one">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">cancel_one</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.status.DeliveryStatus.cancel_one" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel the failed file.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dds_cli.status.ProgressPercentage">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.status.</span></code><code class="sig-name descname"><span class="pre">ProgressPercentage</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">progress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.status.ProgressPercentage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Updates the progress bar with the callback from boto3.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.text_handler">
+<span id="dds-cli-text-handler"></span><h2>dds_cli.text_handler<a class="headerlink" href="#module-dds_cli.text_handler" title="Permalink to this headline">¶</a></h2>
+<p>Handles formatting of string.</p>
+<dl class="py class">
+<dt id="dds_cli.text_handler.StringFormat">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.text_handler.</span></code><code class="sig-name descname"><span class="pre">StringFormat</span></code><a class="headerlink" href="#dds_cli.text_handler.StringFormat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Defines different formats for strings, e.g. colors and bold.</p>
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.BLUE">
+<code class="sig-name descname"><span class="pre">BLUE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[94m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.BLUE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.BOLD">
+<code class="sig-name descname"><span class="pre">BOLD</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[1m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.BOLD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.CYAN">
+<code class="sig-name descname"><span class="pre">CYAN</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[96m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.CYAN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.DARKCYAN">
+<code class="sig-name descname"><span class="pre">DARKCYAN</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[36m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.DARKCYAN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.END">
+<code class="sig-name descname"><span class="pre">END</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[0m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.END" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.GREEN">
+<code class="sig-name descname"><span class="pre">GREEN</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[92m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.GREEN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.HEADER">
+<code class="sig-name descname"><span class="pre">HEADER</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[95m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.HEADER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.PURPLE">
+<code class="sig-name descname"><span class="pre">PURPLE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[95m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.PURPLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.RED">
+<code class="sig-name descname"><span class="pre">RED</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[91m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.RED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.UNDERLINE">
+<code class="sig-name descname"><span class="pre">UNDERLINE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[4m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.UNDERLINE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.text_handler.StringFormat.YELLOW">
+<code class="sig-name descname"><span class="pre">YELLOW</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'\x1b[93m'</span></em><a class="headerlink" href="#dds_cli.text_handler.StringFormat.YELLOW" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dds_cli.text_handler.TextHandler">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.text_handler.</span></code><code class="sig-name descname"><span class="pre">TextHandler</span></code><a class="headerlink" href="#dds_cli.text_handler.TextHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#dds_cli.text_handler.StringFormat" title="dds_cli.text_handler.StringFormat"><code class="xref py py-class docutils literal notranslate"><span class="pre">dds_cli.text_handler.StringFormat</span></code></a></p>
+<p>Handler for text formatting.</p>
+<dl class="py method">
+<dt id="dds_cli.text_handler.TextHandler.format_tabs">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">format_tabs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_string_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.text_handler.TextHandler.format_tabs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Format number of tabs to have within string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.text_handler.TextHandler.task_name">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">task_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.text_handler.TextHandler.task_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate display name for progress task</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.timestamp">
+<span id="dds-cli-timestamp"></span><h2>dds_cli.timestamp<a class="headerlink" href="#module-dds_cli.timestamp" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="dds_cli.timestamp.TimeStamp">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.timestamp.</span></code><code class="sig-name descname"><span class="pre">TimeStamp</span></code><a class="headerlink" href="#dds_cli.timestamp.TimeStamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.user">
+<span id="dds-cli-user"></span><h2>dds_cli.user<a class="headerlink" href="#module-dds_cli.user" title="Permalink to this headline">¶</a></h2>
+<p>User module.</p>
+<dl class="py class">
+<dt id="dds_cli.user.TokenFile">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.user.</span></code><code class="sig-name descname"><span class="pre">TokenFile</span></code><a class="headerlink" href="#dds_cli.user.TokenFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to manage the saved token.</p>
+<dl class="py method">
+<dt id="dds_cli.user.TokenFile.check_token_file_permissions">
+<code class="sig-name descname"><span class="pre">check_token_file_permissions</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.user.TokenFile.check_token_file_permissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify permissions for token file. Raises dds_cli.exceptions.DDSCLIException if
+permissions are not properly set.</p>
+<p>Returns None otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.user.TokenFile.delete_token">
+<code class="sig-name descname"><span class="pre">delete_token</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.user.TokenFile.delete_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the token file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.user.TokenFile.file_exists">
+<code class="sig-name descname"><span class="pre">file_exists</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.user.TokenFile.file_exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the token file exists.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.user.TokenFile.read_token">
+<code class="sig-name descname"><span class="pre">read_token</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.user.TokenFile.read_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempts to fetch a valid token from the token file.</p>
+<p>Returns None if no valid token can be found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.user.TokenFile.save_token">
+<code class="sig-name descname"><span class="pre">save_token</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.user.TokenFile.save_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the token to the token file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.user.TokenFile.token_expired">
+<code class="sig-name descname"><span class="pre">token_expired</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.user.TokenFile.token_expired" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check how old the token is based on the modification time of the token file.</p>
+<p>It compares the age with the dds variables TOKEN_MAX_AGE and TOKEN_WARNING_AGE to decide
+what to do.</p>
+<p>Returns True if the token has expired, False otherwise.</p>
+<p>** Notice, this does not actually know the expiration time of the token, it’s possible that the
+expiration time has changed upstream in which case the variables need to be updated.</p>
+<p>if check is True, token age will be reported to stdout</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="dds_cli.user.TokenFile.token_report">
+<code class="sig-name descname"><span class="pre">token_report</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.user.TokenFile.token_report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produce report of token status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dds_cli.user.User">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.user.</span></code><code class="sig-name descname"><span class="pre">User</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_renew_token</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_prompt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.user.User" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents a DDS user.</p>
+<p>when instantiating, an authentication token will be read from a file or
+renewed from the DDS API if the saved token is not found or has expired.</p>
+<dl class="py method">
+<dt id="dds_cli.user.User.token_dict">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">token_dict</span></code><a class="headerlink" href="#dds_cli.user.User.token_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli.utils">
+<span id="dds-cli-utils"></span><h2>dds_cli.utils<a class="headerlink" href="#module-dds_cli.utils" title="Permalink to this headline">¶</a></h2>
+<p>DDS CLI utils module.</p>
+<dl class="py function">
+<dt id="dds_cli.utils.calculate_magnitude">
+<code class="sig-prename descclassname"><span class="pre">dds_cli.utils.</span></code><code class="sig-name descname"><span class="pre">calculate_magnitude</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projects</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iec_standard</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.utils.calculate_magnitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate magnitude of values.</p>
+<p>Uses the project list, obtains the values assigned to a particular key iteratively and
+calculates the best magnitude to format this set of values consistently.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dds_cli.utils.format_api_response">
+<code class="sig-prename descclassname"><span class="pre">dds_cli.utils.</span></code><code class="sig-name descname"><span class="pre">format_api_response</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iec_standard</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.utils.format_api_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a value e.g. bytes and reformat it to include a unit prefix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="dds_cli.utils.get_json_response">
+<code class="sig-prename descclassname"><span class="pre">dds_cli.utils.</span></code><code class="sig-name descname"><span class="pre">get_json_response</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dds_cli.utils.get_json_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get json output from requests response.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-dds_cli">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-dds_cli" title="Permalink to this headline">¶</a></h2>
+<p>DDS CLI.</p>
+<dl class="py class">
+<dt id="dds_cli.DDSEndpoint">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.</span></code><code class="sig-name descname"><span class="pre">DDSEndpoint</span></code><a class="headerlink" href="#dds_cli.DDSEndpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Defines all DDS urls.</p>
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.BASE_ENDPOINT">
+<code class="sig-name descname"><span class="pre">BASE_ENDPOINT</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.BASE_ENDPOINT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.BASE_ENDPOINT_LOCAL">
+<code class="sig-name descname"><span class="pre">BASE_ENDPOINT_LOCAL</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.BASE_ENDPOINT_LOCAL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.BASE_ENDPOINT_REMOTE">
+<code class="sig-name descname"><span class="pre">BASE_ENDPOINT_REMOTE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'https://dds.dckube.scilifelab.se/api/v1'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.BASE_ENDPOINT_REMOTE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.CREATE_PROJ">
+<code class="sig-name descname"><span class="pre">CREATE_PROJ</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/proj/create'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.CREATE_PROJ" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.ENCRYPTED_TOKEN">
+<code class="sig-name descname"><span class="pre">ENCRYPTED_TOKEN</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/user/encrypted_token'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.ENCRYPTED_TOKEN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.FILE_INFO">
+<code class="sig-name descname"><span class="pre">FILE_INFO</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/file/info'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.FILE_INFO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.FILE_INFO_ALL">
+<code class="sig-name descname"><span class="pre">FILE_INFO_ALL</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/file/all/info'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.FILE_INFO_ALL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.FILE_MATCH">
+<code class="sig-name descname"><span class="pre">FILE_MATCH</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/file/match'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.FILE_MATCH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.FILE_NEW">
+<code class="sig-name descname"><span class="pre">FILE_NEW</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/file/new'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.FILE_NEW" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.FILE_UPDATE">
+<code class="sig-name descname"><span class="pre">FILE_UPDATE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/file/update'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.FILE_UPDATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.INVOICE">
+<code class="sig-name descname"><span class="pre">INVOICE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/invoice'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.INVOICE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.LIST_FILES">
+<code class="sig-name descname"><span class="pre">LIST_FILES</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/files/list'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.LIST_FILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.LIST_PROJ">
+<code class="sig-name descname"><span class="pre">LIST_PROJ</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/proj/list'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.LIST_PROJ" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.LIST_PROJ_USERS">
+<code class="sig-name descname"><span class="pre">LIST_PROJ_USERS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/proj/users'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.LIST_PROJ_USERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.PROJ_PRIVATE">
+<code class="sig-name descname"><span class="pre">PROJ_PRIVATE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/proj/private'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.PROJ_PRIVATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.PROJ_PUBLIC">
+<code class="sig-name descname"><span class="pre">PROJ_PUBLIC</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/proj/public'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.PROJ_PUBLIC" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.REMOVE_FILE">
+<code class="sig-name descname"><span class="pre">REMOVE_FILE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/file/rm'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.REMOVE_FILE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.REMOVE_FOLDER">
+<code class="sig-name descname"><span class="pre">REMOVE_FOLDER</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/file/rmdir'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.REMOVE_FOLDER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.REMOVE_PROJ_CONT">
+<code class="sig-name descname"><span class="pre">REMOVE_PROJ_CONT</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/proj/rm'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.REMOVE_PROJ_CONT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.S3KEYS">
+<code class="sig-name descname"><span class="pre">S3KEYS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/s3/proj'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.S3KEYS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.TIMEOUT">
+<code class="sig-name descname"><span class="pre">TIMEOUT</span></code><em class="property"> <span class="pre">=</span> <span class="pre">5</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.TIMEOUT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.USAGE">
+<code class="sig-name descname"><span class="pre">USAGE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/usage'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.USAGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.DDSEndpoint.USER_ADD">
+<code class="sig-name descname"><span class="pre">USER_ADD</span></code><em class="property"> <span class="pre">=</span> <span class="pre">'http://127.0.0.1:5000/api/v1/user/add'</span></em><a class="headerlink" href="#dds_cli.DDSEndpoint.USER_ADD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="dds_cli.FileSegment">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">dds_cli.</span></code><code class="sig-name descname"><span class="pre">FileSegment</span></code><a class="headerlink" href="#dds_cli.FileSegment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Defines information on signatures, file chunks, etc.</p>
+<dl class="py attribute">
+<dt id="dds_cli.FileSegment.DDS_SIGNATURE">
+<code class="sig-name descname"><span class="pre">DDS_SIGNATURE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">b'DelSys'</span></em><a class="headerlink" href="#dds_cli.FileSegment.DDS_SIGNATURE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.FileSegment.SEGMENT_SIZE_CIPHER">
+<code class="sig-name descname"><span class="pre">SEGMENT_SIZE_CIPHER</span></code><em class="property"> <span class="pre">=</span> <span class="pre">65552</span></em><a class="headerlink" href="#dds_cli.FileSegment.SEGMENT_SIZE_CIPHER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="dds_cli.FileSegment.SEGMENT_SIZE_RAW">
+<code class="sig-name descname"><span class="pre">SEGMENT_SIZE_RAW</span></code><em class="property"> <span class="pre">=</span> <span class="pre">65536</span></em><a class="headerlink" href="#dds_cli.FileSegment.SEGMENT_SIZE_RAW" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">dds_cli package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-dds_cli.account_adder">dds_cli.account_adder</a></li>
+<li><a class="reference internal" href="#module-dds_cli.auth">dds_cli.auth</a></li>
+<li><a class="reference internal" href="#module-dds_cli.base">dds_cli.base</a></li>
+<li><a class="reference internal" href="#module-dds_cli.cli_decorators">dds_cli.cli_decorators</a></li>
+<li><a class="reference internal" href="#module-dds_cli.data_getter">dds_cli.data_getter</a></li>
+<li><a class="reference internal" href="#module-dds_cli.data_lister">dds_cli.data_lister</a></li>
+<li><a class="reference internal" href="#module-dds_cli.data_putter">dds_cli.data_putter</a></li>
+<li><a class="reference internal" href="#module-dds_cli.data_remover">dds_cli.data_remover</a></li>
+<li><a class="reference internal" href="#module-dds_cli.directory">dds_cli.directory</a></li>
+<li><a class="reference internal" href="#module-dds_cli.exceptions">dds_cli.exceptions</a></li>
+<li><a class="reference internal" href="#module-dds_cli.file_compressor">dds_cli.file_compressor</a></li>
+<li><a class="reference internal" href="#module-dds_cli.file_encryptor">dds_cli.file_encryptor</a></li>
+<li><a class="reference internal" href="#module-dds_cli.file_handler">dds_cli.file_handler</a></li>
+<li><a class="reference internal" href="#module-dds_cli.file_handler_local">dds_cli.file_handler_local</a></li>
+<li><a class="reference internal" href="#module-dds_cli.file_handler_remote">dds_cli.file_handler_remote</a></li>
+<li><a class="reference internal" href="#module-dds_cli.project_creator">dds_cli.project_creator</a></li>
+<li><a class="reference internal" href="#module-dds_cli.s3_connector">dds_cli.s3_connector</a></li>
+<li><a class="reference internal" href="#module-dds_cli.status">dds_cli.status</a></li>
+<li><a class="reference internal" href="#module-dds_cli.text_handler">dds_cli.text_handler</a></li>
+<li><a class="reference internal" href="#module-dds_cli.timestamp">dds_cli.timestamp</a></li>
+<li><a class="reference internal" href="#module-dds_cli.user">dds_cli.user</a></li>
+<li><a class="reference internal" href="#module-dds_cli.utils">dds_cli.utils</a></li>
+<li><a class="reference internal" href="#module-dds_cli">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="previous chapter">All modules</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dds_cli.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="All modules"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Data Delivery System  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >All modules</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">dds_cli package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, SciLifeLab Data Centre.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.5.4.
+    </div>
+  </body>
+</html>

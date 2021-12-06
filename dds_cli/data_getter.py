@@ -177,23 +177,27 @@ class DataGetter(base.DDSBaseClass):
         """Download files from the cloud."""
         downloaded = False
         error = ""
-        # file_local = str(self.filehandler.data[file]["path_downloaded"])
         file_local = self.filehandler.data[file]["path_downloaded"]
         file_remote = self.filehandler.data[file]["url"]
 
-        # try:
-        #     with requests.get(file_remote, stream=True) as r:
-        #         r.raise_for_status()
-        #         with file_local.open(mode="wb") as f:
-        #             for chunk in r.iter_content(chunk_size=8192):
-        #                 progress.update(task, advance=len(chunk))
-        #                 f.write(chunk)
-        # except requests.exceptions.HTTPError as err:
-        #     error = str(err)
-        #     LOG.exception(f"{file}: {error}")
-        # else:
-        #     downloaded = True
-        error = "testing"
+        try:
+            with requests.get(file_remote, stream=True) as req:
+                req.raise_for_status()
+                with file_local.open(mode="wb") as new_file:
+                    for chunk in req.iter_content(chunk_size=8192):
+                        progress.update(task, advance=len(chunk))
+                        new_file.write(chunk)
+        except (
+            requests.exceptions.ConnectTimeout,
+            requests.exceptions.HTTPError,
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+        ) as err:
+            error = str(err)
+        else:
+            downloaded = True
+
         return downloaded, error
 
     @update_status

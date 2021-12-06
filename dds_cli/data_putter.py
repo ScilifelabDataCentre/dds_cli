@@ -276,7 +276,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Update file info incl size, public key, salt
         self.filehandler.data[file]["public_key"] = file_public_key
-        self.filehandler.data[file]["key_salt"] = salt
+        self.filehandler.data[file]["salt"] = salt
         self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
         if saved:
@@ -367,6 +367,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
+        LOG.debug(f"Fileinfo: {fileinfo}")
         params = {"project": self.project}
         file_info = {
             "name": file,

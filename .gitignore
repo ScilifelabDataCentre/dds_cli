@@ -40,3 +40,4 @@ timings
 *dict_structure.json
 *.code-workspace
 .DDS_CLI.env
+/docs/_build/

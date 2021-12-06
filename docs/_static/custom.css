@@ -1,0 +1,30 @@
+/* @import "https://fonts.googleapis.com/css?family=Saira+Extra+Condensed:700&amp;subset=latin-ext"; */
+
+/* h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    font-weight: 700;
+    font-family: "Saira Extra Condensed", Arial, sans-serif;
+} */
+
+/* h1, h2, h3 {
+    text-transform: lowercase;
+} */
+
+/* ... */
+
+h1 {
+    font-weight: 700;
+    font-size: 30pt;
+}
+
+h2 {
+    font-size: 25pt;
+    font-weight: 20;
+    text-decoration: underline;
+}
+
+h3 {
+    font-size: 20pt;
+    font-weight: 20;
+    font-style: italic;
+}

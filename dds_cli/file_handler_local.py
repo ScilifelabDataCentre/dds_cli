@@ -303,7 +303,7 @@ class LocalFileHandler(fh.FileHandler):
                 # checksum.update(chunk)
                 # break
                 yield chunk
-        # os._exit(0)
+
         # LOG.debug("Streaming file finished.")
         # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()

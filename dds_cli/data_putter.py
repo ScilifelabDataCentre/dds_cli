@@ -9,7 +9,6 @@ import concurrent.futures
 import itertools
 import logging
 import pathlib
-import sys
 
 # Installed
 import boto3
@@ -25,7 +24,6 @@ from dds_cli import data_remover as dr
 from dds_cli import DDSEndpoint
 from dds_cli import file_encryptor as fe
 from dds_cli import file_handler_local as fhl
-from dds_cli import s3_connector as s3
 from dds_cli import status
 from dds_cli import text_handler as txt
 from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required

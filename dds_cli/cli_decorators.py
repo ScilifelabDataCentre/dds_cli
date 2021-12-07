@@ -10,10 +10,7 @@ import logging
 import pathlib
 
 # Installed
-import boto3
-import botocore
 import rich
-import rich.padding
 import rich.table
 from rich.progress import Progress, SpinnerColumn
 

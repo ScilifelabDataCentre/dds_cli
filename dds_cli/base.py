@@ -8,13 +8,11 @@
 import logging
 import os
 import pathlib
-import collections
 
 # Installed
 import http
 import requests
 import simplejson
-import rich
 
 # Own modules
 import dds_cli.directory
@@ -30,7 +28,6 @@ from dds_cli import s3_connector as s3
 from dds_cli import user
 from dds_cli import exceptions
 from dds_cli import utils
-from dds_cli import file_handler as fh
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

@@ -13,7 +13,6 @@ import traceback
 
 
 # Installed
-import immutabledict
 import zstandard as zstd
 
 # Own modules

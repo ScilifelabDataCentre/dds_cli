@@ -9,10 +9,8 @@ import json
 import logging
 import os
 import pathlib
-import textwrap
 
 # Installed
-import rich
 
 # Own modules
 import dds_cli.utils

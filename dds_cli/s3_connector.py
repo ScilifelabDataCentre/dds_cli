@@ -6,9 +6,7 @@
 
 # Standard library
 import dataclasses
-import gc
 import logging
-import os
 import traceback
 import requests
 

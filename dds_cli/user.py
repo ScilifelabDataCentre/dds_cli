@@ -5,16 +5,15 @@
 ###############################################################################
 
 # Standard library
-import dataclasses
 import datetime
 import logging
 import os
+import stat
+import getpass
 import requests
 import simplejson
-import stat
 
 # Installed
-import getpass
 import rich
 
 # Own modules
@@ -64,7 +63,7 @@ class User:
             try:
                 LOG.debug(f"Checking if token file exists for user {self.username}")
                 self.token = token_file.read_token()
-            except dds_cli.exceptions.TokenNotFoundError as err:
+            except dds_cli.exceptions.TokenNotFoundError:
                 self.token = None
 
         # Authenticate user and save token

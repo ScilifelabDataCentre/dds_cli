@@ -101,6 +101,9 @@ class DDSEndpoint:
     # Project creation urls
     CREATE_PROJ = BASE_ENDPOINT + "/proj/create"
 
+    # Project status updation
+    UPDATE_PROJ_STATUS = BASE_ENDPOINT + "/proj/status"
+
     TIMEOUT = 5
 
 

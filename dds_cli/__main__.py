@@ -10,6 +10,7 @@ import itertools
 import logging
 import os
 import sys
+import functools
 
 # Installed
 import click
@@ -30,6 +31,7 @@ import dds_cli.data_remover
 import dds_cli.directory
 import dds_cli.project_creator
 import dds_cli.auth
+import dds_cli.project_status
 import dds_cli.utils
 
 
@@ -848,5 +850,155 @@ def info():
         with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
             authenticator.check()
     except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+###################################################################################
+# STATUS ################################################################# STATUS #
+###################################################################################
+@dds_main.group(invoke_without_command=True)
+@click.pass_obj
+def status(click_ctx):
+    """Manage project statuses."""
+    pass
+
+
+def common_options(f):
+    options = [
+        click.option(
+            "--username",
+            "-u",
+            required=False,
+            type=str,
+            help="Your Data Delivery System username.",
+        ),
+        click.option("--project", "-p", required=True, type=str, help="Project ID."),
+    ]
+    return functools.reduce(lambda x, opt: opt(x), options, f)
+
+
+@click.option(
+    "--show_history",
+    required=False,
+    is_flag=True,
+    help="Show history of project statuses in addition to current status",
+)
+@status.command()
+@common_options
+@click.pass_obj
+def display(click_ctx, username, project, show_history):
+    """Display and Update project status."""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.get_status(show_history)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@click.option(
+    "--deadline",
+    required=False,
+    type=int,
+    help="Deadline in days when releasing a project",
+)
+@status.command()
+@common_options
+@click.pass_obj
+def release(click_ctx, username, project, deadline):
+    """Make project available for user download"""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="Available", deadline=deadline)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@status.command()
+@common_options
+@click.pass_obj
+def retract(click_ctx, username, project):
+    """Retract a project available for download to add more data"""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="In Progress")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@status.command()
+@common_options
+@click.pass_obj
+def archive(click_ctx, username, project):
+    """Manually archive a released project and delete all its data"""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="Archived")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@status.command()
+@common_options
+@click.pass_obj
+def delete(click_ctx, username, project):
+    """Delete an unreleased project and all its data"""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="Deleted")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@status.command()
+@common_options
+@click.pass_obj
+def abort(click_ctx, username, project):
+    """Abort a released project to delete all its data"""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="Archived", is_aborted=True)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
         LOG.error(err)
         sys.exit(1)

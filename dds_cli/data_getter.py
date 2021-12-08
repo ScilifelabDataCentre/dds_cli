@@ -14,7 +14,7 @@ import simplejson
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-from dds_cli import DDSEndpoint
+from dds_cli import DDSEndpoint, FileSegment
 from dds_cli import file_handler_remote as fhr
 from dds_cli import data_remover as dr
 from dds_cli import file_compressor as fc
@@ -183,7 +183,7 @@ class DataGetter(base.DDSBaseClass):
             with requests.get(file_remote, stream=True) as req:
                 req.raise_for_status()
                 with file_local.open(mode="wb") as new_file:
-                    for chunk in req.iter_content(chunk_size=8192):
+                    for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
                         progress.update(task, advance=len(chunk))
                         new_file.write(chunk)
         except (

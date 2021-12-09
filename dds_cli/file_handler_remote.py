@@ -57,7 +57,6 @@ class RemoteFileHandler(fh.FileHandler):
 
         LOG.debug("Saving file...")
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with outfile.open(mode="wb+") as new_file:
                 for chunk in chunks:
                     new_file.write(chunk)
@@ -67,8 +66,6 @@ class RemoteFileHandler(fh.FileHandler):
         else:
             saved = True
             LOG.debug("File saved.")
-        finally:
-            os.umask(original_umask)
 
         return saved, message
 

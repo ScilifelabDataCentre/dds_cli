@@ -102,14 +102,11 @@ class LocalFileHandler(fh.FileHandler):
         """Read file in chunk_size sized chunks."""
 
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with file.open(mode="rb") as infile:
                 for chunk in iter(lambda: infile.read(chunk_size), b""):
                     yield chunk
         except OSError as err:
             LOG.warning(str(err))
-        finally:
-            os.umask(original_umask)
 
     # Private methods ############ Private methods #
     def __collect_file_info_local(self, all_paths, folder=pathlib.Path(""), task_name=""):

@@ -46,17 +46,13 @@ class FileHandler:
             source_path_file = pathlib.Path(source_path_file)
             if source_path_file.exists():
                 try:
-                    original_umask = os.umask(0)  # User file-creation mode mask
                     with source_path_file.resolve().open(mode="r") as spf:
                         self.data_list += spf.read().splitlines()
                 except OSError as err:
                     dds_cli.utils.console.print(
                         f"Failed to get files from source-path-file option: {err}"
                     )
-                    os.umask(original_umask)
                     os._exit(1)
-                finally:
-                    os.umask(original_umask)
 
         self.failed = {}
 
@@ -65,7 +61,6 @@ class FileHandler:
     def append_errors_to_file(file: pathlib.Path, info):
         """Save errors to specific json file."""
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with file.open(mode="a") as errfile:
                 json_output = json.dumps(
                     info,
@@ -77,8 +72,6 @@ class FileHandler:
                 errfile.write(json_output + "\n")
         except (OSError, TypeError) as err:
             LOG.warning(str(err))
-        finally:
-            os.umask(original_umask)
 
     @staticmethod
     def create_summary_table(

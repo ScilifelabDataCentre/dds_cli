@@ -95,7 +95,6 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
             # Get response
             response_json = response.json()
-            LOG.info(response_json)
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
         except simplejson.JSONDecodeError as err:
@@ -103,19 +102,12 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Format response message
         if not response.ok:
-            message = response_json.get("message")
+            message = response_json["message"]
+
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(message=f"{message}")
-            elif response.status_code == http.HTTPStatus.FORBIDDEN:
-                raise dds_cli.exceptions.DDSCLIException(
-                    "You need to be an administrator to delete this user!"
-                )
-            elif response.status_code == http.HTTPStatus.BAD_REQUEST:
-                # if message.get("email"):
-                #    raise dds_cli.exceptions.DDSCLIException(message.get("email"))
-                # elif message.get("projectowner"):
-                #    raise dds_cli.exceptions.DDSCLIException(message.get("projectowner"))
-                # else:
-                raise dds_cli.exceptions.DDSCLIException(message)
+                raise dds_cli.exceptions.ApiResponseError(message)
             else:
                 raise dds_cli.exceptions.DDSCLIException(message)
+
+        else:
+            LOG.info(response_json["message"])

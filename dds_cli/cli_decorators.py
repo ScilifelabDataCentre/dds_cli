@@ -52,7 +52,7 @@ def verify_proceed(func):
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.info(f"File {file} started {func.__name__}")
+        LOG.debug(f"File {file} started {func.__name__}")
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
@@ -135,7 +135,7 @@ def subpath_required(func):
             except OSError as err:
                 return False, str(err)
 
-            LOG.info(f"New directory created: {full_subpath}")
+            LOG.debug(f"New directory created: {full_subpath}")
 
         return func(self, file=file, *args, **kwargs)
 
@@ -153,7 +153,7 @@ def removal_spinner(func):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
-            console=dds_cli.utils.console,
+            console=dds_cli.utils.stderr_console,
         ) as progress:
 
             # Determine spinner text

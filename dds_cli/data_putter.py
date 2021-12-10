@@ -73,7 +73,7 @@ def put(
             " • ",
             "[progress.percentage]{task.percentage:>3.1f}%",
             refresh_per_second=2,
-            console=dds_cli.utils.console,
+            console=dds_cli.utils.stderr_console,
         ) as progress:
 
             # Keep track of futures
@@ -199,7 +199,7 @@ class DataPutter(base.DDSBaseClass):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
-            console=dds_cli.utils.console,
+            console=dds_cli.utils.stderr_console,
         ) as progress:
             # Spinner while collecting file info
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")

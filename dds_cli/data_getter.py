@@ -193,7 +193,14 @@ class DataGetter(base.DDSBaseClass):
             requests.exceptions.Timeout,
             requests.exceptions.ConnectionError,
         ) as err:
-            error = str(err)
+            if (
+                hasattr(err, "response")
+                and hasattr(err.response, "status_code")
+                and err.response.status_code == 404
+            ):
+                error = "File not found! Please report this to the SciLifeLab Data Centre."
+            else:
+                error = str(err)
         else:
             downloaded = True
 

@@ -154,7 +154,6 @@ class Encryptor(ECDHKeyHandler):
         aad = None
 
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             # Save encryption output to file
             with outfile.open(mode="wb") as out:
                 # Create and save first IV/nonce
@@ -189,8 +188,6 @@ class Encryptor(ECDHKeyHandler):
             encrypted_and_saved = True
             message = f"Encrypted file stored in location: {outfile}"
             LOG.debug(message)
-        finally:
-            os.umask(original_umask)
 
         return encrypted_and_saved, message
 
@@ -229,7 +226,6 @@ class Decryptor(ECDHKeyHandler):
         """Decrypts the file"""
 
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with infile.open(mode="rb+") as file:
                 # Get last nonce
                 file.seek(-12, os.SEEK_END)
@@ -270,5 +266,3 @@ class Decryptor(ECDHKeyHandler):
                 LOG.debug(f"Last nonce should be: {last_nonce}, was: {nonce}")
         except Exception as err:
             LOG.warning(str(err))
-        finally:
-            os.umask(original_umask)

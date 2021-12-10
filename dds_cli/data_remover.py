@@ -94,7 +94,7 @@ class DataRemover(base.DDSBaseClass):
             file.unlink()
         except FileNotFoundError as err:
             LOG.exception(str(err))
-            LOG.info("File deletion may have failed. Usage of space may increase.")
+            LOG.warning("File deletion may have failed. Usage of space may increase.")
 
     # Public methods ###################### Public methods #
     @removal_spinner

@@ -91,7 +91,7 @@ def put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.info(f"Starting: {file}")
+                    LOG.debug(f"Starting: {file}")
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -133,7 +133,7 @@ def put(
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.info(f"Starting: {next_file}")
+                            LOG.debug(f"Starting: {next_file}")
                             upload_threads[
                                 texec.submit(
                                     putter.protect_and_upload,
@@ -278,7 +278,7 @@ class DataPutter(base.DDSBaseClass):
         self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
         if saved:
-            LOG.info(
+            LOG.debug(
                 f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
             )
             # Update progress bar for upload
@@ -298,7 +298,7 @@ class DataPutter(base.DDSBaseClass):
 
                 if db_updated:
                     all_ok = True
-                    LOG.info(f"File successfully uploaded and added to the database: {file}")
+                    LOG.debug(f"File successfully uploaded and added to the database: {file}")
 
         if not saved or all_ok:
             # Delete temporary processed file locally

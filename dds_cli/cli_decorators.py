@@ -66,7 +66,7 @@ def verify_proceed(func):
 
             if self.break_on_fail:
                 message = f"'--break-on-fail'. File causing failure: '{file}'. "
-                LOG.info(message)
+                LOG.warning(message)
 
                 _ = [
                     self.status[x].update({"cancel": True, "message": message})

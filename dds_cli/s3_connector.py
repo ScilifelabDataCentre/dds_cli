@@ -81,7 +81,7 @@ class S3Connector:
             LOG.warning(f"S3 connection failed: {err}")
             raise
 
-        LOG.info(f"Resource :{self.resource}")
+        LOG.debug(f"Resource :{self.resource}")
         return resource
 
     # Static methods ############ Static methods #

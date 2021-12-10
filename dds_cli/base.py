@@ -186,13 +186,13 @@ class DDSBaseClass:
                 f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
             )
 
-            utils.console.print(
+            utils.stderr_console.print(
                 f"{intro_error_message}. See {self.failed_delivery_log} for more information."
             )
 
         else:
             # Printout if no cancelled/failed files
-            LOG.debug(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
+            LOG.info(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
             LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")

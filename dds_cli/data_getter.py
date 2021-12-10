@@ -79,7 +79,7 @@ class DataGetter(base.DDSBaseClass):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
-            console=dds_cli.utils.console,
+            console=dds_cli.utils.stderr_console,
         ) as progress:
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")
             self.filehandler = fhr.RemoteFileHandler(
@@ -135,7 +135,7 @@ class DataGetter(base.DDSBaseClass):
             db_updated, message = self.update_db(file=file)
             LOG.debug(f"Database updated: {db_updated}")
 
-            LOG.info(f"Beginning decryption of file {file}...")
+            LOG.debug(f"Beginning decryption of file {file}...")
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,

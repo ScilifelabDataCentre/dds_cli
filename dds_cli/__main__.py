@@ -1044,7 +1044,7 @@ def add(click_ctx, username, email, role, project):
 
 
 ## Delete users from the system
-@user.command(no_args_is_help=True)
+@user.command(name="delete", no_args_is_help=True)
 @click.argument(
     "email",
     nargs=1,
@@ -1059,7 +1059,7 @@ def add(click_ctx, username, email, role, project):
     help="Decommission your own user account",
 )
 @click.pass_obj
-def delete(click_ctx, email, self):
+def delete_users(click_ctx, email, self):
     """
     Delete user accounts from the Data Delivery System.
 

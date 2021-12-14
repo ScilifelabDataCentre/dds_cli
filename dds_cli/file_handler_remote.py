@@ -1,4 +1,4 @@
-"""Remote file handler module"""
+"""Remote file handler module."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -11,6 +11,7 @@ import pathlib
 
 # Installed
 import requests
+import simplejson
 
 # Own modules
 from dds_cli import DDSEndpoint
@@ -33,7 +34,7 @@ class RemoteFileHandler(fh.FileHandler):
 
     # Magic methods ################ Magic methods #
     def __init__(self, get_all, user_input, token, project, destination=pathlib.Path("")):
-
+        """Initialize FileHandler for collecting remote files."""
         # Initiate FileHandler from inheritance
         super().__init__(user_input=user_input, local_destination=destination, project=project)
 
@@ -42,8 +43,9 @@ class RemoteFileHandler(fh.FileHandler):
         self.data_list = list(set(self.data_list))
 
         if not self.data_list and not get_all:
-            dds_cli.utils.console.print("\n:warning-emoji: No data specified. :warning-emoji:\n")
-            os._exit(1)
+            raise dds_cli.exceptions.NoDataError(
+                "\n:warning-emoji: No data specified. :warning-emoji:\n"
+            )
 
         self.data = self.__collect_file_info_remote(all_paths=self.data_list, token=token)
         self.data_list = None
@@ -51,8 +53,7 @@ class RemoteFileHandler(fh.FileHandler):
     # Static methods ############ Static methods #
     @staticmethod
     def write_file(chunks, outfile: pathlib.Path, **_):
-        """Write file chunks to file"""
-
+        """Write file chunks to file."""
         saved, message = (False, "")
 
         LOG.debug("Saving file...")
@@ -72,9 +73,6 @@ class RemoteFileHandler(fh.FileHandler):
     # Private methods ############ Private methods #
     def __collect_file_info_remote(self, all_paths, token):
         """Get information on files in db."""
-
-        LOG.debug(all_paths)
-
         # Get file info from db via API
         try:
             response = requests.get(
@@ -83,43 +81,42 @@ class RemoteFileHandler(fh.FileHandler):
                 headers=token,
                 json=all_paths,
             )
-        except requests.ConnectionError as err:
-            LOG.fatal(err)
-            os._exit(1)
+
+            # Get file info from response
+            file_info = response.json()
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
         # Server error or error in response
         if not response.ok:
-            dds_cli.utils.console.print(f"\n{response.text}\n")
-            os._exit(1)
-
-        # Get file info from response
-        file_info = response.json()
+            raise dds_cli.exceptions.ApiResponseError(response.text)
 
         # Folder info required if specific files requested
-        if all_paths and "folders" not in file_info:
-            dds_cli.utils.console.print(
-                "\n:warning-emoji: Error in response. "
-                "Not enough info returned despite ok request. :warning-emoji:\n"
+        if all_paths and "folder_contents" not in file_info:
+            raise dds_cli.exceptions.DDSCLIException(
+                "Error in response. Not enough info returned despite ok request."
             )
-            os._exit(1)
 
+        folder_contents = file_info.get("folder_contents", {})
+        files = file_info.get("files")
         # Files in response always required
-        if "files" not in file_info:
-            dds_cli.utils.console.print(
-                "\n:warning-emoji: No files in response despite ok request. :warning-emoji:\n"
-            )
-            os._exit(1)
+        if not files:
+            raise dds_cli.exceptions.DDSCLIException("No files in response despite ok request.")
 
-        # files and files in folders from db
-        files = file_info["files"]
-        folders = file_info["folders"] if "folders" in file_info else {}
+        LOG.debug(f"Attempted: \n{all_paths}")
+        LOG.debug(f"Files: \n{files}")
+        LOG.debug(f"Folder contents: \n{folder_contents}")
 
         # Cancel download of those files or folders not found in the db
         self.failed = {
             x: {"error": "Not found in DB."}
             for x in all_paths
-            if x not in files and x not in folders
+            if x not in files and x not in folder_contents
         }
+
+        LOG.debug(f"Not found: {self.failed}")
 
         # Save info on files in dict and return
         data = {
@@ -131,38 +128,32 @@ class RemoteFileHandler(fh.FileHandler):
             }
             for x, y in files.items()
         }
+        LOG.debug(f"Data (files):\n {data}")
 
         # Save info on files in a specific folder and return
-        for x, y in folders.items():
+        for x, y in folder_contents.items():
+            LOG.debug(f"{x}")
             data.update(
                 {
                     self.local_destination
-                    / pathlib.Path(z[0]): {
-                        "name_in_db": z[0],
-                        "name_in_bucket": z[1],
-                        "path_downloaded": self.local_destination / pathlib.Path(z[1]),
-                        "subpath": z[2],
-                        "size": z[3],
-                        "size_encrypted": z[4],
-                        "key_salt": z[5],
-                        "public_key": z[6],
-                        "checksum": z[7],
-                        "compressed": z[8],
+                    / pathlib.Path(j): {
+                        **k,
+                        "name_in_db": j,
+                        "path_downloaded": self.local_destination
+                        / pathlib.Path(k["name_in_bucket"]),
                     }
-                    for z in y
+                    for j, k in y.items()
                 }
             )
 
-        LOG.debug(data)
+        LOG.debug(f"Data (files and folders):\n {data}")
         return data
 
     # Public methods ############ Public methods #
     def create_download_status_dict(self):
         """Create dict for tracking file download status."""
-
-        status_dict = {}
-        for x in list(self.data):
-            status_dict[x] = {
+        return {
+            x: {
                 "cancel": False,
                 "started": False,
                 "message": "",
@@ -170,5 +161,5 @@ class RemoteFileHandler(fh.FileHandler):
                 "get": {"started": False, "done": False},
                 "update_db": {"started": False, "done": False},
             }
-
-        return status_dict
+            for x in self.data
+        }

@@ -9,10 +9,8 @@ import json
 import logging
 import os
 import pathlib
-import textwrap
 
 # Installed
-import rich
 
 # Own modules
 import dds_cli.utils
@@ -72,103 +70,6 @@ class FileHandler:
                 errfile.write(json_output + "\n")
         except (OSError, TypeError) as err:
             LOG.warning(str(err))
-
-    @staticmethod
-    def create_summary_table(
-        all_failed_data,
-        get_single_files: bool = True,
-        upload: bool = True,
-    ):
-        """Create summary of files and errors."""
-        columns = ["File", "Error"] if upload else ["File", "Location", "Error"]
-        curr_table = None
-        title = "file" if get_single_files else "directory"
-        up_or_down = "upload" if upload else "download"
-
-        LOG.debug(f"Files: {get_single_files}, Upload: {upload}, Columns: {columns}")
-
-        if not get_single_files:
-            columns = ["Directory"] + columns
-
-        files = [
-            x
-            for x in all_failed_data
-            if (
-                get_single_files
-                and x[1]["subpath"] == "."
-                or not get_single_files
-                and x[1]["subpath"] != "."
-            )
-        ]
-
-        additional_message = (
-            (
-                "One or more files were not uploaded due to a issue with another file. "
-                "To ignore issues with other files, remove the `--break-on-fail` "
-                "flag from the call."
-            )
-            if any([1 for x in files if "break-on-fail" in x[1]["message"]])
-            else ""
-        )
-
-        if files:
-            curr_table = rich.table.Table(
-                title=f"Incomplete {title} {up_or_down}s",
-                title_justify="left",
-                show_header=True,
-                header_style="bold",
-            )
-
-            for x in columns:
-                curr_table.add_column(x, overflow="fold")
-
-            if get_single_files:
-                if upload:
-                    _ = [
-                        curr_table.add_row(
-                            textwrap.fill(x[1]["path_raw"]),
-                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
-                        )
-                        for x in files
-                    ]
-                else:
-                    _ = [
-                        curr_table.add_row(
-                            x[1]["name_in_db"],
-                            textwrap.fill(x[0]),
-                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
-                        )
-                        for x in files
-                    ]
-            else:
-                subpath = ""
-                if upload:
-                    for x in files:
-                        curr_table.add_row(
-                            textwrap.fill(
-                                ""
-                                if subpath == x[1]["subpath"]
-                                else str(pathlib.Path(x[1]["path_raw"]).parent)
-                            ),
-                            str(pathlib.Path(x[1]["path_raw"]).name),
-                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
-                        )
-
-                        subpath = x[1]["subpath"]
-                else:
-                    for x in files:
-                        curr_table.add_row(
-                            ""
-                            if subpath == x[1]["subpath"]
-                            else str(pathlib.Path(x[1]["subpath"])),
-                            x[1]["name_in_db"],
-                            textwrap.fill(str(pathlib.Path(x[0]))),
-                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
-                        )
-
-                        subpath = x[1]["subpath"]
-
-        return curr_table, additional_message
 
     @staticmethod
     def delete_tempdir(directory: pathlib.Path):

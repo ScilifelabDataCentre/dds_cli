@@ -30,6 +30,16 @@ class InvalidMethodError(Exception):
 class DDSCLIException(click.ClickException):
     """Base exception for click in DDS."""
 
+    def __init__(self, message, sign=":warning-emoji:"):
+        """Init base exception."""
+        self.message = message
+        self.sign = sign
+        super().__init__(message)
+
+    def __str__(self):
+        """Format error message and return with signs."""
+        return f"{self.sign} {self.message} {self.sign}"
+
 
 class AuthenticationError(click.ClickException):
     """Errors due to user authentication."""
@@ -75,14 +85,22 @@ class UploadError(Exception):
     """Errors relating to file uploads."""
 
 
+class DownloadError(Exception):
+    """Errors relating to file download."""
+
+
 class S3KeyLengthExceeded(UploadError):
     """The name in bucket exceeded the allowed 1024 bytes."""
 
     def __init__(
         self,
         filename,
-        message=" exceeds allowed limit for combined path and name length and can't be stored in the system.",
+        message=(
+            "Exceeds allowed limit for combined path "
+            "and name length and can't be stored in the system."
+        ),
     ):
+        """Init s3 key length error."""
         super().__init__(f"{filename} {message}")
 
 

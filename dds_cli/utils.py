@@ -1,13 +1,29 @@
-import rich.console
+"""DDS CLI utils module."""
+
 import numbers
+import rich.console
+import simplejson
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
 
 
-def calculate_magnitude(projects, keys, iec_standard=False):
-    """Uses the project list, obtains the values assigned to a particular key iteratively and calculates the best magnitude to format this set of values consistently"""
+def get_json_response(response):
+    """Get json output from requests response."""
+    try:
+        json_response = response.json()
+    except simplejson.JSONDecodeError as err:
+        raise SystemExit from err  # TODO: Change?
 
+    return json_response
+
+
+def calculate_magnitude(projects, keys, iec_standard=False):
+    """Calculate magnitude of values.
+
+    Uses the project list, obtains the values assigned to a particular key iteratively and
+    calculates the best magnitude to format this set of values consistently.
+    """
     # initialize the dictionary to be returned
     magnitudes = dict(zip(keys, [None] * len(keys)))
 
@@ -22,8 +38,8 @@ def calculate_magnitude(projects, keys, iec_standard=False):
             else:
                 base = 1000.0
 
-            # exclude values smaller than base, such that empty projects don't interfer with the calculation
-            # ensures that a minimum can be calculated if no val is larger than base
+            # exclude values smaller than base, such that empty projects don't interfer with
+            # the calculation ensures that a minimum can be calculated if no val is larger than base
             minimum = (lambda x: min(x) if x else 1)([val for val in values if val >= base])
             mag = 0
 
@@ -36,7 +52,7 @@ def calculate_magnitude(projects, keys, iec_standard=False):
 
 
 def format_api_response(response, key, magnitude=None, iec_standard=False):
-    """Takes a value e.g. bytes and reformats it to include a unit prefix"""
+    """Take a value e.g. bytes and reformat it to include a unit prefix."""
     if isinstance(response, str):
         return response  # pass the response if already a string
 
@@ -46,7 +62,8 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
 
         if key in ["Size", "Usage"]:
             if iec_standard:
-                # The IEC created prefixes such as kibi, mebi, gibi, etc., to unambiguously denote powers of 1024
+                # The IEC created prefixes such as kibi, mebi, gibi, etc.,
+                # to unambiguously denote powers of 1024
                 prefixlist = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
                 base = 1024.0
             else:
@@ -80,22 +97,24 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
             prefixlist[3] = "B"  # for currencies, Billions are used instead of Giga
 
         if response > 0:
-            if (
-                magnitude
-            ):  # if magnitude was given, then use fixed number of digits to allow for easier comparisons across projects
+            # if magnitude was given, then use fixed number of digits
+            # to allow for easier comparisons across projects
+            if magnitude:
                 return "{}{}{}".format(
                     "{:.2f}".format(response),
                     spacerA,
                     prefixlist[magnitude] + spacerB + unit,
                 )
-            else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
-                return "{}{}{}".format(
-                    "{:.2f}".format(response).rstrip("0").rstrip("."),
-                    spacerA,
-                    prefixlist[mag] + spacerB + unit,
-                )
-        else:
-            return f"0 {unit}"
-    else:
-        # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
-        return str(response)
+
+            # if values are anyway prefixed individually, then strip trailing 0 for readability
+            return "{}{}{}".format(
+                "{:.2f}".format(response).rstrip("0").rstrip("."),
+                spacerA,
+                prefixlist[mag] + spacerB + unit,
+            )
+
+        return f"0 {unit}"
+
+    # Since table.add.row() expects a string,
+    # try to return whatever is not yet a string but also not numeric as string
+    return str(response)

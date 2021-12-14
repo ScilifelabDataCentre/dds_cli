@@ -68,7 +68,7 @@ dds_cli.utils.stderr_console.print(
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
 def dds_main(click_ctx, verbose, log_file, no_prompt):
-    """The SciLifeLab Data Delivery System (DDS) command line interface
+    """SciLifeLab Data Delivery System (DDS) command line interface.
 
     Access token is saved in a .dds_cli_token file in the home directory.
     """
@@ -143,8 +143,8 @@ def add_user(click_ctx, username, email, role, project):
             inviter.add_user(email=email, role=role, project=project)
             if project:
                 LOG.info(
-                    "Any user shown as invited would need to be added to the project "
-                    "once the user has accepted the invitation and created an account in the system."
+                    "Any user shown as invited would need to be added to the project once the user "
+                    "has accepted the invitation and created an account in the system."
                 )
     except (
         dds_cli.exceptions.AuthenticationError,
@@ -274,7 +274,10 @@ def put(
     is_flag=True,
     default=False,
     show_default=True,
-    help="Show the usage for available projects, in GBHours and cost. No effect when specifying a project id.",
+    help=(
+        "Show the usage for available projects, in GBHours and cost. "
+        "No effect when specifying a project id."
+    ),
 )
 @click.option(
     "--sort",
@@ -603,84 +606,103 @@ def get(
         )
         sys.exit(1)
 
-    # Begin delivery
-    with dds_cli.data_getter.DataGetter(
-        username=username,
-        project=project,
-        get_all=get_all,
-        source=source,
-        source_path_file=source_path_file,
-        break_on_fail=break_on_fail,
-        destination=destination,
-        silent=silent,
-        verify_checksum=verify_checksum,
-        no_prompt=click_ctx.get("NO_PROMPT", False),
-    ) as getter:
+    try:
+        # Begin delivery
+        with dds_cli.data_getter.DataGetter(
+            username=username,
+            project=project,
+            get_all=get_all,
+            source=source,
+            source_path_file=source_path_file,
+            break_on_fail=break_on_fail,
+            destination=destination,
+            silent=silent,
+            verify_checksum=verify_checksum,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+        ) as getter:
 
-        with rich.progress.Progress(
-            "{task.description}",
-            rich.progress.BarColumn(bar_width=None),
-            " • ",
-            "[progress.percentage]{task.percentage:>3.1f}%",
-            refresh_per_second=2,
-            console=dds_cli.utils.console,
-        ) as progress:
+            with rich.progress.Progress(
+                "{task.description}",
+                rich.progress.BarColumn(bar_width=None),
+                " • ",
+                "[progress.percentage]{task.percentage:>3.1f}%",
+                refresh_per_second=2,
+                console=dds_cli.utils.stderr_console,
+            ) as progress:
 
-            # Keep track of futures
-            download_threads = {}
+                # Keep track of futures
+                download_threads = {}
 
-            # Iterator to keep track of which files have been handled
-            iterator = iter(getter.filehandler.data.copy())
+                # Iterator to keep track of which files have been handled
+                iterator = iter(getter.filehandler.data.copy())
 
-            with concurrent.futures.ThreadPoolExecutor() as texec:
-                task_dwnld = progress.add_task(
-                    "Download", total=len(getter.filehandler.data), step="summary"
-                )
-
-                # Schedule the first num_threads futures for upload
-                for file in itertools.islice(iterator, num_threads):
-                    LOG.info(f"Starting: {file}")
-                    # Execute download
-                    download_threads[
-                        texec.submit(getter.download_and_verify, file=file, progress=progress)
-                    ] = file
-
-                while download_threads:
-                    # Wait for the next future to complete
-                    ddone, _ = concurrent.futures.wait(
-                        download_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                with concurrent.futures.ThreadPoolExecutor() as texec:
+                    task_dwnld = progress.add_task(
+                        "Download", total=len(getter.filehandler.data), step="summary"
                     )
 
-                    new_tasks = 0
-
-                    for dfut in ddone:
-                        downloaded_file = download_threads.pop(dfut)
-                        LOG.info(
-                            f"Future done: {downloaded_file}",
-                        )
-
-                        # Get result
-                        try:
-                            file_downloaded = dfut.result()
-                            LOG.info(f"Download of {downloaded_file} successful: {file_downloaded}")
-                        except concurrent.futures.BrokenExecutor as err:
-                            LOG.critical(f"Download of file {downloaded_file} failed! Error: {err}")
-                            continue
-
-                        new_tasks += 1
-                        progress.advance(task_dwnld)
-
-                    # Schedule the next set of futures for download
-                    for next_file in itertools.islice(iterator, new_tasks):
-                        LOG.info(f"Starting: {next_file}")
+                    # Schedule the first num_threads futures for upload
+                    for file in itertools.islice(iterator, num_threads):
+                        LOG.debug(f"Starting: {file}")
                         # Execute download
                         download_threads[
-                            texec.submit(
-                                getter.download_and_verify,
-                                file=next_file,
-                                progress=progress,
+                            texec.submit(getter.download_and_verify, file=file, progress=progress)
+                        ] = file
+
+                    while download_threads:
+                        # Wait for the next future to complete
+                        ddone, _ = concurrent.futures.wait(
+                            download_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                        )
+
+                        new_tasks = 0
+
+                        for dfut in ddone:
+                            downloaded_file = download_threads.pop(dfut)
+                            LOG.debug(
+                                f"Future done: {downloaded_file}",
                             )
-                        ] = next_file
+
+                            # Get result
+                            try:
+                                file_downloaded = dfut.result()
+                                LOG.debug(
+                                    f"Download of {downloaded_file} successful: {file_downloaded}"
+                                )
+                            except concurrent.futures.BrokenExecutor as err:
+                                LOG.critical(
+                                    f"Download of file {downloaded_file} failed! Error: {err}"
+                                )
+                                continue
+
+                            new_tasks += 1
+                            progress.advance(task_dwnld)
+
+                        # Schedule the next set of futures for download
+                        for next_file in itertools.islice(iterator, new_tasks):
+                            LOG.debug(f"Starting: {next_file}")
+                            # Execute download
+                            download_threads[
+                                texec.submit(
+                                    getter.download_and_verify,
+                                    file=next_file,
+                                    progress=progress,
+                                )
+                            ] = next_file
+    except (
+        dds_cli.exceptions.InvalidMethodError,
+        OSError,
+        dds_cli.exceptions.TokenNotFoundError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.ApiResponseError,
+        SystemExit,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.NoDataError,
+        dds_cli.exceptions.DownloadError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
 
 
 ###################################################################################
@@ -796,9 +818,8 @@ def create(
 ###################################################################################
 @dds_main.group()
 @click.pass_obj
-def auth(click_ctx):
+def auth(_):
     """Manage the saved authentication token."""
-    pass
 
 
 @auth.command()
@@ -811,9 +832,10 @@ def auth(click_ctx):
 )
 @click.pass_obj
 def login(click_ctx, username):
-    """Renew the authentication token stored in the '.dds_cli_token' file. Run this command before
-    running the cli in a non interactive fashion as this enables the longest possible session time
-    before a password needs to be entered again.
+    """Renew the authentication token stored in the '.dds_cli_token' file.
+
+    Run this command before running the cli in a non interactive fashion as this enables the longest
+    possible session time before a password needs to be entered again.
     """
     no_prompt = click_ctx.get("NO_PROMPT", False)
     if no_prompt:
@@ -837,7 +859,7 @@ def logout():
     try:
         with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
             authenticator.logout()
-            LOG.info(f"[green]Successfully logged out![/green]")
+            LOG.info("[green]Successfully logged out![/green]")
     except dds_cli.exceptions.DDSCLIException as err:
         LOG.error(err)
         sys.exit(1)

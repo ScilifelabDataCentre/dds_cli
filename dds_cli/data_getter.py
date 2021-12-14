@@ -6,24 +6,19 @@
 
 # Standard library
 import logging
-import os
 import pathlib
 
 # Installed
-import boto3
-import botocore
 import requests
 import simplejson
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-from dds_cli import DDSEndpoint
+from dds_cli import DDSEndpoint, FileSegment
 from dds_cli import file_handler_remote as fhr
 from dds_cli import data_remover as dr
 from dds_cli import file_compressor as fc
 from dds_cli import file_encryptor as fe
-from dds_cli import s3_connector as s3
-from dds_cli import status
 from dds_cli import text_handler as txt
 from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
 from dds_cli import base
@@ -75,16 +70,16 @@ class DataGetter(base.DDSBaseClass):
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
-            dds_cli.utils.console.print(
-                f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n"
+            raise dds_cli.exceptions.InvalidMethodError(
+                attempted_method=self.method,
+                message="DataGetter attempting unauthorized method",
             )
-            os._exit(1)
 
         # Start file prep progress
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
-            console=dds_cli.utils.console,
+            console=dds_cli.utils.stderr_console,
         ) as progress:
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")
             self.filehandler = fhr.RemoteFileHandler(
@@ -96,16 +91,14 @@ class DataGetter(base.DDSBaseClass):
             )
 
             if self.filehandler.failed and self.break_on_fail:
-                dds_cli.utils.console.print(
-                    "\n:warning-emoji: Some specified files were not found in the system "
-                    "and '--break-on-fail' flag used. :warning-emoji:\n\n"
-                    f"Files not found: {self.filehandler.failed}\n"
+                raise dds_cli.exceptions.DownloadError(
+                    ":warning-emoji: Some specified files were not found in the system "
+                    "and '--break-on-fail' flag used. :warning-emoji:"
+                    f"Files not found: {self.filehandler.failed}"
                 )
-                os._exit(1)
 
             if not self.filehandler.data:
-                dds_cli.utils.console.print("\nNo files to download.\n")
-                os._exit(0)
+                raise dds_cli.exceptions.DownloadError("No files to download.")
 
             self.status = self.filehandler.create_download_status_dict()
 
@@ -142,12 +135,12 @@ class DataGetter(base.DDSBaseClass):
             db_updated, message = self.update_db(file=file)
             LOG.debug(f"Database updated: {db_updated}")
 
-            LOG.info(f"Beginning decryption of file {file}...")
+            LOG.debug(f"Beginning decryption of file {file}...")
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
                 peer_public=file_info["public_key"],
-                key_salt=file_info["key_salt"],
+                key_salt=file_info["salt"],
             ) as decryptor:
 
                 streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"])
@@ -183,32 +176,33 @@ class DataGetter(base.DDSBaseClass):
         """Download files from the cloud."""
         downloaded = False
         error = ""
-        file_local = str(self.filehandler.data[file]["path_downloaded"])
-        file_remote = self.filehandler.data[file]["name_in_bucket"]
+        file_local = self.filehandler.data[file]["path_downloaded"]
+        file_remote = self.filehandler.data[file]["url"]
 
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            if None in [conn.url, conn.keys, conn.bucketname]:
-                error = "No s3 info returned! " + conn.message
+        try:
+            with requests.get(file_remote, stream=True) as req:
+                req.raise_for_status()
+                with file_local.open(mode="wb") as new_file:
+                    for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
+                        progress.update(task, advance=len(chunk))
+                        new_file.write(chunk)
+        except (
+            requests.exceptions.ConnectTimeout,
+            requests.exceptions.HTTPError,
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+        ) as err:
+            if (
+                hasattr(err, "response")
+                and hasattr(err.response, "status_code")
+                and err.response.status_code == 404
+            ):
+                error = "File not found! Please report this to the SciLifeLab Data Centre."
             else:
-                # Upload file
-                try:
-                    conn.resource.meta.client.download_file(
-                        Filename=file_local,
-                        Bucket=conn.bucketname,
-                        Key=file_remote,
-                        Callback=status.ProgressPercentage(progress=progress, task=task)
-                        if not self.silent
-                        else None,
-                    )
-                except (
-                    botocore.client.ClientError,
-                    boto3.exceptions.Boto3Error,
-                ) as err:
-                    error = f"S3 download of file '{file}' failed: {err}"
-                    LOG.exception(f"{file}: {err}")
-                else:
-                    downloaded = True
+                error = str(err)
+        else:
+            downloaded = True
 
         return downloaded, error
 

@@ -10,10 +10,7 @@ import logging
 import pathlib
 
 # Installed
-import boto3
-import botocore
 import rich
-import rich.padding
 import rich.table
 from rich.progress import Progress, SpinnerColumn
 
@@ -55,7 +52,7 @@ def verify_proceed(func):
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.info(f"File {file} started {func.__name__}")
+        LOG.debug(f"File {file} started {func.__name__}")
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
@@ -69,7 +66,7 @@ def verify_proceed(func):
 
             if self.break_on_fail:
                 message = f"'--break-on-fail'. File causing failure: '{file}'. "
-                LOG.info(message)
+                LOG.warning(message)
 
                 _ = [
                     self.status[x].update({"cancel": True, "message": message})
@@ -120,42 +117,12 @@ def update_status(func):
     return wrapped
 
 
-def connect_cloud(func):
-    """Connect to S3"""
-
-    @functools.wraps(func)
-    def init_resource(self, *args, **kwargs):
-
-        # Connect to service
-        try:
-            session = boto3.session.Session()
-
-            self.resource = session.resource(
-                service_name="s3",
-                endpoint_url=self.url,
-                aws_access_key_id=self.keys["access_key"],
-                aws_secret_access_key=self.keys["secret_key"],
-            )
-        except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
-            self.url, self.keys, self.message = (
-                None,
-                None,
-                f"S3 connection failed: {err}",
-            )
-        else:
-            LOG.debug("Connection to S3 established.")
-            return func(self, *args, **kwargs)
-
-    return init_resource
-
-
 def subpath_required(func):
     """Make sure that the subpath to the temporary file directory exist."""
 
     @functools.wraps(func)
     def check_and_create(self, file, *args, **kwargs):
         """Create the sub directory if it does not exist."""
-
         file_info = self.filehandler.data[file]
 
         # Required path
@@ -168,7 +135,7 @@ def subpath_required(func):
             except OSError as err:
                 return False, str(err)
 
-            LOG.info(f"New directory created: {full_subpath}")
+            LOG.debug(f"New directory created: {full_subpath}")
 
         return func(self, file=file, *args, **kwargs)
 
@@ -186,7 +153,7 @@ def removal_spinner(func):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
-            console=dds_cli.utils.console,
+            console=dds_cli.utils.stderr_console,
         ) as progress:
 
             # Determine spinner text

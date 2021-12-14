@@ -24,7 +24,6 @@ from dds_cli import data_remover as dr
 from dds_cli import DDSEndpoint
 from dds_cli import file_encryptor as fe
 from dds_cli import file_handler_local as fhl
-from dds_cli import s3_connector as s3
 from dds_cli import status
 from dds_cli import text_handler as txt
 from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
@@ -74,7 +73,7 @@ def put(
             " • ",
             "[progress.percentage]{task.percentage:>3.1f}%",
             refresh_per_second=2,
-            console=dds_cli.utils.console,
+            console=dds_cli.utils.stderr_console,
         ) as progress:
 
             # Keep track of futures
@@ -92,7 +91,7 @@ def put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.info(f"Starting: {file}")
+                    LOG.debug(f"Starting: {file}")
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -134,7 +133,7 @@ def put(
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.info(f"Starting: {next_file}")
+                            LOG.debug(f"Starting: {next_file}")
                             upload_threads[
                                 texec.submit(
                                     putter.protect_and_upload,
@@ -200,7 +199,7 @@ class DataPutter(base.DDSBaseClass):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
-            console=dds_cli.utils.console,
+            console=dds_cli.utils.stderr_console,
         ) as progress:
             # Spinner while collecting file info
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")
@@ -213,7 +212,7 @@ class DataPutter(base.DDSBaseClass):
             )
 
             # Verify that the Safespring S3 bucket exists
-            self.verify_bucket_exist()
+            # self.verify_bucket_exist()
 
             # Check which, if any, files exist in the db
             files_in_db = self.filehandler.check_previous_upload(token=self.token)
@@ -275,11 +274,11 @@ class DataPutter(base.DDSBaseClass):
 
         # Update file info incl size, public key, salt
         self.filehandler.data[file]["public_key"] = file_public_key
-        self.filehandler.data[file]["key_salt"] = salt
+        self.filehandler.data[file]["salt"] = salt
         self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
         if saved:
-            LOG.info(
+            LOG.debug(
                 f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
             )
             # Update progress bar for upload
@@ -299,7 +298,7 @@ class DataPutter(base.DDSBaseClass):
 
                 if db_updated:
                     all_ok = True
-                    LOG.info(f"File successfully uploaded and added to the database: {file}")
+                    LOG.debug(f"File successfully uploaded and added to the database: {file}")
 
         if not saved or all_ok:
             # Delete temporary processed file locally
@@ -325,44 +324,35 @@ class DataPutter(base.DDSBaseClass):
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
 
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            # Check that connection ok and upload file
-            if None in [
-                conn.safespring_project,
-                conn.url,
-                conn.keys,
-                conn.bucketname,
-            ]:
-                error = "No s3 info returned! " + conn.message
-            else:
+        try:
+            with self.s3connector as conn:
                 # Upload file
-                try:
-                    conn.resource.meta.client.upload_file(
-                        Filename=file_local,
-                        Bucket=conn.bucketname,
-                        Key=file_remote,
-                        ExtraArgs={
-                            "ACL": "private",  # Access control list
-                            "CacheControl": "no-store",  # Don't store cache
-                        },
-                        Callback=status.ProgressPercentage(
-                            progress=progress,
-                            task=task,
-                        )
-                        if task is not None
-                        else None,
+                conn.resource.meta.client.upload_file(
+                    Filename=file_local,
+                    Bucket=conn.bucketname,
+                    Key=file_remote,
+                    ExtraArgs={
+                        "ACL": "private",  # Access control list
+                        "CacheControl": "no-store",  # Don't store cache
+                    },
+                    Callback=status.ProgressPercentage(
+                        progress=progress,
+                        task=task,
                     )
-                except (
-                    botocore.client.ClientError,
-                    boto3.exceptions.Boto3Error,
-                    FileNotFoundError,
-                    TypeError,
-                ) as err:
-                    error = f"S3 upload of file '{file}' failed: {err}"
-                    LOG.exception(f"{file}: {err}")
-                else:
-                    uploaded = True
+                    if task is not None
+                    else None,
+                )
+        except (
+            botocore.client.ClientError,
+            boto3.exceptions.Boto3Error,
+            botocore.exceptions.BotoCoreError,
+            FileNotFoundError,
+            TypeError,
+        ) as err:
+            error = f"S3 upload of file '{file}' failed: {err}"
+            LOG.exception(f"{file}: {err}")
+        else:
+            uploaded = True
 
         return uploaded, error
 
@@ -375,6 +365,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
+        LOG.debug(f"Fileinfo: {fileinfo}")
         params = {"project": self.project}
         file_info = {
             "name": file,
@@ -383,7 +374,7 @@ class DataPutter(base.DDSBaseClass):
             "size": fileinfo["size_raw"],
             "size_processed": fileinfo["size_processed"],
             "compressed": not fileinfo["compressed"],
-            "salt": fileinfo["key_salt"],
+            "salt": fileinfo["salt"],
             "public_key": fileinfo["public_key"],
             "checksum": fileinfo["checksum"],
         }

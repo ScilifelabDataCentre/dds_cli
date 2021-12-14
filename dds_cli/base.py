@@ -12,13 +12,11 @@ import pathlib
 # Installed
 import http
 import requests
-import rich
 import simplejson
 
 # Own modules
 import dds_cli.directory
 import dds_cli.timestamp
-import dds_cli.utils
 
 from dds_cli import (
     DDS_METHODS,
@@ -26,10 +24,10 @@ from dds_cli import (
     DDS_KEYS_REQUIRED_METHODS,
 )
 from dds_cli import DDSEndpoint
-from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
 from dds_cli import user
 from dds_cli import exceptions
+from dds_cli import utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -95,10 +93,12 @@ class DDSBaseClass:
             )
             self.token = dds_user.token_dict
 
-        LOG.debug(f"Method: {self.method}, Project: {self.project}")
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in DDS_KEYS_REQUIRED_METHODS:
+            if self.method == "put":
+                self.s3connector = self.__get_safespring_keys()
+
             self.keys = self.__get_project_keys()
 
             self.status = dict()
@@ -121,6 +121,10 @@ class DDSBaseClass:
         return True
 
     # Private methods ############################### Private methods #
+    def __get_safespring_keys(self):
+        """Get safespring keys."""
+        return s3.S3Connector(project_id=self.project, token=self.token)
+
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""
         # Project public key required for both put and get
@@ -161,7 +165,7 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if key_type not in project_public:
-            dds_cli.utils.console.print(
+            utils.console.print(
                 "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
             )
             os._exit(1)
@@ -170,55 +174,25 @@ class DDSBaseClass:
 
     def __printout_delivery_summary(self, max_fileerrs: int = 40):
         """Print out the delivery summary if any files were cancelled."""
+        # TODO: Look into a better summary print out - old deleted for now
         any_failed = self.__collect_all_failed()
 
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
         if any_failed:
+            LOG.info(f"Failed: \n{any_failed}")
             intro_error_message = (
                 f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
             )
 
-            # Print message if any failed files, print summary table unless too many failed files
-            if len(any_failed) < max_fileerrs:
-                dds_cli.utils.console.print(f"{intro_error_message}:")
-
-                # Cancelled files in root
-                files_table, additional_info = fh.FileHandler.create_summary_table(
-                    all_failed_data=any_failed, upload=bool(self.method == "put")
-                )
-                if files_table is not None:
-                    dds_cli.utils.console.print(rich.padding.Padding(files_table, 1))
-
-                # Cancelled files in different folders
-                folders_table, additional_info = fh.FileHandler.create_summary_table(
-                    all_failed_data=any_failed,
-                    get_single_files=False,
-                    upload=bool(self.method == "put"),
-                )
-                if folders_table is not None:
-                    dds_cli.utils.console.print(rich.padding.Padding(folders_table, 1))
-                if additional_info:
-                    dds_cli.utils.console.print(rich.padding.Padding(additional_info, 1))
-
-            dds_cli.utils.console.print(
+            utils.stderr_console.print(
                 f"{intro_error_message}. See {self.failed_delivery_log} for more information."
             )
 
-            if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
-                dds_cli.utils.console.print(
-                    rich.padding.Padding(
-                        "One or more files where uploaded but may not have been added to "
-                        "the db. Contact support and supply the logfile found in "
-                        f"{self.dds_directory.directories['LOGS']}",
-                        1,
-                    )
-                )
-
         else:
             # Printout if no cancelled/failed files
-            LOG.debug(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
+            LOG.info(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
             LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
@@ -249,32 +223,11 @@ class DDSBaseClass:
         )
 
         # Sort by which directory the files are in
+        LOG.debug(self.filehandler.failed)
+
+        # TODO: Sort more?
         return (
-            sorted(
-                sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
-                key=lambda f: f[1]["subpath"],
-            )
+            sorted(self.filehandler.failed.items(), key=lambda g: g)
             if sort
             else self.filehandler.failed
         )
-
-    # Public methods ################################# Public methods #
-    def verify_bucket_exist(self):
-        """Check that s3 connection works, and that bucket exists."""
-        LOG.debug("Verifying and/or creating bucket.")
-
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
-                dds_cli.utils.console.print(f"\n:warning-emoji: {conn.message} :warning-emoji:\n")
-                os._exit(1)
-
-            bucket_exists = conn.check_bucket_exists()
-            LOG.debug(f"Bucket exists: {bucket_exists}")
-            if not bucket_exists:
-                LOG.debug("Attempting to create bucket...")
-                _ = conn.create_bucket()
-
-        LOG.debug("Bucket verified.")
-
-        return True

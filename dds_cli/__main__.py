@@ -987,7 +987,6 @@ def user(click_ctx):
     nargs=1,
     type=str,
     required=True,
-    callback=dds_cli.utils.email_validator,
 )
 @click.option(
     "--username",
@@ -1045,12 +1044,13 @@ def add(click_ctx, username, email, role, project):
 
 ## Delete users from the system
 @user.command(name="delete", no_args_is_help=True)
-@click.argument(
-    "email",
-    nargs=1,
-    type=str,
+@click.argument("email", nargs=1, type=str, required=False)
+@click.option(
+    "--username",
+    "-u",
     required=False,
-    callback=dds_cli.utils.email_validator,
+    type=str,
+    help="Your Data Delivery System username.",
 )
 @click.option(
     "--self",
@@ -1059,7 +1059,7 @@ def add(click_ctx, username, email, role, project):
     help="Decommission your own user account",
 )
 @click.pass_obj
-def delete_users(click_ctx, email, self):
+def delete_users(click_ctx, email, username, self):
     """
     Delete user accounts from the Data Delivery System.
 
@@ -1069,27 +1069,41 @@ def delete_users(click_ctx, email, self):
     If you have sufficient administrative privileges, you may also delete the accounts of other users.
     Specify the e-mail address as argument to the main command to initiate the removal process.
     """
-    if email:
-        # Click.confirm unfortunately doesn't support formatted or colored strings, so use Log to warn.
-        LOG.info(f"[red]Delete Data Delivery System user account associated with {email}?[/red]")
+
+    if click_ctx.get("NO_PROMPT", False):
+        pass
     else:
-        LOG.info(f"[red]Are you sure? Deleted accounts can't be restored![/red]")
+        if not self:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Delete Data Delivery System user account associated with {email}"
+            )
+        else:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Are you sure? Deleted accounts can't be restored!"
+            )
 
-    click.confirm("Proceed with account deletion?", abort=True)
+    if proceed_deletion:
+        try:
+            with dds_cli.account_manager.AccountManager(
+                username=username,
+                method="delete",
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+            ) as manager:
+                if self and not email:
+                    manager.delete_own_account()
+                elif email and not self:
+                    manager.delete_user(email=email)
+                else:
+                    LOG.error(
+                        "You must either specify the '--self' flag or the e-mail address of the user to be deleted"
+                    )
+                    sys.exit(1)
 
-    try:
-        with dds_cli.account_manager.AccountManager(
-            username=None,
-            method="delete",
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-        ) as manager:
-            manager.delete_user(email=email, ownaccount=self)
-
-    except (
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.ApiResponseError,
-        dds_cli.exceptions.ApiRequestError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
+        except (
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)

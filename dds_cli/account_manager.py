@@ -80,11 +80,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         LOG.info(response_json.get("message", "User successfully added."))
 
-    def delete_user(self, email, ownaccount):
+    def delete_user(self, email):
         """Delete users from the system"""
-
         # Perform request to API
-        json = {"email": email, "ownaccount": ownaccount}
+        json = {"email": email}
 
         try:
             response = requests.post(
@@ -95,6 +94,8 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
             # Get response
             response_json = response.json()
+            message = response_json["message"]
+
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
         except simplejson.JSONDecodeError as err:
@@ -102,12 +103,38 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Format response message
         if not response.ok:
-            message = response_json["message"]
-
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message)
             else:
                 raise dds_cli.exceptions.DDSCLIException(message)
-
         else:
-            LOG.info(response_json["message"])
+            LOG.info(message)
+
+    def delete_own_account(self):
+        """Delete users from the system"""
+        # Perform request to API
+
+        try:
+            response = requests.post(
+                dds_cli.DDSEndpoint.USER_DELETE_SELF,
+                headers=self.token,
+                json=None,
+            )
+
+            # Get response
+            response_json = response.json()
+            message = response_json["message"]
+
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        # Format response message
+        if not response.ok:
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message)
+            else:
+                raise dds_cli.exceptions.DDSCLIException(message)
+        else:
+            LOG.info(message)

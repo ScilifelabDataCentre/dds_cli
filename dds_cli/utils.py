@@ -1,15 +1,14 @@
-<<<<<<< HEAD
 """DDS CLI utils module."""
 
 import numbers
 import rich.console
 import simplejson
-=======
+
 import click
 import rich.console
 import numbers
-import re
->>>>>>> 411efc1 (Add validator function for emails (only Regex, not functional))
+import rich.console
+import numbers
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
@@ -123,5 +122,3 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
     else:
         # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
         return str(response)
-
-

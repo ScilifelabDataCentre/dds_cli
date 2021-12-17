@@ -222,7 +222,7 @@ class TokenFile:
             return True
         elif age > dds_cli.TOKEN_WARNING_AGE:
             LOG.warning(
-                f"Saved token will soon expire: {expiration_time.strftime('%Y-%m-%d %H:%M:%S')}, please consider renewing the session using the 'dds session' command."
+                f"Saved token will soon expire: {expiration_time.strftime('%Y-%m-%d %H:%M:%S')}, please consider renewing the session using the 'dds auth login' command."
             )
 
         return False

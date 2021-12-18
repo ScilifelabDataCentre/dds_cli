@@ -23,7 +23,7 @@ import questionary
 
 # Own modules
 import dds_cli
-import dds_cli.account_adder
+import dds_cli.account_manager
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -100,19 +100,23 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
         click_ctx.obj = {"NO_PROMPT": no_prompt}
 
 
-####################################################################################################
-# INVITE USER ######################################################################## INVITE USER #
-####################################################################################################
+def common_options(f):
+    options = [
+        click.option(
+            "--username",
+            "-u",
+            required=False,
+            type=str,
+            help="Your Data Delivery System username.",
+        ),
+    ]
+    return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
+# COMMAND###################################################################################
+#### INVITE USER ############################################################ INVITE USER #
+###########################################################################################
 @dds_main.command()
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
 @click.option(
     "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
 )
@@ -126,26 +130,15 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
     ),
     help="Type of account.",
 )
-@click.option(
-    "--project",
-    "-p",
-    required=False,
-    type=str,
-    help="Existing Project you want the user to be associated to.",
-)
 @click.pass_obj
-def add_user(click_ctx, username, email, role, project):
+@common_options
+def add_user(click_ctx, username, email, role):
     """Add user to DDS, sending an invitation email to that person."""
     try:
-        with dds_cli.account_adder.AccountAdder(
+        with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as inviter:
-            inviter.add_user(email=email, role=role, project=project)
-            if project:
-                LOG.info(
-                    "Any user shown as invited would need to be added to the project once the user "
-                    "has accepted the invitation and created an account in the system."
-                )
+            inviter.add_user(email=email, role=role)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
@@ -162,13 +155,6 @@ def add_user(click_ctx, username, email, role, project):
 
 
 @dds_main.command()
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username",
-)
 @click.option(
     "--project",
     "-p",
@@ -226,6 +212,7 @@ def add_user(click_ctx, username, email, role, project):
         "Suggested for uploads including a large number of files."
     ),
 )
+@common_options
 @click.pass_obj
 def put(
     click_ctx,
@@ -267,9 +254,6 @@ def put(
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
-    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
-)
-@click.option(
     "--usage",
     is_flag=True,
     default=False,
@@ -304,6 +288,7 @@ def put(
     default=False,
     help="Output in JSON format",
 )
+@common_options
 @click.pass_obj
 def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users, json):
     """
@@ -432,9 +417,6 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
 @dds_main.command()
 @click.argument("proj_arg", required=False)
 @click.option("--project", "-p", required=True, type=str, help="Project ID.")
-@click.option(
-    "--username", "-u", required=False, type=str, help="Your Data Delivery System username."
-)
 @click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
 @click.option(
     "--file", "-f", required=False, type=str, multiple=True, help="Path to file to remove."
@@ -442,6 +424,7 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
 @click.option(
     "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
 )
+@common_options
 @click.pass_obj
 def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
     """Delete the files within a project."""
@@ -508,13 +491,6 @@ def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
 
 
 @dds_main.command()
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
 @click.option(
     "--project",
     "-p",
@@ -585,6 +561,7 @@ def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
     show_default=True,
     help="Perform SHA-256 checksum verification after download (slower).",
 )
+@common_options
 @click.pass_obj
 def get(
     click_ctx,
@@ -705,116 +682,8 @@ def get(
         sys.exit(1)
 
 
-###################################################################################
-# CREATE ################################################################# CREATE #
-###################################################################################
-@dds_main.command(no_args_is_help=True)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--title",
-    "-t",
-    required=True,
-    type=str,
-    help="The title of the project",
-)
-@click.option(
-    "--description",
-    "-d",
-    required=True,
-    type=str,
-    help="A description of the project",
-)
-@click.option(
-    "--principal-investigator",
-    "-pi",
-    required=True,
-    type=str,
-    help="The name of the Principal Investigator",
-)
-@click.option(
-    "--is_sensitive",
-    required=False,
-    is_flag=True,
-    help="Indicate if the Project includes sensitive data",
-)
-@click.option(
-    "--owner",
-    required=False,
-    multiple=True,
-    help="Email of a user to be added to the project as Project Owner",
-)
-@click.option(
-    "--researcher",
-    required=False,
-    multiple=True,
-    help="Email of a user to be added to the project as Researcher",
-)
-@click.pass_obj
-def create(
-    click_ctx,
-    username,
-    title,
-    description,
-    principal_investigator,
-    is_sensitive,
-    owner,
-    researcher,
-):
-    """Create a project."""
-    try:
-        with dds_cli.project_creator.ProjectCreator(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as creator:
-            emails_roles = []
-            if owner or researcher:
-                email_overlap = set(owner) & set(researcher)
-                if email_overlap:
-                    LOG.info(
-                        f"The email(s) {email_overlap} specified as both owner and researcher! "
-                        "Please specify a unique role for each email."
-                    )
-                    sys.exit(1)
-                if owner:
-                    emails_roles.extend([{"email": x, "role": "Project Owner"} for x in owner])
-                if researcher:
-                    emails_roles.extend([{"email": x, "role": "Researcher"} for x in researcher])
-
-            created, project_id, user_addition_messages, err = creator.create_project(
-                title=title,
-                description=description,
-                principal_investigator=principal_investigator,
-                sensitive=is_sensitive,
-                users_to_add=emails_roles,
-            )
-            if created:
-                LOG.info(
-                    f"Project created with id: {project_id}",
-                )
-                if user_addition_messages:
-                    for msg in user_addition_messages:
-                        LOG.info(msg)
-                        LOG.info(
-                            "Any user shown as invited would need to be "
-                            "added to the project once the user has accepted "
-                            "the invitation and created an account in the system."
-                        )
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-###################################################################################
-# AUTH ##################################################################### AUTH #
+# COMMAND##########################################################################
+#### AUTH ################################################################## AUTH #
 ###################################################################################
 @dds_main.group()
 @click.pass_obj
@@ -876,28 +745,205 @@ def info():
         sys.exit(1)
 
 
-###################################################################################
-# STATUS ################################################################# STATUS #
+# COMMAND##########################################################################
+#### PROJECT ############################################################ PROJECT #
 ###################################################################################
 @dds_main.group(invoke_without_command=True)
+@click.pass_obj
+def project(click_ctx):
+    """Manage projects"""
+    pass
+
+
+def common_options_project(f):
+    options = [
+        click.option("--project", "-p", required=True, type=str, help="Project ID."),
+    ]
+    return functools.reduce(lambda x, opt: opt(x), options, f)
+
+
+# SUBCOMMAND#######################################################################
+####### CREATE ########################################################### CREATE #
+###################################################################################
+@project.command(no_args_is_help=True)
+@click.option(
+    "--title",
+    "-t",
+    required=True,
+    type=str,
+    help="The title of the project",
+)
+@click.option(
+    "--description",
+    "-d",
+    required=True,
+    type=str,
+    help="A description of the project",
+)
+@click.option(
+    "--principal-investigator",
+    "-pi",
+    required=True,
+    type=str,
+    help="The name of the Principal Investigator",
+)
+@click.option(
+    "--is_sensitive",
+    required=False,
+    is_flag=True,
+    help="Indicate if the Project includes sensitive data",
+)
+@click.option(
+    "--owner",
+    required=False,
+    multiple=True,
+    help="Email of a user to be added to the project as Project Owner",
+)
+@click.option(
+    "--researcher",
+    required=False,
+    multiple=True,
+    help="Email of a user to be added to the project as Researcher",
+)
+@common_options
+@click.pass_obj
+def create(
+    click_ctx,
+    username,
+    title,
+    description,
+    principal_investigator,
+    is_sensitive,
+    owner,
+    researcher,
+):
+    """Create a project."""
+    try:
+        with dds_cli.project_creator.ProjectCreator(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as creator:
+            emails_roles = []
+            if owner or researcher:
+                email_overlap = set(owner) & set(researcher)
+                if email_overlap:
+                    LOG.info(
+                        f"The email(s) {email_overlap} specified as both owner and researcher! "
+                        "Please specify a unique role for each email."
+                    )
+                    sys.exit(1)
+                if owner:
+                    emails_roles.extend([{"email": x, "role": "Project Owner"} for x in owner])
+                if researcher:
+                    emails_roles.extend([{"email": x, "role": "Researcher"} for x in researcher])
+
+            created, project_id, user_addition_messages, err = creator.create_project(
+                title=title,
+                description=description,
+                principal_investigator=principal_investigator,
+                sensitive=is_sensitive,
+                users_to_add=emails_roles,
+            )
+            if created:
+                LOG.info(
+                    f"Project created with id: {project_id}",
+                )
+                if user_addition_messages:
+                    for msg in user_addition_messages:
+                        LOG.info(msg)
+                        LOG.info(
+                            "Any user shown as invited would need to be "
+                            "added to the project once the user has accepted "
+                            "the invitation and created an account in the system."
+                        )
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# SUBCOMMAND#######################################################################
+####### GRANT ############################################################# GRANT #
+###################################################################################
+@click.option(
+    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
+)
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(
+        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
+        case_sensitive=False,
+    ),
+    help="Type of account.",
+)
+@project.command()
+@common_options
+@common_options_project
+@click.pass_obj
+def grant(click_ctx, username, project, email, role):
+    """Grant user access to a project"""
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as granter:
+            granter.add_user(email=email, role=role, project=project)
+            if project:
+                LOG.info(
+                    "Any user shown as invited would need to be added to the project once the user "
+                    "has accepted the invitation and created an account in the system."
+                )
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# SUBCOMMAND#######################################################################
+####### REVOKE ########################################################### REVOKE #
+###################################################################################
+@click.option(
+    "--email",
+    "-e",
+    required=True,
+    type=str,
+    help="Email of the user for whom project access is to be revoked.",
+)
+@project.command()
+@common_options
+@common_options_project
+@click.pass_obj
+def revoke(click_ctx, username, project, email):
+    """Revoke user access to a project"""
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as revoker:
+            revoker.revoke_project_access(project, email)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# SUBCOMMAND#######################################################################
+####### STATUS ########################################################### STATUS #
+###################################################################################
+@project.group()
 @click.pass_obj
 def status(click_ctx):
     """Manage project statuses."""
     pass
-
-
-def common_options(f):
-    options = [
-        click.option(
-            "--username",
-            "-u",
-            required=False,
-            type=str,
-            help="Your Data Delivery System username.",
-        ),
-        click.option("--project", "-p", required=True, type=str, help="Project ID."),
-    ]
-    return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
 @click.option(
@@ -908,6 +954,7 @@ def common_options(f):
 )
 @status.command()
 @common_options
+@common_options_project
 @click.pass_obj
 def display(click_ctx, username, project, show_history):
     """Display and Update project status."""
@@ -933,6 +980,7 @@ def display(click_ctx, username, project, show_history):
 )
 @status.command()
 @common_options
+@common_options_project
 @click.pass_obj
 def release(click_ctx, username, project, deadline):
     """Make project available for user download"""
@@ -952,6 +1000,7 @@ def release(click_ctx, username, project, deadline):
 
 @status.command()
 @common_options
+@common_options_project
 @click.pass_obj
 def retract(click_ctx, username, project):
     """Retract a project available for download to add more data"""
@@ -971,6 +1020,7 @@ def retract(click_ctx, username, project):
 
 @status.command()
 @common_options
+@common_options_project
 @click.pass_obj
 def archive(click_ctx, username, project):
     """Manually archive a released project and delete all its data"""
@@ -990,6 +1040,7 @@ def archive(click_ctx, username, project):
 
 @status.command()
 @common_options
+@common_options_project
 @click.pass_obj
 def delete(click_ctx, username, project):
     """Delete an unreleased project and all its data"""
@@ -1009,6 +1060,7 @@ def delete(click_ctx, username, project):
 
 @status.command()
 @common_options
+@common_options_project
 @click.pass_obj
 def abort(click_ctx, username, project):
     """Abort a released project to delete all its data"""

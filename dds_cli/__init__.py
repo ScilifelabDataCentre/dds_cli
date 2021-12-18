@@ -90,6 +90,9 @@ class DDSEndpoint:
     REMOVE_FILE = BASE_ENDPOINT + "/file/rm"
     REMOVE_FOLDER = BASE_ENDPOINT + "/file/rmdir"
 
+    # User management
+    REVOKE_PROJECT_ACCESS = BASE_ENDPOINT + "/user/rm_from_project"
+
     # Encryption keys
     PROJ_PUBLIC = BASE_ENDPOINT + "/proj/public"
     PROJ_PRIVATE = BASE_ENDPOINT + "/proj/private"

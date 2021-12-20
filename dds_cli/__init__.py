@@ -33,7 +33,7 @@ __all__ = [
 ###############################################################################
 
 # Keep track of all allowed methods
-DDS_METHODS = ["put", "get", "ls", "rm", "create", "add"]
+DDS_METHODS = ["put", "get", "ls", "rm", "create", "add", "delete"]
 
 # Methods to which a directory created by DDS
 DDS_DIR_REQUIRED_METHODS = ["put", "get"]
@@ -62,8 +62,10 @@ class DDSEndpoint:
         BASE_ENDPOINT_LOCAL if os.getenv("DDS_CLI_ENV") == "development" else BASE_ENDPOINT_REMOTE
     )
 
-    # User creation
+    # User management
     USER_ADD = BASE_ENDPOINT + "/user/add"
+    USER_DELETE = BASE_ENDPOINT + "/user/delete"
+    USER_DELETE_SELF = BASE_ENDPOINT + "/user/delete_self"
 
     # Authentication - user and project
     ENCRYPTED_TOKEN = BASE_ENDPOINT + "/user/encrypted_token"

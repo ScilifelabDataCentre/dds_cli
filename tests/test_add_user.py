@@ -19,15 +19,15 @@ def runner_with_project(runner):
     def _run():
         return runner(
             [
-                "add-user",
+                "user",
+                "add",
                 "-u",
                 "unituser",
-                "-e",
-                ADD_JSON["email"],
                 "-r",
                 ADD_JSON["role"],
                 "-p",
                 ADD_JSON_PROJECT["project"],
+                ADD_JSON["email"],
             ]
         )
 
@@ -39,9 +39,7 @@ def runner_no_project(runner):
     """Run dds add-user without a project specified."""
 
     def _run():
-        return runner(
-            ["add-user", "-u", "unituser", "-e", ADD_JSON["email"], "-r", ADD_JSON["role"]]
-        )
+        return runner(["user", "add", "-u", "unituser", "-r", ADD_JSON["role"], ADD_JSON["email"]])
 
     yield _run
 

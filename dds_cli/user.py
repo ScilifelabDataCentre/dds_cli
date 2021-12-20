@@ -92,7 +92,7 @@ class User:
         if self.username is None:
             self.username = rich.prompt.Prompt.ask("DDS username")
 
-        password = getpass.getpass(prompt="DDS Password: ")
+        password = getpass.getpass(prompt="DDS password: ")
 
         if password == "":
             raise exceptions.AuthenticationError(

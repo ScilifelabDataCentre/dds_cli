@@ -130,6 +130,13 @@ def common_options(f):
     ),
     help="Type of account.",
 )
+@click.option(
+    "--project",
+    "-p",
+    required=False,
+    type=str,
+    help="Existing Project you want the user to be associated to.",
+)
 @click.pass_obj
 @common_options
 def add_user(click_ctx, username, email, role):
@@ -138,7 +145,12 @@ def add_user(click_ctx, username, email, role):
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as inviter:
-            inviter.add_user(email=email, role=role)
+            inviter.add_user(email=email, role=role, project=project)
+            if project:
+                LOG.info(
+                    "Any user shown as invited would need to be added to the project once the user "
+                    "has accepted the invitation and created an account in the system."
+                )
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

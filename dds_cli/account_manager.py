@@ -86,7 +86,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         json = {"email": email}
 
         try:
-            response = requests.post(
+            response = requests.delete(
                 dds_cli.DDSEndpoint.USER_DELETE,
                 headers=self.token,
                 json=json,
@@ -115,7 +115,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         # Perform request to API
 
         try:
-            response = requests.post(
+            response = requests.delete(
                 dds_cli.DDSEndpoint.USER_DELETE_SELF,
                 headers=self.token,
                 json=None,

@@ -4,12 +4,6 @@ import numbers
 import rich.console
 import simplejson
 
-import click
-import rich.console
-import numbers
-import rich.console
-import numbers
-
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
 

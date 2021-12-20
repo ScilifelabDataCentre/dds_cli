@@ -112,60 +112,9 @@ def common_options(f):
     ]
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
-
-# COMMAND###################################################################################
-#### INVITE USER ############################################################ INVITE USER #
-###########################################################################################
-@dds_main.command()
-@click.option(
-    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
-)
-@click.option(
-    "--role",
-    "-r",
-    required=True,
-    type=click.Choice(
-        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
-        case_sensitive=False,
-    ),
-    help="Type of account.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=False,
-    type=str,
-    help="Existing Project you want the user to be associated to.",
-)
-@click.pass_obj
-@common_options
-def add_user(click_ctx, username, email, role, project):
-    """Add user to DDS, sending an invitation email to that person."""
-    try:
-        with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as inviter:
-            inviter.add_user(email=email, role=role, project=project)
-            if project:
-                LOG.info(
-                    "Any user shown as invited would need to be added to the project once the user "
-                    "has accepted the invitation and created an account in the system."
-                )
-    except (
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.ApiResponseError,
-        dds_cli.exceptions.ApiRequestError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
 ####################################################################################################
 # PUT ######################################################################################## PUT #
 ####################################################################################################
-
-
 @dds_main.command()
 @click.option(
     "--project",
@@ -1088,3 +1037,130 @@ def abort(click_ctx, username, project):
     ) as err:
         LOG.error(err)
         sys.exit(1)
+
+
+###################################################################################
+# USER MANAGEMENT ############################################### USER MANAGEMENT #
+###################################################################################
+@dds_main.group(no_args_is_help=True)
+@click.pass_obj
+def user(click_ctx):
+    """Manage user accounts, including your own."""
+    pass
+
+
+## Invite new users to the system
+@user.command()
+@click.argument(
+    "email",
+    nargs=1,
+    type=str,
+    required=True,
+)
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(
+        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
+        case_sensitive=False,
+    ),
+    help="Type of account.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=False,
+    type=str,
+    help="Existing Project you want the user to be associated to.",
+)
+@click.pass_obj
+@common_options
+def add(click_ctx, username, email, role, project):
+    """
+    Add a user to the DDS system or hosted projects.
+
+    Specify an user's email and role to associate it with projects.
+    If the user doesn't exist in the system yet, an invitation email
+    will be sent automatically to that person.
+
+    """
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as inviter:
+            inviter.add_user(email=email, role=role, project=project)
+            if project:
+                LOG.info(
+                    "Any user shown as invited would need to be added to the project "
+                    "once the user has accepted the invitation and created an account in the system."
+                )
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+## Delete users from the system
+@user.command(name="delete", no_args_is_help=True)
+@click.argument("email", nargs=1, type=str, required=False)
+@click.option(
+    "--self",
+    required=False,
+    is_flag=True,
+    help="Decommission your own user account",
+)
+@click.pass_obj
+@common_options
+def delete_users(click_ctx, email, username, self):
+    """
+    Delete user accounts from the Data Delivery System.
+
+    To request the removal of your own account, use the `--self` flag without any arguments.
+    An e-mail will be sent to you asking to confirm the deletion.
+
+    If you have sufficient administrative privileges, you may also delete the accounts of other users.
+    Specify the e-mail address as argument to the main command to initiate the removal process.
+    """
+
+    if click_ctx.get("NO_PROMPT", False):
+        pass
+    else:
+        if not self:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Delete Data Delivery System user account associated with {email}"
+            )
+        else:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Are you sure? Deleted accounts can't be restored!"
+            )
+
+    if proceed_deletion:
+        try:
+            with dds_cli.account_manager.AccountManager(
+                username=username,
+                method="delete",
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+            ) as manager:
+                if self and not email:
+                    manager.delete_own_account()
+                elif email and not self:
+                    manager.delete_user(email=email)
+                else:
+                    LOG.error(
+                        "You must either specify the '--self' flag or the e-mail address of the user to be deleted"
+                    )
+                    sys.exit(1)
+
+        except (
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)

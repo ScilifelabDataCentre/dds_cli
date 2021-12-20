@@ -105,16 +105,14 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
                     spacerA,
                     prefixlist[magnitude] + spacerB + unit,
                 )
-
-            # if values are anyway prefixed individually, then strip trailing 0 for readability
-            return "{}{}{}".format(
-                "{:.2f}".format(response).rstrip("0").rstrip("."),
-                spacerA,
-                prefixlist[mag] + spacerB + unit,
-            )
-
-        return f"0 {unit}"
-
-    # Since table.add.row() expects a string,
-    # try to return whatever is not yet a string but also not numeric as string
-    return str(response)
+            else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
+                return "{}{}{}".format(
+                    "{:.2f}".format(response).rstrip("0").rstrip("."),
+                    spacerA,
+                    prefixlist[mag] + spacerB + unit,
+                )
+        else:
+            return f"0 {unit}"
+    else:
+        # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
+        return str(response)

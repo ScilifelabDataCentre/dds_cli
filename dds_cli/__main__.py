@@ -139,7 +139,7 @@ def common_options(f):
 )
 @click.pass_obj
 @common_options
-def add_user(click_ctx, username, email, role):
+def add_user(click_ctx, username, email, role, project):
     """Add user to DDS, sending an invitation email to that person."""
     try:
         with dds_cli.account_manager.AccountManager(

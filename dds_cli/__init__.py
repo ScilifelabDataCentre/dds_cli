@@ -66,7 +66,7 @@ class DDSEndpoint:
     USER_ADD = BASE_ENDPOINT + "/user/add"
     USER_DELETE = BASE_ENDPOINT + "/user/delete"
     USER_DELETE_SELF = BASE_ENDPOINT + "/user/delete_self"
-    REVOKE_PROJECT_ACCESS = BASE_ENDPOINT + "/user/rm_from_project"
+    REVOKE_PROJECT_ACCESS = BASE_ENDPOINT + "/user/access/revoke"
 
     # Authentication - user and project
     ENCRYPTED_TOKEN = BASE_ENDPOINT + "/user/encrypted_token"

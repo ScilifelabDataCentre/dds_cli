@@ -833,25 +833,27 @@ def create(
     "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
 )
 @click.option(
-    "--role",
-    "-r",
-    required=True,
-    type=click.Choice(
-        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
-        case_sensitive=False,
-    ),
-    help="Type of account.",
+    "--owner",
+    required=False,
+    is_flag=True,
+    help="Grant access as project owner.",
 )
 @project.command()
 @common_options
 @common_options_project
 @click.pass_obj
-def grant(click_ctx, username, project, email, role):
+def grant(click_ctx, username, project, email, owner):
     """Grant user access to a project"""
     try:
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as granter:
+            role = "Researcher"
+            if owner:
+                role = "Project Owner"
+            import pdb
+
+            pdb.set_trace()
             granter.add_user(email=email, role=role, project=project)
             if project:
                 LOG.info(

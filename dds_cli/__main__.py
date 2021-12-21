@@ -836,7 +836,7 @@ def create(
     "--owner",
     required=False,
     is_flag=True,
-    help="Grant access as project owner.",
+    help="Grant access as project owner. If not specified, the user gets Researcher permissions within the project.",
 )
 @project.command()
 @common_options
@@ -851,9 +851,6 @@ def grant(click_ctx, username, project, email, owner):
             role = "Researcher"
             if owner:
                 role = "Project Owner"
-            import pdb
-
-            pdb.set_trace()
             granter.add_user(email=email, role=role, project=project)
             if project:
                 LOG.info(

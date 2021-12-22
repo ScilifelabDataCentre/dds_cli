@@ -19,6 +19,7 @@ import dds_cli.auth
 import dds_cli.base
 import dds_cli.exceptions
 
+
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
 ####################################################################################################
@@ -43,8 +44,8 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             username=username, authenticate=authenticate, method=method, no_prompt=no_prompt
         )
 
-        # Only methods "add" and "delete" can use the AccountManager class
-        if self.method not in ["add", "delete"]:
+        # Only methods "add", "delete" and "revoke" can use the AccountManager class
+        if self.method not in ["add", "delete", "revoke"]:
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     def add_user(self, email, role, project):
@@ -138,3 +139,33 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 raise dds_cli.exceptions.DDSCLIException(message)
         else:
             LOG.info(message)
+
+    def revoke_project_access(self, project, email):
+        """Revoke a user's access to a project"""
+        json = {"email": email, "project": project}
+        try:
+            response = requests.post(
+                dds_cli.DDSEndpoint.REVOKE_PROJECT_ACCESS,
+                headers=self.token,
+                json=json,
+            )
+
+            # Get response
+            response_json = response.json()
+            LOG.debug(response_json)
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        # Format response message
+        if not response.ok:
+            message = "Could not revoke user access"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise dds_cli.exceptions.DDSCLIException(
+                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            )
+
+        LOG.info(response_json.get("message", "User access successfully revoked."))

@@ -654,13 +654,7 @@ def auth(_):
 
 
 @auth.command()
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username. Required unless the `--check` flag is used.",
-)
+@common_options
 @click.pass_obj
 def login(click_ctx, username):
     """Renew the authentication token stored in the '.dds_cli_token' file.

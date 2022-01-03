@@ -33,7 +33,7 @@ import dds_cli.project_creator
 import dds_cli.auth
 import dds_cli.project_status
 import dds_cli.utils
-import dds_cli.options as opts
+from dds_cli.options import args, flags, opts
 
 
 ####################################################################################################
@@ -114,16 +114,16 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
 # ************************************************************************************************ #
 
 
-def common_options(f):
-    """Options common to most dds commands."""
-    options = [opts.username_optional]
-    return functools.reduce(lambda x, opt: opt(x), options, f)
+# def common_options(f):
+#     """Options common to most dds commands."""
+#     options = [opts.username_optional]
+#     return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
-def common_options_project_content_output(f):
-    """Options common to dds ls [PROJECT]."""
-    options = [opts.list_user_flag, opts.output_json_flag, opts.display_tree_flag]
-    return functools.reduce(lambda x, opt: opt(x), options, f)
+# def common_options_project_content_output(f):
+#     """Options common to dds ls [PROJECT]."""
+#     options = [opts.list_user_flag, opts.output_json_flag, opts.display_tree_flag]
+#     return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
 # ************************************************************************************************ #
@@ -131,61 +131,22 @@ def common_options_project_content_output(f):
 # ************************************************************************************************ #
 
 # -- dds ls -- #
-@dds_main.command(name="ls", no_args_is_help=True)
+@dds_main.command(name="ls")
 # Positional args
-@click.argument("project", metavar="[PROJECT ID]", nargs=1, required=False)
-@click.argument("folder", nargs=1, required=False)
+@args.project_optional
+@args.folder_optional
 # Options
-@click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
-@click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
-@click.option(
-    "--usage",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help=(
-        "Show the usage for available projects, in GBHours and cost. "
-        "No effect when specifying a project id."
-    ),
-)
-@click.option(
-    "--sort",
-    type=click.Choice(
-        choices=["id", "title", "pi", "status", "updated", "size", "usage", "cost"],
-        case_sensitive=False,
-    ),
-    default="Updated",
-    required=False,
-    help="Which column to sort the project list by.",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--users",
-    is_flag=True,
-    default=False,
-    help="Display users associated with a project(Requires a project id)",
-)
-@click.option(
-    "--json",
-    is_flag=True,
-    default=False,
-    help="Output in JSON format",
-)
-@click.option(
-    "--tree",
-    "-t",
-    is_flag=True,
-    default=False,
-    help="Display the entire project(s) directory tree",
-)
+@opts.username_optional
+@opts.sort_optional
+# Flags
+@flags.projects
+@flags.size
+@flags.usage
+@flags.users
+@flags.json
+@flags.tree
 @click.pass_obj
-def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users, json):
+def ls(click_ctx, project, folder, username, sort, projects, size, usage, tree, users, json):
     """
     List your projects and project files.
 
@@ -323,14 +284,8 @@ def auth_group_command(_):
 
 
 # -- dds auth login -- #
-@auth_group_command.command(name="login", no_args_is_help=True)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
+@auth_group_command.command(name="login")
+@opts.username_optional
 @click.pass_obj
 def login(click_ctx, username):
     """Renew the authentication token stored in the '.dds_cli_token' file.
@@ -355,7 +310,7 @@ def login(click_ctx, username):
 
 
 # -- dds auth logout -- #
-@auth_group_command.command(name="logout", no_args_is_help=True)
+@auth_group_command.command(name="logout")
 def logout():
     """Remove the saved authentication token by deleting the '.dds_cli_token' file."""
     try:
@@ -368,7 +323,7 @@ def logout():
 
 
 # -- dds auth info -- #
-@auth_group_command.command(name="info", no_args_is_help=True)
+@auth_group_command.command(name="info")
 def info():
     """Print info on saved authentication token validity and age."""
     try:
@@ -399,25 +354,10 @@ def user_group_command(_):
 # -- dds user add -- #
 @user_group_command.command(name="add", no_args_is_help=True)
 # Positional args
-@click.argument("email", nargs=1, type=str, required=True)
+@args.email_required
 # Options
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--role",
-    "-r",
-    required=True,
-    type=click.Choice(
-        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
-        case_sensitive=False,
-    ),
-    help="Type of account.",
-)
+@opts.username_optional
+@opts.role_required
 @click.option(
     "--project",
     "-p",
@@ -426,7 +366,7 @@ def user_group_command(_):
     help="Existing Project you want the user to be associated to.",
 )
 @click.pass_obj
-def add_user(click_ctx, username, email, role, project):
+def add_user(click_ctx, email, username, role, project):
     """
     Add a user to the DDS system or hosted projects.
 
@@ -458,15 +398,10 @@ def add_user(click_ctx, username, email, role, project):
 # -- dds user delete -- #
 @user_group_command.command(name="delete", no_args_is_help=True)
 # Positional args
-@click.argument("email", nargs=1, type=str, required=False)
+@args.email_optional
 # Options
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
+@opts.username_optional
+# Flags
 @click.option(
     "--self",
     required=False,
@@ -544,39 +479,13 @@ def project_group_command(_):
 # -- dds project ls -- #
 # TODO: CALL dds ls command
 @project_group_command.command(name="ls", no_args_is_help=True)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
-)
-@click.option(
-    "--users",
-    is_flag=True,
-    default=False,
-    help="Display users associated with a project(Requires a project id)",
-)
-@click.option(
-    "--json",
-    is_flag=True,
-    default=False,
-    help="Output in JSON format",
-)
-@click.option(
-    "--tree",
-    "-t",
-    is_flag=True,
-    default=False,
-    help="Display the entire project(s) directory tree",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
+# Options
+@opts.username_optional
+@opts.project_required
+# Flags
+@flags.users
+@flags.json
+@flags.tree
 def list_project_contents(click_ctx, username, project, users, json, tree):
     """List project contents. Calls the dds ls function."""
     ls(
@@ -596,6 +505,8 @@ def list_project_contents(click_ctx, username, project, users, json, tree):
 
 # -- dds project create -- #
 @project_group_command.command(no_args_is_help=True)
+# Options
+@opts.username_optional
 @click.option(
     "--title",
     "-t",
@@ -634,13 +545,6 @@ def list_project_contents(click_ctx, username, project, users, json, tree):
     required=False,
     multiple=True,
     help="Email of a user to be added to the project as Researcher",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
 )
 @click.pass_obj
 def create(
@@ -714,25 +618,14 @@ def project_status(_):
 
 # -- dds project status display -- #
 @project_status.command(name="display", no_args_is_help=True)
+@opts.username_optional
+@opts.project_required
+# Flags
 @click.option(
     "--show_history",
     required=False,
     is_flag=True,
     help="Show history of project statuses in addition to current status",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
 )
 @click.pass_obj
 def display_project_status(click_ctx, username, project, show_history):
@@ -753,25 +646,14 @@ def display_project_status(click_ctx, username, project, show_history):
 
 # -- dds project status release -- #
 @project_status.command(name="release", no_args_is_help=True)
+# Options
+@opts.username_optional
+@opts.project_required
 @click.option(
     "--deadline",
     required=False,
     type=int,
     help="Deadline in days when releasing a project",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
 )
 @click.pass_obj
 def release_project(click_ctx, username, project, deadline):
@@ -792,20 +674,9 @@ def release_project(click_ctx, username, project, deadline):
 
 # -- dds project status retract -- #
 @project_status.command(name="retract", no_args_is_help=True)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
-)
+# Options
+@opts.username_optional
+@opts.project_required
 @click.pass_obj
 def retract_project(click_ctx, username, project):
     """Retract a project available for download to add more data."""
@@ -825,20 +696,9 @@ def retract_project(click_ctx, username, project):
 
 # -- dds project status archive -- #
 @project_status.command(name="archive", no_args_is_help=True)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
-)
+# Options
+@opts.username_optional
+@opts.project_required
 @click.pass_obj
 def archive_project(click_ctx, username, project):
     """Manually archive a released project and delete all its data."""
@@ -858,20 +718,9 @@ def archive_project(click_ctx, username, project):
 
 # -- dds project status delete -- #
 @project_status.command(name="delete", no_args_is_help=True)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
-)
+# Options
+@opts.username_optional
+@opts.project_required
 @click.pass_obj
 def delete_project(click_ctx, username, project):
     """Delete an unreleased project and all its data."""
@@ -891,20 +740,9 @@ def delete_project(click_ctx, username, project):
 
 # -- dds project status abort -- #
 @project_status.command(name="abort", no_args_is_help=True)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
-)
+# Options
+@opts.username_optional
+@opts.project_required
 @click.pass_obj
 def abort_project(click_ctx, username, project):
     """Abort a released project to delete all its data."""
@@ -931,28 +769,22 @@ def project_access(_):
 
 # -- dds project access grant -- #
 @project_access.command(name="grant", no_args_is_help=True)
+# Options
+@opts.username_optional
+@opts.project_required
 @click.option(
-    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
+    "--email",
+    "-e",
+    required=True,
+    type=str,
+    help="Email of the user you would like to invite.",
 )
+# Flags
 @click.option(
     "--owner",
     required=False,
     is_flag=True,
     help="Grant access as project owner. If not specified, the user gets Researcher permissions within the project.",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
 )
 @click.pass_obj
 def grant_project_access(click_ctx, username, project, email, owner):
@@ -982,26 +814,15 @@ def grant_project_access(click_ctx, username, project, email, owner):
 
 # -- dds project access revoke -- #
 @project_access.command(name="revoke", no_args_is_help=True)
+# Options
+@opts.username_optional
+@opts.project_required
 @click.option(
     "--email",
     "-e",
     required=True,
     type=str,
     help="Email of the user for whom project access is to be revoked.",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
 )
 @click.pass_obj
 def revoke_project_access(click_ctx, username, project, email):
@@ -1040,6 +861,8 @@ def data_group_command(_):
 
 # -- dds data put -- #
 @data_group_command.command(name="put", no_args_is_help=True)
+# Options
+@opts.username_optional
 @click.option(
     "--project",
     "-p",
@@ -1077,33 +900,9 @@ def data_group_command(_):
     show_default=True,
     help="Overwrite files if already uploaded",
 )
-@click.option(
-    "--num-threads",
-    "-nt",
-    required=False,
-    multiple=False,
-    default=4,
-    show_default=True,
-    type=click.IntRange(1, 32),
-    help="Number of parallel threads to perform the delivery",
-)
-@click.option(
-    "--silent",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help=(
-        "Turn off progress bar for each individual file. Summary bars still visible. "
-        "Suggested for uploads including a large number of files."
-    ),
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
+@opts.num_threads_optional
+# Flags
+@flags.silent
 @click.pass_obj
 def put_data(
     click_ctx,
@@ -1136,6 +935,8 @@ def put_data(
 
 # -- dds data get -- #
 @data_group_command.command(name="get", no_args_is_help=True)
+@opts.username_optional
+@opts.num_threads_optional
 @click.option(
     "--project",
     "-p",
@@ -1183,16 +984,6 @@ def put_data(
     help="Cancel download of all files if one fails",
 )
 @click.option(
-    "--num-threads",
-    "-nt",
-    required=False,
-    multiple=False,
-    default=4,
-    show_default=True,
-    type=click.IntRange(1, 32),
-    help="Number of parallel threads to perform the download.",
-)
-@click.option(
     "--silent",
     is_flag=True,
     default=False,
@@ -1205,13 +996,6 @@ def put_data(
     default=False,
     show_default=True,
     help="Perform SHA-256 checksum verification after download (slower).",
-)
-@click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
 )
 @click.pass_obj
 def get_data(
@@ -1336,58 +1120,38 @@ def get_data(
 # -- dds data ls -- #
 @data_group_command.command(name="ls", no_args_is_help=True)
 @click.pass_obj
-def list_data(click_ctx):
+def list_data(_):
     """List project contents. Call dds ls [PROJECT]."""
-
-    # ls(
-    #     click_ctx=click_ctx,
-    #     project=project,
-    #     folder=folder,
-    #     size=size,
-    #     username=username,
-    #     sort=sort,
-    #     tree=tree,
-    #     users=users,
-    #     json=json,
-    #     projects=False,
-    #     usage=False,
-    # )
 
 
 # -- dds data rm -- #
 @data_group_command.command(name="rm", no_args_is_help=True)
-@click.argument("proj_arg", required=False)
-@click.option("--project", "-p", required=True, type=str, help="Project ID.")
-@click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
+# Options
+@opts.username_optional
+@opts.project_required
 @click.option(
     "--file", "-f", required=False, type=str, multiple=True, help="Path to file to remove."
 )
 @click.option(
     "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
 )
+# Flags
 @click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
+    "--rm-all",
+    "-a",
+    is_flag=True,
+    default=False,
+    help="Remove all project contents.",
 )
 @click.pass_obj
-def rm_data(click_ctx, proj_arg, project, username, rm_all, file, folder):
+def rm_data(click_ctx, username, project, file, folder, rm_all):
     """Delete the files within a project."""
     no_prompt = click_ctx.get("NO_PROMPT", False)
-
-    # One of proj_arg or project is required
-    if all(x is None for x in [proj_arg, project]):
-        LOG.error("No project specified, cannot remove anything.")
-        sys.exit(1)
 
     # Either all or a file
     if rm_all and (file or folder):
         LOG.error("The options '--rm-all' and '--file'/'--folder' cannot be used together.")
         sys.exit(1)
-
-    project = proj_arg if proj_arg is not None else project
 
     # Will not delete anything if no file or folder specified
     if project and not any([rm_all, file, folder]):

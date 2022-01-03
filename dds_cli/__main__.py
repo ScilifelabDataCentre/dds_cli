@@ -120,18 +120,6 @@ def common_options_project_contents(f):
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
-# def common_options(f):
-#     """Options common to most dds commands."""
-#     options = [opts.username_optional]
-#     return functools.reduce(lambda x, opt: opt(x), options, f)
-
-
-# def common_options_project_content_output(f):
-#     """Options common to dds ls [PROJECT]."""
-#     options = [opts.list_user_flag, opts.output_json_flag, opts.display_tree_flag]
-#     return functools.reduce(lambda x, opt: opt(x), options, f)
-
-
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #
 # ************************************************************************************************ #
@@ -139,8 +127,8 @@ def common_options_project_contents(f):
 # -- dds ls -- #
 @dds_main.command(name="ls")
 # Positional args
-@args.project_optional
-@args.folder_optional
+@click.argument("project", metavar="[PROJECT ID]", nargs=1, required=False)
+@click.argument("folder", nargs=1, required=False)
 # Options
 @opts.username_optional
 @opts.sort_optional
@@ -160,6 +148,7 @@ def ls(click_ctx, project, folder, username, sort, projects, size, usage, tree, 
     Specify a Project ID to list the files within a project.
     You can also follow this with a subfolder path to show files within that folder.
     """
+    LOG.info(click_ctx)
     try:
         # List all projects if project is None and all files if project spec
         if project is None:
@@ -485,23 +474,14 @@ def project_group_command(_):
 @project_group_command.command(name="ls")
 # Options
 @opts.username_optional
+@opts.sort_optional
 # Common
 @flags.json  # users, json, tree
-def list_projects(click_ctx, username, json):
+@click.pass_context
+def list_projects(ctx, username, json, sort):
     """List project contents. Calls the dds ls function."""
-    ls(
-        click_ctx=click_ctx,
-        username=username,
-        json=json,
-        project=None,
-        folder=None,
-        projects=False,
-        size=False,
-        usage=False,
-        sort=False,
-        tree=False,
-        users=False,
-    )
+    LOG.info(ctx)
+    ctx.invoke(ls, username=username, json=json, sort=sort)
 
 
 # -- dds project create -- #
@@ -1134,11 +1114,11 @@ def get_data(
 @flags.size  # used for listing project contents
 # Common
 @common_options_project_contents  # users, json, tree
-@click.pass_obj
-def list_data(click_ctx, username, project, folder, size, tree, users, json):
-    """List project contents. Call dds ls [PROJECT]."""
-    ls(
-        click_ctx=click_ctx,
+@click.pass_context
+def list_data(ctx, username, project, folder, size, tree, users, json):
+    """List project contents. Same as dds ls [PROJECT ID]."""
+    ctx.invoke(
+        ls,
         username=username,
         project=project,
         folder=folder,
@@ -1146,9 +1126,6 @@ def list_data(click_ctx, username, project, folder, size, tree, users, json):
         tree=tree,
         users=users,
         json=json,
-        sort=None,
-        projects=False,
-        usage=False,
     )
 
 

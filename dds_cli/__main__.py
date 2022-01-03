@@ -114,6 +114,12 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
 # ************************************************************************************************ #
 
 
+def common_options_project_contents(f):
+    """Common options used when listing project contents."""
+    options = [flags.users, flags.json, flags.tree]
+    return functools.reduce(lambda x, opt: opt(x), options, f)
+
+
 # def common_options(f):
 #     """Options common to most dds commands."""
 #     options = [opts.username_optional]
@@ -142,9 +148,8 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
 @flags.projects
 @flags.size
 @flags.usage
-@flags.users
-@flags.json
-@flags.tree
+# Common
+@common_options_project_contents  # users, json, tree
 @click.pass_obj
 def ls(click_ctx, project, folder, username, sort, projects, size, usage, tree, users, json):
     """
@@ -477,29 +482,25 @@ def project_group_command(_):
 
 
 # -- dds project ls -- #
-# TODO: CALL dds ls command
-@project_group_command.command(name="ls", no_args_is_help=True)
+@project_group_command.command(name="ls")
 # Options
 @opts.username_optional
-@opts.project_required
-# Flags
-@flags.users
-@flags.json
-@flags.tree
-def list_project_contents(click_ctx, username, project, users, json, tree):
+# Common
+@flags.json  # users, json, tree
+def list_projects(click_ctx, username, json):
     """List project contents. Calls the dds ls function."""
     ls(
         click_ctx=click_ctx,
         username=username,
-        project=project,
-        users=users,
         json=json,
-        tree=tree,
+        project=None,
         folder=None,
         projects=False,
         size=False,
         usage=False,
         sort=False,
+        tree=False,
+        users=False,
     )
 
 
@@ -1119,9 +1120,36 @@ def get_data(
 
 # -- dds data ls -- #
 @data_group_command.command(name="ls", no_args_is_help=True)
+# Options
+@opts.username_optional
+@opts.project_required
+@click.option(
+    "--folder",
+    "-f",
+    required=False,
+    type=str,
+    help="List contents in this project folder.",
+)
+# Flags
+@flags.size  # used for listing project contents
+# Common
+@common_options_project_contents  # users, json, tree
 @click.pass_obj
-def list_data(_):
+def list_data(click_ctx, username, project, folder, size, tree, users, json):
     """List project contents. Call dds ls [PROJECT]."""
+    ls(
+        click_ctx=click_ctx,
+        username=username,
+        project=project,
+        folder=folder,
+        size=size,
+        tree=tree,
+        users=users,
+        json=json,
+        sort=None,
+        projects=False,
+        usage=False,
+    )
 
 
 # -- dds data rm -- #

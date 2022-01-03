@@ -33,7 +33,7 @@ import dds_cli.project_creator
 import dds_cli.auth
 import dds_cli.project_status
 import dds_cli.utils
-from dds_cli.options import args, flags, opts
+from dds_cli.options import flags, opts
 
 
 ####################################################################################################
@@ -133,9 +133,9 @@ def common_options_project_contents(f):
 @opts.username_optional
 @opts.sort_optional
 # Flags
-@flags.projects
 @flags.size
 @flags.usage
+@click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 # Common
 @common_options_project_contents  # users, json, tree
 @click.pass_obj
@@ -348,10 +348,19 @@ def user_group_command(_):
 # -- dds user add -- #
 @user_group_command.command(name="add", no_args_is_help=True)
 # Positional args
-@args.email_required
+@click.argument("email", nargs=1, type=str, required=True)
 # Options
 @opts.username_optional
-@opts.role_required
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(
+        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
+        case_sensitive=False,
+    ),
+    help="Type of account.",
+)
 @click.option(
     "--project",
     "-p",
@@ -392,7 +401,7 @@ def add_user(click_ctx, email, username, role, project):
 # -- dds user delete -- #
 @user_group_command.command(name="delete", no_args_is_help=True)
 # Positional args
-@args.email_optional
+@click.argument("email", nargs=1, type=str, required=False)
 # Options
 @opts.username_optional
 # Flags
@@ -477,11 +486,11 @@ def project_group_command(_):
 @opts.sort_optional
 # Common
 @flags.json  # users, json, tree
+@flags.usage
 @click.pass_context
-def list_projects(ctx, username, json, sort):
+def list_projects(ctx, username, json, sort, usage):
     """List project contents. Calls the dds ls function."""
-    LOG.info(ctx)
-    ctx.invoke(ls, username=username, json=json, sort=sort)
+    ctx.invoke(ls, username=username, json=json, sort=sort, usage=usage)
 
 
 # -- dds project create -- #
@@ -916,6 +925,7 @@ def put_data(
 
 # -- dds data get -- #
 @data_group_command.command(name="get", no_args_is_help=True)
+# Options
 @opts.username_optional
 @opts.num_threads_optional
 @click.option(
@@ -957,19 +967,14 @@ def put_data(
     multiple=False,
     help="Destination of downloaded files.",
 )
+# Flags
+@flags.silent
 @click.option(
     "--break-on-fail",
     is_flag=True,
     default=False,
     show_default=True,
     help="Cancel download of all files if one fails",
-)
-@click.option(
-    "--silent",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Turn off progress bar for each individual file. Summary bars still visible.",
 )
 @click.option(
     "--verify-checksum",

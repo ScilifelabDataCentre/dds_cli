@@ -100,22 +100,217 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
         click_ctx.obj = {"NO_PROMPT": no_prompt}
 
 
+username_option = click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+
+
 def common_options(f):
-    options = [
-        click.option(
-            "--username",
-            "-u",
-            required=False,
-            type=str,
-            help="Your Data Delivery System username.",
-        ),
-    ]
+    """Options common to most dds commands."""
+    options = [username_option]
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
 ####################################################################################################
-# PUT ######################################################################################## PUT #
+# AUTH ###################################################################################### AUTH #
 ####################################################################################################
+
+# GROUP COMMAND #################################################################### GROUP COMMAND #
+@dds_main.group(no_args_is_help=True)
+@click.pass_obj
+def auth(_):
+    """Manage the saved authentication token."""
+
+
+# SUB COMMANDS ###################################################################### SUB COMMANDS #
+@auth.command(no_args_is_help=True)
+@common_options
+@click.pass_obj
+def login(click_ctx, username):
+    """Renew the authentication token stored in the '.dds_cli_token' file.
+
+    Run this command before running the cli in a non interactive fashion as this enables the longest
+    possible session time before a password needs to be entered again.
+    """
+    no_prompt = click_ctx.get("NO_PROMPT", False)
+    if no_prompt:
+        LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
+    try:
+        with dds_cli.auth.Auth(username=username):
+            # Authentication token renewed in the init method.
+            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@auth.command(no_args_is_help=True)
+def logout():
+    """Remove the saved authentication token by deleting the '.dds_cli_token' file."""
+    try:
+        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+            authenticator.logout()
+            LOG.info("[green]Successfully logged out![/green]")
+    except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@auth.command(no_args_is_help=True)
+def info():
+    """Print info on saved authentication token validity and age."""
+    try:
+        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+            authenticator.check()
+    except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+####################################################################################################
+#### USER ################################################################################### USER #
+####################################################################################################
+
+
+# GROUP COMMAND #################################################################### GROUP COMMAND #
+
+
+@dds_main.group(no_args_is_help=True)
+@click.pass_obj
+def user(_):
+    """Group command: dds user. Manage user accounts, including your own."""
+
+
+# SUB COMMANDS ###################################################################### SUB COMMANDS #
+
+# -- dds add -- #
+@user.command(name="add", no_args_is_help=True)
+@common_options
+# Positional args
+@click.argument("email", nargs=1, type=str, required=True)
+# Keyword args
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(
+        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
+        case_sensitive=False,
+    ),
+    help="Type of account.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=False,
+    type=str,
+    help="Existing Project you want the user to be associated to.",
+)
+@click.pass_obj
+def add_user(click_ctx, username, email, role, project):
+    """
+    Add a user to the DDS system or hosted projects.
+
+    Specify an user's email and role to associate it with projects.
+    If the user doesn't exist in the system yet, an invitation email
+    will be sent automatically to that person.
+
+    """
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as inviter:
+            inviter.add_user(email=email, role=role, project=project)
+            if project:
+                LOG.info(
+                    "Any user shown as invited would need to be added to the project "
+                    "once the user has accepted the invitation and created an account in the system."
+                )
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds delete -- #
+@user.command(name="delete", no_args_is_help=True)
+@common_options
+# Positional args
+@click.argument("email", nargs=1, type=str, required=False)
+# Keyword args
+@click.option(
+    "--self",
+    required=False,
+    is_flag=True,
+    help="Decommission your own user account",
+)
+@click.pass_obj
+def delete_user(click_ctx, email, username, self):
+    """
+    Delete user accounts from the Data Delivery System.
+
+    To request the removal of your own account, use the `--self` flag without any arguments.
+    An e-mail will be sent to you asking to confirm the deletion.
+
+    If you have sufficient administrative privileges, you may also delete the accounts of other users.
+    Specify the e-mail address as argument to the main command to initiate the removal process.
+    """
+    if click_ctx.get("NO_PROMPT", False):
+        pass
+    else:
+        if not self:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Delete Data Delivery System user account associated with {email}"
+            )
+        else:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Are you sure? Deleted accounts can't be restored!"
+            )
+
+    if proceed_deletion:
+        try:
+            with dds_cli.account_manager.AccountManager(
+                username=username,
+                method="delete",
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+            ) as manager:
+                if self and not email:
+                    manager.delete_own_account()
+                elif email and not self:
+                    manager.delete_user(email=email)
+                else:
+                    LOG.error(
+                        "You must either specify the '--self' flag or the e-mail address of the user to be deleted"
+                    )
+                    sys.exit(1)
+
+        except (
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
+
+
+####################################################################################################
+# DATA ###################################################################################### DATA #
+####################################################################################################
+
+
 @dds_main.command()
 @click.option(
     "--project",
@@ -645,63 +840,6 @@ def get(
 
 
 # COMMAND##########################################################################
-#### AUTH ################################################################## AUTH #
-###################################################################################
-@dds_main.group()
-@click.pass_obj
-def auth(_):
-    """Manage the saved authentication token."""
-
-
-@auth.command()
-@common_options
-@click.pass_obj
-def login(click_ctx, username):
-    """Renew the authentication token stored in the '.dds_cli_token' file.
-
-    Run this command before running the cli in a non interactive fashion as this enables the longest
-    possible session time before a password needs to be entered again.
-    """
-    no_prompt = click_ctx.get("NO_PROMPT", False)
-    if no_prompt:
-        LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
-    try:
-        with dds_cli.auth.Auth(username=username):
-            # Authentication token renewed in the init method.
-            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-@auth.command()
-def logout():
-    """Remove the saved authentication token by deleting the '.dds_cli_token' file."""
-    try:
-        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
-            authenticator.logout()
-            LOG.info("[green]Successfully logged out![/green]")
-    except dds_cli.exceptions.DDSCLIException as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-@auth.command()
-def info():
-    """Print info on saved authentication token validity and age."""
-    try:
-        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
-            authenticator.check()
-    except dds_cli.exceptions.DDSCLIException as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# COMMAND##########################################################################
 #### PROJECT ############################################################ PROJECT #
 ###################################################################################
 @dds_main.group(invoke_without_command=True)
@@ -1031,136 +1169,3 @@ def abort(click_ctx, username, project):
     ) as err:
         LOG.error(err)
         sys.exit(1)
-
-
-# COMMAND##########################################################################
-#### USER ################################################################## USER #
-###################################################################################
-@dds_main.group(no_args_is_help=True)
-@click.pass_obj
-def user(click_ctx):
-    """Manage user accounts, including your own."""
-    pass
-
-
-# SUBCOMMAND#######################################################################
-####### ADD ################################################################# ADD #
-###################################################################################
-## Invite new users to the system
-@user.command()
-@click.argument(
-    "email",
-    nargs=1,
-    type=str,
-    required=True,
-)
-@click.option(
-    "--role",
-    "-r",
-    required=True,
-    type=click.Choice(
-        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
-        case_sensitive=False,
-    ),
-    help="Type of account.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=False,
-    type=str,
-    help="Existing Project you want the user to be associated to.",
-)
-@click.pass_obj
-@common_options
-def add(click_ctx, username, email, role, project):
-    """
-    Add a user to the DDS system or hosted projects.
-
-    Specify an user's email and role to associate it with projects.
-    If the user doesn't exist in the system yet, an invitation email
-    will be sent automatically to that person.
-
-    """
-    try:
-        with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as inviter:
-            inviter.add_user(email=email, role=role, project=project)
-            if project:
-                LOG.info(
-                    "Any user shown as invited would need to be added to the project "
-                    "once the user has accepted the invitation and created an account in the system."
-                )
-    except (
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.ApiResponseError,
-        dds_cli.exceptions.ApiRequestError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# SUBCOMMAND#######################################################################
-####### DELETE_USERS ############################################### DELETE_USERS #
-###################################################################################
-## Delete users from the system
-@user.command(name="delete", no_args_is_help=True)
-@click.argument("email", nargs=1, type=str, required=False)
-@click.option(
-    "--self",
-    required=False,
-    is_flag=True,
-    help="Decommission your own user account",
-)
-@click.pass_obj
-@common_options
-def delete_users(click_ctx, email, username, self):
-    """
-    Delete user accounts from the Data Delivery System.
-
-    To request the removal of your own account, use the `--self` flag without any arguments.
-    An e-mail will be sent to you asking to confirm the deletion.
-
-    If you have sufficient administrative privileges, you may also delete the accounts of other users.
-    Specify the e-mail address as argument to the main command to initiate the removal process.
-    """
-
-    if click_ctx.get("NO_PROMPT", False):
-        pass
-    else:
-        if not self:
-            proceed_deletion = rich.prompt.Confirm.ask(
-                f"Delete Data Delivery System user account associated with {email}"
-            )
-        else:
-            proceed_deletion = rich.prompt.Confirm.ask(
-                f"Are you sure? Deleted accounts can't be restored!"
-            )
-
-    if proceed_deletion:
-        try:
-            with dds_cli.account_manager.AccountManager(
-                username=username,
-                method="delete",
-                no_prompt=click_ctx.get("NO_PROMPT", False),
-            ) as manager:
-                if self and not email:
-                    manager.delete_own_account()
-                elif email and not self:
-                    manager.delete_user(email=email)
-                else:
-                    LOG.error(
-                        "You must either specify the '--self' flag or the e-mail address of the user to be deleted"
-                    )
-                    sys.exit(1)
-
-        except (
-            dds_cli.exceptions.AuthenticationError,
-            dds_cli.exceptions.ApiResponseError,
-            dds_cli.exceptions.ApiRequestError,
-            dds_cli.exceptions.DDSCLIException,
-        ) as err:
-            LOG.error(err)
-            sys.exit(1)

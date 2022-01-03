@@ -33,6 +33,7 @@ import dds_cli.project_creator
 import dds_cli.auth
 import dds_cli.project_status
 import dds_cli.utils
+import dds_cli.options as opts
 
 
 ####################################################################################################
@@ -41,9 +42,17 @@ import dds_cli.utils
 
 LOG = logging.getLogger()
 
-####################################################################################################
-# MAIN ###################################################################################### MAIN #
-####################################################################################################
+
+## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                                                                                  #
+#                          MMMM   MMMM      AAAA      II   NNNN    NN                              #
+#                          MM MM MM MM     AA  AA     II   NN NN   NN                              #
+#                          MM  MMM  MM    AA    AA    II   NN  NN  NN                              #
+#                          MM   M   MM   AAAAAAAAAA   II   NN   NN NN                              #
+#                          MM       MM   AA      AA   II   NN    NNNN                              #
+#                                                                                                  #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
+
 
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
@@ -56,7 +65,7 @@ dds_cli.utils.stderr_console.print(
     highlight=False,
 )
 
-
+# -- dds -- #
 @click.group()
 @click.option(
     "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
@@ -100,678 +109,33 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
         click_ctx.obj = {"NO_PROMPT": no_prompt}
 
 
-username_option = click.option(
-    "--username",
-    "-u",
-    required=False,
-    type=str,
-    help="Your Data Delivery System username.",
-)
-
-project_option = click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID.",
-)
+# ************************************************************************************************ #
+# COMMON OPTIONS - MAIN **************************************************** COMMON OPTIONS - MAIN #
+# ************************************************************************************************ #
 
 
 def common_options(f):
     """Options common to most dds commands."""
-    options = [username_option]
+    options = [opts.username_optional]
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
-####################################################################################################
-# AUTH ###################################################################################### AUTH #
-####################################################################################################
-
-
-# GROUP COMMAND #################################################################### GROUP COMMAND #
-
-
-@dds_main.group(no_args_is_help=True)
-@click.pass_obj
-def auth(_):
-    """Group command: dds auth. Manage the saved authentication token."""
-
-
-# SUB COMMANDS ###################################################################### SUB COMMANDS #
-
-# -- dds auth login -- #
-@auth.command(no_args_is_help=True)
-@common_options
-@click.pass_obj
-def login(click_ctx, username):
-    """Renew the authentication token stored in the '.dds_cli_token' file.
-
-    Run this command before running the cli in a non interactive fashion as this enables the longest
-    possible session time before a password needs to be entered again.
-    """
-    no_prompt = click_ctx.get("NO_PROMPT", False)
-    if no_prompt:
-        LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
-    try:
-        with dds_cli.auth.Auth(username=username):
-            # Authentication token renewed in the init method.
-            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds auth logout -- #
-@auth.command(no_args_is_help=True)
-def logout():
-    """Remove the saved authentication token by deleting the '.dds_cli_token' file."""
-    try:
-        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
-            authenticator.logout()
-            LOG.info("[green]Successfully logged out![/green]")
-    except dds_cli.exceptions.DDSCLIException as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds auth info -- #
-@auth.command(no_args_is_help=True)
-def info():
-    """Print info on saved authentication token validity and age."""
-    try:
-        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
-            authenticator.check()
-    except dds_cli.exceptions.DDSCLIException as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-####################################################################################################
-#### USER ################################################################################### USER #
-####################################################################################################
-
-
-# GROUP COMMAND #################################################################### GROUP COMMAND #
-
-
-@dds_main.group(no_args_is_help=True)
-@click.pass_obj
-def user(_):
-    """Group command: dds user. Manage user accounts, including your own."""
-
-
-# SUB COMMANDS ###################################################################### SUB COMMANDS #
-
-# -- dds user add -- #
-@user.command(name="add", no_args_is_help=True)
-# Positional args
-@click.argument("email", nargs=1, type=str, required=True)
-# Options
-@common_options
-@click.option(
-    "--role",
-    "-r",
-    required=True,
-    type=click.Choice(
-        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
-        case_sensitive=False,
-    ),
-    help="Type of account.",
-)
-@click.option(
-    "--project",
-    "-p",
-    required=False,
-    type=str,
-    help="Existing Project you want the user to be associated to.",
-)
-@click.pass_obj
-def add_user(click_ctx, username, email, role, project):
-    """
-    Add a user to the DDS system or hosted projects.
-
-    Specify an user's email and role to associate it with projects.
-    If the user doesn't exist in the system yet, an invitation email
-    will be sent automatically to that person.
-
-    """
-    try:
-        with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as inviter:
-            inviter.add_user(email=email, role=role, project=project)
-            if project:
-                LOG.info(
-                    "Any user shown as invited would need to be added to the project "
-                    "once the user has accepted the invitation and created an account in the system."
-                )
-    except (
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.ApiResponseError,
-        dds_cli.exceptions.ApiRequestError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds user delete -- #
-@user.command(name="delete", no_args_is_help=True)
-# Positional args
-@click.argument("email", nargs=1, type=str, required=False)
-# Options
-@common_options
-@click.option(
-    "--self",
-    required=False,
-    is_flag=True,
-    help="Decommission your own user account",
-)
-@click.pass_obj
-def delete_user(click_ctx, email, username, self):
-    """
-    Delete user accounts from the Data Delivery System.
-
-    To request the removal of your own account, use the `--self` flag without any arguments.
-    An e-mail will be sent to you asking to confirm the deletion.
-
-    If you have sufficient administrative privileges, you may also delete the accounts of other users.
-    Specify the e-mail address as argument to the main command to initiate the removal process.
-    """
-    if click_ctx.get("NO_PROMPT", False):
-        pass
-    else:
-        if not self:
-            proceed_deletion = rich.prompt.Confirm.ask(
-                f"Delete Data Delivery System user account associated with {email}"
-            )
-        else:
-            proceed_deletion = rich.prompt.Confirm.ask(
-                f"Are you sure? Deleted accounts can't be restored!"
-            )
-
-    if proceed_deletion:
-        try:
-            with dds_cli.account_manager.AccountManager(
-                username=username,
-                method="delete",
-                no_prompt=click_ctx.get("NO_PROMPT", False),
-            ) as manager:
-                if self and not email:
-                    manager.delete_own_account()
-                elif email and not self:
-                    manager.delete_user(email=email)
-                else:
-                    LOG.error(
-                        "You must either specify the '--self' flag or the e-mail address of the user to be deleted"
-                    )
-                    sys.exit(1)
-
-        except (
-            dds_cli.exceptions.AuthenticationError,
-            dds_cli.exceptions.ApiResponseError,
-            dds_cli.exceptions.ApiRequestError,
-            dds_cli.exceptions.DDSCLIException,
-        ) as err:
-            LOG.error(err)
-            sys.exit(1)
-
-
-####################################################################################################
-#### PROJECT ############################################################################# PROJECT #
-####################################################################################################
-
-
-def common_options_project(f):
-    """Options common to dds project commands."""
-    options = [username_option, project_option]
+def common_options_project_content_output(f):
+    """Options common to dds ls [PROJECT]."""
+    options = [opts.list_user_flag, opts.output_json_flag, opts.display_tree_flag]
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
-# GROUP COMMAND #################################################################### GROUP COMMAND #
+# ************************************************************************************************ #
+# MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #
+# ************************************************************************************************ #
 
-
-@dds_main.group(invoke_without_command=True)
-@click.pass_obj
-def project(_):
-    """Group command: dds project. Manage projects."""
-
-
-# SUB GROUP COMMANDS ########################################################## SUB GROUP COMMANDS #
-
-# -- dds project status -- #
-@project.group(invoke_without_command=True)  # TODO: have this?
-@click.pass_obj
-def status(_):
-    """Manage project statuses."""
-
-
-# -- dds project access -- #
-@project.group(invoke_without_command=True)  # TODO: have this?
-@click.pass_obj
-def access(_):
-    """Manage project statuses."""
-
-
-# PROJECT SUB COMMANDS ###################################################### PROJECT SUB COMMANDS #
-
-# -- dds project ls -- #
-# TODO: CALL dds ls command
-
-
-# -- dds project create -- #
-@project.command(no_args_is_help=True)
-@click.option(
-    "--title",
-    "-t",
-    required=True,
-    type=str,
-    help="The title of the project",
-)
-@click.option(
-    "--description",
-    "-d",
-    required=True,
-    type=str,
-    help="A description of the project",
-)
-@click.option(
-    "--principal-investigator",
-    "-pi",
-    required=True,
-    type=str,
-    help="The name of the Principal Investigator",
-)
-@click.option(
-    "--is_sensitive",
-    required=False,
-    is_flag=True,
-    help="Indicate if the Project includes sensitive data",
-)
-@click.option(
-    "--owner",
-    required=False,
-    multiple=True,
-    help="Email of a user to be added to the project as Project Owner",
-)
-@click.option(
-    "--researcher",
-    required=False,
-    multiple=True,
-    help="Email of a user to be added to the project as Researcher",
-)
-@common_options
-@click.pass_obj
-def create(
-    click_ctx,
-    username,
-    title,
-    description,
-    principal_investigator,
-    is_sensitive,
-    owner,
-    researcher,
-):
-    """Create a project."""
-    try:
-        with dds_cli.project_creator.ProjectCreator(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as creator:
-            emails_roles = []
-            if owner or researcher:
-                email_overlap = set(owner) & set(researcher)
-                if email_overlap:
-                    LOG.info(
-                        f"The email(s) {email_overlap} specified as both owner and researcher! "
-                        "Please specify a unique role for each email."
-                    )
-                    sys.exit(1)
-                if owner:
-                    emails_roles.extend([{"email": x, "role": "Project Owner"} for x in owner])
-                if researcher:
-                    emails_roles.extend([{"email": x, "role": "Researcher"} for x in researcher])
-
-            created, project_id, user_addition_messages, err = creator.create_project(
-                title=title,
-                description=description,
-                principal_investigator=principal_investigator,
-                sensitive=is_sensitive,
-                users_to_add=emails_roles,
-            )
-            if created:
-                LOG.info(
-                    f"Project created with id: {project_id}",
-                )
-                if user_addition_messages:
-                    for msg in user_addition_messages:
-                        LOG.info(msg)
-                        LOG.info(
-                            "Any user shown as invited would need to be "
-                            "added to the project once the user has accepted "
-                            "the invitation and created an account in the system."
-                        )
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# PROJECT STATUS SUB COMMANDS ######################################## PROJECT STATUS SUB COMMANDS #
-
-# PROJECT ACCESS SUB COMMANDS ######################################## PROJECT ACCESS SUB COMMANDS #
-
-# -- dds project grant -- #
-@click.option(
-    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
-)
-@click.option(
-    "--owner",
-    required=False,
-    is_flag=True,
-    help="Grant access as project owner. If not specified, the user gets Researcher permissions within the project.",
-)
-@project.command()
-@common_options_project
-@click.pass_obj
-def grant(click_ctx, username, project, email, owner):
-    """Grant user access to a project."""
-    try:
-        with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as granter:
-            role = "Researcher"
-            if owner:
-                role = "Project Owner"
-            granter.add_user(email=email, role=role, project=project)
-            if project:
-                LOG.info(
-                    "Any user shown as invited would need to be added to the project once the user "
-                    "has accepted the invitation and created an account in the system."
-                )
-    except (
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.ApiResponseError,
-        dds_cli.exceptions.ApiRequestError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds project revoke -- #
-@click.option(
-    "--email",
-    "-e",
-    required=True,
-    type=str,
-    help="Email of the user for whom project access is to be revoked.",
-)
-@project.command()
-@common_options_project
-@click.pass_obj
-def revoke(click_ctx, username, project, email):
-    """Revoke user access to a project."""
-    try:
-        with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as revoker:
-            revoker.revoke_project_access(project, email)
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds project status -- #
-@project.group()
-@click.pass_obj
-def status(click_ctx):
-    """Manage project statuses."""
-
-
-@click.option(
-    "--show_history",
-    required=False,
-    is_flag=True,
-    help="Show history of project statuses in addition to current status",
-)
-@status.command()
-@common_options_project
-@click.pass_obj
-def display(click_ctx, username, project, show_history):
-    """Display and Update project status."""
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as updater:
-            updater.get_status(show_history)
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds project release -- #
-@click.option(
-    "--deadline",
-    required=False,
-    type=int,
-    help="Deadline in days when releasing a project",
-)
-@status.command()
-@common_options_project
-@click.pass_obj
-def release(click_ctx, username, project, deadline):
-    """Make project available for user download."""
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as updater:
-            updater.update_status(new_status="Available", deadline=deadline)
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds project retract -- #
-@status.command()
-@common_options_project
-@click.pass_obj
-def retract(click_ctx, username, project):
-    """Retract a project available for download to add more data."""
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as updater:
-            updater.update_status(new_status="In Progress")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds project archive -- #
-@status.command()
-@common_options_project
-@click.pass_obj
-def archive(click_ctx, username, project):
-    """Manually archive a released project and delete all its data."""
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as updater:
-            updater.update_status(new_status="Archived")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds project delete -- #
-@status.command()
-@common_options_project
-@click.pass_obj
-def delete(click_ctx, username, project):
-    """Delete an unreleased project and all its data."""
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as updater:
-            updater.update_status(new_status="Deleted")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-# -- dds project abort -- #
-@status.command()
-@common_options_project
-@click.pass_obj
-def abort(click_ctx, username, project):
-    """Abort a released project to delete all its data."""
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
-        ) as updater:
-            updater.update_status(new_status="Archived", is_aborted=True)
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-####################################################################################################
-# DATA ###################################################################################### DATA #
-####################################################################################################
-
-
-@dds_main.command()
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="Project ID to which you're uploading data",
-)
-@click.option(
-    "--source",
-    "-s",
-    required=False,
-    type=click.Path(exists=True),
-    multiple=True,
-    help="Path to file or directory (local)",
-)
-@click.option(
-    "--source-path-file",
-    "-spf",
-    required=False,
-    type=click.Path(exists=True),
-    multiple=False,
-    help="File containing path to files or directories",
-)
-@click.option(
-    "--break-on-fail",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Cancel upload of all files if one fails",
-)
-@click.option(
-    "--overwrite",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Overwrite files if already uploaded",
-)
-@click.option(
-    "--num-threads",
-    "-nt",
-    required=False,
-    multiple=False,
-    default=4,
-    show_default=True,
-    type=click.IntRange(1, 32),
-    help="Number of parallel threads to perform the delivery",
-)
-@click.option(
-    "--silent",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help=(
-        "Turn off progress bar for each individual file. Summary bars still visible. "
-        "Suggested for uploads including a large number of files."
-    ),
-)
-@common_options
-@click.pass_obj
-def put(
-    click_ctx,
-    username,
-    project,
-    source,
-    source_path_file,
-    break_on_fail,
-    overwrite,
-    num_threads,
-    silent,
-):
-    """Process and upload specified files to the cloud."""
-    try:
-        dds_cli.data_putter.put(
-            username=username,
-            project=project,
-            source=source,
-            source_path_file=source_path_file,
-            break_on_fail=break_on_fail,
-            overwrite=overwrite,
-            num_threads=num_threads,
-            silent=silent,
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-        )
-    except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
-####################################################################################################
-# LIST ###################################################################################### LIST #
-####################################################################################################
-
-
-@dds_main.command()
+# -- dds ls -- #
+@dds_main.command(name="ls", no_args_is_help=True)
+# Positional args
 @click.argument("project", metavar="[PROJECT ID]", nargs=1, required=False)
 @click.argument("folder", nargs=1, required=False)
+# Options
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.option("--size", "-s", is_flag=True, default=False, help="Show size of project contents.")
 @click.option(
@@ -795,7 +159,11 @@ def put(
     help="Which column to sort the project list by.",
 )
 @click.option(
-    "-t", "--tree", is_flag=True, default=False, help="Display the entire project(s) directory tree"
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
 )
 @click.option(
     "--users",
@@ -809,7 +177,13 @@ def put(
     default=False,
     help="Output in JSON format",
 )
-@common_options
+@click.option(
+    "--tree",
+    "-t",
+    is_flag=True,
+    default=False,
+    help="Display the entire project(s) directory tree",
+)
 @click.pass_obj
 def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, users, json):
     """
@@ -931,75 +305,715 @@ def ls(click_ctx, project, folder, projects, size, username, usage, sort, tree, 
 
 
 ####################################################################################################
-# DELETE ################################################################################## DELETE #
+####################################################################################################
+## AUTH #################################################################################### AUTH ##
+####################################################################################################
 ####################################################################################################
 
 
-@dds_main.command()
-@click.argument("proj_arg", required=False)
-@click.option("--project", "-p", required=True, type=str, help="Project ID.")
-@click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
-@click.option(
-    "--file", "-f", required=False, type=str, multiple=True, help="Path to file to remove."
-)
-@click.option(
-    "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
-)
-@common_options
+@dds_main.group(name="auth", no_args_is_help=True)
 @click.pass_obj
-def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
-    """Delete the files within a project."""
+def auth_group_command(_):
+    """Group command: dds auth. Manage the saved authentication token."""
+
+
+# ************************************************************************************************ #
+# AUTH COMMANDS ******************************************************************** AUTH COMMANDS #
+# ************************************************************************************************ #
+
+
+# -- dds auth login -- #
+@auth_group_command.command(name="login", no_args_is_help=True)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.pass_obj
+def login(click_ctx, username):
+    """Renew the authentication token stored in the '.dds_cli_token' file.
+
+    Run this command before running the cli in a non interactive fashion as this enables the longest
+    possible session time before a password needs to be entered again.
+    """
     no_prompt = click_ctx.get("NO_PROMPT", False)
-
-    # One of proj_arg or project is required
-    if all(x is None for x in [proj_arg, project]):
-        LOG.error("No project specified, cannot remove anything.")
-        sys.exit(1)
-
-    # Either all or a file
-    if rm_all and (file or folder):
-        LOG.error("The options '--rm-all' and '--file'/'--folder' cannot be used together.")
-        sys.exit(1)
-
-    project = proj_arg if proj_arg is not None else project
-
-    # Will not delete anything if no file or folder specified
-    if project and not any([rm_all, file, folder]):
-        LOG.error(
-            "One of the options must be specified to perform data deletion: "
-            "'--rm-all' / '--file' / '--folder'."
-        )
-        sys.exit(1)
-
-    # Warn if trying to remove all contents
-    if rm_all:
-        if no_prompt:
-            LOG.warning(f"Deleting all files within project '{project}'")
-        else:
-            if not rich.prompt.Confirm.ask(
-                f"Are you sure you want to delete all files within project '{project}'?"
-            ):
-                LOG.info("Probably for the best. Exiting.")
-                sys.exit(0)
-
+    if no_prompt:
+        LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.data_remover.DataRemover(
-            project=project,
-            username=username,
-            no_prompt=no_prompt,
-        ) as remover:
+        with dds_cli.auth.Auth(username=username):
+            # Authentication token renewed in the init method.
+            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
 
-            if rm_all:
-                remover.remove_all()
 
-            elif file:
-                remover.remove_file(files=file)
+# -- dds auth logout -- #
+@auth_group_command.command(name="logout", no_args_is_help=True)
+def logout():
+    """Remove the saved authentication token by deleting the '.dds_cli_token' file."""
+    try:
+        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+            authenticator.logout()
+            LOG.info("[green]Successfully logged out![/green]")
+    except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)
 
-            elif folder:
-                remover.remove_folder(folder=folder)
+
+# -- dds auth info -- #
+@auth_group_command.command(name="info", no_args_is_help=True)
+def info():
+    """Print info on saved authentication token validity and age."""
+    try:
+        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+            authenticator.check()
+    except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+####################################################################################################
+####################################################################################################
+## USER #################################################################################### USER ##
+####################################################################################################
+####################################################################################################
+
+
+@dds_main.group(name="user", no_args_is_help=True)
+@click.pass_obj
+def user_group_command(_):
+    """Group command: dds user. Manage user accounts, including your own."""
+
+
+# ************************************************************************************************ #
+# USER COMMANDS ******************************************************************** USER COMMANDS #
+# ************************************************************************************************ #
+
+# -- dds user add -- #
+@user_group_command.command(name="add", no_args_is_help=True)
+# Positional args
+@click.argument("email", nargs=1, type=str, required=True)
+# Options
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(
+        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
+        case_sensitive=False,
+    ),
+    help="Type of account.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=False,
+    type=str,
+    help="Existing Project you want the user to be associated to.",
+)
+@click.pass_obj
+def add_user(click_ctx, username, email, role, project):
+    """
+    Add a user to the DDS system or hosted projects.
+
+    Specify an user's email and role to associate it with projects.
+    If the user doesn't exist in the system yet, an invitation email
+    will be sent automatically to that person.
+
+    """
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as inviter:
+            inviter.add_user(email=email, role=role, project=project)
+            if project:
+                LOG.info(
+                    "Any user shown as invited would need to be added to the project "
+                    "once the user has accepted the invitation and created an account in the system."
+                )
     except (
         dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds user delete -- #
+@user_group_command.command(name="delete", no_args_is_help=True)
+# Positional args
+@click.argument("email", nargs=1, type=str, required=False)
+# Options
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--self",
+    required=False,
+    is_flag=True,
+    help="Decommission your own user account",
+)
+@click.pass_obj
+def delete_user(click_ctx, email, username, self):
+    """
+    Delete user accounts from the Data Delivery System.
+
+    To request the removal of your own account, use the `--self` flag without any arguments.
+    An e-mail will be sent to you asking to confirm the deletion.
+
+    If you have sufficient administrative privileges, you may also delete the accounts of other users.
+    Specify the e-mail address as argument to the main command to initiate the removal process.
+    """
+    if click_ctx.get("NO_PROMPT", False):
+        pass
+    else:
+        if not self:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Delete Data Delivery System user account associated with {email}"
+            )
+        else:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Are you sure? Deleted accounts can't be restored!"
+            )
+
+    if proceed_deletion:
+        try:
+            with dds_cli.account_manager.AccountManager(
+                username=username,
+                method="delete",
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+            ) as manager:
+                if self and not email:
+                    manager.delete_own_account()
+                elif email and not self:
+                    manager.delete_user(email=email)
+                else:
+                    LOG.error(
+                        "You must either specify the '--self' flag or the e-mail address of the user to be deleted"
+                    )
+                    sys.exit(1)
+
+        except (
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
+
+
+####################################################################################################
+####################################################################################################
+## PROJECT ############################################################################## PROJECT ##
+####################################################################################################
+####################################################################################################
+
+
+@dds_main.group(name="project", invoke_without_command=True)
+@click.pass_obj
+def project_group_command(_):
+    """Group command: dds project. Manage projects."""
+
+
+# ************************************************************************************************ #
+# PROJECT COMMANDS ************************************************************** PROJECT COMMANDS #
+# ************************************************************************************************ #
+
+
+# -- dds project ls -- #
+# TODO: CALL dds ls command
+@project_group_command.command(name="ls", no_args_is_help=True)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.option(
+    "--users",
+    is_flag=True,
+    default=False,
+    help="Display users associated with a project(Requires a project id)",
+)
+@click.option(
+    "--json",
+    is_flag=True,
+    default=False,
+    help="Output in JSON format",
+)
+@click.option(
+    "--tree",
+    "-t",
+    is_flag=True,
+    default=False,
+    help="Display the entire project(s) directory tree",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+def list_project_contents(click_ctx, username, project, users, json, tree):
+    """List project contents. Calls the dds ls function."""
+    ls(
+        click_ctx=click_ctx,
+        username=username,
+        project=project,
+        users=users,
+        json=json,
+        tree=tree,
+        folder=None,
+        projects=False,
+        size=False,
+        usage=False,
+        sort=False,
+    )
+
+
+# -- dds project create -- #
+@project_group_command.command(no_args_is_help=True)
+@click.option(
+    "--title",
+    "-t",
+    required=True,
+    type=str,
+    help="The title of the project",
+)
+@click.option(
+    "--description",
+    "-d",
+    required=True,
+    type=str,
+    help="A description of the project",
+)
+@click.option(
+    "--principal-investigator",
+    "-pi",
+    required=True,
+    type=str,
+    help="The name of the Principal Investigator",
+)
+@click.option(
+    "--is_sensitive",
+    required=False,
+    is_flag=True,
+    help="Indicate if the Project includes sensitive data",
+)
+@click.option(
+    "--owner",
+    required=False,
+    multiple=True,
+    help="Email of a user to be added to the project as Project Owner",
+)
+@click.option(
+    "--researcher",
+    required=False,
+    multiple=True,
+    help="Email of a user to be added to the project as Researcher",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.pass_obj
+def create(
+    click_ctx,
+    username,
+    title,
+    description,
+    principal_investigator,
+    is_sensitive,
+    owner,
+    researcher,
+):
+    """Create a project."""
+    try:
+        with dds_cli.project_creator.ProjectCreator(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as creator:
+            emails_roles = []
+            if owner or researcher:
+                email_overlap = set(owner) & set(researcher)
+                if email_overlap:
+                    LOG.info(
+                        f"The email(s) {email_overlap} specified as both owner and researcher! "
+                        "Please specify a unique role for each email."
+                    )
+                    sys.exit(1)
+                if owner:
+                    emails_roles.extend([{"email": x, "role": "Project Owner"} for x in owner])
+                if researcher:
+                    emails_roles.extend([{"email": x, "role": "Researcher"} for x in researcher])
+
+            created, project_id, user_addition_messages, err = creator.create_project(
+                title=title,
+                description=description,
+                principal_investigator=principal_investigator,
+                sensitive=is_sensitive,
+                users_to_add=emails_roles,
+            )
+            if created:
+                LOG.info(
+                    f"Project created with id: {project_id}",
+                )
+                if user_addition_messages:
+                    for msg in user_addition_messages:
+                        LOG.info(msg)
+                        LOG.info(
+                            "Any user shown as invited would need to be "
+                            "added to the project once the user has accepted "
+                            "the invitation and created an account in the system."
+                        )
+    except (
         dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# ************************************************************************************************ #
+# PROJECT SUB GROUPS ********************************************************** PROJECT SUB GROUPS #
+# ************************************************************************************************ #
+
+
+# STATUS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATUS #
+@project_group_command.group(name="status", invoke_without_command=True)  # TODO: have this?
+@click.pass_obj
+def project_status(_):
+    """Manage project statuses."""
+
+
+# -- dds project status display -- #
+@project_status.command(name="display", no_args_is_help=True)
+@click.option(
+    "--show_history",
+    required=False,
+    is_flag=True,
+    help="Show history of project statuses in addition to current status",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.pass_obj
+def display_project_status(click_ctx, username, project, show_history):
+    """Display and Update project status."""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.get_status(show_history)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project status release -- #
+@project_status.command(name="release", no_args_is_help=True)
+@click.option(
+    "--deadline",
+    required=False,
+    type=int,
+    help="Deadline in days when releasing a project",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.pass_obj
+def release_project(click_ctx, username, project, deadline):
+    """Make project available for user download."""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="Available", deadline=deadline)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project status retract -- #
+@project_status.command(name="retract", no_args_is_help=True)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.pass_obj
+def retract_project(click_ctx, username, project):
+    """Retract a project available for download to add more data."""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="In Progress")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project status archive -- #
+@project_status.command(name="archive", no_args_is_help=True)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.pass_obj
+def archive_project(click_ctx, username, project):
+    """Manually archive a released project and delete all its data."""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="Archived")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project status delete -- #
+@project_status.command(name="delete", no_args_is_help=True)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.pass_obj
+def delete_project(click_ctx, username, project):
+    """Delete an unreleased project and all its data."""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="Deleted")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project status abort -- #
+@project_status.command(name="abort", no_args_is_help=True)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.pass_obj
+def abort_project(click_ctx, username, project):
+    """Abort a released project to delete all its data."""
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as updater:
+            updater.update_status(new_status="Archived", is_aborted=True)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# ACCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACCESS #
+@project_group_command.group(name="access", invoke_without_command=True)  # TODO: have this?
+@click.pass_obj
+def project_access(_):
+    """Manage project statuses."""
+
+
+# -- dds project access grant -- #
+@project_access.command(name="grant", no_args_is_help=True)
+@click.option(
+    "--email", "-e", required=True, type=str, help="Email of the user you would like to invite."
+)
+@click.option(
+    "--owner",
+    required=False,
+    is_flag=True,
+    help="Grant access as project owner. If not specified, the user gets Researcher permissions within the project.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.pass_obj
+def grant_project_access(click_ctx, username, project, email, owner):
+    """Grant user access to a project."""
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as granter:
+            role = "Researcher"
+            if owner:
+                role = "Project Owner"
+            granter.add_user(email=email, role=role, project=project)
+            if project:
+                LOG.info(
+                    "Any user shown as invited would need to be added to the project once the user "
+                    "has accepted the invitation and created an account in the system."
+                )
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project access revoke -- #
+@project_access.command(name="revoke", no_args_is_help=True)
+@click.option(
+    "--email",
+    "-e",
+    required=True,
+    type=str,
+    help="Email of the user for whom project access is to be revoked.",
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID.",
+)
+@click.pass_obj
+def revoke_project_access(click_ctx, username, project, email):
+    """Revoke user access to a project."""
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as revoker:
+            revoker.revoke_project_access(project, email)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
@@ -1007,11 +1021,121 @@ def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
 
 
 ####################################################################################################
-# GET ######################################################################################## GET #
+####################################################################################################
+## DATA #################################################################################### DATA ##
+####################################################################################################
 ####################################################################################################
 
 
-@dds_main.command()
+@dds_main.group(name="data", invoke_without_command=True)
+@click.pass_obj
+def data_group_command(_):
+    """Group command: dds project. Manage projects."""
+
+
+# ************************************************************************************************ #
+# DATA COMMANDS ******************************************************************** DATA COMMANDS #
+# ************************************************************************************************ #
+
+
+# -- dds data put -- #
+@data_group_command.command(name="put", no_args_is_help=True)
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="Project ID to which you're uploading data",
+)
+@click.option(
+    "--source",
+    "-s",
+    required=False,
+    type=click.Path(exists=True),
+    multiple=True,
+    help="Path to file or directory (local)",
+)
+@click.option(
+    "--source-path-file",
+    "-spf",
+    required=False,
+    type=click.Path(exists=True),
+    multiple=False,
+    help="File containing path to files or directories",
+)
+@click.option(
+    "--break-on-fail",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Cancel upload of all files if one fails",
+)
+@click.option(
+    "--overwrite",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Overwrite files if already uploaded",
+)
+@click.option(
+    "--num-threads",
+    "-nt",
+    required=False,
+    multiple=False,
+    default=4,
+    show_default=True,
+    type=click.IntRange(1, 32),
+    help="Number of parallel threads to perform the delivery",
+)
+@click.option(
+    "--silent",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help=(
+        "Turn off progress bar for each individual file. Summary bars still visible. "
+        "Suggested for uploads including a large number of files."
+    ),
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.pass_obj
+def put_data(
+    click_ctx,
+    username,
+    project,
+    source,
+    source_path_file,
+    break_on_fail,
+    overwrite,
+    num_threads,
+    silent,
+):
+    """Process and upload specified files to the cloud."""
+    try:
+        dds_cli.data_putter.put(
+            username=username,
+            project=project,
+            source=source,
+            source_path_file=source_path_file,
+            break_on_fail=break_on_fail,
+            overwrite=overwrite,
+            num_threads=num_threads,
+            silent=silent,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+        )
+    except (dds_cli.exceptions.AuthenticationError, dds_cli.exceptions.UploadError) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds data get -- #
+@data_group_command.command(name="get", no_args_is_help=True)
 @click.option(
     "--project",
     "-p",
@@ -1082,9 +1206,15 @@ def rm(click_ctx, proj_arg, project, username, rm_all, file, folder):
     show_default=True,
     help="Perform SHA-256 checksum verification after download (slower).",
 )
-@common_options
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
 @click.pass_obj
-def get(
+def get_data(
     click_ctx,
     username,
     project,
@@ -1198,6 +1328,105 @@ def get(
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.NoDataError,
         dds_cli.exceptions.DownloadError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds data ls -- #
+@data_group_command.command(name="ls", no_args_is_help=True)
+@click.pass_obj
+def list_data(click_ctx):
+    """List project contents. Call dds ls [PROJECT]."""
+
+    # ls(
+    #     click_ctx=click_ctx,
+    #     project=project,
+    #     folder=folder,
+    #     size=size,
+    #     username=username,
+    #     sort=sort,
+    #     tree=tree,
+    #     users=users,
+    #     json=json,
+    #     projects=False,
+    #     usage=False,
+    # )
+
+
+# -- dds data rm -- #
+@data_group_command.command(name="rm", no_args_is_help=True)
+@click.argument("proj_arg", required=False)
+@click.option("--project", "-p", required=True, type=str, help="Project ID.")
+@click.option("--rm-all", "-a", is_flag=True, default=False, help="Remove all project contents.")
+@click.option(
+    "--file", "-f", required=False, type=str, multiple=True, help="Path to file to remove."
+)
+@click.option(
+    "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
+)
+@click.option(
+    "--username",
+    "-u",
+    required=False,
+    type=str,
+    help="Your Data Delivery System username.",
+)
+@click.pass_obj
+def rm_data(click_ctx, proj_arg, project, username, rm_all, file, folder):
+    """Delete the files within a project."""
+    no_prompt = click_ctx.get("NO_PROMPT", False)
+
+    # One of proj_arg or project is required
+    if all(x is None for x in [proj_arg, project]):
+        LOG.error("No project specified, cannot remove anything.")
+        sys.exit(1)
+
+    # Either all or a file
+    if rm_all and (file or folder):
+        LOG.error("The options '--rm-all' and '--file'/'--folder' cannot be used together.")
+        sys.exit(1)
+
+    project = proj_arg if proj_arg is not None else project
+
+    # Will not delete anything if no file or folder specified
+    if project and not any([rm_all, file, folder]):
+        LOG.error(
+            "One of the options must be specified to perform data deletion: "
+            "'--rm-all' / '--file' / '--folder'."
+        )
+        sys.exit(1)
+
+    # Warn if trying to remove all contents
+    if rm_all:
+        if no_prompt:
+            LOG.warning(f"Deleting all files within project '{project}'")
+        else:
+            if not rich.prompt.Confirm.ask(
+                f"Are you sure you want to delete all files within project '{project}'?"
+            ):
+                LOG.info("Probably for the best. Exiting.")
+                sys.exit(0)
+
+    try:
+        with dds_cli.data_remover.DataRemover(
+            project=project,
+            username=username,
+            no_prompt=no_prompt,
+        ) as remover:
+
+            if rm_all:
+                remover.remove_all()
+
+            elif file:
+                remover.remove_file(files=file)
+
+            elif folder:
+                remover.remove_folder(folder=folder)
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
         sys.exit(1)

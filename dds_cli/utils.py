@@ -4,6 +4,7 @@ import numbers
 import rich.console
 import simplejson
 
+
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
 

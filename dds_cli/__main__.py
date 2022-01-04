@@ -111,9 +111,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
 # ************************************************************************************************ #
 # OPTIONS ******************************************************************************** OPTIONS #
 # ************************************************************************************************ #
-# Options used multiple times
-
-# Args
+# Args used multiple times
 def email_arg(required, help_message, email="email", metavar="[EMAIL]", nargs=1):
     """
     Email positional argument standard definition.
@@ -125,7 +123,7 @@ def email_arg(required, help_message, email="email", metavar="[EMAIL]", nargs=1)
     )
 
 
-# Options
+# Options used multiple times
 def email_option(help_message, long="--email", short="-e", name="email", required=True):
     """
     Email option standard definition.
@@ -200,33 +198,6 @@ def project_option(
         name,
         required=required,
         type=str,
-        help=help_message,
-    )
-
-
-def role_option(
-    long="--role",
-    short="-r",
-    name="role",
-    required=True,
-    choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
-    case_sensitive=False,
-    help_message="Type of account.",
-):
-    """
-    Role option standard definition.
-
-    Use as decorator for commands.
-    """
-    return click.option(
-        long,
-        short,
-        name,
-        required=required,
-        type=click.Choice(
-            choices=choices,
-            case_sensitive=case_sensitive,
-        ),
         help=help_message,
     )
 
@@ -366,21 +337,6 @@ def owner_flag(help_message, long="--owner", name="owner", required=False, multi
     )
 
 
-def self_flag(help_message, long="--self", name="self"):
-    """
-    Self flag standard definition.
-
-    Use as decorator for commands.
-    """
-    return click.option(
-        long,
-        name,
-        required=False,
-        is_flag=True,
-        default=False,
-    )
-
-
 def silent_flag(
     help_message,
     long="--silent",
@@ -419,6 +375,11 @@ def size_flag(help_message, long="--size", name="size", show_default=True):
 
 
 def tree_flag(help_message, long="--tree", name="tree", show_default=True):
+    """
+    Tree flag standard definition.
+
+    Use as decorator for commands.
+    """
     return click.option(
         long,
         name,
@@ -697,7 +658,17 @@ def user_group_command(_):
 @project_option(
     required=False, help_message="Existing Project you want the user to be associated to."
 )
-@role_option()
+@click.option(
+    "--role",
+    "-r",
+    "role",
+    required=True,
+    type=click.Choice(
+        choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
+        case_sensitive=False,
+    ),
+    help="Type of account.",
+)
 @click.pass_obj
 def add_user(click_ctx, email, username, role, project):
     """
@@ -735,7 +706,14 @@ def add_user(click_ctx, email, username, role, project):
 # Options
 @username_option()
 # Flags
-@self_flag(help_message="Request deletion of own account.")
+@click.option(
+    "--self",
+    "self",
+    required=False,
+    is_flag=True,
+    default=False,
+    help="Request deletion of own account.",
+)
 @click.pass_obj
 def delete_user(click_ctx, email, username, self):
     """

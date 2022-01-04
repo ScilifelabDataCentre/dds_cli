@@ -10,7 +10,6 @@ import itertools
 import logging
 import os
 import sys
-import functools
 
 # Installed
 import click
@@ -211,7 +210,7 @@ def sort_projects_option(
     help_message="Which column to sort the project list by.",
 ):
     """
-    Standard definition for the sort option.
+    Sort option standard definition.
 
     Use as decorator for commands where you wish to sort the projects.
     """
@@ -730,7 +729,7 @@ def delete_user(click_ctx, email, username, self):
             )
         else:
             proceed_deletion = rich.prompt.Confirm.ask(
-                f"Are you sure? Deleted accounts can't be restored!"
+                "Are you sure? Deleted accounts can't be restored!"
             )
 
     if proceed_deletion:
@@ -897,7 +896,7 @@ def create(
 
 
 # STATUS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ STATUS #
-@project_group_command.group(name="status", invoke_without_command=True)  # TODO: have this?
+@project_group_command.group(name="status", no_args_is_help=True)
 @click.pass_obj
 def project_status(_):
     """Manage project statuses."""
@@ -1049,7 +1048,7 @@ def abort_project(click_ctx, username, project):
 
 
 # ACCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACCESS #
-@project_group_command.group(name="access", invoke_without_command=True)  # TODO: have this?
+@project_group_command.group(name="access")
 @click.pass_obj
 def project_access(_):
     """Manage project statuses."""

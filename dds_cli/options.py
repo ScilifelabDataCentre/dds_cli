@@ -217,18 +217,6 @@ def json_flag(help_message, long="--json", name="json", show_default=True):
     )
 
 
-def owner_flag(help_message, long="--owner", name="owner", required=False, multiple=False):
-    """Owner flag standard definition."""
-    return click.option(
-        long,
-        name,
-        required=required,
-        is_flag=True,
-        multiple=multiple,
-        help=help_message,
-    )
-
-
 def silent_flag(
     help_message,
     long="--silent",

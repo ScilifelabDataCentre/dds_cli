@@ -44,7 +44,6 @@ from dds_cli.options import (
     username_option,
     break_on_fail_flag,
     json_flag,
-    owner_flag,
     silent_flag,
     size_flag,
     tree_flag,
@@ -530,8 +529,12 @@ def list_projects(ctx, username, json, sort, usage):
     help="Email of a user to be added to the project as Researcher",
 )
 # Flags
-@owner_flag(
-    help_message="Email of a user to be added to the project as Project Owner", multiple=True
+@click.option(
+    "--owner",
+    "owner",
+    required=False,
+    multiple=True,
+    help="Email or user to be added to the project as Project Owner",
 )
 @click.option(
     "--is_sensitive",
@@ -768,11 +771,13 @@ def project_access(_):
 @project_option(required=True)
 @email_option(help_message="Email of the user you would like to grant access to the project.")
 # Flags
-@owner_flag(
-    help_message=(
-        "Grant access as project owner. If not specified, "
-        "the user gets Researcher permissions within the project."
-    )
+@click.option(
+    "--owner",
+    "owner",
+    required=False,
+    is_flag=True,
+    help="Grant access as project owner. If not specified, "
+    "the user gets Researcher permissions within the project.",
 )
 @click.pass_obj
 def grant_project_access(click_ctx, username, project, email, owner):

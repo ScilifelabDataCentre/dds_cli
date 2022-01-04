@@ -449,7 +449,6 @@ def ls(click_ctx, project, folder, username, sort, json, size, tree, usage, user
     Specify a Project ID to list the files within a project.
     You can also follow this with a subfolder path to show files within that folder.
     """
-    LOG.info(click_ctx)
     try:
         # List all projects if project is None and all files if project spec
         if project is None:

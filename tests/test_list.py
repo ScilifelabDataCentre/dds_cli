@@ -3,9 +3,9 @@ import unittest.mock
 import copy
 
 # Installed
+import json
 import pytest
 import requests
-import json
 
 # Own modules
 import dds_cli
@@ -85,11 +85,13 @@ def list_request():
         yield _request_mock
 
 
-def test_list_no_projects(ls_runner, list_request):
-    """Test that the list command works when no project is specified nor returned."""
+# ------------------------------------------------------------------------------------------------ #
 
+
+def list_no_projects(ls_runner, list_request, command):
+    """Perform test called by tests with different commands."""
     list_request_OK = list_request(200)
-    result = ls_runner(["ls"])
+    result = ls_runner(command)
 
     assert result.exit_code == 0
     list_request_OK.assert_called_with(
@@ -102,11 +104,23 @@ def test_list_no_projects(ls_runner, list_request):
     assert "" == result.stdout
 
 
-def test_list_no_project_specified(ls_runner, list_request):
-    """Test that the list command works when no project is specified."""
+def test_list_no_projects_dds_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified nor returned."""
+    list_no_projects(ls_runner=ls_runner, list_request=list_request, command=["ls"])
 
+
+def test_list_no_projects_dds_project_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified nor returned."""
+    list_no_projects(ls_runner=ls_runner, list_request=list_request, command=["project", "ls"])
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+def list_no_project_specified(ls_runner, list_request, command):
+    """Perform test called by tests with different commands."""
     list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
-    result = ls_runner(["ls"])
+    result = ls_runner(command)
 
     assert result.exit_code == 0
     list_request_OK.assert_called_with(
@@ -129,14 +143,29 @@ def test_list_no_project_specified(ls_runner, list_request):
         "────────────────",  # Hack to test that there's a table printed
     ]:
         assert substring in result.stdout
+    print(result.stderr)
     assert "" == result.stderr  # Click testing framework aborts any interactivity
 
 
-def test_list_no_project_specified_json(ls_runner, list_request):
-    """Test that the list command works when no project is specified with json output."""
+def test_list_no_project_specified_dds_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified."""
+    list_no_project_specified(ls_runner=ls_runner, list_request=list_request, command=["ls"])
 
+
+def test_list_no_project_specified_dds_project_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified."""
+    list_no_project_specified(
+        ls_runner=ls_runner, list_request=list_request, command=["project", "ls"]
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+def list_no_project_specified_json(ls_runner, list_request, command):
+    """Perform test called by tests with different commands."""
     list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
-    result = ls_runner(["ls", "--json"])
+    result = ls_runner(command)
 
     assert result.exit_code == 0
     list_request_OK.assert_called_with(
@@ -157,11 +186,27 @@ def test_list_no_project_specified_json(ls_runner, list_request):
     ] == project_ids, "Default sorting of json should be last updated"
 
 
-def test_list_no_project_specified_json_sort(ls_runner, list_request):
-    """Test that the list command works when no project is specified with json output and non-default sorting."""
+def test_list_no_project_specified_json_dds_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified with json output."""
+    list_no_project_specified_json(
+        ls_runner=ls_runner, list_request=list_request, command=["ls", "--json"]
+    )
 
+
+def test_list_no_project_specified_json_dds_project_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified with json output."""
+    list_no_project_specified_json(
+        ls_runner=ls_runner, list_request=list_request, command=["project", "ls", "--json"]
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+def list_no_project_specified_json_sort(ls_runner, list_request, command):
+    """Perform test called by tests with different commands."""
     list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
-    result = ls_runner(["ls", "--json", "--sort", "id"])
+    result = ls_runner(command)
 
     assert result.exit_code == 0
     list_request_OK.assert_called_with(
@@ -179,12 +224,31 @@ def test_list_no_project_specified_json_sort(ls_runner, list_request):
     assert ["project_1", "project_2"] == project_ids, "Sorting json on project id failed"
 
 
-def test_list_with_project(ls_runner, list_request):
-    """Test that the list command works when a project is specified."""
+def test_list_no_project_specified_json_sort_dds_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified with json output and non-default sorting."""
+    list_no_project_specified_json_sort(
+        ls_runner=ls_runner, list_request=list_request, command=["ls", "--json", "--sort", "id"]
+    )
+
+
+def test_list_no_project_specified_json_sort_dds_project_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified with json output and non-default sorting."""
+    list_no_project_specified_json_sort(
+        ls_runner=ls_runner,
+        list_request=list_request,
+        command=["project", "ls", "--json", "--sort", "id"],
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+def list_with_project(ls_runner, list_request, command):
+    """Perform test called by tests with different commands."""
     # Need to use deepcopy to be able to reuse the JSON object for other tests
     # since the DataLister.list_recursive uses pop on this dictionary
     list_request_OK = list_request(200, return_json=copy.deepcopy(RETURNED_FILES_JSON))
-    result = ls_runner(["ls", "project_1"])
+    result = ls_runner(command)
 
     assert result.exit_code == 0
     list_request_OK.assert_called_with(
@@ -206,9 +270,27 @@ def test_list_with_project(ls_runner, list_request):
         assert substring in result.stdout
 
 
-def test_list_with_project_and_tree(ls_runner, list_request):
+def test_list_with_project_dds_ls(ls_runner, list_request):
     """Test that the list command works when a project is specified."""
+    list_with_project(
+        ls_runner=ls_runner, list_request=list_request, command=["ls", "--project", "project_1"]
+    )
 
+
+def test_list_with_project_dds_data_ls(ls_runner, list_request):
+    """Test that the list command works when a project is specified."""
+    list_with_project(
+        ls_runner=ls_runner,
+        list_request=list_request,
+        command=["data", "ls", "--project", "project_1"],
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+def list_with_project_and_tree(ls_runner, list_request, command):
+    """Perform test called by tests with different commands."""
     list_request_OK = list_request(
         200,
         side_effect=[
@@ -219,7 +301,7 @@ def test_list_with_project_and_tree(ls_runner, list_request):
         ],
     )
 
-    result = ls_runner(["ls", "--tree", "project_1"])
+    result = ls_runner(command)
 
     assert result.exit_code == 0
     list_request_OK.assert_any_call(
@@ -254,9 +336,29 @@ def test_list_with_project_and_tree(ls_runner, list_request):
         assert substring in result.stdout
 
 
-def test_list_with_project_and_tree_json(ls_runner, list_request):
+def test_list_with_project_and_tree_dds_ls(ls_runner, list_request):
     """Test that the list command works when a project is specified."""
+    list_with_project_and_tree(
+        ls_runner=ls_runner,
+        list_request=list_request,
+        command=["ls", "--tree", "--project", "project_1"],
+    )
 
+
+def test_list_with_project_and_tree_dds_data_ls(ls_runner, list_request):
+    """Test that the list command works when a project is specified."""
+    list_with_project_and_tree(
+        ls_runner=ls_runner,
+        list_request=list_request,
+        command=["data", "ls", "--tree", "--project", "project_1"],
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #
+
+
+def list_with_project_and_tree_json(ls_runner, list_request, command):
+    """Perform test called by tests with different commands."""
     list_request_OK = list_request(
         200,
         side_effect=[
@@ -267,7 +369,7 @@ def test_list_with_project_and_tree_json(ls_runner, list_request):
         ],
     )
 
-    result = ls_runner(["ls", "--tree", "--json", "project_1"])
+    result = ls_runner(command)
 
     assert result.exit_code == 0
     list_request_OK.assert_any_call(
@@ -303,3 +405,24 @@ def test_list_with_project_and_tree_json(ls_runner, list_request):
     except KeyError:
         assert False, f"wrong JSON structure: {json_output}"
     assert file["name"] == "simple_file4.txt"
+
+
+def test_list_with_project_and_tree_json_dds_ls(ls_runner, list_request):
+    """Test that the list command works when a project is specified."""
+    list_with_project_and_tree_json(
+        ls_runner=ls_runner,
+        list_request=list_request,
+        command=["ls", "--tree", "--json", "--project", "project_1"],
+    )
+
+
+def test_list_with_project_and_tree_json_dds_data_ls(ls_runner, list_request):
+    """Test that the list command works when a project is specified."""
+    list_with_project_and_tree_json(
+        ls_runner=ls_runner,
+        list_request=list_request,
+        command=["data", "ls", "--tree", "--json", "--project", "project_1"],
+    )
+
+
+# ------------------------------------------------------------------------------------------------ #

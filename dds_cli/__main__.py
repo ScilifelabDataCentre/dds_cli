@@ -133,6 +133,7 @@ def email_option(help_message, long="--email", short="-e", name="email", require
     return click.option(
         long,
         short,
+        name,
         required=required,
         type=str,
         help=help_message,
@@ -140,7 +141,7 @@ def email_option(help_message, long="--email", short="-e", name="email", require
 
 
 def folder_option(
-    help_message, long="--folder", short="f", name="folder", required=False, multiple=False
+    help_message, long="--folder", short="-f", name="folder", required=False, multiple=False
 ):
     """
     Folder option standard definition.

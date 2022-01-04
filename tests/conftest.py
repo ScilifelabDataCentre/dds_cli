@@ -12,7 +12,7 @@ from dds_cli.__main__ import dds_main
 
 @pytest.fixture
 def retrieve_token():
-    """A fixture to mock authentication by having a None token for every user"""
+    """Fixture to mock authentication by having a None token for every user."""
     with unittest.mock.patch.object(User, "_User__retrieve_token") as mock_A:
         mock_A.return_value = None
         yield mock_A
@@ -20,12 +20,15 @@ def retrieve_token():
 
 @pytest.fixture
 def runner(retrieve_token):
-    """A fixture that returns the click cli runner. The runner is invoked
-    when the function returned by this fixture is called."""
-    runner = click.testing.CliRunner(mix_stderr=False)
+    """
+    Fixture that returns the click cli runner.
+
+    The runner is invoked when the function returned by this fixture is called.
+    """
+    runner_ = click.testing.CliRunner(mix_stderr=False)
 
     def _run(cmd, input=None):
-        return runner.invoke(
+        return runner_.invoke(
             dds_main,
             cmd,
             catch_exceptions=True,

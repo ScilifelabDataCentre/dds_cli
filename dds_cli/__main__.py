@@ -127,60 +127,43 @@ num_threads_optional = click.option(
 
 # FLAGS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ FLAGS #
 
-json = click.option(
-    "--json",
-    is_flag=True,
-    default=False,
-    help="Output in JSON format",
-)
-
-silent = click.option(
-    "--silent",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Turn off progress bar for each individual file. Summary bars still visible.",
-)
-
-size = click.option(
-    "--size",
-    "-s",
-    is_flag=True,
-    default=False,
-    help="Show size of project contents.",
-)
-
-tree = click.option(
-    "--tree",
-    "-t",
-    is_flag=True,
-    default=False,
-    help="Display the entire project(s) directory tree",
-)
-
-users = click.option(
-    "--users",
-    is_flag=True,
-    default=False,
-    help="Display users associated with a project(Requires a project id)",
-)
-
-usage = click.option(
-    "--usage",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help=(
-        "Show the usage for available projects, in GBHours and cost. "
-        "No effect when specifying a project id."
-    ),
-)
 
 # COMMON OPTIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ COMMON OPTIONS #
-def common_options_project_contents(f):
-    """Common options used when listing project contents."""
-    options = [users, json, tree]
-    return functools.reduce(lambda x, opt: opt(x), options, f)
+
+# Args
+
+
+def email_arg(required, help_message, email="email", metavar="[EMAIL]", nargs=1):
+    """
+    Email positional argument standard definition.
+
+    Use as decorator for commands.
+    """
+    return click.argument(
+        email, metavar=metavar, nargs=nargs, type=str, required=required, help=help_message
+    )
+
+
+# Options
+
+
+def folder_option(
+    help_message, long="--folder", short="f", name="folder", required=False, multiple=False
+):
+    """
+    Folder option standard definition.
+
+    Use as decorator for commands.
+    """
+    return click.option(
+        long,
+        short,
+        name,
+        required=required,
+        type=str,
+        multiple=multiple,
+        help=help_message,
+    )
 
 
 def project_option(
@@ -249,6 +232,105 @@ def username_option(
     )
 
 
+# Flags
+
+
+def json_flag(help_message, long="--json", name="json", show_default=True):
+    """
+    Json flag standard definition.
+
+    Use as decorator for commands.
+    """
+    return click.option(
+        long,
+        name,
+        is_flag=True,
+        default=False,
+        show_default=show_default,
+        help=help_message,
+    )
+
+
+def silent_flag(
+    help_message,
+    long="--silent",
+    name="silent",
+    show_default=True,
+):
+    """
+    Silent flag standard definition.
+
+    Use as decorator for commands.
+    """
+    return click.option(
+        long,
+        name,
+        is_flag=True,
+        default=False,
+        show_default=show_default,
+        help=help_message,
+    )
+
+
+def size_flag(help_message, long="--size", name="size", show_default=True):
+    """
+    Size flag standard definition.
+
+    Use as decorator for commands.
+    """
+    return click.option(
+        long,
+        name,
+        is_flag=True,
+        default=False,
+        show_default=show_default,
+        help=help_message,
+    )
+
+
+def tree_flag(help_message, long="--tree", name="tree", show_default=True):
+    return click.option(
+        long,
+        name,
+        is_flag=True,
+        default=False,
+        show_default=show_default,
+        help=help_message,
+    )
+
+
+def usage_flag(help_message, long="--usage", name="usage", show_default=True):
+    """
+    Usage flag standard definition.
+
+    Use as decorator for commands where displaying the usage may be desired.
+    """
+    return click.option(
+        long, name, is_flag=True, default=False, show_default=show_default, help=help_message
+    )
+
+
+def users_flag(
+    help_message,
+    long="--users",
+    name="users",
+    show_default=True,
+):
+    """
+    Users flag standard definition.
+
+    Use as a decorator for commands.
+    """
+    return click.option(
+        long,
+        name,
+        is_flag=True,
+        default=False,
+        show_default=show_default,
+        help=help_message,
+    )
+
+
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #
 # ************************************************************************************************ #
@@ -259,19 +341,14 @@ def username_option(
 @username_option()
 @project_option(required=False)
 @sort_projects_option()
-@click.option(
-    "--folder",
-    "-f",
-    required=False,
-    type=str,
-    help="List contents of this project folder.",
-)
+@folder_option(help_message="List contents of this project folder.")
 # Flags
-@size
-@usage
+@size_flag(help_message="Show size of project contents.")
+@usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
-# Common
-@common_options_project_contents  # users, json, tree
+@users_flag(help_message="Display users associated with a project(Requires a project id)")
+@tree_flag(help_message="Display the entire project(s) directory tree")
+@json_flag(help_message="Output in JSON format")
 @click.pass_obj
 def ls(click_ctx, project, folder, username, sort, projects, size, usage, tree, users, json):
     """
@@ -482,7 +559,9 @@ def user_group_command(_):
 # -- dds user add -- #
 @user_group_command.command(name="add", no_args_is_help=True)
 # Positional args
-@click.argument("email", nargs=1, type=str, required=True)
+@email_arg(
+    required=True, help_message="Email of the user you are attempting to add to DDS and/or project."
+)
 # Options
 @username_option()
 @project_option(
@@ -531,6 +610,7 @@ def add_user(click_ctx, email, username, role, project):
 # -- dds user delete -- #
 @user_group_command.command(name="delete", no_args_is_help=True)
 # Positional args
+@email_arg(required=False, help_message="Email of the user account you are attempting to delete.")
 @click.argument("email", nargs=1, type=str, required=False)
 # Options
 @username_option()
@@ -614,9 +694,9 @@ def project_group_command(_):
 # Options
 @username_option()
 @sort_projects_option()
+@usage_flag(help_message="Show the usage for available projects, in GBHours and cost. ")
 # Common
 @json  # users, json, tree
-@usage
 @click.pass_context
 def list_projects(ctx, username, json, sort, usage):
     """List project contents. Calls the dds ls function."""
@@ -1016,7 +1096,9 @@ def data_group_command(_):
 )
 @num_threads_optional
 # Flags
-@silent
+@silent_flag(
+    help_message="Turn off progress bar for each individual file. Summary bars still visible."
+)
 @click.pass_obj
 def put_data(
     click_ctx,
@@ -1086,7 +1168,9 @@ def put_data(
     help="Destination of downloaded files.",
 )
 # Flags
-@silent
+@silent_flag(
+    help_message="Turn off progress bar for each individual file. Summary bars still visible."
+)
 @click.option(
     "--break-on-fail",
     is_flag=True,
@@ -1226,17 +1310,13 @@ def get_data(
 # Options
 @username_option()
 @project_option(required=True)
-@click.option(
-    "--folder",
-    "-f",
-    required=False,
-    type=str,
-    help="List contents in this project folder.",
-)
+@folder_option(help_message="List contents in this project folder.")
 # Flags
-@size  # used for listing project contents
+@size_flag(help_message="Show size of project contents.")
 # Common
-@common_options_project_contents  # users, json, tree
+@users_flag(help_message="Display users associated with a project(Requires a project id)")
+@tree_flag(help_message="Display the entire project(s) directory tree")
+@json_flag(help_message="Output in JSON format")
 @click.pass_context
 def list_data(ctx, username, project, folder, size, tree, users, json):
     """List project contents. Same as dds ls [PROJECT ID]."""
@@ -1260,9 +1340,7 @@ def list_data(ctx, username, project, folder, size, tree, users, json):
 @click.option(
     "--file", "-f", required=False, type=str, multiple=True, help="Path to file to remove."
 )
-@click.option(
-    "--folder", "-fl", required=False, type=str, multiple=True, help="Path to folder to remove."
-)
+@folder_option(help_message="Path to folder to remove.", short="-fl", multiple=True)
 # Flags
 @click.option(
     "--rm-all",

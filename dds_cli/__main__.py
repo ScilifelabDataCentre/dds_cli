@@ -112,15 +112,13 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
 # OPTIONS ******************************************************************************** OPTIONS #
 # ************************************************************************************************ #
 # Args used multiple times
-def email_arg(required, help_message, email="email", metavar="[EMAIL]", nargs=1):
+def email_arg(required, email="email", metavar="[EMAIL]", nargs=1):
     """
     Email positional argument standard definition.
 
     Use as decorator for commands.
     """
-    return click.argument(
-        email, metavar=metavar, nargs=nargs, type=str, required=required, help=help_message
-    )
+    return click.argument(email, metavar=metavar, nargs=nargs, type=str, required=required)
 
 
 # Options used multiple times
@@ -651,9 +649,7 @@ def user_group_command(_):
 # -- dds user add -- #
 @user_group_command.command(name="add", no_args_is_help=True)
 # Positional args
-@email_arg(
-    required=True, help_message="Email of the user you are attempting to add to DDS and/or project."
-)
+@email_arg(required=True)
 # Options
 @username_option()
 @project_option(
@@ -703,7 +699,7 @@ def add_user(click_ctx, email, username, role, project):
 # -- dds user delete -- #
 @user_group_command.command(name="delete", no_args_is_help=True)
 # Positional args
-@email_arg(required=False, help_message="Email of the user account you are attempting to delete.")
+@email_arg(required=False)
 # Options
 @username_option()
 # Flags

@@ -1098,7 +1098,7 @@ def list_data(ctx, username, project, folder, json, size, tree, users):
     required=False,
     type=str,
     multiple=True,
-    help="Path to file to remove.",
+    help="Path to file to remove." + dds_cli.utils.multiple_help_text(item="file"),
 )
 # Flags
 @click.option(

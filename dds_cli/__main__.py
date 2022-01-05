@@ -838,7 +838,7 @@ def revoke_project_access(click_ctx, username, project, email):
 @dds_main.group(name="data", no_args_is_help=True)
 @click.pass_obj
 def data_group_command(_):
-    """Group command: dds project. Manage projects."""
+    """Group command: dds data. Handle data within the projects."""
 
 
 # ************************************************************************************************ #

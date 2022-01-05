@@ -4,8 +4,14 @@ import numbers
 import rich.console
 import simplejson
 
+
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
+
+
+def multiple_help_text(item):
+    """Return help text for option with multiple=True."""
+    return f" Use the option multiple times to specify more than one {item} [multiple]"
 
 
 def get_json_response(response):

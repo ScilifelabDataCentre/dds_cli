@@ -761,7 +761,7 @@ def abort_project(click_ctx, username, project):
 @project_group_command.group(name="access")
 @click.pass_obj
 def project_access(_):
-    """Manage project statuses."""
+    """Manage project access."""
 
 
 # -- dds project access grant -- #

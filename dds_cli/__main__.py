@@ -472,7 +472,7 @@ def delete_user(click_ctx, email, username, self):
 ####################################################################################################
 
 
-@dds_main.group(name="project", invoke_without_command=True)
+@dds_main.group(name="project", no_args_is_help=True)
 @click.pass_obj
 def project_group_command(_):
     """Group command: dds project. Manage projects."""

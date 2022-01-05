@@ -534,7 +534,7 @@ def list_projects(ctx, username, json, sort, usage):
     "owner",
     required=False,
     multiple=True,
-    help="Email or user to be added to the project as Project Owner",
+    help="Email of user to be added to the project as Project Owner",
 )
 @click.option(
     "--is_sensitive",

@@ -136,11 +136,11 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
 @sort_projects_option()
 @folder_option(help_message="List contents of this project folder.")
 # Flags
-@json_flag(help_message="Output in JSON format")
+@json_flag(help_message="Output in JSON format.")
 @size_flag(help_message="Show size of project contents.")
-@tree_flag(help_message="Display the entire project(s) directory tree")
+@tree_flag(help_message="Display the entire project(s) directory tree.")
 @usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
-@users_flag(help_message="Display users associated with a project(Requires a project id)")
+@users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.pass_obj
 def ls(click_ctx, project, folder, username, sort, json, size, tree, usage, users, projects):
@@ -489,7 +489,7 @@ def project_group_command(_):
 @username_option()
 @sort_projects_option()
 # Flags
-@usage_flag(help_message="Show the usage for available projects, in GBHours and cost. ")
+@usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @json_flag(help_message="Output project list as json.")  # users, json, tree
 @click.pass_context
 def list_projects(ctx, username, json, sort, usage):
@@ -506,27 +506,28 @@ def list_projects(ctx, username, json, sort, usage):
     "-t",
     required=True,
     type=str,
-    help="The title of the project",
+    help="The title of the project.",
 )
 @click.option(
     "--description",
     "-d",
     required=True,
     type=str,
-    help="A description of the project",
+    help="A description of the project.",
 )
 @click.option(
     "--principal-investigator",
     "-pi",
     required=True,
     type=str,
-    help="The name of the Principal Investigator",
+    help="The name of the Principal Investigator.",
 )
 @click.option(
     "--researcher",
     required=False,
     multiple=True,
-    help="Email of a user to be added to the project as Researcher",
+    help="Email of a user to be added to the project as Researcher."
+    + dds_cli.utils.multiple_help_text(item="researcher"),
 )
 # Flags
 @click.option(
@@ -534,13 +535,14 @@ def list_projects(ctx, username, json, sort, usage):
     "owner",
     required=False,
     multiple=True,
-    help="Email of user to be added to the project as Project Owner",
+    help="Email of user to be added to the project as Project Owner."
+    + dds_cli.utils.multiple_help_text(item="project owner"),
 )
 @click.option(
     "--is_sensitive",
     required=False,
     is_flag=True,
-    help="Indicate if the Project includes sensitive data",
+    help="Indicate if the Project includes sensitive data.",
 )
 @click.pass_obj
 def create(
@@ -622,7 +624,7 @@ def project_status(_):
     "--show_history",
     required=False,
     is_flag=True,
-    help="Show history of project statuses in addition to current status",
+    help="Show history of project statuses in addition to current status.",
 )
 @click.pass_obj
 def display_project_status(click_ctx, username, project, show_history):
@@ -650,7 +652,7 @@ def display_project_status(click_ctx, username, project, show_history):
     "--deadline",
     required=False,
     type=int,
-    help="Deadline in days when releasing a project",
+    help="Deadline in days when releasing a project.",
 )
 @click.pass_obj
 def release_project(click_ctx, username, project, deadline):
@@ -850,9 +852,9 @@ def data_group_command(_):
 @data_group_command.command(name="put", no_args_is_help=True)
 # Options
 @username_option()
-@project_option(required=True, help_message="Project ID to which you're uploading data")
+@project_option(required=True, help_message="Project ID to which you're uploading data.")
 @source_option(
-    help_message="Path to file or directory (local)", option_type=click.Path(exists=True)
+    help_message="Path to file or directory (local).", option_type=click.Path(exists=True)
 )
 @source_path_file_option()
 @num_threads_option()
@@ -861,10 +863,10 @@ def data_group_command(_):
     is_flag=True,
     default=False,
     show_default=True,
-    help="Overwrite files if already uploaded",
+    help="Overwrite files if already uploaded.",
 )
 # Flags
-@break_on_fail_flag(help_message="Cancel upload of all files if one fails")
+@break_on_fail_flag(help_message="Cancel upload of all files if one fails.")
 @silent_flag(
     help_message="Turn off progress bar for each individual file. Summary bars still visible."
 )
@@ -1061,10 +1063,10 @@ def get_data(
 @project_option(required=True)
 @folder_option(help_message="List contents in this project folder.")
 # Flags
-@json_flag(help_message="Output in JSON format")
+@json_flag(help_message="Output in JSON format.")
 @size_flag(help_message="Show size of project contents.")
-@tree_flag(help_message="Display the entire project(s) directory tree")
-@users_flag(help_message="Display users associated with a project(Requires a project id)")
+@tree_flag(help_message="Display the entire project(s) directory tree.")
+@users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.pass_context
 def list_data(ctx, username, project, folder, json, size, tree, users):
     """List project contents. Same as dds ls [PROJECT ID]."""
@@ -1085,9 +1087,18 @@ def list_data(ctx, username, project, folder, json, size, tree, users):
 # Options
 @username_option()
 @project_option(required=True)
-@folder_option(help_message="Path to folder to remove.", short="-fl", multiple=True)
+@folder_option(
+    help_message="Path to folder to remove.",
+    short="-fl",
+    multiple=True,
+)
 @click.option(
-    "--file", "-f", required=False, type=str, multiple=True, help="Path to file to remove."
+    "--file",
+    "-f",
+    required=False,
+    type=str,
+    multiple=True,
+    help="Path to file to remove.",
 )
 # Flags
 @click.option(

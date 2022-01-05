@@ -2,7 +2,7 @@
 
 # Imports
 import click
-
+from dds_cli.utils import multiple_help_text
 
 # Args used multiple times
 def email_arg(required, email="email", metavar="[EMAIL]", nargs=1):
@@ -39,6 +39,8 @@ def folder_option(
 
     Use as decorator for commands.
     """
+    if multiple:
+        help_message += multiple_help_text(item="folder")
     return click.option(
         long,
         short,
@@ -130,7 +132,13 @@ def source_option(
     Use as decorator for commands.
     """
     return click.option(
-        long, short, name, required=required, type=option_type, multiple=True, help=help_message
+        long,
+        short,
+        name,
+        required=required,
+        type=option_type,
+        multiple=True,
+        help=help_message + multiple_help_text(item="source"),
     )
 
 

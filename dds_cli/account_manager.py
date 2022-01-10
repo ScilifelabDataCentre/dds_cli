@@ -169,3 +169,37 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             )
 
         LOG.info(response_json.get("message", "User access successfully revoked."))
+
+    def get_user_info(self):
+        """Get a users info"""
+        try:
+            response = requests.get(
+                dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
+                headers=self.token,
+            )
+
+            # Get response
+            response_json = response.json()
+            LOG.debug(response_json)
+            info = response_json["info"]
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        # Format response message
+        if not response.ok:
+            message = "Could not get user info"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise dds_cli.exceptions.DDSCLIException(
+                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            )
+
+        LOG.info(
+            f"User Name: {info['username']} \nRole: {info['role']} \
+            \nName: {info['name']} \
+            \nPrimary Email: {info['email_primary']} \
+            \nAssociated Emails: {', '.join(str(x) for x in info['emails_all'])}"
+        )

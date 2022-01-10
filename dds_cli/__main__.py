@@ -465,6 +465,31 @@ def delete_user(click_ctx, email, username, self):
             sys.exit(1)
 
 
+# -- dds user info -- #
+@user_group_command.command(name="info")
+# Options
+@username_option()
+# Flags
+@click.pass_obj
+def get_info_user(click_ctx, username):
+    """
+    Display info about the user logged in from the Data Delivery System.
+
+    """
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as get_info:
+            get_info.get_user_info()
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
 ####################################################################################################
 ####################################################################################################
 ## PROJECT ############################################################################## PROJECT ##

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 import logging
 import os
 from typing import Tuple, Union, List
+import datetime
 
 # Installed
 import requests
@@ -16,6 +17,8 @@ import simplejson
 from rich.padding import Padding
 from rich.table import Table
 from rich.tree import Tree
+import pytz
+import tzlocal
 
 # Own modules
 from dds_cli import base
@@ -96,6 +99,20 @@ class DataLister(base.DDSBaseClass):
         project_info = resp_json.get("project_info")
         if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
+
+        for project in project_info:
+            try:
+                last_updated = pytz.timezone("UTC").localize(
+                    datetime.datetime.strptime(project["Last updated"], "%a, %d %b %Y %H:%M:%S GMT")
+                )
+            except ValueError as err:
+                raise exceptions.ApiResponseError(
+                    f"Time zone mismatch: Incorrect zone '{project['Last updated'].split()[-1]}'"
+                )
+            else:
+                project["Last updated"] = last_updated.astimezone(tzlocal.get_localzone()).strftime(
+                    "%a, %d %b %Y %H:%M:%S %Z"
+                )
 
         # Sort projects according to chosen or default, first ID
         sorted_projects = self.__sort_projects(projects=project_info, sort_by=sort_by)

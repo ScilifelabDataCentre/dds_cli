@@ -27,6 +27,7 @@ from dds_cli import file_handler_local as fhl
 from dds_cli import status
 from dds_cli import text_handler as txt
 from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
+from dds_cli import s3_connector as s3
 
 import dds_cli
 import dds_cli.utils
@@ -193,7 +194,17 @@ class DataPutter(base.DDSBaseClass):
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
-            raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
+            raise dds_cli.exceptions.InvalidMethodError(
+                attempted_method=self.method, message="DataPutter attempting unauthorized method."
+            )
+
+        # Get keys required for put
+        self.s3connector = self.__get_safespring_keys()
+        self.keys = self.get_project_keys()
+
+        # Set put specific variables
+        self.status = dict()
+        self.filehandler = None
 
         # Start file prep progress
         with Progress(
@@ -235,6 +246,11 @@ class DataPutter(base.DDSBaseClass):
 
         if not self.filehandler.data:
             raise exceptions.UploadError("No data to upload.")
+
+    # Private methods #################### Private methods #
+    def __get_safespring_keys(self):
+        """Get safespring keys."""
+        return s3.S3Connector(project_id=self.project, token=self.token)
 
     # Public methods ###################### Public methods #
     @verify_proceed

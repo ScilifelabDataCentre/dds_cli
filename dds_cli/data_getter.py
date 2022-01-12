@@ -75,6 +75,13 @@ class DataGetter(base.DDSBaseClass):
                 message="DataGetter attempting unauthorized method",
             )
 
+        # Get keys required for get
+        self.keys = self.get_project_keys()
+
+        # Set get specific variables
+        self.status = dict()
+        self.filehandler = None
+
         # Start file prep progress
         with Progress(
             "[bold]{task.description}",

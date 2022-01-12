@@ -472,10 +472,7 @@ def delete_user(click_ctx, email, username, self):
 # Flags
 @click.pass_obj
 def get_info_user(click_ctx, username):
-    """
-    Display info about the user logged in from the Data Delivery System.
-
-    """
+    """Display info about the user logged in from the Data Delivery System."""
     try:
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -564,7 +561,7 @@ def list_projects(ctx, username, json, sort, usage):
     + dds_cli.utils.multiple_help_text(item="project owner"),
 )
 @click.option(
-    "--is_sensitive",
+    "--is-sensitive",
     required=False,
     is_flag=True,
     help="Indicate if the Project includes sensitive data.",

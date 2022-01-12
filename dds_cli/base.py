@@ -24,7 +24,6 @@ from dds_cli import (
     DDS_KEYS_REQUIRED_METHODS,
 )
 from dds_cli import DDSEndpoint
-from dds_cli import s3_connector as s3
 from dds_cli import user
 from dds_cli import exceptions
 from dds_cli import utils
@@ -93,17 +92,6 @@ class DDSBaseClass:
             )
             self.token = dds_user.token_dict
 
-        # Project access only required if trying to upload, download or list
-        # files within project
-        if self.method in DDS_KEYS_REQUIRED_METHODS:
-            if self.method == "put":
-                self.s3connector = self.__get_safespring_keys()
-
-            self.keys = self.__get_project_keys()
-
-            self.status = dict()
-            self.filehandler = None
-
     def __enter__(self):
         """Return self when using context manager."""
         return self
@@ -121,11 +109,8 @@ class DDSBaseClass:
         return True
 
     # Private methods ############################### Private methods #
-    def __get_safespring_keys(self):
-        """Get safespring keys."""
-        return s3.S3Connector(project_id=self.project, token=self.token)
 
-    def __get_project_keys(self):
+    def get_project_keys(self):
         """Get public and private project keys depending on method."""
         # Project public key required for both put and get
         public = self.__get_key()

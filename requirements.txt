@@ -15,3 +15,5 @@ simplejson
 zstandard>=0.15.1
 pyyaml
 pytest
+pytz
+tzlocal

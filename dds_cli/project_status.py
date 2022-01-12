@@ -4,6 +4,9 @@ import logging
 # Installed
 import requests
 import simplejson
+import pytz
+import tzlocal
+import datetime
 
 # Own modules
 from dds_cli import base
@@ -66,10 +69,40 @@ class ProjectStatusManager(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise exceptions.APIError(f"Could not decode JSON response: {err}")
         else:
-            LOG.info(f"Current status of {self.project}: {resp_json.get('current_status')}")
+            current_status = resp_json.get("current_status")
+            current_deadline = resp_json.get("current_deadline")
+            status_out = f"Current status of {self.project}: {current_status}"
+            deadline_out = ""
+            if current_deadline:
+                try:
+                    date = pytz.timezone("UTC").localize(
+                        datetime.datetime.strptime(current_deadline, "%a, %d %b %Y %H:%M:%S GMT")
+                    )
+                except ValueError as err:
+                    raise exceptions.ApiResponseError(
+                        f"Time zone mismatch: Incorrect zone '{current_deadline.split()[-1]}'"
+                    )
+                else:
+                    current_deadline = date.astimezone(tzlocal.get_localzone()).strftime(
+                        "%a, %d %b %Y %H:%M:%S %Z"
+                    )
+                deadline_out = f" with deadline {current_deadline}"
+            LOG.info(f"{status_out}{deadline_out}")
             if show_history:
                 history = "Status history \n"
                 for row in resp_json.get("history"):
+                    try:
+                        date = pytz.timezone("UTC").localize(
+                            datetime.datetime.strptime(row[1], "%a, %d %b %Y %H:%M:%S GMT")
+                        )
+                    except ValueError as err:
+                        raise exceptions.ApiResponseError(
+                            f"Time zone mismatch: Incorrect zone '{row[1].split()[-1]}'"
+                        )
+                    else:
+                        row[1] = date.astimezone(tzlocal.get_localzone()).strftime(
+                            "%a, %d %b %Y %H:%M:%S %Z"
+                        )
                     history += ", ".join([item for item in row]) + " \n"
                 LOG.info(history)
 

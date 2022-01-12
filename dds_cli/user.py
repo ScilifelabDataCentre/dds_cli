@@ -266,6 +266,7 @@ class TokenFile:
 
     # Private methods ############################################################ Private methods #
     def __token_dates(self):
+        # os.path.getmtime() gets modified time of token file from local, so already localized
         modification_time = datetime.datetime.fromtimestamp(os.path.getmtime(self.token_file))
         age = datetime.datetime.now() - modification_time
         expiration_time = modification_time + dds_cli.TOKEN_MAX_AGE

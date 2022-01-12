@@ -119,7 +119,7 @@ def test_list_no_projects_dds_project_ls(ls_runner, list_request):
 
 def list_no_project_specified(ls_runner, list_request, command):
     """Perform test called by tests with different commands."""
-    list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
+    list_request_OK = list_request(200, return_json=copy.deepcopy(RETURNED_PROJECTS_JSON))
     result = ls_runner(command)
 
     assert result.exit_code == 0
@@ -164,7 +164,7 @@ def test_list_no_project_specified_dds_project_ls(ls_runner, list_request):
 
 def list_no_project_specified_json(ls_runner, list_request, command):
     """Perform test called by tests with different commands."""
-    list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
+    list_request_OK = list_request(200, return_json=copy.deepcopy(RETURNED_PROJECTS_JSON))
     result = ls_runner(command)
 
     assert result.exit_code == 0
@@ -205,7 +205,7 @@ def test_list_no_project_specified_json_dds_project_ls(ls_runner, list_request):
 
 def list_no_project_specified_json_sort(ls_runner, list_request, command):
     """Perform test called by tests with different commands."""
-    list_request_OK = list_request(200, return_json=RETURNED_PROJECTS_JSON)
+    list_request_OK = list_request(200, return_json=copy.deepcopy(RETURNED_PROJECTS_JSON))
     result = ls_runner(command)
 
     assert result.exit_code == 0

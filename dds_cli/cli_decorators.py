@@ -10,8 +10,6 @@ import logging
 import pathlib
 
 # Installed
-import rich
-import rich.table
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules

@@ -263,17 +263,20 @@ class DataPutter(base.DDSBaseClass):
         salt = ""
 
         # Progress bar for processing
+        task_step = "encrypt" if self.sensitive else "prepare"
         task = progress.add_task(
-            description=txt.TextHandler.task_name(file=file, step="encrypt"),
+            description=txt.TextHandler.task_name(file=file, step=task_step),
             total=file_info["size_raw"],
             visible=not self.silent,
         )
 
-        no_compression = False  # For development
-        # Stream chunks from file
-        streamed_chunks = self.filehandler.stream_from_file(
-            file=file, no_compression=no_compression
+        # Stream chunks from file, either while compressing or reading
+        stream_function = (
+            self.filehandler.stream_compressed_data
+            if not file_info["compressed"]  # or no_compression -- TODO
+            else self.filehandler.stream_raw_data
         )
+        streamed_chunks = stream_function(file=file, progress=progress)
 
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:

@@ -23,6 +23,7 @@ from dds_cli import file_handler as fh
 from dds_cli import FileSegment
 from dds_cli import exceptions
 import dds_cli.utils
+from dds_cli import cli_decorators
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -269,25 +270,33 @@ class LocalFileHandler(fh.FileHandler):
 
         return new_file_name
 
-    def stream_from_file(self, file, no_compression):
-        """Read raw or compress file depending on if compressed already or not."""
-        # Info on current file
+    def stream_raw_data(self, file):
+        """Stream raw data from file."""
+        # Get info for current file
+        file_info = self.data[file]
+
+        # Stream chunks while generating checksum from raw data
+        checksum = hashlib.sha256()
+        for chunk in self.read_file(file=file_info["path_raw"]):
+            checksum.update(chunk)
+            yield chunk
+
+        # Update checksum in file info
+        self.data[file]["checksum"] = checksum.hexdigest()
+
+    def stream_compressed_data(self, file):
+        """Stream compressed data from file."""
+        # Get info for current file
         file_info = self.data[file]
 
         # Generate checksum
         checksum = hashlib.sha256()
-        if file_info["compressed"]:
-            for chunk in self.read_file(file=file_info["path_raw"]):
-                checksum.update(chunk)
-                yield chunk
-        else:
-            # Generate checksum first
-            for chunk in self.read_file(file=file_info["path_raw"]):
-                checksum.update(chunk)
+        for chunk in self.read_file(file=file_info["path_raw"]):
+            checksum.update(chunk)
 
-            # Then stream file chunks
-            for chunk in fc.Compressor.compress_file(file=file_info["path_raw"]):
-                yield chunk
+        # Stream compressed chunks
+        for chunk in fc.Compressor.compress_file(file=file_info["path_raw"]):
+            yield chunk
 
-        # Add checksum to file info
+        # Update checksum in file info
         self.data[file]["checksum"] = checksum.hexdigest()

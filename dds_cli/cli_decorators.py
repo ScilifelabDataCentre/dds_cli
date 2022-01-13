@@ -28,6 +28,25 @@ LOG = logging.getLogger(__name__)
 ###############################################################################
 
 
+def task_stream(func):
+    @functools.wraps(func)
+    def wrapped(self, file, *args, **kwargs):
+
+        progress = kwargs.get("progress")
+        if progress:
+            task = progress.add_task(
+                description=txt.TextHandler.task_name(file=file, step="encrypt"),
+                total=file_info["size_raw"],
+                visible=not self.silent,
+            )
+        print(self)
+        print(args)
+        print(kwargs)
+        return
+
+    return wrapped
+
+
 def verify_proceed(func):
     """Decorator for verifying that the file is not cancelled.
     Also cancels the upload of all non-started files if break-on-fail."""

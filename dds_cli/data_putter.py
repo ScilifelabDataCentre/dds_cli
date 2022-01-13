@@ -202,10 +202,6 @@ class DataPutter(base.DDSBaseClass):
         self.s3connector = self.__get_safespring_keys()
         self.keys = self.get_project_keys()
 
-        # Set put specific variables
-        self.status = dict()
-        self.filehandler = None
-
         # Start file prep progress
         with Progress(
             "[bold]{task.description}",
@@ -221,9 +217,6 @@ class DataPutter(base.DDSBaseClass):
                 project=self.project,
                 temporary_destination=self.dds_directory.directories["FILES"],
             )
-
-            # Verify that the Safespring S3 bucket exists
-            # self.verify_bucket_exist()
 
             # Check which, if any, files exist in the db
             files_in_db = self.filehandler.check_previous_upload(token=self.token)

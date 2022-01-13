@@ -60,6 +60,9 @@ class DDSBaseClass:
         self.method_check = method_check
         self.method = method
         self.no_prompt = no_prompt
+        # Needed for put and get (but added here)
+        self.status = dict()
+        self.filehandler = None
 
         if self.method_check:
             # Get attempted operation e.g. put/ls/rm/get

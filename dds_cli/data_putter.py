@@ -250,10 +250,17 @@ class DataPutter(base.DDSBaseClass):
     @subpath_required
     def protect_and_upload(self, file, progress):
         """Process and upload the file while handling the progress bars."""
-        # Variables
-        all_ok, saved, message = (False, False, "")  # Error catching
-        file_info = self.filehandler.data[file]  # Info on current file
-        file_public_key, salt = ("", "")  # Crypto info
+        # Error catching
+        all_ok = False
+        saved = False
+        message = ""
+
+        # Info on current file
+        file_info = self.filehandler.data[file]
+
+        # Crypto info
+        file_public_key = ""
+        salt = ""
 
         # Progress bar for processing
         task = progress.add_task(
@@ -262,8 +269,11 @@ class DataPutter(base.DDSBaseClass):
             visible=not self.silent,
         )
 
+        no_compression = False  # For development
         # Stream chunks from file
-        streamed_chunks = self.filehandler.stream_from_file(file=file)
+        streamed_chunks = self.filehandler.stream_from_file(
+            file=file, no_compression=no_compression
+        )
 
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:

@@ -269,12 +269,11 @@ class LocalFileHandler(fh.FileHandler):
 
         return new_file_name
 
-    def stream_from_file(self, file):
+    def stream_from_file(self, file, no_compression):
         """Read raw or compress file depending on if compressed already or not."""
-
+        # Info on current file
         file_info = self.data[file]
 
-        LOG.debug("Streaming file...")
         # Generate checksum
         checksum = hashlib.sha256()
         if file_info["compressed"]:
@@ -282,24 +281,13 @@ class LocalFileHandler(fh.FileHandler):
                 checksum.update(chunk)
                 yield chunk
         else:
-            LOG.debug("File not compressed -- compressing")
             # Generate checksum first
-            # total_read = 0
             for chunk in self.read_file(file=file_info["path_raw"]):
                 checksum.update(chunk)
-                # total_read += len(chunk)
-                # LOG.debug(total_read)
 
             # Then stream file chunks
-            # LOG.debug(
-            #     "Test: %s",
-            # )
             for chunk in fc.Compressor.compress_file(file=file_info["path_raw"]):
-                # LOG.debug("Chunk type: %s", type(chunk))
-                # checksum.update(chunk)
-                # break
                 yield chunk
 
-        # LOG.debug("Streaming file finished.")
         # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()

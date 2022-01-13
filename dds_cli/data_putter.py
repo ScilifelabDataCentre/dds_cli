@@ -198,9 +198,10 @@ class DataPutter(base.DDSBaseClass):
                 attempted_method=self.method, message="DataPutter attempting unauthorized method."
             )
 
-        # Get keys required for put
+        # Get info required for put
+        self.sensitive, public_key = self.__get_project_info()
+        self.keys = (None, public_key)
         self.s3connector = self.__get_safespring_keys()
-        self.keys = self.get_project_keys()
 
         # Start file prep progress
         with Progress(
@@ -241,6 +242,40 @@ class DataPutter(base.DDSBaseClass):
             raise exceptions.UploadError("No data to upload.")
 
     # Private methods #################### Private methods #
+    def __get_project_info(self):
+        """ """
+        try:
+            response = requests.get(
+                DDSEndpoint.PROJ_PUBLIC,
+                params={"project": self.project},
+                headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
+            )
+        except requests.exceptions.RequestException as err:
+            LOG.fatal(str(err))
+            raise exceptions.ApiRequestError(message=str(err))
+
+        if not response.ok:
+            message = "Failed getting required project information from API."
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
+
+        response_json = dds_cli.utils.get_json_response(response=response)
+        if "sensitive" not in response_json:
+            raise exceptions.ApiResponseError(
+                message="No information regarding project sensitivity."
+            )
+        sensitive = response_json.get("sensitive")
+        public = response_json.get("public")
+        if sensitive and not public:
+            raise exceptions.ApiResponseError(
+                "Public project key required to deliver data within sensitive projects."
+            )
+
+        return sensitive, public
+
     def __get_safespring_keys(self):
         """Get safespring keys."""
         return s3.S3Connector(project_id=self.project, token=self.token)
@@ -276,7 +311,7 @@ class DataPutter(base.DDSBaseClass):
             if not file_info["compressed"]  # or no_compression -- TODO
             else self.filehandler.stream_raw_data
         )
-        streamed_chunks = stream_function(file=file, progress=progress)
+        streamed_chunks = stream_function(file=file)
 
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:

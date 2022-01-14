@@ -283,6 +283,80 @@ class DataPutter(base.DDSBaseClass):
         return s3.S3Connector(project_id=self.project, token=self.token)
 
     # Public methods ###################### Public methods #
+    def stage_nonsensitive(self, file, progress, task):
+        file_info = self.filehandler.data[file]
+        # Perform staging
+        try:
+            if file_info["compressed"]:  # TODO: or no_compression
+                # TODO: Add spinner?
+                # Copy file and presever metadata
+                shutil.copy2(src=file_info["path_raw"], dst=file_info["path_processed"])
+            else:
+                # Progress bar for processing
+                progress.reset(
+                    task,
+                    description=txt.TextHandler.task_name(file=file, step="stage"),
+                    total=file_info["size_raw"],
+                    visible=not self.silent,
+                )
+                streamed_chunks = self.filehandler.stream_compressed_data(file=file)
+                self.filehandler.save_streamed_chunks(
+                    chunks=streamed_chunks,
+                    outfile=file_info["path_processed"],
+                    progress=(progress, task),
+                )
+                self.filehandler.data[file]["size_processed"] = (
+                    file_info["path_processed"].stat().st_size
+                )
+        except (OSError, TypeError, FileExistsError) as err:
+            LOG.warning(err)
+            raise exceptions.StagingError(err)
+
+    def stage_sensitive(self, file, progress, task):
+        file_info = self.filehandler.data[file]
+        # Perform compression/encryption
+        try:
+            if file_info["compressed"]:  # TODO: or no_compression
+                # TODO: Add spinner?
+                streamed_chunks = self.filehandler.stream_raw_data(file=file)
+            else:
+                streamed_chunks = self.filehandler.stream_compressed_data(file=file)
+
+            # Stream the chunks into the encryptor to save the encrypted chunks
+            with fe.Encryptor(project_keys=self.keys) as encryptor:
+
+                # Encrypt and save chunks
+                encryptor.encrypt_filechunks(
+                    chunks=streamed_chunks,
+                    outfile=file_info["path_processed"],
+                    progress=(progress, task),
+                )
+
+                # Get hex version of public key -- saved in db
+                file_public_key = encryptor.get_public_component_hex(
+                    private_key=encryptor.my_private
+                )
+                salt = encryptor.salt
+
+                # Update file info incl size, public key, salt
+                self.filehandler.data[file]["public_key"] = file_public_key
+                self.filehandler.data[file]["salt"] = salt
+                self.filehandler.data[file]["size_processed"] = (
+                    file_info["path_processed"].stat().st_size
+                )
+        except (
+            OSError,
+            TypeError,
+            FileExistsError,
+            InterruptedError,
+        ) as err:  # TODO: Check which exceptions
+            LOG.exception(err)
+            raise exceptions.ProcessingError(err)
+
+        LOG.debug(
+            f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
+        )
+
     @verify_proceed
     @subpath_required
     def stage_and_upload(self, file, progress, task):
@@ -291,33 +365,18 @@ class DataPutter(base.DDSBaseClass):
         file_info = self.filehandler.data[file]
 
         # Handle non-sensitive project data
-        if not self.sensitive:
-            # Perform staging
-            try:
-                if file_info["compressed"]:  # TODO: or no_compression
-                    # TODO: Add spinner?
-                    # Copy file and presever metadata
-                    shutil.copy2(src=file_info["path_raw"], dst=file_info["path_processed"])
-                else:
-                    # Progress bar for processing
-                    progress.reset(
-                        task,
-                        description=txt.TextHandler.task_name(file=file, step="stage"),
-                        total=file_info["size_raw"],
-                        visible=not self.silent,
-                    )
-                    streamed_chunks = self.filehandler.stream_compressed_data(file=file)
-                    self.filehandler.save_streamed_chunks(
-                        chunks=streamed_chunks,
-                        outfile=file_info["path_processed"],
-                        progress=(progress, task),
-                    )
-                    self.filehandler.data[file]["size_processed"] = (
-                        file_info["path_processed"].stat().st_size
-                    )
-            except (OSError, TypeError, FileExistsError) as err:
-                LOG.warning(err)
-                raise exceptions.StagingError(err)
+        if self.sensitive:
+            self.stage_sensitive(file=file, progress=progress, task=task)
+
+            # Progress bar for processing
+            progress.reset(
+                task,
+                description=txt.TextHandler.task_name(file=file, step="encrypt"),
+                total=file_info["size_raw"],
+                visible=not self.silent,
+            )
+        else:
+            self.stage_nonsensitive(file=file, progress=progress, task=task)
 
             # Update progress bar for upload
             progress.reset(
@@ -329,119 +388,29 @@ class DataPutter(base.DDSBaseClass):
                 step="put",
             )
 
-            # Perform upload
-            try:
-                self.put(file=file, progress=progress, task=task)
-            except (
-                botocore.client.ClientError,
-                boto3.exceptions.Boto3Error,
-                botocore.exceptions.BotoCoreError,
-                FileNotFoundError,
-                TypeError,
-            ) as err:
-                LOG.exception(err)
-                raise exceptions.UploadError(err)
+        # Perform upload
+        try:
+            self.put(file=file, progress=progress, task=task)
+        except (
+            botocore.client.ClientError,
+            boto3.exceptions.Boto3Error,
+            botocore.exceptions.BotoCoreError,
+            FileNotFoundError,
+            TypeError,
+        ) as err:
+            LOG.exception(err)
+            raise exceptions.UploadError(err)
 
-            # Perform database update
-            try:
-                self.add_file_db(file=file)
-            except (exceptions.DatabaseUpdateError, exceptions.StatusError) as err:
-                LOG.exception(err)
-                raise
+        # Perform database update
+        try:
+            self.add_file_db(file=file)
+        except (exceptions.DatabaseUpdateError, exceptions.StatusError) as err:
+            LOG.exception(err)
+            raise
 
-            LOG.info(f"File successfully uploaded and added to the database: {file}")
+        LOG.info(f"File successfully uploaded and added to the database: {file}")
 
-            # Delete temporary processed file locally
-            dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
-
-    @verify_proceed
-    @subpath_required
-    def protect_and_upload(self, file, progress, task):
-        """Process and upload the file while handling the progress bars."""
-        # Info on current file
-        file_info = self.filehandler.data[file]
-
-        # Crypto info
-        file_public_key = ""
-        salt = ""
-
-        # Progress bar for processing
-        progress.reset(
-            description=txt.TextHandler.task_name(file=file, step="encrypt"),
-            total=file_info["size_raw"],
-            visible=not self.silent,
-        )
-
-        # Handle sensitive project data
-        if self.sensitive:
-            # Perform compression/encryption
-            try:
-                if file_info["compressed"]:  # TODO: or no_compression
-                    # TODO: Add spinner?
-                    streamed_chunks = self.filehandler.stream_raw_data(file=file)
-                else:
-                    streamed_chunks = self.filehandler.stream_compressed_data(file=file)
-
-                # Stream the chunks into the encryptor to save the encrypted chunks
-                with fe.Encryptor(project_keys=self.keys) as encryptor:
-
-                    # Encrypt and save chunks
-                    saved, message = encryptor.encrypt_filechunks(
-                        chunks=streamed_chunks,
-                        outfile=file_info["path_processed"],
-                        progress=(progress, task),
-                    )
-
-                    # Get hex version of public key -- saved in db
-                    file_public_key = encryptor.get_public_component_hex(
-                        private_key=encryptor.my_private
-                    )
-                    salt = encryptor.salt
-
-                    # Update file info incl size, public key, salt
-                    self.filehandler.data[file]["public_key"] = file_public_key
-                    self.filehandler.data[file]["salt"] = salt
-                    self.filehandler.data[file]["size_processed"] = (
-                        file_info["path_processed"].stat().st_size
-                    )
-            except (OSError, TypeError, FileExistsError) as err:  # TODO: Check which exceptions
-                LOG.exception(err)
-                raise exceptions.ProcessingError(err)
-
-            LOG.debug(
-                f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
-            )
-
-            # Update progress bar for upload
-            progress.reset(
-                task,
-                description=txt.TextHandler.task_name(file=file, step="put"),
-                total=self.filehandler.data[file]["size_processed"],
-                step="put",
-            )
-
-            # Perform upload
-            try:
-                self.put(file=file, progress=progress, task=task)
-            except (
-                botocore.client.ClientError,
-                boto3.exceptions.Boto3Error,
-                botocore.exceptions.BotoCoreError,
-                FileNotFoundError,
-                TypeError,
-            ) as err:
-                LOG.exception(err)
-                raise exceptions.UploadError(err)
-
-            # Perform database update
-            try:
-                self.add_file_db(file=file)
-            except (exceptions.DatabaseUpdateError, exceptions.StatusError) as err:
-                LOG.exception(err)
-                raise
-
-            LOG.info(f"File successfully uploaded and added to the database: {file}")
-
+        # Delete temporary processed file locally
         dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
     @update_status

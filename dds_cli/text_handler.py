@@ -68,7 +68,7 @@ class TextHandler(StringFormat):
         # Different symbols to the left depending on current process
         if dds_cli.dds_on_legacy_console:
             symbols = {
-                "prepare": "[bold]prepare",
+                "stage": "[bold]stage",
                 "encrypt": "[bold]encrypt",
                 "put": "[bold]put",
                 "get": "[bold]get",
@@ -76,7 +76,7 @@ class TextHandler(StringFormat):
             }
         else:
             symbols = {
-                "prepare": ":hourglass:",
+                "stage": ":hourglass:",
                 "encrypt": ":lock:",
                 "put": ":arrow_up:",
                 "get": ":arrow_down:",

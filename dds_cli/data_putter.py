@@ -9,6 +9,7 @@ import concurrent.futures
 import itertools
 import logging
 import pathlib
+import shutil
 
 # Installed
 import boto3
@@ -16,6 +17,7 @@ import botocore
 import requests
 from rich.progress import Progress, SpinnerColumn, BarColumn
 import simplejson
+import http
 
 # Own modules
 from dds_cli import base
@@ -95,7 +97,7 @@ def put(
                     LOG.debug(f"Starting: {file}")
                     upload_threads[
                         texec.submit(
-                            putter.protect_and_upload,
+                            putter.prepare_and_upload,
                             file=file,
                             progress=progress,
                         )
@@ -137,7 +139,7 @@ def put(
                             LOG.debug(f"Starting: {next_file}")
                             upload_threads[
                                 texec.submit(
-                                    putter.protect_and_upload,
+                                    putter.prepare_and_upload,
                                     file=next_file,
                                     progress=progress,
                                 )
@@ -281,6 +283,82 @@ class DataPutter(base.DDSBaseClass):
         return s3.S3Connector(project_id=self.project, token=self.token)
 
     # Public methods ###################### Public methods #
+    def prepare_and_upload(self, file, progress):
+        """Prepare data and perform upload."""
+        # Error catching
+        all_ok = False
+        saved = False
+        message = ""
+        # Info on current file
+        file_info = self.filehandler.data[file]
+
+        # Handle non-sensitive project data
+        if not self.sensitive:
+            if file_info["compressed"]:
+                # TODO: Add spinner?
+                try:
+                    # Copy file and presever metadata
+                    shutil.copy2(src=file_info["path_raw"], dst=file_info["path_processed"])
+                except OSError as err:
+                    LOG.exception(err)  # TODO: Add exception or error message
+                else:
+                    saved = True
+            else:  # TODO: or no_compression
+                # Progress bar for processing
+                task = progress.add_task(
+                    description=txt.TextHandler.task_name(file=file, step="stage"),
+                    total=file_info["size_raw"],
+                    visible=not self.silent,
+                )
+                streamed_chunks = self.filehandler.stream_compressed_data(file=file)
+                try:
+                    self.filehandler.save_streamed_chunks(
+                        chunks=streamed_chunks, outfile=file_info["path_processed"]
+                    )
+                except (OSError, TypeError, FileExistsError) as err:
+                    LOG.exception(err)  # TODO: Add exception or error message
+                else:
+                    saved = True
+
+                self.filehandler.data[file]["size_processed"] = (
+                    file_info["path_processed"].stat().st_size
+                )
+
+            if saved:
+                # Update progress bar for upload
+                progress.reset(
+                    task,
+                    description=txt.TextHandler.task_name(file=file, step="put"),
+                    total=self.filehandler.data[file].get(
+                        "size_processed", self.filehandler.data[file].get("size_raw")
+                    ),
+                    step="put",
+                )
+
+                # Perform upload
+                file_uploaded, message = self.put(file=file, progress=progress, task=task)
+
+                # Perform db update
+                if file_uploaded:
+                    db_updated, message = self.add_file_db(file=file)
+
+                    if db_updated:
+                        all_ok = True
+                        LOG.debug(f"File successfully uploaded and added to the database: {file}")
+
+            if not saved or all_ok:
+                # Delete temporary processed file locally
+                LOG.debug(
+                    f"Deleting file {file_info['path_processed']} - "
+                    f"exists: {file_info['path_processed'].exists()}"
+                )
+                dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
+
+        # Remove progress bar task
+        progress.remove_task(task)
+
+        return all_ok, message
+
     @verify_proceed
     @subpath_required
     def protect_and_upload(self, file, progress):
@@ -429,10 +507,10 @@ class DataPutter(base.DDSBaseClass):
             "name_in_bucket": str(fileinfo["path_remote"]),
             "subpath": str(fileinfo["subpath"]),
             "size": fileinfo["size_raw"],
-            "size_processed": fileinfo["size_processed"],
+            "size_processed": fileinfo.get("size_processed"),
             "compressed": not fileinfo["compressed"],
-            "salt": fileinfo["salt"],
-            "public_key": fileinfo["public_key"],
+            "salt": fileinfo.get("salt"),
+            "public_key": fileinfo.get("public_key"),
             "checksum": fileinfo["checksum"],
         }
 

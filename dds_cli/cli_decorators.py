@@ -53,7 +53,12 @@ def verify_proceed(func):
         LOG.debug(f"File {file} started {func.__name__}")
 
         # Run function
-        ok_to_proceed, message = func(self, file=file, *args, **kwargs)
+        try:
+            ok_to_proceed, message = func(self, file=file, *args, **kwargs)
+        except OSError as err:
+            # copy2
+            LOG.exception(err)
+            raise
 
         # Cancel file(s) if something failed
         if not ok_to_proceed:

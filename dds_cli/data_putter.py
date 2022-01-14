@@ -283,12 +283,15 @@ class DataPutter(base.DDSBaseClass):
         return s3.S3Connector(project_id=self.project, token=self.token)
 
     # Public methods ###################### Public methods #
+    @verify_proceed
+    @subpath_required
     def prepare_and_upload(self, file, progress):
         """Prepare data and perform upload."""
         # Error catching
         all_ok = False
         saved = False
         message = ""
+
         # Info on current file
         file_info = self.filehandler.data[file]
 

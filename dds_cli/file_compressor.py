@@ -98,15 +98,8 @@ class Compressor:
                 # Initiate a Zstandard compressor
                 cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
 
-                # total_read = 0.0
                 # Compress file chunk by chunk while reading
                 with cctzx.stream_reader(infile) as compressor:
-                    # while True:
-                    #     chunk = compressor.read(chunk_size)
-                    #     LOG.debug(type(chunk))
-                    #     if not chunk:
-                    #         break
-                    #     yield
                     for chunk in iter(lambda: compressor.read(chunk_size), b""):
                         yield chunk
         except Exception as err:

@@ -99,7 +99,11 @@ class LocalFileHandler(fh.FileHandler):
 
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
-        """Read file in chunk_size sized chunks."""
+        """Read file in chunk_size sized chunks.
+
+        Raises:
+        - OSError
+        """
 
         try:
             with file.open(mode="rb") as infile:

@@ -54,8 +54,7 @@ class TextHandler(StringFormat):
 
     @staticmethod
     def task_name(file, step="", max_len=30):
-        """Generate display name for progress task"""
-
+        """Generate display name for progress task."""
         task_name = file
 
         # Keep full file name in progress if short otherwise add ... in the beginning

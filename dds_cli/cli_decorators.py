@@ -19,6 +19,7 @@ import dds_cli
 import dds_cli.utils
 import dds_cli.file_handler
 from dds_cli import exceptions
+from dds_cli import text_handler as txt
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -56,10 +57,17 @@ def verify_proceed(func):
         self.status[file]["started"] = True
         LOG.debug(f"File {file} started {func.__name__}")
 
+        # Progress bar for processing
+        task = kwargs["progress"].add_task(
+            description=txt.TextHandler.task_name(file=file),
+            total=self.filehandler.data[file]["size_raw"],
+            visible=False,
+        )
+
         # Run function
         ok_to_proceed = False
         try:
-            func(self, file=file, *args, **kwargs)
+            func(self, file=file, task=task, *args, **kwargs)
         except (
             exceptions.StagingError,
             exceptions.UploadError,
@@ -84,6 +92,10 @@ def verify_proceed(func):
             dds_cli.file_handler.FileHandler.append_errors_to_file(
                 self.failed_delivery_log, self.status[file]
             )
+        else:
+            ok_to_proceed = True
+
+        kwargs["progress"].remove_task(task)
 
         return ok_to_proceed
 

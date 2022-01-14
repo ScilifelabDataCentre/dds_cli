@@ -301,8 +301,9 @@ class LocalFileHandler(fh.FileHandler):
         # Update checksum in file info
         self.data[file]["checksum"] = checksum.hexdigest()
 
-    def save_streamed_chunks(self, chunks, outfile):
+    def save_streamed_chunks(self, chunks, outfile, progress):
         """Save chunks to file."""
         with outfile.open(mode="wb+") as out:
             for chunk in chunks:
                 out.write(chunk)
+                progress[0].advance(progress[1], FileSegment.SEGMENT_SIZE_RAW)

@@ -285,7 +285,7 @@ class DataPutter(base.DDSBaseClass):
     # Public methods ###################### Public methods #
     @verify_proceed
     @subpath_required
-    def stage_and_upload(self, file, progress):
+    def stage_and_upload(self, file, progress, task):
         """Prepare data and perform upload."""
         # Info on current file
         file_info = self.filehandler.data[file]
@@ -300,14 +300,17 @@ class DataPutter(base.DDSBaseClass):
                     shutil.copy2(src=file_info["path_raw"], dst=file_info["path_processed"])
                 else:
                     # Progress bar for processing
-                    task = progress.add_task(
+                    progress.reset(
+                        task,
                         description=txt.TextHandler.task_name(file=file, step="stage"),
                         total=file_info["size_raw"],
                         visible=not self.silent,
                     )
                     streamed_chunks = self.filehandler.stream_compressed_data(file=file)
                     self.filehandler.save_streamed_chunks(
-                        chunks=streamed_chunks, outfile=file_info["path_processed"]
+                        chunks=streamed_chunks,
+                        outfile=file_info["path_processed"],
+                        progress=(progress, task),
                     )
                     self.filehandler.data[file]["size_processed"] = (
                         file_info["path_processed"].stat().st_size
@@ -325,6 +328,7 @@ class DataPutter(base.DDSBaseClass):
                 ),
                 step="put",
             )
+
             # Perform upload
             try:
                 self.put(file=file, progress=progress, task=task)

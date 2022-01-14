@@ -97,7 +97,7 @@ def put(
                     LOG.debug(f"Starting: {file}")
                     upload_threads[
                         texec.submit(
-                            putter.prepare_and_upload,
+                            putter.stage_and_upload,
                             file=file,
                             progress=progress,
                         )
@@ -139,7 +139,7 @@ def put(
                             LOG.debug(f"Starting: {next_file}")
                             upload_threads[
                                 texec.submit(
-                                    putter.prepare_and_upload,
+                                    putter.stage_and_upload,
                                     file=next_file,
                                     progress=progress,
                                 )
@@ -285,82 +285,70 @@ class DataPutter(base.DDSBaseClass):
     # Public methods ###################### Public methods #
     @verify_proceed
     @subpath_required
-    def prepare_and_upload(self, file, progress):
+    def stage_and_upload(self, file, progress):
         """Prepare data and perform upload."""
-        # Error catching
-        all_ok = False
-        saved = False
-        message = ""
-
         # Info on current file
         file_info = self.filehandler.data[file]
 
         # Handle non-sensitive project data
         if not self.sensitive:
-            if file_info["compressed"]:
-                # TODO: Add spinner?
-                try:
+            # Perform staging
+            try:
+                if file_info["compressed"]:  # TODO: or no_compression
+                    # TODO: Add spinner?
                     # Copy file and presever metadata
                     shutil.copy2(src=file_info["path_raw"], dst=file_info["path_processed"])
-                except OSError as err:
-                    LOG.exception(err)  # TODO: Add exception or error message
                 else:
-                    saved = True
-            else:  # TODO: or no_compression
-                # Progress bar for processing
-                task = progress.add_task(
-                    description=txt.TextHandler.task_name(file=file, step="stage"),
-                    total=file_info["size_raw"],
-                    visible=not self.silent,
-                )
-                streamed_chunks = self.filehandler.stream_compressed_data(file=file)
-                try:
+                    # Progress bar for processing
+                    task = progress.add_task(
+                        description=txt.TextHandler.task_name(file=file, step="stage"),
+                        total=file_info["size_raw"],
+                        visible=not self.silent,
+                    )
+                    streamed_chunks = self.filehandler.stream_compressed_data(file=file)
                     self.filehandler.save_streamed_chunks(
                         chunks=streamed_chunks, outfile=file_info["path_processed"]
                     )
-                except (OSError, TypeError, FileExistsError) as err:
-                    LOG.exception(err)  # TODO: Add exception or error message
-                else:
-                    saved = True
+                    self.filehandler.data[file]["size_processed"] = (
+                        file_info["path_processed"].stat().st_size
+                    )
+            except (OSError, TypeError, FileExistsError) as err:
+                LOG.warning(err)
+                raise exceptions.StagingError(err)
 
-                self.filehandler.data[file]["size_processed"] = (
-                    file_info["path_processed"].stat().st_size
-                )
+            # Update progress bar for upload
+            progress.reset(
+                task,
+                description=txt.TextHandler.task_name(file=file, step="put"),
+                total=self.filehandler.data[file].get(
+                    "size_processed", self.filehandler.data[file].get("size_raw")
+                ),
+                step="put",
+            )
+            # Perform upload
+            try:
+                self.put(file=file, progress=progress, task=task)
+            except (
+                botocore.client.ClientError,
+                boto3.exceptions.Boto3Error,
+                botocore.exceptions.BotoCoreError,
+                FileNotFoundError,
+                TypeError,
+            ) as err:
+                LOG.exception(err)
+                raise exceptions.UploadError(err)
 
-            if saved:
-                # Update progress bar for upload
-                progress.reset(
-                    task,
-                    description=txt.TextHandler.task_name(file=file, step="put"),
-                    total=self.filehandler.data[file].get(
-                        "size_processed", self.filehandler.data[file].get("size_raw")
-                    ),
-                    step="put",
-                )
+            # Perform database update
+            try:
+                self.add_file_db(file=file)
+            except (exceptions.DatabaseUpdateError, exceptions.StatusError) as err:
+                LOG.exception(err)
+                raise
+            else:
+                LOG.info(f"File successfully uploaded and added to the database: {file}")
 
-                # Perform upload
-                file_uploaded, message = self.put(file=file, progress=progress, task=task)
-
-                # Perform db update
-                if file_uploaded:
-                    db_updated, message = self.add_file_db(file=file)
-
-                    if db_updated:
-                        all_ok = True
-                        LOG.debug(f"File successfully uploaded and added to the database: {file}")
-
-            if not saved or all_ok:
-                # Delete temporary processed file locally
-                LOG.debug(
-                    f"Deleting file {file_info['path_processed']} - "
-                    f"exists: {file_info['path_processed'].exists()}"
-                )
-                dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
-
-        # Remove progress bar task
-        progress.remove_task(task)
-
-        return all_ok, message
+            # Delete temporary processed file locally
+            dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
     @verify_proceed
     @subpath_required
@@ -454,56 +442,35 @@ class DataPutter(base.DDSBaseClass):
     @update_status
     def put(self, file, progress, task):
         """Upload files to the cloud."""
-        # Variables
-        uploaded = False
-        error = ""
-
         # File info
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
 
-        try:
-            with self.s3connector as conn:
-                # Upload file
-                conn.resource.meta.client.upload_file(
-                    Filename=file_local,
-                    Bucket=conn.bucketname,
-                    Key=file_remote,
-                    ExtraArgs={
-                        "ACL": "private",  # Access control list
-                        "CacheControl": "no-store",  # Don't store cache
-                    },
-                    Callback=status.ProgressPercentage(
-                        progress=progress,
-                        task=task,
-                    )
-                    if task is not None
-                    else None,
+        with self.s3connector as conn:
+            # Upload file
+            conn.resource.meta.client.upload_file(
+                Filename=file_local,
+                Bucket=conn.bucketname,
+                Key=file_remote,
+                ExtraArgs={
+                    "ACL": "private",  # Access control list
+                    "CacheControl": "no-store",  # Don't store cache
+                },
+                Callback=status.ProgressPercentage(
+                    progress=progress,
+                    task=task,
                 )
-        except (
-            botocore.client.ClientError,
-            boto3.exceptions.Boto3Error,
-            botocore.exceptions.BotoCoreError,
-            FileNotFoundError,
-            TypeError,
-        ) as err:
-            error = f"S3 upload of file '{file}' failed: {err}"
-            LOG.exception(f"{file}: {err}")
-        else:
-            uploaded = True
-
-        return uploaded, error
+                if task is not None
+                else None,
+            )
 
     @update_status
     def add_file_db(self, file):
         """Make API request to add file to DB."""
-        # Variables
-        added_to_db = False
-        error = ""
-
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
-        LOG.debug(f"Fileinfo: {fileinfo}")
+
+        # Request params
         params = {"project": self.project}
         file_info = {
             "name": file,
@@ -528,19 +495,10 @@ class DataPutter(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            error = str(err)
-            LOG.warning(error)
-        else:
-            # Error if failed
-            if not response.ok:
-                error = f"Failed to add file '{file}' to database: {response.text}"
-                LOG.exception(error)
-                return added_to_db, error
+            raise exceptions.DatabaseUpdateError(err)
 
-            try:
-                added_to_db, error = (True, response.json().get("message"))
-            except simplejson.JSONDecodeError as err:
-                error = str(err)
-                LOG.warning(error)
-
-        return added_to_db, error
+        # Error if failed
+        if not response.ok:
+            raise exceptions.DatabaseUpdateError(
+                f"Failed to add file '{file}' to database: {response.text}"
+            )

@@ -11,11 +11,14 @@ import pathlib
 
 # Installed
 from rich.progress import Progress, SpinnerColumn
+import botocore
+import boto3
 
 # Own modules
 import dds_cli
 import dds_cli.utils
 import dds_cli.file_handler
+from dds_cli import exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -29,7 +32,8 @@ LOG = logging.getLogger(__name__)
 
 
 def verify_proceed(func):
-    """Decorator for verifying that the file is not cancelled.
+    """Verify that the file is not cancelled.
+
     Also cancels the upload of all non-started files if break-on-fail."""
 
     @functools.wraps(func)
@@ -53,17 +57,18 @@ def verify_proceed(func):
         LOG.debug(f"File {file} started {func.__name__}")
 
         # Run function
+        ok_to_proceed = False
         try:
-            ok_to_proceed, message = func(self, file=file, *args, **kwargs)
-        except OSError as err:
-            # copy2
-            LOG.exception(err)
-            raise
-
-        # Cancel file(s) if something failed
-        if not ok_to_proceed:
-            LOG.warning(f"{func.__name__} failed: {message}")
-            self.status[file].update({"cancel": True, "message": message})
+            func(self, file=file, *args, **kwargs)
+        except (
+            exceptions.StagingError,
+            exceptions.UploadError,
+            exceptions.DatabaseUpdateError,
+        ) as err:
+            err_info = str(err)
+            # Cancel file(s) if something failed
+            LOG.warning(f"{func.__name__} failed: {err_info}")
+            self.status[file].update({"cancel": True, "message": err_info})
             if self.status[file].get("failed_op") is None:
                 self.status[file]["failed_op"] = "crypto"
 
@@ -79,43 +84,49 @@ def verify_proceed(func):
             dds_cli.file_handler.FileHandler.append_errors_to_file(
                 self.failed_delivery_log, self.status[file]
             )
+
         return ok_to_proceed
 
     return wrapped
 
 
 def update_status(func):
-    """Decorator for updating the status of files."""
+    """Update the status of files."""
 
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
 
         # TODO (ina): add processing?
         if func.__name__ not in ["put", "add_file_db", "get", "update_db"]:
-            raise Exception(f"The function {func.__name__} cannot be used with this decorator.")
+            raise exceptions.StatusError(
+                f"The function {func.__name__} cannot be used with this decorator."
+            )
         if func.__name__ not in self.status[file]:
-            raise Exception(f"No status found for function {func.__name__}.")
+            raise exceptions.StatusError(f"No status found for function {func.__name__}.")
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
         LOG.debug(f"File {file} status updated to {func.__name__}: started")
 
         # Run function
-        ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
-
-        # ok_to_continue = False
-        if not ok_to_continue:
-            # Save info about which operation failed
-
+        try:
+            func(self, file=file, *args, **kwargs)
+        except (
+            botocore.client.ClientError,
+            boto3.exceptions.Boto3Error,
+            botocore.exceptions.BotoCoreError,
+            FileNotFoundError,
+            TypeError,
+            exceptions.DatabaseUpdateError,
+        ) as err:
+            # Save info about which operation failed∂
             self.status[file]["failed_op"] = func.__name__
-            LOG.warning(f"{func.__name__} failed: {message}")
+            LOG.warning(f"{func.__name__} failed: {str(err)}")
+            raise
 
-        else:
-            # Update status to done
-            self.status[file][func.__name__].update({"done": True})
-            LOG.debug(f"File {file} status updated to {func.__name__}: done")
-
-        return ok_to_continue, message
+        # Update status to done
+        self.status[file][func.__name__].update({"done": True})
+        LOG.debug(f"File {file} status updated to {func.__name__}: done")
 
     return wrapped
 
@@ -136,9 +147,8 @@ def subpath_required(func):
             try:
                 full_subpath.mkdir(parents=True, exist_ok=True)
             except OSError as err:
-                return False, str(err)
-
-            LOG.debug(f"New directory created: {full_subpath}")
+                raise exceptions.StagingError(err)
+            LOG.info(f"New directory created: {full_subpath}")
 
         return func(self, file=file, *args, **kwargs)
 

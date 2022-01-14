@@ -27,6 +27,14 @@ class InvalidMethodError(Exception):
         return f"{self.message}: {self.method}"
 
 
+class StagingError(Exception):
+    """ """
+
+
+class StatusError(Exception):
+    """ """
+
+
 class DDSCLIException(click.ClickException):
     """Base exception for click in DDS."""
 
@@ -87,6 +95,10 @@ class UploadError(Exception):
 
 class DownloadError(Exception):
     """Errors relating to file download."""
+
+
+class DatabaseUpdateError(Exception):
+    """ """
 
 
 class S3KeyLengthExceeded(UploadError):

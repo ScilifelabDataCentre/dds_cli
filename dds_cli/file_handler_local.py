@@ -104,13 +104,9 @@ class LocalFileHandler(fh.FileHandler):
         Raises:
         - OSError
         """
-
-        try:
-            with file.open(mode="rb") as infile:
-                for chunk in iter(lambda: infile.read(chunk_size), b""):
-                    yield chunk
-        except OSError as err:
-            LOG.warning(str(err))
+        with file.open(mode="rb") as infile:
+            for chunk in iter(lambda: infile.read(chunk_size), b""):
+                yield chunk
 
     # Private methods ############ Private methods #
     def __collect_file_info_local(self, all_paths, folder=pathlib.Path(""), task_name=""):

@@ -31,6 +31,10 @@ class StagingError(Exception):
     """ """
 
 
+class ProcessingError(Exception):
+    """ """
+
+
 class StatusError(Exception):
     """ """
 

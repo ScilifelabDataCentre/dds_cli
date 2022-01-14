@@ -348,21 +348,16 @@ class DataPutter(base.DDSBaseClass):
             except (exceptions.DatabaseUpdateError, exceptions.StatusError) as err:
                 LOG.exception(err)
                 raise
-            else:
-                LOG.info(f"File successfully uploaded and added to the database: {file}")
+
+            LOG.info(f"File successfully uploaded and added to the database: {file}")
 
             # Delete temporary processed file locally
             dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
     @verify_proceed
     @subpath_required
-    def protect_and_upload(self, file, progress):
+    def protect_and_upload(self, file, progress, task):
         """Process and upload the file while handling the progress bars."""
-        # Error catching
-        all_ok = False
-        saved = False
-        message = ""
-
         # Info on current file
         file_info = self.filehandler.data[file]
 
@@ -371,46 +366,52 @@ class DataPutter(base.DDSBaseClass):
         salt = ""
 
         # Progress bar for processing
-        task_step = "encrypt" if self.sensitive else "prepare"
-        task = progress.add_task(
-            description=txt.TextHandler.task_name(file=file, step=task_step),
+        progress.reset(
+            description=txt.TextHandler.task_name(file=file, step="encrypt"),
             total=file_info["size_raw"],
             visible=not self.silent,
         )
 
-        # Stream chunks from file, either while compressing or reading
-        stream_function = (
-            self.filehandler.stream_compressed_data
-            if not file_info["compressed"]  # or no_compression -- TODO
-            else self.filehandler.stream_raw_data
-        )
-        streamed_chunks = stream_function(file=file)
+        # Handle sensitive project data
+        if self.sensitive:
+            # Perform compression/encryption
+            try:
+                if file_info["compressed"]:  # TODO: or no_compression
+                    # TODO: Add spinner?
+                    streamed_chunks = self.filehandler.stream_raw_data(file=file)
+                else:
+                    streamed_chunks = self.filehandler.stream_compressed_data(file=file)
 
-        # Stream the chunks into the encryptor to save the encrypted chunks
-        with fe.Encryptor(project_keys=self.keys) as encryptor:
+                # Stream the chunks into the encryptor to save the encrypted chunks
+                with fe.Encryptor(project_keys=self.keys) as encryptor:
 
-            # Encrypt and save chunks
-            saved, message = encryptor.encrypt_filechunks(
-                chunks=streamed_chunks,
-                outfile=file_info["path_processed"],
-                progress=(progress, task),
-            )
+                    # Encrypt and save chunks
+                    saved, message = encryptor.encrypt_filechunks(
+                        chunks=streamed_chunks,
+                        outfile=file_info["path_processed"],
+                        progress=(progress, task),
+                    )
 
-            # Get hex version of public key -- saved in db
-            file_public_key = encryptor.get_public_component_hex(private_key=encryptor.my_private)
-            salt = encryptor.salt
+                    # Get hex version of public key -- saved in db
+                    file_public_key = encryptor.get_public_component_hex(
+                        private_key=encryptor.my_private
+                    )
+                    salt = encryptor.salt
 
-        LOG.debug(f"Updating file processed size: {file_info['path_processed']}")
+                    # Update file info incl size, public key, salt
+                    self.filehandler.data[file]["public_key"] = file_public_key
+                    self.filehandler.data[file]["salt"] = salt
+                    self.filehandler.data[file]["size_processed"] = (
+                        file_info["path_processed"].stat().st_size
+                    )
+            except (OSError, TypeError, FileExistsError) as err:  # TODO: Check which exceptions
+                LOG.exception(err)
+                raise exceptions.ProcessingError(err)
 
-        # Update file info incl size, public key, salt
-        self.filehandler.data[file]["public_key"] = file_public_key
-        self.filehandler.data[file]["salt"] = salt
-        self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
-
-        if saved:
             LOG.debug(
                 f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
             )
+
             # Update progress bar for upload
             progress.reset(
                 task,
@@ -420,28 +421,28 @@ class DataPutter(base.DDSBaseClass):
             )
 
             # Perform upload
-            file_uploaded, message = self.put(file=file, progress=progress, task=task)
+            try:
+                self.put(file=file, progress=progress, task=task)
+            except (
+                botocore.client.ClientError,
+                boto3.exceptions.Boto3Error,
+                botocore.exceptions.BotoCoreError,
+                FileNotFoundError,
+                TypeError,
+            ) as err:
+                LOG.exception(err)
+                raise exceptions.UploadError(err)
 
-            # Perform db update
-            if file_uploaded:
-                db_updated, message = self.add_file_db(file=file)
+            # Perform database update
+            try:
+                self.add_file_db(file=file)
+            except (exceptions.DatabaseUpdateError, exceptions.StatusError) as err:
+                LOG.exception(err)
+                raise
 
-                if db_updated:
-                    all_ok = True
-                    LOG.debug(f"File successfully uploaded and added to the database: {file}")
+            LOG.info(f"File successfully uploaded and added to the database: {file}")
 
-        if not saved or all_ok:
-            # Delete temporary processed file locally
-            LOG.debug(
-                f"Deleting file {file_info['path_processed']} - "
-                f"exists: {file_info['path_processed'].exists()}"
-            )
-            dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
-
-        # Remove progress bar task
-        progress.remove_task(task)
-
-        return all_ok, message
+        dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
     @update_status
     def put(self, file, progress, task):

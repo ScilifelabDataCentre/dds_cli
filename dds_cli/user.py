@@ -99,12 +99,31 @@ class User:
                 message="Non-empty password needed to be able to authenticate."
             )
 
-        # Project passed in to add it to the token. Can be None.
+        send_new_code = rich.prompt.Confirm.ask(
+            "2FA code required to login. Would you like to request a new code to be sent to your email?"
+        )
+
+        if send_new_code:
+            # Request 2fa email token
+            try:
+                response = requests.get(
+                    dds_cli.DDSEndpoint.REQUEST_EMAIL_2FA,
+                    auth=(self.username, password),
+                    timeout=dds_cli.DDSEndpoint.TIMEOUT,
+                )
+            except requests.exceptions.RequestException as err:
+                raise exceptions.ApiRequestError(message=str(err)) from err
+
+            LOG.info("2FA code requested, please check your email.")
+
+        one_time_password = rich.prompt.Prompt.ask("2FA code from email: ")
+
         try:
             response = requests.get(
                 dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
                 auth=(self.username, password),
                 timeout=dds_cli.DDSEndpoint.TIMEOUT,
+                json={"HOTP": one_time_password},
             )
             response_json = response.json()
         except requests.exceptions.RequestException as err:

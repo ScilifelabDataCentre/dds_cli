@@ -100,7 +100,7 @@ class User:
             )
 
         send_new_code = rich.prompt.Confirm.ask(
-            "2FA code required to login. Would you like to request a new code to be sent to your email?"
+            "One-time authentication code required to login. Would you like to request a new code to be sent to your email?"
         )
 
         if send_new_code:
@@ -114,9 +114,26 @@ class User:
             except requests.exceptions.RequestException as err:
                 raise exceptions.ApiRequestError(message=str(err)) from err
 
-            LOG.info("2FA code requested, please check your email.")
+            LOG.info("Authentication one-time code requested, please check your email.")
+        else:
+            LOG.info("No new one-time code requested.")
 
-        one_time_password = rich.prompt.Prompt.ask("2FA code from email: ")
+        one_time_password = None
+        while one_time_password is None:
+            LOG.info("Please enter the one-time authentication code (leave empty to exit):")
+            token_entered = rich.prompt.Prompt.ask("Authentication one-time code")
+            if token_entered == "":
+                raise exceptions.AuthenticationError(
+                    message="Exited due to no one-time authentication code entered."
+                )
+
+            if not token_entered.isdigit():
+                LOG.info("Please enter a valid one-time code. It should consist of only digits.")
+                continue
+            if len(token_entered) != 8:
+                LOG.info("Please enter a valid one-time code. It should consist of 8 digits.")
+                continue
+            one_time_password = token_entered
 
         try:
             response = requests.get(

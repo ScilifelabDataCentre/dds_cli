@@ -42,12 +42,6 @@ class ProjectCreator(base.DDSBaseClass):
     # Public methods ###################### Public methods #
     def create_project(self, title, description, principal_investigator, sensitive, users_to_add):
         """Create project with title and description."""
-        # Variables
-        created = False
-        error = ""
-        created_project_id = ""
-        user_addition_statuses = {}
-
         # Submit request to API
         try:
             response = requests.post(
@@ -63,22 +57,16 @@ class ProjectCreator(base.DDSBaseClass):
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
-        else:
-            # Error if failed
-            if not response.ok:
-                error = f"{response.json().get('message')}"
-                LOG.error(error)
-                return created, created_project_id, user_addition_statuses, error
 
-            try:
-                created, created_project_id, user_addition_statuses, error = (
-                    True,
-                    response.json().get("project_id"),
-                    response.json().get("user_addition_statuses"),
-                    response.json().get("message"),
-                )
-            except simplejson.JSONDecodeError as err:
-                error = str(err)
-                LOG.warning(error)
+        # Error if failed
+        if not response.ok:
+            error = f"{response.json().get('message')}"
+            raise exceptions.ProjectCreationError(error)
 
-        return created, created_project_id, user_addition_statuses, error
+        # Get response info as json
+        try:
+            project_info = response.json()
+        except simplejson.JSONDecodeError as err:
+            raise exceptions.ApiResponseError(err)
+
+        return project_info.get("project_id"), project_info.get("user_addition_statuses")

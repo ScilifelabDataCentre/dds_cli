@@ -39,6 +39,10 @@ class StatusError(Exception):
     """ """
 
 
+class ProjectCreationError(Exception):
+    """ """
+
+
 class DDSCLIException(click.ClickException):
     """Base exception for click in DDS."""
 

@@ -598,27 +598,28 @@ def create(
                 if researcher:
                     emails_roles.extend([{"email": x, "role": "Researcher"} for x in researcher])
 
-            created, project_id, user_addition_messages, err = creator.create_project(
+            project_id, user_addition_messages = creator.create_project(
                 title=title,
                 description=description,
                 principal_investigator=principal_investigator,
                 sensitive=is_sensitive,
                 users_to_add=emails_roles,
             )
-            if created:
-                LOG.info(
-                    f"Project created with id: {project_id}",
-                )
-                if user_addition_messages:
-                    for msg in user_addition_messages:
-                        LOG.info(msg)
-                        LOG.info(
-                            "Any user shown as invited would need to be "
-                            "added to the project once the user has accepted "
-                            "the invitation and created an account in the system."
-                        )
+            LOG.info(
+                f"Project created with id: {project_id}",
+            )
+            if user_addition_messages:
+                for msg in user_addition_messages:
+                    LOG.info(msg)
+                    LOG.info(
+                        "Any user shown as invited would need to be "
+                        "added to the project once the user has accepted "
+                        "the invitation and created an account in the system."
+                    )
     except (
         dds_cli.exceptions.APIError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
     ) as err:

@@ -35,6 +35,8 @@ LOG = logging.getLogger(__name__)
 class AccountManager(dds_cli.base.DDSBaseClass):
     """Admin class for adding users, etc."""
 
+    allowed_methods = ["add", "delete", "revoke"]
+
     def __init__(
         self, username: str, authenticate: bool = True, method: str = "add", no_prompt: bool = False
     ):
@@ -45,7 +47,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         )
 
         # Only methods "add", "delete" and "revoke" can use the AccountManager class
-        if self.method not in ["add", "delete", "revoke"]:
+        if self.method not in self.allowed_methods:
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     def add_user(self, email, role, project):

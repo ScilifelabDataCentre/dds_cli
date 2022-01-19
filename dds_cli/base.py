@@ -20,7 +20,7 @@ import dds_cli.timestamp
 
 from dds_cli import (
     DDS_METHODS,
-    DDS_DIR_REQUIRED_METHODS,
+    STAGING_DIR_REQUIRED_METHODS,
     DDS_KEYS_REQUIRED_METHODS,
 )
 from dds_cli import DDSEndpoint
@@ -71,7 +71,7 @@ class DDSBaseClass:
             LOG.debug(f"Attempted operation: {self.method}")
 
             # Use user defined destination if any specified
-            if self.method in DDS_DIR_REQUIRED_METHODS:
+            if self.method in STAGING_DIR_REQUIRED_METHODS:
                 self.dds_directory = dds_cli.directory.DDSDirectory(
                     path=dds_directory
                     if dds_directory

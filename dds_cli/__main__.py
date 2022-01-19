@@ -92,7 +92,8 @@ dds_cli.utils.stderr_console.print(
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
 def dds_main(click_ctx, verbose, log_file, no_prompt):
-    """SciLifeLab Data Delivery System (DDS) command line interface.
+    """
+    SciLifeLab Data Delivery System (DDS) command line interface.
 
     Access token is saved in a .dds_cli_token file in the home directory.
     """
@@ -286,7 +287,8 @@ def auth_group_command(_):
 @username_option()
 @click.pass_obj
 def login(click_ctx, username):
-    """Renew the authentication token stored in the '.dds_cli_token' file.
+    """
+    Renew the authentication token stored in the '.dds_cli_token' file.
 
     Run this command before running the cli in a non interactive fashion as this enables the longest
     possible session time before a password needs to be entered again.

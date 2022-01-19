@@ -20,7 +20,7 @@ __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
 __all__ = [
     "DDS_METHODS",
-    "DDS_DIR_REQUIRED_METHODS",
+    "STAGING_DIR_REQUIRED_METHODS",
     "DDS_KEYS_REQUIRED_METHODS",
     "DDSEndpoint",
     "FileSegment",
@@ -36,7 +36,7 @@ __all__ = [
 DDS_METHODS = ["put", "get", "ls", "rm", "create", "add", "delete"]
 
 # Methods to which a directory created by DDS
-DDS_DIR_REQUIRED_METHODS = ["put", "get"]
+STAGING_DIR_REQUIRED_METHODS = ["put", "get"]
 
 # Methods which require a project ID
 DDS_KEYS_REQUIRED_METHODS = ["put", "get"]

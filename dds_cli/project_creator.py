@@ -58,12 +58,12 @@ class ProjectCreator(base.DDSBaseClass):
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
 
-        # Error if failed
-        if not response.ok:
-            raise exceptions.ProjectCreationError(str(response.json().get("message")))
-
         # Get response info as json
         try:
+            # Error if failed
+            if not response.ok:
+                raise exceptions.ProjectCreationError(response.json().get("message"))
+
             project_info = response.json()
         except simplejson.JSONDecodeError as err:
             raise exceptions.ApiResponseError(err)

@@ -60,8 +60,7 @@ class ProjectCreator(base.DDSBaseClass):
 
         # Error if failed
         if not response.ok:
-            error = f"{response.json().get('message')}"
-            raise exceptions.ProjectCreationError(error)
+            raise exceptions.ProjectCreationError(f"{response.json().get('message')}")
 
         # Get response info as json
         try:

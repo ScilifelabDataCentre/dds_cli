@@ -622,6 +622,7 @@ def create(
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ProjectCreationError,
     ) as err:
         LOG.error(err)
         sys.exit(1)

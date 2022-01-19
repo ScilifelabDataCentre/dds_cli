@@ -33,24 +33,24 @@ LOG = logging.getLogger(__name__)
 
 
 def verify_proceed(func):
-    """Verify that the file is not cancelled.
+    """
+    Verify that the file is not cancelled.
 
-    Also cancels the upload of all non-started files if break-on-fail."""
+    Also cancels the upload of all non-started files if break-on-fail.
+    """
 
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
 
-        # Check if keyboardinterrupt in dds
+        # Cancel if keyboardinterrupt
         if self.stop_doing:
             # TODO (ina): Add save to status here
-            message = "KeyBoardInterrupt - cancelling file {file}"
-            LOG.warning(message)
+            LOG.warning("KeyBoardInterrupt - cancelling file {file}")
             return False  # Do not proceed
 
         # Return if file cancelled by another file
         if self.status[file]["cancel"]:
-            message = f"File already cancelled, stopping file {file}"
-            LOG.warning(message)
+            LOG.warning(f"File already cancelled, stopping file {file}")
             return False
 
         # Mark as started
@@ -65,7 +65,7 @@ def verify_proceed(func):
         )
 
         # Run function
-        ok_to_proceed = False
+        ok_to_proceed = False  # Need to return this due to threads
         try:
             func(self, file=file, task=task, *args, **kwargs)
         except (
@@ -73,13 +73,16 @@ def verify_proceed(func):
             exceptions.UploadError,
             exceptions.DatabaseUpdateError,
         ) as err:
+            # Get error message
             err_info = str(err)
-            # Cancel file(s) if something failed
             LOG.warning(f"{func.__name__} failed: {err_info}")
+
+            # Cancel file
             self.status[file].update({"cancel": True, "message": err_info})
             if self.status[file].get("failed_op") is None:
                 self.status[file]["failed_op"] = "crypto"
 
+            # Cancel all files if break_on_fail flag used
             if self.break_on_fail:
                 message = f"'--break-on-fail'. File causing failure: '{file}'. "
                 LOG.warning(message)
@@ -89,6 +92,8 @@ def verify_proceed(func):
                     for x in self.status
                     if not self.status[x]["cancel"] and not self.status[x]["started"] and x != file
                 ]
+
+            # Save errors to file
             dds_cli.file_handler.FileHandler.append_errors_to_file(
                 self.failed_delivery_log, self.status[file]
             )
@@ -107,18 +112,17 @@ def update_status(func):
 
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
-
-        # TODO (ina): add processing?
-        if func.__name__ not in ["put", "add_file_db", "get", "update_db"]:
+        current_function = func.__name__
+        if current_function not in ["put", "add_file_db", "get", "update_db"]:
             raise exceptions.StatusError(
                 f"The function {func.__name__} cannot be used with this decorator."
             )
-        if func.__name__ not in self.status[file]:
-            raise exceptions.StatusError(f"No status found for function {func.__name__}.")
+        if current_function not in self.status[file]:
+            raise exceptions.StatusError(f"No status found for function {current_function}.")
 
         # Update status to started
-        self.status[file][func.__name__].update({"started": True})
-        LOG.debug(f"File {file} status updated to {func.__name__}: started")
+        self.status[file][current_function].update({"started": True})
+        LOG.debug(f"File {file} status updated to {current_function}: started")
 
         # Run function
         try:
@@ -132,13 +136,13 @@ def update_status(func):
             exceptions.DatabaseUpdateError,
         ) as err:
             # Save info about which operation failed∂
-            self.status[file]["failed_op"] = func.__name__
-            LOG.warning(f"{func.__name__} failed: {str(err)}")
+            self.status[file]["failed_op"] = current_function
+            LOG.warning(f"{current_function} failed: {str(err)}")
             raise
 
         # Update status to done
-        self.status[file][func.__name__].update({"done": True})
-        LOG.debug(f"File {file} status updated to {func.__name__}: done")
+        self.status[file][current_function].update({"done": True})
+        LOG.debug(f"File {file} status updated to {current_function}: done")
 
     return wrapped
 
@@ -160,7 +164,7 @@ def subpath_required(func):
                 full_subpath.mkdir(parents=True, exist_ok=True)
             except OSError as err:
                 raise exceptions.StagingError(err)
-            LOG.info(f"New directory created: {full_subpath}")
+            LOG.debug(f"New directory created: {full_subpath}")
 
         return func(self, file=file, *args, **kwargs)
 

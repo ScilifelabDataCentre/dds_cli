@@ -173,8 +173,7 @@ class LocalFileHandler(fh.FileHandler):
 
     # Public methods ############## Public methods #
     def create_upload_status_dict(self, existing_files, overwrite=False):
-        """Create dict for tracking file delivery status"""
-
+        """Create dict for tracking file delivery status."""
         LOG.debug("Creating the status dictionary.")
 
         status_dict = {}
@@ -195,18 +194,13 @@ class LocalFileHandler(fh.FileHandler):
                             }
                         )
 
-                # filestream_funcname = (
-                #     "read_file" if self.data[x]["compressed"] else "compress_file"
-                # )
                 status_dict[x] = {
                     "cancel": False,
                     "started": False,
                     "message": "",
                     "failed_op": None,
-                    # filestream_funcname: {"started": False, "done": False},
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
-                    # "task": None,
                 }
 
         LOG.debug("Initial statuses created.")
@@ -215,7 +209,6 @@ class LocalFileHandler(fh.FileHandler):
 
     def check_previous_upload(self, token):
         """Do API call and check for the files in the DB."""
-
         LOG.debug("Checking if files have been previously uploaded.")
 
         # Get files from db

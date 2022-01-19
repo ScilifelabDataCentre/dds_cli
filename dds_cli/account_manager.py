@@ -143,7 +143,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             LOG.info(message)
 
     def revoke_project_access(self, project, email):
-        """Revoke a user's access to a project"""
+        """Revoke a user's access to a project."""
         json = {"email": email, "project": project}
         try:
             response = requests.post(

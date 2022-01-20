@@ -75,10 +75,7 @@ class DataLister(base.DDSBaseClass):
             response = requests.get(
                 DDSEndpoint.LIST_PROJ,
                 headers=self.token,
-                params={
-                    "usage": self.show_usage,
-                    "project": self.project,
-                },
+                json={"usage": self.show_usage},
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
@@ -411,9 +408,7 @@ class DataLister(base.DDSBaseClass):
             response = requests.get(
                 DDSEndpoint.LIST_PROJ_USERS,
                 headers=self.token,
-                params={
-                    "project": self.project,
-                },
+                params={"project": self.project},
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))

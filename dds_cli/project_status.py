@@ -51,9 +51,7 @@ class ProjectStatusManager(base.DDSBaseClass):
             response = requests.get(
                 DDSEndpoint.UPDATE_PROJ_STATUS,
                 headers=self.token,
-                params={
-                    "project": self.project,
-                },
+                params={"project": self.project},
                 json={"history": show_history},
             )
         except requests.exceptions.RequestException as err:
@@ -118,9 +116,7 @@ class ProjectStatusManager(base.DDSBaseClass):
             response = requests.post(
                 DDSEndpoint.UPDATE_PROJ_STATUS,
                 headers=self.token,
-                params={
-                    "project": self.project,
-                },
+                params={"project": self.project},
                 json=extra_params,
             )
         except requests.exceptions.RequestException as err:
@@ -129,6 +125,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         # Check response
         if not response.ok:
             raise exceptions.APIError(f"An Error occured: {response.json().get('message')}")
+
         # Get result from API
         try:
             resp_json = response.json()

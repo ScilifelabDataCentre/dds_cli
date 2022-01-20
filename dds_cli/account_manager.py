@@ -52,12 +52,12 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         """Invite new user or associate existing users with projects."""
         # Perform request to API
         json = {"email": email, "role": role}
-        if project:
-            json["project"] = project
+
         try:
             response = requests.post(
                 dds_cli.DDSEndpoint.USER_ADD,
                 headers=self.token,
+                params={"project": project},
                 json=json,
             )
 
@@ -142,11 +142,12 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
     def revoke_project_access(self, project, email):
         """Revoke a user's access to a project"""
-        json = {"email": email, "project": project}
+        json = {"email": email}
         try:
             response = requests.post(
                 dds_cli.DDSEndpoint.REVOKE_PROJECT_ACCESS,
                 headers=self.token,
+                params={"project": project},
                 json=json,
             )
 

@@ -69,6 +69,7 @@ class DDSEndpoint:
     REVOKE_PROJECT_ACCESS = BASE_ENDPOINT + "/user/access/revoke"
     DISPLAY_USER_INFO = BASE_ENDPOINT + "/user/info"
     USER_PUBLIC = BASE_ENDPOINT + "/user/public"
+    USER_ACCESS = BASE_ENDPOINT + "/user/access"
 
     # Authentication - user and project
     ENCRYPTED_TOKEN = BASE_ENDPOINT + "/user/encrypted_token"

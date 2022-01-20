@@ -472,10 +472,7 @@ def delete_user(click_ctx, email, username, self):
 # Flags
 @click.pass_obj
 def get_info_user(click_ctx, username):
-    """
-    Display info about the user logged in from the Data Delivery System.
-
-    """
+    """Display info about the user logged in from the Data Delivery System."""
     try:
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -486,6 +483,43 @@ def get_info_user(click_ctx, username):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
     ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds user keys -- #
+@user_group_command.group(name="keys", no_args_is_help=True)
+@click.pass_obj
+def key_group_command(_):
+    """Group command to handle user keys."""
+
+
+@key_group_command.command(name="setup", no_args_is_help=True)
+# Options
+@username_option()
+@click.pass_obj
+def setup_keys(click_ctx, username):
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False), method="setup"
+        ) as key_generator:
+            key_generator.gen_user_keys()
+    except Exception as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@key_group_command.command(name="reset", no_args_is_help=True)
+# Options
+@username_option()
+@click.pass_obj
+def reset_keys(click_ctx, username):
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False), method="reset"
+        ) as key_resetter:
+            key_resetter.reset_user_keys()
+    except Exception as err:
         LOG.error(err)
         sys.exit(1)
 
@@ -851,6 +885,24 @@ def revoke_project_access(click_ctx, username, project, email):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
     ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@project_access.command(name="renew", no_args_is_help=True)
+@username_option()
+@email_option(
+    help_message="Email of the user whome you're attempting to update project access for."
+)
+@click.pass_obj
+def renew_project_access(click_ctx, username, email):
+
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as renewer:
+            renewer.renew_project_access()
+    except Exception as err:
         LOG.error(err)
         sys.exit(1)
 

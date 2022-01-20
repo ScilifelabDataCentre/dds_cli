@@ -45,7 +45,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         )
 
         # Only methods "add", "delete" and "revoke" can use the AccountManager class
-        if self.method not in ["add", "delete", "revoke"]:
+        if self.method not in ["add", "delete", "revoke", "key"]:
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     def add_user(self, email, role, project):
@@ -203,3 +203,59 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             \nPrimary Email: {info['email_primary']} \
             \nAssociated Emails: {', '.join(str(x) for x in info['emails_all'])}"
         )
+
+    def gen_user_keys(self):
+        # generate keys - this is just an example
+        public_key = "public_key"
+        private_key = "private_key"
+
+        # Save private key to file (and encrypt with password derived key...?)
+        # Also just an example, this will be done in a different way
+        with open("private_key.txt", "w") as keyfile:
+            keyfile.write(private_key)
+
+        # post public key to dds
+        try:
+            response = requests.post(
+                dds_cli.DDSEndpoint.USER_PUBLIC, headers=self.token, json={"public": public_key}
+            )
+        except Exception as err:
+            raise dds_cli.exceptions.APIError
+
+        if not response.ok:
+            raise dds_cli.exceptions.APIError
+
+        LOG.info(response.json())
+
+    def reset_user_keys(self):
+        # Generate new keys
+        public_key = "public_key"
+        private_key = "private_key"
+
+        # Save private key temporarily to file (and encrypt with password derived key...?)
+        # Also just an example, this will be done in a different way
+        with open("private_key_temp.txt", "w") as keyfile:
+            keyfile.write(private_key)
+
+        # put public key to dds
+        try:
+            response = requests.put(
+                dds_cli.DDSEndpoint.USER_PUBLIC, headers=self.token, json={"public": public_key}
+            )
+        except Exception as err:
+            raise dds_cli.exceptions.APIError
+
+        if not response.ok:
+            raise dds_cli.exceptions.APIError
+
+        LOG.info(response.json())
+
+        # 1. delete old private key file
+        # 2. rename private key file
+
+    def renew_access(self, email):
+        """ """
+        # 1. Get current user project private keys and the user with the email's public key
+        # 2. Decrypt with user private key
+        # 3. Encrypt with new user public key
+        # 4. Send back public_key and project private keys

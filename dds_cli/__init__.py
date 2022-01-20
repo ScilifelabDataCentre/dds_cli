@@ -33,7 +33,7 @@ __all__ = [
 ###############################################################################
 
 # Keep track of all allowed methods
-DDS_METHODS = ["put", "get", "ls", "rm", "create", "add", "delete"]
+DDS_METHODS = ["put", "get", "ls", "rm", "create", "add", "delete", "setup"]
 
 # Methods to which a directory created by DDS
 DDS_DIR_REQUIRED_METHODS = ["put", "get"]
@@ -68,6 +68,7 @@ class DDSEndpoint:
     USER_DELETE_SELF = BASE_ENDPOINT + "/user/delete_self"
     REVOKE_PROJECT_ACCESS = BASE_ENDPOINT + "/user/access/revoke"
     DISPLAY_USER_INFO = BASE_ENDPOINT + "/user/info"
+    USER_PUBLIC = BASE_ENDPOINT + "/user/public"
 
     # Authentication - user and project
     ENCRYPTED_TOKEN = BASE_ENDPOINT + "/user/encrypted_token"

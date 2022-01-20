@@ -253,7 +253,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         # 1. delete old private key file
         # 2. rename private key file
 
-    def renew_access(self, email):
+    def renew_project_access(self, email):
         """ """
         # 1. Get current user project private keys and the user with the email's public key
         # 2. Decrypt with user private key

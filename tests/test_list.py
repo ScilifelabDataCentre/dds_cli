@@ -97,7 +97,6 @@ def list_no_projects(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
-        params={"project": None},
         json={"usage": False},
     )
 
@@ -154,11 +153,11 @@ def test_list_no_project_specified_dds_ls(ls_runner, list_request):
     list_no_project_specified(ls_runner=ls_runner, list_request=list_request, command=["ls"])
 
 
-def test_list_no_project_specified_dds_project_ls(ls_runner, list_request):
-    """Test that the list command works when no project is specified."""
-    list_no_project_specified(
-        ls_runner=ls_runner, list_request=list_request, command=["project", "ls"]
-    )
+# def test_list_no_project_specified_dds_project_ls(ls_runner, list_request):
+#     """Test that the list command works when no project is specified."""
+#     list_no_project_specified(
+#         ls_runner=ls_runner, list_request=list_request, command=["project", "ls"]
+#     )
 
 
 # ------------------------------------------------------------------------------------------------ #
@@ -173,7 +172,7 @@ def list_no_project_specified_json(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
-        params={"project": None},
+        # params={"project": None},
         json={"usage": False},
     )
 

@@ -214,7 +214,7 @@ def list_no_project_specified_json_sort(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
-        params={"project": None},
+        # params={"project": None},
         json={"usage": False},
     )
 

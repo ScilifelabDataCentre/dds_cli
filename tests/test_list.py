@@ -152,11 +152,11 @@ def test_list_no_project_specified_dds_ls(ls_runner, list_request):
     list_no_project_specified(ls_runner=ls_runner, list_request=list_request, command=["ls"])
 
 
-# def test_list_no_project_specified_dds_project_ls(ls_runner, list_request):
-#     """Test that the list command works when no project is specified."""
-#     list_no_project_specified(
-#         ls_runner=ls_runner, list_request=list_request, command=["project", "ls"]
-#     )
+def test_list_no_project_specified_dds_project_ls(ls_runner, list_request):
+    """Test that the list command works when no project is specified."""
+    list_no_project_specified(
+        ls_runner=ls_runner, list_request=list_request, command=["project", "ls"]
+    )
 
 
 # ------------------------------------------------------------------------------------------------ #

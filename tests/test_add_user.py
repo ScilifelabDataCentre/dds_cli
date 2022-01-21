@@ -10,7 +10,6 @@ import dds_cli
 
 ADD_JSON = {"email": "test.testsson@example.com", "role": "Researcher"}
 PROJECT = {"project": "test_project"}
-# ADD_JSON_PROJECT = {**{"project": "test_project"}, **ADD_JSON}
 
 
 @pytest.fixture
@@ -27,7 +26,7 @@ def runner_with_project(runner):
                 "-r",
                 ADD_JSON["role"],
                 "-p",
-                ADD_JSON_PROJECT["project"],
+                PROJECT["project"],
                 ADD_JSON["email"],
             ]
         )

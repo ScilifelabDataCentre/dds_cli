@@ -97,7 +97,7 @@ def list_no_projects(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
-        params={"usage": False, "project": None},
+        json={"usage": False},
     )
 
     assert "No project info was retrieved" in result.stderr
@@ -126,7 +126,7 @@ def list_no_project_specified(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
-        params={"usage": False, "project": None},
+        json={"usage": False},
     )
 
     for substring in [
@@ -171,7 +171,7 @@ def list_no_project_specified_json(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
-        params={"usage": False, "project": None},
+        json={"usage": False},
     )
 
     try:
@@ -212,7 +212,7 @@ def list_no_project_specified_json_sort(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
-        params={"usage": False, "project": None},
+        json={"usage": False},
     )
 
     try:

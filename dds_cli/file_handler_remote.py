@@ -124,7 +124,9 @@ class RemoteFileHandler(fh.FileHandler):
             / pathlib.Path(x): {
                 **y,
                 "name_in_db": x,
-                "path_downloaded": self.local_destination / pathlib.Path(y["name_in_bucket"]),
+                "path_downloaded": self.local_destination
+                / pathlib.Path(y["subpath"])
+                / pathlib.Path(y["name_in_bucket"]),
             }
             for x, y in files.items()
         }
@@ -140,6 +142,7 @@ class RemoteFileHandler(fh.FileHandler):
                         **k,
                         "name_in_db": j,
                         "path_downloaded": self.local_destination
+                        / pathlib.Path(k["subpath"])
                         / pathlib.Path(k["name_in_bucket"]),
                     }
                     for j, k in y.items()

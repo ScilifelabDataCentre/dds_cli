@@ -85,16 +85,8 @@ class LocalFileHandler(fh.FileHandler):
         called in the bucket."""
 
         # Generate new file name
-        new_name = str(folder / pathlib.Path(str(uuid.uuid5(uuid.NAMESPACE_X500, filename))))
-
-        # maximum allowed length of S3 object key is 1024 bytes in UTF-8
-        if len(new_name.encode("utf-8")) > 1024:
-            # because UTF-8 is a variable length encoding, some characters may take up 4 bytes.
-            # Also mind that umlauts like ö or å will be encoded to 2 bytes each in Windows/Linux but to 3 bytes each on Mac,
-            # because Windows/Linux use Normal-Form-Composed (NFC) Unicode, MacOS uses Normal-Form-Decomposed (NFD) Unicode.
-            raise exceptions.S3KeyLengthExceeded(str(folder / pathlib.Path(filename)))
-        else:
-            return new_name
+        new_name = f"{uuid.uuid5(uuid.NAMESPACE_X500, str(folder))}{uuid.uuid5(uuid.NAMESPACE_X500, filename)}"
+        return new_name
 
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):

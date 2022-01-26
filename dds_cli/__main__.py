@@ -649,7 +649,7 @@ def project_status(_):
 @project_option(required=True)
 # Flags
 @click.option(
-    "--show_history",
+    "--show-history",
     required=False,
     is_flag=True,
     help="Show history of project statuses in addition to current status.",

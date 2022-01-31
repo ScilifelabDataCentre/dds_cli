@@ -91,7 +91,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
                 response /= base
         else:
             # utilize the given magnitude
-            response /= base ** magnitude
+            response /= base**magnitude
 
         if key == "Size":
             unit = "B"  # lock

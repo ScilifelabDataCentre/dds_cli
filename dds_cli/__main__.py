@@ -490,6 +490,100 @@ def get_info_user(click_ctx, username):
         sys.exit(1)
 
 
+# -- dds user activate -- #
+@user_group_command.command(name="activate", no_args_is_help=True)
+# Positional args
+@email_arg(required=True)
+# Options
+@username_option()
+# Flags
+@click.pass_obj
+def activate_user(click_ctx, email, username):
+    """
+    (Re)Activate user accounts in the Data Delivery System.
+
+    If you have sufficient admin privileges, you may activate the accounts of other users.
+    Specify the e-mail address as argument to the main command to initiate the activation process.
+    """
+    if click_ctx.get("NO_PROMPT", False):
+        pass
+    else:
+        proceed_activation = rich.prompt.Confirm.ask(
+            f"Activate Data Delivery System user account associated with {email}?"
+        )
+
+    if proceed_activation:
+        try:
+            with dds_cli.account_manager.AccountManager(
+                username=username,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+            ) as manager:
+                if email:
+                    manager.user_activation(email=email, action="reactivate")
+                else:
+                    LOG.error(
+                        "You must either specify the the e-mail "
+                        "address of the user to be deleted"
+                    )
+                    sys.exit(1)
+
+        except (
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
+
+
+# -- dds user deactivate -- #
+@user_group_command.command(name="deactivate", no_args_is_help=True)
+# Positional args
+@email_arg(required=True)
+# Options
+@username_option()
+# Flags
+@click.pass_obj
+def deactivate_user(click_ctx, email, username):
+    """
+    Deactivate user accounts in the Data Delivery System.
+
+    If you have sufficient admin privileges, you may deactivate the accounts of other users.
+    Specify the e-mail address as argument to the main command to initiate the deactivation process.
+    """
+    if click_ctx.get("NO_PROMPT", False):
+        pass
+    else:
+        proceed_deactivation = rich.prompt.Confirm.ask(
+            f"Deactivate Data Delivery System user account associated with {email}?"
+        )
+
+    if proceed_deactivation:
+        try:
+            with dds_cli.account_manager.AccountManager(
+                username=username,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+            ) as manager:
+                if email:
+                    manager.user_activation(email=email, action="deactivate")
+                else:
+                    LOG.error(
+                        "You must either specify the the e-mail "
+                        "address of the user to be deleted"
+                    )
+                    sys.exit(1)
+
+        except (
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
+
+
 ####################################################################################################
 ####################################################################################################
 ## PROJECT ############################################################################## PROJECT ##

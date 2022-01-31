@@ -89,21 +89,6 @@ class DownloadError(Exception):
     """Errors relating to file download."""
 
 
-class S3KeyLengthExceeded(UploadError):
-    """The name in bucket exceeded the allowed 1024 bytes."""
-
-    def __init__(
-        self,
-        filename,
-        message=(
-            "Exceeds allowed limit for combined path "
-            "and name length and can't be stored in the system."
-        ),
-    ):
-        """Init s3 key length error."""
-        super().__init__(f"{filename} {message}")
-
-
 class NoDataError(Exception):
     """Errors when there is no data to do anything with."""
 

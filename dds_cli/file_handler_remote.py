@@ -94,16 +94,13 @@ class RemoteFileHandler(fh.FileHandler):
             raise dds_cli.exceptions.ApiResponseError(response.text)
 
         # Folder info required if specific files requested
-        if all_paths and "folder_contents" not in file_info:
+        if all_paths and not all(x in file_info for x in ["files", "folder_contents", "not_found"]):
             raise dds_cli.exceptions.DDSCLIException(
                 "Error in response. Not enough info returned despite ok request."
             )
 
         folder_contents = file_info.get("folder_contents", {})
         files = file_info.get("files")
-        # Files in response always required
-        if not files:
-            raise dds_cli.exceptions.DDSCLIException("No files in response despite ok request.")
 
         LOG.debug(f"Attempted: \n{all_paths}")
         LOG.debug(f"Files: \n{files}")

@@ -518,14 +518,7 @@ def activate_user(click_ctx, email, username):
                 username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
             ) as manager:
-                if email:
-                    manager.user_activation(email=email, action="reactivate")
-                else:
-                    LOG.error(
-                        "You must either specify the the e-mail "
-                        "address of the user to be deleted"
-                    )
-                    sys.exit(1)
+                manager.user_activation(email=email, action="reactivate")
 
         except (
             dds_cli.exceptions.AuthenticationError,
@@ -565,14 +558,7 @@ def deactivate_user(click_ctx, email, username):
                 username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
             ) as manager:
-                if email:
-                    manager.user_activation(email=email, action="deactivate")
-                else:
-                    LOG.error(
-                        "You must either specify the the e-mail "
-                        "address of the user to be deleted"
-                    )
-                    sys.exit(1)
+                manager.user_activation(email=email, action="deactivate")
 
         except (
             dds_cli.exceptions.AuthenticationError,

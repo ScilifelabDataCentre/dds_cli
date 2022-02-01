@@ -118,7 +118,7 @@ class User:
                 )
             else:
                 raise dds_cli.exceptions.ApiResponseError(
-                    message=f"API returned an error: {response_json['message']}"
+                    message=f"API returned an error: {response_json.get('message', 'Unknown Error!')}"
                 )
 
         # Token received from API needs to be completed with a mfa timestamp
@@ -128,8 +128,8 @@ class User:
         LOG.info(
             "Please enter the one-time authentication code sent to your email address (leave empty to exit):"
         )
-        done = None
-        while done is None:
+        done = False
+        while not done:
             entered_one_time_code = rich.prompt.Prompt.ask("Authentication one-time code")
             if entered_one_time_code == "":
                 raise exceptions.AuthenticationError(

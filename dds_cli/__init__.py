@@ -70,7 +70,7 @@ class DDSEndpoint:
 
     # Authentication - user and project
     ENCRYPTED_TOKEN = BASE_ENDPOINT + "/user/encrypted_token"
-    REQUEST_EMAIL_2FA = BASE_ENDPOINT + "/user/request_mail2fa"
+    SECOND_FACTOR = BASE_ENDPOINT + "/user/second_factor"
 
     # S3Connector keys
     S3KEYS = BASE_ENDPOINT + "/s3/proj"

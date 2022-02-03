@@ -99,7 +99,6 @@ class User:
                 message="Non-empty password needed to be able to authenticate."
             )
 
-        # Project passed in to add it to the token. Can be None.
         try:
             response = requests.get(
                 dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
@@ -112,13 +111,64 @@ class User:
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
-        # Raise exceptions to log info if not ok response
         if not response.ok:
-            message = response_json.get("message", "Unexpected error!")
             if response.status_code == 401:
-                raise exceptions.AuthenticationError(message=message)
+                raise exceptions.AuthenticationError(
+                    "Authentication failed, incorrect username and/or password."
+                )
+            else:
+                raise dds_cli.exceptions.ApiResponseError(
+                    message=f"API returned an error: {response_json.get('message', 'Unknown Error!')}"
+                )
 
-            raise exceptions.ApiResponseError(message=message)
+        # Token received from API needs to be completed with a mfa timestamp
+        partial_auth_token = response_json.get("token")
+
+        # Verify 2fa email token
+        LOG.info(
+            "Please enter the one-time authentication code sent to your email address (leave empty to exit):"
+        )
+        done = False
+        while not done:
+            entered_one_time_code = rich.prompt.Prompt.ask("Authentication one-time code")
+            if entered_one_time_code == "":
+                raise exceptions.AuthenticationError(
+                    message="Exited due to no one-time authentication code entered."
+                )
+
+            if not entered_one_time_code.isdigit():
+                LOG.info("Please enter a valid one-time code. It should consist of only digits.")
+                continue
+            if len(entered_one_time_code) != 8:
+                LOG.info(
+                    f"Please enter a valid one-time code. It should consist of 8 digits (you entered {len(entered_one_time_code)} digits)."
+                )
+                continue
+
+            try:
+                response = requests.get(
+                    dds_cli.DDSEndpoint.SECOND_FACTOR,
+                    headers={"Authorization": f"Bearer {partial_auth_token}"},
+                    json={"HOTP": entered_one_time_code},
+                    timeout=dds_cli.DDSEndpoint.TIMEOUT,
+                )
+                response_json = response.json()
+            except requests.exceptions.RequestException as err:
+                raise exceptions.ApiRequestError(message=str(err)) from err
+
+            if response.ok:
+                # Step out of the while-loop
+                done = True
+            if not response.ok:
+                message = response_json.get("message", "Unexpected error!")
+                if response.status_code == 401:
+                    try_again = rich.prompt.Confirm.ask(
+                        "Second factor authentication failed, would you like to try again?"
+                    )
+                    if not try_again:
+                        raise exceptions.AuthenticationError(message="Exited due to user choice.")
+                else:
+                    raise exceptions.ApiResponseError(message=message)
 
         # Get token from response
         token = response_json.get("token")

@@ -211,7 +211,7 @@ class TokenFile:
         try:
             lft = jwt.get_unverified_header(token).get("lft")
             lifetime = isodate.parse_duration(lft) if lft else dds_cli.TOKEN_MAX_AGE
-        except:
+        except jwt.exceptions.InvalidTokenError:
             lifetime = dds_cli.TOKEN_MAX_AGE
 
         if self.token_expired(lifetime=lifetime):

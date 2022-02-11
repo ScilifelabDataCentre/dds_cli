@@ -6,7 +6,6 @@
 
 # Standard library
 import datetime
-import isodate
 import logging
 import os
 import stat
@@ -20,7 +19,7 @@ import rich
 # Own modules
 import dds_cli
 from dds_cli import exceptions
-from dds_cli.utils import get_token_header_contents
+from dds_cli.utils import get_token_header_contents, readable_timedelta
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -210,9 +209,13 @@ class TokenFile:
             # Use lifetime from token header if given, else read default from config
         try:
             token_contents = get_token_header_contents(token)
-            consignee = token_contents.get("usr", None)
-            lifetime = token_contents.get("lft", None)
-            lifetime = isodate.parse_duration(lifetime) if lifetime else dds_cli.TOKEN_MAX_AGE
+            consignee = token_contents.get("csg", None)
+            expiration = token_contents.get("exp", None)
+            lifetime = (
+                datetime.datetime.fromtimestamp(expiration) - datetime.datetime.now()
+                if expiration
+                else dds_cli.TOKEN_MAX_AGE
+            )
         except exceptions.TokenNotFoundError:
             lifetime = dds_cli.TOKEN_MAX_AGE
 
@@ -283,7 +286,7 @@ class TokenFile:
             return True
         elif age > dds_cli.TOKEN_WARNING_AGE * lifetime:
             LOG.warning(
-                f"Saved token will soon expire: {expiration_time.strftime('%Y-%m-%d %H:%M:%S')}, please consider renewing the session using the 'dds auth login' command."
+                f"Saved token will expire in {readable_timedelta(lifetime)}, please consider renewing the session using the 'dds auth login' command."
             )
 
         return False
@@ -323,7 +326,9 @@ class TokenFile:
         if age > lifetime:
             LOG.info(f"[{markup_color}]Token expired: {expiration_time}[/{markup_color}]")
         else:
-            LOG.info(f"[{markup_color}]Token expires: {expiration_time}[/{markup_color}]")
+            LOG.info(
+                f"[{markup_color}]Token expires: {expiration_time} (in {readable_timedelta(lifetime)})[/{markup_color}]"
+            )
 
         if consignee:
             LOG.info(f"[{markup_color}]Token issued to: {consignee}[/{markup_color}]")

@@ -157,9 +157,26 @@ def base64url_decode(value):
     if isinstance(value, str):
         value = value.encode("ascii")
 
-    rem = len(value) % 4
+    _, rem = divmod(len(value), 4)
 
     if rem > 0:
         value += b"=" * (4 - rem)
 
     return base64.urlsafe_b64decode(value)
+
+
+def readable_timedelta(duration):
+    """Function to output a human-readable more sophisticated timedelta
+    than str(datatime.timedelta) would."""
+    timespan = {}
+    timespan["days"], rem = divmod(duration.total_seconds(), 86_400)
+    timespan["hours"], rem = divmod(rem, 3_600)
+    timespan["minutes"], _ = divmod(rem, 60)
+    time_parts = ((name, round(value)) for name, value in timespan.items())
+    time_parts = [
+        f"{value} {name if value > 1 else name[:-1]}" for name, value in time_parts if value > 0
+    ]
+    if time_parts:
+        return " ".join(time_parts)
+    else:
+        return "now"

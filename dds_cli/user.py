@@ -197,7 +197,7 @@ class TokenFile:
 
         if not self.file_exists():
             LOG.debug(f"Token file {self.token_file} does not exist.")
-            return None, None
+            return None, None, None
 
         self.check_token_file_permissions()
 
@@ -209,17 +209,18 @@ class TokenFile:
 
             # Use lifetime from token header if given, else read default from config
         try:
-            lft = jwt.get_unverified_header(token).get("lft")
+            lft = jwt.get_unverified_header(token).get("lft", None)
             lifetime = isodate.parse_duration(lft) if lft else dds_cli.TOKEN_MAX_AGE
+            consignee = jwt.get_unverified_header(token).get("usr", None)
         except jwt.exceptions.InvalidTokenError:
             lifetime = dds_cli.TOKEN_MAX_AGE
 
         if self.token_expired(lifetime=lifetime):
             LOG.debug("No token retrieved from file, will fetch new token from api")
-            return None, None
+            return None, None, None
 
         LOG.debug("Token retrieved from file.")
-        return token, lifetime
+        return token, lifetime, consignee if consignee else None
 
     def file_exists(self):
         """Returns True if the token file exists."""
@@ -286,7 +287,7 @@ class TokenFile:
 
         return False
 
-    def token_report(self, lifetime=dds_cli.TOKEN_MAX_AGE):
+    def token_report(self, lifetime=dds_cli.TOKEN_MAX_AGE, consignee=None):
         """Produce report of token status."""
         age, expiration_time = self.__token_dates(lifetime=lifetime)
 
@@ -322,6 +323,9 @@ class TokenFile:
             LOG.info(f"[{markup_color}]Token expired: {expiration_time}[/{markup_color}]")
         else:
             LOG.info(f"[{markup_color}]Token expires: {expiration_time}[/{markup_color}]")
+
+        if username:
+            LOG.info(f"[{markup_color}]Token issued to: {consignee}[/{markup_color}]")
 
     # Private methods ############################################################ Private methods #
     def __token_dates(self, lifetime):

@@ -4,7 +4,7 @@ click-pathlib
 click>=7.1.2
 cryptography>=3.4.7
 immutabledict
-isodate
+isodate>=0.6.1
 pandas>=1.2.0
 prettytable>=2.0.0
 prompt_toolkit>=3.0.3
@@ -15,7 +15,7 @@ rich>=10.0.0
 rich-click
 simplejson
 zstandard>=0.15.1
-PyJWT
+PyJWT>=2.3.0
 pyyaml
 pytest
 pytz

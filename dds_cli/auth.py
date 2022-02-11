@@ -38,8 +38,8 @@ class Auth(base.DDSBaseClass):
         token_file = user.TokenFile()
         if token_file.file_exists():
             token_file.check_token_file_permissions()
-            _, lifetime = token_file.read_token()
-            token_file.token_report(lifetime=lifetime)
+            _, lifetime, consignee = token_file.read_token()
+            token_file.token_report(lifetime=lifetime, consignee=consignee)
         else:
             LOG.error(f"[red]No saved authentication token found![/red]")
 

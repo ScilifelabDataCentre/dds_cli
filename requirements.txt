@@ -15,7 +15,6 @@ rich>=10.0.0
 rich-click
 simplejson
 zstandard>=0.15.1
-PyJWT>=2.3.0
 pyyaml
 pytest
 pytz

@@ -64,7 +64,7 @@ class User:
             # Get token from file
             try:
                 LOG.debug(f"Checking if token file exists for user {self.username}")
-                self.token, _ = token_file.read_token()
+                self.token, _, _ = token_file.read_token()
             except dds_cli.exceptions.TokenNotFoundError:
                 self.token = None
 

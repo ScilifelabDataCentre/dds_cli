@@ -169,7 +169,7 @@ def readable_timedelta(duration):
     """Function to output a human-readable more sophisticated timedelta
     than str(datatime.timedelta) would."""
     timespan = {}
-    timespan["days"], rem = divmod(duration.total_seconds(), 86_400)
+    timespan["days"], rem = divmod(abs(duration.total_seconds()), 86_400)
     timespan["hours"], rem = divmod(rem, 3_600)
     timespan["minutes"], _ = divmod(rem, 60)
     time_parts = ((name, round(value)) for name, value in timespan.items())
@@ -179,4 +179,4 @@ def readable_timedelta(duration):
     if time_parts:
         return " ".join(time_parts)
     else:
-        return "now"
+        return "a short while" if duration.total_seconds() < 0 else "recent"

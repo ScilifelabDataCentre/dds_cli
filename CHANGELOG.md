@@ -1,5 +1,15 @@
 # Data Delivery System CLI: Changelog
+Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes. 
+## Sprint (2021-08-11 - 2021-08-25)
+* Progress bar glitch fixed by creating console object in utils.py ([#130](https://github.com/ScilifelabDataCentre/dds_cli/pull/130))
+* Log messages about successful checksum verification ([#131](https://github.com/ScilifelabDataCentre/dds_cli/pull/131))
+* Removed reduntant message in `dds ls` ([#132](https://github.com/ScilifelabDataCentre/dds_cli/pull/132))
+* Pagination of tables if too long ([#133](https://github.com/ScilifelabDataCentre/dds_cli/pull/133))
+* Warning about non existent files when using `--source-path-file` option in `dds put` ([#134](https://github.com/ScilifelabDataCentre/dds_cli/pull/134))
+* `--tree` option for `dds ls` - display whole file tree ([#136](https://github.com/ScilifelabDataCentre/dds_cli/pull/136))
 
+## Sprint (2021-08-25 - 2021-09-08)
+* Custom exceptions and code cleanup ([#143](https://github.com/ScilifelabDataCentre/dds_cli/pull/143))
 ## Sprint (2021-09-08 - 2021-09-22)
 * Install `pytest` in github action ([#151](https://github.com/ScilifelabDataCentre/dds_cli/pull/151))
 * `method` moved to base class ([#152](https://github.com/ScilifelabDataCentre/dds_cli/pull/152))

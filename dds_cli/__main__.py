@@ -18,6 +18,7 @@ import rich
 import rich.logging
 import rich.progress
 import rich.prompt
+import rich_click
 import questionary
 
 # Own modules
@@ -56,6 +57,11 @@ from dds_cli.options import (
 ####################################################################################################
 
 LOG = logging.getLogger()
+
+# Monkey patch click to use rich's logging
+rich_click.core.MAX_WIDTH = 100
+click.Group.format_help = rich_click.rich_format_help
+click.Command.format_help = rich_click.rich_format_help
 
 
 ## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

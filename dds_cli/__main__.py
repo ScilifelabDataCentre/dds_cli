@@ -149,7 +149,9 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
 @users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.pass_obj
-def ls(click_ctx, project, folder, username, sort, json, size, tree, usage, users, projects):
+def list_projects_and_contents(
+    click_ctx, project, folder, username, sort, json, size, tree, usage, users, projects
+):
     """
     List your projects and project files.
 
@@ -483,10 +485,7 @@ def delete_user(click_ctx, email, username, self):
 # Flags
 @click.pass_obj
 def get_info_user(click_ctx, username):
-    """
-    Display info about the user logged in from the Data Delivery System.
-
-    """
+    """Display info about the user logged in from the Data Delivery System."""
     try:
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -611,7 +610,7 @@ def project_group_command(_):
 @click.pass_context
 def list_projects(ctx, username, json, sort, usage):
     """List project contents. Calls the dds ls function."""
-    ctx.invoke(ls, username=username, json=json, sort=sort, usage=usage)
+    ctx.invoke(list_projects_and_contents, username=username, json=json, sort=sort, usage=usage)
 
 
 # -- dds project create -- #
@@ -1200,7 +1199,7 @@ def get_data(
 def list_data(ctx, username, project, folder, json, size, tree, users):
     """List project contents. Same as dds ls [PROJECT ID]."""
     ctx.invoke(
-        ls,
+        list_projects_and_contents,
         username=username,
         project=project,
         folder=folder,

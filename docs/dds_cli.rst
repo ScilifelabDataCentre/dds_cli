@@ -7,7 +7,7 @@ Submodules
 dds\_cli.account\_adder
 ------------------------------
 
-.. automodule:: dds_cli.account_adder
+.. automodule:: dds_cli.account_manager
    :members:
    :undoc-members:
    :show-inheritance:

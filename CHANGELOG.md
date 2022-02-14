@@ -1,8 +1,4 @@
 # Data Delivery System CLI: Changelog
-* ([#](https://github.com/ScilifelabDataCentre/dds_cli/pull/))
-
-* ([#](https://github.com/ScilifelabDataCentre/dds_cli/pull/))
-
 
 ## Sprint (2021-09-08 - 2021-09-22)
 * Install `pytest` in github action ([#151](https://github.com/ScilifelabDataCentre/dds_cli/pull/151))

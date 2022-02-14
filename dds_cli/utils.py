@@ -1,8 +1,13 @@
 """DDS CLI utils module."""
 
+import base64
+import json
 import numbers
 import rich.console
 import simplejson
+
+from collections.abc import Mapping
+from dds_cli import exceptions
 
 
 console = rich.console.Console()
@@ -122,3 +127,56 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
     else:
         # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
         return str(response)
+
+
+def get_token_header_contents(token):
+    """Function to extract the header of the DDS token
+    and obtain the encoded lifetime and username."""
+
+    if isinstance(token, str):
+        token = token.encode("utf-8")
+
+    if not isinstance(token, bytes):
+        raise exceptions.TokenNotFoundError(f"Invalid token format")
+
+    header_segment, crypto_segment = token.split(b".", 1)
+
+    try:
+        header_data = base64url_decode(header_segment)
+        header_data = json.loads(header_data)
+    except (TypeError, ValueError):
+        raise exceptions.TokenNotFoundError(f"Invalid token as contents are not readable!")
+
+    return header_data if isinstance(header_data, Mapping) else None
+
+
+def base64url_decode(value):
+    """Function to decode byte string and add flexible padding:
+    https://en.wikipedia.org/wiki/Base64#Decoding_Base64_with_padding"""
+
+    if isinstance(value, str):
+        value = value.encode("ascii")
+
+    _, rem = divmod(len(value), 4)
+
+    if rem > 0:
+        value += b"=" * (4 - rem)
+
+    return base64.urlsafe_b64decode(value)
+
+
+def readable_timedelta(duration):
+    """Function to output a human-readable more sophisticated timedelta
+    than str(datatime.timedelta) would."""
+    timespan = {}
+    timespan["days"], rem = divmod(abs(duration.total_seconds()), 86_400)
+    timespan["hours"], rem = divmod(rem, 3_600)
+    timespan["minutes"], _ = divmod(rem, 60)
+    time_parts = ((name, round(value)) for name, value in timespan.items())
+    time_parts = [
+        f"{value} {name if value > 1 else name[:-1]}" for name, value in time_parts if value > 0
+    ]
+    if time_parts:
+        return " ".join(time_parts)
+    else:
+        return "a short while" if duration.total_seconds() < 0 else "recent"

@@ -234,3 +234,25 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             )
 
         LOG.info(response_json.get("message", f"User successfully {action}d."))
+
+    def fix_project_access(self, email, project):
+        """Fix project access for specific user."""
+        json = {"email": email}
+        try:
+            response = requests.post(
+                dds_cli.DDSEndpoint.PROJ_ACCESS,
+                headers=self.token,
+                params={"project": project},
+                json=json,
+            )
+            response_json = response.json()
+
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        if not response.ok:
+            raise dds_cli.exceptions.ApiResponseError(response.reason)
+
+        raise dds_cli.exceptions.DDSCLIException(response_json.get("message", "Unexpected error!"))

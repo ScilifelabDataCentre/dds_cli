@@ -955,6 +955,32 @@ def revoke_project_access(click_ctx, username, project, email):
         sys.exit(1)
 
 
+# -- dds project access fix -- #
+@project_access.command(name="fix", no_args_is_help=True)
+# Positional arguments
+@email_arg(required=True)
+# Options
+@username_option()
+@project_option(required=False)
+@click.pass_obj
+def fix_project_access(click_ctx, email, username, project):
+    """Re-grant project access to user that has lost access due to password reset."""
+
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as fixer:
+            fixer.fix_project_access(email=email, project=project)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
 ####################################################################################################
 ####################################################################################################
 ## DATA #################################################################################### DATA ##

@@ -699,12 +699,12 @@ def create(
                 users_to_add=emails_roles,
             )
             if created:
-                LOG.info(
+                dds_cli.utils.console.print(
                     f"Project created with id: {project_id}",
                 )
                 if user_addition_messages:
                     for msg in user_addition_messages:
-                        LOG.info(msg)
+                        dds_cli.utils.console.print(msg)
                         LOG.info(
                             "Any user shown as invited would need to be "
                             "added to the project once the user has accepted "

@@ -12,6 +12,7 @@ import datetime
 from dds_cli import base
 from dds_cli import exceptions
 from dds_cli import DDSEndpoint
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -85,7 +86,7 @@ class ProjectStatusManager(base.DDSBaseClass):
                         "%a, %d %b %Y %H:%M:%S %Z"
                     )
                 deadline_out = f" with deadline {current_deadline}"
-            LOG.info(f"{status_out}{deadline_out}")
+            dds_cli.utils.console.print(f"{status_out}{deadline_out}")
             if show_history:
                 history = "Status history \n"
                 for row in resp_json.get("history"):
@@ -132,4 +133,4 @@ class ProjectStatusManager(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise exceptions.APIError(f"Could not decode JSON response: {err}")
         else:
-            LOG.info(f"Project {resp_json.get('message')}")
+            dds_cli.utils.console.print(f"Project {resp_json.get('message')}")

@@ -56,12 +56,19 @@ class FileHandler:
 
     # Static methods ############ Static methods #
     @staticmethod
-    def append_errors_to_file(file: pathlib.Path, info):
+    def append_errors_to_file(log_file: pathlib.Path, file, info, status):
         """Save errors to specific json file."""
+
+        failed_to_save = {
+            str(file): {
+                **FileHandler.make_json_serializable(non_json=info),
+                "status": FileHandler.make_json_serializable(non_json=status),
+            }
+        }
         try:
-            with file.open(mode="a") as errfile:
+            with log_file.open(mode="a") as errfile:
                 json_output = json.dumps(
-                    info,
+                    failed_to_save,
                     indent=None,
                 )
                 # Each line is valid json, but the entire file is not.
@@ -70,6 +77,11 @@ class FileHandler:
                 errfile.write(json_output + "\n")
         except (OSError, TypeError) as err:
             LOG.warning(str(err))
+
+    @staticmethod
+    def make_json_serializable(non_json):
+        """Convert pathlib.Path instances in dict to string."""
+        return {str(x): (str(y) if isinstance(y, pathlib.Path) else y) for x, y in non_json.items()}
 
     @staticmethod
     def delete_tempdir(directory: pathlib.Path):

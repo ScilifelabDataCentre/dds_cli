@@ -20,7 +20,7 @@ from dds_cli import data_remover as dr
 from dds_cli import file_compressor as fc
 from dds_cli import file_encryptor as fe
 from dds_cli import text_handler as txt
-from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
+from dds_cli.custom_decorators import verify_proceed, update_status, subpath_required
 from dds_cli import base
 import dds_cli.utils
 

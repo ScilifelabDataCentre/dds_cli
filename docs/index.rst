@@ -13,6 +13,9 @@ The Data Delivery System (DDS) consists of a command line interface (CLI) and a 
 
 To go to the DDS web interface, go to https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
 
+How will I get my user account?
+-------------------------------
+Steps here to explain the account procedure
 
 How to use the DDS CLI
 ======================
@@ -22,15 +25,15 @@ Installation
 
 PyPi - MacOS / Linux 
 ~~~~~~~~~~~~~~~~~~~~~
-1. To perform these steps you need to have Pip and Python (the DDS requires Python version 3.7 or higher) installed. These are generally installed by default on Unix systems. If they are not, please install those first.
+#. 1. To perform these steps you need to have Pip and Python (the DDS requires Python version 3.7 or higher) installed. These are generally installed by default on Unix systems. If they are not, please install those first.
    * Install Python: 
    * Install Pip: 
-2. To install the CLI, open the terminal and run
+#. 2. To install the CLI, open the terminal and run
 
    .. code-block:: bash
 
       $ pip install dds-cli
-3. Once the installation has finished, test that everything is working correctly:
+#. 3. Once the installation has finished, test that everything is working correctly:
 
    .. code-block:: bash
 

@@ -69,7 +69,7 @@ class FileHandler:
             with log_file.open(mode="a") as errfile:
                 json_output = json.dumps(
                     failed_to_save,
-                    indent=None,
+                    indent=4,
                 )
                 # Each line is valid json, but the entire file is not.
                 # Multiple threads are appending to this file, so valid json for

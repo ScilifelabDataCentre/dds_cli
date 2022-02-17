@@ -193,7 +193,10 @@ def removal_spinner(func):
             else:
                 dds_cli.utils.console.print(self.failed_table)
             LOG.warning(f"Finished {description_lc} with errors, see table above")
+        elif self.failed_files is not None:
+            self.failed_files["result"] = f"Finished {description_lc} with errors"
+            dds_cli.utils.console.print(self.failed_files)
         else:
-            LOG.info(f"Successfully finished {description_lc}")
+            dds_cli.utils.console.print(f"Successfully finished {description_lc}")
 
     return create_and_remove_task

@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 =====================================================================
-Welcome to the Data Delivery System's documentation / Test Protocol!
+Welcome to the Data Delivery Systems' Documentation / Test Protocol!
 =====================================================================
 
 .. note:: During testing on 2022-02-28 to 2022-03-07, this will also work as a test protocol. The goal is to give you ideas on what aspects of the system to try out, but if you feel that we have missed something, please test it and let us know what works and what doesn't. 
@@ -19,10 +19,43 @@ How to use the DDS CLI
 
 Installation
 ------------
-Information about installing here
-* pip
-* executable at some point
-* windows? should work the same way
+
+PyPi - MacOS / Linux 
+~~~~~~~~~~~~~~~~~~~~~
+1. To perform these steps you need to have Pip and Python (the DDS requires Python version 3.7 or higher) installed. These are generally installed by default on Unix systems. If they are not, please install those first.
+   * Install Python: 
+   * Install Pip: 
+2. To install the CLI, open the terminal and run
+
+   .. code-block:: bash
+
+      $ pip install dds-cli
+3. Once the installation has finished, test that everything is working correctly:
+
+   .. code-block:: bash
+
+      $ dds --help
+
+   This should display something like this:
+
+   .. code-block:: bash
+
+           ︵ 
+       ︵ (  )   ︵ 
+      (  ) ) (  (  )   SciLifeLab Data Delivery System 
+       ︶  (  ) ) (    https://www.scilifelab.se/data 
+            ︶ (  )    Version 1.5.9 
+                ︶
+
+                                                                                                         
+      Usage: dds [OPTIONS] COMMAND [ARGS]...                                                              
+                                                                                                         
+      SciLifeLab Data Delivery System (DDS) command line interface.                                       
+      Access token is saved in a .dds_cli_token file in the home directory. 
+
+Executable - Windows
+~~~~~~~~~~~~~~~~~~~~~
+WE NEED TO FIX AN EXECUTABLE
 
 Main command and options
 ------------------------
@@ -37,7 +70,9 @@ The DDS CLI has the following major commands: :ref:`auth<auth-info>`, :ref:`user
 
 `dds auth`
 ~~~~~~~~~~
-some auth info here + link to docs
+`dds auth` and its subcommands is used for creating and managing sessions. This will enable you to run multiple commands within a certain amount of time (current 48 hours) without specifying your user credentials. 
+
+If you do not authenticate yourself and start a new session, you will need to provide your DDS username when running the other commands. If you do not provide the username as an option, you will be prompted to fill it in.
 
 See the subcommands and documentation :ref:`here<dds-auth>`.
 

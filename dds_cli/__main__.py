@@ -700,11 +700,6 @@ def create(
                 if user_addition_messages:
                     for msg in user_addition_messages:
                         dds_cli.utils.console.print(msg)
-                        LOG.info(
-                            "Any user shown as invited would need to be "
-                            "added to the project once the user has accepted "
-                            "the invitation and created an account in the system."
-                        )
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

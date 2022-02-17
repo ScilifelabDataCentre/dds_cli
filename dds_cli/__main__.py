@@ -305,7 +305,9 @@ def auth_group_command(_):
 @username_option()
 @click.pass_obj
 def login(click_ctx, username):
-    """Renew the authentication token stored in the '.dds_cli_token' file.
+    """Start or renew an authenticated session.
+
+    Creates or renews the authentication token stored in the '.dds_cli_token' file.
 
     Run this command before running the cli in a non interactive fashion as this enables the longest
     possible session time before a password needs to be entered again.
@@ -330,7 +332,10 @@ def login(click_ctx, username):
 # -- dds auth logout -- #
 @auth_group_command.command(name="logout")
 def logout():
-    """Remove the saved authentication token by deleting the '.dds_cli_token' file."""
+    """End authenticated session.
+
+    Removes the saved authentication token by deleting the '.dds_cli_token' file.
+    """
     try:
         with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
             authenticator.logout()
@@ -343,7 +348,13 @@ def logout():
 # -- dds auth info -- #
 @auth_group_command.command(name="info")
 def info():
-    """Print info on saved authentication token validity and age."""
+    """Display information about token.
+
+    Information displayed:
+    - If the token is about to expire
+    - Token age
+    - Time of token expiration
+    """
     try:
         with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
             authenticator.check()

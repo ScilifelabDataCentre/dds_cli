@@ -66,6 +66,8 @@ How to test the `dds auth` command functionality
 
 #. Run the `logout` subcommand. A success message should be displayed.
 
+#. Continue with any of the other commands: :ref:`user<user-info>`, :ref:`project<project-info>`, :ref:`data<data-info>` and :ref:`ls<ls-info>`.
+
 ----
 
 .. _dds-auth:
@@ -73,3 +75,4 @@ How to test the `dds auth` command functionality
 .. click:: dds_cli.__main__:auth_group_command
    :prog: dds auth
    :nested: full
+

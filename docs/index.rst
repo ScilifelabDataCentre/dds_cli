@@ -76,43 +76,41 @@ The DDS CLI has the following major commands: :ref:`auth<auth-info>`, :ref:`user
 
 .. _auth-info:
 
-`dds auth`
-~~~~~~~~~~
+:ref:`dds auth<dds-auth>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`dds auth` and its subcommands are used for creating and managing sessions. This will enable you to run multiple commands within a certain amount of time (current 48 hours) without specifying your user credentials. 
-
-If you do not authenticate yourself and start a new session, you will need to provide your DDS username when running the other commands. If you do not provide the username as an option, you will be prompted to fill it in.
+`dds auth` and its subcommands are used for creating and managing sessions. This will enable you to run multiple commands within a certain amount of time (currently 48 hours) without specifying your user credentials. 
 
 See the subcommands and documentation :ref:`here<dds-auth>`.
 
 .. _user-info:
 
-`dds user`
-~~~~~~~~~~
+:ref:`dds user<dds-user>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 some user info here + link to docs
 
 See the subcommands and documentation :ref:`here<dds-user>`.
 
 .. _project-info:
 
-`dds project`
-~~~~~~~~~~~~~
+:ref:`dds project<dds-project>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 some project info here + link to docs
 
 See the subcommands and documentation :ref:`here<dds-project>`.
 
 .. _data-info:
 
-`dds data`
-~~~~~~~~~~
+:ref:`dds data<dds-data>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 some data info here + link to docs
 
 See the subcommands and documentation :ref:`here<dds-data>`.
 
 .. _ls-info:
 
-`dds ls`
-~~~~~~~~
+:ref:`dds ls<dds-ls>`
+~~~~~~~~~~~~~~~~~~~~~~
 some listing info here + link to docs
 
 See the subcommands and documentation :ref:`here<dds-ls>`.

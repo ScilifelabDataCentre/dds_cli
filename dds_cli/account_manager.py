@@ -79,7 +79,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(response_json.get("message", "User successfully added."))
+        dds_cli.utils.console.print(response_json.get("message", "User successfully added."))
 
     def delete_user(self, email):
         """Delete users from the system"""
@@ -169,7 +169,9 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(response_json.get("message", "User access successfully revoked."))
+        dds_cli.utils.console.print(
+            response_json.get("message", "User access successfully revoked.")
+        )
 
     def get_user_info(self):
         """Get a users info"""

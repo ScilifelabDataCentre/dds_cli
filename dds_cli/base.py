@@ -172,7 +172,7 @@ class DDSBaseClass:
 
         return project_public[key_type]
 
-    def __printout_delivery_summary(self, max_fileerrs: int = 40):
+    def __printout_delivery_summary(self):
         """Print out the delivery summary if any files were cancelled."""
         # TODO: Look into a better summary print out - old deleted for now
         any_failed = self.__collect_all_failed()
@@ -181,18 +181,36 @@ class DDSBaseClass:
         self.filehandler.failed.clear()
 
         if any_failed:
-            LOG.info(f"Failed: \n{any_failed}")
             intro_error_message = (
                 f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
             )
 
+            if self.method == "put":
+                retry_message = (
+                    "If you wish to retry the upload, re-run the `dds data put` command again, "
+                    "specifying the same options as you did now. To also overwrite the files "
+                    "that were uploaded, also add the `--overwrite` flag at the end of the command."
+                )
+            else:
+                # TODO: --destination should be able to >at least< overwrite the files in the
+                # previously created download location.
+                retry_message = (
+                    "If you wish to retry the download, re-run the `dds data get` command again, "
+                    "specifying the same options as you did now. A new directory will "
+                    "automatically be created and all files will be downloaded again."
+                )
+
             utils.stderr_console.print(
-                f"{intro_error_message}. See {self.failed_delivery_log} for more information."
+                f"{intro_error_message}. \n"
+                f"{retry_message} \n\n"
+                f"See {self.failed_delivery_log} for more information."
             )
 
         else:
             # Printout if no cancelled/failed files
-            LOG.info(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
+            dds_cli.utils.console.print(
+                f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n"
+            )
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
             LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")

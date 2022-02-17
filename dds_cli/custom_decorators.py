@@ -58,8 +58,7 @@ def verify_proceed(func):
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
-        LOG.debug(f"status: {self.status[file]}")
-        LOG.debug(f"fileinfo: {self.filehandler.data[file]}")
+
         # Cancel file(s) if something failed
         if not ok_to_proceed:
             LOG.warning(f"{func.__name__} failed: {message}")

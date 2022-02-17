@@ -17,7 +17,7 @@ import simplejson
 
 # Own modules
 import dds_cli
-from dds_cli.cli_decorators import removal_spinner
+from dds_cli.custom_decorators import removal_spinner
 from dds_cli import base
 from dds_cli import DDSEndpoint
 

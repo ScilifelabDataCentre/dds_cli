@@ -26,7 +26,7 @@ from dds_cli import file_encryptor as fe
 from dds_cli import file_handler_local as fhl
 from dds_cli import status
 from dds_cli import text_handler as txt
-from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
+from dds_cli.custom_decorators import verify_proceed, update_status, subpath_required
 
 import dds_cli
 import dds_cli.utils
@@ -396,7 +396,6 @@ class DataPutter(base.DDSBaseClass):
             # Error if failed
             if not response.ok:
                 error = f"Failed to add file '{file}' to database: {response.text}"
-                LOG.exception(error)
                 return added_to_db, error
 
             try:

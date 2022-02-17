@@ -181,7 +181,6 @@ class DDSBaseClass:
         self.filehandler.failed.clear()
 
         if any_failed:
-            LOG.info(f"Failed: \n{any_failed}")
             intro_error_message = (
                 f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
             )

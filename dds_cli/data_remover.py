@@ -63,7 +63,13 @@ class DataRemover(base.DDSBaseClass):
 
         # Create table if any files failed
         if not_exists or delete_failed:
-            if not self.no_prompt:
+            if self.no_prompt:
+                self.failed_files = {"Errors": []}
+                for x in not_exists:
+                    self.failed_files["Errors"].append({x: f"No such {level.lower()}"})
+                for x, y in delete_failed.items():
+                    self.failed_files["Errors"].append({x: y})
+            else:
                 # Create table and add columns
                 table = rich.table.Table(
                     title=f"{level}s not deleted",
@@ -87,12 +93,6 @@ class DataRemover(base.DDSBaseClass):
 
                 # Print out table
                 self.failed_table = rich.padding.Padding(table, 1)
-            else:
-                self.failed_files = {"Errors": []}
-                for x in not_exists:
-                    self.failed_files["Errors"].append({x: f"No such {level.lower()}"})
-                for x, y in delete_failed.items():
-                    self.failed_files["Errors"].append({x: y})
 
     @staticmethod
     def delete_tempfile(file: pathlib.Path):

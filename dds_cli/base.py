@@ -192,7 +192,9 @@ class DDSBaseClass:
 
         else:
             # Printout if no cancelled/failed files
-            LOG.info(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
+            dds_cli.utils.console.print(
+                f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n"
+            )
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
             LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")

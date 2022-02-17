@@ -87,7 +87,7 @@ See the subcommands and documentation :ref:`here<dds-auth>`.
 
 :ref:`dds user<dds-user>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-some user info here + link to docs
+You can use `add user` group command to manage your own and (if you have administrative permissions) other user accounts. 
 
 See the subcommands and documentation :ref:`here<dds-user>`.
 

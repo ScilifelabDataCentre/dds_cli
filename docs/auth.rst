@@ -4,6 +4,11 @@
 
 How to test the `dds auth` command functionality
 ----------------------------------------------------
+When running the commands, remember to make a note of whether or not any information or error messages are understandable and if there's anything we need to improve on. 
+
+Steps
+~~~~~~~
+
 #. Run 
    
    .. code-block:: 
@@ -12,8 +17,7 @@ How to test the `dds auth` command functionality
    
    Is there any information you're missing from this help text?
 
-#. Run the `login` subcommand. 
-   Are the messages displayed understandable? Is there anything we should improve on? 
+#. Run the `login` subcommand
 
    #. With incorrect credentials
 
@@ -69,6 +73,7 @@ How to test the `dds auth` command functionality
 #. Continue with any of the other commands: :ref:`user<user-info>`, :ref:`project<project-info>`, :ref:`data<data-info>` and :ref:`ls<ls-info>`.
 
 ----
+
 
 .. _dds-auth:
 

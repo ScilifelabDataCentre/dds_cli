@@ -11,7 +11,8 @@ Welcome to the Data Delivery System's documentation / Test Protocol!
 
 The Data Delivery System (DDS) consists of a command line interface (CLI) and a very minimal web interface. The web interface will be improved on asap, but we have decided that having a working CLI is highest on the priority list. 
 
-To go to the DDS web interface, go to https://dds.dckube.se/. There will only be a log in page and the possibility of requesting a password change. (ADD LINK TO HTML -- STEPS TO TRY OUT IN THE WEB)
+To go to the DDS web interface, go to https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
+
 
 How to use the DDS CLI
 ======================
@@ -77,6 +78,7 @@ Links to documentation
 
 .. toctree::
 
+   web
    main
    auth
    user

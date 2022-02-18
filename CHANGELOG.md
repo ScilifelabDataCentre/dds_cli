@@ -80,3 +80,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint (2022-02-09 - 2022-02-23)
 * Add `dds project access fix` command for reseting user access when reset password ([236](https://github.com/ScilifelabDataCentre/dds_cli/pull/236))
 * Save failed files to log and print out help message after ([237](https://github.com/ScilifelabDataCentre/dds_cli/pull/237))
+* Display logged in user in header ([244](https://github.com/ScilifelabDataCentre/dds_cli/pull/244))

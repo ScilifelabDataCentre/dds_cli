@@ -255,6 +255,20 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
         if not response.ok:
-            raise dds_cli.exceptions.ApiResponseError(response.reason)
+            message = f"Failed updating user '{email}' project access"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
-        raise dds_cli.exceptions.DDSCLIException(response_json.get("message", "Unexpected error!"))
+            raise dds_cli.exceptions.DDSCLIException(
+                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            )
+
+        LOG.info(
+            response_json.get(
+                "message",
+                (
+                    f"Project access fixed for user '{email}'. "
+                    "They should now have access to all project data."
+                ),
+            )
+        )

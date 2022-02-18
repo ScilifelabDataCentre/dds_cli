@@ -32,6 +32,7 @@ import dds_cli.directory
 import dds_cli.project_creator
 import dds_cli.auth
 import dds_cli.project_status
+import dds_cli.user
 import dds_cli.utils
 from dds_cli.options import (
     email_arg,
@@ -74,6 +75,8 @@ click.Command.format_help = rich_click.rich_format_help
 #                                                                                                  #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
+# Get token metadata
+_, metadata = dds_cli.user.TokenFile().read_token()
 
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
@@ -82,7 +85,8 @@ dds_cli.utils.stderr_console.print(
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
     "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
     f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
-    "\n[green]          ︶\n",
+    "\n[green]          ︶",
+    f"\n[green]Logged in:[/] [red]{metadata.get('csg') if metadata else 'None'}",
     highlight=False,
 )
 

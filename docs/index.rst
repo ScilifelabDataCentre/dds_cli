@@ -7,6 +7,12 @@
 Welcome to the Data Delivery Systems' Documentation / Test Protocol!
 =====================================================================
 
+* LINK TO BOARD
+* IMAGE OF BOARD
+   * ROLES
+   * WORKFLOW ETC
+
+   
 .. note:: 
 
    During testing on 2022-02-28 to 2022-03-07, this will also work as a test protocol. The goal is to give you ideas on what aspects of the system to try out, but please also test anything else you can think of (e.g. if you feel we have missed something). Also, please make note of whether the documentation of the system has any deficiencies such as unclear, misleading or incomplete instructions. 

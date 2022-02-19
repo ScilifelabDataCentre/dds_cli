@@ -284,7 +284,7 @@ def list_projects_and_contents(
 def auth_group_command(_):
     """Group command for creating and managing authenticated sessions.
 
-    Authenticate yourself with once and run multiple commands within a certain amount of time
+    Authenticate yourself once and run multiple commands within a certain amount of time
     (currently 48 hours) without specifying your user credentials.
     If you do not authenticate yourself and start a new session, you will need to provide your
     DDS username when running the other commands. If you do not provide the username as an option,

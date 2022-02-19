@@ -1,10 +1,15 @@
+.. _dds-auth:
+
 ==============
 `dds auth`
 ==============
 
 How to test the `dds auth` command functionality
 ----------------------------------------------------
-When running the commands, remember to make a note of whether or not any information or error messages are understandable and if there's anything we need to improve on. 
+
+.. note::
+
+   When running the commands, remember to make a note of whether or not any information or error messages are understandable and if there’s anything we need to improve on, including the documentation on this page.
 
 Steps
 ~~~~~~~
@@ -46,8 +51,6 @@ Steps
          .. note::
             You should be granted access, a message should be displayed, and there should be a `.dds_cli_token` in your home directory.
 
-      #. Can you open the `.dds_cli_token` file? 
-
       #. Open the `.dds_cli_token` file or (in Unix systems) run 
          
          .. code-block::
@@ -73,9 +76,6 @@ Steps
 #. Continue with any of the other commands: :ref:`user<user-info>`, :ref:`project<project-info>`, :ref:`data<data-info>` and :ref:`ls<ls-info>`.
 
 ----
-
-
-.. _dds-auth:
 
 .. click:: dds_cli.__main__:auth_group_command
    :prog: dds auth

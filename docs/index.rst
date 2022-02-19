@@ -38,9 +38,6 @@ Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* a
 How to use the DDS CLI
 ======================
 
-.. role:: bash(code)
-   :language: bash
-
 Installation
 ------------
 
@@ -89,7 +86,7 @@ Executable - Windows
 Running the command
 ---------------------
 
-The main command :bash:`dds` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>`.
+The main command `dds` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>`.
 
 The five group commands
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,15 +107,15 @@ See the test protocol and the command documentation :ref:`here<dds-auth>`.
 """"""""""""""""""""""""""
 You can use the `add user` group command to manage your own and (if you have administrative permissions) other user accounts. 
 
-See the subcommands and documentation :ref:`here<dds-user>`.
+See the test protocol and the command documentation :ref:`here<dds-user>`.
 
 .. _project-info:
 
 :ref:`dds project<dds-project>`
 """"""""""""""""""""""""""""""""
-some project info here + link to docs
+The `dds project` command is for creating and managing projects. The majority of the functionalities regarding project management is only available to *Unit Admin* and *Unit Personnel* accounts.
 
-See the subcommands and documentation :ref:`here<dds-project>`.
+See the test protocol and the command documentation :ref:`here<dds-project>`.
 
 .. _data-info:
 
@@ -126,7 +123,7 @@ See the subcommands and documentation :ref:`here<dds-project>`.
 """"""""""""""""""""""""""
 some data info here + link to docs
 
-See the subcommands and documentation :ref:`here<dds-data>`.
+See the test protocol and the command documentation :ref:`here<dds-data>`.
 
 .. _ls-info:
 
@@ -134,7 +131,7 @@ See the subcommands and documentation :ref:`here<dds-data>`.
 """"""""""""""""""""""
 some listing info here + link to docs
 
-See the subcommands and documentation :ref:`here<dds-ls>`.
+See the test protocol and the command documentation :ref:`here<dds-ls>`.
 
 Links to documentation
 =======================
@@ -156,16 +153,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-
-
-1. = 
-2. - 
-3. ~
-4. "
-5. '
-6. ^
-7. #
-8. *
-9. $ 
-10. `

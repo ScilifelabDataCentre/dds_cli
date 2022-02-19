@@ -40,7 +40,9 @@ class ProjectCreator(base.DDSBaseClass):
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
     # Public methods ###################### Public methods #
-    def create_project(self, title, description, principal_investigator, sensitive, users_to_add):
+    def create_project(
+        self, title, description, principal_investigator, non_sensitive, users_to_add
+    ):
         """Create project with title and description."""
         # Variables
         created = False
@@ -57,7 +59,7 @@ class ProjectCreator(base.DDSBaseClass):
                     "title": title,
                     "description": description,
                     "pi": principal_investigator,
-                    "is_sensitive": sensitive,
+                    "non_sensitive": non_sensitive,
                     "users_to_add": users_to_add,
                 },
             )

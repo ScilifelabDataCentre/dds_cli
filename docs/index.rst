@@ -69,22 +69,7 @@ PyPi - MacOS / Linux
 
       $ dds --help
 
-   This should display something like this:
-
-   .. code-block:: bash
-
-           ︵ 
-       ︵ (  )   ︵ 
-      (  ) ) (  (  )   SciLifeLab Data Delivery System 
-       ︶  (  ) ) (    https://www.scilifelab.se/data 
-            ︶ (  )    Version 1.5.9 
-                ︶
-
-                                                                                                         
-      Usage: dds [OPTIONS] COMMAND [ARGS]...                                                              
-                                                                                                         
-      SciLifeLab Data Delivery System (DDS) command line interface.                                       
-      Access token is saved in a .dds_cli_token file in the home directory. 
+   This should display a logo, version information and a short usage message. 
 
 
 Executable - Windows

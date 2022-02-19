@@ -2,7 +2,7 @@
 `dds auth`
 ==============
 
-This page begins with a description and step-by-step guide to how you could test this command. At the :ref:`bottom<dds-auth>` of this page, you can find the different commands and a list of their options.
+This section begins with a description and step-by-step guide to how you could test this command. At the :ref:`bottom<dds-auth>` of this section, you can find the different commands and a list of their options.
 
 How to test the `dds auth` command functionality
 ----------------------------------------------------

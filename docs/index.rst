@@ -7,12 +7,6 @@
 Welcome to the Data Delivery Systems' Documentation / Test Protocol!
 =====================================================================
 
-* LINK TO BOARD
-* IMAGE OF BOARD
-   * ROLES
-   * WORKFLOW ETC
-
-   
 .. note:: 
 
    During testing on 2022-02-28 to 2022-03-07, this will also work as a test protocol. The goal is to give you ideas on what aspects of the system to try out, but please also test anything else you can think of (e.g. if you feel we have missed something). Also, please make note of whether the documentation of the system has any deficiencies such as unclear, misleading or incomplete instructions. 
@@ -21,9 +15,9 @@ Welcome to the Data Delivery Systems' Documentation / Test Protocol!
    
    **Please do not use any sensitive data during this testing phase.** The key management has been implemented and your data should be secure, however there may be bugs and/or issues which we need to solve before DDS is put in production. 
 
-The Data Delivery System (DDS) consists of a command line interface (CLI) and a very minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI is highest on the priority list. 
+The Data Delivery System (DDS) consists of a command line interface (CLI) and a very minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
 
-To go to the DDS web interface, go to https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
+The DDS web interface can be found at https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
 
 How will I get my user account?
 ===============================
@@ -35,6 +29,8 @@ Once you get the invitation email, follow the link in the email and register you
    Forgetting passwords in the DDS means that you will lose access to all project data. We highly recommend that you use a password management system such as `LastPass <https://www.lastpass.com/>`_ or similar.
 
    When resetting a password you can, of course, regain access to the projects you lost access to. This procedure is explained <here>.
+
+Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. The roles are defined <here>. 
 
 
 .. _how-to-use:

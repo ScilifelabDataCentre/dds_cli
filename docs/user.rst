@@ -76,7 +76,7 @@ Steps
 
    These test steps assume you have already started a session with the :ref:`dds auth<dds-auth>` command.
 
-#. Run
+1. Run
 
    .. code-block::
 
@@ -84,7 +84,7 @@ Steps
 
    Is there any information you're missing from this help text? 
 
-#. Run the `info` subcommand
+2. Run the `info` subcommand
    
    .. note:: 
       
@@ -95,24 +95,24 @@ Steps
       * Name
       * Emails connected to the account
 
-#. Run the `add` subcommand
+3. Run the `add` subcommand
 
-   #. Invite a new user to the DDS
+   3.1. Invite a new user to the DDS
 
       .. warning::
          Please either use one of your own accounts or a colleague that is also involved in the testing of the DDS.
 
-   #. Invite the same user to DDS again
+   3.2. Invite the same user to DDS again
       
       .. note:: 
          This should not work and a message notifying you that the user has an ongoing invite should be displayed.
 
-   #. Try to invite yourself by specifying the email your current account is registered with
+   3.3. Try to invite yourself by specifying the email your current account is registered with
       
       .. note:: 
          This should not work and a message notifying you of this should be displayed.
    
-   #. Try to invite a user (without the `project` option) and specify the `role`
+   3.4. Try to invite a user (without the `project` option) and specify the `role`
 
       * Unit Admin
 
@@ -134,7 +134,7 @@ Steps
          .. note::
             Anyone should be able to invite a user with the role Researcher. 
 
-   #. Try to invite a user (`project` option *specified*) and the `--role`:
+   3.5. Try to invite a user (`project` option *specified*) and the `--role`:
 
       * Unit Admin
 
@@ -156,19 +156,19 @@ Steps
          .. note::
             Anyone should be able to invite a user with the role Researcher. 
 
-#. Run the `deactivate` subcommand
+4. Run the `deactivate` subcommand
 
-   #. Try to deactivate your own account
+   4.1. Try to deactivate your own account
       
       .. note::
          This should not work and a message notifying you of this should be displayed.
 
-   #. Try to deactivate a fake account
+   4.2. Try to deactivate a fake account
 
       .. note:: 
          A fake account does not exist and should therefore not be possible to deactivate.
 
-   #. Try to deactivate another account, either one of your own, created in the steps above, or another colleagues.
+   4.3. Try to deactivate another account, either one of your own, created in the steps above, or another colleagues.
 
       .. _deactive-other:
 
@@ -178,33 +178,35 @@ Steps
       .. note:: 
          You can also attempt inviting yourself to multiple accounts and specifying different roles, after which (and after registration in the `web<web>`) you can attempt to deactivate the different accounts. Have a look at the table at the top of the page if you are uncertain about which actions should be possible.
 
-#. Run the `activate` subcommand
+5. Run the `activate` subcommand
 
-   #. Try to activate your own account
+   5.1. Try to activate your own account
 
       .. note::
          This should not work and a message notifying you of this should be displayed.
 
-   #. Activate an account that is already activate
+   5.2. Activate an account that is already activate
 
       .. note::
          Use one of the accounts which you invited in the steps above. They should be automatically activated once they have registered an account in the web, and therefore should not be possible to activate again.
 
-   #. Try to activate a fake account
+   5.3. Try to activate a fake account
 
       .. note:: 
          A fake account does not exist and should therefore not be possible to activate.
 
-   #. Reactivate the other account that you attempted (and hopefully in some cases succeeded) to deactivate in the :ref:`step above<deactive-other>`
+   5.4. Reactivate the other account that you attempted (and hopefully in some cases succeeded) to deactivate in the :ref:`step above<deactive-other>`
 
       .. note:: 
          Try this command by specifying users with different roles. Have a look at the table at the top of the page if you are uncertain about which actions should be possible.
 
 .. warning::
-   **Please do not attempt to delete users during this testing period. Do not use the `dds delete` command.**
+   **Do not delete any accounts during this testing period. If you wish to try out this functionality, please wait until you are finished with testing the other commands. Deleted accounts are non-reversible.**
 
 -----
 
+The command
+~~~~~~~~~~~~
 .. _dds-user:
 
 .. click:: dds_cli.__main__:user_group_command

@@ -31,8 +31,10 @@ LOG = logging.getLogger(__name__)
 
 
 def verify_proceed(func):
-    """Decorator for verifying that the file is not cancelled.
-    Also cancels the upload of all non-started files if break-on-fail."""
+    """Verify that the file is not cancelled.
+
+    Also cancels the upload of all non-started files if break-on-fail.
+    """
 
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
@@ -56,7 +58,6 @@ def verify_proceed(func):
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
-
         # Cancel file(s) if something failed
         if not ok_to_proceed:
             LOG.warning(f"{func.__name__} failed: {message}")
@@ -73,8 +74,12 @@ def verify_proceed(func):
                     for x in self.status
                     if not self.status[x]["cancel"] and not self.status[x]["started"] and x != file
                 ]
+
             dds_cli.file_handler.FileHandler.append_errors_to_file(
-                self.failed_delivery_log, self.status[file]
+                log_file=self.failed_delivery_log,
+                file=file,
+                info=self.filehandler.data[file],
+                status=self.status[file],
             )
         return ok_to_proceed
 
@@ -187,7 +192,10 @@ def removal_spinner(func):
             else:
                 dds_cli.utils.console.print(self.failed_table)
             LOG.warning(f"Finished {description_lc} with errors, see table above")
+        elif self.failed_files is not None:
+            self.failed_files["result"] = f"Finished {description_lc} with errors"
+            dds_cli.utils.console.print(self.failed_files)
         else:
-            LOG.info(f"Successfully finished {description_lc}")
+            dds_cli.utils.console.print(f"Successfully finished {description_lc}")
 
     return create_and_remove_task

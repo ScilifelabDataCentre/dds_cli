@@ -17,7 +17,7 @@ import simplejson
 
 # Own modules
 import dds_cli
-from dds_cli.cli_decorators import removal_spinner
+from dds_cli.custom_decorators import removal_spinner
 from dds_cli import base
 from dds_cli import DDSEndpoint
 
@@ -41,6 +41,7 @@ class DataRemover(base.DDSBaseClass):
         super().__init__(username=username, project=project, method=method, no_prompt=no_prompt)
 
         self.failed_table = None
+        self.failed_files = None
 
         # Only method "rm" can use the DataRemover class
         if self.method != "rm":
@@ -62,30 +63,36 @@ class DataRemover(base.DDSBaseClass):
 
         # Create table if any files failed
         if not_exists or delete_failed:
-
-            # Create table and add columns
-            table = rich.table.Table(
-                title=f"{level}s not deleted",
-                title_justify="left",
-                show_header=True,
-                header_style="bold",
-            )
-            columns = [level, "Error"]
-            for x in columns:
-                table.add_column(x)
-
-            # Add rows
-            for x in not_exists:
-                table.add_row(x, f"No such {level.lower()}")
-
-            for x, y in delete_failed.items():
-                table.add_row(
-                    f"[light_salmon3]{x}[/light_salmon3]",
-                    f"[light_salmon3]{y}[/light_salmon3]",
+            if self.no_prompt:
+                self.failed_files = {"Errors": []}
+                for x in not_exists:
+                    self.failed_files["Errors"].append({x: f"No such {level.lower()}"})
+                for x, y in delete_failed.items():
+                    self.failed_files["Errors"].append({x: y})
+            else:
+                # Create table and add columns
+                table = rich.table.Table(
+                    title=f"{level}s not deleted",
+                    title_justify="left",
+                    show_header=True,
+                    header_style="bold",
                 )
+                columns = [level, "Error"]
+                for x in columns:
+                    table.add_column(x)
 
-            # Print out table
-            self.failed_table = rich.padding.Padding(table, 1)
+                # Add rows
+                for x in not_exists:
+                    table.add_row(x, f"No such {level.lower()}")
+
+                for x, y in delete_failed.items():
+                    table.add_row(
+                        f"[light_salmon3]{x}[/light_salmon3]",
+                        f"[light_salmon3]{y}[/light_salmon3]",
+                    )
+
+                # Print out table
+                self.failed_table = rich.padding.Padding(table, 1)
 
     @staticmethod
     def delete_tempfile(file: pathlib.Path):

@@ -31,7 +31,7 @@ dds\_cli.base
 dds\_cli.cli\_decorators
 -------------------------------
 
-.. automodule:: dds_cli.cli_decorators
+.. automodule:: dds_cli.custom_decorators
    :members:
    :undoc-members:
    :show-inheritance:

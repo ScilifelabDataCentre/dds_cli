@@ -79,7 +79,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(response_json.get("message", "User successfully added."))
+        dds_cli.utils.console.print(response_json.get("message", "User successfully added."))
 
     def delete_user(self, email):
         """Delete users from the system"""
@@ -169,7 +169,9 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(response_json.get("message", "User access successfully revoked."))
+        dds_cli.utils.console.print(
+            response_json.get("message", "User access successfully revoked.")
+        )
 
     def get_user_info(self):
         """Get a users info"""
@@ -234,3 +236,39 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             )
 
         LOG.info(response_json.get("message", f"User successfully {action}d."))
+
+    def fix_project_access(self, email, project):
+        """Fix project access for specific user."""
+        json = {"email": email}
+        try:
+            response = requests.post(
+                dds_cli.DDSEndpoint.PROJ_ACCESS,
+                headers=self.token,
+                params={"project": project},
+                json=json,
+            )
+            response_json = response.json()
+
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        if not response.ok:
+            message = f"Failed updating user '{email}' project access"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise dds_cli.exceptions.DDSCLIException(
+                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            )
+
+        LOG.info(
+            response_json.get(
+                "message",
+                (
+                    f"Project access fixed for user '{email}'. "
+                    "They should now have access to all project data."
+                ),
+            )
+        )

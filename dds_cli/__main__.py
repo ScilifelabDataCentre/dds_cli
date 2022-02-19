@@ -12,13 +12,12 @@ import os
 import sys
 
 # Installed
-import click
+import rich_click as click
 import click_pathlib
 import rich
 import rich.logging
 import rich.progress
 import rich.prompt
-import rich_click
 import questionary
 
 # Own modules
@@ -58,10 +57,8 @@ from dds_cli.options import (
 
 LOG = logging.getLogger()
 
-# Monkey patch click to use rich's logging
-rich_click.core.MAX_WIDTH = 100
-click.Group.format_help = rich_click.rich_format_help
-click.Command.format_help = rich_click.rich_format_help
+# Configuration for rich-click output
+click.rich_click.MAX_WIDTH = 100
 
 
 ## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -415,11 +412,6 @@ def add_user(click_ctx, email, username, role, project):
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as inviter:
             inviter.add_user(email=email, role=role, project=project)
-            if project:
-                LOG.info(
-                    "Any user shown as invited would need to be added to the project once the user "
-                    "has accepted the invitation and created an account in the system."
-                )
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
@@ -716,17 +708,12 @@ def create(
                 users_to_add=emails_roles,
             )
             if created:
-                LOG.info(
+                dds_cli.utils.console.print(
                     f"Project created with id: {project_id}",
                 )
                 if user_addition_messages:
                     for msg in user_addition_messages:
-                        LOG.info(msg)
-                        LOG.info(
-                            "Any user shown as invited would need to be "
-                            "added to the project once the user has accepted "
-                            "the invitation and created an account in the system."
-                        )
+                        dds_cli.utils.console.print(msg)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -933,11 +920,6 @@ def grant_project_access(click_ctx, username, project, email, owner):
             if owner:
                 role = "Project Owner"
             granter.add_user(email=email, role=role, project=project)
-            if project:
-                LOG.info(
-                    "Any user shown as invited would need to be added to the project once the user "
-                    "has accepted the invitation and created an account in the system."
-                )
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
@@ -962,6 +944,32 @@ def revoke_project_access(click_ctx, username, project, email):
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as revoker:
             revoker.revoke_project_access(project, email)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project access fix -- #
+@project_access.command(name="fix", no_args_is_help=True)
+# Positional arguments
+@email_arg(required=True)
+# Options
+@username_option()
+@project_option(required=False)
+@click.pass_obj
+def fix_project_access(click_ctx, email, username, project):
+    """Re-grant project access to user that has lost access due to password reset."""
+
+    try:
+        with dds_cli.account_manager.AccountManager(
+            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+        ) as fixer:
+            fixer.fix_project_access(email=email, project=project)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

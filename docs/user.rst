@@ -2,6 +2,8 @@
 `dds user`
 ==============
 
+This page begins with a description and step-by-step guide to how you could test this command. At the :ref:`bottom<dds-user>` of this page, you can find the different commands and a list of their options.
+
 How to test the `dds user` command functionality
 ----------------------------------------------------
 
@@ -168,6 +170,8 @@ Steps
 
    #. Try to deactivate another account, either one of your own, created in the steps above, or another colleagues.
 
+      .. _deactive-other:
+
       .. warning:: 
          Please make sure to notify the user you are attempting to deactivate. 
 
@@ -176,7 +180,28 @@ Steps
 
 #. Run the `activate` subcommand
 
-#. Run the `delete` subcommand
+   #. Try to activate your own account
+
+      .. note::
+         This should not work and a message notifying you of this should be displayed.
+
+   #. Activate an account that is already activate
+
+      .. note::
+         Use one of the accounts which you invited in the steps above. They should be automatically activated once they have registered an account in the web, and therefore should not be possible to activate again.
+
+   #. Try to activate a fake account
+
+      .. note:: 
+         A fake account does not exist and should therefore not be possible to activate.
+
+   #. Reactivate the other account that you attempted (and hopefully in some cases succeeded) to deactivate in the :ref:`step above<deactive-other>`
+
+      .. note:: 
+         Try this command by specifying users with different roles. Have a look at the table at the top of the page if you are uncertain about which actions should be possible.
+
+.. warning::
+   **Please do not attempt to delete users during this testing period. Do not use the `dds delete` command.**
 
 -----
 

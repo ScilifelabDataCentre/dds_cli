@@ -370,7 +370,7 @@ def info():
 @dds_main.group(name="user", no_args_is_help=True)
 @click.pass_obj
 def user_group_command(_):
-    """Group command: dds user. Manage user accounts, including your own."""
+    """Group command for managing user accounts, including your own."""
 
 
 # ************************************************************************************************ #
@@ -402,10 +402,10 @@ def add_user(click_ctx, email, username, role, project):
     """
     Add a user to the DDS system or hosted projects.
 
-    Specify an user's email and role to associate it with projects.
+    Specify a users email and role to associate it with projects.
+
     If the user doesn't exist in the system yet, an invitation email
     will be sent automatically to that person.
-
     """
     try:
         with dds_cli.account_manager.AccountManager(
@@ -441,6 +441,8 @@ def add_user(click_ctx, email, username, role, project):
 def delete_user(click_ctx, email, username, self):
     """
     Delete user accounts from the Data Delivery System.
+
+    Use this command with caution. Deletion of accounts cannot be undone.
 
     To request the removal of your own account, use the `--self` flag without any arguments.
     An e-mail will be sent to you asking to confirm the deletion.
@@ -495,7 +497,7 @@ def delete_user(click_ctx, email, username, self):
 # Flags
 @click.pass_obj
 def get_info_user(click_ctx, username):
-    """Display info about the user logged in from the Data Delivery System."""
+    """Display information connected to your own DDS account."""
     try:
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -521,7 +523,7 @@ def get_info_user(click_ctx, username):
 @click.pass_obj
 def activate_user(click_ctx, email, username):
     """
-    (Re)Activate user accounts in the Data Delivery System.
+    Activate/Reactivate user accounts.
 
     If you have sufficient admin privileges, you may activate the accounts of other users.
     Specify the e-mail address as argument to the main command to initiate the activation process.

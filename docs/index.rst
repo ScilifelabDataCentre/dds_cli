@@ -13,7 +13,7 @@ Welcome to the Data Delivery Systems' Documentation / Test Protocol!
 
 .. warning::
    
-   **Please do not use any sensitive data during this testing phase.** The key management has been implemented and your data should be secure, however there may be bugs and/or issues which we need to solve before DDS is put in production. 
+   **Please do not use any sensitive data during this testing phase.** Since the last testing period we have implemented a key management system for the storage of all required keys (e.g. encryption keys) and your data should be secure, however there may be bugs and/or issues which we need to solve before DDS is put into production. 
 
 The Data Delivery System (DDS) consists of a command line interface (CLI) and a very minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
 
@@ -38,12 +38,15 @@ Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* a
 How to use the DDS CLI
 ======================
 
+.. role:: bash(code)
+   :language: bash
+
 Installation
 ------------
 
 PyPi - MacOS / Linux 
 ~~~~~~~~~~~~~~~~~~~~~
-#. To perform these steps you need to have Python version 3.8 or higher installed. It's possible that it works with other versions as well, but we cannot guarantee it. 
+1. To perform these steps you need to have Python version 3.8 or higher installed. It's possible that it could work with other versions, but this cannot be guaranteed. 
 
    * To install Python, please first run
       
@@ -59,51 +62,52 @@ PyPi - MacOS / Linux
 
       If this does not return `Python 3.8.x` or higher, you will need to `install Python <https://www.python.org/downloads/>`_.
       
-#. To install the DDS CLI, open the terminal and run
+2. To install the DDS CLI, open the terminal and run
 
    .. code-block:: bash
 
       $ pip install dds-cli
 
-#. Once the installation has finished, test that everything is working correctly:
+3. Once the installation has finished, test that everything is working correctly:
 
    .. code-block:: bash
 
       $ dds --help
 
-   This should display a logo, version information and a short usage message. 
+   This should display a logo, version information and a short usage message. If there are no errors when running this command, the test has succeeded and you should be able to move on to :ref:`Running the command<Running the command>`.
 
 
 Executable - Windows
 ~~~~~~~~~~~~~~~~~~~~~
 
-WE NEED TO FIX AN EXECUTABLE OR COPY/EDIT LAST YEARS WINDOWS INSTRUCTIONS
+*Windows instructions are coming.*
 
 -------
 
-Main command and options
-------------------------
+.. _Running the command:
 
-The main command `dds` has some options and possible customizations. A detailed list of these can be found :ref:`here<dds-main>`.
+Running the command
+---------------------
+
+The main command :bash:`dds` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>`.
 
 The five group commands
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-The DDS CLI has the following major commands: :ref:`auth<auth-info>`, :ref:`user<user-info>`, :ref:`project<project-info>`, :ref:`data<data-info>` and :ref:`ls<ls-info>`.
+The DDS CLI has the following group commands: :ref:`auth<auth-info>`, :ref:`user<user-info>`, :ref:`project<project-info>`, :ref:`data<data-info>` and :ref:`ls<ls-info>`.
 
 .. _auth-info:
 
 :ref:`dds auth<dds-auth>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""
+`dds auth` and its subcommands are used for creating and managing sessions. This will enable you to use the CLI without specifying your user credentials for a certain amount of time, currently 48 hours. 
 
-`dds auth` and its subcommands are used for creating and managing sessions. This will enable you to run multiple commands within a certain amount of time (currently 48 hours) without specifying your user credentials. 
-
-See the subcommands and documentation :ref:`here<dds-auth>`.
+See the test protocol and the command documentation :ref:`here<dds-auth>`.
 
 .. _user-info:
 
 :ref:`dds user<dds-user>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""
 You can use the `add user` group command to manage your own and (if you have administrative permissions) other user accounts. 
 
 See the subcommands and documentation :ref:`here<dds-user>`.
@@ -111,7 +115,7 @@ See the subcommands and documentation :ref:`here<dds-user>`.
 .. _project-info:
 
 :ref:`dds project<dds-project>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""""""""
 some project info here + link to docs
 
 See the subcommands and documentation :ref:`here<dds-project>`.
@@ -119,7 +123,7 @@ See the subcommands and documentation :ref:`here<dds-project>`.
 .. _data-info:
 
 :ref:`dds data<dds-data>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""""""
 some data info here + link to docs
 
 See the subcommands and documentation :ref:`here<dds-data>`.
@@ -127,7 +131,7 @@ See the subcommands and documentation :ref:`here<dds-data>`.
 .. _ls-info:
 
 :ref:`dds ls<dds-ls>`
-~~~~~~~~~~~~~~~~~~~~~~
+""""""""""""""""""""""
 some listing info here + link to docs
 
 See the subcommands and documentation :ref:`here<dds-ls>`.
@@ -136,7 +140,8 @@ Links to documentation
 =======================
 
 .. toctree::
-
+   :maxdepth: 1
+   
    web
    main
    auth
@@ -144,13 +149,6 @@ Links to documentation
    project
    data
    ls
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: DDS CLI Modules :
-
-   modules
 
 Indices and tables
 ==================

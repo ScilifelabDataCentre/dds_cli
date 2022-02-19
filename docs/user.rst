@@ -9,9 +9,9 @@ How to test the `dds user` command functionality
 
 .. note::
 
-   When running the commands, remember to make a note of whether or not any information or error messages are understandable and if there’s anything we need to improve on, including the documentation on this page.
+   When running the commands, remember to make a note of whether or not any information or error messages are understandable and if there’s anything we need to improve on, including the documentation in this section.
 
-As a *Unit Admin* or *Unit Personnel* account, you should be able to run all commands successfully. As a *Researcher* however, you will only be able to run the `info` command, unless you're a *Project Owner* for a specific project. In this case you should only be able to handle other Project Owners and Researchers which are involved in the project you are set as Project Owner in. 
+From a *Unit Admin* or *Unit Personnel* account, you should be able to run all commands successfully. From a *Researcher* however, you will only be able to run the `info` command, unless you're a *Project Owner* for a specific project. In this case you should only be able to handle other Project Owners and Researchers that are involved in the project you are set as Project Owner in. 
 
 Although Project Owners and Researchers should not be able to successfully run most of these commands, we ask you to try these out anyway, and report back if anything unexpected happens.
 
@@ -176,7 +176,7 @@ Steps
          Please make sure to notify the user you are attempting to deactivate. 
 
       .. note:: 
-         You can also attempt inviting yourself to multiple accounts and specifying different roles, after which (and after registration in the `web<web>`) you can attempt to deactivate the different accounts. Have a look at the table at the top of the page if you are uncertain about which actions should be possible.
+         You can also attempt inviting yourself to multiple accounts and specifying different roles, after which (and after registration in the `web<web>`) you can attempt to deactivate the different accounts. Have a look at the table at the top of the section if you are uncertain about which actions should be possible.
 
 5. Run the `activate` subcommand
 
@@ -198,7 +198,7 @@ Steps
    5.4. Reactivate the other account that you attempted (and hopefully in some cases succeeded) to deactivate in the :ref:`step above<deactive-other>`
 
       .. note:: 
-         Try this command by specifying users with different roles. Have a look at the table at the top of the page if you are uncertain about which actions should be possible.
+         Try this command by specifying users with different roles. Have a look at the table at the top of the section if you are uncertain about which actions should be possible.
 
 .. warning::
    **Do not delete any accounts during this testing period. If you wish to try out this functionality, please wait until you are finished with testing the other commands. Deleted accounts are non-reversible.**

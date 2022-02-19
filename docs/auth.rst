@@ -34,17 +34,17 @@ Steps
       .. note::
          You **should not** be granted access and you **should not** have a `.dds_cli_token` file in your home directory.
 
-   2.3. With correct credentials. You should be prompted for a one-time code sent to your email address.
+   2.3. With correct credentials. You should receive an email containing a one-time code and be prompted by the command line to enter this code.
 
       (i) Fill in an incorrect one-time code. 
 
          .. note:: 
-            You **should not** be granted access and you **should not** have a `.dds_cli_token` file in your home directory.
+            You **should not** be granted access and you **should not** have a `.dds_cli_token` file in your home directory. You should be asked by the command line if you want to try again. If you choose to try again, you should not recieve a new one-time code. If you cancel the current command and run `dds auth login` again, you should also not receive a new one-time code. However, if you wait 15 minutes and then try again, you should receive a new one-time code via email. This setup is due to security reasons.
       
-      (ii) Fill in the valid one-time code sent in the previous email.
+      (ii) Wait 15 minutes and run the `dds auth login` command again. You should receive a new email with a new one-time code. Fill in the one-time code sent in the previous email.
 
          .. note:: 
-            The system should not accept an old one-time code. You **should not** be granted access and you **should not** have a `.dds_cli_token` file in your home directory.
+            The system should not accept an old one-time code. You **should not** be granted access and you **should not** have a `.dds_cli_token` file in your home directory. 
          
       (iii) Fill in the valid one-time code
 
@@ -65,9 +65,9 @@ Steps
 3. Run the `info` subcommand.
    The information printed out should contain:
 
-   * If the token is about to expire soon or not 
-   * Token age
-   * Token expiration time
+   * Whether the token will expire
+   * Age of the token
+   * When the token will expire
 
    Is the information understandable?
 

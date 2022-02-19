@@ -306,7 +306,7 @@ def login(click_ctx, username):
 
     Creates or renews the authentication token stored in the '.dds_cli_token' file.
 
-    Run this command before running the cli in a non interactive fashion as this enables the longest
+    Run this command before running the cli in a non-interactive fashion as this enables the longest
     possible session time before a password needs to be entered again.
     """
     no_prompt = click_ctx.get("NO_PROMPT", False)
@@ -1254,7 +1254,7 @@ def list_data(ctx, username, project, folder, json, size, tree, users):
     required=False,
     type=str,
     multiple=True,
-    help="Path to file to remove." + dds_cli.utils.multiple_help_text(item="file"),
+    help="Path to file to be removed." + dds_cli.utils.multiple_help_text(item="file"),
 )
 # Flags
 @click.option(

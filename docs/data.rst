@@ -124,166 +124,180 @@ Steps
 
       To simplify the testing of this section, we have split it up into *4.1. Unit Admins and Unit Personnel* and *4.2. Researchers*.
 
+      .. admonition:: Options to test
+
+         **Independent of account role**, test this command by trying different flags and options, for example:
+
+         * Without any specified options
+
+            .. admonition:: Expected result
+
+               The download requires a project ID and information on which data to download. The CLI should display a help message. 
+
+         * Specify a file / folder with the ``--source`` option. Also try specifying ``--source`` multiple times in the same command. 
+
+         * Specify files / folders within a text file and use the ``--source-path-file`` option.
+
+         * Try the ``--silent`` flag and ``--num-threads`` option. 
+
+         * Specify where you would like to download the data to by using the ``--destination`` option. 
+
+            .. note:: 
+
+               The ``--destination`` cannot (at this time) be an existing directory. You need to specify a new directory name and the DDS CLI will create it for you. 
+
+         * Use the ``--verify-checksum`` flag. This performs an additional check to verify that the downloaded file is identical to the file uploaded by the Unit Admin / Personnel. 
+
+            .. admonition:: Expected result
+
+               A message informing you that the checksum verification passed should be displayed. 
+
+            .. warning:: 
+
+               Notify us immediately if the checksum verification fails. 
+
    4.1. *Unit Admins and Unit Personnel* 
 
       .. admonition:: Recommended testing prodecure
 
-      We recommend that you test the functionality by performing the following general steps:
+         We recommend that you test the functionality by performing the following general steps:
 
-      (i) Use a project which you've uploaded data to. Make sure the project status is **In Progress**. See the :ref:`dds project section<dds-project>` for instructions on how to do this. 
+         (i) Use a project which you've uploaded data to. Make sure the project status is **In Progress**. See the :ref:`dds project section<dds-project>` for instructions on how to do this. 
 
-      (ii) List the project contents with the ``ls`` command described in point 3. above. 
+         (ii) List the project contents with the ``ls`` command described in point 3. above. 
 
-      (iii) Download a file
+         (iii) Download a file
 
-         * Try to download a file that is not listed in step (ii) above
+            * Try to download a file that is not listed in step (ii) above
+
+               .. admonition:: Expected result
+
+                  A message should be printed out, letting you know that the file could not be found.
+            
+            * Download a file that is listed in step (ii) above. 
+
+               .. admonition:: Expected result
+
+                  A folder should be created in your current working directory (or in the location you choose, see ``--destination`` below), the file should be downloaded, and finally decrypted. Once the file has been downloaded and decrypted, a message should be displayed notifying you where you can find the file.
+
+         (iv) Download a folder
+
+            * Try to download a folder that is not listed in step (ii) above
+
+               .. admonition:: Expected result
+
+                  A message should be printed out, notifying you that the folder could not be found.
+
+            * Download a folder that is listed in step (ii) above
+
+               .. admonition:: Expected result 
+
+                  The result of this should be similar to the download in step (iii) above. 
+
+         (v) Download a folder and a file
 
             .. admonition:: Expected result
 
-               A message should be printed out, letting you know that the file could not be found.
-         
-         * Download a file that is listed in step (ii) above. 
+               The result of this command should be similar to the download in steps (iii) and (iv) above.
+
+         (vi) Set the project status as **Available**. See the :ref:`dds project section<dds-project>` for instructions on how to do this. 
+
+         (vii) Try to download a file / folder
 
             .. admonition:: Expected result
 
-               A folder should be created in your current working directory (or in the location you choose, see ``--destination`` below), the file should be downloaded, and finally decrypted. Once the file has been downloaded and decrypted, a message should be displayed notifying you where you can find the file.
+               Since download is available for Unit Admins and Unit Personnel when the project status is **Available**, the download should be successful and the output should be similar to that of the download steps above.
 
-      (iv) Download a folder
-
-         * Try to download a folder that is not listed in step (ii) above
-
+         (viii) Set the project as **Archived** or **Aborted**. 
+            
             .. admonition:: Expected result
 
-               A message should be printed out, notifying you that the folder could not be found.
+               Archiving or aborting a project should delete all project data. 
 
-         * Download a folder that is listed in step (ii) above
+         (ix) Try to download data 
 
             .. admonition:: Expected result 
 
-               The result of this should be similar to the download in step (iii) above. 
-
-      (v) Download a folder and a file
-
-         .. admonition:: Expected result
-
-            The result of this command should be similar to the download in steps (iii) and (iv) above.
-
-      (vi) Set the project status as **Available**. See the :ref:`dds project section<dds-project>` for instructions on how to do this. 
-
-      (vii) Try to download a file / folder
-
-         .. admonition:: Expected result
-
-            Since download is available for Unit Admins and Unit Personnel when the project status is **Available**, the download should be successful and the output should be similar to that of the download steps above.
-
-      (viii) Set the project as **Archived** or **Aborted**. 
-         
-         .. admonition:: Expected result
-
-            Archiving or aborting a project should delete all project data. 
-
-      (ix) Try to download data 
-
-         .. admonition:: Expected result 
-
-            Download should not be possible and a message informing you that the project status prevents you from downloading should be displayed. 
+               Download should not be possible and a message informing you that the project status prevents you from downloading should be displayed. 
 
    4.2. *Researchers*
 
       .. admonition:: Recommended testing prodecure
 
-      We recommend that you test the functionality by performing the following general steps:
+         We recommend that you test the functionality by performing the following general steps:
 
-      (i) Display the status of a project you have access to. Use ``dds ls`` to list the projects, and ``dds project status display`` to see the status of a specific project. Choose a project which has the status **Available**. 
+         (i) Display the status of a project you have access to. Use ``dds ls`` to list the projects, and ``dds project status display`` to see the status of a specific project. Choose a project which has the status **Available**. 
 
-         .. note:: 
+            .. note:: 
 
-            When a project status is changed from **In Progress** to **Available**, you should receive an email informing you that there is data available for download. If you have access to a project which is **Available** but you have not received an email about this, first check your junk folder. If you still cannot find this email, contact us and we will look into it.
+               When a project status is changed from **In Progress** to **Available**, you should receive an email informing you that there is data available for download. If you have access to a project which is **Available** but you have not received an email about this, first check your junk folder. If you still cannot find this email, contact us and we will look into it.
 
-      (ii) List the contents of the project. See step 3 above. 
+         (ii) List the contents of the project. See step 3 above. 
 
-      (iii) Download a file
+         (iii) Download a file
 
-         * Try to download a file that is not listed in step (ii) above
+            * Try to download a file that is not listed in step (ii) above
+
+               .. admonition:: Expected result
+
+                  A message should be printed out, letting you know that the file could not be found.
+            
+            * Download a file that is listed in step (ii) above. 
+
+               .. admonition:: Expected result
+
+                  A folder should be created in your current working directory (or in the location you choose, see ``--destination`` below), the file should be downloaded, and finally decrypted. Once the file has been downloaded and decrypted, a message should be displayed notifying you where you can find the file.
+
+         (iv) Download a folder
+
+            * Try to download a folder that is not listed in step (ii) above
+
+               .. admonition:: Expected result
+
+                  A message should be printed out, notifying you that the folder could not be found.
+
+            * Download a folder that is listed in step (ii) above
+
+               .. admonition:: Expected result 
+
+                  The result of this should be similar to the download in step (iii) above. 
+
+         (v) Download a folder and a file
 
             .. admonition:: Expected result
 
-               A message should be printed out, letting you know that the file could not be found.
-         
-         * Download a file that is listed in step (ii) above. 
+               The result of this command should be similar to the download in steps (iii) and (iv) above.
 
-            .. admonition:: Expected result
+         (vi) Use the ``--get-all`` flag to download the entire project. 
 
-               A folder should be created in your current working directory (or in the location you choose, see ``--destination`` below), the file should be downloaded, and finally decrypted. Once the file has been downloaded and decrypted, a message should be displayed notifying you where you can find the file.
+            .. note:: 
 
-      (iv) Download a folder
-
-         * Try to download a folder that is not listed in step (ii) above
-
-            .. admonition:: Expected result
-
-               A message should be printed out, notifying you that the folder could not be found.
-
-         * Download a folder that is listed in step (ii) above
-
-            .. admonition:: Expected result 
-
-               The result of this should be similar to the download in step (iii) above. 
-
-      (v) Download a folder and a file
-
-         .. admonition:: Expected result
-
-            The result of this command should be similar to the download in steps (iii) and (iv) above.
-
-      (vi) Use the ``--get-all`` flag to download the entire project. 
-
-         .. note:: 
-
-            Make sure you have enough space.
+               Make sure you have enough space.
    
-   .. admonition:: Options to test
-
-      ** Independent of account role**, test this command by trying different flags and options, for example:
-
-      * Without any specified options
-
-         .. admonition:: Expected result
-
-            The download requires a project ID and information on which data to download. The CLI should display a help message. 
-
-      * Specify a file / folder with the ``--source`` option. Also try specifying ``--source`` multiple times in the same command. 
-
-      * Specify files / folders within a text file and use the ``--source-path-file`` option.
-
-      * Try the ``--silent`` flag and ``--num-threads`` option. 
-
-      * Specify where you would like to download the data to by using the ``--destination`` option. 
-
-         .. note:: 
-
-            The ``--destination`` cannot (at this time) be an existing directory. You need to specify a new directory name and the DDS CLI will create it for you. 
-
-      * Use the ``--verify-checksum`` flag. This performs an additional check to verify that the downloaded file is identical to the file uploaded by the Unit Admin / Personnel. 
-
-         .. admonition:: Expected result
-
-            A message informing you that the checksum verification passed should be displayed. 
-
-         .. warning:: 
-
-            Notify us immediately if the checksum verification fails. 
    
-
 5. Delete (remove) data with the ``rm`` \*\*\*
    
-   recommended: 
-   1. list project contents
-   2. remove a file
-   3. list project contents
-   4. remove a folder
-   5. list project contents
-   6. remove all 
+   .. admonition:: Recommended testing prodecure
+
+      We recommend that you test the functionality by performing the following general steps:
+
+      (i) List the project contents with the ``dds data ls`` command as described in step 3 above. 
+
+      (ii) Attempt to remove a file.
+
+      (iii) List the project contents again.
+
+      (iv) Attempt to remove a folder.
+
+      (v) List the project contents again.
+      
+      (vi) Use the `--rm-all` flag to remove all project contents.
+   
+   .. admonition:: Expected result (all ``rm`` steps above)
+
+      When attempting to remove data which does not exist, a message should be displayed in the terminal saying that the data was not found. 
+
+      When attempting to remove data which does exist in the project and is listed in step (i), a success message should be displayed, informing you that the data was removed. 
 
 -------
 

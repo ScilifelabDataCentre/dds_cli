@@ -88,7 +88,7 @@ Steps
 
    .. note:: 
       All projects are set as **sensitive** by default. This means that all data will be encrypted before upload, and decrypted after download. Depending on the size of the data, this may take some time. There is a ``--non-sensitive`` flag available, however at this time this is not functional and all projects are handled in the same way. Therefore, if you use the `--non-sensitive` flag, the project will be saved in the database as non-sensitive, but the data will still be handled as if it is sensitive. This will be changed as soon as possible.
-       
+
    3.1. Without any options
 
       .. note::
@@ -113,10 +113,19 @@ Steps
       .. note:: 
          A project should be created, a message should be displayed stating the new Project ID, and an additional message should be displayed, stating that the specified owner has either been sent an invitation, or granted access to the project, depending on whether or not the specified email has an existing account. The message should also inform you that the user has been granted access as a Project Owner.
 
-   3.5. Specify both a Researchuser and an owner 
-   -- there is a non-sensitive flag but it's not used for anything at the moment, all projects are by default sensitive -- 
+   3.5. Specify both a Researchuser and an owner. 
+   
+      Perform the same steps as in 3.3. and 3.4. but specify both a ``--researcher`` and an ``--owner``. 
 
-   3.6. with multiple users 
+      .. note::
+         This should result in a similar output as in the previous steps.
+
+   3.6. With multiple users. 
+
+      Perform the same steps as in 3.3. and 3.4. but try specifying multiple researchers and / or owners. 
+
+      .. note:: 
+         This should result in a similar output as in the previous steps.
 
 4. Run the `status` subcommand
    -- For Unit Admins / Personnel we recommend to check this functionality by creating a project, displaying the status, attempting to change the status and then displaying again to see that it has taken affect. -- 

@@ -132,8 +132,29 @@ Steps
    4.1. Display the status of a project (``status display``)
 
       * Specify a non-existent project 
+
+         .. note::
+            A message saying that the project does not exist should be displayed.
+
       * Specify an existing project
+
+         .. note::
+            The output should look something like this:
+
+            .. code-block:: bash
+
+               Current status of someunit00002: In Progress
+
       * Also show the status history with the ``--show-history`` flag
+
+         .. note:: 
+            The output should look something like this:
+
+            .. code-block:: bash
+
+               Current status of someunit00002: In Progress
+               INFO     Status history
+               In Progress, Sun, 20 Feb 2022 11:51:13 CET 
    
    4.2. try the different changes \*\*\*
       

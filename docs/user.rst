@@ -2,7 +2,7 @@
 `dds user`
 ==============
 
-This section begins with a description and step-by-step guide to how you could test this command. At the :ref:`bottom<dds-user>` of this section, you can find the different commands and a list of their options.
+This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-user>` of the section. 
 
 How to test the `dds user` command functionality
 ----------------------------------------------------
@@ -11,9 +11,11 @@ How to test the `dds user` command functionality
 
    When running the commands, remember to make a note of whether or not any information or error messages are understandable and if there’s anything we need to improve on, including the documentation in this section.
 
-From a *Unit Admin* or *Unit Personnel* account, you should be able to run all commands successfully. From a *Researcher* however, you will only be able to run the `info` command, unless you're a *Project Owner* for a specific project. In this case you should only be able to handle other Project Owners and Researchers that are involved in the project you are set as Project Owner in. 
+From a *Unit Admin* or *Unit Personnel* account, you should be able to run all commands successfully. From a *Researcher* account, however, you will only be able to run the **dds user info** command, unless you're a *Project Owner* for a specific project. In this case you should only be able to manage accounts of other Project Owners and Researchers that are involved in the project you are set as Project Owner in. 
 
-Although Project Owners and Researchers should not be able to successfully run most of these commands, we ask you to try these out anyway, and report back if anything unexpected happens.
+.. note:: 
+   
+   Although Project Owners and Researchers should not be able to successfully run most of these commands, we ask you to try these out anyway, and report back if anything unexpected happens.
 
 .. list-table:: Different roles and their permissions
    :header-rows: 1
@@ -82,7 +84,8 @@ Steps
 
       dds user --help
 
-   Is there any information you're missing from this help text? 
+   .. note::
+      Please let us know whether there is any additional information that you would like to see added to the help text.
 
 2. Run the `info` subcommand
    

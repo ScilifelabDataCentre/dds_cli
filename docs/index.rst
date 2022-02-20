@@ -17,8 +17,6 @@ Welcome to the Data Delivery Systems' Documentation / Test Protocol!
 
 The Data Delivery System (DDS) consists of a command line interface (CLI) and a very minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
 
-The DDS web interface can be found at https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
-
 How will I get my user account?
 ===============================
 The testing will begin with you getting an invite via email. The email will be from `dsw@scilifelab.se` during the testing. If you do not get an email, please have a look in the junk folder. If it's not there either, please contact Ina (*email:* ina.oden.osterbo@scilifelab.uu.se, *slack:* Ina Odén Österbo) and we will look into it. 
@@ -28,9 +26,9 @@ Once you get the invitation email, follow the link in the email and register you
 .. warning::
    Forgetting passwords in the DDS means that you will lose access to all project data. We highly recommend that you use a password management system such as `LastPass <https://www.lastpass.com/>`_ or similar.
 
-   When resetting a password you can, of course, regain access to the projects you lost access to. This procedure is explained <here>.
+   When resetting a password you can, of course, regain access to the projects you lost access to. This procedure is explained :ref:`here<web>`.
 
-Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. The roles are defined <here>. 
+Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. The roles are defined `on this board <https://app.diagrams.net/?page-id=iAQ0dwp1xBzZl6jLjueX&hide-pages=1#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_. 
 
 
 .. _how-to-use:
@@ -77,7 +75,7 @@ PyPi - MacOS / Linux
 Executable - Windows
 ~~~~~~~~~~~~~~~~~~~~~
 
-*Windows instructions are coming.*
+*Windows instructions are in progress.*
 
 -------
 
@@ -132,6 +130,10 @@ See the test protocol and the command documentation :ref:`here<dds-data>`.
 some listing info here + link to docs
 
 See the test protocol and the command documentation :ref:`here<dds-ls>`.
+
+How to test the web interface
+==============================
+The DDS web interface can be found at https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
 
 Links to documentation
 =======================

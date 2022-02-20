@@ -2,7 +2,7 @@
 `dds auth`
 ==============
 
-This section begins with a description and step-by-step guide to how you could test this command. At the :ref:`bottom<dds-auth>` of this section, you can find the different commands and a list of their options.
+This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-auth>` of the section. 
 
 How to test the `dds auth` command functionality
 ----------------------------------------------------
@@ -20,7 +20,8 @@ Steps
 
       dds auth --help 
    
-   Is there any information you're missing from this help text?
+   .. note::
+      Please let us know whether there is any additional information that you would like to see added to the help text.
 
 2. Run the `login` subcommand
 

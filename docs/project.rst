@@ -170,18 +170,39 @@ Steps
 
       The possible status changes are displayed visually `on this board <https://app.diagrams.net/?page-id=vh0lXXhkObWnrkoySPmn&hide-pages=1&viewbox=%7B%22x%22%3A-753%2C%22y%22%3A-503%2C%22width%22%3A1676%2C%22height%22%3A1656%2C%22border%22%3A100%7D#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_ and are listed in the :ref:`documentation below<dds-project>`.
 
-5. Run the `access` subcommand
-   -- Unit Personnel / Admins -- 
-   -- before doing this you can list the project users as described :ref:`here<dds-ls>` -- 
-   5.1. grant 
-      * non existent user 
-      * existent user
+5. Manage project access with the ``access`` subcommand \*\*\* (Also possible for Project Owners, )
+
+   .. note:: 
+      We recommend testing this functionality in the following steps:
+         
+      (i) List the users with access to a specific project: ``dds ls --project <project_id> --users``. More details on the ``dds ls`` command can be found :ref:`here<dds-ls>`. 
+      (ii) Grant / Revoke / Fix access for a specific user as described in the steps below.
+      (iii) Do step (i)
+
+   5.1. Grant access to a project (``access grant``)
+      
+      (i) Specify a non-existent user.
+
+         .. note:: 
+            The user should be invited and a message notifying you of this should be displayed. Note that you can only use ``grant`` for Researchers, not Unit Admins or Unit Personnel. Therefore, any email specified in this account will be 
+
+      (ii) Specify an existing user.
+
+         * Attempt to grant access to a user with the role **Unit Admin** or **Unit Personnel**
+
+            .. note::
+               This command should produce an error message. Unit Admins / Personnel have access to *all* projects connected to a specific unit. Only researchers can be granted access with this command.
+
+         * Attempt to grant access to a user with the role **Researcher**
+
+            Try to grant access both to a user which already has access to the specified project, and one who does not. 
+
       * existent unit Personnel
-   5.2. revoke
+   5.2. Revoke project access (``access revoke``)
       * non existent user
       * existent user that doesn't have access
       * revoke access for those that you granted
-   5.3 fix
+   5.3 Fix project access (``access fix``) \*\*\* (Also possible for )
       -- Unit Personnel / Admins / Project Owner -- 
       -- this is to reactivate a users project access if they have lost it after requesting a password reset -- 
       -- difficult to test unless someone contacts you about losing access, but you can follow the :ref:`web instructions<web>` on how to request a password reset, and then ask someone in your unit to perform this command for you. -- 

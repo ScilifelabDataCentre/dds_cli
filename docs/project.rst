@@ -87,7 +87,7 @@ Steps
 3. Create a project with the ``create`` subcommand \*\*\*
 
    .. note:: 
-      All projects are set as **sensitive** by default. This means that all data will be encrypted before upload, and decrypted after download. Depending on the size of the data, this may take some time. There is a ``--non-sensitive`` flag available, however at this time this is not functional and all projects are handled in the same way. Therefore, if you use the `--non-sensitive` flag, the project will be saved in the database as non-sensitive, but the data will still be handled as if it is sensitive. This will be changed as soon as possible.
+      All projects are set as **sensitive** by default. This means that all data will be encrypted before upload, and decrypted after download. Depending on the size of the data, this may take some time. There is a ``--non-sensitive`` flag available, however at this time this is not functional and all projects are handled in the same way. Therefore, if you use the ``--non-sensitive`` flag, the project will be saved in the database as non-sensitive, but the data will still be handled as if it were sensitive. This will be changed as soon as possible.
 
    3.1. Without any options
 
@@ -156,7 +156,7 @@ Steps
                INFO     Status history
                In Progress, Sun, 20 Feb 2022 11:51:13 CET 
    
-   4.2. try the different changes \*\*\*
+   4.2. Attempt changing the project status \*\*\*
       
       .. note:: 
          We recommend testing this functionality in the following steps: 
@@ -166,9 +166,10 @@ Steps
          (iii) Attempt changing the status.
          (iv) Display status.
 
-      The possible status changes are displayed `on this board <https://app.diagrams.net/?page-id=vh0lXXhkObWnrkoySPmn&hide-pages=1&viewbox=%7B%22x%22%3A-753%2C%22y%22%3A-503%2C%22width%22%3A1676%2C%22height%22%3A1656%2C%22border%22%3A100%7D#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_.
+         Please attempt to change the project status in different orders. 
 
-      -- We recommend to test different changes in different combinations -- 
+      The possible status changes are displayed visually `on this board <https://app.diagrams.net/?page-id=vh0lXXhkObWnrkoySPmn&hide-pages=1&viewbox=%7B%22x%22%3A-753%2C%22y%22%3A-503%2C%22width%22%3A1676%2C%22height%22%3A1656%2C%22border%22%3A100%7D#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_ and are listed in the :ref:`documentation below<dds-project>`.
+
 5. Run the `access` subcommand
    -- Unit Personnel / Admins -- 
    -- before doing this you can list the project users as described :ref:`here<dds-ls>` -- 

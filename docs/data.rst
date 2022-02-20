@@ -93,27 +93,31 @@ Steps
    - should get an email when there is data available for download and the project is set as available
    recommended: 
    1. list project contents with 3. 
-   2. download file
-   3. download folder
+   2. download file (with and with and withoout source and spf)
+      - doesn't exist
+      - exists
+   3. download folder (with and with and withoout source and spf)
+      - doesn't exist
+      - exists
    4. download both
-   5. 
+   5. download all
+   5. use the destination and play around with the flags
+
+   NOTIFY immediately if the verify checksum fails 
 
    see the possible statuses here 
 
-   try different 
-   - without any options
-   - specify files that
-   - specify one --source and multiple
-   - specify one source path file and multiple
-   - specify both source and source path file
-   - 
-
-
-
-
 
 5. Delete (remove) data with the ``rm`` \*\*\*
-
+   
+   recommended: 
+   1. list project contents
+   2. remove a file
+   3. list project contents
+   4. remove a folder
+   5. list project contents
+   6. remove all 
+   
 -------
 
 .. _dds-data:

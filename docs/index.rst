@@ -49,13 +49,13 @@ PyPi - MacOS / Linux
 
          python --version
 
-      It's possible that this shows `Python 2.7`, in which case you should run 
+      It's possible that this shows ``Python 2.7``, in which case you should run 
 
       .. code-block::
 
          python3 --version
 
-      If this does not return `Python 3.8.x` or higher, you will need to `install Python <https://www.python.org/downloads/>`_.
+      If this does not return ``Python 3.8.x`` or higher, you will need to `install Python <https://www.python.org/downloads/>`_.
       
 2. To install the DDS CLI, open the terminal and run
 
@@ -84,7 +84,7 @@ Executable - Windows
 Running the command
 ---------------------
 
-The main command `dds` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>`.
+The main command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>`.
 
 The five group commands
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -95,7 +95,7 @@ The DDS CLI has the following group commands: :ref:`auth<auth-info>`, :ref:`user
 
 :ref:`dds auth<dds-auth>`
 """"""""""""""""""""""""""
-`dds auth` and its subcommands are used for creating and managing sessions. This will enable you to use the CLI without specifying your user credentials for a certain amount of time, currently 48 hours. 
+``dds auth`` and its subcommands are used for creating and managing sessions. This will enable you to use the CLI without specifying your user credentials for a certain amount of time, currently 48 hours. 
 
 See the test protocol and the command documentation :ref:`here<dds-auth>`.
 
@@ -103,7 +103,7 @@ See the test protocol and the command documentation :ref:`here<dds-auth>`.
 
 :ref:`dds user<dds-user>`
 """"""""""""""""""""""""""
-You can use the `add user` group command to manage your own and (if you have administrative permissions) other user accounts. 
+You can use the ``add user`` group command to manage your own and (if you have administrative permissions) other user accounts. 
 
 See the test protocol and the command documentation :ref:`here<dds-user>`.
 
@@ -111,7 +111,7 @@ See the test protocol and the command documentation :ref:`here<dds-user>`.
 
 :ref:`dds project<dds-project>`
 """"""""""""""""""""""""""""""""
-The `dds project` command is for creating and managing projects. The majority of the functionalities regarding project management is only available to *Unit Admin* and *Unit Personnel* accounts.
+The ``dds project`` command is for creating and managing projects. The majority of the functionalities regarding project management is only available to *Unit Admin* and *Unit Personnel* accounts.
 
 See the test protocol and the command documentation :ref:`here<dds-project>`.
 
@@ -119,7 +119,7 @@ See the test protocol and the command documentation :ref:`here<dds-project>`.
 
 :ref:`dds data<dds-data>`
 """"""""""""""""""""""""""
-some data info here + link to docs
+The ``dds data`` group command is used for uploading, downloading, listing and deleting data. Only **Unit Admin** and **Unit Personnel** accounts can upload and delete data. All account types can list and download. 
 
 See the test protocol and the command documentation :ref:`here<dds-data>`.
 
@@ -135,8 +135,8 @@ How to test the web interface
 ==============================
 The DDS web interface can be found at https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
 
-Links to documentation
-=======================
+Command documentation and guide
+================================
 
 .. toctree::
    :maxdepth: 1

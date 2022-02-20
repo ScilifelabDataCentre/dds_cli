@@ -15,7 +15,7 @@ From a *Unit Admin* or *Unit Personnel* account, you should be able to run all c
 
 .. note:: 
    
-   Commands that should only work for Unit Adminds and Unit Personnel are noted in the step it applies to with three asterisks \*\*\*). If there is additional information about the different permissions, this is displayed in a parenthesis beside the asterisk. 
+   Commands that should only work for Unit Adminds and Unit Personnel are noted in the step it applies to with three asterisks \*\*\*). Asterisks applied to a main item (e.g. 3.) also applies to the subitems (e.g. 3.1., 3.2. etc). If there is additional information about the different permissions, this is displayed in a parenthesis beside the asterisk. 
    
    Although Project Owners and Researchers should not be able to successfully run most of these commands, we ask you to try these out anyway, and report back if anything unexpected happens.
 
@@ -127,15 +127,26 @@ Steps
       .. note:: 
          This should result in a similar output as in the previous steps.
 
-4. Run the `status` subcommand
-   -- For Unit Admins / Personnel we recommend to check this functionality by creating a project, displaying the status, attempting to change the status and then displaying again to see that it has taken affect. -- 
-   4.1. display -- All --
-      * Non existent project
-      * Existing project 
-      * show history 
-      - information on what should be displayed - 
-   4.2. try the different changes -- Unit Admins / Personnel --
-      -- Image of possible status transactions -- 
+4. View and manage the project statuses with the ``status`` subcommand 
+
+   4.1. Display the status of a project (``status display``)
+
+      * Specify a non-existent project 
+      * Specify an existing project
+      * Also show the status history with the ``--show-history`` flag
+   
+   4.2. try the different changes \*\*\*
+      
+      .. note:: 
+         We recommend testing this functionality in the following steps: 
+
+         (i) Create a project
+         (ii) Display status. The status should always be **In Progress** at this point.
+         (iii) Attempt changing the status.
+         (iv) Display status.
+
+      The possible status changes are displayed `on this board <https://app.diagrams.net/?page-id=vh0lXXhkObWnrkoySPmn&hide-pages=1&viewbox=%7B%22x%22%3A-753%2C%22y%22%3A-503%2C%22width%22%3A1676%2C%22height%22%3A1656%2C%22border%22%3A100%7D#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_.
+
       -- We recommend to test different changes in different combinations -- 
 5. Run the `access` subcommand
    -- Unit Personnel / Admins -- 

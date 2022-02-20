@@ -2,7 +2,10 @@
 `dds auth`
 ==============
 
-This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-auth>` of the section. 
+.. admonition:: Page structure 
+   
+   This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-auth>` of the section. 
+
 
 How to test the `dds auth` command functionality
 ----------------------------------------------------
@@ -16,7 +19,7 @@ Steps
 
 1. Help: ``--help``
 """"""""""""""""""""
-Run 
+Run
    
 .. code-block:: 
 
@@ -27,6 +30,9 @@ Run
 
 2. Start authenticated session: ``login``
 """""""""""""""""""""""""""""""""""""""""""
+.. code-block::
+
+   dds auth login 
 
 2.1. With incorrect credentials
 
@@ -68,6 +74,10 @@ Run
 
 3. Get session information: `info`
 """""""""""""""""""""""""""""""""""
+.. code-block::
+
+   dds auth info 
+
 The information printed out should contain:
 
 * Whether the token will expire
@@ -76,8 +86,11 @@ The information printed out should contain:
 
 Is the information understandable?
 
-4. Run the `logout` subcommand. 
-"""""""""""""""""""""""""""""""
+4. End the authenticated session: ``logout``
+"""""""""""""""""""""""""""""""""""""""""""""
+.. code-block::
+
+   dds auth logout 
 
 .. admonition:: Expected result
 

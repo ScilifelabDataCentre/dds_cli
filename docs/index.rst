@@ -86,6 +86,8 @@ Running the command
 
 The main command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>`.
 
+Some commands should not be possible to successfully run from a Researcher account. The affected commands are marked with asterisks (\*\*\*). However, we ask you to try these commands anyway and report back to us if anything unexpected occurs. 
+
 The five group commands
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

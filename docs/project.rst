@@ -2,7 +2,9 @@
 `dds project`
 ==============
 
-This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-project>` of the section. 
+.. admonition:: Page structure 
+   
+   This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-project>` of the section. 
 
 How to test the `dds project` command functionality
 ----------------------------------------------------
@@ -36,6 +38,9 @@ Run
 
 2. List projects: ``ls``
 """""""""""""""""""""""""
+.. code-block::
+
+   dds project ls
 
 .. note::
    This command performs the same actions as ``dds ls`` (with out any specified project). You can find the documentation for that :ref:`here<dds-ls>`. Please test this and compare the output, it should be identical to what you see here.
@@ -94,6 +99,10 @@ Run
 
 3. Create a project ``create`` \*\*\*
 """"""""""""""""""""""""""""""""""""""
+.. code-block::
+
+   dds project create 
+
 .. note:: 
    All projects are set as **sensitive** by default. This means that all data will be encrypted before upload, and decrypted after download. Depending on the size of the data, this may take some time. There is a ``--non-sensitive`` flag available, however at this time this is not functional and all projects are handled in the same way. Therefore, if you use the ``--non-sensitive`` flag, the project will be saved in the database as non-sensitive, but the data will still be handled as if it were sensitive. This will be changed as soon as possible.
 
@@ -143,6 +152,9 @@ Run
 
 4. View and manage the project statuses: ``status``
 """""""""""""""""""""""""""""""""""""""""""""""""""" 
+.. code-block::
+
+   dds project status
 
 4.1. Display the status of a project (``status display``)
 
@@ -190,6 +202,9 @@ Run
 
 5. Manage project access: ``access`` \*\*\* (Also possible for Project Owners)
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.. code-block::
+
+   dds project access
 
 .. tip:: 
    We recommend testing this functionality in the following steps:

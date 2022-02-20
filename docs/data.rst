@@ -2,7 +2,9 @@
 `dds data`
 ==============
 
-This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-data>` of the section. 
+.. admonition:: Page structure 
+   
+   This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-data>` of the section. 
 
 How to test the `dds data` command functionality
 ----------------------------------------------------
@@ -26,6 +28,7 @@ Steps
 
 1. Help: ``--help``
 """"""""""""""""""""
+Run
 
 .. code-block::
 
@@ -38,6 +41,10 @@ Steps
 
 2. Upload: ``put`` \*\*\*
 """"""""""""""""""""""""""
+.. code-block::
+
+   dds data put
+
 .. note::
    Some project statuses do not permit uploads. A visual respresentation of the project statuses can be found `on this board <https://app.diagrams.net/?page-id=vh0lXXhkObWnrkoySPmn&hide-pages=1#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_. 
 
@@ -104,29 +111,37 @@ Steps
 
 3. List data: ``ls`` 
 """""""""""""""""""""
+.. code-block::
+
+   dds data ls
+
 .. note::
    This command performs the same actions as ``dds ls --project``. You can find the documentation for this :ref:`here<dds-ls>`. Please test this and compare the output, it should be identical to what you see here.
 
    Make sure to compare the output to the file structure you recently uploaded. If it does not seem correct, please contact us.
 
-(i) Without any options
+3.1. Run the command without any options
 
    .. admonition:: Expected result
 
       This should produce a help message. The minimum required information for this command is the Project ID, specified with the ``--project`` option. 
 
-(ii) List the contents of a specific folder (``--folder``) 
+3.2. List the contents of a specific folder (``--folder``) 
 
-(iii) List the project contents as json format (``--json``)
+3.3. List the project contents as json format (``--json``)
 
-(iv) Use the ``--tree`` flag to list all project contents as a tree structure
+3.4. Use the ``--tree`` flag to list all project contents as a tree structure
 
-(v) List the researchers with access to the project (``--users``)
+3.5. List the researchers with access to the project (``--users``)
 
 .. _dds-data-get:
 
 4. Download: ``get`` 
 """"""""""""""""""""""
+.. code-block::
+
+   dds data get
+
 .. note:: 
 
    Some project statuses do not permit downloads. For Researcher accounts, data is only available for download in projects with the status **Available**. For Unit Admin and Unit Personnel accounts, data is *also* available for download when the projects have the status **In Progress**. A visual representation of the project statuses can be found `on this board <https://app.diagrams.net/?page-id=vh0lXXhkObWnrkoySPmn&hide-pages=1#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_.
@@ -169,7 +184,6 @@ Steps
 
 4.1. *Unit Admins and Unit Personnel* 
 ''''''''''''''''''''''''''''''''''''''
-
 .. admonition:: Recommended testing prodecure
 
    We recommend that you test the functionality by performing the following general steps:
@@ -292,6 +306,10 @@ Steps
 
 5. Delete (remove): ``rm`` \*\*\*
 """"""""""""""""""""""""""""""""""
+.. code-block::
+
+   dds data rm
+
 .. admonition:: Recommended testing prodecure
 
    We recommend that you test the functionality by performing the following general steps:

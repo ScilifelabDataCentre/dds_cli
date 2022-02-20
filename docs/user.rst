@@ -2,7 +2,9 @@
 `dds user`
 ==============
 
-This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-user>` of the section. 
+.. admonition:: Page structure 
+   
+   This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-user>` of the section. 
 
 How to test the `dds user` command functionality
 ----------------------------------------------------
@@ -80,7 +82,7 @@ Steps
 
 1. Help: ``--help``
 """"""""""""""""""""
-Run
+Run 
 
 .. code-block::
 
@@ -91,7 +93,10 @@ Run
 
 2. Get user info: ``info``
 """""""""""""""""""""""""""""
-   
+.. code-block::
+
+   dds user info
+
 .. note:: 
    
    The information printed out should contain your
@@ -103,6 +108,9 @@ Run
 
 3. Add users: ``add``
 """"""""""""""""""""""
+.. code-block::
+
+   dds user add
 
 3.1. Invite a new user to the DDS
 
@@ -165,6 +173,9 @@ Run
 
 4. Deactivate user: ``deactivate``
 """""""""""""""""""""""""""""""""""
+.. code-block::
+
+   dds user deactivate
 
 4.1. Try to deactivate your own account
    
@@ -188,6 +199,9 @@ Run
 
 5. Activate/Reactivate user: ``activate`` 
 """"""""""""""""""""""""""""""""""""""""""
+.. code-block::
+
+   dds user activate
 
 5.1. Try to activate your own account
 

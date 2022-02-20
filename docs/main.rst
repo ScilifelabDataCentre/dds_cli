@@ -14,7 +14,7 @@ How to test the functionality of the main `dds` command
 Steps
 ~~~~~~
 
-#. Run the *dds* command without any options or additional commands. Simply run:
+1. Run the *dds* command without any options or additional commands. Simply run:
 
    .. code-block:: bash
 
@@ -23,7 +23,7 @@ Steps
    .. note:: 
       Please let us know whether there is any additional information that you would like to see added to the help text.
 
-#. When running other subcommands, please try out the different flags and options listed below. To see the instructions on how to use these commands, go to :ref:`dds auth<dds-auth>`, :ref:`dds user<dds-user>`, :ref:`dds project<dds-project>`, :ref:`dds data<dds-data>` or :ref:`dds ls<dds-ls>`.
+2. When running other subcommands, please try out the different flags and options listed below. To see the instructions on how to use these commands, go to :ref:`dds auth<dds-auth>`, :ref:`dds user<dds-user>`, :ref:`dds project<dds-project>`, :ref:`dds data<dds-data>` or :ref:`dds ls<dds-ls>`.
 
 -----
 

@@ -78,131 +78,139 @@ Steps
 
    These test steps assume you have already started a session with the :ref:`dds auth<dds-auth>` command.
 
-1. Run
+1. Help: ``--help``
+""""""""""""""""""""
+Run
 
-   .. code-block::
+.. code-block::
 
-      dds user --help
+   dds user --help
 
-   .. note::
-      Please let us know whether there is any additional information that you would like to see added to the help text.
+.. note::
+   Please let us know whether there is any additional information that you would like to see added to the help text.
 
-2. Run the `info` subcommand
+2. Get user info: ``info``
+"""""""""""""""""""""""""""""
+   
+.. note:: 
+   
+   The information printed out should contain your
+
+   * Username
+   * Role
+   * Name
+   * Emails connected to the account
+
+3. Add users: ``add``
+""""""""""""""""""""""
+
+3.1. Invite a new user to the DDS
+
+   .. warning::
+      Please either use one of your own accounts or a colleague that is also involved in the testing of the DDS.
+
+3.2. Invite the same user to DDS again
    
    .. note:: 
-      
-      The information printed out should contain your
+      This should not work and a message notifying you that the user has an ongoing invite should be displayed.
 
-      * Username
-      * Role
-      * Name
-      * Emails connected to the account
-
-3. Run the `add` subcommand
-
-   3.1. Invite a new user to the DDS
-
-      .. warning::
-         Please either use one of your own accounts or a colleague that is also involved in the testing of the DDS.
-
-   3.2. Invite the same user to DDS again
-      
-      .. note:: 
-         This should not work and a message notifying you that the user has an ongoing invite should be displayed.
-
-   3.3. Try to invite yourself by specifying the email your current account is registered with
-      
-      .. note:: 
-         This should not work and a message notifying you of this should be displayed.
+3.3. Try to invite yourself by specifying the email your current account is registered with
    
-   3.4. Try to invite a user (without the `project` option) and specify the `role`
+   .. note:: 
+      This should not work and a message notifying you of this should be displayed.
 
-      * Unit Admin
+3.4. Try to invite a user (without the `project` option) and specify the `role`
 
-         .. note:: 
-            Should only work for other Unit Admin accounts.
-
-      * Unit Personnel
-         
-         .. note:: 
-            Should only work for other Unit Personnel and Unit Admin accounts.
-
-      * Project Owner
-
-         .. note::
-            Should work for Researcher accounts assigned as Project Owners  within a specific project, Unit Personnel and Unit Admin accounts.
-      
-      * Researcher 
-
-         .. note::
-            Anyone should be able to invite a user with the role Researcher. 
-
-   3.5. Try to invite a user (`project` option *specified*) and the `--role`:
-
-      * Unit Admin
-
-         .. note:: 
-            This should work for other Unit Admins as above, but there should be a message displayed saying that all Unit Admins get access to all projects within a specific unit.
-
-      * Unit Personnel
-         
-         .. note:: 
-            This should work for other Unit Personnel and Unit Admin accounts, but as for the Unit Admin, all Unit Personnel accounts get access to all unit projects and there should therefore be a print out of a message informing you of this.
-
-      * Project Owner
-
-         .. note::
-            Should work for Researcher accounts assigned as Project Owners  within a specific project, Unit Personnel and Unit Admin accounts.
-      
-      * Researcher 
-
-         .. note::
-            Anyone should be able to invite a user with the role Researcher. 
-
-4. Run the `deactivate` subcommand
-
-   4.1. Try to deactivate your own account
-      
-      .. note::
-         This should not work and a message notifying you of this should be displayed.
-
-   4.2. Try to deactivate a fake account
+   * Unit Admin
 
       .. note:: 
-         A fake account does not exist and should therefore not be possible to deactivate.
+         Should only work for other Unit Admin accounts.
 
-   4.3. Try to deactivate another account, either one of your own, created in the steps above, or another colleagues.
-
-      .. _deactive-other:
-
-      .. warning:: 
-         Please make sure to notify the user you are attempting to deactivate. 
-
+   * Unit Personnel
+      
       .. note:: 
-         You can also attempt inviting yourself to multiple accounts and specifying different roles, after which (and after registration in the `web<web>`) you can attempt to deactivate the different accounts. Have a look at the table at the top of the section if you are uncertain about which actions should be possible.
+         Should only work for other Unit Personnel and Unit Admin accounts.
 
-5. Run the `activate` subcommand
-
-   5.1. Try to activate your own account
+   * Project Owner
 
       .. note::
-         This should not work and a message notifying you of this should be displayed.
-
-   5.2. Activate an account that is already activate
+         Should work for Researcher accounts assigned as Project Owners  within a specific project, Unit Personnel and Unit Admin accounts.
+   
+   * Researcher 
 
       .. note::
-         Use one of the accounts which you invited in the steps above. They should be automatically activated once they have registered an account in the web, and therefore should not be possible to activate again.
+         Anyone should be able to invite a user with the role Researcher. 
 
-   5.3. Try to activate a fake account
+3.5. Try to invite a user (`project` option *specified*) and the `--role`:
 
-      .. note:: 
-         A fake account does not exist and should therefore not be possible to activate.
-
-   5.4. Reactivate the other account that you attempted (and hopefully in some cases succeeded) to deactivate in the :ref:`step above<deactive-other>`
+   * Unit Admin
 
       .. note:: 
-         Try this command by specifying users with different roles. Have a look at the table at the top of the section if you are uncertain about which actions should be possible.
+         This should work for other Unit Admins as above, but there should be a message displayed saying that all Unit Admins get access to all projects within a specific unit.
 
+   * Unit Personnel
+      
+      .. note:: 
+         This should work for other Unit Personnel and Unit Admin accounts, but as for the Unit Admin, all Unit Personnel accounts get access to all unit projects and there should therefore be a print out of a message informing you of this.
+
+   * Project Owner
+
+      .. note::
+         Should work for Researcher accounts assigned as Project Owners  within a specific project, Unit Personnel and Unit Admin accounts.
+   
+   * Researcher 
+
+      .. note::
+         Anyone should be able to invite a user with the role Researcher. 
+
+4. Deactivate user: ``deactivate``
+"""""""""""""""""""""""""""""""""""
+
+4.1. Try to deactivate your own account
+   
+   .. note::
+      This should not work and a message notifying you of this should be displayed.
+
+4.2. Try to deactivate a fake account
+
+   .. note:: 
+      A fake account does not exist and should therefore not be possible to deactivate.
+
+4.3. Try to deactivate another account, either one of your own, created in the steps above, or another colleagues.
+
+   .. _deactive-other:
+
+   .. warning:: 
+      Please make sure to notify the user you are attempting to deactivate. 
+
+   .. note:: 
+      You can also attempt inviting yourself to multiple accounts and specifying different roles, after which (and after registration in the `web<web>`) you can attempt to deactivate the different accounts. Have a look at the table at the top of the section if you are uncertain about which actions should be possible.
+
+5. Activate/Reactivate user: ``activate`` 
+""""""""""""""""""""""""""""""""""""""""""
+
+5.1. Try to activate your own account
+
+   .. note::
+      This should not work and a message notifying you of this should be displayed.
+
+5.2. Activate an account that is already activate
+
+   .. note::
+      Use one of the accounts which you invited in the steps above. They should be automatically activated once they have registered an account in the web, and therefore should not be possible to activate again.
+
+5.3. Try to activate a fake account
+
+   .. note:: 
+      A fake account does not exist and should therefore not be possible to activate.
+
+5.4. Reactivate the other account that you attempted (and hopefully in some cases succeeded) to deactivate in the :ref:`step above<deactive-other>`
+
+   .. note:: 
+      Try this command by specifying users with different roles. Have a look at the table at the top of the section if you are uncertain about which actions should be possible.
+
+6. Delete user: ``delete``
+"""""""""""""""""""""""""""
 .. warning::
    **Do not delete any accounts during this testing period. If you wish to try out this functionality, please wait until you are finished with testing the other commands. Deleted accounts are non-reversible.**
 

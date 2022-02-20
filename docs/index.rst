@@ -127,7 +127,7 @@ See the test protocol and the command documentation :ref:`here<dds-data>`.
 
 :ref:`dds ls<dds-ls>`
 """"""""""""""""""""""
-some listing info here + link to docs
+The ``dds ls`` group command can be used for listing both projects and project contents. Calling the ``dds ls`` command should produce the same output as ``dds project ls``, and calling ``dds ls --project`` should result in the same output as when calling ``dds data ls``. 
 
 See the test protocol and the command documentation :ref:`here<dds-ls>`.
 

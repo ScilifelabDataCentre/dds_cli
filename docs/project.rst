@@ -32,7 +32,7 @@ Steps
    .. note::
       Please let us know whether there is any additional information that you would like to see added to the help text.
 
-2. Run the ``ls`` subcommand
+2. List the projects with the ``ls`` subcommand
 
    .. note::
       This command performs the same actions as ``dds ls`` (with out any specified project). You can find the documentation for that :ref:`here<dds-ls>`. Please test this and compare the output, it should be identical to what you see here.
@@ -84,14 +84,35 @@ Steps
             ]
 
 
-3. Run the **create** subcommand (**Unit Admins / Personnel** only)
-   -- Unit Admins and Unit Personnel --
-   3.1. without any options
-   3.2. without users
-   3.3. with a researchuser
-   3.4. with a project Owner
+3. Create a project with the ``create`` subcommand \*\*\*
+   3.1. Without any options
+
+      .. note::
+         To create a project you need to specify a title, a description and the principal investigator (PI) of that project. Without this information, creating a project should not be possible. 
+
+   3.2. With all required options: ``--title``, ``--description``, ``--principal-investigator`` but without adding any users
+
+      .. note::
+         A project should be created and you should see a message displayed stating the new Project ID. This Project ID should be passed in as the ``--project`` option when running project-specific commands. If you forget the Project ID, use the ``dds ls`` command to list all projects.
+
+   3.3. Create a project and specify a Researcher (``--researcher``) that should have access to the project.
+
+      You can either specify a researcher that you know has a DDS account, or you can specify a user which you wish to invite to the DDS. 
+
+      .. note:: 
+         A project should be created, a message should be displayed stating the new Project ID, and an additional message should be displayed, stating that the specified Researcher has either been sent an invitation, or granted access to the project, depending on whether or not the specified email has an existing account. 
+
+   3.4. Create a project and specify an Project Owner (``--owner``)
+      
+      As in 3.3. above, the owner can either be a new user or and existing one. 
+
+      .. note:: 
+         A project should be created, a message should be displayed stating the new Project ID, and an additional message should be displayed, stating that the specified owner has either been sent an invitation, or granted access to the project, depending on whether or not the specified email has an existing account. The message should also inform you that the user has been granted access as a Project Owner.
+
    3.5. with both researchuser and owner 
    -- there is a non-sensitive flag but it's not used for anything at the moment, all projects are by default sensitive -- 
+
+   3.6. with multiple users 
 
 4. Run the `status` subcommand
    -- For Unit Admins / Personnel we recommend to check this functionality by creating a project, displaying the status, attempting to change the status and then displaying again to see that it has taken affect. -- 

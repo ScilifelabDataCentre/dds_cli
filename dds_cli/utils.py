@@ -2,11 +2,11 @@
 
 import numbers
 
-import jwcrypto
 import rich.console
 import simplejson
 from jwcrypto.common import InvalidJWEOperation
 from jwcrypto.jwe import InvalidJWEData
+from jwcrypto import jwt
 
 import dds_cli.exceptions
 
@@ -132,7 +132,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
 def get_token_header_contents(token):
     """Function to extract the jose header of the DDS token (JWE)"""
     try:
-        token = jwcrypto.jwt.JWT(jwt=token)
+        token = jwt.JWT(jwt=token)
         return token.token.jose_header
     except (ValueError, InvalidJWEData, InvalidJWEOperation):
         raise dds_cli.exceptions.TokenDeserializationError(

@@ -651,7 +651,7 @@ def list_projects(ctx, username, json, sort, usage):
     "--non-sensitive",
     required=False,
     is_flag=True,
-    help="Indicate if the Project includes sensitive data.",
+    help="Indicate whether the project contains only non-sensitive data",
 )
 @click.pass_obj
 def create(

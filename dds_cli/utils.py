@@ -131,6 +131,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
 
 def get_token_header_contents(token):
     """Function to extract the jose header of the DDS token (JWE)"""
+
     try:
         token = jwcrypto.jwt.JWT(jwt=token)
         return token.token.jose_header

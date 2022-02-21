@@ -39,6 +39,10 @@ How to use the DDS CLI
 Installation
 ------------
 
+Uppmax
+~~~~~~~
+*Uppmax instructions coming are in progress* 
+
 PyPi - MacOS / Linux 
 ~~~~~~~~~~~~~~~~~~~~~
 1. To perform these steps you need to have Python version 3.8 or higher installed. It's possible that it could work with other versions, but this cannot be guaranteed. 

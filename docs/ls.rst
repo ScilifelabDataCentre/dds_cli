@@ -17,6 +17,10 @@ How to test the `dds ls` command functionality
 Steps
 ~~~~~~~
 
+.. note::
+
+   These sections/test steps assume you have already started a session with the :ref:`dds auth<dds-auth>` command.
+
 1. Help: ``--help``
 """"""""""""""""""""
 Run

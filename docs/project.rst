@@ -13,7 +13,7 @@ How to test the `dds project` command functionality
 
    When running the commands, remember to make a note of whether or not any information or error messages are understandable and if there’s anything we need to improve on, including the documentation in this section.
 
-From a *Unit Admin* or *Unit Personnel* account, you should be able to run all commands successfully. From a *Researcher* account, however, you should only be able to run the **dds project ls** and **dds status display** commands, unless you're a *Project Owner* for a specific project. In this case you should also be able to grant (**dds project access grant**) and revoke (**dds project access revoke**) project access to other Project Owners and Researchers that are involved in the project you are set as Project Owner in. 
+From a *Unit Admin* or *Unit Personnel* account, you should be able to run all commands successfully. From a *Researcher* account, however, you should only be able to run the **dds project ls** and **dds project status display** commands, unless you're a *Project Owner* for a specific project. In this case you should also be able to grant (**dds project access grant**) and revoke (**dds project access revoke**) project access to other Project Owners and Researchers that are involved in the project you are set as Project Owner in. 
 
 .. note:: 
    
@@ -24,6 +24,11 @@ From a *Unit Admin* or *Unit Personnel* account, you should be able to run all c
 
 Steps
 ~~~~~~
+
+.. note::
+
+   These sections/test steps assume you have already started a session with the :ref:`dds auth<dds-auth>` command.
+
 
 1. Help: ``--help``
 """""""""""""""""""

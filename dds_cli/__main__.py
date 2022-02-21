@@ -149,8 +149,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
 def list_projects_and_contents(
     click_ctx, project, folder, username, sort, json, size, tree, usage, users, projects
 ):
-    """
-    List your projects and project files.
+    """List the projects you have access to or the project contents.
 
     To list all projects, run `dds ls` without any arguments.
 
@@ -522,8 +521,7 @@ def get_info_user(click_ctx, username):
 # Flags
 @click.pass_obj
 def activate_user(click_ctx, email, username):
-    """
-    Activate/Reactivate user accounts.
+    """Activate/Reactivate user accounts.
 
     If you have sufficient admin privileges, you may activate the accounts of other users.
     Specify the e-mail address as argument to the main command to initiate the activation process.
@@ -562,8 +560,7 @@ def activate_user(click_ctx, email, username):
 # Flags
 @click.pass_obj
 def deactivate_user(click_ctx, email, username):
-    """
-    Deactivate user accounts in the Data Delivery System.
+    """Deactivate user accounts in the Data Delivery System.
 
     If you have sufficient admin privileges, you may deactivate the accounts of other users.
     Specify the e-mail address as argument to the main command to initiate the deactivation process.
@@ -603,7 +600,7 @@ def deactivate_user(click_ctx, email, username):
 @dds_main.group(name="project", no_args_is_help=True)
 @click.pass_obj
 def project_group_command(_):
-    """Group command: dds project. Manage projects."""
+    """Group command for creating and managing projects within the DDS."""
 
 
 # ************************************************************************************************ #
@@ -621,7 +618,10 @@ def project_group_command(_):
 @json_flag(help_message="Output project list as json.")  # users, json, tree
 @click.pass_context
 def list_projects(ctx, username, json, sort, usage):
-    """List project contents. Calls the dds ls function."""
+    """List all projects you have access to in the DDS.
+
+    Calls the `dds ls` function.
+    """
     ctx.invoke(list_projects_and_contents, username=username, json=json, sort=sort, usage=usage)
 
 
@@ -752,7 +752,7 @@ def project_status(_):
 )
 @click.pass_obj
 def display_project_status(click_ctx, username, project, show_history):
-    """Display and Update project status."""
+    """Display and manage project statuses."""
     try:
         with dds_cli.project_status.ProjectStatusManager(
             username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -781,7 +781,7 @@ def display_project_status(click_ctx, username, project, show_history):
 )
 @click.pass_obj
 def release_project(click_ctx, username, project, deadline):
-    """Make project available for user download."""
+    """Make project data available for user download."""
     try:
         with dds_cli.project_status.ProjectStatusManager(
             username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -804,7 +804,10 @@ def release_project(click_ctx, username, project, deadline):
 @project_option(required=True)
 @click.pass_obj
 def retract_project(click_ctx, username, project):
-    """Retract a project available for download to add more data."""
+    """Set the status as `In Progress`.
+
+    This allows Unit Personnel / Admins to upload additional data to the project.
+    """
     try:
         with dds_cli.project_status.ProjectStatusManager(
             username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -827,7 +830,10 @@ def retract_project(click_ctx, username, project):
 @project_option(required=True)
 @click.pass_obj
 def archive_project(click_ctx, username, project):
-    """Manually archive a released project and delete all its data."""
+    """Manually archive a released project.
+
+    This deletes all project data.
+    """
     try:
         with dds_cli.project_status.ProjectStatusManager(
             username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -850,7 +856,10 @@ def archive_project(click_ctx, username, project):
 @project_option(required=True)
 @click.pass_obj
 def delete_project(click_ctx, username, project):
-    """Delete an unreleased project and all its data."""
+    """Delete an unreleased project.
+
+    This deletes all project data.
+    """
     try:
         with dds_cli.project_status.ProjectStatusManager(
             username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -873,7 +882,10 @@ def delete_project(click_ctx, username, project):
 @project_option(required=True)
 @click.pass_obj
 def abort_project(click_ctx, username, project):
-    """Abort a released project to delete all its data."""
+    """Abort a released project.
+
+    This deletes all project data.
+    """
     try:
         with dds_cli.project_status.ProjectStatusManager(
             username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -893,7 +905,7 @@ def abort_project(click_ctx, username, project):
 @project_group_command.group(name="access")
 @click.pass_obj
 def project_access(_):
-    """Manage project access."""
+    """Manage specific users access to a project."""
 
 
 # -- dds project access grant -- #
@@ -966,7 +978,6 @@ def revoke_project_access(click_ctx, username, project, email):
 @click.pass_obj
 def fix_project_access(click_ctx, email, username, project):
     """Re-grant project access to user that has lost access due to password reset."""
-
     try:
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
@@ -992,7 +1003,7 @@ def fix_project_access(click_ctx, email, username, project):
 @dds_main.group(name="data", no_args_is_help=True)
 @click.pass_obj
 def data_group_command(_):
-    """Group command: dds data. Handle data within the projects."""
+    """Group command for uploading, downloading and managing project data."""
 
 
 # ************************************************************************************************ #
@@ -1034,7 +1045,11 @@ def put_data(
     num_threads,
     silent,
 ):
-    """Process and upload specified files to the cloud."""
+    """Upload data to project.
+
+    This first compressed the files (if not already compressed), encrypts them, and finally uploads
+    them to Safespring S3 Storage.
+    """
     try:
         dds_cli.data_putter.put(
             username=username,
@@ -1106,7 +1121,10 @@ def get_data(
     silent,
     verify_checksum,
 ):
-    """Download specified files from the cloud and restores the original format."""
+    """Download files within a project.
+
+    This downloads, decrypts, and finally decompresses (if compressed by the DDS) the files.
+    """
     if get_all and (source or source_path_file):
         LOG.error(
             "Flag '--get-all' cannot be used together with options '--source'/'--source-path-fail'."
@@ -1225,7 +1243,10 @@ def get_data(
 @users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.pass_context
 def list_data(ctx, username, project, folder, json, size, tree, users):
-    """List project contents. Same as dds ls [PROJECT ID]."""
+    """List project contents.
+
+    Same as dds ls [PROJECT ID].
+    """
     ctx.invoke(
         list_projects_and_contents,
         username=username,
@@ -1266,7 +1287,7 @@ def list_data(ctx, username, project, folder, json, size, tree, users):
 )
 @click.pass_obj
 def rm_data(click_ctx, username, project, file, folder, rm_all):
-    """Delete the files within a project."""
+    """Delete project data."""
     no_prompt = click_ctx.get("NO_PROMPT", False)
 
     # Either all or a file

@@ -73,7 +73,7 @@ click.rich_click.MAX_WIDTH = 100
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
 # Get token metadata
-_, metadata = dds_cli.user.TokenFile().read_token()
+username = dds_cli.user.User.get_user_name_if_logged_in()
 
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
@@ -83,7 +83,7 @@ dds_cli.utils.stderr_console.print(
     "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
     f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
     "\n[green]          ︶",
-    f"\n[green]Logged in:[/] [red]{metadata.get('csg') if metadata else 'None'}",
+    f"\n[green]Logged in:[/] [red]{username}",
     highlight=False,
 )
 

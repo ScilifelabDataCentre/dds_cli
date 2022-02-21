@@ -194,7 +194,7 @@ Run
 
    (i) Use a project which you've uploaded data to. Make sure the project status is **In Progress**. See the :ref:`dds project section<dds-project>` for instructions on how to do this. 
 
-   (ii) List the project contents with the ``ls`` command described in point 3. above. 
+   (ii) List the project contents with the ``ls`` command described in section 3. above. 
 
    (iii) Download a file
 

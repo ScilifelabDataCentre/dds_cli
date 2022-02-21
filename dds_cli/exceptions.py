@@ -55,6 +55,14 @@ class AuthenticationError(click.ClickException):
         return f"{self.sign} {self.message} {self.sign}"
 
 
+class TokenDeserializationError(Exception):
+    """Error caused by being unable to deserialize the token."""
+
+    def __init__(self, message, sign=":warning-emoji:"):
+        """Reformat error message."""
+        super().__init__(message=message, sign=sign)
+
+
 class TokenNotFoundError(AuthenticationError):
     """No token retrieved from REST API or from File."""
 

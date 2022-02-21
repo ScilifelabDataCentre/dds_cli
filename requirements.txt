@@ -18,3 +18,4 @@ pyyaml
 pytest
 pytz
 tzlocal
+jwcrypto==1.0

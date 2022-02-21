@@ -1,14 +1,14 @@
 """DDS CLI utils module."""
 
-import base64
-import json
 import numbers
+
+import jwcrypto
 import rich.console
 import simplejson
+from jwcrypto.common import InvalidJWEOperation
+from jwcrypto.jwe import InvalidJWEData
 
-from collections.abc import Mapping
-from dds_cli import exceptions
-
+import dds_cli.exceptions
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
@@ -130,39 +130,24 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
 
 
 def get_token_header_contents(token):
-    """Function to extract the header of the DDS token
-    and obtain the encoded lifetime and username."""
-
-    if isinstance(token, str):
-        token = token.encode("utf-8")
-
-    if not isinstance(token, bytes):
-        raise exceptions.TokenNotFoundError(f"Invalid token format")
-
-    header_segment, crypto_segment = token.split(b".", 1)
-
+    """Function to extract the jose header of the DDS token (JWE)"""
     try:
-        header_data = base64url_decode(header_segment)
-        header_data = json.loads(header_data)
-    except (TypeError, ValueError):
-        raise exceptions.TokenNotFoundError(f"Invalid token as contents are not readable!")
+        token = jwcrypto.jwt.JWT(jwt=token)
+        return token.token.jose_header
+    except (ValueError, InvalidJWEData, InvalidJWEOperation):
+        raise dds_cli.exceptions.TokenDeserializationError(
+            message="Token could not be deserialized."
+        )
 
-    return header_data if isinstance(header_data, Mapping) else None
 
+def get_token_expiration_time(token):
+    """Function to extract the expiration time of the DDS token from its jose header.
+    This expiration time is not the actual exp claim encrypted inside the token. This
+    is only to help the cli know the time precisely instead of estimating."""
 
-def base64url_decode(value):
-    """Function to decode byte string and add flexible padding:
-    https://en.wikipedia.org/wiki/Base64#Decoding_Base64_with_padding"""
-
-    if isinstance(value, str):
-        value = value.encode("ascii")
-
-    _, rem = divmod(len(value), 4)
-
-    if rem > 0:
-        value += b"=" * (4 - rem)
-
-    return base64.urlsafe_b64decode(value)
+    jose_header = get_token_header_contents(token=token)
+    if jose_header and "exp" in jose_header:
+        return jose_header["exp"]
 
 
 def readable_timedelta(duration):

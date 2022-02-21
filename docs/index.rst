@@ -142,8 +142,7 @@ Command documentation and guide
 
 .. toctree::
    :maxdepth: 1
-   
-   web
+
    main
    auth
    user

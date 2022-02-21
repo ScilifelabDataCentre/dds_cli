@@ -2,7 +2,7 @@
 `dds project`
 ==============
 
-.. admonition:: Page structure 
+.. admonition:: Section structure 
    
    This section begins with a description and step-by-step guide to how you could test this command. You can find the different commands and their options at the :ref:`bottom<dds-project>` of the section. 
 

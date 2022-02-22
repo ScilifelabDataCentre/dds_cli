@@ -83,7 +83,7 @@ dds_cli.utils.stderr_console.print(
     "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
     f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
     "\n[green]          ︶",
-    f"\n[green]Current user:[/] [red]{username}",
+    f"\n[green]Current user:[/] [red]{username}" if username else "",
     highlight=False,
 )
 

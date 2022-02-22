@@ -188,7 +188,7 @@ class User:
     def get_user_name_if_logged_in():
         """Returns a user name if logged in, otherwise None"""
         tokenfile = TokenFile()
-        username = "None"
+        username = None
         if tokenfile.file_exists() and not tokenfile.token_expired():
             token, _ = tokenfile.read_token()
             try:

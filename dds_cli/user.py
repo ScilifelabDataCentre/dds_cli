@@ -187,18 +187,19 @@ class User:
         """Returns a user name if logged in, otherwise None"""
         tokenfile = TokenFile()
         username = None
-        if tokenfile.file_exists() and not tokenfile.token_expired():
+        if tokenfile.file_exists():
             token = tokenfile.read_token()
-            try:
-                response = requests.get(
-                    dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
-                    headers={"Authorization": f"Bearer {token}"},
-                )
-                # Get response
-                response_json = response.json()
-                username = response_json["info"]["username"]
-            except:
-                pass
+            if not tokenfile.token_expired(token=token):
+                try:
+                    response = requests.get(
+                        dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
+                        headers={"Authorization": f"Bearer {token}"},
+                    )
+                    # Get response
+                    response_json = response.json()
+                    username = response_json["info"]["username"]
+                except:
+                    pass
         return username
 
 

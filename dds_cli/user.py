@@ -184,6 +184,25 @@ class User:
 
         return token
 
+    @staticmethod
+    def get_user_name_if_logged_in():
+        """Returns a user name if logged in, otherwise None"""
+        tokenfile = TokenFile()
+        username = None
+        if tokenfile.file_exists() and not tokenfile.token_expired():
+            token, _ = tokenfile.read_token()
+            try:
+                response = requests.get(
+                    dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                # Get response
+                response_json = response.json()
+                username = response_json["info"]["username"]
+            except:
+                pass
+        return username
+
 
 class TokenFile:
     """A class to manage the saved token."""

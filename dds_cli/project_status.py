@@ -108,7 +108,7 @@ class ProjectStatusManager(base.DDSBaseClass):
     def update_status(self, new_status, deadline=None, is_aborted=False, nomail=False):
         """Update project status"""
 
-        extra_params = {"new_status": new_status, "sent_email": not nomail}
+        extra_params = {"new_status": new_status, "send_email": not nomail}
         if deadline:
             extra_params["deadline"] = deadline
         if is_aborted:

@@ -189,7 +189,7 @@ class User:
         """Returns a user name if logged in, otherwise None"""
         tokenfile = TokenFile()
         username = "None"
-        if tokenfile.file_exists():
+        if tokenfile.file_exists() and not tokenfile.token_expired():
             token, _ = tokenfile.read_token()
             try:
                 response = requests.get(

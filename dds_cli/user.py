@@ -10,10 +10,8 @@ import logging
 import os
 import stat
 import getpass
-import pytz
 import requests
 import simplejson
-import tzlocal
 
 # Installed
 import rich
@@ -190,7 +188,7 @@ class User:
         tokenfile = TokenFile()
         username = None
         if tokenfile.file_exists() and not tokenfile.token_expired():
-            token, _ = tokenfile.read_token()
+            token = tokenfile.read_token()
             try:
                 response = requests.get(
                     dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
@@ -272,27 +270,23 @@ class TokenFile:
             )
 
     def token_expired(self, token):
-        """Check how old the token is based on the modification time of the token file.
-
-        It compares the age with the dds variables TOKEN_MAX_AGE and TOKEN_WARNING_AGE to decide
-        what to do.
+        """Check if the token has expired or is about to expire soon based on the UTC time.
 
         :param token: The DDS token that is obtained after successful basic and two-factor authentication.
             Token is already obtained before coming here, so not expected to be None.
 
         Returns True if the token has expired, False otherwise.
         """
-        age, expiration_time = self.__token_dates(token=token)
+        expiration_time = self.__token_dates(token=token)
+        time_to_expire = expiration_time - datetime.datetime.utcnow()
 
-        LOG.debug(f"Token file age: {readable_timedelta(age)}")
-        if age > dds_cli.TOKEN_MAX_AGE:
+        if expiration_time <= datetime.datetime.utcnow():
             LOG.debug("Token has expired. Now deleting it and fetching new token.")
             self.delete_token()
             return True
-        elif age > dds_cli.TOKEN_WARNING_AGE:
-            lifetime = age - dds_cli.TOKEN_MAX_AGE
+        elif time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
             LOG.warning(
-                f"Saved token will expire in {readable_timedelta(lifetime)}, "
+                f"Saved token will expire in {readable_timedelta(time_to_expire)}, "
                 f"please consider renewing the session using the 'dds auth login' command."
             )
 
@@ -305,53 +299,29 @@ class TokenFile:
             Token is already obtained before coming here, so not expected to be None.
         """
 
-        age, expiration_time = self.__token_dates(token=token)
-        # display expiration time in local time
-        expiration_time = expiration_time.astimezone(tz=tzlocal.get_localzone()).strftime(
-            "on %d %B %Y at %H:%Mh"
-        )
+        expiration_time = self.__token_dates(token=token)
+        time_to_expire = expiration_time - datetime.datetime.utcnow()
 
-        if age > dds_cli.TOKEN_MAX_AGE:
+        if expiration_time <= datetime.datetime.utcnow():
             markup_color = "red"
             sign = ":no_entry_sign:"
             message = "Token has expired!"
-        elif age > dds_cli.TOKEN_WARNING_AGE:
+        elif time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
             markup_color = "yellow"
             sign = ":warning-emoji:"
-            message = "Token will expire soon!"
+            message = f"Token will expire in {readable_timedelta(time_to_expire)}!"
         else:
             markup_color = "green"
             sign = ":white_check_mark:"
             message = "Token is OK!"
 
-        # Heading
         LOG.info(f"[{markup_color}]{sign}  {message} {sign} [/{markup_color}]")
-        LOG.info(f"[{markup_color}]Token age: {readable_timedelta(age)}[/{markup_color}]")
-
-        if age > dds_cli.TOKEN_MAX_AGE:
-            LOG.info(f"[{markup_color}]Token expired: {expiration_time}[/{markup_color}]")
-        else:
-            lifetime = age - dds_cli.TOKEN_MAX_AGE
-            LOG.info(
-                f"[{markup_color}]Token expires: {expiration_time} (in {readable_timedelta(lifetime)})[/{markup_color}]"
-            )
 
     # Private methods ############################################################ Private methods #
     def __token_dates(self, token):
-        """Returns definitive (based on the token jose header) or estimated values
-        (based on the token file) for the token's age and expiration time in UTC."""
+        """Returns the expiration time in UTC that is extracted from the token jose header."""
 
         expiration_time = get_token_expiration_time(token=token)
 
-        # Try to use the Expiration Time (exp) in the token jose header,
-        # otherwise fall back to calculation based on the token file
         if expiration_time:
-            utc_tz = pytz.timezone("UTC")
-            expiration_time = datetime.datetime.fromtimestamp(expiration_time, tz=utc_tz)
-            age = dds_cli.TOKEN_MAX_AGE - (expiration_time - datetime.datetime.utcnow())
-        else:
-            modification_time = datetime.datetime.fromtimestamp(os.path.getmtime(self.token_file))
-            age = datetime.datetime.utcnow() - modification_time
-            expiration_time = modification_time + dds_cli.TOKEN_MAX_AGE
-
-        return age, expiration_time
+            return datetime.datetime.fromisoformat(expiration_time)

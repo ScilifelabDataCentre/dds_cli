@@ -58,9 +58,17 @@ class AuthenticationError(click.ClickException):
 class TokenDeserializationError(Exception):
     """Error caused by being unable to deserialize the token."""
 
-    def __init__(self, message, sign=":warning-emoji:"):
+    def __init__(self, message):
         """Reformat error message."""
-        super().__init__(message=message, sign=sign)
+        super().__init__(message)
+
+
+class TokenExpirationMissingError(Exception):
+    """Error caused by missing token expiration time in the jose header of the token."""
+
+    def __init__(self, message):
+        """Reformat error message."""
+        super().__init__(message)
 
 
 class TokenNotFoundError(AuthenticationError):

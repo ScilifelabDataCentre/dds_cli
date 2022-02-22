@@ -6,6 +6,7 @@ import rich.console
 import simplejson
 from jwcrypto.common import InvalidJWEOperation
 from jwcrypto.jwe import InvalidJWEData
+from jwcrypto.jws import InvalidJWSObject
 from jwcrypto import jwt
 
 import dds_cli.exceptions
@@ -130,11 +131,15 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
 
 
 def get_token_header_contents(token):
-    """Function to extract the jose header of the DDS token (JWE)"""
+    """Function to extract the jose header of the DDS token (JWE)
+
+    :param token: a token that is not None
+
+    returns the jose header of the token on successful deserialization"""
     try:
         token = jwt.JWT(jwt=token)
         return token.token.jose_header
-    except (ValueError, InvalidJWEData, InvalidJWEOperation):
+    except (ValueError, InvalidJWEData, InvalidJWEOperation, InvalidJWSObject):
         raise dds_cli.exceptions.TokenDeserializationError(
             message="Token could not be deserialized."
         )
@@ -143,16 +148,27 @@ def get_token_header_contents(token):
 def get_token_expiration_time(token):
     """Function to extract the expiration time of the DDS token from its jose header.
     This expiration time is not the actual exp claim encrypted inside the token. This
-    is only to help the cli know the time precisely instead of estimating."""
+    is only to help the cli know the time precisely instead of estimating.
+
+    :param token: a token that is not None
+
+    returns the exp claim for the cli from the jose header of the token"""
 
     jose_header = get_token_header_contents(token=token)
     if jose_header and "exp" in jose_header:
         return jose_header["exp"]
+    raise dds_cli.exceptions.TokenExpirationMissingError(
+        message="Expiration time could not be found in the header of the token."
+    )
 
 
 def readable_timedelta(duration):
     """Function to output a human-readable more sophisticated timedelta
-    than str(datatime.timedelta) would."""
+    than str(datatime.timedelta) would.
+
+    :param timedelta duration: difference in time, for example, token_exp_time - utcnow
+
+    returns human-readable time representation from days down to the precision of minutes"""
     timespan = {}
     timespan["days"], rem = divmod(abs(duration.total_seconds()), 86_400)
     timespan["hours"], rem = divmod(rem, 3_600)
@@ -164,4 +180,4 @@ def readable_timedelta(duration):
     if time_parts:
         return " ".join(time_parts)
     else:
-        return "a short while" if duration.total_seconds() < 0 else "recent"
+        return "less than a minute"

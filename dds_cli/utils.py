@@ -1,14 +1,15 @@
 """DDS CLI utils module."""
 
-import base64
-import json
 import numbers
+
 import rich.console
 import simplejson
+from jwcrypto.common import InvalidJWEOperation
+from jwcrypto.jwe import InvalidJWEData
+from jwcrypto.jws import InvalidJWSObject
+from jwcrypto import jwt
 
-from collections.abc import Mapping
-from dds_cli import exceptions
-
+import dds_cli.exceptions
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
@@ -130,44 +131,44 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
 
 
 def get_token_header_contents(token):
-    """Function to extract the header of the DDS token
-    and obtain the encoded lifetime and username."""
+    """Function to extract the jose header of the DDS token (JWE)
 
-    if isinstance(token, str):
-        token = token.encode("utf-8")
+    :param token: a token that is not None
 
-    if not isinstance(token, bytes):
-        raise exceptions.TokenNotFoundError(f"Invalid token format")
-
-    header_segment, crypto_segment = token.split(b".", 1)
-
+    returns the jose header of the token on successful deserialization"""
     try:
-        header_data = base64url_decode(header_segment)
-        header_data = json.loads(header_data)
-    except (TypeError, ValueError):
-        raise exceptions.TokenNotFoundError(f"Invalid token as contents are not readable!")
+        token = jwt.JWT(jwt=token)
+        return token.token.jose_header
+    except (ValueError, InvalidJWEData, InvalidJWEOperation, InvalidJWSObject):
+        raise dds_cli.exceptions.TokenDeserializationError(
+            message="Token could not be deserialized."
+        )
 
-    return header_data if isinstance(header_data, Mapping) else None
 
+def get_token_expiration_time(token):
+    """Function to extract the expiration time of the DDS token from its jose header.
+    This expiration time is not the actual exp claim encrypted inside the token. This
+    is only to help the cli know the time precisely instead of estimating.
 
-def base64url_decode(value):
-    """Function to decode byte string and add flexible padding:
-    https://en.wikipedia.org/wiki/Base64#Decoding_Base64_with_padding"""
+    :param token: a token that is not None
 
-    if isinstance(value, str):
-        value = value.encode("ascii")
+    returns the exp claim for the cli from the jose header of the token"""
 
-    _, rem = divmod(len(value), 4)
-
-    if rem > 0:
-        value += b"=" * (4 - rem)
-
-    return base64.urlsafe_b64decode(value)
+    jose_header = get_token_header_contents(token=token)
+    if jose_header and "exp" in jose_header:
+        return jose_header["exp"]
+    raise dds_cli.exceptions.TokenExpirationMissingError(
+        message="Expiration time could not be found in the header of the token."
+    )
 
 
 def readable_timedelta(duration):
     """Function to output a human-readable more sophisticated timedelta
-    than str(datatime.timedelta) would."""
+    than str(datatime.timedelta) would.
+
+    :param timedelta duration: difference in time, for example, token_exp_time - utcnow
+
+    returns human-readable time representation from days down to the precision of minutes"""
     timespan = {}
     timespan["days"], rem = divmod(abs(duration.total_seconds()), 86_400)
     timespan["hours"], rem = divmod(rem, 3_600)
@@ -179,4 +180,4 @@ def readable_timedelta(duration):
     if time_parts:
         return " ".join(time_parts)
     else:
-        return "a short while" if duration.total_seconds() < 0 else "recent"
+        return "less than a minute"

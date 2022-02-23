@@ -27,6 +27,7 @@ def runner_with_project(runner):
                 ADD_JSON["role"],
                 "-p",
                 PROJECT["project"],
+                "--no-mail",
                 ADD_JSON["email"],
             ]
         )
@@ -67,7 +68,7 @@ def test_add_user_no_project_OK(runner_no_project, add_user):
     result = runner_no_project()
     add_user_OK.assert_called_with(
         dds_cli.DDSEndpoint.USER_ADD,
-        json=ADD_JSON,
+        json={**ADD_JSON, "send_email": True},
         params={"project": None},
         headers=unittest.mock.ANY,
     )
@@ -80,7 +81,7 @@ def test_add_user_no_project_fail(runner_no_project, add_user):
     result = runner_no_project()
     add_user_FAIL.assert_called_with(
         dds_cli.DDSEndpoint.USER_ADD,
-        json=ADD_JSON,
+        json={**ADD_JSON, "send_email": True},
         params={"project": None},
         headers=unittest.mock.ANY,
     )
@@ -95,7 +96,7 @@ def test_add_user_with_project_ok(runner_with_project, add_user):
     result = runner_with_project()
     add_user_OK.assert_called_with(
         dds_cli.DDSEndpoint.USER_ADD,
-        json=ADD_JSON,
+        json={**ADD_JSON, "send_email": False},
         params=PROJECT,
         headers=unittest.mock.ANY,
     )
@@ -108,7 +109,7 @@ def test_add_user_with_project_fail(runner_with_project, add_user):
     result = runner_with_project()
     add_user_OK.assert_called_with(
         dds_cli.DDSEndpoint.USER_ADD,
-        json=ADD_JSON,
+        json={**ADD_JSON, "send_email": False},
         params=PROJECT,
         headers=unittest.mock.ANY,
     )

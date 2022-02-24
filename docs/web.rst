@@ -67,7 +67,7 @@ When another user invites you to the DDS, you will get an email (currently from 
 2. Login
 """"""""""
 
-2.1. Go to https://delivery.scilifelab.se/. You should see the following page.
+2.1. Go to https://delivery.scilifelab.se/ (if you're met with an error message, try https://dds.dckube.scilifelab.se/ instead, and let us know that the first url does not work). You should see the following page.
 
     .. image:: _static/login.png
         :width: 400
@@ -124,7 +124,7 @@ When another user invites you to the DDS, you will get an email (currently from 
 
 5. Reset forgotten password
 """""""""""""""""""""""""""""
-5.1. Go to https://delivery.scilifelab.se/ and click on "Forgot Password?". You should be redirected to the following page:
+5.1. Go to https://delivery.scilifelab.se/ (if you're met with an error message, try https://dds.dckube.scilifelab.se/ instead, and let us know that the first url does not work) and click on "Forgot Password?". You should be redirected to the following page:
 
     .. image:: _static/password_forgot.png
         :width: 400
@@ -148,7 +148,7 @@ When another user invites you to the DDS, you will get an email (currently from 
     .. image:: _static/password_reset_success.png
         :width: 400
 
-        
+
 
 
 

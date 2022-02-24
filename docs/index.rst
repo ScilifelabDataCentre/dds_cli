@@ -137,7 +137,7 @@ See the test protocol and the command documentation :ref:`here<dds-ls>`.
 
 How to test the web interface
 ==============================
-The DDS web interface can be found at https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
+The DDS web interface can be found at https://delivery.scilifelab.se/ (if you're met with an error message, try https://dds.dckube.scilifelab.se/ ). There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
 
 Command documentation and guide
 ================================

@@ -43,8 +43,7 @@ DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
 
 # Token related variables
 TOKEN_FILE = pathlib.Path(os.path.expanduser("~/.dds_cli_token"))
-TOKEN_MAX_AGE = datetime.timedelta(days=2)
-TOKEN_WARNING_AGE = 0.8  # relative to TOKEN_MAX_AGE
+TOKEN_EXPIRATION_WARNING_THRESHOLD = datetime.timedelta(hours=6)
 
 
 ###############################################################################

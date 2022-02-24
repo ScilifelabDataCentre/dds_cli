@@ -31,6 +31,7 @@ import dds_cli.directory
 import dds_cli.project_creator
 import dds_cli.auth
 import dds_cli.project_status
+import dds_cli.user
 import dds_cli.utils
 from dds_cli.options import (
     email_arg,
@@ -71,6 +72,8 @@ click.rich_click.MAX_WIDTH = 100
 #                                                                                                  #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
+# Get token metadata
+username = dds_cli.user.User.get_user_name_if_logged_in()
 
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
@@ -79,7 +82,8 @@ dds_cli.utils.stderr_console.print(
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
     "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
     f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
-    "\n[green]          ︶\n",
+    "\n[green]          ︶",
+    f"\n[green]Current user:[/] [red]{username}" if username else "",
     highlight=False,
 )
 
@@ -667,10 +671,10 @@ def list_projects(ctx, username, json, sort, usage):
     + dds_cli.utils.multiple_help_text(item="project owner"),
 )
 @click.option(
-    "--is_sensitive",
+    "--non-sensitive",
     required=False,
     is_flag=True,
-    help="Indicate if the Project includes sensitive data.",
+    help="Indicate whether the project contains only non-sensitive data",
 )
 @click.pass_obj
 def create(
@@ -679,7 +683,7 @@ def create(
     title,
     description,
     principal_investigator,
-    is_sensitive,
+    non_sensitive,
     owner,
     researcher,
 ):
@@ -706,7 +710,7 @@ def create(
                 title=title,
                 description=description,
                 principal_investigator=principal_investigator,
-                sensitive=is_sensitive,
+                non_sensitive=non_sensitive,
                 users_to_add=emails_roles,
             )
             if created:

@@ -55,6 +55,22 @@ class AuthenticationError(click.ClickException):
         return f"{self.sign} {self.message} {self.sign}"
 
 
+class TokenDeserializationError(Exception):
+    """Error caused by being unable to deserialize the token."""
+
+    def __init__(self, message):
+        """Reformat error message."""
+        super().__init__(message)
+
+
+class TokenExpirationMissingError(Exception):
+    """Error caused by missing token expiration time in the jose header of the token."""
+
+    def __init__(self, message):
+        """Reformat error message."""
+        super().__init__(message)
+
+
 class TokenNotFoundError(AuthenticationError):
     """No token retrieved from REST API or from File."""
 

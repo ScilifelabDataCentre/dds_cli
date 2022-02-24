@@ -384,7 +384,7 @@ def user_group_command(_):
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def add_user(click_ctx, email, username, role, project, nomail):
+def add_user(click_ctx, email, username, role, project, no_mail):
     """
     Add a user to the DDS system or hosted projects.
 
@@ -397,7 +397,7 @@ def add_user(click_ctx, email, username, role, project, nomail):
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as inviter:
-            inviter.add_user(email=email, role=role, project=project, nomail=nomail)
+            inviter.add_user(email=email, role=role, project=project, no_mail=no_mail)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
@@ -768,13 +768,13 @@ def display_project_status(click_ctx, username, project, show_history):
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def release_project(click_ctx, username, project, deadline, nomail):
+def release_project(click_ctx, username, project, deadline, no_mail):
     """Make project available for user download."""
     try:
         with dds_cli.project_status.ProjectStatusManager(
             username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as updater:
-            updater.update_status(new_status="Available", deadline=deadline, nomail=nomail)
+            updater.update_status(new_status="Available", deadline=deadline, no_mail=no_mail)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -901,7 +901,7 @@ def project_access(_):
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def grant_project_access(click_ctx, username, project, email, owner, nomail):
+def grant_project_access(click_ctx, username, project, email, owner, no_mail):
     """Grant user access to a project."""
     try:
         with dds_cli.account_manager.AccountManager(
@@ -910,7 +910,7 @@ def grant_project_access(click_ctx, username, project, email, owner, nomail):
             role = "Researcher"
             if owner:
                 role = "Project Owner"
-            granter.add_user(email=email, role=role, project=project, nomail=nomail)
+            granter.add_user(email=email, role=role, project=project, no_mail=no_mail)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

@@ -228,7 +228,7 @@ def json_flag(help_message, long="--json", name="json", show_default=True):
 def nomail_flag(
     help_message,
     long="--no-mail",
-    name="nomail",
+    name="no_mail",
     show_default=False,
 ):
     """

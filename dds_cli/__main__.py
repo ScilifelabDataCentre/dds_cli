@@ -787,7 +787,6 @@ def display_project_status(click_ctx, username, project, show_history):
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-
 def release_project(click_ctx, username, project, deadline, no_mail):
     """Make project data available for user download."""
     try:

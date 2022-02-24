@@ -225,6 +225,27 @@ def json_flag(help_message, long="--json", name="json", show_default=True):
     )
 
 
+def nomail_flag(
+    help_message,
+    long="--no-mail",
+    name="no_mail",
+    show_default=False,
+):
+    """
+    No-email flag standard definition.
+
+    Use as decorator for commands.
+    """
+    return click.option(
+        long,
+        name,
+        is_flag=True,
+        default=False,
+        show_default=show_default,
+        help=help_message,
+    )
+
+
 def silent_flag(
     help_message,
     long="--silent",

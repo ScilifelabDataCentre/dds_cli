@@ -9,7 +9,7 @@ Welcome to the Data Delivery Systems' Documentation / Test Protocol!
 
 .. note:: 
 
-   During testing on 2022-02-28 to 2022-03-07, this will also work as a test protocol. The goal is to give you ideas on what aspects of the system to try out, but please also test anything else you can think of (e.g. if you feel we have missed something). Also, please make note of whether the documentation of the system has any deficiencies such as unclear, misleading or incomplete instructions. 
+   During testing on 2022-02-28 to 2022-03-07, this will work as **both documentation and as a test protocol**. The goal is to give you ideas on what aspects of the system to try out, but please also test anything else you can think of (e.g. if you feel we have missed something). Also, please make note of whether the documentation of the system has any deficiencies such as unclear, misleading or incomplete instructions. 
 
 .. warning::
    
@@ -19,7 +19,7 @@ The Data Delivery System (DDS) consists of a command line interface (CLI) and a 
 
 How will I get my user account?
 ===============================
-The testing will begin with you getting an invite via email. The email will be from `dsw@scilifelab.se` during the testing. If you do not get an email, please have a look in the junk folder. If it's not there either, please contact Ina (*email:* ina.oden.osterbo@scilifelab.uu.se, *slack:* Ina Odén Österbo) and we will look into it. 
+The testing will begin with you getting an invite via email. The email will be from `dsw@scilifelab.se` during the testing (note that any emails sent to this address regarding the DDS *will not be responded to*). If you do not get an email, please have a look in the junk/spam folder. If it's not there either, please contact Ina (*email:* ina.oden.osterbo@scilifelab.uu.se, *slack:* Ina Odén Österbo) and we will look into it. 
 
 Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system and can begin testing the different features. To be able to test the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<how-to-use>`.
 
@@ -76,9 +76,9 @@ PyPi - MacOS / Linux
    This should display a logo, version information and a short usage message. If there are no errors when running this command, the test has succeeded and you should be able to move on to :ref:`Running the command<Running the command>`.
 
 
-Executable - Windows
+Windows
 ~~~~~~~~~~~~~~~~~~~~~
-
+We are working on creating an executable which will perform all required installations. However, for now, we have made detailed instructions for how you can install the DDS CLI on Windows. The instructions can be found :ref:`here<windows>`. 
 *Windows instructions are in progress.*
 
 -------

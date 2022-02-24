@@ -18,9 +18,9 @@ Steps
 """"""""""""""""""""""""
 When another user invites you to the DDS, you will get an email (currently from the email *dsw@scilifelab.se*). To test the registration functionality, we suggest that you perform the following steps.
 
-*Steps are in progress*
+1.1. 
 
-2. Login
+1. Login
 """"""""""
 *In progress*
 

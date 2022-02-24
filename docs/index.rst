@@ -30,7 +30,6 @@ Once you get the invitation email, follow the link in the email and register you
 
 Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. The roles are defined `on this board <https://app.diagrams.net/?page-id=iAQ0dwp1xBzZl6jLjueX&hide-pages=1#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_. 
 
-
 .. _how-to-use:
 
 How to use the DDS CLI
@@ -41,7 +40,7 @@ Installation
 
 Uppmax
 ~~~~~~~
-*Uppmax instructions coming are in progress* 
+We are currently checking that installing the DDS CLI on Rackham works as expected. We will update this information as soon as possible. Regarding Bianca: Uppmax has offered to help us out with testing that the connection to Bianca works. Instructions for this will therefore not be provided at this time. Data will be possible to deliver to Bianca when the DDS is in production. Instructions for how this will work will come at a later time.
 
 PyPi - MacOS / Linux 
 ~~~~~~~~~~~~~~~~~~~~~
@@ -79,7 +78,6 @@ PyPi - MacOS / Linux
 Windows
 ~~~~~~~~~~~~~~~~~~~~~
 We are working on creating an executable which will perform all required installations. However, for now, we have made detailed instructions for how you can install the DDS CLI on Windows. The instructions can be found :ref:`here<windows>`. 
-*Windows instructions are in progress.*
 
 -------
 

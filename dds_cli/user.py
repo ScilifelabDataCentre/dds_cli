@@ -38,21 +38,27 @@ class User:
     when instantiating, an authentication token will be read from a file or
     renewed from the DDS API if the saved token is not found or has expired."""
 
-    def __init__(self, username: str, force_renew_token: bool = False, no_prompt: bool = False):
+    def __init__(
+        self,
+        username: str,
+        force_renew_token: bool = False,
+        no_prompt: bool = False,
+        totp: str = None,
+    ):
         self.username = username
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt
         self.token = None
 
         # Fetch encrypted JWT token or authenticate against API
-        self.__retrieve_token()
+        self.__retrieve_token(totp=totp)
 
     @property
     def token_dict(self):
         return {"Authorization": f"Bearer {self.token}"}
 
     # Private methods ######################### Private methods #
-    def __retrieve_token(self):
+    def __retrieve_token(self, totp: str = None):
         """Attempts to fetch saved token from file otherwise authenticate user and saves the new token."""
 
         token_file = TokenFile()
@@ -75,10 +81,10 @@ class User:
                 )
             else:
                 LOG.info("Attempting to renew the session token")
-            self.token = self.__authenticate_user()
+            self.token = self.__authenticate_user(totp=totp)
             token_file.save_token(self.token)
 
-    def __authenticate_user(self):
+    def __authenticate_user(self, totp: str = None):
         """Authenticates the username and password via a call to the API."""
 
         LOG.debug(f"Authenticating the user: {self.username} on the api")
@@ -125,51 +131,74 @@ class User:
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
 
-        # Verify 2fa email token
-        LOG.info(
-            "Please enter the one-time authentication code sent to your email address (leave empty to exit):"
-        )
-        done = False
-        while not done:
-            entered_one_time_code = rich.prompt.Prompt.ask("Authentication one-time code")
-            if entered_one_time_code == "":
-                raise exceptions.AuthenticationError(
-                    message="Exited due to no one-time authentication code entered."
-                )
+        # Second Factor
+        if totp is None:
+            LOG.info(
+                "Please enter the one-time authentication code sent to your email address (leave empty to exit):"
+            )
+            done = False
+            while not done:
+                entered_one_time_code = rich.prompt.Prompt.ask("Authentication one-time code")
+                if entered_one_time_code == "":
+                    raise exceptions.AuthenticationError(
+                        message="Exited due to no one-time authentication code entered."
+                    )
 
-            if not entered_one_time_code.isdigit():
-                LOG.info("Please enter a valid one-time code. It should consist of only digits.")
-                continue
-            if len(entered_one_time_code) != 8:
-                LOG.info(
-                    f"Please enter a valid one-time code. It should consist of 8 digits (you entered {len(entered_one_time_code)} digits)."
-                )
-                continue
+                if not entered_one_time_code.isdigit():
+                    LOG.info(
+                        "Please enter a valid one-time code. It should consist of only digits."
+                    )
+                    continue
+                if len(entered_one_time_code) != 8:
+                    LOG.info(
+                        f"Please enter a valid one-time code. It should consist of 8 digits (you entered {len(entered_one_time_code)} digits)."
+                    )
+                    continue
 
+                try:
+                    response = requests.get(
+                        dds_cli.DDSEndpoint.SECOND_FACTOR,
+                        headers={"Authorization": f"Bearer {partial_auth_token}"},
+                        json={"HOTP": entered_one_time_code},
+                        timeout=dds_cli.DDSEndpoint.TIMEOUT,
+                    )
+                    response_json = response.json()
+                except requests.exceptions.RequestException as err:
+                    raise exceptions.ApiRequestError(message=str(err)) from err
+
+                if response.ok:
+                    # Step out of the while-loop
+                    done = True
+                if not response.ok:
+                    message = response_json.get(
+                        "message", "Unexpected error with second factor authentication!"
+                    )
+                    if response.status_code == 401:
+                        LOG.error(message)
+                        try_again = rich.prompt.Confirm.ask(
+                            "Second factor authentication failed, would you like to try again?"
+                        )
+                        if not try_again:
+                            raise exceptions.AuthenticationError(
+                                message="Exited due to user choice."
+                            )
+                    else:
+                        raise exceptions.ApiResponseError(message=message)
+        else:  # TOTP
             try:
                 response = requests.get(
                     dds_cli.DDSEndpoint.SECOND_FACTOR,
                     headers={"Authorization": f"Bearer {partial_auth_token}"},
-                    json={"HOTP": entered_one_time_code},
+                    json={"TOTP": totp},
                     timeout=dds_cli.DDSEndpoint.TIMEOUT,
                 )
                 response_json = response.json()
             except requests.exceptions.RequestException as err:
                 raise exceptions.ApiRequestError(message=str(err)) from err
 
-            if response.ok:
-                # Step out of the while-loop
-                done = True
             if not response.ok:
                 message = response_json.get("message", "Unexpected error!")
-                if response.status_code == 401:
-                    try_again = rich.prompt.Confirm.ask(
-                        "Second factor authentication failed, would you like to try again?"
-                    )
-                    if not try_again:
-                        raise exceptions.AuthenticationError(message="Exited due to user choice.")
-                else:
-                    raise exceptions.ApiResponseError(message=message)
+                raise exceptions.ApiResponseError(message=message)
 
         # Get token from response
         token = response_json.get("token")

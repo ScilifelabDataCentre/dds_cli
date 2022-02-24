@@ -295,8 +295,14 @@ def auth_group_command(_):
 # -- dds auth login -- #
 @auth_group_command.command(name="login")
 @username_option()
+@click.option(
+    "--TOTP",
+    type=str,
+    default=None,
+    help="TOTP code for 2FA authentication. Default is to use one-time authentication code via mail.",
+)
 @click.pass_obj
-def login(click_ctx, username):
+def login(click_ctx, username, totp):
     """Renew the authentication token stored in the '.dds_cli_token' file.
 
     Run this command before running the cli in a non interactive fashion as this enables the longest
@@ -306,7 +312,7 @@ def login(click_ctx, username):
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.auth.Auth(username=username):
+        with dds_cli.auth.Auth(username=username, totp=totp):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
     except (
@@ -340,6 +346,25 @@ def info():
         with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
             authenticator.check()
     except dds_cli.exceptions.DDSCLIException as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@auth_group_command.command(name="twofactor")
+@click.option(
+    "--TOTP",
+    is_flag=True,
+    default=False,
+    help="Attempt to activate TOTP for second factor authentication.",
+)
+def twofactor(totp=True):
+    """Requests regarding configuration of second factor authentication."""
+    try:
+        with dds_cli.auth.Auth(
+            username=None, authenticate=True, force_renew_token=False
+        ) as authenticator:
+            authenticator.twofactor(totp=totp)
+    except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
         LOG.error(err)
         sys.exit(1)
 

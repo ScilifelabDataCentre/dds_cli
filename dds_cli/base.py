@@ -53,6 +53,7 @@ class DDSBaseClass:
         authenticate: bool = True,
         method_check: bool = True,
         force_renew_token: bool = False,
+        totp: str = None,
         no_prompt: bool = False,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
@@ -90,6 +91,7 @@ class DDSBaseClass:
                 username=username,
                 force_renew_token=force_renew_token,
                 no_prompt=no_prompt,
+                totp=totp,
             )
             self.token = dds_user.token_dict
 

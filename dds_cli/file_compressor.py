@@ -10,11 +10,9 @@ import logging
 import os
 import pathlib
 import traceback
-import sys
 
 
 # Installed
-import immutabledict
 import zstandard as zstd
 
 # Own modules
@@ -25,7 +23,6 @@ from dds_cli import FileSegment
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -96,7 +93,6 @@ class Compressor:
         LOG.debug("Started compression...")
 
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with file.open(mode="rb") as infile:
 
                 # Initiate a Zstandard compressor
@@ -115,8 +111,7 @@ class Compressor:
                         yield chunk
         except Exception as err:
             LOG.warning(str(err))
-        finally:
-            os.umask(original_umask)
+
         LOG.debug("Compression finished.")
 
     @staticmethod
@@ -128,7 +123,6 @@ class Compressor:
         # Decompressing file and saving
         LOG.debug("Decompressing...")
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with outfile.open(mode="wb+") as file:
                 dctx = zstd.ZstdDecompressor()
                 with dctx.stream_writer(file) as decompressor:
@@ -141,8 +135,6 @@ class Compressor:
         else:
             saved = True
             LOG.debug("Decompression done.")
-        finally:
-            os.umask(original_umask)
 
         return saved, message
 
@@ -152,14 +144,11 @@ class Compressor:
 
         compressed, error = (False, "")
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with file.open(mode="rb") as f:
                 file_start = f.read(self.max_magic_len)
                 if file_start.startswith(tuple(x for x in self.fmt_magic)):
                     compressed = True
         except OSError as err:
             error = str(err)
-        finally:
-            os.umask(original_umask)
 
         return compressed, error

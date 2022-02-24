@@ -19,7 +19,6 @@ import sys
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -42,11 +41,8 @@ class DDSDirectory:
 
         for _, y in dirs.items():
             try:
-                original_umask = os.umask(0)  # User file-creation mode mask
                 y.mkdir(parents=True, exist_ok=False)
             except OSError as ose:
                 sys.exit("The temporary directory {y} could not be created: " f"{ose}")
-            finally:
-                os.umask(original_umask)
 
         self.directories = dirs

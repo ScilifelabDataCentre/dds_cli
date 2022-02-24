@@ -6,24 +6,24 @@
 
 # Standard library
 import functools
-import hashlib
 import logging
 import pathlib
 
 # Installed
-import boto3
-import botocore
 import rich
+import rich.table
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
+import dds_cli
+import dds_cli.utils
+import dds_cli.file_handler
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #
@@ -31,8 +31,10 @@ LOG.setLevel(logging.DEBUG)
 
 
 def verify_proceed(func):
-    """Decorator for verifying that the file is not cancelled.
-    Also cancels the upload of all non-started files if break-on-fail."""
+    """Verify that the file is not cancelled.
+
+    Also cancels the upload of all non-started files if break-on-fail.
+    """
 
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
@@ -52,21 +54,20 @@ def verify_proceed(func):
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.info("File %s started %s", file, func.__name__)
+        LOG.debug(f"File {file} started {func.__name__}")
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
-
         # Cancel file(s) if something failed
         if not ok_to_proceed:
-            LOG.warning("%s failed: %s", func.__name__, message)
+            LOG.warning(f"{func.__name__} failed: {message}")
             self.status[file].update({"cancel": True, "message": message})
             if self.status[file].get("failed_op") is None:
                 self.status[file]["failed_op"] = "crypto"
 
             if self.break_on_fail:
                 message = f"'--break-on-fail'. File causing failure: '{file}'. "
-                LOG.info(message)
+                LOG.warning(message)
 
                 _ = [
                     self.status[x].update({"cancel": True, "message": message})
@@ -74,6 +75,12 @@ def verify_proceed(func):
                     if not self.status[x]["cancel"] and not self.status[x]["started"] and x != file
                 ]
 
+            dds_cli.file_handler.FileHandler.append_errors_to_file(
+                log_file=self.failed_delivery_log,
+                file=file,
+                info=self.filehandler.data[file],
+                status=self.status[file],
+            )
         return ok_to_proceed
 
     return wrapped
@@ -93,7 +100,7 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.info("File %s status updated to %s: started", file, func.__name__)
+        LOG.debug(f"File {file} status updated to {func.__name__}: started")
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
@@ -101,46 +108,18 @@ def update_status(func):
         # ok_to_continue = False
         if not ok_to_continue:
             # Save info about which operation failed
+
             self.status[file]["failed_op"] = func.__name__
-            LOG.warning("%s failed: %s", func.__name__, message)
+            LOG.warning(f"{func.__name__} failed: {message}")
 
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.info("File %s status updated to %s: done", file, func.__name__)
+            LOG.debug(f"File {file} status updated to {func.__name__}: done")
 
         return ok_to_continue, message
 
     return wrapped
-
-
-def connect_cloud(func):
-    """Connect to S3"""
-
-    @functools.wraps(func)
-    def init_resource(self, *args, **kwargs):
-
-        # Connect to service
-        try:
-            session = boto3.session.Session()
-
-            self.resource = session.resource(
-                service_name="s3",
-                endpoint_url=self.url,
-                aws_access_key_id=self.keys["access_key"],
-                aws_secret_access_key=self.keys["secret_key"],
-            )
-        except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
-            self.url, self.keys, self.message = (
-                None,
-                None,
-                f"S3 connection failed: {err}",
-            )
-        else:
-            LOG.info("Connection to S3 established.")
-            return func(self, *args, **kwargs)
-
-    return init_resource
 
 
 def subpath_required(func):
@@ -149,7 +128,6 @@ def subpath_required(func):
     @functools.wraps(func)
     def check_and_create(self, file, *args, **kwargs):
         """Create the sub directory if it does not exist."""
-
         file_info = self.filehandler.data[file]
 
         # Required path
@@ -162,7 +140,7 @@ def subpath_required(func):
             except OSError as err:
                 return False, str(err)
 
-            LOG.info("New directory created: %s", full_subpath)
+            LOG.debug(f"New directory created: {full_subpath}")
 
         return func(self, file=file, *args, **kwargs)
 
@@ -180,32 +158,44 @@ def removal_spinner(func):
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
+            console=dds_cli.utils.stderr_console,
         ) as progress:
 
             # Determine spinner text
             if func.__name__ == "remove_all":
-                description = f"Removing all files in project {self.project}..."
+                description = f"Removing all files in project {self.project}"
             elif func.__name__ == "remove_file":
-                description = "Removing file(s)..."
+                description = "Removing file(s)"
             elif func.__name__ == "remove_folder":
-                description = "Removing folder(s)..."
+                description = "Removing folder(s)"
 
             # Add progress task
-            task = progress.add_task(description=description)
+            task = progress.add_task(description=f"{description}...")
 
-            # Execute function
-            message = func(self, *args, **kwargs)
-
-            # Remove progress task
-            progress.remove_task(task)
+            # Execute function, exceptions are caught in __main__.py
+            try:
+                func(self, *args, **kwargs)
+            finally:
+                # Remove progress task
+                progress.remove_task(task)
 
         # Printout removal response
-        if message is None:
-            rm_type = "File" if func.__name__ == "remove_file" else "Folder"
 
-            message = f"{rm_type}(s) successfully removed."
+        # reuse the description but don't want the capital letter in the middle of the sentence.
+        description_lc = description[0].lower() + description[1:]
+        if self.failed_table is not None:
+            table_len = self.failed_table.renderable.row_count
 
-        console = rich.console.Console()
-        console.print(message)
+            if table_len + 5 > dds_cli.utils.console.height:
+                with dds_cli.utils.console.pager():
+                    dds_cli.utils.console.print(self.failed_table)
+            else:
+                dds_cli.utils.console.print(self.failed_table)
+            LOG.warning(f"Finished {description_lc} with errors, see table above")
+        elif self.failed_files is not None:
+            self.failed_files["result"] = f"Finished {description_lc} with errors"
+            dds_cli.utils.console.print(self.failed_files)
+        else:
+            dds_cli.utils.console.print(f"Successfully finished {description_lc}")
 
     return create_and_remove_task

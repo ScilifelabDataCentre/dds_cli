@@ -7,17 +7,18 @@
 # Standard Library
 import logging
 import pathlib
-import sys
 
 # Installed
 import requests
 import rich
+import rich.table
+import rich.padding
 import simplejson
 
 # Own modules
-from dds_cli.cli_decorators import removal_spinner
+import dds_cli
+from dds_cli.custom_decorators import removal_spinner
 from dds_cli import base
-from dds_cli import data_lister
 from dds_cli import DDSEndpoint
 
 ###############################################################################
@@ -25,7 +26,6 @@ from dds_cli import DDSEndpoint
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -35,26 +35,27 @@ LOG.setLevel(logging.DEBUG)
 class DataRemover(base.DDSBaseClass):
     """Data remover class."""
 
-    def __init__(self, project: str, username: str = None, config: pathlib.Path = None):
-
+    def __init__(self, project: str, username: str, method: str = "rm", no_prompt: bool = False):
+        """Handle actions regarding data deletion in the cli."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, config=config, project=project)
+        super().__init__(username=username, project=project, method=method, no_prompt=no_prompt)
 
-        # Only method "ls" can use the DataLister class
+        self.failed_table = None
+        self.failed_files = None
+
+        # Only method "rm" can use the DataRemover class
         if self.method != "rm":
-            sys.exit(f"Unauthorized method: {self.method}")
+            raise dds_cli.exceptions.InvalidMethodError(
+                attempted_method=method, message="DataRemover attempting unauthorized method"
+            )
 
-    # Static methods ###################### Static methods #
-    @staticmethod
-    def __response_delete(resp_json, level="File"):
+    def __create_failed_table(self, resp_json, level="File"):
         """Output a response after deletion."""
-
-        # console = rich.console.Console()
-
         # Check that enough info
         if not all(x in resp_json for x in ["not_exists", "not_removed"]):
-            return "No information returned. Server error."
-            # os._exit(0)
+            raise dds_cli.exceptions.APIError(
+                f"Malformatted response detected when attempting remove action on {self.project}."
+            )
 
         # Get info
         not_exists = resp_json["not_exists"]
@@ -62,58 +63,60 @@ class DataRemover(base.DDSBaseClass):
 
         # Create table if any files failed
         if not_exists or delete_failed:
-            # Warn if many failed files
-            data_lister.DataLister.warn_if_many(count=len(not_exists) + len(delete_failed))
-
-            # Create table and add columns
-            table = rich.table.Table(
-                title=f"{level}s not deleted",
-                title_justify="left",
-                show_header=True,
-                header_style="bold",
-            )
-            columns = [level, "Error"]
-            for x in columns:
-                table.add_column(x)
-
-            # Add rows
-            _ = [table.add_row(x, f"No such {level.lower()}") for x in not_exists]
-            _ = [
-                table.add_row(
-                    f"[light_salmon3]{x}[/light_salmon3]",
-                    f"[light_salmon3]{y}[/light_salmon3]",
+            if self.no_prompt:
+                self.failed_files = {"Errors": []}
+                for x in not_exists:
+                    self.failed_files["Errors"].append({x: f"No such {level.lower()}"})
+                for x, y in delete_failed.items():
+                    self.failed_files["Errors"].append({x: y})
+            else:
+                # Create table and add columns
+                table = rich.table.Table(
+                    title=f"{level}s not deleted",
+                    title_justify="left",
+                    show_header=True,
+                    header_style="bold",
                 )
-                for x, y in delete_failed.items()
-            ]
+                columns = [level, "Error"]
+                for x in columns:
+                    table.add_column(x)
 
-            # Print out table
-            return rich.padding.Padding(table, 1)
+                # Add rows
+                for x in not_exists:
+                    table.add_row(x, f"No such {level.lower()}")
+
+                for x, y in delete_failed.items():
+                    table.add_row(
+                        f"[light_salmon3]{x}[/light_salmon3]",
+                        f"[light_salmon3]{y}[/light_salmon3]",
+                    )
+
+                # Print out table
+                self.failed_table = rich.padding.Padding(table, 1)
 
     @staticmethod
     def delete_tempfile(file: pathlib.Path):
-        """Deletes the specified file."""
-
+        """Delete the specified file."""
         try:
             file.unlink()
         except FileNotFoundError as err:
             LOG.exception(str(err))
-            LOG.info("File deletion may have failed. Usage of space may increase.")
+            LOG.warning("File deletion may have failed. Usage of space may increase.")
 
     # Public methods ###################### Public methods #
     @removal_spinner
     def remove_all(self, *_, **__):
         """Remove all files in project."""
-
-        message = ""
-
         # Perform request to API to perform deletion
         try:
-            response = requests.delete(DDSEndpoint.REMOVE_PROJ_CONT, headers=self.token)
+            response = requests.delete(
+                DDSEndpoint.REMOVE_PROJ_CONT, params={"project": self.project}, headers=self.token
+            )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
         if not response.ok:
-            return f"Failed to delete files in project: {response.text}"
+            raise dds_cli.exceptions.APIError(f"Failed to delete files in project: {response.text}")
 
         # Print out response - deleted or not?
         try:
@@ -121,26 +124,29 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        if resp_json["removed"]:
-            message = f"All files have been removed from project {self.project}."
-        else:
-            message = resp_json.get("error")
-            if message is None:
-                message = "No error message returned despite failure."
-
-        return message
+        if "removed" not in resp_json:
+            raise dds_cli.exceptions.APIError(
+                "Malformatted response detected when attempting "
+                f"to remove all files from {self.project}."
+            )
 
     @removal_spinner
     def remove_file(self, files):
         """Remove specific files."""
-
         try:
-            response = requests.delete(DDSEndpoint.REMOVE_FILE, json=files, headers=self.token)
+            response = requests.delete(
+                DDSEndpoint.REMOVE_FILE,
+                params={"project": self.project},
+                json=files,
+                headers=self.token,
+            )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
         if not response.ok:
-            return f"Failed to delete file(s) '{files}' in project {self.project}: {response.text}"
+            raise dds_cli.exceptions.APIError(
+                f"Failed to delete file(s) '{files}' in project {self.project}: {response.text}"
+            )
 
         # Get info in response
         try:
@@ -148,19 +154,23 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        return self.__response_delete(resp_json=resp_json)
+        self.__create_failed_table(resp_json=resp_json)
 
     @removal_spinner
     def remove_folder(self, folder):
         """Remove specific folders."""
-
         try:
-            response = requests.delete(DDSEndpoint.REMOVE_FOLDER, json=folder, headers=self.token)
+            response = requests.delete(
+                DDSEndpoint.REMOVE_FOLDER,
+                params={"project": self.project},
+                json=folder,
+                headers=self.token,
+            )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 
         if not response.ok:
-            return (
+            raise dds_cli.exceptions.APIError(
                 f"Failed to delete folder(s) '{folder}' "
                 f"in project {self.project}: {response.text}"
             )
@@ -171,4 +181,4 @@ class DataRemover(base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise SystemExit from err
 
-        return self.__response_delete(resp_json=resp_json, level="Folder")
+        self.__create_failed_table(resp_json=resp_json, level="Folder")

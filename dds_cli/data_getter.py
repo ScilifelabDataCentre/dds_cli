@@ -6,43 +6,29 @@
 
 # Standard library
 import logging
-import os
 import pathlib
-import sys
-import traceback
 
 # Installed
-import boto3
-import botocore
-import rich
 import requests
 import simplejson
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-from dds_cli import base
 from dds_cli import DDSEndpoint, FileSegment
 from dds_cli import file_handler_remote as fhr
 from dds_cli import data_remover as dr
 from dds_cli import file_compressor as fc
 from dds_cli import file_encryptor as fe
-from dds_cli import s3_connector as s3
-from dds_cli import status
 from dds_cli import text_handler as txt
-from dds_cli.cli_decorators import verify_proceed, update_status, subpath_required
+from dds_cli.custom_decorators import verify_proceed, update_status, subpath_required
+from dds_cli import base
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -54,8 +40,7 @@ class DataGetter(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str = None,
-        config: pathlib.Path = None,
+        username: str,
         project: str = None,
         break_on_fail: bool = False,
         get_all: bool = False,
@@ -64,11 +49,17 @@ class DataGetter(base.DDSBaseClass):
         destination: pathlib.Path = pathlib.Path(""),
         silent: bool = False,
         verify_checksum: bool = False,
+        method: str = "get",
+        no_prompt: bool = False,
     ):
-
+        """Handle actions regarding downloading data."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username, config=config, project=project, log_location=destination["LOGS"]
+            username=username,
+            project=project,
+            dds_directory=destination,
+            method=method,
+            no_prompt=no_prompt,
         )
 
         # Initiate DataGetter specific attributes
@@ -76,37 +67,38 @@ class DataGetter(base.DDSBaseClass):
         self.verify_checksum = verify_checksum
         self.silent = silent
         self.filehandler = None
-        # self.log_location = destination["LOGS"]
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":
-            console.print(f"\n:no_entry_sign: Unauthorized method: {self.method} :no_entry_sign:\n")
-            os._exit(0)
+            raise dds_cli.exceptions.InvalidMethodError(
+                attempted_method=self.method,
+                message="DataGetter attempting unauthorized method",
+            )
 
         # Start file prep progress
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
+            console=dds_cli.utils.stderr_console,
         ) as progress:
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")
             self.filehandler = fhr.RemoteFileHandler(
                 get_all=get_all,
                 user_input=(source, source_path_file),
                 token=self.token,
-                destination=destination["FILES"],
+                project=self.project,
+                destination=self.dds_directory.directories["FILES"],
             )
 
             if self.filehandler.failed and self.break_on_fail:
-                console.print(
-                    "\n:warning: Some specified files were not found in the system "
-                    "and '--break-on-fail' flag used. :warning:\n\n"
-                    f"Files not found: {self.filehandler.failed}\n"
+                raise dds_cli.exceptions.DownloadError(
+                    ":warning-emoji: Some specified files were not found in the system "
+                    "and '--break-on-fail' flag used. :warning-emoji:"
+                    f"Files not found: {self.filehandler.failed}"
                 )
-                os._exit(0)
 
             if not self.filehandler.data:
-                console.print("\nNo files to download.\n")
-                os._exit(0)
+                raise dds_cli.exceptions.DownloadError("No files to download.")
 
             self.status = self.filehandler.create_download_status_dict()
 
@@ -116,15 +108,14 @@ class DataGetter(base.DDSBaseClass):
     @verify_proceed
     @subpath_required
     def download_and_verify(self, file, progress):
-        """Downloads the file, reveals the original data and verifies the integrity."""
-
+        """Download the file, reveals the original data and verifies the integrity."""
         all_ok, message = (False, "")
         file_info = self.filehandler.data[file]
 
         # File task for downloading
         task = progress.add_task(
             description=txt.TextHandler.task_name(file=file, step="get"),
-            total=file_info["size_encrypted"],
+            total=file_info["size_stored"],
             visible=not self.silent,
         )
 
@@ -135,21 +126,21 @@ class DataGetter(base.DDSBaseClass):
         progress.reset(
             task,
             description=txt.TextHandler.task_name(file=file, step="decrypt"),
-            total=file_info["size"],
+            total=file_info["size_original"],
         )
 
-        LOG.debug("File %s downloaded: %s", file, file_downloaded)
+        LOG.debug(f"File {file} downloaded: {file_downloaded}")
 
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
-            LOG.debug("Database updated: %s", db_updated)
+            LOG.debug(f"Database updated: {db_updated}")
 
-            LOG.info("Beginning decryption of file %s...", file)
+            LOG.debug(f"Beginning decryption of file {file}...")
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
                 peer_public=file_info["public_key"],
-                key_salt=file_info["key_salt"],
+                key_salt=file_info["salt"],
             ) as decryptor:
 
                 streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"])
@@ -165,7 +156,7 @@ class DataGetter(base.DDSBaseClass):
                     outfile=file,
                 )
 
-            LOG.debug("file saved? %s", file_saved)
+            LOG.debug(f"file saved? {file_saved}")
             if file_saved:
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
@@ -182,53 +173,55 @@ class DataGetter(base.DDSBaseClass):
 
     @update_status
     def get(self, file, progress, task):
-        """Downloads files from the cloud."""
-
+        """Download files from the cloud."""
         downloaded = False
         error = ""
-        file_local = str(self.filehandler.data[file]["path_downloaded"])
-        file_remote = self.filehandler.data[file]["name_in_bucket"]
+        file_local = self.filehandler.data[file]["path_downloaded"]
+        file_remote = self.filehandler.data[file]["url"]
 
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            if None in [conn.url, conn.keys, conn.bucketname]:
-                error = "No s3 info returned! " + conn.message
+        try:
+            with requests.get(file_remote, stream=True) as req:
+                req.raise_for_status()
+                with file_local.open(mode="wb") as new_file:
+                    for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
+                        progress.update(task, advance=len(chunk))
+                        new_file.write(chunk)
+        except (
+            requests.exceptions.ConnectTimeout,
+            requests.exceptions.HTTPError,
+            requests.exceptions.ReadTimeout,
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+        ) as err:
+            if (
+                hasattr(err, "response")
+                and hasattr(err.response, "status_code")
+                and err.response.status_code == 404
+            ):
+                error = "File not found! Please report this to the SciLifeLab Data Centre."
             else:
-                # Upload file
-                try:
-                    conn.resource.meta.client.download_file(
-                        Filename=file_local,
-                        Bucket=conn.bucketname,
-                        Key=file_remote,
-                        Callback=status.ProgressPercentage(progress=progress, task=task)
-                        if not self.silent
-                        else None,
-                    )
-                except (
-                    botocore.client.ClientError,
-                    boto3.exceptions.Boto3Error,
-                ) as err:
-                    error = f"S3 download of file '{file}' failed: {err}"
-                    LOG.exception("%s: %s", file, err)
-                else:
-                    downloaded = True
+                error = str(err)
+        else:
+            downloaded = True
 
         return downloaded, error
 
     @update_status
     def update_db(self, file):
         """Update file info in db."""
-
         updated_in_db = False
         error = ""
 
         # Get file info
         fileinfo = self.filehandler.data[file]
-        params = {"name": fileinfo["name_in_db"]}
+        filename = {"name": fileinfo["name_in_db"]}
+        params = {"project": self.project}
 
         # Send file info to API
         try:
-            response = requests.put(DDSEndpoint.FILE_UPDATE, params=params, headers=self.token)
+            response = requests.put(
+                DDSEndpoint.FILE_UPDATE, params=params, json=filename, headers=self.token
+            )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err
 

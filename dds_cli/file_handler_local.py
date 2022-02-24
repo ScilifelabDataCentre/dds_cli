@@ -6,38 +6,30 @@
 
 # Standard library
 import hashlib
+import http
 import logging
 import os
 import pathlib
-import sys
 import uuid
+import random
 
 # Installed
 import requests
-import rich
 import simplejson
-import zstandard as zstd
 
 # Own modules
 from dds_cli import DDSEndpoint
 from dds_cli import file_compressor as fc
 from dds_cli import file_handler as fh
 from dds_cli import FileSegment
-from dds_cli import status
-from dds_cli.cli_decorators import subpath_required
+from dds_cli import exceptions
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -48,22 +40,39 @@ class LocalFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, user_input, temporary_destination):
+    def __init__(self, user_input, temporary_destination, project):
 
         LOG.debug("Collecting file info...")
 
         # Initiate FileHandler from inheritance
-        super().__init__(user_input=user_input, local_destination=temporary_destination)
-
-        # Get absolute paths to all data and removes duplicates
-        self.data_list = list(
-            set(pathlib.Path(x).resolve() for x in self.data_list if pathlib.Path(x).exists())
+        super().__init__(
+            user_input=user_input, local_destination=temporary_destination, project=project
         )
+
+        # Remove duplicates and save all files for later use
+        all_files = set(self.data_list)
+
+        # Remove non existent files
+        self.data_list = {x for x in self.data_list if pathlib.Path(x).exists()}
+
+        non_existent_files = all_files.difference(self.data_list)
+        if len(non_existent_files) > 0:
+            # Issue warning that some of the files don't exist
+            LOG.warning(
+                "The following files from '{}' does not exist: '{}'".format(
+                    user_input[1], "', '".join(non_existent_files)
+                )
+            )
+
+        # Get absolute paths for all data
+        self.data_list = [
+            pathlib.Path(os.path.abspath(os.path.expanduser(path))) for path in self.data_list
+        ]
 
         # No data -- cannot proceed
         if not self.data_list:
-            console.print("\n:warning: No data specified. :warning:\n")
-            os._exit(0)
+            dds_cli.utils.console.print("\n:warning-emoji: No data specified. :warning-emoji:\n")
+            os._exit(1)
 
         self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
         self.data_list = None
@@ -77,22 +86,19 @@ class LocalFileHandler(fh.FileHandler):
         called in the bucket."""
 
         # Generate new file name
-        new_name = "".join([str(uuid.uuid4().hex[:6]), "_", filename])
-        return str(folder / pathlib.Path(new_name))
+        new_name = f"{'%020x' % random.randrange(16**20)}_{uuid.uuid5(uuid.NAMESPACE_X500, str(folder))}{uuid.uuid5(uuid.NAMESPACE_X500, filename)}"
+        return new_name
 
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
         """Read file in chunk_size sized chunks."""
 
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with file.open(mode="rb") as infile:
                 for chunk in iter(lambda: infile.read(chunk_size), b""):
                     yield chunk
         except OSError as err:
             LOG.warning(str(err))
-        finally:
-            os.umask(original_umask)
 
     # Private methods ############ Private methods #
     def __collect_file_info_local(self, all_paths, folder=pathlib.Path(""), task_name=""):
@@ -110,27 +116,27 @@ class LocalFileHandler(fh.FileHandler):
 
                     if error != "":
                         LOG.exception(error)
-                        os._exit(0)
+                        os._exit(1)
 
-                    path_processed = self.create_encrypted_name(
-                        raw_file=path,
-                        subpath=folder,
-                        no_compression=is_compressed,
-                    )
+                path_processed = self.create_encrypted_name(
+                    raw_file=path,
+                    subpath=folder,
+                    no_compression=is_compressed,
+                )
 
-                    file_info[str(folder / path.name)] = {
-                        "path_raw": path,
-                        "subpath": folder,
-                        "size_raw": path.stat().st_size,
-                        "compressed": is_compressed,
-                        "path_processed": path_processed,
-                        "size_processed": 0,
-                        "path_remote": self.generate_bucket_filepath(
-                            filename=path_processed.name, folder=folder
-                        ),
-                        "overwrite": False,
-                        "checksum": "",
-                    }
+                file_info[str(folder / path.name)] = {
+                    "path_raw": path,
+                    "subpath": folder,
+                    "size_raw": path.stat().st_size,
+                    "compressed": is_compressed,
+                    "path_processed": path_processed,
+                    "size_processed": 0,
+                    "path_remote": self.generate_bucket_filepath(
+                        filename=path_processed.name, folder=folder
+                    ),
+                    "overwrite": False,
+                    "checksum": "",
+                }
 
             elif path.is_dir():
                 content_info, _ = self.__collect_file_info_local(
@@ -138,6 +144,22 @@ class LocalFileHandler(fh.FileHandler):
                     folder=folder / pathlib.Path(path.name),
                 )
                 file_info.update({**content_info})
+            else:
+                if path.is_symlink():
+                    try:
+                        resolved = path.resolve()
+                    except RuntimeError:
+                        LOG.warning(
+                            f"IGNORED: Link: {path} seems to contain infinite loop, will be ignored."
+                        )
+                    else:
+                        LOG.warning(
+                            f"IGNORED: Link: {path} -> {resolved} seems to be broken, will be ignored."
+                        )
+                else:
+                    LOG.warning(
+                        f"IGNORED: Path of unsupported/unknown type: {path}, will be ignored."
+                    )
 
         return file_info, progress_tasks
 
@@ -193,6 +215,7 @@ class LocalFileHandler(fh.FileHandler):
         try:
             response = requests.get(
                 DDSEndpoint.FILE_MATCH,
+                params={"project": self.project},
                 headers=token,
                 json=files,
                 timeout=DDSEndpoint.TIMEOUT,
@@ -202,8 +225,11 @@ class LocalFileHandler(fh.FileHandler):
             raise SystemExit from err
 
         if not response.ok:
-            console.print(f"\n{response.text}\n")
-            os._exit(0)
+            message = "Failed getting information about previously uploaded files"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
 
         try:
             files_in_db = response.json()
@@ -213,8 +239,10 @@ class LocalFileHandler(fh.FileHandler):
 
         # API failure
         if "files" not in files_in_db:
-            console.print("\n:warning: Files not returned from API. :warning:\n")
-            os._exit(0)
+            dds_cli.utils.console.print(
+                "\n:warning-emoji: Files not returned from API. :warning-emoji:\n"
+            )
+            os._exit(1)
 
         LOG.debug("Previous upload check finished.")
 
@@ -264,7 +292,7 @@ class LocalFileHandler(fh.FileHandler):
                 # checksum.update(chunk)
                 # break
                 yield chunk
-        # os._exit(0)
+
         # LOG.debug("Streaming file finished.")
         # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()

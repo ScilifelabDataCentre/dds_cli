@@ -5,47 +5,35 @@
 ###############################################################################
 
 # Standard library
-import inspect
 import logging
 import os
 import pathlib
-import traceback
 
 # Installed
-import getpass
+import http
 import requests
-import rich
 import simplejson
 
 # Own modules
+import dds_cli.directory
+import dds_cli.timestamp
+
+from dds_cli import (
+    DDS_METHODS,
+    DDS_DIR_REQUIRED_METHODS,
+    DDS_KEYS_REQUIRED_METHODS,
+)
 from dds_cli import DDSEndpoint
-from dds_cli import file_handler as fh
 from dds_cli import s3_connector as s3
 from dds_cli import user
+from dds_cli import exceptions
+from dds_cli import utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
-
-###############################################################################
-# FUNCTIONS ####################################################### FUNCTIONS #
-###############################################################################
-
-
-def attempted_operation():
-    """Gets the command entered by the user (e.g. put)."""
-
-    curframe = inspect.currentframe()
-    return inspect.getouterframes(curframe, 2)[3].function
 
 
 ###############################################################################
@@ -58,164 +46,87 @@ class DDSBaseClass:
 
     def __init__(
         self,
-        username=None,
-        password=None,
-        config=None,
+        username,
         project=None,
-        ignore_config_project=False,
-        log_location=pathlib.Path(""),
+        dds_directory: pathlib.Path = None,
+        method: str = None,
+        authenticate: bool = True,
+        method_check: bool = True,
+        force_renew_token: bool = False,
+        no_prompt: bool = False,
     ):
+        """Initialize Base class for authenticating the user and preparing for DDS action."""
+        self.username = username
+        self.project = project
+        self.method_check = method_check
+        self.method = method
+        self.no_prompt = no_prompt
 
-        LOG.debug("Config: %s", config)
+        if self.method_check:
+            # Get attempted operation e.g. put/ls/rm/get
+            if self.method not in DDS_METHODS:
+                raise exceptions.InvalidMethodError(attempted_method=self.method)
+            LOG.debug(f"Attempted operation: {self.method}")
 
-        # Get attempted operation e.g. put/ls/rm/get
-        self.method = attempted_operation()
-        LOG.info("Attempted operation: %s", self.method)
+            # Use user defined destination if any specified
+            if self.method in DDS_DIR_REQUIRED_METHODS:
+                self.dds_directory = dds_cli.directory.DDSDirectory(
+                    path=dds_directory
+                    if dds_directory
+                    else pathlib.Path.cwd()
+                    / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
+                )
+
+                self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
+                    "dds_failed_delivery.txt"
+                )
 
         # Keyboardinterrupt
         self.stop_doing = False
 
-        # log location
-        self.log_location = log_location
-
-        # Verify that user entered enough info
-        username, password, self.project = self.__verify_input(
-            username=username,
-            password=password,
-            config=config,
-            project=project,
-            ignore_config_project=ignore_config_project,
-        )
-
         # Authenticate the user and get the token
-        dds_user = user.User(username=username, password=password, project=self.project)
-        self.token = dds_user.token
+        if authenticate:
+            dds_user = user.User(
+                username=username,
+                force_renew_token=force_renew_token,
+                no_prompt=no_prompt,
+            )
+            self.token = dds_user.token_dict
 
         # Project access only required if trying to upload, download or list
         # files within project
-        if self.method in ["put", "get"] or (
-            self.method in ["ls", "rm"] and self.project is not None
-        ):
-            self.token = self.__verify_project_access()
+        if self.method in DDS_KEYS_REQUIRED_METHODS:
+            if self.method == "put":
+                self.s3connector = self.__get_safespring_keys()
 
-            if self.method in ["put", "get"]:
-                self.keys = self.__get_project_keys()
+            self.keys = self.__get_project_keys()
 
-                self.status = dict()
-                self.filehandler = None
+            self.status = dict()
+            self.filehandler = None
 
     def __enter__(self):
+        """Return self when using context manager."""
         return self
 
     def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
-        if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
-            return False  # uncomment to pass exception through
-
+        """Finish and print out delivery summary."""
         if self.method in ["put", "get"]:
             self.__printout_delivery_summary()
 
-            # Delete temporary file directory if it is empty
-            # if not next(self.filehandler.local_destination.iterdir(), None):
-            #     fh.FileHandler.delete_tempdir(
-            #         directory=self.filehandler.local_destination
-            #     )
+        # Exception is not handled
+        if exc_type is not None:
+            LOG.debug(f"Exception: {exc_type} with value {exc_value}")
+            return False
 
         return True
 
     # Private methods ############################### Private methods #
-    def __verify_input(
-        self,
-        username=None,
-        password=None,
-        config=None,
-        project=None,
-        ignore_config_project=False,
-    ):
-        """Verifies that the users input is valid and fully specified."""
-
-        LOG.info("Verifying the user input...")
-
-        # Get contents from file
-        if config is not None:
-            # Get contents from file
-            contents = fh.FileHandler.extract_config(configfile=config)
-
-            # Get user credentials and project info if not already specified
-            if username is None and "username" in contents:
-                username = contents["username"]
-            if password is None and "password" in contents:
-                password = contents["password"]
-            if not ignore_config_project:
-                if (
-                    project is None
-                    and "project" in contents
-                    and self.method in ["put", "get", "ls"]
-                ):
-                    project = contents["project"]
-
-        LOG.info("Username: %s, Project ID: %s", username, project)
-
-        # Username and project info is minimum required info
-        if self.method in ["put", "get"] and project is None:
-            console.print(
-                "\n:warning: Data Delivery System project information is missing. :warning:\n"
-            )
-            os._exit(0)
-        if username is None:
-            console.print("\n:warning: Data Delivery System options are missing :warning:\n")
-            os._exit(0)
-
-        # Set password if missing
-        if password is None:
-            password = getpass.getpass()
-            # password = "password"  # TODO: REMOVE - ONLY FOR DEV
-
-        LOG.debug("User input verified.")
-
-        return username, password, project
-
-    def __verify_project_access(self):
-        """Verifies that the user has access to the specified project."""
-
-        LOG.debug("Verifying access to project %s...", self.project)
-
-        # Perform request to API
-        try:
-            response = requests.get(
-                DDSEndpoint.AUTH_PROJ,
-                params={"method": self.method},
-                headers=self.token,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            LOG.warning(err)
-            raise SystemExit from err
-
-        # Problem
-        if not response.ok:
-            console.print(
-                f"\n:no_entry_sign: Project access denied: {response.text} :no_entry_sign:\n"
-            )
-            os._exit(0)
-
-        try:
-            dds_access = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        # Access not granted
-        if not dds_access["dds-access-granted"] or "token" not in dds_access:
-            console.print("\n:no_entry_sign: Project access denied :no_entry_sign:\n")
-            os._exit(0)
-
-        LOG.debug("User has been granted access to project %s", self.project)
-
-        return {"x-access-token": dds_access["token"]}
+    def __get_safespring_keys(self):
+        """Get safespring keys."""
+        return s3.S3Connector(project_id=self.project, token=self.token)
 
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""
-
         # Project public key required for both put and get
         public = self.__get_key()
 
@@ -226,12 +137,12 @@ class DDSBaseClass:
 
     def __get_key(self, private: bool = False):
         """Get public key for project."""
-
         key_type = "private" if private else "public"
         # Get key from API
         try:
             response = requests.get(
                 DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
+                params={"project": self.project},
                 headers=self.token,
                 timeout=DDSEndpoint.TIMEOUT,
             )
@@ -240,10 +151,11 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if not response.ok:
-            console.print(
-                f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
-            )
-            os._exit(0)
+            message = "Failed getting key from DDS API"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
 
         # Get key from response
         try:
@@ -253,16 +165,16 @@ class DDSBaseClass:
             raise SystemExit from err
 
         if key_type not in project_public:
-            console.print(
+            utils.console.print(
                 "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
             )
-            os._exit(0)
+            os._exit(1)
 
         return project_public[key_type]
 
-    def __printout_delivery_summary(self, max_fileerrs: int = 40):
+    def __printout_delivery_summary(self):
         """Print out the delivery summary if any files were cancelled."""
-
+        # TODO: Look into a better summary print out - old deleted for now
         any_failed = self.__collect_all_failed()
 
         # Clear dict to not take up too much space
@@ -273,58 +185,38 @@ class DDSBaseClass:
                 f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
             )
 
-            # Save to file and print message if too many failed files,
-            # otherwise create and print tables
-            outfile = self.log_location / pathlib.Path("dds_failed_delivery.txt")
-
-            fh.FileHandler.save_errors_to_file(file=outfile, info=any_failed)
-
-            # Only print out if the number of cancelled files are below a certain thresh
-            if len(any_failed) < max_fileerrs:
-                console.print(f"{intro_error_message}:")
-
-                # Cancelled files in root
-                files_table, additional_info = fh.FileHandler.create_summary_table(
-                    all_failed_data=any_failed, upload=bool(self.method == "put")
+            if self.method == "put":
+                retry_message = (
+                    "If you wish to retry the upload, re-run the `dds data put` command again, "
+                    "specifying the same options as you did now. To also overwrite the files "
+                    "that were uploaded, also add the `--overwrite` flag at the end of the command."
                 )
-                if files_table is not None:
-                    console.print(rich.padding.Padding(files_table, 1))
-
-                # Cancelled files in different folders
-                folders_table, additional_info = fh.FileHandler.create_summary_table(
-                    all_failed_data=any_failed,
-                    get_single_files=False,
-                    upload=bool(self.method == "put"),
+            else:
+                # TODO: --destination should be able to >at least< overwrite the files in the
+                # previously created download location.
+                retry_message = (
+                    "If you wish to retry the download, re-run the `dds data get` command again, "
+                    "specifying the same options as you did now. A new directory will "
+                    "automatically be created and all files will be downloaded again."
                 )
-                if folders_table is not None:
-                    console.print(rich.padding.Padding(folders_table, 1))
-                if additional_info:
-                    console.print(rich.padding.Padding(additional_info, 1))
 
-            console.print(f"{intro_error_message}. See {outfile} for more information.")
-
-            if any([y["failed_op"] in ["add_file_db"] for _, y in self.status.items()]):
-                console.print(
-                    rich.padding.Padding(
-                        "One or more files where uploaded but may not have been added to "
-                        "the db. Contact support and supply the logfile found in "
-                        f"{self.log_location}",
-                        1,
-                    )
-                )
+            utils.stderr_console.print(
+                f"{intro_error_message}. \n"
+                f"{retry_message} \n\n"
+                f"See {self.failed_delivery_log} for more information."
+            )
 
         else:
             # Printout if no cancelled/failed files
-            console.print(f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n")
+            dds_cli.utils.console.print(
+                f"\n{'Upload' if self.method == 'put' else 'Download'} completed!\n"
+            )
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
-            console.print(
-                f"Any downloaded files are located: {self.filehandler.local_destination}."
-            )
+            LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
 
     def __collect_all_failed(self, sort: bool = True):
         """Put cancelled files from status in to failed dict and sort the output."""
-
         # Transform all items to string
         self.filehandler.data = {
             str(file): {str(x): str(y) for x, y in info.items()}
@@ -349,31 +241,11 @@ class DDSBaseClass:
         )
 
         # Sort by which directory the files are in
+        LOG.debug(self.filehandler.failed)
+
+        # TODO: Sort more?
         return (
-            sorted(
-                sorted(self.filehandler.failed.items(), key=lambda g: g[0]),
-                key=lambda f: f[1]["subpath"],
-            )
+            sorted(self.filehandler.failed.items(), key=lambda g: g)
             if sort
             else self.filehandler.failed
         )
-
-    # Public methods ################################# Public methods #
-    def verify_bucket_exist(self):
-        """Check that s3 connection works, and that bucket exists."""
-
-        LOG.debug("Verifying and/or creating bucket.")
-
-        with s3.S3Connector(project_id=self.project, token=self.token) as conn:
-
-            if None in [conn.safespring_project, conn.keys, conn.bucketname, conn.url]:
-                console.print(f"\n:warning: {conn.message} :warning:\n")
-                os._exit(0)
-
-            bucket_exists = conn.check_bucket_exists()
-            if not bucket_exists:
-                _ = conn.create_bucket()
-
-        LOG.debug("Bucket verified.")
-
-        return True

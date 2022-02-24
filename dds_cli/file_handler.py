@@ -9,27 +9,18 @@ import json
 import logging
 import os
 import pathlib
-import shutil
-import sys
-import textwrap
 
 # Installed
-import rich
 
 # Own modules
+import dds_cli.utils
+import dds_cli.exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
-
-###############################################################################
-# RICH CONFIG ################################################### RICH CONFIG #
-###############################################################################
-
-console = rich.console.Console()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -39,170 +30,62 @@ console = rich.console.Console()
 class FileHandler:
     """Main file handler."""
 
-    def __init__(self, user_input, local_destination):
+    def __init__(self, user_input, local_destination, project=None):
+        """Initiate file handler."""
         source, source_path_file = user_input
 
         # Get user specified data
+        self.project = project
         self.local_destination = local_destination
-        self.data_list = list()
+        self.data_list = []
         if source is not None:
             self.data_list += list(source)
         if source_path_file is not None:
             source_path_file = pathlib.Path(source_path_file)
             if source_path_file.exists():
                 try:
-                    original_umask = os.umask(0)  # User file-creation mode mask
                     with source_path_file.resolve().open(mode="r") as spf:
                         self.data_list += spf.read().splitlines()
                 except OSError as err:
-                    console.print(f"Failed to get files from source-path-file option: {err}")
-                    os.umask(original_umask)
-                    os._exit(0)
-                finally:
-                    os.umask(original_umask)
+                    dds_cli.utils.console.print(
+                        f"Failed to get files from source-path-file option: {err}"
+                    )
+                    os._exit(1)
 
         self.failed = {}
 
     # Static methods ############ Static methods #
     @staticmethod
-    def extract_config(configfile):
-        """Extracts info from config file."""
+    def append_errors_to_file(log_file: pathlib.Path, file, info, status):
+        """Save errors to specific json file."""
 
-        # Absolute path to config file
-        configpath = pathlib.Path(configfile).resolve()
-        if not configpath.exists():
-            console.print("\n:warning: Config file does not exist. :warning:\n")
-            os._exit(0)
-
-        # Open config file and get contents
+        failed_to_save = {
+            str(file): {
+                **FileHandler.make_json_serializable(non_json=info),
+                "status": FileHandler.make_json_serializable(non_json=status),
+            }
+        }
         try:
-            original_umask = os.umask(0)
-            with configpath.open(mode="r") as cfp:
-                contents = json.load(cfp)
-        except json.decoder.JSONDecodeError as err:
-            console.print(f"\nFailed to get config file contents: {err}\n")
-            os._exit(0)
-        finally:
-            os.umask(original_umask)
-
-        return contents
-
-    @staticmethod
-    def save_errors_to_file(file: pathlib.Path, info):
-        try:
-            original_umask = os.umask(0)  # User file-creation mode mask
-            with file.open(mode="w") as errfile:
-                json.dump(
-                    info,
-                    errfile,
+            with log_file.open(mode="a") as errfile:
+                json_output = json.dumps(
+                    failed_to_save,
                     indent=4,
                 )
+                # Each line is valid json, but the entire file is not.
+                # Multiple threads are appending to this file, so valid json for
+                # the entire file is not trivial.
+                errfile.write(json_output + "\n")
         except (OSError, TypeError) as err:
             LOG.warning(str(err))
-        finally:
-            os.umask(original_umask)
 
     @staticmethod
-    def create_summary_table(
-        all_failed_data,
-        get_single_files: bool = True,
-        upload: bool = True,
-    ):
-
-        columns = ["File", "Error"] if upload else ["File", "Location", "Error"]
-        curr_table = None
-        title = "file" if get_single_files else "directory"
-        up_or_down = "upload" if upload else "download"
-
-        LOG.debug("Files: %s, Upload: %s, Columns: %s", get_single_files, upload, columns)
-
-        if not get_single_files:
-            columns = ["Directory"] + columns
-
-        files = [
-            x
-            for x in all_failed_data
-            if (
-                get_single_files
-                and x[1]["subpath"] == "."
-                or not get_single_files
-                and x[1]["subpath"] != "."
-            )
-        ]
-
-        additional_message = (
-            (
-                "One or more files were not uploaded due to a issue with another file. "
-                "To ignore issues with other files, remove the `--break-on-fail` "
-                "flag from the call."
-            )
-            if any([1 for x in files if "break-on-fail" in x[1]["message"]])
-            else ""
-        )
-
-        if files:
-            curr_table = rich.table.Table(
-                title=f"Incomplete {title} {up_or_down}s",
-                title_justify="left",
-                show_header=True,
-                header_style="bold",
-            )
-
-            for x in columns:
-                curr_table.add_column(x, overflow="fold")
-
-            if get_single_files:
-                if upload:
-                    _ = [
-                        curr_table.add_row(
-                            textwrap.fill(x[1]["path_raw"]),
-                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
-                        )
-                        for x in files
-                    ]
-                else:
-                    _ = [
-                        curr_table.add_row(
-                            x[1]["name_in_db"],
-                            textwrap.fill(x[0]),
-                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
-                        )
-                        for x in files
-                    ]
-            else:
-                subpath = ""
-                if upload:
-                    for x in files:
-                        curr_table.add_row(
-                            textwrap.fill(
-                                ""
-                                if subpath == x[1]["subpath"]
-                                else str(pathlib.Path(x[1]["path_raw"]).parent)
-                            ),
-                            str(pathlib.Path(x[1]["path_raw"]).name),
-                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
-                        )
-
-                        subpath = x[1]["subpath"]
-                else:
-                    for x in files:
-                        curr_table.add_row(
-                            ""
-                            if subpath == x[1]["subpath"]
-                            else str(pathlib.Path(x[1]["subpath"])),
-                            x[1]["name_in_db"],
-                            textwrap.fill(str(pathlib.Path(x[0]))),
-                            x[1]["message"] if "break-on-fail" not in x[1]["message"] else "",
-                        )
-
-                        subpath = x[1]["subpath"]
-
-        return curr_table, additional_message
+    def make_json_serializable(non_json):
+        """Convert pathlib.Path instances in dict to string."""
+        return {str(x): (str(y) if isinstance(y, pathlib.Path) else y) for x, y in non_json.items()}
 
     @staticmethod
     def delete_tempdir(directory: pathlib.Path):
-        """Deletes the specified directory."""
-
+        """Delete the specified directory."""
         ok_to_remove = False
 
         # If file not ok to remove folder
@@ -210,7 +93,7 @@ class FileHandler:
             return ok_to_remove
 
         # Iterate through any existing subdirectories - recursive
-        LOG.debug("Any in directory? %s", any(directory.iterdir()))
+        LOG.debug(f"Any in directory? {any(directory.iterdir())}")
         for x in directory.iterdir():
             LOG.debug(x)
         if any(directory.iterdir()):

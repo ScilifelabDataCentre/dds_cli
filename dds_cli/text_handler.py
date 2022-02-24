@@ -7,6 +7,7 @@
 # Standard library
 import logging
 import pathlib
+import dds_cli
 
 # Installed
 
@@ -17,7 +18,6 @@ import pathlib
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -66,13 +66,18 @@ class TextHandler(StringFormat):
                 task_name = "..." + task_name.split("...", 1)[-1][-max_len::]
 
         # Different symbols to the left depending on current process
-        symbol = ""
-        if step == "encrypt":
-            symbol = ":lock:"
-        elif step == "put":
-            symbol = ":arrow_up: "
-        elif step == "get":
-            symbol = ":arrow_down: "
-        elif step == "decrypt":
-            symbol = ":unlock:"
-        return f"{symbol} {task_name}"
+        if dds_cli.dds_on_legacy_console:
+            symbols = {
+                "encrypt": "[bold]encrypt",
+                "put": "[bold]put",
+                "get": "[bold]get",
+                "decrypt": "[bold]decrypt",
+            }
+        else:
+            symbols = {
+                "encrypt": ":lock:",
+                "put": ":arrow_up:",
+                "get": ":arrow_down:",
+                "decrypt": ":unlock:",
+            }
+        return f"{symbols.get(step, '')} {task_name}"

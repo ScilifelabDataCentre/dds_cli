@@ -9,7 +9,6 @@ import hashlib
 import logging
 import os
 import pathlib
-import sys
 import traceback
 
 # Installed
@@ -30,7 +29,7 @@ from dds_cli.file_handler_local import LocalFileHandler as fh
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.DEBUG)
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -63,8 +62,7 @@ class ECDHKeyHandler:
             backend=backends.default_backend(),
         ).derive(shared_key)
 
-        LOG.debug("Salt: %s", salt)
-        LOG.debug("Derived shared key: %s", derived_shared_key)
+        LOG.debug(f"Salt: {salt}")
         return derived_shared_key, salt.hex().upper()
 
     @staticmethod
@@ -133,6 +131,7 @@ class Encryptor(ECDHKeyHandler):
         else:
             if checksum.hexdigest() == correct_checksum:
                 verified, error = (True, "File integrity verified.")
+                LOG.info("Checksum verification successful. File integrity verified.")
                 LOG.debug(error)
             else:
                 error = "Checksum verification failed. File compromised."
@@ -155,7 +154,6 @@ class Encryptor(ECDHKeyHandler):
         aad = None
 
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             # Save encryption output to file
             with outfile.open(mode="wb") as out:
                 # Create and save first IV/nonce
@@ -189,9 +187,7 @@ class Encryptor(ECDHKeyHandler):
         else:
             encrypted_and_saved = True
             message = f"Encrypted file stored in location: {outfile}"
-            LOG.info(message)
-        finally:
-            os.umask(original_umask)
+            LOG.debug(message)
 
         return encrypted_and_saved, message
 
@@ -230,7 +226,6 @@ class Decryptor(ECDHKeyHandler):
         """Decrypts the file"""
 
         try:
-            original_umask = os.umask(0)  # User file-creation mode mask
             with infile.open(mode="rb+") as file:
                 # Get last nonce
                 file.seek(-12, os.SEEK_END)
@@ -268,8 +263,6 @@ class Decryptor(ECDHKeyHandler):
                 LOG.debug("Testing nonce...")
                 if last_nonce != nonce:
                     raise SystemExit("Nonces do not match!!")
-                LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)
+                LOG.debug(f"Last nonce should be: {last_nonce}, was: {nonce}")
         except Exception as err:
             LOG.warning(str(err))
-        finally:
-            os.umask(original_umask)

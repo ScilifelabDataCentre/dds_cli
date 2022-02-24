@@ -1,3 +1,4 @@
+testing
 .DS_Store
 docs/build
 *.pyc
@@ -22,15 +23,14 @@ S3-Upload-Proxy
 *.c4gh
 dp_testing_group.csv
 sensitive
-*tests
 *testing*
+!tools_for_testing.py
 not_used*
 encryption.md
 chunk_tester.py
 creds_files
 create_account.py
 *demo*
-*test.py
 old_version_files*
 temp_*
 my_*
@@ -38,3 +38,6 @@ ds.log
 x_cli_code
 timings
 *dict_structure.json
+*.code-workspace
+.DDS_CLI.env
+/docs/_build/

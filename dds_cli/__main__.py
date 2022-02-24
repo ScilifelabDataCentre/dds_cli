@@ -45,6 +45,7 @@ from dds_cli.options import (
     username_option,
     break_on_fail_flag,
     json_flag,
+    nomail_flag,
     silent_flag,
     size_flag,
     tree_flag,
@@ -400,8 +401,9 @@ def user_group_command(_):
     ),
     help="Type of account.",
 )
+@nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def add_user(click_ctx, email, username, role, project):
+def add_user(click_ctx, email, username, role, project, no_mail):
     """
     Add a user to the DDS system or hosted projects.
 
@@ -414,7 +416,7 @@ def add_user(click_ctx, email, username, role, project):
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as inviter:
-            inviter.add_user(email=email, role=role, project=project)
+            inviter.add_user(email=email, role=role, project=project, no_mail=no_mail)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
@@ -783,14 +785,16 @@ def display_project_status(click_ctx, username, project, show_history):
     type=int,
     help="Deadline in days when releasing a project.",
 )
+@nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def release_project(click_ctx, username, project, deadline):
+
+def release_project(click_ctx, username, project, deadline, no_mail):
     """Make project data available for user download."""
     try:
         with dds_cli.project_status.ProjectStatusManager(
             username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as updater:
-            updater.update_status(new_status="Available", deadline=deadline)
+            updater.update_status(new_status="Available", deadline=deadline, no_mail=no_mail)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -927,8 +931,9 @@ def project_access(_):
     help="Grant access as project owner. If not specified, "
     "the user gets Researcher permissions within the project.",
 )
+@nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def grant_project_access(click_ctx, username, project, email, owner):
+def grant_project_access(click_ctx, username, project, email, owner, no_mail):
     """Grant user access to a project."""
     try:
         with dds_cli.account_manager.AccountManager(
@@ -937,7 +942,7 @@ def grant_project_access(click_ctx, username, project, email, owner):
             role = "Researcher"
             if owner:
                 role = "Project Owner"
-            granter.add_user(email=email, role=role, project=project)
+            granter.add_user(email=email, role=role, project=project, no_mail=no_mail)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

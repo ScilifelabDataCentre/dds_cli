@@ -48,10 +48,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         if self.method not in ["add", "delete", "revoke"]:
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
-    def add_user(self, email, role, project):
+    def add_user(self, email, role, project, no_mail=False):
         """Invite new user or associate existing users with projects."""
         # Perform request to API
-        json = {"email": email, "role": role}
+        json = {"email": email, "role": role, "send_email": not no_mail}
 
         try:
             response = requests.post(

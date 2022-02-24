@@ -105,10 +105,10 @@ class ProjectStatusManager(base.DDSBaseClass):
                     history += ", ".join([item for item in row]) + " \n"
                 LOG.info(history)
 
-    def update_status(self, new_status, deadline=None, is_aborted=False):
+    def update_status(self, new_status, deadline=None, is_aborted=False, no_mail=False):
         """Update project status"""
 
-        extra_params = {"new_status": new_status}
+        extra_params = {"new_status": new_status, "send_email": not no_mail}
         if deadline:
             extra_params["deadline"] = deadline
         if is_aborted:

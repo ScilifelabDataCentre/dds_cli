@@ -68,9 +68,18 @@ class ProjectCreator(base.DDSBaseClass):
         else:
             # Error if failed
             if not response.ok:
-                error = f"{response.json().get('message')}"
-                LOG.error(error)
-                return created, created_project_id, user_addition_statuses, error
+                message = response.json().get("message")
+                title = response.json().get("title")
+                description = response.json().get("description")
+                pi = response.json().get("pi")
+                email = response.json().get("email")
+
+                messages = [message, title, description, pi, email]
+
+                error = next(message for message in messages if message)
+
+                LOG.error(error[0])
+                return created, created_project_id, user_addition_statuses, error[0]
 
             try:
                 created, created_project_id, user_addition_statuses, error = (

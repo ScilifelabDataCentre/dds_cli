@@ -87,4 +87,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint (2022-02-23 - 2022-03-09)
 * Introduced a `--no-mail` flag in the CLI respectively a `send_email: True/False` json parameter to fix [issue 924](https://github.com/scilifelabdatacentre/dds_web/issues/924) ([#253](https://github.com/ScilifelabDataCentre/dds_cli/pull/253))
 * Added documentation and test protocol ([#252](https://github.com/ScilifelabDataCentre/dds_cli/pull/252))
-
+* Temporary unit option when adding user ([#261](https://github.com/ScilifelabDataCentre/dds_cli/pull/261))

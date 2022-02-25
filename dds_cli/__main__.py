@@ -401,9 +401,14 @@ def user_group_command(_):
     ),
     help="Type of account.",
 )
+@click.option(
+    "--unit",
+    required=False,
+    help="Can only be used by Super Admin. To specify which unit the user should belong to.",
+)
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def add_user(click_ctx, email, username, role, project, no_mail):
+def add_user(click_ctx, email, username, role, project, unit, no_mail):
     """
     Add a user to the DDS system or hosted projects.
 
@@ -416,7 +421,7 @@ def add_user(click_ctx, email, username, role, project, no_mail):
         with dds_cli.account_manager.AccountManager(
             username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
         ) as inviter:
-            inviter.add_user(email=email, role=role, project=project, no_mail=no_mail)
+            inviter.add_user(email=email, role=role, project=project, no_mail=no_mail, unit=unit)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

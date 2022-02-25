@@ -18,12 +18,12 @@ This tool is written and maintained by the [SciLifeLab Data Centre](https://www.
 
 ### Python Package Index
 
-> :warning: Not available yet - coming soon after first release :warning:
+> :warning: Only pre-releases so far.
 
 The `dds-cli` package can be installed from [PyPI](https://pypi.python.org/pypi/dds_cli/) using pip as follows:
 
 ```bash
-pip install dds_cli
+pip install dds-cli
 ```
 
 ### Development version

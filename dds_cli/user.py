@@ -311,12 +311,14 @@ class TokenFile:
         elif time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
             markup_color = "yellow"
             sign = ":warning-emoji:"
+            message = ""
         else:
             markup_color = "green"
             sign = ":white_check_mark:"
             message = "Token is OK!"
 
-        LOG.info(f"[{markup_color}]{sign}  {message} {sign} [/{markup_color}]")
+        if message:
+            LOG.info(f"[{markup_color}]{sign}  {message} {sign} [/{markup_color}]")
         LOG.info(f"[{markup_color}]{sign}  {expiration_message} {sign} [/{markup_color}]")
 
     # Private methods ############################################################ Private methods #

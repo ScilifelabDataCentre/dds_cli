@@ -78,7 +78,8 @@ pip install --upgrade -r requirements-dev.txt -e .
 
 Once installed you can use the command `dds` in a terminal session. This has the following subcommands:
 
-* `get` - Download specified files from the cloud and restore the original format.
-* `ls` - List the projects and the files within projects.
-* `put` - Process and upload specified files to the cloud.
-* `rm` - Delete files within a project.
+* `auth`: Create and manage authenticated sessions.
+* `user`: Create and manage user accounts, including your own. 
+* `project`: Create and manage projects.
+* `data`: Upload, download and manage project data.
+* `ls`: List projects and project contents.

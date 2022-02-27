@@ -163,6 +163,7 @@ Command documentation and guide
    project
    data
    ls
+   web
 
 Indices and tables
 ==================

@@ -40,5 +40,7 @@ timings
 *dict_structure.json
 *.code-workspace
 .DDS_CLI.env
-/docs/_build/
+/docs/_build/latex/*
+/docs/_build/html/*
+/docs/_build/doctrees/*
 !*datadeliverysystem.pdf

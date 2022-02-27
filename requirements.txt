@@ -9,7 +9,6 @@ click-pathlib==2020.3.13.0
 colorama==0.4.4
 commonmark==0.9.1
 cryptography==36.0.1
-dds-cli==0.0.4
 Deprecated==1.2.13
 idna==3.3
 immutabledict==2.2.1

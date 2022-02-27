@@ -1,6 +1,7 @@
 testing
 .DS_Store
 docs/build
+!docs/_build/latex/datadeliverysystem.pdf
 *.pyc
 __pycache__
 couchdb-data

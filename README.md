@@ -1,7 +1,7 @@
 # SciLifeLab Data Delivery System - Command line interface
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds_cli/)
+[![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds-cli/)
 
 > **A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery Service.**
 
@@ -24,6 +24,39 @@ The `dds-cli` package can be installed from [PyPI](https://pypi.python.org/pypi/
 
 ```bash
 pip install dds-cli
+```
+
+After installing, run `dds` and verify that the output looks like this:
+
+```bash
+$ dds
+     ︵ 
+ ︵ (  )   ︵ 
+(  ) ) (  (  )   SciLifeLab Data Delivery System 
+ ︶  (  ) ) (    https://delivery.scilifelab.se/ 
+      ︶ (  )    Version 0.0.6 
+          ︶ 
+Current user: dds_admin
+                                                                                                                                                                                                             
+ Usage: dds [OPTIONS] COMMAND [ARGS]...                                                                                                                                                                      
+                                                                                                                                                                                                             
+ SciLifeLab Data Delivery System (DDS) command line interface.                                                                                                                                               
+ Access token is saved in a .dds_cli_token file in the home directory.                                                                                                                                       
+                                                                                                                                                                                                             
+╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
+│  --verbose    -v              Print verbose output to the console.                               │
+│  --log-file   -l  <filename>  Save a log to a file.                                              │
+│  --no-prompt                  Run without any interactive features.                              │
+│  --version                    Show the version and exit.                                         │
+│  --help                       Show this message and exit.                                        │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
+│  auth     Group command for creating and managing authenticated sessions.                        │
+│  data     Group command for uploading, downloading and managing project data.                    │
+│  ls       List the projects you have access to or the project contents.                          │
+│  project  Group command for creating and managing projects within the DDS.                       │
+│  user     Group command for managing user accounts, including your own.                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ### Development version

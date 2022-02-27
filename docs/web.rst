@@ -23,6 +23,7 @@ When another user invites you to the DDS, you will get an email (currently from 
 
     .. image:: _static/invite.png
         :align: center
+        :width: 400
 
 1.2. Click on the **Sign Up** button. You should reach the *Registration* page. 
 
@@ -30,11 +31,13 @@ When another user invites you to the DDS, you will get an email (currently from 
 
     .. image:: _static/registration_researcher.png
         :align: center
+        :width: 400
     
     If you have invited to the DDS as a Unit Admin or Personnel, the registration page should look something like this:
 
     .. image:: _static/registration_unit.png
         :align: center
+        :width: 400
 
     1.2.1. Fill in your information. You cannot choose a different email than the one you got the invitation email to (but try it out), and the `Unit` field (if visible) cannot be changed. 
 
@@ -64,15 +67,17 @@ When another user invites you to the DDS, you will get an email (currently from 
 
     .. image:: _static/registration_completed.png
         :align: center
+        :width: 400
 
 
-1. Login
+2. Login
 """"""""""
 
 2.1. Go to https://delivery.scilifelab.se/. You should see the following page.
 
     .. image:: _static/login.png
         :align: center
+        :width: 400
 
 2.2. Attempt to log in with
 
@@ -85,12 +90,13 @@ When another user invites you to the DDS, you will get an email (currently from 
         When the username and/or password is correct, a message should be displayed notifying you of the specific error. 
 
 
-1. MFA Authentication
+3. MFA Authentication
 """"""""""""""""""""""
 3.1. When filling in the correct user credentials and clicking `Login`, you should be met with the following page:
 
     .. image:: _static/hotp.png
         :align: center
+        :width: 400
 
 3.2. Go to your email inbox and open the email with the subject line "DDS One-Time Authentication Code". The email should contain a 8-digit code.
 
@@ -105,12 +111,13 @@ When another user invites you to the DDS, you will get an email (currently from 
 
     3.2.2. When inputting the correct one-time code, you should be redirected to a very simple page with a logout button, and a link with the text "Change Password".
 
-1. Change Password
+4. Change Password
 """"""""""""""""""""
 4.1. Log in to the DDS web interface and click on the "Change Password" link. You should be redirected to the following page:
 
     .. image:: _static/password_change.png
         :align: center
+        :width: 400
 
 4.2. Attempt to change password with
 
@@ -122,19 +129,22 @@ When another user invites you to the DDS, you will get an email (currently from 
 
     .. image:: _static/password_change_success.png
         :align: center
+        :width: 400
   
 
-1. Reset forgotten password
+5. Reset forgotten password
 """""""""""""""""""""""""""""
 5.1. Go to https://delivery.scilifelab.se/ and click on "Forgot Password?". You should be redirected to the following page:
 
     .. image:: _static/password_forgot.png
         :align: center
+        :width: 400
 
 5.2. Fill in your email address and click on the "Request Password Reset" button. Only the used when registering should work. The following message should be displayed:
 
     .. image:: _static/password_forgot_email.png
         :align: center
+        :width: 400
 
 5.3. Go to your email inbox (or spam if you cannot find it in inbox) and open the email with the subject line "WARNING! Password Reset Request for SciLifeLab Data Delivery System". **Read the information in the email.** 
 
@@ -142,6 +152,7 @@ When another user invites you to the DDS, you will get an email (currently from 
     
     .. image:: _static/password_reset.png
         :align: center
+        :width: 400
 
 5.5. Fill in a new password. Test both invalid and valid passwords, as in section 1. and 2. above. 
 
@@ -149,6 +160,7 @@ When another user invites you to the DDS, you will get an email (currently from 
 
     .. image:: _static/password_reset_success.png
         :align: center
+        :width: 400
 
 
 

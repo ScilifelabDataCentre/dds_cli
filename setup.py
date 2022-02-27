@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = "0.0.5"
+version = "0.0.6"
 
 with open("README.md") as f:
     readme = f.read()
@@ -14,7 +14,16 @@ setup(
     description="A command line tool to manage data and projects in the SciLifeLab Data Delivery System.",
     long_description=readme,
     long_description_content_type="text/markdown",
+    classifiers=[
+        "Development Status :: 4 - Beta", 
+        "License :: OSI Approved :: MIT License", 
+        "Programming Language :: Python :: 3.7", 
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10"
+        ],
     url="https://github.com/ScilifelabDataCentre/dds_cli",
+    author="SciLifeLab Data Centre", 
     license="MIT",
     packages=find_packages(exclude=("docs")),
     include_package_data=True,

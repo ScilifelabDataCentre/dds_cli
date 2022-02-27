@@ -14,7 +14,7 @@ import rich.console
 
 __title__ = "Data Delivery System"
 __version__ = pkg_resources.get_distribution("dds_cli").version
-__url__ = "https://www.scilifelab.se/data"
+__url__ = "https://delivery.scilifelab.se/"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"

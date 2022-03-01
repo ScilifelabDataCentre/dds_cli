@@ -340,7 +340,7 @@ def logout():
     try:
         with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
             authenticator.logout()
-            LOG.info("[green]Successfully logged out![/green]")
+
     except dds_cli.exceptions.DDSCLIException as err:
         LOG.error(err)
         sys.exit(1)
@@ -756,7 +756,7 @@ def project_status(_):
 @project_option(required=True)
 # Flags
 @click.option(
-    "--show_history",
+    "--show-history",
     required=False,
     is_flag=True,
     help="Show history of project statuses in addition to current status.",

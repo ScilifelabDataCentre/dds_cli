@@ -51,6 +51,6 @@ class Auth(base.DDSBaseClass):
         token_file = user.TokenFile()
         if token_file.file_exists():
             token_file.delete_token()
-            LOG.info("[green]Successfully logged out![/green]")
+            LOG.info(f"[green] :white_check_mark: Successfully logged out![/green]")
         else:
             LOG.info(f"[green]Already logged out![/green]")

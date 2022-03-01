@@ -40,8 +40,12 @@ class Auth(base.DDSBaseClass):
             token_file.check_token_file_permissions()
             token = token_file.read_token()
             token_file.token_report(token=token)
+
+            return True
         else:
             LOG.error(f"[red]No saved authentication token found![/red]")
+
+            return False
 
     def logout(self):
         token_file = user.TokenFile()

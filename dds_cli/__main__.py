@@ -339,9 +339,8 @@ def logout():
     """
     try:
         with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
-            if authenticator.check():
-                authenticator.logout()
-                LOG.info("[green]Successfully logged out![/green]")
+            authenticator.logout()
+
     except dds_cli.exceptions.DDSCLIException as err:
         LOG.error(err)
         sys.exit(1)

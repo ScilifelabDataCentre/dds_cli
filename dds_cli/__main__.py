@@ -340,7 +340,7 @@ def logout():
     try:
         with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
             authenticator.logout()
-            
+
     except dds_cli.exceptions.DDSCLIException as err:
         LOG.error(err)
         sys.exit(1)

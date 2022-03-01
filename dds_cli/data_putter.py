@@ -12,6 +12,7 @@ import pathlib
 
 # Installed
 import boto3
+from boto3.s3.transfer import TransferConfig
 import botocore
 import requests
 from rich.progress import Progress, SpinnerColumn, BarColumn
@@ -325,7 +326,7 @@ class DataPutter(base.DDSBaseClass):
         file_remote = self.filehandler.data[file]["path_remote"]
 
         GB = 1024**3
-        config = boto3.s3.transfer.TransferConfig(multipart_threshold=5 * GB)
+        config = TransferConfig(multipart_threshold=5 * GB)
         try:
             with self.s3connector as conn:
                 # Upload file

@@ -125,6 +125,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             # Get response
             response_json = response.json()
             message = response_json["message"]
+            dds_cli.auth.Auth.logout(self)
 
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
@@ -184,7 +185,8 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             # Get response
             response_json = response.json()
             LOG.debug(response_json)
-            info = response_json["info"]
+            if "info" in response_json:
+                info = response_json["info"]
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
         except simplejson.JSONDecodeError as err:

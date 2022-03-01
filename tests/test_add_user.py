@@ -8,7 +8,7 @@ import requests
 # Own modules
 import dds_cli
 
-ADD_JSON = {"email": "test.testsson@example.com", "role": "Researcher"}
+ADD_JSON = {"email": "test.testsson@example.com", "role": "Researcher", "unit": None}
 PROJECT = {"project": "test_project"}
 
 

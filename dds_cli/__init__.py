@@ -14,7 +14,7 @@ import rich.console
 
 __title__ = "Data Delivery System"
 __version__ = pkg_resources.get_distribution("dds_cli").version
-__url__ = "https://www.scilifelab.se/data"
+__url__ = "https://delivery.scilifelab.se/"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
@@ -56,7 +56,7 @@ class DDSEndpoint:
 
     # Base url - local or remote
     BASE_ENDPOINT_LOCAL = "http://127.0.0.1:5000/api/v1"
-    BASE_ENDPOINT_REMOTE = "https://dds.dckube.scilifelab.se/api/v1"
+    BASE_ENDPOINT_REMOTE = "https://delivery.scilifelab.se/api/v1"
     BASE_ENDPOINT = (
         BASE_ENDPOINT_LOCAL if os.getenv("DDS_CLI_ENV") == "development" else BASE_ENDPOINT_REMOTE
     )

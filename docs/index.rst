@@ -38,9 +38,13 @@ How to use the DDS CLI
 Installation
 ------------
 
+At this time, a **Python** and **pip** installation is required for the ``dds-cli`` installation to work. We are currently working on an executable which can install all the requirements and the CLI for you. The goal is for this executable to be ready when we release the CLI into production.
+
 Uppmax
 ~~~~~~~
-We are currently checking that installing the DDS CLI on Rackham works as expected. We will update this information as soon as possible. Regarding Bianca: Uppmax has offered to help us out with testing that the connection to Bianca works. Instructions for this will therefore not be provided at this time. Data will be possible to deliver to Bianca when the DDS is in production. Instructions for how this will work will come at a later time.
+We are currently checking that installing the DDS CLI on Rackham works as expected. We will update this information as soon as possible. If we have not yet updated this section before you attempt to use the DDS CLI on **Uppmax Rackham**, feel free to try it and inform us on any issues. 
+
+**Regarding Bianca:** Uppmax has offered to help us out with testing that the connection to Bianca works. Instructions for this will therefore not be provided at this time. Data will be possible to deliver to Bianca when the DDS is in production. Instructions for how this will work will come at a later time.
 
 PyPi - MacOS / Linux 
 ~~~~~~~~~~~~~~~~~~~~~
@@ -59,8 +63,16 @@ PyPi - MacOS / Linux
          python3 --version
 
       If this does not return ``Python 3.8.x`` or higher, you will need to `install Python <https://www.python.org/downloads/>`_.
-      
-2. To install the DDS CLI, open the terminal and run
+   
+   .. warning:: 
+   
+      Make sure you have the latest version of **pip**.
+
+         .. code-block:: 
+
+            python3 -m pip install --upgrade pip
+
+2. The DDS CLI is available on `PyPi <https://pypi.org/project/dds-cli/>`_. To install the DDS CLI, open the terminal and run
 
    .. code-block:: bash
 
@@ -137,7 +149,7 @@ See the test protocol and the command documentation :ref:`here<dds-ls>`.
 
 How to test the web interface
 ==============================
-The DDS web interface can be found at https://delivery.scilifelab.se/ (if you're met with an error message, try https://dds.dckube.scilifelab.se/ instead, and let us know that the first url does not work). There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
+The DDS web interface can be found at https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
 
 Command documentation and guide
 ================================
@@ -151,6 +163,7 @@ Command documentation and guide
    project
    data
    ls
+   web
 
 Indices and tables
 ==================

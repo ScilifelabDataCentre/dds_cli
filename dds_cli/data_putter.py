@@ -324,7 +324,7 @@ class DataPutter(base.DDSBaseClass):
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
 
-        GB = 1024 ** 3
+        GB = 1024**3
         config = boto3.s3.transfer.TransferConfig(multipart_threshold=5 * GB)
         try:
             with self.s3connector as conn:
@@ -343,7 +343,7 @@ class DataPutter(base.DDSBaseClass):
                     )
                     if task is not None
                     else None,
-                    Config=config
+                    Config=config,
                 )
         except (
             botocore.client.ClientError,

@@ -42,7 +42,12 @@ Run
 2.2. Using the correct characters in the credentials but exchanging them to lower case or upper case depending on the correct format
 
    .. note::
-      You **should not** be granted access and you **should not** have a `.dds_cli_token` file in your home directory.
+
+      **Username:** The username should be case *insensitive*. If your username is ``username`` you should also be able to login with ``USERNAME`` or ``uSeRnAmE`` etc.
+
+      **Password:** The password should be case *senstive*. Only the exact characters in your password, including whether or not they are upper case or lower case, should give you access to the system.
+      
+      If either the username or password is incorrect, you **should not** be granted access and you **should not** have a `.dds_cli_token` file in your home directory.
 
 2.3. With correct credentials. You should receive an email containing a one-time code and be prompted by the command line to enter this code.
 
@@ -72,7 +77,7 @@ Run
       .. note::
          **They should not be**, inform the SciLifeLab Data Centre *immediately* if you can discern any information from the file contents.
 
-3. Get session information: `info`
+1. Get session information: `info`
 """""""""""""""""""""""""""""""""""
 .. code-block::
 
@@ -81,12 +86,11 @@ Run
 The information printed out should contain:
 
 * Whether the token will expire
-* Age of the token
 * When the token will expire
 
 Is the information understandable?
 
-4. End the authenticated session: ``logout``
+1. End the authenticated session: ``logout``
 """""""""""""""""""""""""""""""""""""""""""""
 .. code-block::
 

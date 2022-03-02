@@ -91,3 +91,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Added windows docs (by Matthias Zepper) ([#276](https://github.com/ScilifelabDataCentre/dds_cli/pull/276))
 * Removed pinned package versions and bumped rick-click, should work for Python 3.7 up to 3.10 ([#288](https://github.com/ScilifelabDataCentre/dds_cli/pull/288))
 * Remove local token when requesting deletion of own account ([297](https://github.com/ScilifelabDataCentre/dds_cli/pull/297)/[303](https://github.com/ScilifelabDataCentre/dds_cli/pull/303))
+* Add Role when listing project users ([#316](https://github.com/ScilifelabDataCentre/dds_cli/pull/316))

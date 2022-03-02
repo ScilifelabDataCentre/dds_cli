@@ -571,7 +571,7 @@ class DataLister(base.DDSBaseClass):
     def __print_users_table(self, research_users):
         default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
         column_formatting = {
-            **{x: default_format for x in ["User Name", "Primary email"]},
+            **{x: default_format for x in ["User Name", "Primary email", "Role"]},
         }
         table = Table(
             title="Project User(s)",

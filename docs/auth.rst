@@ -45,7 +45,7 @@ Run
 
       **Username:** The username should be case *insensitive*. If your username is ``username`` you should also be able to login with ``USERNAME`` or ``uSeRnAmE`` etc.
 
-      **Password:** The password should be case *senstive*. Only the exact characters in your password, including whether or not they are upper case or lower case, should give you access to the system.
+      **Password:** The password should be case *sensitive*. Only the exact characters in your password, including whether or not they are upper case or lower case, should give you access to the system.
       
       If either the username or password is incorrect, you **should not** be granted access and you **should not** have a `.dds_cli_token` file in your home directory.
 

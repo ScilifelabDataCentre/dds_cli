@@ -42,7 +42,7 @@ DDS_DIR_REQUIRED_METHODS = ["put", "get"]
 DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
 
 # Token related variables
-TOKEN_FILE = pathlib.Path(os.path.expanduser("~/.dds_cli_token"))  # set_token_file_path()
+TOKEN_FILE = pathlib.Path(os.path.expanduser("~/.dds_cli_token"))
 TOKEN_EXPIRATION_WARNING_THRESHOLD = datetime.timedelta(hours=6)
 
 
@@ -142,17 +142,3 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
 
 # Determine if the user is on an old terminal without proper Unicode support
 dds_on_legacy_console = rich.console.detect_legacy_windows()
-
-
-###############################################################################
-# FUNCTIONS ####################################################### FUNCTIONS #
-###############################################################################
-
-
-def set_token_file_path():
-    """Returns the path given by DDS_TOKEN_PATH if set, otherwise returns the default `~/.dds_cli_token`."""
-    user_defined_token = os.env.get("DDS_TOKEN_PATH")
-    if user_defined_token is not None:
-        return pathlib.Path(os.path.expanduser(user_defined_token))
-
-    return pathlib.Path(os.path.expanduser("~/.dds_cli_token"))

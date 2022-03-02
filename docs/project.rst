@@ -119,6 +119,12 @@ Run
 
 3.2. With all required options: ``--title``, ``--description``, ``--principal-investigator`` but without adding any users
 
+   .. note:: 
+
+      Use quotation marks to use spaces within the value passed into an option.
+
+      E.g: ``--title "This is a longer title"``
+      
    .. admonition:: Expected result 
 
       A project should be created and you should see a message displayed stating the new Project ID. This Project ID should be passed in as the ``--project`` option when running project-specific commands. If you forget the Project ID, use the ``dds ls`` command to list all projects.

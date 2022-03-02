@@ -42,11 +42,11 @@ When another user invites you to the DDS, you will get an email (currently from 
     1.2.1. Fill in your information. You cannot choose a different email than the one you got the invitation email to (but try it out), and the `Unit` field (if visible) cannot be changed. 
 
         * Fill in your full name. 
-        * Try to choose a username shorter than 8 and one longer than 20 characters.
+        * Try to choose a username shorter than 3 and one longer than 30 characters.
             
             .. admonition:: Expected result
 
-                An error message should be displayed, notifying you that the username is required to be between 8 and 20 characters long. 
+                An error message should be displayed, notifying you that the username is required to be between 3 and 30 characters long. You can also use underscores (``_``), hyphens (``-``) and periods (``.``). 
 
         * Try to choose an invalid password:
             - Less than 10 characters

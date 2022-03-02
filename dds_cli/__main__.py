@@ -106,9 +106,10 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     # Get token metadata
     username = dds_cli.user.User.get_user_name_if_logged_in(token_path=token_path)
 
-    dds_cli.utils.stderr_console.print(
-        f"[green]Current user:[/] [red]{username}" if username else "", highlight=False
-    )
+    if username:
+        dds_cli.utils.stderr_console.print(
+            f"[green]Current user:[/] [red]{username}", highlight=False
+        )
 
     if "--help" not in sys.argv:
         # Set the base logger to output DEBUG

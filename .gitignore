@@ -1,5 +1,4 @@
 testing
-.DS_Store
 docs/build
 *.pyc
 __pycache__
@@ -44,3 +43,5 @@ timings
 /docs/_build/html/*
 /docs/_build/doctrees/*
 !*datadeliverysystem.pdf
+!*docs/_static/*
+.DS_Store

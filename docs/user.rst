@@ -112,6 +112,12 @@ Run
 
    dds user add
 
+.. note:: 
+
+   Use quotation marks to use spaces within the value passed into an option.
+
+   E.g: ``--role "Project Owner"``
+
 3.1. Invite a new user to the DDS
 
    .. warning::

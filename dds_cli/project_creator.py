@@ -81,8 +81,11 @@ class ProjectCreator(base.DDSBaseClass):
 
                 error = next(message for message in messages if message)
 
-                LOG.error(error[0])
-                return created, created_project_id, user_addition_statuses, error[0]
+                if isinstance(error, list):
+                    error = error[0]
+
+                LOG.error(error)
+                return created, created_project_id, user_addition_statuses, error
 
             try:
                 created, created_project_id, user_addition_statuses, error = (

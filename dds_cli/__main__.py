@@ -351,7 +351,7 @@ def logout(click_ctx):
             username=None, authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
             authenticator.logout()
-            LOG.info("[green]Successfully logged out![/green]")
+
     except dds_cli.exceptions.DDSCLIException as err:
         LOG.error(err)
         sys.exit(1)
@@ -779,7 +779,7 @@ def project_status(_):
 @project_option(required=True)
 # Flags
 @click.option(
-    "--show_history",
+    "--show-history",
     required=False,
     is_flag=True,
     help="Show history of project statuses in addition to current status.",
@@ -1107,7 +1107,7 @@ def put_data(
 ):
     """Upload data to project.
 
-    This first compressed the files (if not already compressed), encrypts them, and finally uploads
+    This first compresses the files (if not already compressed), encrypts them, and finally uploads
     them to Safespring S3 Storage.
     """
     try:

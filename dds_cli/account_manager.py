@@ -134,6 +134,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             # Get response
             response_json = response.json()
             message = response_json["message"]
+            dds_cli.auth.Auth.logout(self)
 
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
@@ -193,7 +194,6 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             # Get response
             response_json = response.json()
             LOG.debug(response_json)
-            info = response_json["info"]
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
         except simplejson.JSONDecodeError as err:
@@ -209,12 +209,14 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(
-            f"User Name: {info['username']} \nRole: {info['role']} \
-            \nName: {info['name']} \
-            \nPrimary Email: {info['email_primary']} \
-            \nAssociated Emails: {', '.join(str(x) for x in info['emails_all'])}"
-        )
+        info = response_json.get("info")
+        if info:
+            LOG.info(
+                f"User Name: {info['username']} \nRole: {info['role']} \
+                \nName: {info['name']} \
+                \nPrimary Email: {info['email_primary']} \
+                \nAssociated Emails: {', '.join(str(x) for x in info['emails_all'])}"
+            )
 
     def user_activation(self, email, action):
         """Deactivate/Reactivate users"""

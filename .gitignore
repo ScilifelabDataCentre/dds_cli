@@ -44,3 +44,4 @@ timings
 /docs/_build/html/*
 /docs/_build/doctrees/*
 !*datadeliverysystem.pdf
+!*docs/_static/*

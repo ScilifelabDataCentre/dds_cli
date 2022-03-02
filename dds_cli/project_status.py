@@ -31,14 +31,12 @@ class ProjectStatusManager(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str,
         project: str,
         no_prompt: bool = False,
     ):
         """Handle actions regarding project status in the cli."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username,
             no_prompt=no_prompt,
             method_check=False,
         )
@@ -46,8 +44,7 @@ class ProjectStatusManager(base.DDSBaseClass):
 
     # Public methods ###################### Public methods #
     def get_status(self, show_history):
-        """Get current status and status history of the project"""
-
+        """Get current status and status history of the project."""
         try:
             response = requests.get(
                 DDSEndpoint.UPDATE_PROJ_STATUS,

@@ -165,28 +165,6 @@ def source_path_file_option(
     )
 
 
-def username_option(
-    long="--username",
-    short="-u",
-    name="username",
-    required=False,
-    help_message="Your Data Delivery System username.",
-):
-    """
-    Username option standard definition.
-
-    Use as decorator for commands.
-    """
-    return click.option(
-        long,
-        short,
-        name,
-        required=required,
-        type=str,
-        help=help_message,
-    )
-
-
 # Flags
 def break_on_fail_flag(
     help_message,

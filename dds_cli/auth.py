@@ -22,31 +22,33 @@ class Auth(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str,
         authenticate: bool = True,
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username,
             authenticate=authenticate,
             method_check=False,
             force_renew_token=True,  # Only used if authenticate is True
         )
 
-    def check(self):
+    @staticmethod
+    def check():
+        """Check if token file exists and get information."""
         token_file = user.TokenFile()
         if token_file.file_exists():
             token_file.check_token_file_permissions()
             token = token_file.read_token()
             token_file.token_report(token=token)
         else:
-            LOG.error(f"[red]No saved authentication token found![/red]")
+            LOG.error("[red]No saved authentication token found![/red]")
 
-    def logout(self):
+    @staticmethod
+    def logout():
+        """Remove token file."""
         token_file = user.TokenFile()
         if token_file.file_exists():
             token_file.delete_token()
-            LOG.info(f"[green] :white_check_mark: Successfully logged out![/green]")
+            LOG.info("[green] :white_check_mark: Successfully logged out![/green]")
         else:
-            LOG.info(f"[green]Already logged out![/green]")
+            LOG.info("[green]Already logged out![/green]")

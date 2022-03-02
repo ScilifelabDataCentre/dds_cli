@@ -35,14 +35,10 @@ LOG = logging.getLogger(__name__)
 class AccountManager(dds_cli.base.DDSBaseClass):
     """Admin class for adding users, etc."""
 
-    def __init__(
-        self, username: str, authenticate: bool = True, method: str = "add", no_prompt: bool = False
-    ):
+    def __init__(self, authenticate: bool = True, method: str = "add", no_prompt: bool = False):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(
-            username=username, authenticate=authenticate, method=method, no_prompt=no_prompt
-        )
+        super().__init__(authenticate=authenticate, method=method, no_prompt=no_prompt)
 
         # Only methods "add", "delete" and "revoke" can use the AccountManager class
         if self.method not in ["add", "delete", "revoke"]:
@@ -112,7 +108,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             LOG.info(message)
 
     def delete_own_account(self):
-        """Delete users from the system"""
+        """Delete users from the system."""
         # Perform request to API
 
         try:
@@ -125,7 +121,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             # Get response
             response_json = response.json()
             message = response_json["message"]
-            dds_cli.auth.Auth.logout(self)
+            dds_cli.auth.Auth.logout()
 
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
@@ -136,13 +132,13 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         if not response.ok:
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message)
-            else:
-                raise dds_cli.exceptions.DDSCLIException(message)
-        else:
-            LOG.info(message)
+
+            raise dds_cli.exceptions.DDSCLIException(message)
+
+        LOG.info(message)
 
     def revoke_project_access(self, project, email):
-        """Revoke a user's access to a project"""
+        """Revoke a user's access to a project."""
         json = {"email": email}
         try:
             response = requests.post(
@@ -175,7 +171,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         )
 
     def get_user_info(self):
-        """Get a users info"""
+        """Get a users info."""
         try:
             response = requests.get(
                 dds_cli.DDSEndpoint.DISPLAY_USER_INFO,

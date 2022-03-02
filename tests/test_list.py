@@ -294,7 +294,6 @@ def list_with_project_and_tree(ls_runner, list_request, command):
     list_request_OK = list_request(
         200,
         side_effect=[
-            None,
             copy.deepcopy(RETURNED_FILES_JSON),
             copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
             copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
@@ -363,7 +362,6 @@ def list_with_project_and_tree_json(ls_runner, list_request, command):
     list_request_OK = list_request(
         200,
         side_effect=[
-            None,
             copy.deepcopy(RETURNED_FILES_JSON),
             copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),
             copy.deepcopy(RETURNED_FILES_RECURSIVE_BOTTOM),

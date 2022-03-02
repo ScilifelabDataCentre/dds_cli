@@ -1060,7 +1060,7 @@ def put_data(
 ):
     """Upload data to project.
 
-    This first compressed the files (if not already compressed), encrypts them, and finally uploads
+    This first compresses the files (if not already compressed), encrypts them, and finally uploads
     them to Safespring S3 Storage.
     """
     try:

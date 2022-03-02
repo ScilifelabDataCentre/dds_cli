@@ -1,5 +1,5 @@
 # Data Delivery System CLI: Changelog
-Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes. 
+Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes.
 ## Sprint (2021-08-11 - 2021-08-25)
 * Progress bar glitch fixed by creating console object in utils.py ([#130](https://github.com/ScilifelabDataCentre/dds_cli/pull/130))
 * Log messages about successful checksum verification ([#131](https://github.com/ScilifelabDataCentre/dds_cli/pull/131))
@@ -92,3 +92,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Removed pinned package versions and bumped rick-click, should work for Python 3.7 up to 3.10 ([#288](https://github.com/ScilifelabDataCentre/dds_cli/pull/288))
 * Remove local token when requesting deletion of own account ([297](https://github.com/ScilifelabDataCentre/dds_cli/pull/297)/[303](https://github.com/ScilifelabDataCentre/dds_cli/pull/303))
 * Add Role when listing project users ([#316](https://github.com/ScilifelabDataCentre/dds_cli/pull/316))
+* Pin rich-click `>=1.2.1` to solve exception handling errors

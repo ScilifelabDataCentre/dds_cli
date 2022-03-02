@@ -51,6 +51,7 @@ class DataGetter(base.DDSBaseClass):
         verify_checksum: bool = False,
         method: str = "get",
         no_prompt: bool = False,
+        token_path: str = None,
     ):
         """Handle actions regarding downloading data."""
         # Initiate DDSBaseClass to authenticate user
@@ -60,6 +61,7 @@ class DataGetter(base.DDSBaseClass):
             dds_directory=destination,
             method=method,
             no_prompt=no_prompt,
+            token_path=token_path,
         )
 
         # Initiate DataGetter specific attributes

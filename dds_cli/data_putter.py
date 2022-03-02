@@ -52,6 +52,7 @@ def put(
     num_threads,
     silent,
     no_prompt,
+    token_path,
 ):
     """Handle upload of data."""
     # Initialize delivery - check user access etc
@@ -64,6 +65,7 @@ def put(
         overwrite=overwrite,
         silent=silent,
         no_prompt=no_prompt,
+        token_path=token_path,
     ) as putter:
 
         # Progress object to keep track of progress tasks
@@ -180,10 +182,17 @@ class DataPutter(base.DDSBaseClass):
         silent: bool = False,
         method: str = "put",
         no_prompt: bool = False,
+        token_path: str = None,
     ):
         """Handle actions regarding upload of data."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, project=project, method=method, no_prompt=no_prompt)
+        super().__init__(
+            username=username,
+            project=project,
+            method=method,
+            no_prompt=no_prompt,
+            token_path=token_path,
+        )
 
         # Initiate DataPutter specific attributes
         self.break_on_fail = break_on_fail

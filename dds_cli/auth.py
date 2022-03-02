@@ -24,6 +24,7 @@ class Auth(base.DDSBaseClass):
         self,
         username: str,
         authenticate: bool = True,
+        token_path: str = None,
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
@@ -32,10 +33,11 @@ class Auth(base.DDSBaseClass):
             authenticate=authenticate,
             method_check=False,
             force_renew_token=True,  # Only used if authenticate is True
+            token_path=token_path,
         )
 
     def check(self):
-        token_file = user.TokenFile()
+        token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token_file.check_token_file_permissions()
             token = token_file.read_token()
@@ -44,7 +46,7 @@ class Auth(base.DDSBaseClass):
             LOG.error(f"[red]No saved authentication token found![/red]")
 
     def logout(self):
-        token_file = user.TokenFile()
+        token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token_file.delete_token()
         else:

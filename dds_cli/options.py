@@ -165,6 +165,28 @@ def source_path_file_option(
     )
 
 
+def token_path_option(
+    long="--token-path",
+    short="-tp",
+    name="token_path",
+    required=False,
+    help_message="The path where the authentication token will be stored. For a normal use-case, this should not be needed.",
+):
+    """
+    token path option standard definition.
+
+    Use as decorator for commands.
+    """
+    return click.option(
+        long,
+        short,
+        name,
+        required=required,
+        type=str,
+        help=help_message,
+    )
+
+
 def username_option(
     long="--username",
     short="-u",

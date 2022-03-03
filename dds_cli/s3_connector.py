@@ -50,9 +50,6 @@ class S3Connector:
             self.bucketname,
         ) = self.__get_s3_info(project_id=project_id, token=token)
 
-        if "minio" in self.url:
-            self.url = "http://localhost:9000/"
-
     # @connect_cloud
     def __enter__(self):
         """Enter context."""
@@ -73,6 +70,7 @@ class S3Connector:
         # Connect to service
         try:
             session = boto3.session.Session()
+
             resource = session.resource(
                 service_name="s3",
                 endpoint_url=self.url,

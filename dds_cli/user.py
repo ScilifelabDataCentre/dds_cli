@@ -6,12 +6,13 @@
 
 # Standard library
 import datetime
+import getpass
 import logging
 import os
-import stat
-import getpass
+import pathlib
 import requests
 import simplejson
+import stat
 
 # Installed
 import rich
@@ -38,10 +39,16 @@ class User:
     when instantiating, an authentication token will be read from a file or
     renewed from the DDS API if the saved token is not found or has expired."""
 
-    def __init__(self, force_renew_token: bool = False, no_prompt: bool = False):
+    def __init__(
+        self,
+        force_renew_token: bool = False,
+        no_prompt: bool = False,
+        token_path: str = None,
+    ):
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt
         self.token = None
+        self.token_path = token_path
 
         # Fetch encrypted JWT token or authenticate against API
         self.__retrieve_token()
@@ -53,8 +60,8 @@ class User:
 
     # Private methods ######################### Private methods #
     def __retrieve_token(self):
-        """Fetch saved token from file, otherwise authenticate user and saves the new token."""
-        token_file = TokenFile()
+        """Fetch saved token from file otherwise authenticate user and saves the new token."""
+        token_file = TokenFile(token_path=self.token_path)
 
         if not self.force_renew_token:
             LOG.debug("Retrieving token.")
@@ -182,9 +189,10 @@ class User:
         return token
 
     @staticmethod
-    def get_user_name_if_logged_in():
+    def get_user_name_if_logged_in(token_path=None):
         """Returns a user name if logged in, otherwise None"""
-        tokenfile = TokenFile()
+
+        tokenfile = TokenFile(token_path=token_path)
         username = None
         if tokenfile.file_exists():
             token = tokenfile.read_token()
@@ -205,8 +213,11 @@ class User:
 class TokenFile:
     """A class to manage the saved token."""
 
-    def __init__(self):
-        self.token_file = dds_cli.TOKEN_FILE
+    def __init__(self, token_path=None):
+        if token_path is None:
+            self.token_file = dds_cli.TOKEN_FILE
+        else:
+            self.token_file = pathlib.Path(os.path.expanduser(token_path))
 
     def read_token(self):
         """Attempts to fetch a valid token from the token file.

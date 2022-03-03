@@ -35,10 +35,21 @@ LOG = logging.getLogger(__name__)
 class AccountManager(dds_cli.base.DDSBaseClass):
     """Admin class for adding users, etc."""
 
-    def __init__(self, authenticate: bool = True, method: str = "add", no_prompt: bool = False):
+    def __init__(
+        self,
+        authenticate: bool = True,
+        method: str = "add",
+        no_prompt: bool = False,
+        token_path: str = None,
+    ):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(authenticate=authenticate, method=method, no_prompt=no_prompt)
+        super().__init__(
+            authenticate=authenticate,
+            method=method,
+            no_prompt=no_prompt,
+            token_path=token_path,
+        )
 
         # Only methods "add", "delete" and "revoke" can use the AccountManager class
         if self.method not in ["add", "delete", "revoke"]:

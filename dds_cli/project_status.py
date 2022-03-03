@@ -33,12 +33,14 @@ class ProjectStatusManager(base.DDSBaseClass):
         self,
         project: str,
         no_prompt: bool = False,
+        token_path: str = None,
     ):
         """Handle actions regarding project status in the cli."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             no_prompt=no_prompt,
             method_check=False,
+            token_path=token_path,
         )
         self.project = project
 

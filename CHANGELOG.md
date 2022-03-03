@@ -93,3 +93,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Remove local token when requesting deletion of own account ([297](https://github.com/ScilifelabDataCentre/dds_cli/pull/297)/[303](https://github.com/ScilifelabDataCentre/dds_cli/pull/303))
 * Add Role when listing project users ([#316](https://github.com/ScilifelabDataCentre/dds_cli/pull/316))
 * Pin rich-click `>=1.2.1` to solve exception handling errors
+* Add a --token-path argument to tell where the token should be saved and which token to be used.

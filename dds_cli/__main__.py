@@ -43,6 +43,7 @@ from dds_cli.options import (
     source_option,
     source_path_file_option,
     username_option,
+    token_path_option,
     break_on_fail_flag,
     json_flag,
     nomail_flag,
@@ -73,8 +74,6 @@ click.rich_click.MAX_WIDTH = 100
 #                                                                                                  #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
-# Get token metadata
-username = dds_cli.user.User.get_user_name_if_logged_in()
 
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
@@ -84,7 +83,6 @@ dds_cli.utils.stderr_console.print(
     "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
     f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
     "\n[green]          ︶",
-    f"\n[green]Current user:[/] [red]{username}" if username else "",
     highlight=False,
 )
 
@@ -97,13 +95,22 @@ dds_cli.utils.stderr_console.print(
 @click.option(
     "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
 )
+@token_path_option()
 @click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
 @click.pass_context
-def dds_main(click_ctx, verbose, log_file, no_prompt):
+def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     """SciLifeLab Data Delivery System (DDS) command line interface.
 
     Access token is saved in a .dds_cli_token file in the home directory.
     """
+    # Get token metadata
+    username = dds_cli.user.User.get_user_name_if_logged_in(token_path=token_path)
+
+    if username:
+        dds_cli.utils.stderr_console.print(
+            f"[green]Current user:[/] [red]{username}", highlight=False
+        )
+
     if "--help" not in sys.argv:
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
@@ -129,7 +136,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt):
             LOG.addHandler(log_fh)
 
         # Create context object
-        click_ctx.obj = {"NO_PROMPT": no_prompt}
+        click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path}
 
 
 # ************************************************************************************************ #
@@ -170,6 +177,7 @@ def list_projects_and_contents(
                 username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 json=json,
+                token_path=click_ctx.get("TOKEN_PATH"),
             ) as lister:
                 projects = lister.list_projects(sort_by=sort)
                 if json:
@@ -205,6 +213,7 @@ def list_projects_and_contents(
                 tree=tree,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 json=json,
+                token_path=click_ctx.get("TOKEN_PATH"),
             ) as lister:
                 if json:
                     json_output = {"project_name": project}
@@ -317,7 +326,7 @@ def login(click_ctx, username):
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.auth.Auth(username=username):
+        with dds_cli.auth.Auth(username=username, token_path=click_ctx.get("TOKEN_PATH")):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
     except (
@@ -332,13 +341,16 @@ def login(click_ctx, username):
 
 # -- dds auth logout -- #
 @auth_group_command.command(name="logout")
-def logout():
+@click.pass_obj
+def logout(click_ctx):
     """End authenticated session.
 
     Removes the saved authentication token by deleting the '.dds_cli_token' file.
     """
     try:
-        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+        with dds_cli.auth.Auth(
+            username=None, authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
+        ) as authenticator:
             authenticator.logout()
 
     except dds_cli.exceptions.DDSCLIException as err:
@@ -348,7 +360,8 @@ def logout():
 
 # -- dds auth info -- #
 @auth_group_command.command(name="info")
-def info():
+@click.pass_obj
+def info(click_ctx):
     """Display information about token.
 
     Information displayed:
@@ -357,7 +370,9 @@ def info():
     - Time of token expiration
     """
     try:
-        with dds_cli.auth.Auth(username=None, authenticate=False) as authenticator:
+        with dds_cli.auth.Auth(
+            username=None, authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
+        ) as authenticator:
             authenticator.check()
     except dds_cli.exceptions.DDSCLIException as err:
         LOG.error(err)
@@ -419,7 +434,9 @@ def add_user(click_ctx, email, username, role, project, unit, no_mail):
     """
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as inviter:
             inviter.add_user(email=email, role=role, project=project, no_mail=no_mail, unit=unit)
     except (
@@ -478,6 +495,7 @@ def delete_user(click_ctx, email, username, self):
                 username=username,
                 method="delete",
                 no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
             ) as manager:
                 if self and not email:
                     manager.delete_own_account()
@@ -510,7 +528,9 @@ def get_info_user(click_ctx, username):
     """Display information connected to your own DDS account."""
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as get_info:
             get_info.get_user_info()
     except (
@@ -549,6 +569,7 @@ def activate_user(click_ctx, email, username):
             with dds_cli.account_manager.AccountManager(
                 username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
             ) as manager:
                 manager.user_activation(email=email, action="reactivate")
 
@@ -588,6 +609,7 @@ def deactivate_user(click_ctx, email, username):
             with dds_cli.account_manager.AccountManager(
                 username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
             ) as manager:
                 manager.user_activation(email=email, action="deactivate")
 
@@ -697,7 +719,9 @@ def create(
     """Create a project."""
     try:
         with dds_cli.project_creator.ProjectCreator(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as creator:
             emails_roles = []
             if owner or researcher:
@@ -766,7 +790,10 @@ def display_project_status(click_ctx, username, project, show_history):
     """Display and manage project statuses."""
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as updater:
             updater.get_status(show_history)
     except (
@@ -796,7 +823,10 @@ def release_project(click_ctx, username, project, deadline, no_mail):
     """Make project data available for user download."""
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as updater:
             updater.update_status(new_status="Available", deadline=deadline, no_mail=no_mail)
     except (
@@ -822,7 +852,10 @@ def retract_project(click_ctx, username, project):
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as updater:
             updater.update_status(new_status="In Progress")
     except (
@@ -848,7 +881,10 @@ def archive_project(click_ctx, username, project):
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as updater:
             updater.update_status(new_status="Archived")
     except (
@@ -874,7 +910,10 @@ def delete_project(click_ctx, username, project):
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as updater:
             updater.update_status(new_status="Deleted")
     except (
@@ -900,7 +939,10 @@ def abort_project(click_ctx, username, project):
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username, project=project, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as updater:
             updater.update_status(new_status="Archived", is_aborted=True)
     except (
@@ -941,7 +983,9 @@ def grant_project_access(click_ctx, username, project, email, owner, no_mail):
     """Grant user access to a project."""
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as granter:
             role = "Researcher"
             if owner:
@@ -968,7 +1012,9 @@ def revoke_project_access(click_ctx, username, project, email):
     """Revoke user access to a project."""
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as revoker:
             revoker.revoke_project_access(project, email)
     except (
@@ -993,7 +1039,9 @@ def fix_project_access(click_ctx, email, username, project):
     """Re-grant project access to user that has lost access due to password reset."""
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username, no_prompt=click_ctx.get("NO_PROMPT", False)
+            username=username,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as fixer:
             fixer.fix_project_access(email=email, project=project)
     except (
@@ -1074,6 +1122,7 @@ def put_data(
             num_threads=num_threads,
             silent=silent,
             no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         )
     except (
         dds_cli.exceptions.AuthenticationError,
@@ -1157,6 +1206,7 @@ def get_data(
             silent=silent,
             verify_checksum=verify_checksum,
             no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as getter:
 
             with rich.progress.Progress(
@@ -1332,6 +1382,7 @@ def rm_data(click_ctx, username, project, file, folder, rm_all):
             project=project,
             username=username,
             no_prompt=no_prompt,
+            token_path=click_ctx.get("TOKEN_PATH"),
         ) as remover:
 
             if rm_all:

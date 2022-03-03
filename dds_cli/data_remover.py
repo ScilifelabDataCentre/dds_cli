@@ -38,7 +38,6 @@ class DataRemover(base.DDSBaseClass):
     def __init__(
         self,
         project: str,
-        username: str,
         method: str = "rm",
         no_prompt: bool = False,
         token_path: str = None,
@@ -46,7 +45,6 @@ class DataRemover(base.DDSBaseClass):
         """Handle actions regarding data deletion in the cli."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username,
             project=project,
             method=method,
             no_prompt=no_prompt,

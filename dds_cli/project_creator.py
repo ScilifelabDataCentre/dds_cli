@@ -27,16 +27,13 @@ class ProjectCreator(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str,
         method: str = "create",
         no_prompt: bool = False,
         token_path: str = None,
     ):
         """Handle actions regarding project creation in the cli."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(
-            username=username, method=method, no_prompt=no_prompt, token_path=token_path
-        )
+        super().__init__(method=method, no_prompt=no_prompt, token_path=token_path)
 
         # Only method "create" can use the ProjectCreator class
         if self.method != "create":

@@ -46,7 +46,6 @@ class DDSBaseClass:
 
     def __init__(
         self,
-        username,
         project=None,
         dds_directory: pathlib.Path = None,
         method: str = None,
@@ -57,7 +56,6 @@ class DDSBaseClass:
         token_path: str = None,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
-        self.username = username
         self.project = project
         self.method_check = method_check
         self.method = method
@@ -89,7 +87,6 @@ class DDSBaseClass:
         # Authenticate the user and get the token
         if authenticate:
             dds_user = user.User(
-                username=username,
                 force_renew_token=force_renew_token,
                 no_prompt=no_prompt,
                 token_path=token_path,

@@ -44,7 +44,6 @@ class DataLister(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str,
         method: str = "ls",
         project: str = None,
         show_usage: bool = False,
@@ -62,7 +61,6 @@ class DataLister(base.DDSBaseClass):
 
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username,
             project=project,
             method=method,
             no_prompt=no_prompt,

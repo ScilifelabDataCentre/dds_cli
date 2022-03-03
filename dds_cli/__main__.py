@@ -42,7 +42,6 @@ from dds_cli.options import (
     sort_projects_option,
     source_option,
     source_path_file_option,
-    username_option,
     token_path_option,
     break_on_fail_flag,
     json_flag,
@@ -146,7 +145,6 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 # -- dds ls -- #
 @dds_main.command(name="ls")
 # Options
-@username_option()
 @project_option(required=False)
 @sort_projects_option()
 @folder_option(help_message="List contents of this project folder.")
@@ -159,7 +157,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.pass_obj
 def list_projects_and_contents(
-    click_ctx, project, folder, username, sort, json, size, tree, usage, users, projects
+    click_ctx, project, folder, sort, json, size, tree, usage, users, projects
 ):
     """List the projects you have access to or the project contents.
 
@@ -174,7 +172,6 @@ def list_projects_and_contents(
             with dds_cli.data_lister.DataLister(
                 project=project,
                 show_usage=usage,
-                username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 json=json,
                 token_path=click_ctx.get("TOKEN_PATH"),
@@ -209,7 +206,6 @@ def list_projects_and_contents(
         if project:
             with dds_cli.data_lister.DataLister(
                 project=project,
-                username=username,
                 tree=tree,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 json=json,
@@ -300,8 +296,7 @@ def auth_group_command(_):
     Authenticate yourself once and run multiple commands within a certain amount of time
     (currently 48 hours) without specifying your user credentials.
     If you do not authenticate yourself and start a new session, you will need to provide your
-    DDS username when running the other commands. If you do not provide the username as an option,
-    you will be prompted to fill it in.
+    DDS username when running the other commands.
     """
 
 
@@ -312,9 +307,8 @@ def auth_group_command(_):
 
 # -- dds auth login -- #
 @auth_group_command.command(name="login")
-@username_option()
 @click.pass_obj
-def login(click_ctx, username):
+def login(click_ctx):
     """Start or renew an authenticated session.
 
     Creates or renews the authentication token stored in the '.dds_cli_token' file.
@@ -326,7 +320,7 @@ def login(click_ctx, username):
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.auth.Auth(username=username, token_path=click_ctx.get("TOKEN_PATH")):
+        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH")):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
     except (
@@ -349,7 +343,7 @@ def logout(click_ctx):
     """
     try:
         with dds_cli.auth.Auth(
-            username=None, authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
+            authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
             authenticator.logout()
 
@@ -371,7 +365,7 @@ def info(click_ctx):
     """
     try:
         with dds_cli.auth.Auth(
-            username=None, authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
+            authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
             authenticator.check()
     except dds_cli.exceptions.DDSCLIException as err:
@@ -401,7 +395,6 @@ def user_group_command(_):
 # Positional args
 @email_arg(required=True)
 # Options
-@username_option()
 @project_option(
     required=False, help_message="Existing Project you want the user to be associated to."
 )
@@ -423,7 +416,7 @@ def user_group_command(_):
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def add_user(click_ctx, email, username, role, project, unit, no_mail):
+def add_user(click_ctx, email, role, project, unit, no_mail):
     """
     Add a user to the DDS system or hosted projects.
 
@@ -434,7 +427,6 @@ def add_user(click_ctx, email, username, role, project, unit, no_mail):
     """
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as inviter:
@@ -454,7 +446,6 @@ def add_user(click_ctx, email, username, role, project, unit, no_mail):
 # Positional args
 @email_arg(required=False)
 # Options
-@username_option()
 # Flags
 @click.option(
     "--self",
@@ -465,7 +456,7 @@ def add_user(click_ctx, email, username, role, project, unit, no_mail):
     help="Request deletion of own account.",
 )
 @click.pass_obj
-def delete_user(click_ctx, email, username, self):
+def delete_user(click_ctx, email, self):
     """
     Delete user accounts from the Data Delivery System.
 
@@ -492,7 +483,6 @@ def delete_user(click_ctx, email, username, self):
     if proceed_deletion:
         try:
             with dds_cli.account_manager.AccountManager(
-                username=username,
                 method="delete",
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 token_path=click_ctx.get("TOKEN_PATH"),
@@ -521,14 +511,12 @@ def delete_user(click_ctx, email, username, self):
 # -- dds user info -- #
 @user_group_command.command(name="info")
 # Options
-@username_option()
 # Flags
 @click.pass_obj
-def get_info_user(click_ctx, username):
+def get_info_user(click_ctx):
     """Display information connected to your own DDS account."""
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as get_info:
@@ -548,10 +536,9 @@ def get_info_user(click_ctx, username):
 # Positional args
 @email_arg(required=True)
 # Options
-@username_option()
 # Flags
 @click.pass_obj
-def activate_user(click_ctx, email, username):
+def activate_user(click_ctx, email):
     """Activate/Reactivate user accounts.
 
     If you have sufficient admin privileges, you may activate the accounts of other users.
@@ -567,7 +554,6 @@ def activate_user(click_ctx, email, username):
     if proceed_activation:
         try:
             with dds_cli.account_manager.AccountManager(
-                username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as manager:
@@ -588,10 +574,9 @@ def activate_user(click_ctx, email, username):
 # Positional args
 @email_arg(required=True)
 # Options
-@username_option()
 # Flags
 @click.pass_obj
-def deactivate_user(click_ctx, email, username):
+def deactivate_user(click_ctx, email):
     """Deactivate user accounts in the Data Delivery System.
 
     If you have sufficient admin privileges, you may deactivate the accounts of other users.
@@ -607,7 +592,6 @@ def deactivate_user(click_ctx, email, username):
     if proceed_deactivation:
         try:
             with dds_cli.account_manager.AccountManager(
-                username=username,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as manager:
@@ -644,24 +628,22 @@ def project_group_command(_):
 # -- dds project ls -- #
 @project_group_command.command(name="ls")
 # Options
-@username_option()
 @sort_projects_option()
 # Flags
 @usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @json_flag(help_message="Output project list as json.")  # users, json, tree
 @click.pass_context
-def list_projects(ctx, username, json, sort, usage):
+def list_projects(ctx, json, sort, usage):
     """List all projects you have access to in the DDS.
 
     Calls the `dds ls` function.
     """
-    ctx.invoke(list_projects_and_contents, username=username, json=json, sort=sort, usage=usage)
+    ctx.invoke(list_projects_and_contents, json=json, sort=sort, usage=usage)
 
 
 # -- dds project create -- #
 @project_group_command.command(no_args_is_help=True)
 # Options
-@username_option()
 @click.option(
     "--title",
     "-t",
@@ -708,7 +690,6 @@ def list_projects(ctx, username, json, sort, usage):
 @click.pass_obj
 def create(
     click_ctx,
-    username,
     title,
     description,
     principal_investigator,
@@ -719,7 +700,6 @@ def create(
     """Create a project."""
     try:
         with dds_cli.project_creator.ProjectCreator(
-            username=username,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as creator:
@@ -776,7 +756,6 @@ def project_status(_):
 # -- dds project status display -- #
 @project_status.command(name="display", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 # Flags
 @click.option(
@@ -786,11 +765,10 @@ def project_status(_):
     help="Show history of project statuses in addition to current status.",
 )
 @click.pass_obj
-def display_project_status(click_ctx, username, project, show_history):
+def display_project_status(click_ctx, project, show_history):
     """Display and manage project statuses."""
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username,
             project=project,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
@@ -809,7 +787,6 @@ def display_project_status(click_ctx, username, project, show_history):
 # -- dds project status release -- #
 @project_status.command(name="release", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @click.option(
     "--deadline",
@@ -819,11 +796,10 @@ def display_project_status(click_ctx, username, project, show_history):
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def release_project(click_ctx, username, project, deadline, no_mail):
+def release_project(click_ctx, project, deadline, no_mail):
     """Make project data available for user download."""
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username,
             project=project,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
@@ -842,17 +818,15 @@ def release_project(click_ctx, username, project, deadline, no_mail):
 # -- dds project status retract -- #
 @project_status.command(name="retract", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @click.pass_obj
-def retract_project(click_ctx, username, project):
+def retract_project(click_ctx, project):
     """Set the status as `In Progress`.
 
     This allows Unit Personnel / Admins to upload additional data to the project.
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username,
             project=project,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
@@ -871,17 +845,15 @@ def retract_project(click_ctx, username, project):
 # -- dds project status archive -- #
 @project_status.command(name="archive", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @click.pass_obj
-def archive_project(click_ctx, username, project):
+def archive_project(click_ctx, project):
     """Manually archive a released project.
 
     This deletes all project data.
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username,
             project=project,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
@@ -900,17 +872,15 @@ def archive_project(click_ctx, username, project):
 # -- dds project status delete -- #
 @project_status.command(name="delete", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @click.pass_obj
-def delete_project(click_ctx, username, project):
+def delete_project(click_ctx, project):
     """Delete an unreleased project.
 
     This deletes all project data.
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username,
             project=project,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
@@ -929,17 +899,15 @@ def delete_project(click_ctx, username, project):
 # -- dds project status abort -- #
 @project_status.command(name="abort", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @click.pass_obj
-def abort_project(click_ctx, username, project):
+def abort_project(click_ctx, project):
     """Abort a released project.
 
     This deletes all project data.
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
-            username=username,
             project=project,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
@@ -965,7 +933,6 @@ def project_access(_):
 # -- dds project access grant -- #
 @project_access.command(name="grant", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @email_option(help_message="Email of the user you would like to grant access to the project.")
 # Flags
@@ -979,11 +946,10 @@ def project_access(_):
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
-def grant_project_access(click_ctx, username, project, email, owner, no_mail):
+def grant_project_access(click_ctx, project, email, owner, no_mail):
     """Grant user access to a project."""
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as granter:
@@ -1004,15 +970,13 @@ def grant_project_access(click_ctx, username, project, email, owner, no_mail):
 # -- dds project access revoke -- #
 @project_access.command(name="revoke", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @email_option(help_message="Email of the user for whom project access is to be revoked.")
 @click.pass_obj
-def revoke_project_access(click_ctx, username, project, email):
+def revoke_project_access(click_ctx, project, email):
     """Revoke user access to a project."""
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as revoker:
@@ -1032,14 +996,12 @@ def revoke_project_access(click_ctx, username, project, email):
 # Positional arguments
 @email_arg(required=True)
 # Options
-@username_option()
 @project_option(required=False)
 @click.pass_obj
-def fix_project_access(click_ctx, email, username, project):
+def fix_project_access(click_ctx, email, project):
     """Re-grant project access to user that has lost access due to password reset."""
     try:
         with dds_cli.account_manager.AccountManager(
-            username=username,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as fixer:
@@ -1075,7 +1037,6 @@ def data_group_command(_):
 # -- dds data put -- #
 @data_group_command.command(name="put", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True, help_message="Project ID to which you're uploading data.")
 @source_option(
     help_message="Path to file or directory (local).", option_type=click.Path(exists=True)
@@ -1097,7 +1058,6 @@ def data_group_command(_):
 @click.pass_obj
 def put_data(
     click_ctx,
-    username,
     project,
     source,
     source_path_file,
@@ -1113,7 +1073,6 @@ def put_data(
     """
     try:
         dds_cli.data_putter.put(
-            username=username,
             project=project,
             source=source,
             source_path_file=source_path_file,
@@ -1136,7 +1095,6 @@ def put_data(
 # -- dds data get -- #
 @data_group_command.command(name="get", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True, help_message="Project ID from which you're downloading data.")
 @num_threads_option()
 @source_option(help_message="Path to file or directory.", option_type=str)
@@ -1172,7 +1130,6 @@ def put_data(
 @click.pass_obj
 def get_data(
     click_ctx,
-    username,
     project,
     get_all,
     source,
@@ -1196,7 +1153,6 @@ def get_data(
     try:
         # Begin delivery
         with dds_cli.data_getter.DataGetter(
-            username=username,
             project=project,
             get_all=get_all,
             source=source,
@@ -1296,7 +1252,6 @@ def get_data(
 # -- dds data ls -- #
 @data_group_command.command(name="ls", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @folder_option(help_message="List contents in this project folder.")
 # Flags
@@ -1305,14 +1260,13 @@ def get_data(
 @tree_flag(help_message="Display the entire project(s) directory tree.")
 @users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.pass_context
-def list_data(ctx, username, project, folder, json, size, tree, users):
+def list_data(ctx, project, folder, json, size, tree, users):
     """List project contents.
 
     Same as dds ls [PROJECT ID].
     """
     ctx.invoke(
         list_projects_and_contents,
-        username=username,
         project=project,
         folder=folder,
         size=size,
@@ -1325,7 +1279,6 @@ def list_data(ctx, username, project, folder, json, size, tree, users):
 # -- dds data rm -- #
 @data_group_command.command(name="rm", no_args_is_help=True)
 # Options
-@username_option()
 @project_option(required=True)
 @folder_option(
     help_message="Path to folder to remove.",
@@ -1349,7 +1302,7 @@ def list_data(ctx, username, project, folder, json, size, tree, users):
     help="Remove all project contents.",
 )
 @click.pass_obj
-def rm_data(click_ctx, username, project, file, folder, rm_all):
+def rm_data(click_ctx, project, file, folder, rm_all):
     """Delete project data."""
     no_prompt = click_ctx.get("NO_PROMPT", False)
 
@@ -1380,7 +1333,6 @@ def rm_data(click_ctx, username, project, file, folder, rm_all):
     try:
         with dds_cli.data_remover.DataRemover(
             project=project,
-            username=username,
             no_prompt=no_prompt,
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as remover:

@@ -41,12 +41,10 @@ class User:
 
     def __init__(
         self,
-        username: str,
         force_renew_token: bool = False,
         no_prompt: bool = False,
         token_path: str = None,
     ):
-        self.username = username
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt
         self.token = None
@@ -57,20 +55,20 @@ class User:
 
     @property
     def token_dict(self):
+        """Get token as authorization dict for requests."""
         return {"Authorization": f"Bearer {self.token}"}
 
     # Private methods ######################### Private methods #
     def __retrieve_token(self):
-        """Attempts to fetch saved token from file otherwise authenticate user and saves the new token."""
-
+        """Fetch saved token from file otherwise authenticate user and saves the new token."""
         token_file = TokenFile(token_path=self.token_path)
 
         if not self.force_renew_token:
-            LOG.debug(f"Retrieving token for user {self.username}")
+            LOG.debug("Retrieving token.")
 
             # Get token from file
             try:
-                LOG.debug(f"Checking if token file exists for user {self.username}")
+                LOG.debug("Checking if token file exists.")
                 self.token = token_file.read_token()
             except dds_cli.exceptions.TokenNotFoundError:
                 self.token = None
@@ -88,8 +86,7 @@ class User:
 
     def __authenticate_user(self):
         """Authenticates the username and password via a call to the API."""
-
-        LOG.debug(f"Authenticating the user: {self.username} on the api")
+        LOG.debug("Starting authentication on the API.")
 
         if self.no_prompt:
             raise exceptions.AuthenticationError(
@@ -98,9 +95,8 @@ class User:
                     "Please run the `dds auth login` command and authenticate interactively."
                 )
             )
-        if self.username is None:
-            self.username = rich.prompt.Prompt.ask("DDS username")
 
+        username = rich.prompt.Prompt.ask("DDS username")
         password = getpass.getpass(prompt="DDS password: ")
 
         if password == "":
@@ -111,7 +107,7 @@ class User:
         try:
             response = requests.get(
                 dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
-                auth=(self.username, password),
+                auth=(username, password),
                 timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
             response_json = response.json()
@@ -125,17 +121,18 @@ class User:
                 raise exceptions.AuthenticationError(
                     "Authentication failed, incorrect username and/or password."
                 )
-            else:
-                raise dds_cli.exceptions.ApiResponseError(
-                    message=f"API returned an error: {response_json.get('message', 'Unknown Error!')}"
-                )
+
+            raise dds_cli.exceptions.ApiResponseError(
+                message=f"API returned an error: {response_json.get('message', 'Unknown Error!')}"
+            )
 
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
 
         # Verify 2fa email token
         LOG.info(
-            "Please enter the one-time authentication code sent to your email address (leave empty to exit):"
+            "Please enter the one-time authentication code sent "
+            "to your email address (leave empty to exit):"
         )
         done = False
         while not done:
@@ -150,7 +147,8 @@ class User:
                 continue
             if len(entered_one_time_code) != 8:
                 LOG.info(
-                    f"Please enter a valid one-time code. It should consist of 8 digits (you entered {len(entered_one_time_code)} digits)."
+                    "Please enter a valid one-time code. It should consist of 8 digits "
+                    f"(you entered {len(entered_one_time_code)} digits)."
                 )
                 continue
 
@@ -186,7 +184,7 @@ class User:
                 message="Missing token in authentication response."
             )
 
-        LOG.debug(f"User {self.username} granted access to the DDS")
+        LOG.debug(f"User {username} granted access to the DDS")
 
         return token
 
@@ -233,7 +231,7 @@ class TokenFile:
         self.check_token_file_permissions()
 
         # Read token from file
-        with self.token_file.open() as file:
+        with self.token_file.open(mode="r") as file:
             token = file.read()
             if not token:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")

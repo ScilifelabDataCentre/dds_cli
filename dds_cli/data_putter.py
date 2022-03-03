@@ -43,7 +43,6 @@ LOG = logging.getLogger(__name__)
 
 
 def put(
-    username,
     project,
     source,
     source_path_file,
@@ -57,7 +56,6 @@ def put(
     """Handle upload of data."""
     # Initialize delivery - check user access etc
     with DataPutter(
-        username=username,
         project=project,
         source=source,
         source_path_file=source_path_file,
@@ -173,7 +171,6 @@ class DataPutter(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str,
         project: str = None,
         break_on_fail: bool = False,
         overwrite: bool = False,
@@ -187,7 +184,6 @@ class DataPutter(base.DDSBaseClass):
         """Handle actions regarding upload of data."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username,
             project=project,
             method=method,
             no_prompt=no_prompt,

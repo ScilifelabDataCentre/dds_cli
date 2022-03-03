@@ -75,7 +75,7 @@ Run
       Are the contents/output readble?
    
       .. note::
-         **They should not be**, inform the SciLifeLab Data Centre *immediately* if you can discern any information from the file contents.
+         The file should be readable but the token **should look like jibberish**, inform the SciLifeLab Data Centre *immediately* if you can discern any information from the file contents.
 
 1. Get session information: `info`
 """""""""""""""""""""""""""""""""""

@@ -165,15 +165,15 @@ def source_path_file_option(
     )
 
 
-def username_option(
-    long="--username",
-    short="-u",
-    name="username",
+def token_path_option(
+    long="--token-path",
+    short="-tp",
+    name="token_path",
     required=False,
-    help_message="Your Data Delivery System username.",
+    help_message="The path where the authentication token will be stored. For a normal use-case, this should not be needed.",
 ):
     """
-    Username option standard definition.
+    token path option standard definition.
 
     Use as decorator for commands.
     """

@@ -35,10 +35,21 @@ LOG = logging.getLogger(__name__)
 class DataRemover(base.DDSBaseClass):
     """Data remover class."""
 
-    def __init__(self, project: str, username: str, method: str = "rm", no_prompt: bool = False):
+    def __init__(
+        self,
+        project: str,
+        method: str = "rm",
+        no_prompt: bool = False,
+        token_path: str = None,
+    ):
         """Handle actions regarding data deletion in the cli."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, project=project, method=method, no_prompt=no_prompt)
+        super().__init__(
+            project=project,
+            method=method,
+            no_prompt=no_prompt,
+            token_path=token_path,
+        )
 
         self.failed_table = None
         self.failed_files = None

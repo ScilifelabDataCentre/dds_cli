@@ -92,4 +92,6 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Removed pinned package versions and bumped rick-click, should work for Python 3.7 up to 3.10 ([#288](https://github.com/ScilifelabDataCentre/dds_cli/pull/288))
 * Remove local token when requesting deletion of own account ([297](https://github.com/ScilifelabDataCentre/dds_cli/pull/297)/[303](https://github.com/ScilifelabDataCentre/dds_cli/pull/303))
 * Add Role when listing project users ([#316](https://github.com/ScilifelabDataCentre/dds_cli/pull/316))
-* Pin rich-click `>=1.2.1` to solve exception handling errors
+* Pin rich-click `>=1.2.1` to solve exception handling errors ([#327](https://github.com/ScilifelabDataCentre/dds_cli/pull/327))
+* Add a `--token-path` argument to tell where the token should be saved and which token to be used. ([#329](https://github.com/ScilifelabDataCentre/dds_cli/pull/329))
+* Remove `--username` option ([#331](https://github.com/ScilifelabDataCentre/dds_cli/pull/331))

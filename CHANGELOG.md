@@ -95,3 +95,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Pin rich-click `>=1.2.1` to solve exception handling errors ([#327](https://github.com/ScilifelabDataCentre/dds_cli/pull/327))
 * Add a `--token-path` argument to tell where the token should be saved and which token to be used. ([#329](https://github.com/ScilifelabDataCentre/dds_cli/pull/329))
 * Remove `--username` option ([#331](https://github.com/ScilifelabDataCentre/dds_cli/pull/331))
+* Added check for minio in order to work with no-config setup in web ([#335](https://github.com/ScilifelabDataCentre/dds_cli/pull/335) - [#993](https://github.com/ScilifelabDataCentre/dds_web/pull/993))

@@ -97,3 +97,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Remove `--username` option ([#331](https://github.com/ScilifelabDataCentre/dds_cli/pull/331))
 * Add support for the zero-conf environment in dds_web ([#337](https://github.com/ScilifelabDataCentre/dds_cli/pull/337))
 * Increase request timeout to 30 ([#344]https://github.com/ScilifelabDataCentre/dds_cli/pull/344)
+* Make sure "already uploaded" does not give an error output ([#341](https://github.com/ScilifelabDataCentre/dds_cli/pull/341))

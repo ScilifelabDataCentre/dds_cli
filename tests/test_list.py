@@ -262,7 +262,7 @@ def list_with_project(ls_runner, list_request, command):
         params={"project": "project_1"},
         json={"subpath": None, "show_size": False},
         headers=unittest.mock.ANY,
-        # timeout=dds_cli.DDSEndpoint.TIMEOUT,
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
     print(result.stdout)
     for substring in [

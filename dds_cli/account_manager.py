@@ -66,6 +66,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 headers=self.token,
                 params={"project": project},
                 json=json,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
 
             # Get response
@@ -157,6 +158,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 headers=self.token,
                 params={"project": project},
                 json=json,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
 
             # Get response
@@ -187,6 +189,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             response = requests.get(
                 dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
                 headers=self.token,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
 
             # Get response
@@ -224,6 +227,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 dds_cli.DDSEndpoint.USER_ACTIVATION,
                 headers=self.token,
                 json=json,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
 
             # Get response
@@ -255,6 +259,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 headers=self.token,
                 params={"project": project},
                 json=json,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
             response_json = response.json()
 

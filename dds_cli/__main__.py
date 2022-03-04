@@ -80,7 +80,9 @@ dds_cli.utils.stderr_console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
-    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}/[/link]".format(dds_url[:dds_url.index("/", 7)]),
+    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}/[/link]".format(
+        dds_url[: dds_url.index("/", 7)]
+    ),
     f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
     "\n[green]          ︶",
     highlight=False,

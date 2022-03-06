@@ -81,6 +81,7 @@ class DataLister(base.DDSBaseClass):
                 DDSEndpoint.LIST_PROJ,
                 headers=self.token,
                 json={"usage": self.show_usage},
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
@@ -138,6 +139,7 @@ class DataLister(base.DDSBaseClass):
                 params={"project": self.project},
                 json={"subpath": folder, "show_size": show_size},
                 headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.APIError(f"Problem with database response: '{err}'")
@@ -241,6 +243,7 @@ class DataLister(base.DDSBaseClass):
                     params={"project": self.project},
                     json={"subpath": folder, "show_size": show_size},
                     headers=self.token,
+                    timeout=DDSEndpoint.TIMEOUT,
                 )
             except requests.exceptions.RequestException as err:
                 raise exceptions.APIError(f"Problem with database response: '{err}'")
@@ -414,6 +417,7 @@ class DataLister(base.DDSBaseClass):
                 DDSEndpoint.LIST_PROJ_USERS,
                 headers=self.token,
                 params={"project": self.project},
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))

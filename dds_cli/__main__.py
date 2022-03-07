@@ -734,6 +734,9 @@ def create(
                 if user_addition_messages:
                     for msg in user_addition_messages:
                         dds_cli.utils.console.print(msg)
+                    dds_cli.utils.console.print(
+                        "[red]Any users with errors were not added to the project[/red]"
+                    )
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

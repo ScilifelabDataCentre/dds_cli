@@ -300,7 +300,7 @@ class DataLister(base.DDSBaseClass):
                 else:
                     subtree, _max_string, _max_size = __construct_file_tree(
                         os.path.join(folder, f["name"]) if folder else f["name"],
-                        f"[bold deep_sky_blue3]{f['name']}",
+                        f"[bold deep_sky_blue3]{escape(f['name'])}",
                     )
                     # Due to indentation, the filename strings of
                     # subdirectories are 4 characters deeper than

@@ -130,8 +130,10 @@ class DataLister(base.DDSBaseClass):
         """Create a tree displaying the files within the project."""
         LOG.info(f"Listing files for project '{self.project}'")
         if folder:
-            LOG.info(f"Showing files in folder '{folder}'")
+            LOG.info(f"Showing files in folder '{escape(folder)}'")
 
+        if folder is None:
+            folder = ""
         # Make call to API
         try:
             response = requests.get(
@@ -164,11 +166,11 @@ class DataLister(base.DDSBaseClass):
         sorted_files_folders = sorted(files_folders, key=lambda f: f["name"])
 
         # Create tree
-        tree_title = folder or f"Files / directories in project: [green]{self.project}"
+        tree_title = escape(folder) or f"Files / directories in project: [green]{self.project}"
         tree = Tree(f"[bold magenta]{tree_title}")
 
         if not sorted_files_folders:
-            raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
+            raise exceptions.NoDataError(f"Could not find folder: '{escape(folder)}'")
 
         # Get max length of file name
         max_string = max([len(x["name"]) for x in sorted_files_folders])
@@ -202,7 +204,7 @@ class DataLister(base.DDSBaseClass):
             if is_folder:
                 line = "[bold deep_sky_blue3]"
                 visible_folders.append(x["name"])
-            line += x["name"] + ("/" if is_folder else "")
+            line += escape(x["name"]) + ("/" if is_folder else "")
 
             # Add size to line if option specified
             if show_size and "size" in x:

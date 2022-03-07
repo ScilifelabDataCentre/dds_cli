@@ -37,9 +37,10 @@ class Auth(base.DDSBaseClass):
     def check(self):
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
-            token_file.check_token_file_permissions()
-            token = token_file.read_token()
-            token_file.token_report(token=token)
+            token = token_file.read_token(log=False)
+            token_file.token_report(
+                token=token, current_utc_time=None, expiration_time=None, log=True
+            )
         else:
             LOG.error("[red]No saved authentication token found![/red]")
 

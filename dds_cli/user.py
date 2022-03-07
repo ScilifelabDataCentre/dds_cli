@@ -69,7 +69,7 @@ class User:
             # Get token from file
             try:
                 LOG.debug("Checking if token file exists.")
-                self.token = token_file.read_token()
+                self.token = token_file.read_token(log=False)
             except dds_cli.exceptions.TokenNotFoundError:
                 self.token = None
 
@@ -195,8 +195,8 @@ class User:
         tokenfile = TokenFile(token_path=token_path)
         username = None
         if tokenfile.file_exists():
-            token = tokenfile.read_token()
-            if not tokenfile.token_expired(token=token):
+            token = tokenfile.read_token(log=False)
+            if not tokenfile.token_expired(token=token, log=False):
                 try:
                     response = requests.get(
                         dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
@@ -219,7 +219,7 @@ class TokenFile:
         else:
             self.token_file = pathlib.Path(os.path.expanduser(token_path))
 
-    def read_token(self):
+    def read_token(self, log):
         """Attempts to fetch a valid token from the token file.
 
         Returns None if no valid token can be found."""
@@ -236,7 +236,7 @@ class TokenFile:
             if not token:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
 
-        if self.token_expired(token=token):
+        if self.token_expired(token=token, log=log):
             LOG.debug("No token retrieved from file, will fetch new token from API")
             return None
 
@@ -280,7 +280,7 @@ class TokenFile:
                 message=f"Token file permissions are not properly set, (got {permissions_readable} instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."
             )
 
-    def token_expired(self, token):
+    def token_expired(self, token, log):
         """Check if the token has expired or is about to expire soon based on the UTC time.
 
         :param token: The DDS token that is obtained after successful basic and two-factor authentication.
@@ -288,48 +288,65 @@ class TokenFile:
 
         Returns True if the token has expired, False otherwise.
         """
-        expiration_time = self.__token_dates(token=token)
-        time_to_expire = expiration_time - datetime.datetime.utcnow()
+        current_utc_time = datetime.datetime.utcnow()
 
-        if expiration_time <= datetime.datetime.utcnow():
+        expiration_time = self.__token_dates(token=token)
+
+        self.token_report(token, current_utc_time, expiration_time, log)
+
+        if expiration_time <= current_utc_time:
             LOG.debug("Token has expired. Now deleting it and fetching new token.")
             self.delete_token()
             return True
-        elif time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
-            LOG.warning(
-                f"Saved token will expire in {readable_timedelta(time_to_expire)}, "
-                f"please consider renewing the session using the 'dds auth login' command."
-            )
 
         return False
 
-    def token_report(self, token):
+    def token_report(self, token, current_utc_time=None, expiration_time=None, log=False):
         """Produce report of token status.
 
         :param token: The DDS token that is obtained after successful basic and two-factor authentication.
             Token is already obtained before coming here, so not expected to be None.
         """
+        if current_utc_time is None and expiration_time is None:
+            current_utc_time = datetime.datetime.utcnow()
+            expiration_time = self.__token_dates(token=token)
+            time_to_expire = expiration_time - current_utc_time
 
-        expiration_time = self.__token_dates(token=token)
-        time_to_expire = expiration_time - datetime.datetime.utcnow()
+        time_to_expire = expiration_time - current_utc_time
+        expired_message = "Token has expired!"
         expiration_message = f"Token will expire in {readable_timedelta(time_to_expire)}!"
+        renew_session_message = (
+            "Please consider renewing the session using the 'dds auth login' command."
+        )
 
-        if expiration_time <= datetime.datetime.utcnow():
+        if expiration_time <= current_utc_time:
             markup_color = "red"
             sign = ":no_entry_sign:"
-            message = "Token has expired!"
+            message = expired_message
+
+            if log:
+                LOG.warning(message)
         elif time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
             markup_color = "yellow"
             sign = ":warning-emoji:"
-            message = ""
+            message = f"{expiration_message} {renew_session_message}"
+
+            if log:
+                LOG.warning(message)
+
+                markup_color = "green"
+                sign = ":white_check_mark:"
+                message = "Token is OK!"
+
+                LOG.info(f"[{markup_color}]{sign}  {message} {sign} [/{markup_color}]")
         else:
             markup_color = "green"
             sign = ":white_check_mark:"
             message = "Token is OK!"
 
-        if message:
+        if log:
             LOG.info(f"[{markup_color}]{sign}  {message} {sign} [/{markup_color}]")
-        LOG.info(f"[{markup_color}]{sign}  {expiration_message} {sign} [/{markup_color}]")
+            LOG.info(f"[{markup_color}]{sign}  {expiration_message} {sign} [/{markup_color}]")
 
     # Private methods ############################################################ Private methods #
     def __token_dates(self, token):

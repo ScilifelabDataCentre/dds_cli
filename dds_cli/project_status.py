@@ -53,6 +53,7 @@ class ProjectStatusManager(base.DDSBaseClass):
                 headers=self.token,
                 params={"project": self.project},
                 json={"history": show_history},
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
@@ -118,6 +119,7 @@ class ProjectStatusManager(base.DDSBaseClass):
                 headers=self.token,
                 params={"project": self.project},
                 json=extra_params,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))

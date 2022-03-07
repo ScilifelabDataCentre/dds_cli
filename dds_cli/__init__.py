@@ -114,7 +114,7 @@ class DDSEndpoint:
     # Project status updation
     UPDATE_PROJ_STATUS = BASE_ENDPOINT + "/proj/status"
 
-    TIMEOUT = 5
+    TIMEOUT = 30
 
 
 class FileSegment:

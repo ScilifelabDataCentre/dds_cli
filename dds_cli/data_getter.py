@@ -220,7 +220,11 @@ class DataGetter(base.DDSBaseClass):
         # Send file info to API
         try:
             response = requests.put(
-                DDSEndpoint.FILE_UPDATE, params=params, json=filename, headers=self.token
+                DDSEndpoint.FILE_UPDATE,
+                params=params,
+                json=filename,
+                headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise SystemExit from err

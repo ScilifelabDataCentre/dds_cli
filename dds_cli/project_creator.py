@@ -62,6 +62,7 @@ class ProjectCreator(base.DDSBaseClass):
                     "non_sensitive": non_sensitive,
                     "users_to_add": users_to_add,
                 },
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))

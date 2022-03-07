@@ -80,6 +80,7 @@ class RemoteFileHandler(fh.FileHandler):
                 params={"project": self.project},
                 headers=token,
                 json=all_paths,
+                timeout=DDSEndpoint.TIMEOUT,
             )
 
             # Get file info from response

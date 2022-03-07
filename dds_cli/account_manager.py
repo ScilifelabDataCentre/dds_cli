@@ -133,7 +133,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             # Get response
             response_json = response.json()
             message = response_json["message"]
-            dds_cli.auth.Auth.logout()
+            dds_cli.auth.Auth.logout(self)
 
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))

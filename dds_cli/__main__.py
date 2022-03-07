@@ -587,7 +587,7 @@ def deactivate_user(click_ctx, email):
     """
     if click_ctx.get("NO_PROMPT", False):
         pass
-    else:
+    if not click_ctx.get("NO_PROMPT", False):
         proceed_deactivation = rich.prompt.Confirm.ask(
             f"Deactivate Data Delivery System user account associated with {email}?"
         )
@@ -853,13 +853,15 @@ def retract_project(click_ctx, project):
 # Options
 @project_option(required=True)
 @click.pass_obj
-def archive_project(click_ctx, project):
+def archive_project(click_ctx, project: str):
     """Manually archive a released project.
 
     This deletes all project data.
     """
-    proceed_deletion = dds_cli.utils.get_deletion_confirmation(
-        click_ctx.get("NO_PROMPT", False), "archive", project
+    proceed_deletion = (
+        True
+        if click_ctx.get("NO_PROMPT", False)
+        else dds_cli.utils.get_deletion_confirmation(action="archive", project=project)
     )
     if proceed_deletion:
         try:
@@ -884,13 +886,15 @@ def archive_project(click_ctx, project):
 # Options
 @project_option(required=True)
 @click.pass_obj
-def delete_project(click_ctx, project):
+def delete_project(click_ctx, project: str):
     """Delete an unreleased project.
 
     This deletes all project data.
     """
-    proceed_deletion = dds_cli.utils.get_deletion_confirmation(
-        click_ctx.get("NO_PROMPT", False), "delete", project
+    proceed_deletion = (
+        True
+        if click_ctx.get("NO_PROMPT", False)
+        else dds_cli.utils.get_deletion_confirmation(action="delete", project=project)
     )
     if proceed_deletion:
         try:
@@ -915,13 +919,15 @@ def delete_project(click_ctx, project):
 # Options
 @project_option(required=True)
 @click.pass_obj
-def abort_project(click_ctx, project):
+def abort_project(click_ctx, project: str):
     """Abort a released project.
 
     This deletes all project data.
     """
-    proceed_deletion = dds_cli.utils.get_deletion_confirmation(
-        click_ctx.get("NO_PROMPT", False), "abort", project
+    proceed_deletion = (
+        True
+        if click_ctx.get("NO_PROMPT", False)
+        else dds_cli.utils.get_deletion_confirmation(action="abort", project=project)
     )
     if proceed_deletion:
         try:

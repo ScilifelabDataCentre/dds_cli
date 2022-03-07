@@ -74,12 +74,15 @@ click.rich_click.MAX_WIDTH = 100
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
 
+dds_url = dds_cli.DDSEndpoint.BASE_ENDPOINT
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
-    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
+    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}/[/link]".format(
+        dds_url[: dds_url.index("/", 8)]
+    ),
     f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
     "\n[green]          ︶",
     highlight=False,

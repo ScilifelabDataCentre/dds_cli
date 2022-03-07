@@ -587,7 +587,7 @@ def deactivate_user(click_ctx, email):
     """
     if click_ctx.get("NO_PROMPT", False):
         pass
-    if not click_ctx.get("NO_PROMPT", False):
+    else:
         proceed_deactivation = rich.prompt.Confirm.ask(
             f"Deactivate Data Delivery System user account associated with {email}?"
         )

@@ -201,6 +201,7 @@ class User:
                     response = requests.get(
                         dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
                         headers={"Authorization": f"Bearer {token}"},
+                        timeout=dds_cli.DDSEndpoint.TIMEOUT,
                     )
                     # Get response
                     response_json = response.json()

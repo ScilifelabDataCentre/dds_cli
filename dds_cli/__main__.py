@@ -472,7 +472,7 @@ def delete_user(click_ctx, email, self):
     Specify the e-mail address as argument to the main command to initiate the removal process.
     """
     if click_ctx.get("NO_PROMPT", False):
-        pass
+        proceed_deletion = True
     else:
         if not self:
             proceed_deletion = rich.prompt.Confirm.ask(
@@ -858,21 +858,25 @@ def archive_project(click_ctx, project):
 
     This deletes all project data.
     """
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            project=project,
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as updater:
-            updater.update_status(new_status="Archived")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-        dds_cli.exceptions.ApiResponseError,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
+    proceed_deletion = dds_cli.utils.get_deletion_confirmation(
+        click_ctx.get("NO_PROMPT", False), "archive", project
+    )
+    if proceed_deletion:
+        try:
+            with dds_cli.project_status.ProjectStatusManager(
+                project=project,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
+            ) as updater:
+                updater.update_status(new_status="Archived")
+        except (
+            dds_cli.exceptions.APIError,
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.DDSCLIException,
+            dds_cli.exceptions.ApiResponseError,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
 
 
 # -- dds project status delete -- #
@@ -885,21 +889,25 @@ def delete_project(click_ctx, project):
 
     This deletes all project data.
     """
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            project=project,
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as updater:
-            updater.update_status(new_status="Deleted")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-        dds_cli.exceptions.ApiResponseError,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
+    proceed_deletion = dds_cli.utils.get_deletion_confirmation(
+        click_ctx.get("NO_PROMPT", False), "delete", project
+    )
+    if proceed_deletion:
+        try:
+            with dds_cli.project_status.ProjectStatusManager(
+                project=project,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
+            ) as updater:
+                updater.update_status(new_status="Deleted")
+        except (
+            dds_cli.exceptions.APIError,
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.DDSCLIException,
+            dds_cli.exceptions.ApiResponseError,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
 
 
 # -- dds project status abort -- #
@@ -912,21 +920,25 @@ def abort_project(click_ctx, project):
 
     This deletes all project data.
     """
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            project=project,
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as updater:
-            updater.update_status(new_status="Archived", is_aborted=True)
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-        dds_cli.exceptions.ApiResponseError,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
+    proceed_deletion = dds_cli.utils.get_deletion_confirmation(
+        click_ctx.get("NO_PROMPT", False), "abort", project
+    )
+    if proceed_deletion:
+        try:
+            with dds_cli.project_status.ProjectStatusManager(
+                project=project,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
+            ) as updater:
+                updater.update_status(new_status="Archived", is_aborted=True)
+        except (
+            dds_cli.exceptions.APIError,
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.DDSCLIException,
+            dds_cli.exceptions.ApiResponseError,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
 
 
 # ACCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACCESS #

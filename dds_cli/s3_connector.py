@@ -17,6 +17,7 @@ import botocore
 # Own modules
 from dds_cli import DDSEndpoint
 from dds_cli import utils
+from dds_cli import exceptions
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -102,9 +103,8 @@ class S3Connector:
 
         # Error
         if not response.ok:
-            message = f"Failed retrieving Safespring project name. Server response: {response.text}"
-            LOG.warning(message)
-            raise SystemExit(message)  # TODO: Change
+            message = f"Connection error: {response.text}"
+            raise exceptions.ApiResponseError(message)  # TODO: Change
 
         # Get s3 info
         s3info = utils.get_json_response(response=response)

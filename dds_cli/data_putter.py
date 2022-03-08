@@ -121,7 +121,7 @@ def put(
                             # Get result
                             try:
                                 file_uploaded = fut.result()
-                                LOG.debug(f"Upload of {escape(uploaded_file)} successful: {escape(file_uploaded)}")
+                                LOG.debug(f"Upload of {escape(str(uploaded_file))} successful: {file_uploaded}")
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.error(f"Upload of file {escape(uploaded_file)} failed! Error: {err}")
                                 continue
@@ -290,7 +290,7 @@ class DataPutter(base.DDSBaseClass):
             # Update progress bar for upload
             progress.reset(
                 task,
-                description=txt.TextHandler.task_name(file=file, step="put"),
+                description=txt.TextHandler.task_name(file=escape(file), step="put"),
                 total=self.filehandler.data[file]["size_processed"],
                 step="put",
             )

@@ -15,6 +15,7 @@ import datetime
 import requests
 import simplejson
 from rich.padding import Padding
+from rich.markup import escape
 from rich.table import Table
 from rich.tree import Tree
 import pytz
@@ -564,7 +565,7 @@ class DataLister(base.DDSBaseClass):
         for proj in sorted_projects:
             table.add_row(
                 *[
-                    dds_cli.utils.format_api_response(proj[i], i, magnitudes[i])
+                    escape(dds_cli.utils.format_api_response(proj[i], i, magnitudes[i]))
                     for i in column_formatting
                 ]
             )

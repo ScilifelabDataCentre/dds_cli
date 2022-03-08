@@ -121,9 +121,13 @@ def put(
                             # Get result
                             try:
                                 file_uploaded = fut.result()
-                                LOG.debug(f"Upload of {escape(str(uploaded_file))} successful: {file_uploaded}")
+                                LOG.debug(
+                                    f"Upload of {escape(str(uploaded_file))} successful: {file_uploaded}"
+                                )
                             except concurrent.futures.BrokenExecutor as err:
-                                LOG.error(f"Upload of file {escape(uploaded_file)} failed! Error: {err}")
+                                LOG.error(
+                                    f"Upload of file {escape(uploaded_file)} failed! Error: {err}"
+                                )
                                 continue
 
                             # Increase the main progress bar
@@ -304,7 +308,9 @@ class DataPutter(base.DDSBaseClass):
 
                 if db_updated:
                     all_ok = True
-                    LOG.debug(f"File successfully uploaded and added to the database: {escape(file)}")
+                    LOG.debug(
+                        f"File successfully uploaded and added to the database: {escape(file)}"
+                    )
 
         if not saved or all_ok:
             # Delete temporary processed file locally

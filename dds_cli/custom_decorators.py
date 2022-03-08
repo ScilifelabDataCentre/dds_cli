@@ -12,6 +12,7 @@ import pathlib
 # Installed
 import rich
 import rich.table
+from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
@@ -42,19 +43,19 @@ def verify_proceed(func):
         # Check if keyboardinterrupt in dds
         if self.stop_doing:
             # TODO (ina): Add save to status here
-            message = "KeyBoardInterrupt - cancelling file {file}"
+            message = "KeyBoardInterrupt - cancelling file {escape(file)}"
             LOG.warning(message)
             return False  # Do not proceed
 
         # Return if file cancelled by another file
         if self.status[file]["cancel"]:
-            message = f"File already cancelled, stopping file {file}"
+            message = f"File already cancelled, stopping file {escape(file)}"
             LOG.warning(message)
             return False
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.debug(f"File {file} started {func.__name__}")
+        LOG.debug(f"File {escape(file)} started {func.__name__}")
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)

@@ -11,6 +11,7 @@ import pathlib
 # Installed
 import requests
 import simplejson
+from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
@@ -114,7 +115,7 @@ class DataGetter(base.DDSBaseClass):
 
         # File task for downloading
         task = progress.add_task(
-            description=txt.TextHandler.task_name(file=file, step="get"),
+            description=txt.TextHandler.task_name(file=escape(str(file)), step="get"),
             total=file_info["size_stored"],
             visible=not self.silent,
         )
@@ -125,17 +126,17 @@ class DataGetter(base.DDSBaseClass):
         # Update progress task for decryption
         progress.reset(
             task,
-            description=txt.TextHandler.task_name(file=file, step="decrypt"),
+            description=txt.TextHandler.task_name(file=escape(str(file)), step="decrypt"),
             total=file_info["size_original"],
         )
 
-        LOG.debug(f"File {file} downloaded: {file_downloaded}")
+        LOG.debug(f"File {escape(str(file))} downloaded: {file_downloaded}")
 
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
             LOG.debug(f"Database updated: {db_updated}")
 
-            LOG.debug(f"Beginning decryption of file {file}...")
+            LOG.debug(f"Beginning decryption of file {escape(str(file))}...")
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,

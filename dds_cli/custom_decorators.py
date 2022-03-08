@@ -55,7 +55,7 @@ def verify_proceed(func):
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.debug(f"File {escape(file)} started {func.__name__}")
+        LOG.debug(f"File {escape(str(file))} started {func.__name__}")
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
@@ -101,7 +101,7 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.debug(f"File {file} status updated to {func.__name__}: started")
+        LOG.debug(f"File {escape(str(file))} status updated to {func.__name__}: started")
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
@@ -116,7 +116,7 @@ def update_status(func):
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.debug(f"File {file} status updated to {func.__name__}: done")
+            LOG.debug(f"File {escape(str(file))} status updated to {func.__name__}: done")
 
         return ok_to_continue, message
 

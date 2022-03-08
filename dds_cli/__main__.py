@@ -74,12 +74,15 @@ click.rich_click.MAX_WIDTH = 100
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
 
+dds_url = dds_cli.DDSEndpoint.BASE_ENDPOINT
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
-    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}[/link]".format(dds_cli.__url__),
+    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}/[/link]".format(
+        dds_url[: dds_url.index("/", 8)]
+    ),
     f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
     "\n[green]          ︶",
     highlight=False,
@@ -469,7 +472,7 @@ def delete_user(click_ctx, email, self):
     Specify the e-mail address as argument to the main command to initiate the removal process.
     """
     if click_ctx.get("NO_PROMPT", False):
-        pass
+        proceed_deletion = True
     else:
         if not self:
             proceed_deletion = rich.prompt.Confirm.ask(
@@ -731,6 +734,9 @@ def create(
                 if user_addition_messages:
                     for msg in user_addition_messages:
                         dds_cli.utils.console.print(msg)
+                    dds_cli.utils.console.print(
+                        "[red]Any users with errors were not added to the project[/red]"
+                    )
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -847,26 +853,32 @@ def retract_project(click_ctx, project):
 # Options
 @project_option(required=True)
 @click.pass_obj
-def archive_project(click_ctx, project):
+def archive_project(click_ctx, project: str):
     """Manually archive a released project.
 
     This deletes all project data.
     """
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            project=project,
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as updater:
-            updater.update_status(new_status="Archived")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-        dds_cli.exceptions.ApiResponseError,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
+    proceed_deletion = (
+        True
+        if click_ctx.get("NO_PROMPT", False)
+        else dds_cli.utils.get_deletion_confirmation(action="archive", project=project)
+    )
+    if proceed_deletion:
+        try:
+            with dds_cli.project_status.ProjectStatusManager(
+                project=project,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
+            ) as updater:
+                updater.update_status(new_status="Archived")
+        except (
+            dds_cli.exceptions.APIError,
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.DDSCLIException,
+            dds_cli.exceptions.ApiResponseError,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
 
 
 # -- dds project status delete -- #
@@ -874,26 +886,32 @@ def archive_project(click_ctx, project):
 # Options
 @project_option(required=True)
 @click.pass_obj
-def delete_project(click_ctx, project):
+def delete_project(click_ctx, project: str):
     """Delete an unreleased project.
 
     This deletes all project data.
     """
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            project=project,
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as updater:
-            updater.update_status(new_status="Deleted")
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-        dds_cli.exceptions.ApiResponseError,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
+    proceed_deletion = (
+        True
+        if click_ctx.get("NO_PROMPT", False)
+        else dds_cli.utils.get_deletion_confirmation(action="delete", project=project)
+    )
+    if proceed_deletion:
+        try:
+            with dds_cli.project_status.ProjectStatusManager(
+                project=project,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
+            ) as updater:
+                updater.update_status(new_status="Deleted")
+        except (
+            dds_cli.exceptions.APIError,
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.DDSCLIException,
+            dds_cli.exceptions.ApiResponseError,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
 
 
 # -- dds project status abort -- #
@@ -901,26 +919,32 @@ def delete_project(click_ctx, project):
 # Options
 @project_option(required=True)
 @click.pass_obj
-def abort_project(click_ctx, project):
+def abort_project(click_ctx, project: str):
     """Abort a released project.
 
     This deletes all project data.
     """
-    try:
-        with dds_cli.project_status.ProjectStatusManager(
-            project=project,
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as updater:
-            updater.update_status(new_status="Archived", is_aborted=True)
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-        dds_cli.exceptions.ApiResponseError,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
+    proceed_deletion = (
+        True
+        if click_ctx.get("NO_PROMPT", False)
+        else dds_cli.utils.get_deletion_confirmation(action="abort", project=project)
+    )
+    if proceed_deletion:
+        try:
+            with dds_cli.project_status.ProjectStatusManager(
+                project=project,
+                no_prompt=click_ctx.get("NO_PROMPT", False),
+                token_path=click_ctx.get("TOKEN_PATH"),
+            ) as updater:
+                updater.update_status(new_status="Archived", is_aborted=True)
+        except (
+            dds_cli.exceptions.APIError,
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.DDSCLIException,
+            dds_cli.exceptions.ApiResponseError,
+        ) as err:
+            LOG.error(err)
+            sys.exit(1)
 
 
 # ACCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACCESS #

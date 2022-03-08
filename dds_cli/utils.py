@@ -181,3 +181,14 @@ def readable_timedelta(duration):
         return " ".join(time_parts)
     else:
         return "less than a minute"
+
+
+def get_deletion_confirmation(action: str, project: str) -> bool:
+    """Confirm that the user wants to perform deletion."""
+    question = f"Are you sure you want to {action} {project}? All its contents "
+    if action in ["delete", "abort"]:
+        question = question + "and metainfo "
+    question += "will be deleted!"
+
+    proceed_deletion = rich.prompt.Confirm.ask(question)
+    return proceed_deletion

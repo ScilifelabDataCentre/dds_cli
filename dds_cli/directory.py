@@ -43,6 +43,6 @@ class DDSDirectory:
             try:
                 y.mkdir(parents=True, exist_ok=False)
             except OSError as ose:
-                sys.exit("The temporary directory {y} could not be created: " f"{ose}")
+                sys.exit(f"The temporary directory {y} could not be created: {ose}")
 
         self.directories = dirs

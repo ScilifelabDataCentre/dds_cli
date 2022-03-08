@@ -176,11 +176,13 @@ class DDSBaseClass:
         """Print out the delivery summary if any files were cancelled."""
         # TODO: Look into a better summary print out - old deleted for now
         any_failed = self.__collect_all_failed()
+        true_failed = [entry for entry in any_failed if entry["message"] != "File already uploaded"]
+        nr_uploaded = len(any_failed) - len(true_failed)
 
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
-        if any_failed:
+        if true_failed:
             intro_error_message = (
                 f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
             )
@@ -206,6 +208,11 @@ class DDSBaseClass:
                 f"See {self.failed_delivery_log} for more information."
             )
 
+        elif nr_uploaded:
+            dds_cli.utils.console.print(
+                (f"\nUpload completed!\n{nr_uploaded} files were already uploaded.\n")
+            )
+
         else:
             # Printout if no cancelled/failed files
             dds_cli.utils.console.print(
@@ -215,7 +222,7 @@ class DDSBaseClass:
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
             LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
 
-    def __collect_all_failed(self, sort: bool = True):
+    def __collect_all_failed(self, sort: bool = True) -> list:
         """Put cancelled files from status in to failed dict and sort the output."""
         # Transform all items to string
         self.filehandler.data = {
@@ -240,12 +247,12 @@ class DDSBaseClass:
             }
         )
 
-        # Sort by which directory the files are in
         LOG.debug(self.filehandler.failed)
 
-        # TODO: Sort more?
-        return (
-            sorted(self.filehandler.failed.items(), key=lambda g: g)
-            if sort
-            else self.filehandler.failed
-        )
+        # Sort by which directory the files are in
+        out_data = self.filehandler.failed
+        out_data = [{"filepath": entry[0], **entry[1]} for entry in self.filehandler.failed.items()]
+        if sort:
+            out_data.sort(key=lambda x: x["filepath"])
+
+        return out_data

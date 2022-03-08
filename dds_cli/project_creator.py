@@ -62,6 +62,7 @@ class ProjectCreator(base.DDSBaseClass):
                     "non_sensitive": non_sensitive,
                     "users_to_add": users_to_add,
                 },
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(message=str(err))
@@ -81,6 +82,8 @@ class ProjectCreator(base.DDSBaseClass):
                 if isinstance(error, list):
                     error = error[0]
 
+                if "Insufficient credentials" in error:
+                    error = "You do not have the required permissions to create a project."
                 LOG.error(error)
                 return created, created_project_id, user_addition_statuses, error
 

@@ -11,6 +11,7 @@ import pathlib
 import sys
 
 # Installed
+import rich.markup
 
 # Own modules
 
@@ -45,9 +46,11 @@ class DDSDirectory:
             except OSError as e:
                 if e.errno == errno.EEXIST:
                     sys.exit(
-                        f"Directory '{dir}' already exists. Please specify a path where a new folder can be created."
+                        f"Directory '{rich.markup.escape(str(dir))}' already exists. Please specify a path where a new folder can be created."
                     )
                 else:
-                    sys.exit(f"The temporary directory '{dir}' could not be created: {e}")
+                    sys.exit(
+                        f"The temporary directory '{rich.markup.escape(str(dir))}' could not be created: {e}"
+                    )
 
         self.directories = dirs

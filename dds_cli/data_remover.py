@@ -11,6 +11,7 @@ import pathlib
 # Installed
 import requests
 import rich
+import rich.markup
 import rich.table
 import rich.padding
 import simplejson
@@ -94,12 +95,12 @@ class DataRemover(base.DDSBaseClass):
 
                 # Add rows
                 for x in not_exists:
-                    table.add_row(x, f"No such {level.lower()}")
+                    table.add_row(rich.markup.escape(x), f"No such {level.lower()}")
 
                 for x, y in delete_failed.items():
                     table.add_row(
-                        f"[light_salmon3]{x}[/light_salmon3]",
-                        f"[light_salmon3]{y}[/light_salmon3]",
+                        f"[light_salmon3]{rich.markup.escape(x)}[/light_salmon3]",
+                        f"[light_salmon3]{rich.markup.escape(y)}[/light_salmon3]",
                     )
 
                 # Print out table

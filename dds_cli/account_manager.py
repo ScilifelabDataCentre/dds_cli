@@ -9,7 +9,6 @@ import logging
 
 # Installed
 import http
-from pydoc import resolve
 import requests
 import simplejson
 

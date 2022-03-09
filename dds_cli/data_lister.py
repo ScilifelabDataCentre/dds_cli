@@ -15,6 +15,7 @@ import datetime
 import requests
 import simplejson
 from rich.padding import Padding
+from rich.markup import escape
 from rich.table import Table
 from rich.tree import Tree
 import pytz
@@ -130,8 +131,10 @@ class DataLister(base.DDSBaseClass):
         """Create a tree displaying the files within the project."""
         LOG.info(f"Listing files for project '{self.project}'")
         if folder:
-            LOG.info(f"Showing files in folder '{folder}'")
+            LOG.info(f"Showing files in folder '{escape(folder)}'")
 
+        if folder is None:
+            folder = ""
         # Make call to API
         try:
             response = requests.get(
@@ -164,11 +167,11 @@ class DataLister(base.DDSBaseClass):
         sorted_files_folders = sorted(files_folders, key=lambda f: f["name"])
 
         # Create tree
-        tree_title = folder or f"Files / directories in project: [green]{self.project}"
+        tree_title = escape(folder) or f"Files / directories in project: [green]{self.project}"
         tree = Tree(f"[bold magenta]{tree_title}")
 
         if not sorted_files_folders:
-            raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
+            raise exceptions.NoDataError(f"Could not find folder: '{escape(folder)}'")
 
         # Get max length of file name
         max_string = max([len(x["name"]) for x in sorted_files_folders])
@@ -202,7 +205,7 @@ class DataLister(base.DDSBaseClass):
             if is_folder:
                 line = "[bold deep_sky_blue3]"
                 visible_folders.append(x["name"])
-            line += x["name"] + ("/" if is_folder else "")
+            line += escape(x["name"]) + ("/" if is_folder else "")
 
             # Add size to line if option specified
             if show_size and "size" in x:
@@ -235,7 +238,7 @@ class DataLister(base.DDSBaseClass):
             subtrees: List[Union["FileTree", Tuple[str, str]]] = None
             name: str = None
 
-        def __api_call_list_files(folder):
+        def __api_call_list_files(folder: str):
             # Make call to API
             try:
                 resp_json = requests.get(
@@ -275,7 +278,7 @@ class DataLister(base.DDSBaseClass):
                         "No files or folders found for the specified project"
                     )
                 else:
-                    raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
+                    raise exceptions.NoDataError(f"Could not find folder: '{escape(folder)}'")
 
             # Get max length of file name
             max_string = max([len(x["name"]) for x in sorted_files_folders])
@@ -294,11 +297,11 @@ class DataLister(base.DDSBaseClass):
                 is_folder = f.pop("folder")
 
                 if not is_folder:
-                    tree.subtrees.append((f["name"], f.get("size") if show_size else None))
+                    tree.subtrees.append((escape(f["name"]), f.get("size") if show_size else None))
                 else:
                     subtree, _max_string, _max_size = __construct_file_tree(
                         os.path.join(folder, f["name"]) if folder else f["name"],
-                        f"[bold deep_sky_blue3]{f['name']}",
+                        f"[bold deep_sky_blue3]{escape(f['name'])}",
                     )
                     # Due to indentation, the filename strings of
                     # subdirectories are 4 characters deeper than
@@ -562,7 +565,7 @@ class DataLister(base.DDSBaseClass):
         for proj in sorted_projects:
             table.add_row(
                 *[
-                    dds_cli.utils.format_api_response(proj[i], i, magnitudes[i])
+                    escape(dds_cli.utils.format_api_response(proj[i], i, magnitudes[i]))
                     for i in column_formatting
                 ]
             )

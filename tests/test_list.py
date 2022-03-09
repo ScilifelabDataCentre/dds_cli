@@ -258,7 +258,7 @@ def list_with_project(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_FILES,
         params={"project": "project_1"},
-        json={"subpath": None, "show_size": False},
+        json={"subpath": "", "show_size": False},
         headers=unittest.mock.ANY,
         timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )

@@ -16,6 +16,7 @@ import rich_click as click
 import click_pathlib
 import rich
 import rich.logging
+import rich.markup
 import rich.progress
 import rich.prompt
 import questionary
@@ -1218,7 +1219,7 @@ def get_data(
 
                     # Schedule the first num_threads futures for upload
                     for file in itertools.islice(iterator, num_threads):
-                        LOG.debug(f"Starting: {file}")
+                        LOG.debug(f"Starting: {rich.markup.escape(str(file))}")
                         # Execute download
                         download_threads[
                             texec.submit(getter.download_and_verify, file=file, progress=progress)
@@ -1235,18 +1236,18 @@ def get_data(
                         for dfut in ddone:
                             downloaded_file = download_threads.pop(dfut)
                             LOG.debug(
-                                f"Future done: {downloaded_file}",
+                                f"Future done: {rich.markup.escape(str(downloaded_file))}",
                             )
 
                             # Get result
                             try:
                                 file_downloaded = dfut.result()
                                 LOG.debug(
-                                    f"Download of {downloaded_file} successful: {file_downloaded}"
+                                    f"Download of {rich.markup.escape(str(downloaded_file))} successful: {file_downloaded}"
                                 )
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.critical(
-                                    f"Download of file {downloaded_file} failed! Error: {err}"
+                                    f"Download of file {rich.markup.escape(str(downloaded_file))} failed! Error: {err}"
                                 )
                                 continue
 
@@ -1255,7 +1256,7 @@ def get_data(
 
                         # Schedule the next set of futures for download
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug(f"Starting: {next_file}")
+                            LOG.debug(f"Starting: {rich.markup.escape(str(next_file))}")
                             # Execute download
                             download_threads[
                                 texec.submit(

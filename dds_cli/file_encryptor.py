@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.asymmetric import x25519
 from cryptography.hazmat.primitives.kdf import hkdf
 from nacl.bindings import crypto_aead_chacha20poly1305_ietf_decrypt
 from nacl.bindings import crypto_aead_chacha20poly1305_ietf_encrypt
+from rich.markup import escape
 
 # Own modules
 from dds_cli import FileSegment
@@ -186,7 +187,7 @@ class Encryptor(ECDHKeyHandler):
             LOG.exception(message)
         else:
             encrypted_and_saved = True
-            message = f"Encrypted file stored in location: {outfile}"
+            message = f"Encrypted file stored in location: {escape(str(outfile))}"
             LOG.debug(message)
 
         return encrypted_and_saved, message

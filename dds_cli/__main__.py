@@ -98,7 +98,14 @@ dds_cli.utils.stderr_console.print(
     "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
 )
 @token_path_option()
-@click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
+@click.version_option(
+    version=dds_cli.__version__,
+    prog_name=dds_cli.__title__,
+    help="Display the version of this software.",
+)
+@click.help_option(
+    help="List the options of any DDS subcommand and its default settings.",
+)
 @click.pass_context
 def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     """SciLifeLab Data Delivery System (DDS) command line interface.

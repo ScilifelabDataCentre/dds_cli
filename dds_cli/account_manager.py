@@ -247,9 +247,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
-            )
+            response_message = response_json.get("message", "Unexpected error!")
+            if "Insufficient credentials" in response_message:
+                response_message = f"You do not have the required permissions to {action} a user."
+            raise dds_cli.exceptions.DDSCLIException(message=f"{message}: {response_message}")
 
         LOG.info(response_json.get("message", f"User successfully {action}d."))
 

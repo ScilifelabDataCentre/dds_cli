@@ -14,6 +14,7 @@ import pathlib
 import boto3
 import botocore
 import requests
+from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn, BarColumn
 import simplejson
 
@@ -91,7 +92,7 @@ def put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.debug(f"Starting: {file}")
+                    LOG.debug(f"Starting: {escape(file)}")
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -115,14 +116,18 @@ def put(
                         # Get result from future and schedule database update
                         for fut in done:
                             uploaded_file = upload_threads.pop(fut)
-                            LOG.debug(f"Future done for file: {uploaded_file}")
+                            LOG.debug(f"Future done for file: {escape(uploaded_file)}")
 
                             # Get result
                             try:
                                 file_uploaded = fut.result()
-                                LOG.debug(f"Upload of {uploaded_file} successful: {file_uploaded}")
+                                LOG.debug(
+                                    f"Upload of {escape(str(uploaded_file))} successful: {file_uploaded}"
+                                )
                             except concurrent.futures.BrokenExecutor as err:
-                                LOG.error(f"Upload of file {uploaded_file} failed! Error: {err}")
+                                LOG.error(
+                                    f"Upload of file {escape(uploaded_file)} failed! Error: {err}"
+                                )
                                 continue
 
                             # Increase the main progress bar
@@ -133,7 +138,7 @@ def put(
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug(f"Starting: {next_file}")
+                            LOG.debug(f"Starting: {escape(next_file)}")
                             upload_threads[
                                 texec.submit(
                                     putter.protect_and_upload,
@@ -253,7 +258,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Progress bar for processing
         task = progress.add_task(
-            description=txt.TextHandler.task_name(file=file, step="encrypt"),
+            description=txt.TextHandler.task_name(file=escape(file), step="encrypt"),
             total=file_info["size_raw"],
             visible=not self.silent,
         )
@@ -284,12 +289,12 @@ class DataPutter(base.DDSBaseClass):
 
         if saved:
             LOG.debug(
-                f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
+                f"File successfully encrypted: {escape(file)}. New location: {escape(str(file_info['path_processed']))}"
             )
             # Update progress bar for upload
             progress.reset(
                 task,
-                description=txt.TextHandler.task_name(file=file, step="put"),
+                description=txt.TextHandler.task_name(file=escape(file), step="put"),
                 total=self.filehandler.data[file]["size_processed"],
                 step="put",
             )
@@ -303,12 +308,14 @@ class DataPutter(base.DDSBaseClass):
 
                 if db_updated:
                     all_ok = True
-                    LOG.debug(f"File successfully uploaded and added to the database: {file}")
+                    LOG.debug(
+                        f"File successfully uploaded and added to the database: {escape(file)}"
+                    )
 
         if not saved or all_ok:
             # Delete temporary processed file locally
             LOG.debug(
-                f"Deleting file {file_info['path_processed']} - "
+                f"Deleting file {escape(str(file_info['path_processed']))} - "
                 f"exists: {file_info['path_processed'].exists()}"
             )
             dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
@@ -354,8 +361,8 @@ class DataPutter(base.DDSBaseClass):
             FileNotFoundError,
             TypeError,
         ) as err:
-            error = f"S3 upload of file '{file}' failed: {err}"
-            LOG.exception(f"{file}: {err}")
+            error = f"S3 upload of file '{escape(file)}' failed: {err}"
+            LOG.exception(f"{escape(file)}: {err}")
         else:
             uploaded = True
 

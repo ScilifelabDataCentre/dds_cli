@@ -142,8 +142,6 @@ def list_no_project_specified(ls_runner, list_request, command):
         "In Progress",
         "Tue, 23 Nov",
         "Wed, 24 Nov",
-        "20 B",
-        "30 B",
         "────────────────",  # Hack to test that there's a table printed
     ]:
         assert substring in result.stdout
@@ -260,7 +258,7 @@ def list_with_project(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_FILES,
         params={"project": "project_1"},
-        json={"subpath": None, "show_size": False},
+        json={"subpath": "", "show_size": False},
         headers=unittest.mock.ANY,
         timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )

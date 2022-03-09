@@ -10,8 +10,8 @@ import logging
 # Installed
 import http
 import requests
+import rich.markup
 import simplejson
-
 
 # Own modules
 import dds_cli
@@ -194,6 +194,9 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
             # Get response
             response_json = response.json()
+            for field in response_json.get("info", []):
+                if isinstance(response_json["info"][field], str):
+                    response_json["info"][field] = rich.markup.escape(response_json["info"][field])
             LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))

@@ -492,13 +492,15 @@ class DataLister(base.DDSBaseClass):
                 "overflow": default_format.get("overflow"),
             },
             **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
-            "Size": {
+        }
+
+        if total_size is not None:
+            column_formatting["Size"] = {
                 "justify": "right",
                 "style": default_format.get("style"),
                 "footer": dds_cli.utils.format_api_response(total_size, key="Size"),
                 "overflow": "ellipsis",
-            },
-        }
+            }
 
         if usage_info and self.show_usage:
             # Only display costs above 1 kr

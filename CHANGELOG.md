@@ -114,7 +114,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Add a `--token-path` argument to tell where the token should be saved and which token to be used. ([#329](https://github.com/ScilifelabDataCentre/dds_cli/pull/329))
 * Remove `--username` option ([#331](https://github.com/ScilifelabDataCentre/dds_cli/pull/331))
 * Add support for the zero-conf environment in dds_web ([#337](https://github.com/ScilifelabDataCentre/dds_cli/pull/337))
-* Increase request timeout to 30 ([#344]<https://github.com/ScilifelabDataCentre/dds_cli/pull/344>)
+* Increase request timeout to 30 ([#344](https://github.com/ScilifelabDataCentre/dds_cli/pull/344))
 * Make sure "already uploaded" does not give an error output ([#341](https://github.com/ScilifelabDataCentre/dds_cli/pull/341))
 * URL in the logo changing with DDS_CLI_ENV ([#349](https://github.com/ScilifelabDataCentre/dds_cli/pull/349))
 * Show message "Any users with errors were not added to the project" when emails failed to validate during project creation ([#356](https://github.com/ScilifelabDataCentre/dds_cli/pull/356))

@@ -142,8 +142,6 @@ def list_no_project_specified(ls_runner, list_request, command):
         "In Progress",
         "Tue, 23 Nov",
         "Wed, 24 Nov",
-        "20 B",
-        "30 B",
         "────────────────",  # Hack to test that there's a table printed
     ]:
         assert substring in result.stdout

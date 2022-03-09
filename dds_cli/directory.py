@@ -5,8 +5,8 @@
 ###############################################################################
 
 # Standard library
+import errno
 import logging
-import os
 import pathlib
 import sys
 
@@ -39,10 +39,15 @@ class DDSDirectory:
         if add_file_dir:
             dirs["FILES"] = path / pathlib.Path("files/")
 
-        for _, y in dirs.items():
+        for dir in dirs.values():
             try:
-                y.mkdir(parents=True, exist_ok=False)
-            except OSError as ose:
-                sys.exit(f"The temporary directory {y} could not be created: {ose}")
+                dir.mkdir(parents=True, exist_ok=False)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    sys.exit(
+                        f"Directory '{dir}' already exists. Please specify a path where a new folder can be created."
+                    )
+                else:
+                    sys.exit(f"The temporary directory '{dir}' could not be created: {e}")
 
         self.directories = dirs

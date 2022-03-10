@@ -81,14 +81,14 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
             else:
                 prefixlist = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"]
                 base = 1000.0
-            spacerA = " "
-            spacerB = ""
+            spacer_a = " "
+            spacer_b = ""
         else:
             # Default to the prefixes of the International System of Units (SI)
             prefixlist = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"]
             base = 1000.0
-            spacerA = ""
-            spacerB = " "
+            spacer_a = ""
+            spacer_b = " "
 
         if not magnitude:
             # calculate a suitable magnitude if not given
@@ -114,14 +114,14 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
             if magnitude:
                 return "{}{}{}".format(
                     "{:.2f}".format(response),
-                    spacerA,
-                    prefixlist[magnitude] + spacerB + unit,
+                    spacer_a,
+                    prefixlist[magnitude] + spacer_b + unit,
                 )
             else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
                 return "{}{}{}".format(
                     "{:.2f}".format(response).rstrip("0").rstrip("."),
-                    spacerA,
-                    prefixlist[mag] + spacerB + unit,
+                    spacer_a,
+                    prefixlist[mag] + spacer_b + unit,
                 )
         else:
             return f"0 {unit}"
@@ -139,10 +139,10 @@ def get_token_header_contents(token):
     try:
         token = jwt.JWT(jwt=token)
         return token.token.jose_header
-    except (ValueError, InvalidJWEData, InvalidJWEOperation, InvalidJWSObject):
+    except (ValueError, InvalidJWEData, InvalidJWEOperation, InvalidJWSObject) as exc:
         raise dds_cli.exceptions.TokenDeserializationError(
             message="Token could not be deserialized."
-        )
+        ) from exc
 
 
 def get_token_expiration_time(token):

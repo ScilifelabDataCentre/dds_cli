@@ -5,6 +5,7 @@
 ###################################################################################################
 
 # Standard library
+from enum import unique
 import logging
 
 # Installed
@@ -79,9 +80,9 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Format response message
         if not response.ok:
-            message = "Could not add user"
+            message = response_json.get("message", "Could not add user")
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+                raise dds_cli.exceptions.ApiResponseError(message=message)
 
             raise dds_cli.exceptions.DDSCLIException(
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
@@ -281,12 +282,21 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(
-            response_json.get(
-                "message",
-                (
-                    f"Project access fixed for user '{email}'. "
-                    "They should now have access to all project data."
-                ),
+        errors = response_json.get("errors")
+        if errors:
+            LOG.warning(f"Could not fix user '{email}' access to the following projects:")
+            for unique_error in set(errors.values()):
+                dds_cli.utils.stderr_console.print(f"{unique_error}")
+                affected_projects = [x for x, y in errors.items() if y == unique_error]
+                for proj in affected_projects:
+                    dds_cli.utils.stderr_console.print(f"   - {proj}")
+        else:
+            LOG.info(
+                response_json.get(
+                    "message",
+                    (
+                        f"Project access fixed for user '{email}'. "
+                        "They should now have access to all project data."
+                    ),
+                )
             )
-        )

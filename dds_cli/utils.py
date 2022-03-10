@@ -180,7 +180,7 @@ def calculate_magnitude(projects, keys, iec_standard=False):
                 maximum /= base
 
             # skip consistent scaling of magnitudes if the values are too far off.
-            magnitudes[key] = magmin if (magmax - magmin <= 2) else None
+            magnitudes[key] = magmin if (magmax - magmin <= 1) else None
     return magnitudes
 
 

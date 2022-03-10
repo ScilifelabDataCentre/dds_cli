@@ -119,7 +119,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * URL in the logo changing with DDS_CLI_ENV ([#349](https://github.com/ScilifelabDataCentre/dds_cli/pull/349))
 * Show message "Any users with errors were not added to the project" when emails failed to validate during project creation ([#356](https://github.com/ScilifelabDataCentre/dds_cli/pull/356))
 * Ask user confirmation for project abort, archive and delete([#357](https://github.com/ScilifelabDataCentre/dds_cli/pull/357))
-* Replaced the default help messages of Click for the `--version` and `--help` options as requested in [issue 338](https://github.com/scilifelabdatacentre/dds_web/issues/338).
+* Replaced the default help messages of Click for the `--version` and `--help` options as requested in [issue 338](https://github.com/scilifelabdatacentre/dds_cli/issues/338).
 * Explicit error message for `--destination` when the path exists ([#371](https://github.com/ScilifelabDataCentre/dds_cli/pull/371))
 * Escape variables that are printed in the cli (avoiding e.g. hidden text and bad coloring) ([#364](https://github.com/ScilifelabDataCentre/dds_cli/pull/364))
 
@@ -132,3 +132,5 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * New unit group command unit module ([#398](https://github.com/ScilifelabDataCentre/dds_cli/pull/398))
 * `--unit` option for Super Admins to list unit users ([#397](https://github.com/ScilifelabDataCentre/dds_cli/pull/397))
 * Removed `dds project status abort` and added `--abort` flag to `dds project status archive` ()
+* Escape variables that are printed in the cli (avoiding e.g. hidden text and bad coloring) ([#364](https://github.com/ScilifelabDataCentre/dds_cli/pull/364)).
+* Handle the edge case that a user has two projects with a extremely different size available to them in the `utils.calculate_magnitude` function. Introduce a new option `-up / --unit-prefix` to format the unit prefixes used in `utils.format_api_response` [issue 1043](https://github.com/scilifelabdatacentre/dds_web/issues/1043).

@@ -1,6 +1,9 @@
 # Data Delivery System CLI: Changelog
+
 Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes.
+
 ## Sprint (2021-08-11 - 2021-08-25)
+
 * Progress bar glitch fixed by creating console object in utils.py ([#130](https://github.com/ScilifelabDataCentre/dds_cli/pull/130))
 * Log messages about successful checksum verification ([#131](https://github.com/ScilifelabDataCentre/dds_cli/pull/131))
 * Removed reduntant message in `dds ls` ([#132](https://github.com/ScilifelabDataCentre/dds_cli/pull/132))
@@ -9,8 +12,11 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * `--tree` option for `dds ls` - display whole file tree ([#136](https://github.com/ScilifelabDataCentre/dds_cli/pull/136))
 
 ## Sprint (2021-08-25 - 2021-09-08)
+
 * Custom exceptions and code cleanup ([#143](https://github.com/ScilifelabDataCentre/dds_cli/pull/143))
+
 ## Sprint (2021-09-08 - 2021-09-22)
+
 * Install `pytest` in github action ([#151](https://github.com/ScilifelabDataCentre/dds_cli/pull/151))
 * `method` moved to base class ([#152](https://github.com/ScilifelabDataCentre/dds_cli/pull/152))
 * Module used in testing ([#154](https://github.com/ScilifelabDataCentre/dds_cli/pull/154))
@@ -18,10 +24,12 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Changed CLI to match the new authentication in the API ([#156](https://github.com/ScilifelabDataCentre/dds_cli/pull/156))
 
 ## Sprint (2021-09-22 - 2021-10-06)
+
 * Added detection of Windows legacy versions ([#159](https://github.com/ScilifelabDataCentre/dds_cli/pull/159))
 * Removed tests involving requests ([#166](https://github.com/ScilifelabDataCentre/dds_cli/pull/166))
 
 ## Sprint (2021-10-06 - 2021-10-20)
+
 * Tests removed ([#169](https://github.com/ScilifelabDataCentre/dds_cli/pull/169))
 * Project creation functionality ([#167](https://github.com/ScilifelabDataCentre/dds_cli/pull/167))
 * `--is-sensitive` option added to project creation ([#171](https://github.com/ScilifelabDataCentre/dds_cli/pull/171))
@@ -32,11 +40,13 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * `invite` command ([#158](https://github.com/ScilifelabDataCentre/dds_cli/pull/158))
 
 ## Sprint (2021-10-20 - 2021-11-03)
+
 * Refactoring of `dds rm` ([#179](https://github.com/ScilifelabDataCentre/dds_cli/pull/179))
 * Formatting of the project lists moved to the CLI ([#184](https://github.com/ScilifelabDataCentre/dds_cli/pull/184))
 * Removed the update of the project size after upload ([#185](https://github.com/ScilifelabDataCentre/dds_cli/pull/185))
 
 ## Sprint (2021-11-03 - 2021-11-17)
+
 * Bug fix regarding usage values ([#189](https://github.com/ScilifelabDataCentre/dds_cli/pull/189))
 * Functionality to associate users with projects ([#186](https://github.com/ScilifelabDataCentre/dds_cli/pull/186))
 * Config option removed ([#190](https://github.com/ScilifelabDataCentre/dds_cli/pull/190))
@@ -44,6 +54,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Save encrypted token after authentication and use for subsequent commands([#193](https://github.com/ScilifelabDataCentre/dds_cli/pull/193))
 
 ## Sprint (2021-11-17 - 2021-12-01)
+
 * Username not required since sessions used ([#195](https://github.com/ScilifelabDataCentre/dds_cli/pull/195))
 * Color in `pytest` ([#197](https://github.com/ScilifelabDataCentre/dds_cli/pull/197))
 * Filename displayed in bucket replaced by UUID ([#196](https://github.com/ScilifelabDataCentre/dds_cli/pull/196))
@@ -52,6 +63,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * `--json` flag to `dds ls` to output list of project as json format ([#201](https://github.com/ScilifelabDataCentre/dds_cli/pull/201))
 
 ## Sprint (2021-12-01 - 2021-12-15)
+
 * `sphinx` for automatic generation of documentation ([#202](https://github.com/ScilifelabDataCentre/dds_cli/pull/202))
 * `status` command ([#204](https://github.com/ScilifelabDataCentre/dds_cli/pull/204))
 * Removed all occurrences of `os.umask` ([#206](https://github.com/ScilifelabDataCentre/dds_cli/pull/206))
@@ -59,25 +71,30 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Changed download procedure from `boto3` to `requests` to handle presigned urls ([#203](https://github.com/ScilifelabDataCentre/dds_cli/pull/203))
 
 ## Sprint (2021-12-15 - 2021-12-29) _Christmas_
+
 * Updated token expiration information ([#209](https://github.com/ScilifelabDataCentre/dds_cli/pull/209))
 * Group command `user` ([#200](https://github.com/ScilifelabDataCentre/dds_cli/pull/200))
 * `project` command and subcommands `grant`&`revoke` ([#210](https://github.com/ScilifelabDataCentre/dds_cli/pull/210))
 
 ## Sprint (2021-12-29 - 2022-01-12)
+
 * Grouped commands into `auth`, `user`, `project` and `data`. Created common options and arguments. ([#213](https://github.com/ScilifelabDataCentre/dds_cli/pull/213))
 * Command for displaying user info ([#214](https://github.com/ScilifelabDataCentre/dds_cli/pull/214))
 
 ## Sprint (2022-01-12 - 2022-01-26)
+
 * Timestamps converted to local timezone when displaying ([#217](https://github.com/ScilifelabDataCentre/dds_cli/pull/217))
 * Project ID always sent in request as `param` - consistency changes ([#220](https://github.com/ScilifelabDataCentre/dds_cli/pull/220))
 
 ## Sprint (2022-01-26 - 2022-02-09)
+
 * File paths replaced by UUID to prevent sensitive information in Safespring storage ([#225](https://github.com/ScilifelabDataCentre/dds_cli/pull/225))
 * Commands to activate and deactivate users ([#226](https://github.com/ScilifelabDataCentre/dds_cli/pull/226))
 * Authentication with HOTP ([#222](https://github.com/ScilifelabDataCentre/dds_cli/pull/222))
 * Handling of `ApiResponseError` to avoid huge error printout ([#228](https://github.com/ScilifelabDataCentre/dds_cli/pull/228))
 
 ## Sprint (2022-02-09 - 2022-02-23)
+
 * Add `dds project access fix` command for reseting user access when reset password ([#236](https://github.com/ScilifelabDataCentre/dds_cli/pull/236))
 * Save failed files to log and print out help message after ([#237](https://github.com/ScilifelabDataCentre/dds_cli/pull/237))
 * Change `--is_sensitive` to `--non-sensitive` ([#246](https://github.com/ScilifelabDataCentre/dds_cli/pull/246))
@@ -85,6 +102,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Updated token expiration information ([#245](https://github.com/scilifelabdatacentre/dds_cli/issues/245))
 
 ## Sprint (2022-02-23 - 2022-03-09)
+
 * Introduced a `--no-mail` flag in the CLI respectively a `send_email: True/False` json parameter to fix [issue 924](https://github.com/scilifelabdatacentre/dds_web/issues/924) ([#253](https://github.com/ScilifelabDataCentre/dds_cli/pull/253))
 * Added documentation and test protocol ([#252](https://github.com/ScilifelabDataCentre/dds_cli/pull/252))
 * Temporary unit option when adding user ([#261](https://github.com/ScilifelabDataCentre/dds_cli/pull/261))
@@ -96,8 +114,11 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Add a `--token-path` argument to tell where the token should be saved and which token to be used. ([#329](https://github.com/ScilifelabDataCentre/dds_cli/pull/329))
 * Remove `--username` option ([#331](https://github.com/ScilifelabDataCentre/dds_cli/pull/331))
 * Add support for the zero-conf environment in dds_web ([#337](https://github.com/ScilifelabDataCentre/dds_cli/pull/337))
-* Increase request timeout to 30 ([#344]https://github.com/ScilifelabDataCentre/dds_cli/pull/344)
+* Increase request timeout to 30 ([#344](https://github.com/ScilifelabDataCentre/dds_cli/pull/344))
 * Make sure "already uploaded" does not give an error output ([#341](https://github.com/ScilifelabDataCentre/dds_cli/pull/341))
 * URL in the logo changing with DDS_CLI_ENV ([#349](https://github.com/ScilifelabDataCentre/dds_cli/pull/349))
 * Show message "Any users with errors were not added to the project" when emails failed to validate during project creation ([#356](https://github.com/ScilifelabDataCentre/dds_cli/pull/356))
 * Ask user confirmation for project abort, archive and delete([#357](https://github.com/ScilifelabDataCentre/dds_cli/pull/357))
+* Replaced the default help messages of Click for the `--version` and `--help` options as requested in [issue 338](https://github.com/scilifelabdatacentre/dds_web/issues/338).
+* Explicit error message for `--destination` when the path exists ([#371](https://github.com/ScilifelabDataCentre/dds_cli/pull/371))
+* Escape variables that are printed in the cli (avoiding e.g. hidden text and bad coloring) ([#364](https://github.com/ScilifelabDataCentre/dds_cli/pull/364))

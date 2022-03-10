@@ -16,6 +16,7 @@ import rich_click as click
 import click_pathlib
 import rich
 import rich.logging
+import rich.markup
 import rich.progress
 import rich.prompt
 import questionary
@@ -98,7 +99,14 @@ dds_cli.utils.stderr_console.print(
     "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
 )
 @token_path_option()
-@click.version_option(version=dds_cli.__version__, prog_name=dds_cli.__title__)
+@click.version_option(
+    version=dds_cli.__version__,
+    prog_name=dds_cli.__title__,
+    help="Display the version of this software.",
+)
+@click.help_option(
+    help="List the options of any DDS subcommand and its default settings.",
+)
 @click.pass_context
 def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     """SciLifeLab Data Delivery System (DDS) command line interface.
@@ -1211,7 +1219,7 @@ def get_data(
 
                     # Schedule the first num_threads futures for upload
                     for file in itertools.islice(iterator, num_threads):
-                        LOG.debug(f"Starting: {file}")
+                        LOG.debug(f"Starting: {rich.markup.escape(str(file))}")
                         # Execute download
                         download_threads[
                             texec.submit(getter.download_and_verify, file=file, progress=progress)
@@ -1228,18 +1236,18 @@ def get_data(
                         for dfut in ddone:
                             downloaded_file = download_threads.pop(dfut)
                             LOG.debug(
-                                f"Future done: {downloaded_file}",
+                                f"Future done: {rich.markup.escape(str(downloaded_file))}",
                             )
 
                             # Get result
                             try:
                                 file_downloaded = dfut.result()
                                 LOG.debug(
-                                    f"Download of {downloaded_file} successful: {file_downloaded}"
+                                    f"Download of {rich.markup.escape(str(downloaded_file))} successful: {file_downloaded}"
                                 )
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.critical(
-                                    f"Download of file {downloaded_file} failed! Error: {err}"
+                                    f"Download of file {rich.markup.escape(str(downloaded_file))} failed! Error: {err}"
                                 )
                                 continue
 
@@ -1248,7 +1256,7 @@ def get_data(
 
                         # Schedule the next set of futures for download
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug(f"Starting: {next_file}")
+                            LOG.debug(f"Starting: {rich.markup.escape(str(next_file))}")
                             # Execute download
                             download_threads[
                                 texec.submit(

@@ -10,8 +10,8 @@ import logging
 # Installed
 import http
 import requests
+import rich.markup
 import simplejson
-
 
 # Own modules
 import dds_cli
@@ -194,6 +194,9 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
             # Get response
             response_json = response.json()
+            for field in response_json.get("info", []):
+                if isinstance(response_json["info"][field], str):
+                    response_json["info"][field] = rich.markup.escape(response_json["info"][field])
             LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
             raise dds_cli.exceptions.ApiRequestError(message=str(err))
@@ -244,9 +247,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
-            )
+            response_message = response_json.get("message", "Unexpected error!")
+            if "Insufficient credentials" in response_message:
+                response_message = f"You do not have the required permissions to {action} a user."
+            raise dds_cli.exceptions.DDSCLIException(message=f"{message}: {response_message}")
 
         LOG.info(response_json.get("message", f"User successfully {action}d."))
 

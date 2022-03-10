@@ -86,7 +86,7 @@ def test_add_user_no_project_fail(runner_no_project, add_user):
         timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
-    assert "Could not add user" in result.stderr
+    assert "This user was already added to the system" in result.stderr
     assert "Specifically passed message" in result.stderr
     assert result.exit_code != 0
 

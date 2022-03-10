@@ -7,7 +7,6 @@
 # Standard library
 import dataclasses
 import logging
-import os
 import pathlib
 import traceback
 

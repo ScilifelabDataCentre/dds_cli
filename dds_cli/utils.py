@@ -69,7 +69,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
         return response  # pass the response if already a string
 
     if isinstance(response, numbers.Number):
-        response = float("{:.3g}".format(response))
+        response = float(f"{response:.3g}")
         mag = 0
 
         if key in ["Size", "Usage"]:
@@ -113,13 +113,13 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
             # to allow for easier comparisons across projects
             if magnitude:
                 return "{}{}{}".format(
-                    "{:.2f}".format(response),
+                    f"{response:.2f}",
                     spacer_a,
                     prefixlist[magnitude] + spacer_b + unit,
                 )
             else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
                 return "{}{}{}".format(
-                    "{:.2f}".format(response).rstrip("0").rstrip("."),
+                    f"{response:.2f}".rstrip("0").rstrip("."),
                     spacer_a,
                     prefixlist[mag] + spacer_b + unit,
                 )

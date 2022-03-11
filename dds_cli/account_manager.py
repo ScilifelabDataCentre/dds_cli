@@ -77,23 +77,33 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+        errors = response_json.get("errors")
+        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
+
         # Format response message
         if not response.ok:
             message = "Could not add user"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=message)
 
+            message += ": " + response_json.get("message", "Unexpected error!")
+            show_warning = True
+            if error_messages:
+                message += f"\n{error_messages}"
+                show_warning = False
+
             raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+                message=message,
+                show_emojis=show_warning,
             )
 
-        LOG.info(response_json)
-        errors = response_json.get("errors")
         if errors:
             LOG.warning(f"Could not give the user '{email}' access to the following projects:")
-            dds_cli.utils.parse_project_errors(errors=errors)
+            msg = dds_cli.utils.parse_project_errors(errors=errors)
         else:
-            dds_cli.utils.console.print(response_json.get("message", "User successfully added."))
+            msg = response_json.get("message", "User successfully added.")
+
+        dds_cli.utils.console.print(msg)
 
     def delete_user(self, email):
         """Delete users from the system"""

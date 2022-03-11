@@ -97,6 +97,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 show_emojis=show_warning,
             )
 
+        message = response_json.get("message")
+        if message:
+            LOG.info(message)
+
         if errors:
             LOG.warning(f"Could not give the user '{email}' access to the following projects:")
             msg = dds_cli.utils.parse_project_errors(errors=errors)

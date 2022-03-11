@@ -288,26 +288,32 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+        errors = response_json.get("errors")
+        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
+
         if not response.ok:
             message = f"Failed updating user '{email}' project access"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
-            )
+            message += ": " + response_json.get("message", "Unexpected error!")
+            show_warning = True
+            if error_messages:
+                message += f"\n{error_messages}"
+                show_warning = False
 
-        errors = response_json.get("errors")
+            raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
+
         if errors:
             LOG.warning(f"Could not fix user '{email}' access to the following projects:")
-            dds_cli.utils.parse_project_errors(errors=errors)
+            msg = dds_cli.utils.parse_project_errors(errors=errors)
         else:
-            LOG.info(
-                response_json.get(
-                    "message",
-                    (
-                        f"Project access fixed for user '{email}'. "
-                        "They should now have access to all project data."
-                    ),
-                )
+            msg = response_json.get(
+                "message",
+                (
+                    f"Project access fixed for user '{email}'. "
+                    "They should now have access to all project data."
+                ),
             )
+
+        dds_cli.utils.console.print(msg)

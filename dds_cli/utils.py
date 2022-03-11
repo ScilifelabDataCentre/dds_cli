@@ -15,6 +15,15 @@ console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
 
 
+def parse_project_errors(errors):
+    """Parse all errors related to projects."""
+    for unique_error in set(errors.values()):
+        stderr_console.print(f"{unique_error}")
+        affected_projects = [x for x, y in errors.items() if y == unique_error]
+        for proj in affected_projects:
+            dds_cli.utils.stderr_console.print(f"   - {proj}")
+
+
 def multiple_help_text(item):
     """Return help text for option with multiple=True."""
     return f" Use the option multiple times to specify more than one {item} [multiple]"

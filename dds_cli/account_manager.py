@@ -87,7 +87,13 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        dds_cli.utils.console.print(response_json.get("message", "User successfully added."))
+        LOG.info(response_json)
+        errors = response_json.get("errors")
+        if errors:
+            LOG.warning(f"Could not give the user '{email}' access to the following projects:")
+            dds_cli.utils.parse_project_errors(errors=errors)
+        else:
+            dds_cli.utils.console.print(response_json.get("message", "User successfully added."))
 
     def delete_user(self, email):
         """Delete users from the system"""
@@ -284,11 +290,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         errors = response_json.get("errors")
         if errors:
             LOG.warning(f"Could not fix user '{email}' access to the following projects:")
-            for unique_error in set(errors.values()):
-                dds_cli.utils.stderr_console.print(f"{unique_error}")
-                affected_projects = [x for x, y in errors.items() if y == unique_error]
-                for proj in affected_projects:
-                    dds_cli.utils.stderr_console.print(f"   - {proj}")
+            dds_cli.utils.parse_project_errors(errors=errors)
         else:
             LOG.info(
                 response_json.get(

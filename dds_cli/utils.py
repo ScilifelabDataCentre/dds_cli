@@ -144,7 +144,7 @@ def get_json_response(response):
     return json_response
 
 
-def calculate_magnitude(projects, keys, iec_standard=False):
+def calculate_magnitude(projects, keys, iec_standard=False, force=False):
     """Calculate magnitude of values.
 
     Uses the project list, obtains the values assigned to a particular key iteratively and
@@ -180,11 +180,11 @@ def calculate_magnitude(projects, keys, iec_standard=False):
                 maximum /= base
 
             # skip consistent scaling of magnitudes if the values are too far off.
-            magnitudes[key] = magmin if (magmax - magmin <= 1) else None
+            magnitudes[key] = magmin if (magmax - magmin <= 1) or force else None
     return magnitudes
 
 
-def format_api_response(response, key, magnitude=None, iec_standard=False):
+def format_api_response(response, key, magnitude=None, iec_standard=False, skip=False):
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
     if isinstance(response, str):
         return response  # pass the response if already a string
@@ -193,62 +193,68 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
         return ":white_heavy_check_mark:" if response else ":x:"
 
     if isinstance(response, numbers.Number):
-        response = float(f"{response:.3g}")
-        mag = 0
 
-        if key in ["Size", "Usage"]:
-            if iec_standard:
-                # The IEC created prefixes such as kibi, mebi, gibi, etc.,
-                # to unambiguously denote powers of 1024
-                prefixlist = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
-                base = 1024.0
+        units = {"Size": "B", "Usage": "Bh", "Cost": "SEK"}
+        unit = units.get(key, "")
+
+        if not skip:
+            response = float("{:.3g}".format(response))
+            mag = 0
+
+            if key in ["Size", "Usage"]:
+                if iec_standard:
+                    # The IEC created prefixes such as kibi, mebi, gibi, etc.,
+                    # to unambiguously denote powers of 1024
+                    prefixlist = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
+                    base = 1024.0
+                else:
+                    prefixlist = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"]
+                    base = 1000.0
+                spacerA = " "
+                spacerB = ""
             else:
-                prefixlist = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"]
+                # Default to the prefixes of the International System of Units (SI)
+                prefixlist = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"]
                 base = 1000.0
-            spacer_a = " "
-            spacer_b = ""
-        else:
-            # Default to the prefixes of the International System of Units (SI)
-            prefixlist = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"]
-            base = 1000.0
-            spacer_a = ""
-            spacer_b = " "
+                spacerA = ""
+                spacerB = " "
 
-        if not magnitude:
-            # calculate a suitable magnitude if not given
-            while abs(response) >= base:
-                mag += 1
-                response /= base
-        else:
-            # utilize the given magnitude
-            response /= base**magnitude
+            if not magnitude:
+                # calculate a suitable magnitude if not given
+                while abs(response) >= base:
+                    mag += 1
+                    response /= base
+            else:
+                # utilize the given magnitude
+                response /= base**magnitude
 
-        if key == "Size":
-            unit = "B"  # lock
-        elif key == "Usage":
-            unit = "Bh"  # arrow up
-        elif key == "Cost":
-            unit = "SEK"
-            prefixlist[1] = "K"  # for currencies, the capital K is more common.
-            prefixlist[3] = "B"  # for currencies, Billions are used instead of Giga
+            if key == "Cost":
+                prefixlist[1] = "K"  # for currencies, the capital K is more common.
+                prefixlist[3] = "B"  # for currencies, Billions are used instead of Giga
 
-        if response > 0:
-            # if magnitude was given, then use fixed number of digits
-            # to allow for easier comparisons across projects
-            if magnitude:
+            if response > 0:
+                # if magnitude was given, then use fixed number of digits
+                # to allow for easier comparisons across projects
+                if magnitude:
+                    return "{}{}{}".format(
+                        "{:,.2f}".format(response),
+                        spacerA,
+                        prefixlist[magnitude] + spacerB + unit,
+                    )
+                else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
+                    return "{}{}{}".format(
+                        "{:,.2f}".format(response).rstrip("0").rstrip("."),
+                        spacerA,
+                        prefixlist[mag] + spacerB + unit,
+                    )
+            else:
                 return "{}{}{}".format(
-                    f"{response:.2f}",
-                    spacer_a,
-                    prefixlist[magnitude] + spacer_b + unit,
+                    str(0),
+                    spacerA,
+                    (prefixlist[magnitude] if magnitude else "") + spacerB + unit,
                 )
-            else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
-                return "{}{}{}".format(
-                    f"{response:.2f}".rstrip("0").rstrip("."),
-                    spacer_a,
-                    prefixlist[mag] + spacer_b + unit,
-                )
-        else:
-            return f"0 {unit}"
+        else:  # skip formatting except unit
+            return f"{'{:,.2f}'.format(response) if response > 0 else 0} {unit}"
     else:
         # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
         return str(response)

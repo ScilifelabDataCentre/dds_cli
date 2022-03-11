@@ -187,6 +187,35 @@ def token_path_option(
     )
 
 
+def unit_prefix_option(
+    long="--unit-prefixes",
+    short="-up",
+    name="unitprefix",
+    choices=["auto", "auto-iec", "const", "const-iec", "off"],
+    case_sensitive=False,
+    default="auto",
+    required=False,
+    help_message="Use unit prefixes in order to reduce the number of digits. For Bytes, the SI prefixes can be replaced by powers of 1024 (IEC prefixes).",
+):
+    """
+    Unit prefix option standard definition.
+
+    Use as decorator for commands to dds ls and dds project list.
+    """
+    return click.option(
+        long,
+        short,
+        name,
+        type=click.Choice(
+            choices=choices,
+            case_sensitive=case_sensitive,
+        ),
+        default=default,
+        required=required,
+        help=help_message,
+    )
+
+
 # Flags
 def break_on_fail_flag(
     help_message,

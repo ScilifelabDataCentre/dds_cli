@@ -46,6 +46,7 @@ from dds_cli.options import (
     source_option,
     source_path_file_option,
     token_path_option,
+    unit_prefix_option,
     break_on_fail_flag,
     json_flag,
     nomail_flag,
@@ -160,6 +161,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 # Options
 @project_option(required=False)
 @sort_projects_option()
+@unit_prefix_option()
 @folder_option(help_message="List contents of this project folder.")
 # Flags
 @json_flag(help_message="Output in JSON format.")
@@ -170,7 +172,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.pass_obj
 def list_projects_and_contents(
-    click_ctx, project, folder, sort, json, size, tree, usage, users, projects
+    click_ctx, project, folder, sort, unitprefix, json, size, tree, usage, users, projects
 ):
     """List the projects you have access to or the project contents.
 
@@ -189,7 +191,7 @@ def list_projects_and_contents(
                 json=json,
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as lister:
-                projects = lister.list_projects(sort_by=sort)
+                projects = lister.list_projects(sort_by=sort, unitprefix=unitprefix)
                 if json:
                     dds_cli.utils.console.print_json(data=projects)
                 else:
@@ -671,16 +673,17 @@ def project_group_command(_):
 @project_group_command.command(name="ls")
 # Options
 @sort_projects_option()
+@unit_prefix_option()
 # Flags
 @usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @json_flag(help_message="Output project list as json.")  # users, json, tree
 @click.pass_context
-def list_projects(ctx, json, sort, usage):
+def list_projects(ctx, json, sort, unitprefix, usage):
     """List all projects you have access to in the DDS.
 
     Calls the `dds ls` function.
     """
-    ctx.invoke(list_projects_and_contents, json=json, sort=sort, usage=usage)
+    ctx.invoke(list_projects_and_contents, json=json, sort=sort, unitprefix=unitprefix, usage=usage)
 
 
 # -- dds project create -- #
@@ -1304,13 +1307,14 @@ def get_data(
 # Options
 @project_option(required=True)
 @folder_option(help_message="List contents in this project folder.")
+@unit_prefix_option
 # Flags
 @json_flag(help_message="Output in JSON format.")
 @size_flag(help_message="Show size of project contents.")
 @tree_flag(help_message="Display the entire project(s) directory tree.")
 @users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.pass_context
-def list_data(ctx, project, folder, json, size, tree, users):
+def list_data(ctx, project, folder, unitprefix, json, size, tree, users):
     """List project contents.
 
     Same as dds ls [PROJECT ID].
@@ -1319,6 +1323,7 @@ def list_data(ctx, project, folder, json, size, tree, users):
         list_projects_and_contents,
         project=project,
         folder=folder,
+        unitprefix=unitprefix,
         size=size,
         tree=tree,
         users=users,

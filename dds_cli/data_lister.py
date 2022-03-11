@@ -74,7 +74,7 @@ class DataLister(base.DDSBaseClass):
 
     # Public methods ########################### Public methods #
 
-    def list_projects(self, sort_by="Updated"):
+    def list_projects(self, sort_by="Updated", unitprefix="auto"):
         """Get a list of project(s) the user is involved in."""
         # Get projects from API
         try:
@@ -122,7 +122,9 @@ class DataLister(base.DDSBaseClass):
         sorted_projects = self.__sort_projects(projects=project_info, sort_by=sort_by)
 
         if not self.json:
-            self.__print_project_table(sorted_projects, usage_info, total_size)
+            self.__print_project_table(
+                sorted_projects, usage_info, total_size, unitprefix=unitprefix
+            )
 
         # Return the list of projects
         return sorted_projects
@@ -482,7 +484,7 @@ class DataLister(base.DDSBaseClass):
 
         return sorted_projects
 
-    def __format_project_columns(self, total_size=None, usage_info=None):
+    def __format_project_columns(self, total_size=None, usage_info=None, unitprefix="auto"):
         """Define the formatting for the project table according to what is returned from API."""
         default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
 
@@ -501,7 +503,12 @@ class DataLister(base.DDSBaseClass):
             column_formatting["Size"] = {
                 "justify": "right",
                 "style": default_format.get("style"),
-                "footer": dds_cli.utils.format_api_response(total_size, key="Size"),
+                "footer": dds_cli.utils.format_api_response(
+                    total_size,
+                    key="Size",
+                    iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
+                    skip=True if unitprefix == "off" else False,
+                ),
                 "overflow": "ellipsis",
             }
 
@@ -513,14 +520,22 @@ class DataLister(base.DDSBaseClass):
                         "justify": "right",
                         "style": default_format.get("style"),
                         "footer": dds_cli.utils.format_api_response(
-                            usage_info["usage"], key="Usage"
+                            usage_info["usage"],
+                            key="Usage",
+                            iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
+                            skip=True if unitprefix == "off" else False,
                         ),
                         "overflow": "ellipsis",
                     },
                     "Cost": {
                         "justify": "right",
                         "style": default_format.get("style"),
-                        "footer": dds_cli.utils.format_api_response(usage_info["cost"], key="Cost"),
+                        "footer": dds_cli.utils.format_api_response(
+                            usage_info["cost"],
+                            key="Cost",
+                            iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
+                            skip=True if unitprefix == "off" else False,
+                        ),
                         "overflow": "ellipsis",
                     },
                 }
@@ -535,10 +550,10 @@ class DataLister(base.DDSBaseClass):
 
         return column_formatting
 
-    def __print_project_table(self, sorted_projects, usage_info, total_size):
+    def __print_project_table(self, sorted_projects, usage_info, total_size, unitprefix):
         # Column format
         column_formatting = self.__format_project_columns(
-            total_size=total_size, usage_info=usage_info
+            total_size=total_size, usage_info=usage_info, unitprefix=unitprefix
         )
 
         # Create table
@@ -566,13 +581,26 @@ class DataLister(base.DDSBaseClass):
             )
 
         # calculate the magnitudes for keeping the unit prefix constant across all projects
-        magnitudes = dds_cli.utils.calculate_magnitude(sorted_projects, column_formatting.keys())
+        magnitudes = dds_cli.utils.calculate_magnitude(
+            sorted_projects,
+            column_formatting.keys(),
+            iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
+            force=True if unitprefix in ["const", "const-iec"] else False,
+        )
 
         # Add all column values for each row to table
         for proj in sorted_projects:
             table.add_row(
                 *[
-                    escape(dds_cli.utils.format_api_response(proj[i], i, magnitudes[i]))
+                    escape(
+                        dds_cli.utils.format_api_response(
+                            proj[i],
+                            i,
+                            magnitudes[i],
+                            iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
+                            skip=True if unitprefix == "off" else False,
+                        )
+                    )
                     for i in column_formatting
                 ]
             )

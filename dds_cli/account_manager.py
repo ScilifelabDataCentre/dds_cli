@@ -5,7 +5,6 @@
 ###################################################################################################
 
 # Standard library
-from enum import unique
 import logging
 
 # Installed

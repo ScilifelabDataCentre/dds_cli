@@ -19,7 +19,7 @@ RETURNED_PROJECTS_JSON = {
             "Size": 20,
             "Status": "Available",
             "Title": "First Project",
-            "Access": ":white_heavy_check_mark:",
+            "Access": True,
         },
         {
             "Last updated": "Wed, 24 Nov 2021 10:27:42 GMT",
@@ -28,7 +28,7 @@ RETURNED_PROJECTS_JSON = {
             "Size": 30,
             "Status": "In Progress",
             "Title": "Second Project",
-            "Access": ":white_heavy_check_mark:",
+            "Access": True,
         },
     ],
     "total_size": 0,

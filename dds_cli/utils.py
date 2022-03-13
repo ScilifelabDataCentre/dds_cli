@@ -68,6 +68,9 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
     if isinstance(response, str):
         return response  # pass the response if already a string
 
+    if isinstance(response, bool):
+        return ":white_heavy_check_mark:" if response else ":x:"
+
     if isinstance(response, numbers.Number):
         response = float(f"{response:.3g}")
         mag = 0
@@ -192,3 +195,16 @@ def get_deletion_confirmation(action: str, project: str) -> bool:
 
     proceed_deletion = rich.prompt.Confirm.ask(question)
     return proceed_deletion
+
+
+def print_or_page(item):
+    """Paginate or print out depending on size of item."""
+    if isinstance(item, rich.table.Table):
+        if item.columns:
+            if item.row_count + 5 > dds_cli.utils.console.height:
+                with dds_cli.utils.console.pager():
+                    dds_cli.utils.console.print(item)
+            else:
+                dds_cli.utils.console.print(item)
+        else:
+            raise dds_cli.exceptions.NoDataError("No users found.")

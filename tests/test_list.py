@@ -19,6 +19,7 @@ RETURNED_PROJECTS_JSON = {
             "Size": 20,
             "Status": "Available",
             "Title": "First Project",
+            "Access": ":white_heavy_check_mark:",
         },
         {
             "Last updated": "Wed, 24 Nov 2021 10:27:42 GMT",
@@ -27,6 +28,7 @@ RETURNED_PROJECTS_JSON = {
             "Size": 30,
             "Status": "In Progress",
             "Title": "Second Project",
+            "Access": ":white_heavy_check_mark:",
         },
     ],
     "total_size": 0,
@@ -142,8 +144,8 @@ def list_no_project_specified(ls_runner, list_request, command):
         "In Progress",
         "Tue, 23 Nov",
         "Wed, 24 Nov",
-        ":x:",
-        ":x:",
+        ":white_heavy_check_mark:",
+        ":white_heavy_check_mark:",
         "────────────────",  # Hack to test that there's a table printed
     ]:
         assert substring in result.stdout

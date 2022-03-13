@@ -122,3 +122,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Replaced the default help messages of Click for the `--version` and `--help` options as requested in [issue 338](https://github.com/scilifelabdatacentre/dds_web/issues/338).
 * Explicit error message for `--destination` when the path exists ([#371](https://github.com/ScilifelabDataCentre/dds_cli/pull/371))
 * Escape variables that are printed in the cli (avoiding e.g. hidden text and bad coloring) ([#364](https://github.com/ScilifelabDataCentre/dds_cli/pull/364))
+
+## Sprint (2022-03-09 - 2022-03-23)
+
+* Add `Access` column to show user if they have access or not

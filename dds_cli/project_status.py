@@ -102,7 +102,7 @@ class ProjectStatusManager(base.DDSBaseClass):
                         row[1] = date.astimezone(tzlocal.get_localzone()).strftime(
                             "%a, %d %b %Y %H:%M:%S %Z"
                         )
-                    history += ", ".join([item for item in row]) + " \n"
+                    history += ", ".join(list(row)) + " \n"
                 LOG.info(history)
 
     def update_status(self, new_status, deadline=None, is_aborted=False, no_mail=False):

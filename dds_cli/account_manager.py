@@ -316,4 +316,4 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 ),
             )
 
-        dds_cli.utils.console.print(msg)
+        LOG.info(msg)

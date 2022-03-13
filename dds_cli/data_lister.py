@@ -10,7 +10,6 @@ import logging
 import os
 from typing import Tuple, Union, List
 import datetime
-from unittest import defaultTestLoader
 
 # Installed
 import requests

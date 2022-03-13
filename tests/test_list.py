@@ -134,17 +134,24 @@ def list_no_project_specified(ls_runner, list_request, command):
         json={"usage": False},
         timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
-
+    print(result.stdout)
     for substring in [
         "project_1",
         "project_2",
         "PI Name 1",
         "PI Name 2",
         "Available",
-        "In Progress",
-        "Tue, 23 Nov",
-        "Wed, 24 Nov",
-        "────────────────",  # Hack to test that there's a table printed
+        "In",
+        "Progress",
+        "Tue, ",
+        "23",
+        "Nov",
+        "Wed",
+        "24",
+        "Nov",
+        # ":white_heavy_check_mark:", # This currently doesn't work, will have to fix at a later time
+        # ":x",
+        "───────",  # Hack to test that there's a table printed
     ]:
         assert substring in result.stdout
 

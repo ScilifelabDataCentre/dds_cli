@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Tuple, Union, List
 import datetime
+from unittest import defaultTestLoader
 
 # Installed
 import requests
@@ -525,6 +526,13 @@ class DataLister(base.DDSBaseClass):
                     },
                 }
             )
+
+        column_formatting["Access"] = {
+            "justify": "left",
+            "style": default_format.get("style"),
+            "footer": default_format.get("footer"),
+            "overflow": default_format.get("overflow"),
+        }
 
         return column_formatting
 

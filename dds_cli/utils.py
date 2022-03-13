@@ -40,7 +40,6 @@ def calculate_magnitude(projects, keys, iec_standard=False):
     magnitudes = dict(zip(keys, [None] * len(keys)))
 
     for key in keys:
-
         values = [proj[key] for proj in projects]
 
         if all(isinstance(x, numbers.Number) for x in values):
@@ -67,6 +66,9 @@ def format_api_response(response, key, magnitude=None, iec_standard=False):
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
     if isinstance(response, str):
         return response  # pass the response if already a string
+
+    if isinstance(response, bool):
+        return ":white_heavy_check_mark:" if response else ":x:"
 
     if isinstance(response, numbers.Number):
         response = float(f"{response:.3g}")

@@ -97,17 +97,13 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 show_emojis=show_warning,
             )
 
-        message = response_json.get("message")
-        if message:
-            LOG.info(message)
-
-        if errors:
+        if error_messages:
             LOG.warning(f"Could not give the user '{email}' access to the following projects:")
-            msg = dds_cli.utils.parse_project_errors(errors=errors)
+            msg = error_messages
         else:
             msg = response_json.get("message", "User successfully added.")
 
-        dds_cli.utils.console.print(msg)
+        LOG.info(msg)
 
     def delete_user(self, email):
         """Delete users from the system"""
@@ -308,9 +304,9 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
             raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
 
-        if errors:
+        if error_messages:
             LOG.warning(f"Could not fix user '{email}' access to the following projects:")
-            msg = dds_cli.utils.parse_project_errors(errors=errors)
+            msg = error_messages
         else:
             msg = response_json.get(
                 "message",

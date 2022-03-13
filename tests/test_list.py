@@ -141,7 +141,7 @@ def list_no_project_specified(ls_runner, list_request, command):
         "PI Name 1",
         "PI Name 2",
         "Available",
-        "In",
+        "In",  # The table doesn't always like spaces within the cells
         "Progress",
         "Tue, ",
         "23",

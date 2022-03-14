@@ -77,17 +77,33 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+        errors = response_json.get("errors")
+        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
+
         # Format response message
         if not response.ok:
             message = "Could not add user"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+                raise dds_cli.exceptions.ApiResponseError(message=message)
+
+            message += ": " + response_json.get("message", "Unexpected error!")
+            show_warning = True
+            if error_messages:
+                message += f"\n{error_messages}"
+                show_warning = False
 
             raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+                message=message,
+                show_emojis=show_warning,
             )
 
-        dds_cli.utils.console.print(response_json.get("message", "User successfully added."))
+        if error_messages:
+            LOG.warning(f"Could not give the user '{email}' access to the following projects:")
+            msg = error_messages
+        else:
+            msg = response_json.get("message", "User successfully added.")
+
+        LOG.info(msg)
 
     def delete_user(self, email):
         """Delete users from the system"""
@@ -272,21 +288,32 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+        errors = response_json.get("errors")
+        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
+
         if not response.ok:
             message = f"Failed updating user '{email}' project access"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
-            )
+            message += ": " + response_json.get("message", "Unexpected error!")
+            show_warning = True
+            if error_messages:
+                message += f"\n{error_messages}"
+                show_warning = False
 
-        LOG.info(
-            response_json.get(
+            raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
+
+        if error_messages:
+            LOG.warning(f"Could not fix user '{email}' access to the following projects:")
+            msg = error_messages
+        else:
+            msg = response_json.get(
                 "message",
                 (
                     f"Project access fixed for user '{email}'. "
                     "They should now have access to all project data."
                 ),
             )
-        )
+
+        LOG.info(msg)

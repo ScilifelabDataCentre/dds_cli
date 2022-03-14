@@ -11,6 +11,7 @@ import logging
 import http
 import requests
 import rich.markup
+from rich.table import Table
 import simplejson
 
 # Own modules
@@ -18,6 +19,7 @@ import dds_cli
 import dds_cli.auth
 import dds_cli.base
 import dds_cli.exceptions
+import dds_cli.utils
 
 
 ####################################################################################################
@@ -77,17 +79,33 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+        errors = response_json.get("errors")
+        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
+
         # Format response message
         if not response.ok:
             message = "Could not add user"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+                raise dds_cli.exceptions.ApiResponseError(message=message)
+
+            message += ": " + response_json.get("message", "Unexpected error!")
+            show_warning = True
+            if error_messages:
+                message += f"\n{error_messages}"
+                show_warning = False
 
             raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+                message=message,
+                show_emojis=show_warning,
             )
 
-        dds_cli.utils.console.print(response_json.get("message", "User successfully added."))
+        if error_messages:
+            LOG.warning(f"Could not give the user '{email}' access to the following projects:")
+            msg = error_messages
+        else:
+            msg = response_json.get("message", "User successfully added.")
+
+        LOG.info(msg)
 
     def delete_user(self, email):
         """Delete users from the system"""
@@ -272,8 +290,51 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+        errors = response_json.get("errors")
+        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
+
         if not response.ok:
             message = f"Failed updating user '{email}' project access"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            message += ": " + response_json.get("message", "Unexpected error!")
+            show_warning = True
+            if error_messages:
+                message += f"\n{error_messages}"
+                show_warning = False
+
+            raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
+
+        if error_messages:
+            LOG.warning(f"Could not fix user '{email}' access to the following projects:")
+            msg = error_messages
+        else:
+            msg = response_json.get(
+                "message",
+                (
+                    f"Project access fixed for user '{email}'. "
+                    "They should now have access to all project data."
+                ),
+            )
+
+    def list_unit_users(self):
+        """List all unit users within a specific unit."""
+        try:
+            response = requests.get(
+                dds_cli.DDSEndpoint.LIST_UNIT_USERS,
+                headers=self.token,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
+            )
+            response_json = response.json()
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        # Check if response is ok.
+        if not response.ok:
+            message = "Failed getting unit users from API"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
@@ -281,12 +342,34 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(
-            response_json.get(
-                "message",
-                (
-                    f"Project access fixed for user '{email}'. "
-                    "They should now have access to all project data."
-                ),
-            )
+        # Get items from response
+        users = response_json.get("users")
+        keys = response_json.get("keys")
+        unit = response_json.get("unit")
+        if not users:
+            raise dds_cli.exceptions.ApiResponseError(message="No users returned.")
+
+        # Sort users according to name
+        users = sorted(users, key=lambda i: i["Name"])
+
+        # Create table
+        table = Table(
+            title=f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}.",
+            show_header=True,
+            header_style="bold",
+            show_footer=False,
+            caption="All users (Unit Personnel and Admins) within your unit.",
         )
+
+        # Get columns
+        for key in keys:
+            table.add_column(key, justify="left", overflow="fold")
+
+        # Add rows
+        for row in users:
+            table.add_row(
+                *[rich.markup.escape(dds_cli.utils.format_api_response(row[x], x)) for x in keys]
+            )
+
+        # Print out table
+        dds_cli.utils.print_or_page(item=table)

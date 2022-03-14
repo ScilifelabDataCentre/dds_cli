@@ -125,4 +125,6 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 ## Sprint (2022-03-09 - 2022-03-23)
 
+* New `dds user ls` command for listing unit users ([#384](https://github.com/ScilifelabDataCentre/dds_cli/pull/384))
+* When using `dds project access fix`, list the projects which where not possible to update access in ([#379](https://github.com/ScilifelabDataCentre/dds_cli/pull/379))
 * Add `Access` column to show user if they have access or not ([#383](https://github.com/ScilifelabDataCentre/dds_cli/pull/383))

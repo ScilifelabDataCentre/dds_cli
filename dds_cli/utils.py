@@ -15,6 +15,19 @@ console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
 
 
+def parse_project_errors(errors):
+    """Parse all errors related to projects."""
+    msg = ""
+    if errors:
+        for unique_error in set(errors.values()):
+            msg += unique_error
+            affected_projects = [x for x, y in errors.items() if y == unique_error]
+            for proj in affected_projects:
+                msg += f"\n   - {proj}"
+
+    return msg
+
+
 def multiple_help_text(item):
     """Return help text for option with multiple=True."""
     return f" Use the option multiple times to specify more than one {item} [multiple]"
@@ -194,3 +207,16 @@ def get_deletion_confirmation(action: str, project: str) -> bool:
 
     proceed_deletion = rich.prompt.Confirm.ask(question)
     return proceed_deletion
+
+
+def print_or_page(item):
+    """Paginate or print out depending on size of item."""
+    if isinstance(item, rich.table.Table):
+        if item.columns:
+            if item.row_count + 5 > dds_cli.utils.console.height:
+                with dds_cli.utils.console.pager():
+                    dds_cli.utils.console.print(item)
+            else:
+                dds_cli.utils.console.print(item)
+        else:
+            raise dds_cli.exceptions.NoDataError("No users found.")

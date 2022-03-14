@@ -128,3 +128,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * New `dds user ls` command for listing unit users ([#384](https://github.com/ScilifelabDataCentre/dds_cli/pull/384))
 * When using `dds project access fix`, list the projects which where not possible to update access in ([#379](https://github.com/ScilifelabDataCentre/dds_cli/pull/379))
 * New `--mount-dir` option for `dds data put` where the `DataDelivery...` folders will be created if specified ([#393](https://github.com/ScilifelabDataCentre/dds_cli/pull/393))
+* File permission fixing for the token on Windows ([#395](https://github.com/ScilifelabDataCentre/dds_cli/pull/395))

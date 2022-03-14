@@ -1090,6 +1090,16 @@ def data_group_command(_):
 # -- dds data put -- #
 @data_group_command.command(name="put", no_args_is_help=True)
 # Options
+@click.option(
+    "--mount-dir",
+    "-md",
+    required=False,
+    type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
+    help=(
+        "New directory where the files will be mounted before upload "
+        "and any error log files will be saved for a specific upload."
+    ),
+)
 @project_option(required=True, help_message="Project ID to which you're uploading data.")
 @source_option(
     help_message="Path to file or directory (local).", option_type=click.Path(exists=True)
@@ -1111,6 +1121,7 @@ def data_group_command(_):
 @click.pass_obj
 def put_data(
     click_ctx,
+    mount_dir,
     project,
     source,
     source_path_file,
@@ -1126,6 +1137,7 @@ def put_data(
     """
     try:
         dds_cli.data_putter.put(
+            mount_dir=mount_dir,
             project=project,
             source=source,
             source_path_file=source_path_file,

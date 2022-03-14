@@ -48,6 +48,7 @@ class DDSBaseClass:
         self,
         project=None,
         dds_directory: pathlib.Path = None,
+        mount_dir: pathlib.Path = None,
         method: str = None,
         authenticate: bool = True,
         method_check: bool = True,
@@ -70,13 +71,17 @@ class DDSBaseClass:
 
             # Use user defined destination if any specified
             if self.method in DDS_DIR_REQUIRED_METHODS:
-                self.dds_directory = dds_cli.directory.DDSDirectory(
-                    path=dds_directory
-                    if dds_directory
-                    else pathlib.Path.cwd()
-                    / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
+                default_dir = pathlib.Path(
+                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}"
                 )
+                if mount_dir:
+                    new_directory = mount_dir / default_dir
+                elif dds_directory:
+                    new_directory = dds_directory
+                else:
+                    new_directory = pathlib.Path.cwd() / default_dir
 
+                self.dds_directory = dds_cli.directory.DDSDirectory(path=new_directory)
                 self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
                     "dds_failed_delivery.txt"
                 )

@@ -597,8 +597,8 @@ class DataLister(base.DDSBaseClass):
                             proj[i],
                             i,
                             magnitudes[i],
-                            iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
-                            skip=True if unitprefix == "off" else False,
+                            iec_standard=unitprefix in ["auto-iec", "const-iec"],
+                            skip=unitprefix == "off",
                         )
                     )
                     for i in column_formatting

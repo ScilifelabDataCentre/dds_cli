@@ -404,7 +404,7 @@ def user_group_command(_):
 # -- dds user ls -- #
 @user_group_command.command(name="ls")
 @click.pass_obj
-def list_users(click_ctx, project):
+def list_users(click_ctx):
     """List users."""
     try:
         with dds_cli.account_manager.AccountManager(

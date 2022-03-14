@@ -571,18 +571,11 @@ class DataLister(base.DDSBaseClass):
             )
 
         # Print to stdout if there are any lines
-        if table.columns:
-            # Use a pager if output is taller than the visible terminal
-            if len(sorted_projects) + 5 > dds_cli.utils.console.height:
-                with dds_cli.utils.console.pager():
-                    dds_cli.utils.console.print(table)
-            else:
-                dds_cli.utils.console.print(table)
-        else:
-            raise exceptions.NoDataError("No projects found.")
+        dds_cli.utils.print_or_page(item=table)
 
     # User listing
     def __print_users_table(self, research_users):
+        # TODO: call on future list_project_users function, will be implemented for dds user ls --project
         default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
         column_formatting = {
             **{x: default_format for x in ["User Name", "Primary email", "Role"]},

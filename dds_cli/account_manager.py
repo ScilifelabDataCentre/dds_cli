@@ -11,6 +11,7 @@ import logging
 import http
 import requests
 import rich.markup
+from rich.table import Table
 import simplejson
 
 # Own modules
@@ -18,6 +19,7 @@ import dds_cli
 import dds_cli.auth
 import dds_cli.base
 import dds_cli.exceptions
+import dds_cli.utils
 
 
 ####################################################################################################
@@ -316,4 +318,58 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 ),
             )
 
-        LOG.info(msg)
+    def list_unit_users(self):
+        """List all unit users within a specific unit."""
+        try:
+            response = requests.get(
+                dds_cli.DDSEndpoint.LIST_UNIT_USERS,
+                headers=self.token,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
+            )
+            response_json = response.json()
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        # Check if response is ok.
+        if not response.ok:
+            message = "Failed getting unit users from API"
+            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+            raise dds_cli.exceptions.DDSCLIException(
+                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            )
+
+        # Get items from response
+        users = response_json.get("users")
+        keys = response_json.get("keys")
+        unit = response_json.get("unit")
+        if not users:
+            raise dds_cli.exceptions.ApiResponseError(message="No users returned.")
+
+        # Sort users according to name
+        users = sorted(users, key=lambda i: i["Name"])
+
+        # Create table
+        table = Table(
+            title=f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}.",
+            show_header=True,
+            header_style="bold",
+            show_footer=False,
+            caption="All users (Unit Personnel and Admins) within your unit.",
+        )
+
+        # Get columns
+        for key in keys:
+            table.add_column(key, justify="left", overflow="fold")
+
+        # Add rows
+        for row in users:
+            table.add_row(
+                *[rich.markup.escape(dds_cli.utils.format_api_response(row[x], x)) for x in keys]
+            )
+
+        # Print out table
+        dds_cli.utils.print_or_page(item=table)

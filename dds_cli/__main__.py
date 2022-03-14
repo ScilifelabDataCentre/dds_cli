@@ -1307,14 +1307,13 @@ def get_data(
 # Options
 @project_option(required=True)
 @folder_option(help_message="List contents in this project folder.")
-@unit_prefix_option
 # Flags
 @json_flag(help_message="Output in JSON format.")
 @size_flag(help_message="Show size of project contents.")
 @tree_flag(help_message="Display the entire project(s) directory tree.")
 @users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.pass_context
-def list_data(ctx, project, folder, unitprefix, json, size, tree, users):
+def list_data(ctx, project, folder, json, size, tree, users):
     """List project contents.
 
     Same as dds ls [PROJECT ID].
@@ -1323,7 +1322,6 @@ def list_data(ctx, project, folder, unitprefix, json, size, tree, users):
         list_projects_and_contents,
         project=project,
         folder=folder,
-        unitprefix=unitprefix,
         size=size,
         tree=tree,
         users=users,

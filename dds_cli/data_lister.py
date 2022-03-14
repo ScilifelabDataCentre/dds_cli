@@ -506,8 +506,8 @@ class DataLister(base.DDSBaseClass):
                 "footer": dds_cli.utils.format_api_response(
                     total_size,
                     key="Size",
-                    iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
-                    skip=True if unitprefix == "off" else False,
+                    iec_standard=unitprefix in ["auto-iec", "const-iec"],
+                    skip=unitprefix == "off",
                 ),
                 "overflow": "ellipsis",
             }
@@ -522,8 +522,8 @@ class DataLister(base.DDSBaseClass):
                         "footer": dds_cli.utils.format_api_response(
                             usage_info["usage"],
                             key="Usage",
-                            iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
-                            skip=True if unitprefix == "off" else False,
+                            iec_standard=unitprefix in ["auto-iec", "const-iec"],
+                            skip=unitprefix == "off",
                         ),
                         "overflow": "ellipsis",
                     },
@@ -533,8 +533,8 @@ class DataLister(base.DDSBaseClass):
                         "footer": dds_cli.utils.format_api_response(
                             usage_info["cost"],
                             key="Cost",
-                            iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
-                            skip=True if unitprefix == "off" else False,
+                            iec_standard=unitprefix in ["auto-iec", "const-iec"],
+                            skip=unitprefix == "off",
                         ),
                         "overflow": "ellipsis",
                     },
@@ -584,8 +584,8 @@ class DataLister(base.DDSBaseClass):
         magnitudes = dds_cli.utils.calculate_magnitude(
             sorted_projects,
             column_formatting.keys(),
-            iec_standard=True if unitprefix in ["auto-iec", "const-iec"] else False,
-            force=True if unitprefix in ["const", "const-iec"] else False,
+            iec_standard=unitprefix in ["auto-iec", "const-iec"],
+            force=unitprefix in ["const", "const-iec"],
         )
 
         # Add all column values for each row to table

@@ -125,4 +125,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 ## Sprint (2022-03-09 - 2022-03-23)
 
-* New `dds user ls` command for listing unit users ()
+* New `dds user ls` command for listing unit users ([#384](https://github.com/ScilifelabDataCentre/dds_cli/pull/384))

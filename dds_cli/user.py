@@ -263,13 +263,17 @@ class TokenFile:
         if os.name == "nt":
             cli_username = os.environ.get("USERNAME")
             try:
-                subprocess.check_call([
-                    "icacls.exe",
-                    str(self.token_file),
-                    "/inheritance:r",
-                    "/grant", f"{cli_username}:(R,W)"],
-                                      stdout=subprocess.DEVNULL,
-                                      stderr=subprocess.DEVNULL)
+                subprocess.check_call(
+                    [
+                        "icacls.exe",
+                        str(self.token_file),
+                        "/inheritance:r",
+                        "/grant",
+                        f"{cli_username}:(R,W)",
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
             except subprocess.CalledProcessError as exc:
                 LOG.error("Failed to set token file permissions")
         LOG.debug("New token saved to file.")

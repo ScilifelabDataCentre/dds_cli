@@ -53,7 +53,6 @@ def calculate_magnitude(projects, keys, iec_standard=False):
     magnitudes = dict(zip(keys, [None] * len(keys)))
 
     for key in keys:
-
         values = [proj[key] for proj in projects]
 
         if all(isinstance(x, numbers.Number) for x in values):

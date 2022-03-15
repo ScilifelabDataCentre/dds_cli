@@ -526,6 +526,13 @@ class DataLister(base.DDSBaseClass):
                 }
             )
 
+        column_formatting["Access"] = {
+            "justify": "left",
+            "style": default_format.get("style"),
+            "footer": default_format.get("footer"),
+            "overflow": default_format.get("overflow"),
+        }
+
         return column_formatting
 
     def __print_project_table(self, sorted_projects, usage_info, total_size):

@@ -33,6 +33,7 @@ def create_table(
     header_style: str = "bold",
     show_footer: bool = False,
     caption: str = "",
+    ints_as_string=False,
 ) -> Table:
     """Create table."""
     # Create table
@@ -41,6 +42,7 @@ def create_table(
         show_header=show_header,
         header_style=header_style,
         show_footer=show_footer,
+        caption=caption,
     )
 
     # Add columns
@@ -51,7 +53,11 @@ def create_table(
     for row in rows:
         table.add_row(
             *[
-                rich.markup.escape(dds_cli.utils.format_api_response(str(row[x]), x))
+                rich.markup.escape(
+                    dds_cli.utils.format_api_response(
+                        str(row[x]) if ints_as_string and isinstance(row[x], int) else row[x], x
+                    )
+                )
                 for x in columns
             ]
         )

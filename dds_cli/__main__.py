@@ -9,6 +9,7 @@ import concurrent.futures
 import itertools
 import logging
 import os
+from re import T
 import sys
 
 # Installed
@@ -401,6 +402,28 @@ def user_group_command(_):
 # ************************************************************************************************ #
 # USER COMMANDS ******************************************************************** USER COMMANDS #
 # ************************************************************************************************ #
+
+# -- dds user ls -- #
+# TODO: Move this to dds unit?
+@user_group_command.command(name="ls")
+@click.pass_obj
+def list_users(click_ctx):
+    """List users."""
+    try:
+        with dds_cli.account_manager.AccountManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as lister:
+            lister.list_unit_users()
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
 
 # -- dds user add -- #
 @user_group_command.command(name="add", no_args_is_help=True)
@@ -1439,24 +1462,3 @@ def list_units(click_ctx):
     ) as err:
         LOG.error(err)
         sys.exit(1)
-
-
-# # -- dds unit users -- #
-# @user_group_command.command(name="ls")
-# @click.pass_obj
-# def list_users(click_ctx):
-#     """List users."""
-#     try:
-#         with dds_cli.account_manager.AccountManager(
-#             no_prompt=click_ctx.get("NO_PROMPT", False),
-#             token_path=click_ctx.get("TOKEN_PATH"),
-#         ) as lister:
-#             lister.list_unit_users()
-#     except (
-#         dds_cli.exceptions.AuthenticationError,
-#         dds_cli.exceptions.ApiResponseError,
-#         dds_cli.exceptions.ApiRequestError,
-#         dds_cli.exceptions.DDSCLIException,
-#     ) as err:
-#         LOG.error(err)
-#         sys.exit(1)

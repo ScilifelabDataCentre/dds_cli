@@ -24,6 +24,7 @@ import questionary
 # Own modules
 import dds_cli
 import dds_cli.account_manager
+import dds_cli.unit_manager
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -400,27 +401,6 @@ def user_group_command(_):
 # ************************************************************************************************ #
 # USER COMMANDS ******************************************************************** USER COMMANDS #
 # ************************************************************************************************ #
-
-# -- dds user ls -- #
-@user_group_command.command(name="ls")
-@click.pass_obj
-def list_users(click_ctx):
-    """List users."""
-    try:
-        with dds_cli.account_manager.AccountManager(
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as lister:
-            lister.list_unit_users()
-    except (
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.ApiResponseError,
-        dds_cli.exceptions.ApiRequestError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
 
 # -- dds user add -- #
 @user_group_command.command(name="add", no_args_is_help=True)
@@ -1418,3 +1398,65 @@ def rm_data(click_ctx, project, file, folder, rm_all):
     ) as err:
         LOG.error(err)
         sys.exit(1)
+
+
+####################################################################################################
+####################################################################################################
+## UNIT #################################################################################### UNIT ##
+####################################################################################################
+####################################################################################################
+
+
+@dds_main.group(name="unit", no_args_is_help=True)
+@click.pass_obj
+def unit_group_command(_):
+    """Group command for managing units.
+
+    Only for Super Admins.
+    """
+
+
+# ************************************************************************************************ #
+# UNIT COMMANDS ******************************************************************** UNIT COMMANDS #
+# ************************************************************************************************ #
+
+# -- dds unit ls -- #
+@unit_group_command.command(name="ls", no_args_is_help=False)
+@click.pass_obj
+def list_units(click_ctx):
+    """List all units."""
+    try:
+        with dds_cli.unit_manager.UnitManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as lister:
+            lister.list_all_units()
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# # -- dds unit users -- #
+# @user_group_command.command(name="ls")
+# @click.pass_obj
+# def list_users(click_ctx):
+#     """List users."""
+#     try:
+#         with dds_cli.account_manager.AccountManager(
+#             no_prompt=click_ctx.get("NO_PROMPT", False),
+#             token_path=click_ctx.get("TOKEN_PATH"),
+#         ) as lister:
+#             lister.list_unit_users()
+#     except (
+#         dds_cli.exceptions.AuthenticationError,
+#         dds_cli.exceptions.ApiResponseError,
+#         dds_cli.exceptions.ApiRequestError,
+#         dds_cli.exceptions.DDSCLIException,
+#     ) as err:
+#         LOG.error(err)
+#         sys.exit(1)

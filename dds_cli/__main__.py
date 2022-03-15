@@ -6,6 +6,7 @@
 
 # Standard library
 import concurrent.futures
+from email.policy import default
 import itertools
 import logging
 import os
@@ -403,15 +404,22 @@ def user_group_command(_):
 
 # -- dds user ls -- #
 @user_group_command.command(name="ls")
+@click.option(
+    "--unit",
+    "-u",
+    required=False,
+    type=str,
+    help="Super Admins only: The unit which you wish to list the users in.",
+)
 @click.pass_obj
-def list_users(click_ctx):
+def list_users(click_ctx, unit):
     """List users."""
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
-            lister.list_unit_users()
+            lister.list_unit_users(unit=unit)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

@@ -134,7 +134,6 @@ def list_no_project_specified(ls_runner, list_request, command):
         json={"usage": False},
         timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
-    print(result.stdout)
     for substring in [
         "project_1",
         "project_2",

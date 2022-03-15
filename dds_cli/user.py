@@ -252,7 +252,7 @@ class TokenFile:
     def save_token(self, token):
         """Saves the token to the token file."""
 
-        if self.token_file.is_file():
+        if not self.token_file.is_file():
             self.token_file.touch(mode=0o600)
 
         self.check_token_file_permissions()

@@ -198,7 +198,7 @@ def format_api_response(response, key, magnitude=None, iec_standard=False, skip=
         unit = units.get(key, "")
 
         if not skip:
-            response = float("{:.3g}".format(response))
+            response = float(response)
             mag = 0
 
             if key in ["Size", "Usage"]:

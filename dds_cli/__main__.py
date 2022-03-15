@@ -6,7 +6,6 @@
 
 # Standard library
 import concurrent.futures
-from email.policy import default
 import itertools
 import logging
 import os

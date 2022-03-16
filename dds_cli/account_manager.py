@@ -318,11 +318,12 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 ),
             )
 
-    def list_unit_users(self):
+    def list_unit_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
         response = dds_cli.utils.request_get(
             endpoint=dds_cli.DDSEndpoint.LIST_UNIT_USERS,
             headers=self.token,
+            json={"unit": unit},
             error_message="Failed getting unit users from API",
         )
 

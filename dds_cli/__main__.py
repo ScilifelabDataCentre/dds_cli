@@ -335,7 +335,7 @@ def login(click_ctx):
     try:
         with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH")):
             # Authentication token renewed in the init method.
-            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
+            LOG.info("[green] :white_check_mark: Authentication token created![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -406,15 +406,22 @@ def user_group_command(_):
 # -- dds user ls -- #
 # TODO: Move this to dds unit?
 @user_group_command.command(name="ls")
+@click.option(
+    "--unit",
+    "-u",
+    required=False,
+    type=str,
+    help="Super Admins only: The unit which you wish to list the users in.",
+)
 @click.pass_obj
-def list_users(click_ctx):
+def list_users(click_ctx, unit):
     """List users."""
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
-            lister.list_unit_users()
+            lister.list_unit_users(unit=unit)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

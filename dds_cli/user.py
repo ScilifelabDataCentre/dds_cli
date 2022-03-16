@@ -80,7 +80,7 @@ class User:
                     "No saved token found, or token has expired, proceeding with authentication"
                 )
             else:
-                LOG.info("Attempting to renew the session token")
+                LOG.info("Attempting to create the session token")
             self.token = self.__authenticate_user()
             token_file.save_token(self.token)
 

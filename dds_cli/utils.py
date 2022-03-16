@@ -1,7 +1,6 @@
 """DDS CLI utils module."""
 
 import numbers
-from operator import not_
 
 import requests
 import rich.console

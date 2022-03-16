@@ -318,13 +318,14 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 ),
             )
 
-    def list_unit_users(self):
+    def list_unit_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
         try:
             response = requests.get(
                 dds_cli.DDSEndpoint.LIST_UNIT_USERS,
                 headers=self.token,
                 timeout=dds_cli.DDSEndpoint.TIMEOUT,
+                json={"unit": unit},
             )
             response_json = response.json()
         except requests.exceptions.RequestException as err:
@@ -358,7 +359,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             show_header=True,
             header_style="bold",
             show_footer=False,
-            caption="All users (Unit Personnel and Admins) within your unit.",
+            caption="All users (Unit Personnel and Admins) within the unit.",
         )
 
         # Get columns

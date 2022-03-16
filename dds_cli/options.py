@@ -4,9 +4,6 @@
 import click
 from dds_cli.utils import multiple_help_text
 
-
-# Options
-
 # Args used multiple times
 def email_arg(required, email="email", metavar="[EMAIL]", nargs=1):
     """

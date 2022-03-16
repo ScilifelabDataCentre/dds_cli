@@ -75,7 +75,11 @@ class UnitManager(dds_cli.base.DDSBaseClass):
 
         # Create table
         table = dds_cli.utils.create_table(
-            title="Units within the DDS.", columns=keys, rows=units, ints_as_string=True
+            title="Units within the DDS.", 
+            columns=keys, 
+            rows=units, 
+            ints_as_string=True, 
+            caption="All units within the DDS.",
         )
 
         # Print out table

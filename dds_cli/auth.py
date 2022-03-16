@@ -40,7 +40,9 @@ class Auth(base.DDSBaseClass):
             token = token_file.read_token()
             token_file.token_report(token=token)
         else:
-            LOG.info("[red]No saved token found, or token has expired, proceeding with authentication![/red]")
+            LOG.info(
+                "[red]No saved token found, or token has expired, proceeding with authentication![/red]"
+            )
 
     def logout(self):
         token_file = user.TokenFile(token_path=self.token_path)

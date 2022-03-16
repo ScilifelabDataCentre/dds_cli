@@ -333,7 +333,7 @@ def login(click_ctx):
     try:
         with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH")):
             # Authentication token renewed in the init method.
-            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
+            LOG.info("[green] :white_check_mark: Authentication token created![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

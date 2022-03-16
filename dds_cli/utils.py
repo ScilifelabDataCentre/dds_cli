@@ -2,17 +2,118 @@
 
 import numbers
 
+import requests
 import rich.console
 import simplejson
 from jwcrypto.common import InvalidJWEOperation
 from jwcrypto.jwe import InvalidJWEData
 from jwcrypto.jws import InvalidJWSObject
 from jwcrypto import jwt
+import http
+from rich.table import Table
 
 import dds_cli.exceptions
+from dds_cli import DDSEndpoint
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
+
+
+def sort_items(items: list, sort_by: str) -> list:
+    """Sort list of dicts according to specified key."""
+    return sorted(items, key=lambda i: i[sort_by])
+
+
+def create_table(
+    title: str,
+    columns: list,
+    rows: list,
+    show_header: bool = True,
+    header_style: str = "bold",
+    show_footer: bool = False,
+    caption: str = "",
+    ints_as_string=False,
+) -> Table:
+    """Create table."""
+    # Create table
+    table = Table(
+        title=title,
+        show_header=show_header,
+        header_style=header_style,
+        show_footer=show_footer,
+        caption=caption,
+    )
+
+    # Add columns
+    for col in columns:
+        table.add_column(col, justify="left", overflow="fold")
+
+    # Add rows
+    for row in rows:
+        table.add_row(
+            *[
+                rich.markup.escape(
+                    dds_cli.utils.format_api_response(
+                        str(row[x]) if ints_as_string and isinstance(row[x], int) else row[x], x
+                    )
+                )
+                for x in columns
+            ]
+        )
+
+    return table
+
+
+def get_required_in_response(keys: list, response: dict) -> tuple:
+    """Verify that required info is present."""
+    not_returned = []
+    for key in keys:
+        item = response.get(key)
+        if not item:
+            not_returned.append(key)
+
+    if not_returned:
+        raise dds_cli.exceptions.ApiResponseError(
+            message=f"The following information was returned: {not_returned}"
+        )
+
+    return tuple(response.get(x) for x in keys)
+
+
+def request_get(
+    endpoint,
+    headers,
+    params=None,
+    json=None,
+    error_message="API Request failed.",
+    timeout=DDSEndpoint.TIMEOUT,
+):
+    """Perform get request."""
+    try:
+        response = requests.get(
+            url=endpoint,
+            headers=headers,
+            params=params,
+            json=json,
+            timeout=timeout,
+        )
+        response_json = response.json()
+    except requests.exceptions.RequestException as err:
+        raise dds_cli.exceptions.ApiRequestError(message=str(err))
+    except simplejson.JSONDecodeError as err:
+        raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+    # Check if response is ok.
+    if not response.ok:
+        message = error_message
+        if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+            raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+        raise dds_cli.exceptions.DDSCLIException(
+            message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+        )
+
+    return response_json
 
 
 def parse_project_errors(errors):

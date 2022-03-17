@@ -891,8 +891,16 @@ def retract_project(click_ctx, project):
 @project_status.command(name="archive", no_args_is_help=True)
 # Options
 @project_option(required=True)
+# Flags
+@click.option(
+    "--abort",
+    required=False,
+    is_flag=True,
+    default=False,
+    help="Something has one wrong in the project.",
+)
 @click.pass_obj
-def archive_project(click_ctx, project: str):
+def archive_project(click_ctx, project: str, abort: bool = False):
     """Manually archive a released project.
 
     This deletes all project data.
@@ -909,7 +917,7 @@ def archive_project(click_ctx, project: str):
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as updater:
-                updater.update_status(new_status="Archived")
+                updater.update_status(new_status="Archived", is_aborted=abort)
         except (
             dds_cli.exceptions.APIError,
             dds_cli.exceptions.AuthenticationError,
@@ -943,39 +951,6 @@ def delete_project(click_ctx, project: str):
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as updater:
                 updater.update_status(new_status="Deleted")
-        except (
-            dds_cli.exceptions.APIError,
-            dds_cli.exceptions.AuthenticationError,
-            dds_cli.exceptions.DDSCLIException,
-            dds_cli.exceptions.ApiResponseError,
-        ) as err:
-            LOG.error(err)
-            sys.exit(1)
-
-
-# -- dds project status abort -- #
-@project_status.command(name="abort", no_args_is_help=True)
-# Options
-@project_option(required=True)
-@click.pass_obj
-def abort_project(click_ctx, project: str):
-    """Abort a released project.
-
-    This deletes all project data.
-    """
-    proceed_deletion = (
-        True
-        if click_ctx.get("NO_PROMPT", False)
-        else dds_cli.utils.get_deletion_confirmation(action="abort", project=project)
-    )
-    if proceed_deletion:
-        try:
-            with dds_cli.project_status.ProjectStatusManager(
-                project=project,
-                no_prompt=click_ctx.get("NO_PROMPT", False),
-                token_path=click_ctx.get("TOKEN_PATH"),
-            ) as updater:
-                updater.update_status(new_status="Archived", is_aborted=True)
         except (
             dds_cli.exceptions.APIError,
             dds_cli.exceptions.AuthenticationError,

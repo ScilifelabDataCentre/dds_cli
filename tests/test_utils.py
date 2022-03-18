@@ -1,9 +1,15 @@
 import datetime
+import os
 
 import pytest
 
 from dds_cli.exceptions import TokenDeserializationError, TokenExpirationMissingError
-from dds_cli.utils import get_token_expiration_time, get_token_header_contents, readable_timedelta
+from dds_cli.utils import (
+    get_token_expiration_time,
+    get_token_header_contents,
+    readable_timedelta,
+    delete_folder,
+)
 
 sample_fully_authenticated_token = (
     "eyJhbGciOiJBMjU2S1ciLCJlbmMiOiJBMjU2R0"
@@ -84,3 +90,11 @@ def test_readable_timedelta():
     assert readable_timedelta(datetime.timedelta(seconds=98765)) == "1 day 3 hours 26 minutes"
     assert readable_timedelta(datetime.timedelta(hours=3)) == "3 hours"
     assert readable_timedelta(datetime.timedelta(days=1)) == "1 day"
+
+
+def test_delete_folder(fs):
+    fs.create_dir("folder")
+    fs.create_file("folder/file")
+    assert os.path.isdir("folder") == True
+    delete_folder("folder")
+    assert os.path.isdir("folder") == False

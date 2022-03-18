@@ -18,3 +18,4 @@ pytest
 pytz
 tzlocal
 jwcrypto==1.0
+pyfakefs==4.5.5

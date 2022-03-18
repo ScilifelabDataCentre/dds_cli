@@ -99,6 +99,9 @@ class DataGetter(base.DDSBaseClass):
                 )
 
             if not self.filehandler.data:
+                if self.temporary_folder and self.temporary_folder.is_dir():
+                    LOG.debug(f"Deleting temporary folder {self.temporary_folder}.")
+                    dds_utils.delete_folder(self.temporary_folder)
                 raise dds_cli.exceptions.DownloadError("No files to download.")
 
             self.status = self.filehandler.create_download_status_dict()

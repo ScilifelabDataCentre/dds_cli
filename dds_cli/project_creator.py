@@ -90,11 +90,19 @@ class ProjectCreator(base.DDSBaseClass):
                 return created, created_project_id, user_addition_statuses, error
 
             warning_message = response.json().get("warning")
+
             if warning_message:
-                proceed_creation = rich.prompt.Confirm.ask(
-                    f"[red][bold]WARNING!![/bold][/red] {warning_message}"
-                    "\n\nAre you sure you wish to create this project anyway?"
-                )
+                if self.no_prompt:
+                    LOG.info(
+                        f"{warning_message}\n\n`--no-prompt option used: Not creating project.`"
+                    )
+                    proceed_creation = False
+                else:
+                    proceed_creation = rich.prompt.Confirm.ask(
+                        f"[red][bold]WARNING!![/bold][/red] {warning_message}"
+                        "\n\nAre you sure you wish to create this project anyway?"
+                    )
+
                 if not proceed_creation:
                     return created, created_project_id, user_addition_statuses, error
 

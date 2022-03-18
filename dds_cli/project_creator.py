@@ -94,7 +94,7 @@ class ProjectCreator(base.DDSBaseClass):
             if warning_message:
                 if self.no_prompt:
                     LOG.info(
-                        f"{warning_message}\n\n`--no-prompt option used: Not creating project.`"
+                        f"{warning_message}\n\n`--no-prompt` option used: Not creating project."
                     )
                     proceed_creation = False
                 else:

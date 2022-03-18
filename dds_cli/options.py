@@ -195,7 +195,7 @@ def unit_prefix_option(
     case_sensitive=False,
     default="auto",
     required=False,
-    help_message="Use unit prefixes in order to reduce the number of digits. For Bytes, the SI prefixes can be replaced by powers of 1024 (IEC prefixes).",
+    help_message="Configure the use of unit prefixes (Kilo, Mega, Giga): A consistent scale is enforced with 'const', while 'auto' adapts best to the values on display. For bytes, binary instead of decadic prefixes are set using -iec modifier.",
 ):
     """
     Unit prefix option standard definition.

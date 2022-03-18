@@ -4,6 +4,7 @@ import logging
 # Installed
 import requests
 import simplejson
+import rich.prompt
 
 # Own modules
 from dds_cli import base
@@ -41,7 +42,7 @@ class ProjectCreator(base.DDSBaseClass):
 
     # Public methods ###################### Public methods #
     def create_project(
-        self, title, description, principal_investigator, non_sensitive, users_to_add
+        self, title, description, principal_investigator, non_sensitive, users_to_add, force=False
     ):
         """Create project with title and description."""
         # Variables
@@ -61,6 +62,7 @@ class ProjectCreator(base.DDSBaseClass):
                     "pi": principal_investigator,
                     "non_sensitive": non_sensitive,
                     "users_to_add": users_to_add,
+                    "force": force,
                 },
                 timeout=DDSEndpoint.TIMEOUT,
             )
@@ -86,6 +88,32 @@ class ProjectCreator(base.DDSBaseClass):
                     error = "You do not have the required permissions to create a project."
                 LOG.error(error)
                 return created, created_project_id, user_addition_statuses, error
+
+            warning_message = response.json().get("warning")
+
+            if warning_message:
+                if self.no_prompt:
+                    LOG.warning(
+                        f"{warning_message}\n\n`--no-prompt` option used: Not creating project."
+                    )
+                    proceed_creation = False
+                else:
+                    proceed_creation = rich.prompt.Confirm.ask(
+                        f"[red][bold]WARNING!![/bold][/red] {warning_message}"
+                        "\n\nAre you sure you wish to create this project anyway?"
+                    )
+
+                if not proceed_creation:
+                    return created, created_project_id, user_addition_statuses, error
+
+                return self.create_project(
+                    title=title,
+                    description=description,
+                    principal_investigator=principal_investigator,
+                    non_sensitive=non_sensitive,
+                    users_to_add=users_to_add,
+                    force=True,
+                )
 
             try:
                 created, created_project_id, user_addition_statuses, error = (

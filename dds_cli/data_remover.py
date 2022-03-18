@@ -194,3 +194,10 @@ class DataRemover(base.DDSBaseClass):
             raise SystemExit from err
 
         self.__create_failed_table(resp_json=resp_json, level="Folder")
+
+        if resp_json["nr_deleted"]:
+            LOG.info(f"{resp_json['nr_deleted']} files were successfully deleted in {folder}.")
+        # Print extra warning if s3 deletion succeeded, db failed
+        if  resp_json["fail_type"] == "db":
+            LOG.error("Some files were deleted, but their database entries were not. " +
+                      "Try to run the command again, and contact Data Centre if the problem persists.")

@@ -248,6 +248,9 @@ class DataPutter(base.DDSBaseClass):
             progress.remove_task(wait_task)
 
         if not self.filehandler.data:
+            if self.temporary_folder and self.temporary_folder.is_dir():
+                LOG.debug(f"Deleting temporary folder {self.temporary_folder}.")
+                dds_utils.delete_folder(self.temporary_folder)
             raise exceptions.UploadError("No data to upload.")
 
     # Public methods ###################### Public methods #

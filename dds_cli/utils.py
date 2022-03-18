@@ -1,6 +1,7 @@
 """DDS CLI utils module."""
 
 import numbers
+from pathlib import Path
 
 import requests
 import rich.console
@@ -321,3 +322,14 @@ def print_or_page(item):
                 dds_cli.utils.console.print(item)
         else:
             raise dds_cli.exceptions.NoDataError("No users found.")
+
+
+# Adapted from <https://stackoverflow.com/a/49782093>.
+def delete_folder(folder):
+    folder = Path(folder)
+    for file_or_folder in folder.iterdir():
+        if file_or_folder.is_dir():
+            delete_folder(file_or_folder)
+        else:
+            file_or_folder.unlink()
+    folder.rmdir()

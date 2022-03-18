@@ -81,6 +81,8 @@ class DDSBaseClass:
                 else:
                     new_directory = pathlib.Path.cwd() / default_dir
 
+                self.temporary_directory = new_directory
+
                 self.dds_directory = dds_cli.directory.DDSDirectory(path=new_directory)
                 self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
                     "dds_failed_delivery.txt"

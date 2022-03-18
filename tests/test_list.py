@@ -19,6 +19,7 @@ RETURNED_PROJECTS_JSON = {
             "Size": 20,
             "Status": "Available",
             "Title": "First Project",
+            "Access": True,
         },
         {
             "Last updated": "Wed, 24 Nov 2021 10:27:42 GMT",
@@ -27,6 +28,7 @@ RETURNED_PROJECTS_JSON = {
             "Size": 30,
             "Status": "In Progress",
             "Title": "Second Project",
+            "Access": False,
         },
     ],
     "total_size": 0,
@@ -132,20 +134,26 @@ def list_no_project_specified(ls_runner, list_request, command):
         json={"usage": False},
         timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
-
     for substring in [
         "project_1",
         "project_2",
         "PI Name 1",
         "PI Name 2",
         "Available",
-        "In Progress",
-        "Tue, 23 Nov",
-        "Wed, 24 Nov",
-        "────────────────",  # Hack to test that there's a table printed
+        "In",  # The table doesn't always like spaces within the cells
+        "Progress",
+        "Tue, ",
+        "23",
+        "Nov",
+        "Wed",
+        "24",
+        "Nov",
+        # ":white_heavy_check_mark:", # This currently doesn't work, will have to fix at a later time
+        # ":x",
+        "───────",  # Hack to test that there's a table printed
     ]:
         assert substring in result.stdout
-    print(result.stderr)
+
     assert "" == result.stderr  # Click testing framework aborts any interactivity
 
 

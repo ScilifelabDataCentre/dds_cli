@@ -9,6 +9,7 @@ import concurrent.futures
 import itertools
 import logging
 import os
+from re import T
 import sys
 
 # Installed
@@ -24,6 +25,7 @@ import questionary
 # Own modules
 import dds_cli
 import dds_cli.account_manager
+import dds_cli.unit_manager
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -333,7 +335,7 @@ def login(click_ctx):
     try:
         with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH")):
             # Authentication token renewed in the init method.
-            LOG.info("[green] :white_check_mark: Authentication token renewed![/green]")
+            LOG.info("[green] :white_check_mark: Authentication token created![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -402,16 +404,24 @@ def user_group_command(_):
 # ************************************************************************************************ #
 
 # -- dds user ls -- #
+# TODO: Move this to dds unit?
 @user_group_command.command(name="ls")
+@click.option(
+    "--unit",
+    "-u",
+    required=False,
+    type=str,
+    help="Super Admins only: The unit which you wish to list the users in.",
+)
 @click.pass_obj
-def list_users(click_ctx):
+def list_users(click_ctx, unit):
     """List users."""
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
-            lister.list_unit_users()
+            lister.list_unit_users(unit=unit)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
@@ -881,8 +891,16 @@ def retract_project(click_ctx, project):
 @project_status.command(name="archive", no_args_is_help=True)
 # Options
 @project_option(required=True)
+# Flags
+@click.option(
+    "--abort",
+    required=False,
+    is_flag=True,
+    default=False,
+    help="Something has one wrong in the project.",
+)
 @click.pass_obj
-def archive_project(click_ctx, project: str):
+def archive_project(click_ctx, project: str, abort: bool = False):
     """Manually archive a released project.
 
     This deletes all project data.
@@ -899,7 +917,7 @@ def archive_project(click_ctx, project: str):
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as updater:
-                updater.update_status(new_status="Archived")
+                updater.update_status(new_status="Archived", is_aborted=abort)
         except (
             dds_cli.exceptions.APIError,
             dds_cli.exceptions.AuthenticationError,
@@ -933,39 +951,6 @@ def delete_project(click_ctx, project: str):
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as updater:
                 updater.update_status(new_status="Deleted")
-        except (
-            dds_cli.exceptions.APIError,
-            dds_cli.exceptions.AuthenticationError,
-            dds_cli.exceptions.DDSCLIException,
-            dds_cli.exceptions.ApiResponseError,
-        ) as err:
-            LOG.error(err)
-            sys.exit(1)
-
-
-# -- dds project status abort -- #
-@project_status.command(name="abort", no_args_is_help=True)
-# Options
-@project_option(required=True)
-@click.pass_obj
-def abort_project(click_ctx, project: str):
-    """Abort a released project.
-
-    This deletes all project data.
-    """
-    proceed_deletion = (
-        True
-        if click_ctx.get("NO_PROMPT", False)
-        else dds_cli.utils.get_deletion_confirmation(action="abort", project=project)
-    )
-    if proceed_deletion:
-        try:
-            with dds_cli.project_status.ProjectStatusManager(
-                project=project,
-                no_prompt=click_ctx.get("NO_PROMPT", False),
-                token_path=click_ctx.get("TOKEN_PATH"),
-            ) as updater:
-                updater.update_status(new_status="Archived", is_aborted=True)
         except (
             dds_cli.exceptions.APIError,
             dds_cli.exceptions.AuthenticationError,
@@ -1415,6 +1400,47 @@ def rm_data(click_ctx, project, file, folder, rm_all):
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+####################################################################################################
+####################################################################################################
+## UNIT #################################################################################### UNIT ##
+####################################################################################################
+####################################################################################################
+
+
+@dds_main.group(name="unit", no_args_is_help=True)
+@click.pass_obj
+def unit_group_command(_):
+    """Group command for managing units.
+
+    Only for Super Admins.
+    """
+
+
+# ************************************************************************************************ #
+# UNIT COMMANDS ******************************************************************** UNIT COMMANDS #
+# ************************************************************************************************ #
+
+# -- dds unit ls -- #
+@unit_group_command.command(name="ls", no_args_is_help=False)
+@click.pass_obj
+def list_units(click_ctx):
+    """List all units."""
+    try:
+        with dds_cli.unit_manager.UnitManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as lister:
+            lister.list_all_units()
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
         sys.exit(1)

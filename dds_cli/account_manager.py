@@ -318,58 +318,29 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 ),
             )
 
-    def list_unit_users(self):
+    def list_unit_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
-        try:
-            response = requests.get(
-                dds_cli.DDSEndpoint.LIST_UNIT_USERS,
-                headers=self.token,
-                timeout=dds_cli.DDSEndpoint.TIMEOUT,
-            )
-            response_json = response.json()
-        except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
-        except simplejson.JSONDecodeError as err:
-            raise dds_cli.exceptions.ApiResponseError(message=str(err))
-
-        # Check if response is ok.
-        if not response.ok:
-            message = "Failed getting unit users from API"
-            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
-
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
-            )
-
-        # Get items from response
-        users = response_json.get("users")
-        keys = response_json.get("keys")
-        unit = response_json.get("unit")
-        if not users:
-            raise dds_cli.exceptions.ApiResponseError(message="No users returned.")
-
-        # Sort users according to name
-        users = sorted(users, key=lambda i: i["Name"])
-
-        # Create table
-        table = Table(
-            title=f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}.",
-            show_header=True,
-            header_style="bold",
-            show_footer=False,
-            caption="All users (Unit Personnel and Admins) within your unit.",
+        response = dds_cli.utils.request_get(
+            endpoint=dds_cli.DDSEndpoint.LIST_UNIT_USERS,
+            headers=self.token,
+            json={"unit": unit},
+            error_message="Failed getting unit users from API",
         )
 
-        # Get columns
-        for key in keys:
-            table.add_column(key, justify="left", overflow="fold")
+        users, keys, unit = dds_cli.utils.get_required_in_response(
+            keys=["users", "keys", "unit"], response=response
+        )
 
-        # Add rows
-        for row in users:
-            table.add_row(
-                *[rich.markup.escape(dds_cli.utils.format_api_response(row[x], x)) for x in keys]
-            )
+        # Sort users according to name
+        users = dds_cli.utils.sort_items(items=users, sort_by="Name")
+
+        # Create table
+        table = dds_cli.utils.create_table(
+            title=f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}.",
+            columns=keys,
+            rows=users,
+            caption="All users (Unit Personnel and Admins) within your unit.",
+        )
 
         # Print out table
         dds_cli.utils.print_or_page(item=table)

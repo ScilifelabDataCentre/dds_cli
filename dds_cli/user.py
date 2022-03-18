@@ -13,6 +13,7 @@ import pathlib
 import requests
 import simplejson
 import stat
+import subprocess
 
 # Installed
 import rich
@@ -259,6 +260,22 @@ class TokenFile:
         with self.token_file.open("w") as file:
             file.write(token)
 
+        if os.name == "nt":
+            cli_username = os.environ.get("USERNAME")
+            try:
+                subprocess.check_call(
+                    [
+                        "icacls.exe",
+                        str(self.token_file),
+                        "/inheritance:r",
+                        "/grant",
+                        f"{cli_username}:(R,W)",
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            except subprocess.CalledProcessError as exc:
+                LOG.error("Failed to set token file permissions")
         LOG.debug("New token saved to file.")
 
     def delete_token(self):
@@ -273,13 +290,16 @@ class TokenFile:
 
         Returns None otherwise.
         """
-        st_mode = os.stat(self.token_file).st_mode
-        permissions_octal = oct(stat.S_IMODE(st_mode))
-        permissions_readable = stat.filemode(st_mode)
-        if permissions_octal != "0o600":
-            raise exceptions.DDSCLIException(
-                message=f"Token file permissions are not properly set, (got {permissions_readable} instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."
-            )
+        if os.name != "nt":
+            st_mode = os.stat(self.token_file).st_mode
+            permissions_octal = oct(stat.S_IMODE(st_mode))
+            permissions_readable = stat.filemode(st_mode)
+            if permissions_octal != "0o600":
+                raise exceptions.DDSCLIException(
+                    message=f"Token file permissions are not properly set, (got {permissions_readable} instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."
+                )
+        else:
+            LOG.info("Unable to confirm whether file permissions are correct on Windows.")
 
     def token_expired(self, token):
         """Check if the token has expired or is about to expire soon based on the UTC time.

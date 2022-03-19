@@ -206,18 +206,19 @@ def get_json_response(response):
     return json_response
 
 
-def format_api_response(response, key: str):
+def format_api_response(response, key: str, binary: bool = False):
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
     formatted_response = response
     if isinstance(response, bool):
         formatted_response = ":white_heavy_check_mark:" if response else ":x:"
     elif isinstance(response, numbers.Number):
-        if key in ["Size", "Usage", "Cost"]:
-            formatted_response = HumanBytes.format(num=response, metric=True)
+        if key in ["Size", "Usage"]:
+            formatted_response = HumanBytes.format(num=response, metric=not binary)
             if key == "Usage":
                 formatted_response += "H"
-            elif key == "Cost":
-                formatted_response = formatted_response[0:-1] + "kr"
+        elif key == "Cost":
+            formatted_response = HumanBytes.format(num=response, metric=True)[0:-1] + "kr"
+
     return str(formatted_response)
 
 

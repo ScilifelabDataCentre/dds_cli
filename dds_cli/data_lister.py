@@ -52,6 +52,7 @@ class DataLister(base.DDSBaseClass):
         no_prompt: bool = False,
         json: bool = False,
         token_path: str = None,
+        binary: bool = False,
     ):
         """Handle actions regarding data listing in the cli."""
         # Only method "ls" can use the DataLister class
@@ -71,6 +72,7 @@ class DataLister(base.DDSBaseClass):
         self.show_usage = show_usage
         self.tree = tree
         self.json = json
+        self.binary = binary
 
     # Public methods ########################### Public methods #
 
@@ -569,7 +571,11 @@ class DataLister(base.DDSBaseClass):
         for proj in sorted_projects:
             table.add_row(
                 *[
-                    escape(dds_cli.utils.format_api_response(response=proj[i], key=i))
+                    escape(
+                        dds_cli.utils.format_api_response(
+                            response=proj[i], key=i, binary=self.binary
+                        )
+                    )
                     for i in column_formatting
                 ]
             )

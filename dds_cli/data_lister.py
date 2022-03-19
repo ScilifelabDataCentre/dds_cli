@@ -118,7 +118,6 @@ class DataLister(base.DDSBaseClass):
                     "%a, %d %b %Y %H:%M:%S %Z"
                 )
 
-        LOG.info(project_info)
         # Sort projects according to chosen or default, first ID
         sorted_projects = self.__sort_projects(projects=project_info, sort_by=sort_by)
 
@@ -566,10 +565,6 @@ class DataLister(base.DDSBaseClass):
                 overflow=colformat["overflow"],
             )
 
-        # # calculate the magnitudes for keeping the unit prefix constant across all projects
-        # magnitudes = dds_cli.utils.calculate_magnitude(sorted_projects, column_formatting.keys())
-
-        # print(magnitudes)
         # Add all column values for each row to table
         for proj in sorted_projects:
             table.add_row(

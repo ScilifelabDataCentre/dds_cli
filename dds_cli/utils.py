@@ -212,18 +212,17 @@ def format_api_response(response, key: str):
     if isinstance(response, bool):
         formatted_response = ":white_heavy_check_mark:" if response else ":x:"
     elif isinstance(response, numbers.Number):
-        if key in ["Size", "Usage"]:
+        if key in ["Size", "Usage", "Cost"]:
             formatted_response = HumanBytes.format(num=response, metric=True)
             if key == "Usage":
                 formatted_response += "H"
-        elif key == "Cost":
-            formatted_response = f"{response:.1f}" if response >= 1.00 else str(0) + " kr"
-
+            elif key == "Cost":
+                formatted_response = formatted_response[0:-1] + "kr"
     return str(formatted_response)
 
 
 def get_token_header_contents(token):
-    """Function to extract the jose header of the DDS token (JWE)
+    """Function to extract the jose header of the DDS token (JWE).
 
     :param token: a token that is not None
 

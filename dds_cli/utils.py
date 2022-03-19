@@ -217,7 +217,7 @@ def format_api_response(response, key: str):
             if key == "Usage":
                 formatted_response += "H"
         elif key == "Cost":
-            formatted_response = "{:.1f}".format(response) if response >= 1.00 else str(0)
+            formatted_response = f"{response:.1f}" if response >= 1.00 else str(0) + " kr"
 
     return str(formatted_response)
 

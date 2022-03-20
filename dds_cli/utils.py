@@ -12,12 +12,73 @@ from jwcrypto.jws import InvalidJWSObject
 from jwcrypto import jwt
 import http
 from rich.table import Table
+from typing import List, Union
 
 import dds_cli.exceptions
 from dds_cli import DDSEndpoint
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
+
+# Classes
+
+
+class HumanBytes:
+    """Format as human readable.
+
+    Copied from Stack Overflow: https://stackoverflow.com/a/63839503.
+    """
+
+    METRIC_LABELS: List[str] = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+    BINARY_LABELS: List[str] = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+    PRECISION_OFFSETS: List[float] = [0.5, 0.05, 0.005, 0.0005]  # PREDEFINED FOR SPEED.
+    PRECISION_FORMATS: List[str] = [
+        "{}{:.0f} {}",
+        "{}{:.1f} {}",
+        "{}{:.2f} {}",
+        "{}{:.3f} {}",
+    ]  # PREDEFINED FOR SPEED.
+
+    @staticmethod
+    def format(num: Union[int, float], metric: bool = False, precision: int = 1) -> str:
+        """Human-readable formatting of bytes, using binary (powers of 1024)
+        or metric (powers of 1000) representation.
+        """
+        assert isinstance(num, (int, float)), "num must be an int or float"
+        assert isinstance(metric, bool), "metric must be a bool"
+        assert (
+            isinstance(precision, int) and precision >= 0 and precision <= 3
+        ), "precision must be an int (range 0-3)"
+
+        unit_labels = HumanBytes.METRIC_LABELS if metric else HumanBytes.BINARY_LABELS
+        last_label = unit_labels[-1]
+        unit_step = 1000 if metric else 1024
+        unit_step_thresh = unit_step - HumanBytes.PRECISION_OFFSETS[precision]
+
+        is_negative = num < 0
+        if is_negative:  # Faster than ternary assignment or always running abs().
+            num = abs(num)
+
+        for unit in unit_labels:
+            if num < unit_step_thresh:
+                # VERY IMPORTANT:
+                # Only accepts the CURRENT unit if we're BELOW the threshold where
+                # float rounding behavior would place us into the NEXT unit: F.ex.
+                # when rounding a float to 1 decimal, any number ">= 1023.95" will
+                # be rounded to "1024.0". Obviously we don't want ugly output such
+                # as "1024.0 KiB", since the proper term for that is "1.0 MiB".
+                break
+            if unit != last_label:
+                # We only shrink the number if we HAVEN'T reached the last unit.
+                # NOTE: These looped divisions accumulate floating point rounding
+                # errors, but each new division pushes the rounding errors further
+                # and further down in the decimals, so it doesn't matter at all.
+                num /= unit_step
+
+        return HumanBytes.PRECISION_FORMATS[precision].format("-" if is_negative else "", num, unit)
+
+
+# Functions
 
 
 def sort_items(items: list, sort_by: str) -> list:
@@ -145,110 +206,24 @@ def get_json_response(response):
     return json_response
 
 
-def calculate_magnitude(projects, keys, iec_standard=False):
-    """Calculate magnitude of values.
-
-    Uses the project list, obtains the values assigned to a particular key iteratively and
-    calculates the best magnitude to format this set of values consistently.
-    """
-    # initialize the dictionary to be returned
-    magnitudes = dict(zip(keys, [None] * len(keys)))
-
-    for key in keys:
-        values = [proj[key] for proj in projects]
-
-        if all(isinstance(x, numbers.Number) for x in values):
-
-            if key in ["Size", "Usage"] and iec_standard:
-                base = 1024.0
-            else:
-                base = 1000.0
-
-            # exclude values smaller than base, such that empty projects don't interfer with
-            # the calculation ensures that a minimum can be calculated if no val is larger than base
-            minimum = (lambda x: min(x) if x else 1)([val for val in values if val >= base])
-            mag = 0
-
-            while abs(minimum) >= base:
-                mag += 1
-                minimum /= base
-
-            magnitudes[key] = mag
-    return magnitudes
-
-
-def format_api_response(response, key, magnitude=None, iec_standard=False):
+def format_api_response(response, key: str, binary: bool = False, always_show: bool = False):
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
-    if isinstance(response, str):
-        return response  # pass the response if already a string
-
+    formatted_response = response
     if isinstance(response, bool):
-        return ":white_heavy_check_mark:" if response else ":x:"
-
-    if isinstance(response, numbers.Number):
-        response = float(f"{response:.3g}")
-        mag = 0
-
+        formatted_response = ":white_heavy_check_mark:" if response else ":x:"
+    elif isinstance(response, numbers.Number):
         if key in ["Size", "Usage"]:
-            if iec_standard:
-                # The IEC created prefixes such as kibi, mebi, gibi, etc.,
-                # to unambiguously denote powers of 1024
-                prefixlist = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
-                base = 1024.0
-            else:
-                prefixlist = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"]
-                base = 1000.0
-            spacer_a = " "
-            spacer_b = ""
-        else:
-            # Default to the prefixes of the International System of Units (SI)
-            prefixlist = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"]
-            base = 1000.0
-            spacer_a = ""
-            spacer_b = " "
-
-        if not magnitude:
-            # calculate a suitable magnitude if not given
-            while abs(response) >= base:
-                mag += 1
-                response /= base
-        else:
-            # utilize the given magnitude
-            response /= base**magnitude
-
-        if key == "Size":
-            unit = "B"  # lock
-        elif key == "Usage":
-            unit = "Bh"  # arrow up
+            formatted_response = HumanBytes.format(num=response, metric=not binary)
+            if key == "Usage":
+                formatted_response += "H"
         elif key == "Cost":
-            unit = "SEK"
-            prefixlist[1] = "K"  # for currencies, the capital K is more common.
-            prefixlist[3] = "B"  # for currencies, Billions are used instead of Giga
+            formatted_response = HumanBytes.format(num=response, metric=True)[0:-1] + "kr"
 
-        if response > 0:
-            # if magnitude was given, then use fixed number of digits
-            # to allow for easier comparisons across projects
-            if magnitude:
-                return "{}{}{}".format(
-                    f"{response:.2f}",
-                    spacer_a,
-                    prefixlist[magnitude] + spacer_b + unit,
-                )
-            else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
-                return "{}{}{}".format(
-                    f"{response:.2f}".rstrip("0").rstrip("."),
-                    spacer_a,
-                    prefixlist[mag] + spacer_b + unit,
-                )
-        else:
-            return f"0 {unit}"
-    else:
-        # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
-        return str(response)
+    return str(formatted_response)
 
 
 def get_token_header_contents(token):
-    """Function to extract the jose header of the DDS token (JWE)
+    """Function to extract the jose header of the DDS token (JWE).
 
     :param token: a token that is not None
 

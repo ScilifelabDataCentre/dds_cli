@@ -161,6 +161,17 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 @project_option(required=False)
 @sort_projects_option()
 @folder_option(help_message="List contents of this project folder.")
+@click.option(
+    "--binary",
+    "-b",
+    required=False,
+    is_flag=True,
+    default=False,
+    help=(
+        "Use binary unit prefixes (e.g. KiB instead of KB, "
+        "MiB instead of MB) for size and usage columns."
+    ),
+)
 # Flags
 @json_flag(help_message="Output in JSON format.")
 @size_flag(help_message="Show size of project contents.")
@@ -170,7 +181,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
 @click.pass_obj
 def list_projects_and_contents(
-    click_ctx, project, folder, sort, json, size, tree, usage, users, projects
+    click_ctx, project, folder, sort, json, size, tree, usage, binary, users, projects
 ):
     """List the projects you have access to or the project contents.
 
@@ -188,6 +199,7 @@ def list_projects_and_contents(
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 json=json,
                 token_path=click_ctx.get("TOKEN_PATH"),
+                binary=binary,
             ) as lister:
                 projects = lister.list_projects(sort_by=sort)
                 if json:

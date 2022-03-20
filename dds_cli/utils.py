@@ -206,7 +206,7 @@ def get_json_response(response):
     return json_response
 
 
-def format_api_response(response, key: str, binary: bool = False):
+def format_api_response(response, key: str, binary: bool = False, always_show: bool = False):
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
     formatted_response = response
     if isinstance(response, bool):

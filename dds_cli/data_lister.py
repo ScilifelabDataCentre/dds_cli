@@ -103,6 +103,7 @@ class DataLister(base.DDSBaseClass):
         usage_info = resp_json.get("total_usage")
         total_size = resp_json.get("total_size")
         project_info = resp_json.get("project_info")
+        always_show = resp_json.get("always_show", False)
         if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
 
@@ -124,7 +125,7 @@ class DataLister(base.DDSBaseClass):
         sorted_projects = self.__sort_projects(projects=project_info, sort_by=sort_by)
 
         if not self.json:
-            self.__print_project_table(sorted_projects, usage_info, total_size)
+            self.__print_project_table(sorted_projects, usage_info, total_size, always_show)
 
         # Return the list of projects
         return sorted_projects
@@ -544,7 +545,7 @@ class DataLister(base.DDSBaseClass):
 
         return column_formatting
 
-    def __print_project_table(self, sorted_projects, usage_info, total_size):
+    def __print_project_table(self, sorted_projects, usage_info, total_size, always_show):
         # Column format
         column_formatting = self.__format_project_columns(
             total_size=total_size, usage_info=usage_info
@@ -576,16 +577,19 @@ class DataLister(base.DDSBaseClass):
 
         # Add all column values for each row to table
         for proj in sorted_projects:
-            table.add_row(
-                *[
-                    escape(
-                        dds_cli.utils.format_api_response(
-                            response=proj[i], key=i, binary=self.binary
+            new_row = []
+            for column in column_formatting:
+                if column == "Size" and proj["Status"] != "Available" and not always_show:
+                    new_row.append("---")
+                else:
+                    new_row.append(
+                        escape(
+                            dds_cli.utils.format_api_response(
+                                response=proj[column], key=column, binary=self.binary
+                            )
                         )
                     )
-                    for i in column_formatting
-                ]
-            )
+            table.add_row(*new_row)
 
         # Print to stdout if there are any lines
         dds_cli.utils.print_or_page(item=table)

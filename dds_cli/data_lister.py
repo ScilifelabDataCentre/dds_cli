@@ -181,7 +181,11 @@ class DataLister(base.DDSBaseClass):
         # Get max length of size string
         max_size = max(
             [
-                len(x["size"].split(" ")[0])
+                len(
+                    dds_cli.utils.format_api_response(
+                        response=x["size"], key="Size", binary=self.binary
+                    ).split(" ", maxsplit=1)[0]
+                )
                 for x in sorted_files_folders
                 if show_size and "size" in x
             ],
@@ -211,13 +215,16 @@ class DataLister(base.DDSBaseClass):
 
             # Add size to line if option specified
             if show_size and "size" in x:
-                line += f"{tab}{x['size'].split()[0]}"
+                size = dds_cli.utils.format_api_response(
+                    response=x["size"], key="Size", binary=self.binary
+                )
+                line += f"{tab}{size.split()[0]}"
 
                 # Define space between number and size format
                 tabs_bf_format = th.TextHandler.format_tabs(
-                    string_len=len(x["size"]), max_string_len=max_size, tab_len=2
+                    string_len=len(size), max_string_len=max_size, tab_len=2
                 )
-                line += f"{tabs_bf_format}{x['size'].split()[1]}"
+                line += f"{tabs_bf_format}{size.split()[1]}"
             tree.add(line)
 
         # Print output to stdout

@@ -26,7 +26,7 @@ stderr_console = rich.console.Console(stderr=True)
 class HumanBytes:
     """Format as human readable.
 
-    Partially copied from Stack Overflow: https://stackoverflow.com/a/63839503.
+    Copied from Stack Overflow: https://stackoverflow.com/a/63839503.
     """
 
     METRIC_LABELS: List[str] = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]

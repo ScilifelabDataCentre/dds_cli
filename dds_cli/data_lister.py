@@ -556,7 +556,7 @@ class DataLister(base.DDSBaseClass):
             title="Your Project(s)",
             show_header=True,
             header_style="bold",
-            show_footer=self.show_usage,
+            show_footer=self.show_usage and "Usage" in column_formatting,
             caption=(
                 "The cost is calculated from the pricing provided by Safespring (unit kr/GB/month) "
                 "and is therefore approximate. Contact the Data Centre for more details."

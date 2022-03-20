@@ -1402,11 +1402,12 @@ def rm_data(click_ctx, project, file, folder, rm_all):
             if rm_all:
                 remover.remove_all()
 
-            elif file:
-                remover.remove_file(files=file)
+            else:
+                if file:
+                    remover.remove_file(files=file)
 
-            elif folder:
-                remover.remove_folder(folder=folder)
+                if folder:
+                    remover.remove_folder(folder=folder)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.APIError,

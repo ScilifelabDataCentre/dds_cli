@@ -135,3 +135,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Removed `dds project status abort` and added `--abort` flag to `dds project status archive` ([#404](https://github.com/ScilifelabDataCentre/dds_cli/pull/404))
 * Delete temporary folder before `DownloadError` and `UploadError` ([#407](https://github.com/ScilifelabDataCentre/dds_cli/pull/407)).
 * Allow delete of both folder and files ([#411](https://github.com/ScilifelabDataCentre/dds_cli/pull/411))
+* Report number of files deleted for "rm folder" ([#408](https://github.com/ScilifelabDataCentre/dds_cli/pull/408))

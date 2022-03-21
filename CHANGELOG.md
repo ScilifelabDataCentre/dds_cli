@@ -129,3 +129,9 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * When using `dds project access fix`, list the projects which where not possible to update access in ([#379](https://github.com/ScilifelabDataCentre/dds_cli/pull/379))
 * Add `Access` column to show user if they have access or not ([#383](https://github.com/ScilifelabDataCentre/dds_cli/pull/383))
 * New `--mount-dir` option for `dds data put` where the `DataDelivery...` folders will be created if specified ([#393](https://github.com/ScilifelabDataCentre/dds_cli/pull/393))
+* File permission fixing for the token on Windows ([#395](https://github.com/ScilifelabDataCentre/dds_cli/pull/395))
+* New unit group command unit module ([#398](https://github.com/ScilifelabDataCentre/dds_cli/pull/398))
+* `--unit` option for Super Admins to list unit users ([#397](https://github.com/ScilifelabDataCentre/dds_cli/pull/397))
+* Removed `dds project status abort` and added `--abort` flag to `dds project status archive` ([#404](https://github.com/ScilifelabDataCentre/dds_cli/pull/404))
+* Delete temporary folder before `DownloadError` and `UploadError` ([#407](https://github.com/ScilifelabDataCentre/dds_cli/pull/407)).
+* Allow delete of both folder and files ([#411](https://github.com/ScilifelabDataCentre/dds_cli/pull/411))

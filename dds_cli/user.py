@@ -197,7 +197,7 @@ class User:
         username = None
         if tokenfile.file_exists():
             token = tokenfile.read_token()
-            if not tokenfile.token_expired(token=token):
+            if token and not tokenfile.token_expired(token=token):
                 try:
                     response = requests.get(
                         dds_cli.DDSEndpoint.DISPLAY_USER_INFO,

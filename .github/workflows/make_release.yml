@@ -10,6 +10,8 @@ jobs:
   ddsclirelease:
     name: Release DDS CLI
     runs-on: [ubuntu-latest]
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
     - name: Create Release
       id: create_release
@@ -23,13 +25,7 @@ jobs:
             ${{ github.event.head_commit.message }}
         draft: true   # change to false for production
         prerelease: false
-    - name: Dump Release URL into file
-      run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
-    - name: Upload the Release URL as artifact
-      uses: actions/upload-artifact@v1
-      with:
-        name: release_url
-        path: release_url.txt
+
 
   ddsclipypi:
     name: Release DDS CLI on PyPi
@@ -48,32 +44,29 @@ jobs:
         pip install build
         pip install -r requirements.txt
     - name: Build binary wheel and source tarball
-      run: |
-        python -m build --sdist --wheel --outdir dist/
-    #- name: Publish to Python Package Index
-    #  uses: pypa/gh-action-pypi-publish@master
-    #  with:
-    #    user: __token__
-    #    password: ${{ secrets.PYPI_TOKEN }}
-    - name: Load Release URL File from release job
-      uses: actions/download-artifact@v1
-      with:
-        name: release_url
-    - name: Get Release File Name & Upload URL
-      id: get_release_info
+      id: build_wheel
       shell: bash
       run: |
-        value=`cat release_url/release_url.txt`
-        echo ::set-output name=upload_url::$value
+        python -m build --sdist --wheel --outdir dist/
+        wheel=$(find ./dist -name "*.whl")
+        wheelbase=$(basename $(find ./dist -name "*.whl"))
+        echo ::set-output name=wheel::$wheel
+        echo ::set-output name=wheelbase::$wheelbase
+    - name: Publish to Python Package Index
+      if: github.repository == 'ScilifelabDataCentre/dds_cli'
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_TOKEN }}
     - name: Upload Wheel
       id: upload-wheel
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-        asset_path: $(find ./dist -name "*.whl")
-        asset_name: $(basename $(find ./dist -name "*.whl"))
+        upload_url: ${{ needs.ddsclirelease.outputs.upload_url }}
+        asset_path: ${{ steps.build_wheel.outputs.wheel }}
+        asset_name: ${{ steps.build_wheel.outputs.wheelbase }}
         asset_content_type: application/x-wheel+zip
 
   ddsclibinaries:
@@ -112,23 +105,13 @@ jobs:
         pip install -r requirements.txt
     - name: Building with PyInstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
-    - name: Load Release URL File from release job
-      uses: actions/download-artifact@v1
-      with:
-        name: release_url
-    - name: Get Release File Name & Upload URL
-      id: get_release_info
-      shell: bash
-      run: |
-        value=`cat release_url/release_url.txt`
-        echo ::set-output name=upload_url::$value
     - name: Upload Release Asset
       id: upload-release-asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+        upload_url: ${{ needs.ddsclirelease.outputs.upload_url }}
         asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
         asset_name: ${{ matrix.OUT_FILE_NAME}}
         asset_content_type: ${{ matrix.ASSET_MIME}}

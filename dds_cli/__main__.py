@@ -536,6 +536,12 @@ def delete_user(click_ctx, email, self, is_invite):
             LOG.error("You cannot specify both `--self` and `--is-invite. Choose one.")
             sys.exit(1)
 
+        if not self and not email:
+            LOG.error(
+                "You must specify an email adress associated to the user you're requesting to delete."
+            )
+            sys.exit(1)
+
         if is_invite:
             proceed_deletion = rich.prompt.Confirm.ask(
                 f"Delete invitation of {email} to Data Delivery System?"

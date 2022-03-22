@@ -136,3 +136,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 * Delete temporary folder before `DownloadError` and `UploadError` ([#407](https://github.com/ScilifelabDataCentre/dds_cli/pull/407)).
 * Allow delete of both folder and files ([#411](https://github.com/ScilifelabDataCentre/dds_cli/pull/411))
 * Report number of files deleted for "rm folder" ([#408](https://github.com/ScilifelabDataCentre/dds_cli/pull/408))
+* Github Actions to automatically build the executables (with help from @zishanmirza) and the documentations with Sphinx.([#419](https://github.com/ScilifelabDataCentre/dds_cli/pull/419))

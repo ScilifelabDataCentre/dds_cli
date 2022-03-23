@@ -4,24 +4,16 @@
    contain the root `toctree` directive.
 
 =====================================================================
-Welcome to the Data Delivery Systems' Documentation / Test Protocol!
+Welcome to the Data Delivery Systems' Documentation!
 =====================================================================
-
-.. note:: 
-
-   During testing on 2022-02-28 to 2022-03-07, this will work as **both documentation and as a test protocol**. The goal is to give you ideas on what aspects of the system to try out, but please also test anything else you can think of (e.g. if you feel we have missed something). Also, please make note of whether the documentation of the system has any deficiencies such as unclear, misleading or incomplete instructions. 
-
-.. warning::
-   
-   **Please do not use any sensitive data during this testing phase.** Since the last testing period we have implemented a key management system for the storage of all required keys (e.g. encryption keys) and your data should be secure, however there may be bugs and/or issues which we need to solve before DDS is put into production. 
 
 The Data Delivery System (DDS) consists of a command line interface (CLI) and a very minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
 
-How will I get my user account?
+How do I get my user account?
 ===============================
-The testing will begin with you getting an invite via email. The email will be from `dsw@scilifelab.se` during the testing (note that any emails sent to this address regarding the DDS *will not be responded to*). If you do not get an email, please have a look in the junk/spam folder. If it's not there either, please contact Ina (*email:* ina.oden.osterbo@scilifelab.uu.se, *slack:* Ina Odén Österbo) and we will look into it. 
+An invite from an existing user is required in order for you to get an account within the DDS. The email will be from `dsw@scilifelab.se`, we will notify you if and when this changes. Note that any emails sent to this address regarding the DDS *will not be responded to*. If you do not get an email, please have a look in the junk/spam folder. If your email adress has the `scilifelab.se` domain, keep in mind that your emails may take a while to deliver due to the KTH spam filters. If you do not receive an email, please contact Ina (*email:* ina.oden.osterbo@scilifelab.uu.se, *slack:* Ina Odén Österbo) and we will look into it. 
 
-Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system and can begin testing the different features. To be able to test the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<how-to-use>`.
+Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system. To be able to use the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<how-to-use>`.
 
 .. warning::
    Forgetting passwords in the DDS means that you will lose access to all project data. We highly recommend that you use a password management system such as `LastPass <https://www.lastpass.com/>`_ or similar.
@@ -38,10 +30,31 @@ How to use the DDS CLI
 Installation
 ------------
 
-At this time, a **Python** and **pip** installation is required for the ``dds-cli`` installation to work. We are currently working on an executable which can install all the requirements and the CLI for you. The goal is for this executable to be ready when we release the CLI into production.
+* pip install dds-cli - make sure it's the correct version (pypi link)
+   * **Python** and **pip** installation is required for the ``dds-cli`` installation to work.
+   * If not correct version - pip install --upgrade dds-cli
+* **executable available** for windows, linux and macos
 
 Uppmax
 ~~~~~~~
+* Uppmax - ONLY FOR NON SENSITIVE
+   * pip install dds-cli as usual
+   * in contact with uppmax to make it a module
+   * Rackham User guide: https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/
+* Bianca 
+   * ssh into transit: $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
+   * you get to home directory - any files that are created here are not persistent - if you download data from dds  here is will not persist beyond their ssh session!!!
+   * Mount specific directory of a SENS project on transit: username@transit:~$ mount_wharf <sens_project>
+   * Set mount point as destination in the dds get command: dds data get --destination <sens_project>/<destination>/ (!!!)
+      * downloaded data ends up in a non-backed up storage on bianca 
+   * TO BE AWARE OF:
+      * Mount the correct SENS project on transit
+      * The size of the data they need to download vs the nobackup storage allocation of the corresponding SENS project
+      * start the download in a screen/tmux session for anything larger than a few hundreds of GB
+   * Bianca user guide: https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/
+   * Transit user guide: https://www.uppmax.uu.se/support/user-guides/transit-user-guide/
+   * 
+
 We are currently checking that installing the DDS CLI on Rackham works as expected. We will update this information as soon as possible. If we have not yet updated this section before you attempt to use the DDS CLI on **Uppmax Rackham**, feel free to try it and inform us on any issues. 
 
 **Regarding Bianca:** Uppmax has offered to help us out with testing that the connection to Bianca works. Instructions for this will therefore not be provided at this time. Data will be possible to deliver to Bianca when the DDS is in production. Instructions for how this will work will come at a later time.

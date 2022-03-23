@@ -136,4 +136,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Delete temporary folder before `DownloadError` and `UploadError` ([#407](https://github.com/ScilifelabDataCentre/dds_cli/pull/407)).
 - Allow delete of both folder and files ([#411](https://github.com/ScilifelabDataCentre/dds_cli/pull/411))
 - Report number of files deleted for "rm folder" ([#408](https://github.com/ScilifelabDataCentre/dds_cli/pull/408))
-- Handle large amounts of errors and don't load or dump huge json files in memory ([]())
+- Handle large amounts of errors and don't load or dump huge json files in memory ([#426](https://github.com/ScilifelabDataCentre/dds_cli/pull/426))

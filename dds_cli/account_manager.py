@@ -85,10 +85,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         # Format response message
         if not response.ok:
             message = "Could not add user"
+            message += ": " + response_json.get("message", "Unexpected error!")
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=message)
 
-            message += ": " + response_json.get("message", "Unexpected error!")
             show_warning = True
             if error_messages:
                 message += f"\n{error_messages}"

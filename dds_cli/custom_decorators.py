@@ -76,14 +76,12 @@ def verify_proceed(func):
                     if not self.status[x]["cancel"] and not self.status[x]["started"] and x != file
                 ]
 
-            # Lock thread
             dds_cli.file_handler.FileHandler.append_errors_to_file(
                 log_file=self.failed_delivery_log,
                 file=file,
                 info=self.filehandler.data[file],
                 status=self.status[file],
             )
-
         return ok_to_proceed
 
     return wrapped

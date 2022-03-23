@@ -11,6 +11,7 @@ import os
 import pathlib
 
 # Installed
+import threading
 
 # Own modules
 import dds_cli.utils
@@ -21,7 +22,7 @@ import dds_cli.exceptions
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
+lock = threading.Lock()
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
@@ -59,24 +60,21 @@ class FileHandler:
     def append_errors_to_file(log_file: pathlib.Path, file, info, status):
         """Save errors to specific json file."""
 
-        failed_to_save = {
-            str(file): {
-                **FileHandler.make_json_serializable(non_json=info),
-                "status": FileHandler.make_json_serializable(non_json=status),
-            }
-        }
-        try:
-            with log_file.open(mode="a") as errfile:
-                json_output = json.dumps(
-                    failed_to_save,
-                    indent=4,
-                )
-                # Each line is valid json, but the entire file is not.
-                # Multiple threads are appending to this file, so valid json for
-                # the entire file is not trivial.
-                errfile.write(json_output + "\n")
-        except (OSError, TypeError) as err:
-            LOG.warning(str(err))
+        with lock:
+            try:
+                with log_file.open(mode="r+") as json_file:
+                    file_data = json.load(json_file)
+                    file_data[str(file)] = {
+                        **FileHandler.make_json_serializable(non_json=info),
+                        "status": FileHandler.make_json_serializable(non_json=status),
+                    }
+                    print(file_data)
+
+                    json_file.seek(0)
+                    json.dump(file_data, json_file, indent=4)
+
+            except (OSError, TypeError) as err:
+                LOG.warning(str(err))
 
     @staticmethod
     def make_json_serializable(non_json):

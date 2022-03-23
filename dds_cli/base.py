@@ -13,6 +13,7 @@ import pathlib
 import http
 import requests
 import simplejson
+import json
 
 # Own modules
 import dds_cli.directory
@@ -87,6 +88,9 @@ class DDSBaseClass:
                 self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
                     "dds_failed_delivery.txt"
                 )
+
+                with self.failed_delivery_log.open(mode="w+") as file:
+                    json.dump({}, file)
 
         # Keyboardinterrupt
         self.stop_doing = False

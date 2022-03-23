@@ -2,7 +2,7 @@ name: Release actions for the CLI
 on:
   release:
     types: [published]
-  branches:
+    branches:
       - 'master'
 
 jobs:

@@ -8,7 +8,6 @@
 import functools
 import logging
 import pathlib
-import threading
 
 # Installed
 from rich.markup import escape
@@ -24,7 +23,6 @@ import dds_cli.file_handler
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-lock = threading.Lock()
 
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #

@@ -53,11 +53,6 @@ Uppmax
       * start the download in a screen/tmux session for anything larger than a few hundreds of GB
    * Bianca user guide: https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/
    * Transit user guide: https://www.uppmax.uu.se/support/user-guides/transit-user-guide/
-   * 
-
-We are currently checking that installing the DDS CLI on Rackham works as expected. We will update this information as soon as possible. If we have not yet updated this section before you attempt to use the DDS CLI on **Uppmax Rackham**, feel free to try it and inform us on any issues. 
-
-**Regarding Bianca:** Uppmax has offered to help us out with testing that the connection to Bianca works. Instructions for this will therefore not be provided at this time. Data will be possible to deliver to Bianca when the DDS is in production. Instructions for how this will work will come at a later time.
 
 PyPi - MacOS / Linux 
 ~~~~~~~~~~~~~~~~~~~~~
@@ -115,10 +110,43 @@ The main command ``dds`` has some options and possible customisations. A detaile
 
 Some commands should not be possible to successfully run from a Researcher account. The affected commands are marked with asterisks (\*\*\*). However, we ask you to try these commands anyway and report back to us if anything unexpected occurs. 
 
-The five group commands
+The six group commands
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The DDS CLI has the following group commands: :ref:`auth<auth-info>`, :ref:`user<user-info>`, :ref:`project<project-info>`, :ref:`data<data-info>` and :ref:`ls<ls-info>`.
+The DDS CLI has the following group commands: 
+* :ref:`auth<auth-info>`
+   .. admonition:: Accessible by
+      
+      All user roles.
+
+* :ref:`user<user-info>`
+   .. admonition:: Accessible by
+      
+      All user roles. Some subcommands are limited to Unit Admins, Unit Personnel and in come cases Researchers marked as Project Owners for specific projects.
+
+* :ref:`project<project-info>`
+   .. admonition:: Accessible by
+      
+      Researchers can use the ``dds project ls``.
+      Researchers marked as Project Owners in specific projects can also use ``dds project access grant/revoke``. 
+      The rest of the subcommands are limited to Unit Admins and Unit Personnel.
+
+* :ref:`data<data-info>`
+   .. admonition:: Accessible by
+      
+      Researchers can use `dds data get`.
+      The rest of the subcommands are limited to Unit Admins and Unit Personnel.
+
+* :ref:`unit<unit-info>`
+   .. admonition:: Accessible by
+      
+      Super Admins only.
+
+* :ref:`ls<ls-info>`.
+   .. admonition:: Accessible by
+      
+      All user roles.
+
 
 .. _auth-info:
 

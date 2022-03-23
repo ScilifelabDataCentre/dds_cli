@@ -13,7 +13,6 @@ import pathlib
 import http
 import requests
 import simplejson
-import json
 
 # Own modules
 import dds_cli.directory

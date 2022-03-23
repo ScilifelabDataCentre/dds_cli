@@ -107,10 +107,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         LOG.info(msg)
 
-    def delete_user(self, email):
+    def delete_user(self, email, is_invite: bool = False):
         """Delete users from the system"""
         # Perform request to API
-        json = {"email": email}
+        json = {"email": email, "is_invite": is_invite}
 
         try:
             response = requests.delete(

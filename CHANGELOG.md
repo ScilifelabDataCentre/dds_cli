@@ -137,3 +137,5 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Allow delete of both folder and files ([#411](https://github.com/ScilifelabDataCentre/dds_cli/pull/411))
 - Report number of files deleted for "rm folder" ([#408](https://github.com/ScilifelabDataCentre/dds_cli/pull/408))
 - Handle large amounts of errors and don't load or dump huge json files in memory ([#426](https://github.com/ScilifelabDataCentre/dds_cli/pull/426))
+- `--is-invite` option in `dds user delete` to allow delete of invites (temporary) ([#415](https://github.com/ScilifelabDataCentre/dds_cli/pull/415))
+- Github Action to automatically build the executables (with help from @zishanmirza) and the documentations with Sphinx.([#419](https://github.com/ScilifelabDataCentre/dds_cli/pull/419),[#423](https://github.com/ScilifelabDataCentre/dds_cli/pull/423))

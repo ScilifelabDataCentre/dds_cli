@@ -85,7 +85,7 @@ class DDSBaseClass:
 
                 self.dds_directory = dds_cli.directory.DDSDirectory(path=new_directory)
                 self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
-                    "dds_failed_delivery.txt"
+                    "dds_failed_delivery.json"
                 )
 
         # Keyboardinterrupt

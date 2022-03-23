@@ -509,8 +509,15 @@ def add_user(click_ctx, email, role, project, unit, no_mail):
     default=False,
     help="Request deletion of own account.",
 )
+@click.option(
+    "--is-invite",
+    required=False,
+    is_flag=True,
+    default=False,
+    help="Delete an ongoing and unanswered invite.",
+)
 @click.pass_obj
-def delete_user(click_ctx, email, self):
+def delete_user(click_ctx, email, self, is_invite):
     """
     Delete user accounts from the Data Delivery System.
 
@@ -525,14 +532,29 @@ def delete_user(click_ctx, email, self):
     if click_ctx.get("NO_PROMPT", False):
         proceed_deletion = True
     else:
-        if not self:
+        if is_invite and self:
+            LOG.error("You cannot specify both `--self` and `--is-invite. Choose one.")
+            sys.exit(0)
+
+        if not self and not email:
+            LOG.error(
+                "You must specify an email adress associated to the user you're requesting to delete."
+            )
+            sys.exit(0)
+
+        if is_invite:
             proceed_deletion = rich.prompt.Confirm.ask(
-                f"Delete Data Delivery System user account associated with {email}"
+                f"Delete invitation of {email} to Data Delivery System?"
             )
         else:
-            proceed_deletion = rich.prompt.Confirm.ask(
-                "Are you sure? Deleted accounts can't be restored!"
-            )
+            if self:
+                proceed_deletion = rich.prompt.Confirm.ask(
+                    "Are you sure? Deleted accounts can't be restored!"
+                )
+            else:
+                proceed_deletion = rich.prompt.Confirm.ask(
+                    f"Delete Data Delivery System user account associated with {email}"
+                )
 
     if proceed_deletion:
         try:
@@ -544,7 +566,7 @@ def delete_user(click_ctx, email, self):
                 if self and not email:
                     manager.delete_own_account()
                 elif email and not self:
-                    manager.delete_user(email=email)
+                    manager.delete_user(email=email, is_invite=is_invite)
                 else:
                     LOG.error(
                         "You must either specify the '--self' flag "

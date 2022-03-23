@@ -11,7 +11,6 @@ import os
 import pathlib
 
 # Installed
-import threading
 
 # Own modules
 import dds_cli.utils

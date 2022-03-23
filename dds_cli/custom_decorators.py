@@ -77,15 +77,13 @@ def verify_proceed(func):
                 ]
 
             # Lock thread
-            with lock:
-                current_log_file = dds_cli.file_handler.FileHandler.append_errors_to_file(
-                    log_file=self.failed_delivery_log,
-                    file=file,
-                    info=self.filehandler.data[file],
-                    status=self.status[file],
-                )
-                if current_log_file and current_log_file != self.failed_delivery_log[-1]:
-                    self.failed_delivery_log.append(current_log_file)
+            dds_cli.file_handler.FileHandler.append_errors_to_file(
+                log_file=self.failed_delivery_log,
+                file=file,
+                info=self.filehandler.data[file],
+                status=self.status[file],
+            )
+
         return ok_to_proceed
 
     return wrapped

@@ -56,6 +56,20 @@ RETURNED_FILES_RECURSIVE_BOTTOM = {
 }
 
 
+RETURNED_UNITS_JSON = {
+    "unit_info": [
+        {
+            "Name": "Unit 1",
+            "Public ID": "unit_1",
+            "External Display Name": "Unit 1 external",
+            "Days In Available": 90,
+            "Days In Expired": 30,
+            "Safespring Endpoint": "http://minio:9000",
+            "Contact Email": "support@example.com",
+        },
+    ]
+}
+
 @pytest.fixture
 def ls_runner(runner):
     """Run dds ls without a project specified."""
@@ -445,3 +459,37 @@ def test_list_with_project_and_tree_json_dds_data_ls(ls_runner, list_request):
 
 
 # ------------------------------------------------------------------------------------------------ #
+
+
+def list_with_units(ls_runner, list_request, command):
+    """Perform test called by tests with different commands."""
+    list_request_OK = list_request(200, return_json=copy.deepcopy(RETURNED_UNITS_JSON))
+    result = ls_runner(command)
+
+    assert result.exit_code == 0
+    list_request_OK.assert_called_with(
+        dds_cli.DDSEndpoint.LIST_UNITS_ALL,
+        headers=unittest.mock.ANY,
+        json={"usage": False},
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
+    )
+
+    for substring in [
+        "Unit 1",
+        "unit_1",
+        "Unit 1 external",
+        "90",
+        "30",
+        "http://minio:9000",
+        "support@example.com",
+        "───────",  # Hack to test that there's a table printed
+    ]:
+        assert substring in result.stdout
+
+def test_list_with_units(ls_runner, list_request):
+    """Test that the list command works."""
+    list_with_units(
+        ls_runner=ls_runner,
+        list_request=list_request,
+        command=["unit", "ls"],
+    )

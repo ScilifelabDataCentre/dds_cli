@@ -8,6 +8,7 @@
 import functools
 import logging
 import pathlib
+import threading
 
 # Installed
 from rich.markup import escape
@@ -23,6 +24,7 @@ import dds_cli.file_handler
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
+lock = threading.Lock()
 
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #
@@ -74,12 +76,16 @@ def verify_proceed(func):
                     if not self.status[x]["cancel"] and not self.status[x]["started"] and x != file
                 ]
 
-            dds_cli.file_handler.FileHandler.append_errors_to_file(
-                log_file=self.failed_delivery_log,
-                file=file,
-                info=self.filehandler.data[file],
-                status=self.status[file],
-            )
+            # Lock thread
+            with lock:
+                current_log_file = dds_cli.file_handler.FileHandler.append_errors_to_file(
+                    log_file=self.failed_delivery_log,
+                    file=file,
+                    info=self.filehandler.data[file],
+                    status=self.status[file],
+                )
+                if current_log_file and current_log_file != self.failed_delivery_log[-1]:
+                    self.failed_delivery_log.append(current_log_file)
         return ok_to_proceed
 
     return wrapped

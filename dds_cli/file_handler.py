@@ -22,7 +22,7 @@ import dds_cli.exceptions
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-lock = threading.Lock()
+
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
@@ -59,22 +59,33 @@ class FileHandler:
     @staticmethod
     def append_errors_to_file(log_file: pathlib.Path, file, info, status):
         """Save errors to specific json file."""
+        # Use log file last on the list
+        log_file_to_use = log_file[-1]
 
-        with lock:
-            try:
-                with log_file.open(mode="r+") as json_file:
-                    file_data = json.load(json_file)
-                    file_data[str(file)] = {
-                        **FileHandler.make_json_serializable(non_json=info),
-                        "status": FileHandler.make_json_serializable(non_json=status),
-                    }
-                    print(file_data)
+        try:
+            # Create file if it doesn't exist
+            if not log_file_to_use.exists():
+                with log_file_to_use.open(mode="w+") as file_obj:
+                    json.dump({}, file_obj)
 
-                    json_file.seek(0)
-                    json.dump(file_data, json_file, indent=4)
+            # Switch to new file if current file is "too large"
+            if log_file_to_use.stat().st_size > 4e6:
+                log_file_to_use = log_file_to_use.with_name(str(len(log_file)) + log_file[0].name)
 
-            except (OSError, TypeError) as err:
-                LOG.warning(str(err))
+            # Keep file as correct json by loading and "appending"
+            with log_file_to_use.open(mode="r+") as json_file:
+                file_data = json.load(json_file)
+                file_data[str(file)] = {
+                    **FileHandler.make_json_serializable(non_json=info),
+                    "status": FileHandler.make_json_serializable(non_json=status),
+                }
+                json_file.seek(0)
+                json.dump(file_data, json_file, indent=4)
+
+        except (OSError, TypeError) as err:
+            LOG.warning(str(err))
+
+        return log_file_to_use
 
     @staticmethod
     def make_json_serializable(non_json):

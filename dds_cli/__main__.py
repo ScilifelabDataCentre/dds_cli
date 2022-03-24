@@ -884,7 +884,13 @@ def create(
 @project_group_command.group(name="status", no_args_is_help=True)
 @click.pass_obj
 def project_status(_):
-    """Manage project statuses."""
+    """Manage project statuses.
+
+    Display or change the status of a project.
+
+    Displaying the project status is available for all user roles. Changing the project status
+    is limited to Unit Admins and Personnel.
+    """
 
 
 # -- dds project status display -- #
@@ -900,7 +906,12 @@ def project_status(_):
 )
 @click.pass_obj
 def display_project_status(click_ctx, project, show_history):
-    """Display and manage project statuses."""
+    """Display the status of a specific project.
+
+    Use `--show-history` to see all previous statuses of the project.
+
+    Usable by all user roles.
+    """
     try:
         with dds_cli.project_status.ProjectStatusManager(
             project=project,
@@ -931,7 +942,13 @@ def display_project_status(click_ctx, project, show_history):
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
 def release_project(click_ctx, project, deadline, no_mail):
-    """Make project data available for user download."""
+    """Change project status to 'Available'.
+
+    Make project data available for user download. Data cannot be deleted and additional data cannot
+    be uploaded. The count-down for when the data access expires starts.
+
+    Only usable by: Unit Admins / Personnel.
+    """
     try:
         with dds_cli.project_status.ProjectStatusManager(
             project=project,
@@ -955,9 +972,13 @@ def release_project(click_ctx, project, deadline, no_mail):
 @project_option(required=True)
 @click.pass_obj
 def retract_project(click_ctx, project):
-    """Set the status as `In Progress`.
+    """Change the project status to 'In Progress'.
 
-    This allows Unit Personnel / Admins to upload additional data to the project.
+    'In Progress' is the default status when a project is created. Retracting the project changes
+    the status from 'Available' to 'In Progress' again.
+
+    Make project data unavailable to Researchers, and allow Unit Admins / Personnel to upload
+    additional data to the project. Data cannot be deleted. Data cannot be overwritten.
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
@@ -990,9 +1011,12 @@ def retract_project(click_ctx, project):
 )
 @click.pass_obj
 def archive_project(click_ctx, project: str, abort: bool = False):
-    """Manually archive a released project.
+    """Change the project status to 'Archived'.
 
-    This deletes all project data.
+    Certain meta data is kept and it will still be listed in your projects. All data within the
+    project is deleted. You cannot revert this change.
+
+    Use the `--abort` flag to indicate that something has gone wrong in the project.
     """
     proceed_deletion = (
         True
@@ -1023,9 +1047,10 @@ def archive_project(click_ctx, project: str, abort: bool = False):
 @project_option(required=True)
 @click.pass_obj
 def delete_project(click_ctx, project: str):
-    """Delete an unreleased project.
+    """Delete an unreleased project (change project status to 'Deleted').
 
-    This deletes all project data.
+    Certain meta data is kept (nothing sensitive) and it will still be listed in your projects. All
+    data within the project is deleted. You cannot revert this change.
     """
     proceed_deletion = (
         True
@@ -1068,13 +1093,23 @@ def project_access(_):
     "owner",
     required=False,
     is_flag=True,
-    help="Grant access as project owner. If not specified, "
-    "the user gets Researcher permissions within the project.",
+    help=(
+        "Grant access as project owner. If not specified, "
+        "the user gets Researcher permissions within the project."
+    ),
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
 def grant_project_access(click_ctx, project, email, owner, no_mail):
-    """Grant user access to a project."""
+    """Grant a user access to a project.
+
+    Users can only grant project access to project they themselves have access to, and only to
+    users with the role 'Researcher'. To set the Researcher as a Project Owner in this
+    specific project, use the `--owner` flag.
+
+    Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+    in question.
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -1101,7 +1136,14 @@ def grant_project_access(click_ctx, project, email, owner, no_mail):
 @email_option(help_message="Email of the user for whom project access is to be revoked.")
 @click.pass_obj
 def revoke_project_access(click_ctx, project, email):
-    """Revoke user access to a project."""
+    """Revoke a users access to a project.
+
+    Users can only revoke project access for users with the role 'Researcher'. To set the Researcher
+    as a Project Owner in this specific project, use the `--owner` flag.
+
+    Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+    in question.
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -1126,7 +1168,14 @@ def revoke_project_access(click_ctx, project, email):
 @project_option(required=False)
 @click.pass_obj
 def fix_project_access(click_ctx, email, project):
-    """Re-grant project access to user that has lost access due to password reset."""
+    """Re-grant project access to user that has lost access due to password reset.
+
+    When a password is reset, all project access is lost. To use the DDS in a meaningful way again,
+    the access to the active projects need to be updated.
+
+    Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+    in question.
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -1204,10 +1253,20 @@ def put_data(
     num_threads,
     silent,
 ):
-    """Upload data to project.
+    """Upload data to a project.
 
-    This first compresses the files (if not already compressed), encrypts them, and finally uploads
-    them to Safespring S3 Storage.
+    To upload a file (with the same name) a second time, use the `--overwrite` flag.
+
+    Prior to the upload, the DDS checks if the files are compressed and if not compresses them,
+    followed by encryption. After this the files are uploaded to the cloud.
+
+    NB! The current setup requires compression and encryption to be performed locally. Make sure you
+    have enough space. This will be improved on in future releases.
+    The default number of files to compress, encrypt and upload at a time is four. This can be
+    changed by altering the `--num-threads` option, but whether or not it works depends on the
+    machine you are running the CLI on.
+
+    Limited to Unit Admins and Personnel.
     """
     try:
         dds_cli.data_putter.put(
@@ -1279,9 +1338,19 @@ def get_data(
     silent,
     verify_checksum,
 ):
-    """Download files within a project.
+    """Download data from a project.
 
-    This downloads, decrypts, and finally decompresses (if compressed by the DDS) the files.
+    To download the data to a specific destination, use the `--destination` option. This cannot be
+    an existing directory, for security reasons. This will be improved on in future releases.
+
+    Following to the download, the DDS decrypts the files, checks if the files are compressed and if
+    so decompresses them.
+
+    NB! The current setup requires decryption and decompression to be performed locally. Make sure
+    you have enough space. This will be improved on in future releases.
+    The default number of files to download, decrypt and decompress at a time is four. This can be
+    changed by altering the `--num-threads` option, but whether or not it works depends on the
+    machine you are running the CLI on.
     """
     if get_all and (source or source_path_file):
         LOG.error(
@@ -1402,7 +1471,7 @@ def get_data(
 def list_data(ctx, project, folder, json, size, tree, users):
     """List project contents.
 
-    Same as dds ls [PROJECT ID].
+    Same as `dds ls --p`.
     """
     ctx.invoke(
         list_projects_and_contents,

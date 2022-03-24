@@ -97,7 +97,7 @@ Uppmax
 
 Rackham
 """""""""
-.. warning:: Do not use the DDS to deliver sensitive data to Rackham.
+.. warning:: Do not deliver sensitive data to Rackham.
 
 The DDS CLI will be made a global module at Uppmax and you will be able to load it after having ssh:ed into Rackham. Until it is a module though, you can install the CLI with PyPi as in the previous sections.
 
@@ -139,6 +139,7 @@ The six group commands
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The DDS CLI has the following group commands: 
+
 * :ref:`auth<auth-info>`
 
    .. admonition:: Accessible by
@@ -185,7 +186,7 @@ The DDS CLI has the following group commands:
 """"""""""""""""""""""""""
 ``dds auth`` and its subcommands are used for creating and managing sessions. This will enable you to use the CLI without specifying your user credentials for a certain amount of time, currently 48 hours. 
 
-See the test protocol and the command documentation :ref:`here<dds-auth>`.
+See the command documentation :ref:`here<dds-auth>`.
 
 .. _user-info:
 
@@ -193,7 +194,7 @@ See the test protocol and the command documentation :ref:`here<dds-auth>`.
 """"""""""""""""""""""""""
 You can use the ``add user`` group command to manage your own and (if you have administrative permissions) other user accounts. 
 
-See the test protocol and the command documentation :ref:`here<dds-user>`.
+See the command documentation :ref:`here<dds-user>`.
 
 .. _project-info:
 
@@ -201,7 +202,7 @@ See the test protocol and the command documentation :ref:`here<dds-user>`.
 """"""""""""""""""""""""""""""""
 The ``dds project`` command is for creating and managing projects. The majority of the functionalities regarding project management is only available to *Unit Admin* and *Unit Personnel* accounts.
 
-See the test protocol and the command documentation :ref:`here<dds-project>`.
+See the command documentation :ref:`here<dds-project>`.
 
 .. _data-info:
 
@@ -209,7 +210,7 @@ See the test protocol and the command documentation :ref:`here<dds-project>`.
 """"""""""""""""""""""""""
 The ``dds data`` group command is used for uploading, downloading, listing and deleting data. Only **Unit Admin** and **Unit Personnel** accounts can upload and delete data. All account types can list and download. 
 
-See the test protocol and the command documentation :ref:`here<dds-data>`.
+See the command documentation :ref:`here<dds-data>`.
 
 .. _ls-info:
 
@@ -217,7 +218,7 @@ See the test protocol and the command documentation :ref:`here<dds-data>`.
 """"""""""""""""""""""
 The ``dds ls`` group command can be used for listing both projects and project contents. Calling the ``dds ls`` command should produce the same output as ``dds project ls``, and calling ``dds ls --project`` should result in the same output as when calling ``dds data ls``. 
 
-See the test protocol and the command documentation :ref:`here<dds-ls>`.
+See the command documentation :ref:`here<dds-ls>`.
 
 
 Command documentation and guide

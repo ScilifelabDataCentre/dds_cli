@@ -94,7 +94,7 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
           container: latest
-          pre-build-command: "pip install dds_cli"
+          pre-build-command: "pip install ."
           build-command: "make html"
           docs-folder: "docs/"
       - name: Build the pdf with Sphinx

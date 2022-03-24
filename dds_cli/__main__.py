@@ -185,7 +185,7 @@ def list_projects_and_contents(
 ):
     """List the projects you have access to or the project contents.
 
-    To list all projects, run `dds ls` without any arguments.
+    To list all projects, run `dds ls` without any arguments, or use the `--projects` flag.
 
     Specify a Project ID to list the files within a project.
     You can also follow this with a subfolder path to show files within that folder.
@@ -322,6 +322,8 @@ def auth_group_command(_):
     (currently 7 days) without specifying your user credentials.
     If you do not authenticate yourself and start a new session, you will need to provide your
     DDS username when running the other commands.
+
+    All subcommands are usable by all user roles.
     """
 
 
@@ -381,11 +383,11 @@ def logout(click_ctx):
 @auth_group_command.command(name="info")
 @click.pass_obj
 def info(click_ctx):
-    """Display information about token.
+    """Display information about ongoing authenticated session.
 
+    \b
     Information displayed:
     - If the token is about to expire
-    - Token age
     - Time of token expiration
     """
     try:
@@ -427,7 +429,18 @@ def user_group_command(_):
 )
 @click.pass_obj
 def list_users(click_ctx, unit):
-    """List users."""
+    """List Unit Admins and Personnel connected to a specific unit.
+
+    \b
+    Super Admins:
+        - Required to specify a public unit ID.
+        - Can list users within all units.
+
+    \b
+    Unit Admins / Personnel:
+        - Any unit specified with `--unit` will be ignored.
+        - You can only list users connected to your specific unit.
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -466,18 +479,28 @@ def list_users(click_ctx, unit):
 @click.option(
     "--unit",
     required=False,
-    help="Can only be used by Super Admin. To specify which unit the user should belong to.",
+    help="Super Admins only: To specify which unit the user should belong to.",
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
 def add_user(click_ctx, email, role, project, unit, no_mail):
-    """
-    Add a user to the DDS system or hosted projects.
+    """Invite a new user to the DDS or add an existing one to a hosted project.
 
-    Specify a users email and role to associate it with projects.
+    Not available for Researchers, unless they are marked as Project Owner for a specific project.
 
-    If the user doesn't exist in the system yet, an invitation email
-    will be sent automatically to that person.
+    \b
+    Invite new user:
+        - Email
+        - Role
+
+    \b
+    Add user to project:
+        - Email
+        - Project ID (`dds ls`)
+        - Role: Researcher / Project Owner only in this case.
+        Unit Admins / Personnel are automatically added to all projects within that specific unit.
+        If the user doesn't exist in the system yet, an invitation email will be sent automatically
+        to that person.
     """
     try:
         with dds_cli.account_manager.AccountManager(
@@ -518,16 +541,20 @@ def add_user(click_ctx, email, role, project, unit, no_mail):
 )
 @click.pass_obj
 def delete_user(click_ctx, email, self, is_invite):
-    """
-    Delete user accounts from the Data Delivery System.
+    """Delete user accounts from the Data Delivery System.
 
     Use this command with caution. Deletion of accounts cannot be undone.
 
     To request the removal of your own account, use the `--self` flag without any arguments.
     An e-mail will be sent to you asking to confirm the deletion.
 
-    If you have sufficient admin privileges, you may also delete the accounts of other users.
+    If you have sufficient admin privileges, you may also delete the accounts of some other users.
     Specify the e-mail address as argument to the main command to initiate the removal process.
+
+    \b
+    Super Admins: All users.
+    Unit Admins: Unit Admins / Personnel. Not Researchers since they can be involved in projects
+    connected to other units.
     """
     if click_ctx.get("NO_PROMPT", False):
         proceed_deletion = True
@@ -590,7 +617,18 @@ def delete_user(click_ctx, email, self, is_invite):
 # Flags
 @click.pass_obj
 def get_info_user(click_ctx):
-    """Display information connected to your own DDS account."""
+    """Display information connected to your own DDS account.
+
+    Usable by all user roles.
+
+    \b
+    The following information should be displayed:
+    - Username
+    - Role
+    - Name
+    - Primary email
+    - Associated emails (not useful yet)
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -617,8 +655,10 @@ def get_info_user(click_ctx):
 def activate_user(click_ctx, email):
     """Activate/Reactivate user accounts.
 
-    If you have sufficient admin privileges, you may activate the accounts of other users.
-    Specify the e-mail address as argument to the main command to initiate the activation process.
+    \b
+    Usable only by Super Admins and Unit Admins.
+    Super Admins: All users
+    Unit Admins: Unit Admins / Personnel
     """
     if click_ctx.get("NO_PROMPT", False):
         pass
@@ -655,8 +695,10 @@ def activate_user(click_ctx, email):
 def deactivate_user(click_ctx, email):
     """Deactivate user accounts in the Data Delivery System.
 
-    If you have sufficient admin privileges, you may deactivate the accounts of other users.
-    Specify the e-mail address as argument to the main command to initiate the deactivation process.
+    \b
+    Usable only by Super Admins and Unit Admins.
+    Super Admins: All users
+    Unit Admins: Unit Admins / Personnel
     """
     if click_ctx.get("NO_PROMPT", False):
         pass
@@ -761,7 +803,12 @@ def list_projects(ctx, json, sort, usage):
     "--non-sensitive",
     required=False,
     is_flag=True,
-    help="Indicate whether the project contains only non-sensitive data",
+    default=False,
+    help=(
+        "Indicate whether the project contains only non-sensitive data. "
+        "NB! Currently all data is encrypted independent of whether the "
+        "projects is marked as sensitive or not."
+    ),
 )
 @click.pass_obj
 def create(
@@ -773,7 +820,15 @@ def create(
     owner,
     researcher,
 ):
-    """Create a project."""
+    """Create a project within the DDS.
+
+    Only usable by Unit Admins / Personnel.
+
+    To give new or existing users access to the new project, specify their emails with
+    `--researcher` or `--owner`. Both of these will give the user the role Researcher, but `--owner`
+    will mark the user as a Project Owner for this specific project, which will give that person
+    some additional administrative rights within the project such as adding users etc.
+    """
     try:
         with dds_cli.project_creator.ProjectCreator(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -829,7 +884,13 @@ def create(
 @project_group_command.group(name="status", no_args_is_help=True)
 @click.pass_obj
 def project_status(_):
-    """Manage project statuses."""
+    """Manage project statuses.
+
+    Display or change the status of a project.
+
+    Displaying the project status is available for all user roles. Changing the project status
+    is limited to Unit Admins and Personnel.
+    """
 
 
 # -- dds project status display -- #
@@ -845,7 +906,12 @@ def project_status(_):
 )
 @click.pass_obj
 def display_project_status(click_ctx, project, show_history):
-    """Display and manage project statuses."""
+    """Display the status of a specific project.
+
+    Use `--show-history` to see all previous statuses of the project.
+
+    Usable by all user roles.
+    """
     try:
         with dds_cli.project_status.ProjectStatusManager(
             project=project,
@@ -876,7 +942,13 @@ def display_project_status(click_ctx, project, show_history):
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
 def release_project(click_ctx, project, deadline, no_mail):
-    """Make project data available for user download."""
+    """Change project status to 'Available'.
+
+    Make project data available for user download. Data cannot be deleted and additional data cannot
+    be uploaded. The count-down for when the data access expires starts.
+
+    Only usable by: Unit Admins / Personnel.
+    """
     try:
         with dds_cli.project_status.ProjectStatusManager(
             project=project,
@@ -900,9 +972,13 @@ def release_project(click_ctx, project, deadline, no_mail):
 @project_option(required=True)
 @click.pass_obj
 def retract_project(click_ctx, project):
-    """Set the status as `In Progress`.
+    """Change the project status to 'In Progress'.
 
-    This allows Unit Personnel / Admins to upload additional data to the project.
+    'In Progress' is the default status when a project is created. Retracting the project changes
+    the status from 'Available' to 'In Progress' again.
+
+    Make project data unavailable to Researchers, and allow Unit Admins / Personnel to upload
+    additional data to the project. Data cannot be deleted. Data cannot be overwritten.
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
@@ -935,9 +1011,12 @@ def retract_project(click_ctx, project):
 )
 @click.pass_obj
 def archive_project(click_ctx, project: str, abort: bool = False):
-    """Manually archive a released project.
+    """Change the project status to 'Archived'.
 
-    This deletes all project data.
+    Certain meta data is kept and it will still be listed in your projects. All data within the
+    project is deleted. You cannot revert this change.
+
+    Use the `--abort` flag to indicate that something has gone wrong in the project.
     """
     proceed_deletion = (
         True
@@ -968,9 +1047,10 @@ def archive_project(click_ctx, project: str, abort: bool = False):
 @project_option(required=True)
 @click.pass_obj
 def delete_project(click_ctx, project: str):
-    """Delete an unreleased project.
+    """Delete an unreleased project (change project status to 'Deleted').
 
-    This deletes all project data.
+    Certain meta data is kept (nothing sensitive) and it will still be listed in your projects. All
+    data within the project is deleted. You cannot revert this change.
     """
     proceed_deletion = (
         True
@@ -1013,13 +1093,23 @@ def project_access(_):
     "owner",
     required=False,
     is_flag=True,
-    help="Grant access as project owner. If not specified, "
-    "the user gets Researcher permissions within the project.",
+    help=(
+        "Grant access as project owner. If not specified, "
+        "the user gets Researcher permissions within the project."
+    ),
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
 def grant_project_access(click_ctx, project, email, owner, no_mail):
-    """Grant user access to a project."""
+    """Grant a user access to a project.
+
+    Users can only grant project access to project they themselves have access to, and only to
+    users with the role 'Researcher'. To set the Researcher as a Project Owner in this
+    specific project, use the `--owner` flag.
+
+    Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+    in question.
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -1046,7 +1136,14 @@ def grant_project_access(click_ctx, project, email, owner, no_mail):
 @email_option(help_message="Email of the user for whom project access is to be revoked.")
 @click.pass_obj
 def revoke_project_access(click_ctx, project, email):
-    """Revoke user access to a project."""
+    """Revoke a users access to a project.
+
+    Users can only revoke project access for users with the role 'Researcher'. To set the Researcher
+    as a Project Owner in this specific project, use the `--owner` flag.
+
+    Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+    in question.
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -1071,7 +1168,14 @@ def revoke_project_access(click_ctx, project, email):
 @project_option(required=False)
 @click.pass_obj
 def fix_project_access(click_ctx, email, project):
-    """Re-grant project access to user that has lost access due to password reset."""
+    """Re-grant project access to user that has lost access due to password reset.
+
+    When a password is reset, all project access is lost. To use the DDS in a meaningful way again,
+    the access to the active projects need to be updated.
+
+    Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+    in question.
+    """
     try:
         with dds_cli.account_manager.AccountManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -1149,10 +1253,20 @@ def put_data(
     num_threads,
     silent,
 ):
-    """Upload data to project.
+    """Upload data to a project.
 
-    This first compresses the files (if not already compressed), encrypts them, and finally uploads
-    them to Safespring S3 Storage.
+    To upload a file (with the same name) a second time, use the `--overwrite` flag.
+
+    Prior to the upload, the DDS checks if the files are compressed and if not compresses them,
+    followed by encryption. After this the files are uploaded to the cloud.
+
+    NB! The current setup requires compression and encryption to be performed locally. Make sure you
+    have enough space. This will be improved on in future releases.
+    The default number of files to compress, encrypt and upload at a time is four. This can be
+    changed by altering the `--num-threads` option, but whether or not it works depends on the
+    machine you are running the CLI on.
+
+    Limited to Unit Admins and Personnel.
     """
     try:
         dds_cli.data_putter.put(
@@ -1224,9 +1338,19 @@ def get_data(
     silent,
     verify_checksum,
 ):
-    """Download files within a project.
+    """Download data from a project.
 
-    This downloads, decrypts, and finally decompresses (if compressed by the DDS) the files.
+    To download the data to a specific destination, use the `--destination` option. This cannot be
+    an existing directory, for security reasons. This will be improved on in future releases.
+
+    Following to the download, the DDS decrypts the files, checks if the files are compressed and if
+    so decompresses them.
+
+    NB! The current setup requires decryption and decompression to be performed locally. Make sure
+    you have enough space. This will be improved on in future releases.
+    The default number of files to download, decrypt and decompress at a time is four. This can be
+    changed by altering the `--num-threads` option, but whether or not it works depends on the
+    machine you are running the CLI on.
     """
     if get_all and (source or source_path_file):
         LOG.error(
@@ -1347,7 +1471,7 @@ def get_data(
 def list_data(ctx, project, folder, json, size, tree, users):
     """List project contents.
 
-    Same as dds ls [PROJECT ID].
+    Same as `dds ls --p`.
     """
     ctx.invoke(
         list_projects_and_contents,
@@ -1387,7 +1511,15 @@ def list_data(ctx, project, folder, json, size, tree, users):
 )
 @click.pass_obj
 def rm_data(click_ctx, project, file, folder, rm_all):
-    """Delete project data."""
+    """Delete data within a specific project.
+
+    Limited to Unit Admins and Personnel.
+
+    Project data can only be deleted if the project has the status 'In Progress' and it has never
+    had the status 'Available'.
+
+    This command should be used with caution; once the data is deleted there is no getting it back.
+    """
     no_prompt = click_ctx.get("NO_PROMPT", False)
 
     # Either all or a file
@@ -1452,7 +1584,7 @@ def rm_data(click_ctx, project, file, folder, rm_all):
 def unit_group_command(_):
     """Group command for managing units.
 
-    Only for Super Admins.
+    Limited to Super Admins.
     """
 
 
@@ -1464,7 +1596,7 @@ def unit_group_command(_):
 @unit_group_command.command(name="ls", no_args_is_help=False)
 @click.pass_obj
 def list_units(click_ctx):
-    """List all units."""
+    """List all units and their information."""
     try:
         with dds_cli.unit_manager.UnitManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),

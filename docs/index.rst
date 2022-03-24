@@ -4,24 +4,16 @@
    contain the root `toctree` directive.
 
 =====================================================================
-Welcome to the Data Delivery Systems' Documentation / Test Protocol!
+Welcome to the Data Delivery Systems' Documentation!
 =====================================================================
 
-.. note:: 
+The Data Delivery System (DDS, https://delivery.scilifelab.se/) consists of a command line interface (CLI) and a currently minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
 
-   During testing on 2022-02-28 to 2022-03-07, this will work as **both documentation and as a test protocol**. The goal is to give you ideas on what aspects of the system to try out, but please also test anything else you can think of (e.g. if you feel we have missed something). Also, please make note of whether the documentation of the system has any deficiencies such as unclear, misleading or incomplete instructions. 
-
-.. warning::
-   
-   **Please do not use any sensitive data during this testing phase.** Since the last testing period we have implemented a key management system for the storage of all required keys (e.g. encryption keys) and your data should be secure, however there may be bugs and/or issues which we need to solve before DDS is put into production. 
-
-The Data Delivery System (DDS) consists of a command line interface (CLI) and a very minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
-
-How will I get my user account?
+How do I get my user account?
 ===============================
-The testing will begin with you getting an invite via email. The email will be from `dsw@scilifelab.se` during the testing (note that any emails sent to this address regarding the DDS *will not be responded to*). If you do not get an email, please have a look in the junk/spam folder. If it's not there either, please contact Ina (*email:* ina.oden.osterbo@scilifelab.uu.se, *slack:* Ina Odén Österbo) and we will look into it. 
+An invite from an existing user is required in order for you to get an account within the DDS. The email will be from `dsw@scilifelab.se`, we will notify you if and when this changes. Note that any emails sent to this address regarding the DDS *will not be responded to*. If you do not get an email, please have a look in the junk/spam folder. If your email adress has the `scilifelab.se` domain, keep in mind that your emails may take a while to deliver due to the KTH spam filters. If you do not receive an email, please contact Ina (*email:* ina.oden.osterbo@scilifelab.uu.se, *slack:* Ina Odén Österbo) and we will look into it. 
 
-Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system and can begin testing the different features. To be able to test the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<how-to-use>`.
+Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system. To be able to use the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<how-to-use>`.
 
 .. warning::
    Forgetting passwords in the DDS means that you will lose access to all project data. We highly recommend that you use a password management system such as `LastPass <https://www.lastpass.com/>`_ or similar.
@@ -38,16 +30,13 @@ How to use the DDS CLI
 Installation
 ------------
 
-At this time, a **Python** and **pip** installation is required for the ``dds-cli`` installation to work. We are currently working on an executable which can install all the requirements and the CLI for you. The goal is for this executable to be ready when we release the CLI into production.
+MacOS / Linux 
+~~~~~~~~~~~~~~
+You can either install the DDS CLI using pip (https://pypi.org/project/dds-cli/) or with an executable.
 
-Uppmax
-~~~~~~~
-We are currently checking that installing the DDS CLI on Rackham works as expected. We will update this information as soon as possible. If we have not yet updated this section before you attempt to use the DDS CLI on **Uppmax Rackham**, feel free to try it and inform us on any issues. 
+PyPi
+"""""
 
-**Regarding Bianca:** Uppmax has offered to help us out with testing that the connection to Bianca works. Instructions for this will therefore not be provided at this time. Data will be possible to deliver to Bianca when the DDS is in production. Instructions for how this will work will come at a later time.
-
-PyPi - MacOS / Linux 
-~~~~~~~~~~~~~~~~~~~~~
 1. To perform these steps you need to have Python version 3.8 or higher installed. It's possible that it could work with other versions, but this cannot be guaranteed. 
 
    * To install Python, please first run
@@ -86,10 +75,54 @@ PyPi - MacOS / Linux
 
    This should display a logo, version information and a short usage message. If there are no errors when running this command, the test has succeeded and you should be able to move on to :ref:`Running the command<Running the command>`.
 
+Executable
+""""""""""""
+<instructions here>
 
 Windows
-~~~~~~~~~~~~~~~~~~~~~
-We are working on creating an executable which will perform all required installations. However, for now, we have made detailed instructions for how you can install the DDS CLI on Windows. The instructions can be found :ref:`here<windows>`. 
+~~~~~~~~~
+As with MacOS and Linux, you can use PyPi or an executable to install the DDS CLI. We recommend the executable.
+
+PyPi
+""""""
+Detailed instructions on how install the DDS CLI on Windows: :ref:`here<windows>`. 
+
+Executable
+""""""""""""
+<instructions here>
+
+
+Uppmax
+~~~~~~~
+
+Rackham
+"""""""""
+.. warning:: Do not deliver sensitive data to Rackham.
+
+The DDS CLI will be made a global module at Uppmax and you will be able to load it after having ssh:ed into Rackham. Until it is a module though, you can install the CLI with PyPi as in the previous sections.
+
+.. code-block:: bash
+
+   $ pip install dds-cli 
+
+A detailed user guide for Rackham can be found here: https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/
+
+Bianca
+""""""""
+* Bianca 
+   * ssh into transit: $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
+   * you get to home directory - any files that are created here are not persistent - if you download data from dds  here is will not persist beyond their ssh session!!!
+   * Mount specific directory of a SENS project on transit: username@transit:~$ mount_wharf <sens_project>
+   * Set mount point as destination in the dds get command: dds data get --destination <sens_project>/<destination>/ (!!!)
+      * downloaded data ends up in a non-backed up storage on bianca 
+   * TO BE AWARE OF:
+      * Mount the correct SENS project on transit
+      * The size of the data they need to download vs the nobackup storage allocation of the corresponding SENS project
+      * start the download in a screen/tmux session for anything larger than a few hundreds of GB
+   * Bianca user guide: https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/
+   * Transit user guide: https://www.uppmax.uu.se/support/user-guides/transit-user-guide/
+
+
 
 -------
 
@@ -102,10 +135,50 @@ The main command ``dds`` has some options and possible customisations. A detaile
 
 Some commands should not be possible to successfully run from a Researcher account. The affected commands are marked with asterisks (\*\*\*). However, we ask you to try these commands anyway and report back to us if anything unexpected occurs. 
 
-The five group commands
+The six group commands
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The DDS CLI has the following group commands: :ref:`auth<auth-info>`, :ref:`user<user-info>`, :ref:`project<project-info>`, :ref:`data<data-info>` and :ref:`ls<ls-info>`.
+The DDS CLI has the following group commands: 
+
+* :ref:`auth<auth-info>`
+
+   .. admonition:: Accessible by
+      
+      All user roles.
+
+* :ref:`user<user-info>`
+
+   .. admonition:: Accessible by
+      
+      All user roles. Some subcommands are limited to Unit Admins, Unit Personnel and in come cases Researchers marked as Project Owners for specific projects.
+
+* :ref:`project<project-info>`
+
+   .. admonition:: Accessible by
+      
+      Researchers can use the ``dds project ls``.
+      Researchers marked as Project Owners in specific projects can also use ``dds project access grant/revoke``. 
+      The rest of the subcommands are limited to Unit Admins and Unit Personnel.
+
+* :ref:`data<data-info>`
+
+   .. admonition:: Accessible by
+      
+      Researchers can use `dds data get`.
+      The rest of the subcommands are limited to Unit Admins and Unit Personnel.
+
+* :ref:`unit<unit-info>`
+
+   .. admonition:: Accessible by
+      
+      Super Admins only.
+
+* :ref:`ls<ls-info>`.
+
+   .. admonition:: Accessible by
+      
+      All user roles.
+
 
 .. _auth-info:
 
@@ -113,7 +186,7 @@ The DDS CLI has the following group commands: :ref:`auth<auth-info>`, :ref:`user
 """"""""""""""""""""""""""
 ``dds auth`` and its subcommands are used for creating and managing sessions. This will enable you to use the CLI without specifying your user credentials for a certain amount of time, currently 48 hours. 
 
-See the test protocol and the command documentation :ref:`here<dds-auth>`.
+See the command documentation :ref:`here<dds-auth>`.
 
 .. _user-info:
 
@@ -121,7 +194,7 @@ See the test protocol and the command documentation :ref:`here<dds-auth>`.
 """"""""""""""""""""""""""
 You can use the ``add user`` group command to manage your own and (if you have administrative permissions) other user accounts. 
 
-See the test protocol and the command documentation :ref:`here<dds-user>`.
+See the command documentation :ref:`here<dds-user>`.
 
 .. _project-info:
 
@@ -129,7 +202,7 @@ See the test protocol and the command documentation :ref:`here<dds-user>`.
 """"""""""""""""""""""""""""""""
 The ``dds project`` command is for creating and managing projects. The majority of the functionalities regarding project management is only available to *Unit Admin* and *Unit Personnel* accounts.
 
-See the test protocol and the command documentation :ref:`here<dds-project>`.
+See the command documentation :ref:`here<dds-project>`.
 
 .. _data-info:
 
@@ -137,7 +210,7 @@ See the test protocol and the command documentation :ref:`here<dds-project>`.
 """"""""""""""""""""""""""
 The ``dds data`` group command is used for uploading, downloading, listing and deleting data. Only **Unit Admin** and **Unit Personnel** accounts can upload and delete data. All account types can list and download. 
 
-See the test protocol and the command documentation :ref:`here<dds-data>`.
+See the command documentation :ref:`here<dds-data>`.
 
 .. _ls-info:
 
@@ -145,11 +218,8 @@ See the test protocol and the command documentation :ref:`here<dds-data>`.
 """"""""""""""""""""""
 The ``dds ls`` group command can be used for listing both projects and project contents. Calling the ``dds ls`` command should produce the same output as ``dds project ls``, and calling ``dds ls --project`` should result in the same output as when calling ``dds data ls``. 
 
-See the test protocol and the command documentation :ref:`here<dds-ls>`.
+See the command documentation :ref:`here<dds-ls>`.
 
-How to test the web interface
-==============================
-The DDS web interface can be found at https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
 
 Command documentation and guide
 ================================

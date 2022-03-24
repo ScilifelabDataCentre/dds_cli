@@ -41,7 +41,7 @@ class Auth(base.DDSBaseClass):
             token_file.token_report(token=token)
         else:
             LOG.info(
-                "[red]No saved token found, or token has expired. Authenticate yourself with `dds auth login` to use this functionality.![/red]"
+                "[red]No saved token found, or token has expired. Authenticate yourself with `dds auth login` to use this functionality![/red]"
             )
 
     def logout(self):

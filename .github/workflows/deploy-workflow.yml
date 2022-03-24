@@ -2,7 +2,8 @@ name: Release actions for the CLI
 on:
   release:
     types: [published]
-
+    branches:
+      - 'master'
 jobs:
   build-n-publish:
     runs-on: ubuntu-latest

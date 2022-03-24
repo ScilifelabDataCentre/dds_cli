@@ -7,7 +7,7 @@
 Welcome to the Data Delivery Systems' Documentation!
 =====================================================================
 
-The Data Delivery System (DDS) consists of a command line interface (CLI) and a very minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
+The Data Delivery System (DDS, https://delivery.scilifelab.se/) consists of a command line interface (CLI) and a currently minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
 
 How do I get my user account?
 ===============================
@@ -30,32 +30,13 @@ How to use the DDS CLI
 Installation
 ------------
 
-* pip install dds-cli - make sure it's the correct version (pypi link)
-   * **Python** and **pip** installation is required for the ``dds-cli`` installation to work.
-   * If not correct version - pip install --upgrade dds-cli
-* **executable available** for windows, linux and macos
+MacOS / Linux 
+~~~~~~~~~~~~~~
+You can either install the DDS CLI using pip (https://pypi.org/project/dds-cli/) or with an executable.
 
-Uppmax
-~~~~~~~
-* Uppmax - ONLY FOR NON SENSITIVE
-   * pip install dds-cli as usual
-   * in contact with uppmax to make it a module
-   * Rackham User guide: https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/
-* Bianca 
-   * ssh into transit: $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
-   * you get to home directory - any files that are created here are not persistent - if you download data from dds  here is will not persist beyond their ssh session!!!
-   * Mount specific directory of a SENS project on transit: username@transit:~$ mount_wharf <sens_project>
-   * Set mount point as destination in the dds get command: dds data get --destination <sens_project>/<destination>/ (!!!)
-      * downloaded data ends up in a non-backed up storage on bianca 
-   * TO BE AWARE OF:
-      * Mount the correct SENS project on transit
-      * The size of the data they need to download vs the nobackup storage allocation of the corresponding SENS project
-      * start the download in a screen/tmux session for anything larger than a few hundreds of GB
-   * Bianca user guide: https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/
-   * Transit user guide: https://www.uppmax.uu.se/support/user-guides/transit-user-guide/
+PyPi
+"""""
 
-PyPi - MacOS / Linux 
-~~~~~~~~~~~~~~~~~~~~~
 1. To perform these steps you need to have Python version 3.8 or higher installed. It's possible that it could work with other versions, but this cannot be guaranteed. 
 
    * To install Python, please first run
@@ -94,10 +75,54 @@ PyPi - MacOS / Linux
 
    This should display a logo, version information and a short usage message. If there are no errors when running this command, the test has succeeded and you should be able to move on to :ref:`Running the command<Running the command>`.
 
+Executable
+""""""""""""
+<instructions here>
 
 Windows
-~~~~~~~~~~~~~~~~~~~~~
-We are working on creating an executable which will perform all required installations. However, for now, we have made detailed instructions for how you can install the DDS CLI on Windows. The instructions can be found :ref:`here<windows>`. 
+~~~~~~~~~
+As with MacOS and Linux, you can use PyPi or an executable to install the DDS CLI. We recommend the executable.
+
+PyPi
+""""""
+Detailed instructions on how install the DDS CLI on Windows: :ref:`here<windows>`. 
+
+Executable
+""""""""""""
+<instructions here>
+
+
+Uppmax
+~~~~~~~
+
+Rackham
+"""""""""
+.. warning:: Do not use the DDS to deliver sensitive data to Rackham.
+
+The DDS CLI will be made a global module at Uppmax and you will be able to load it after having ssh:ed into Rackham. Until it is a module though, you can install the CLI with PyPi as in the previous sections.
+
+.. code-block:: bash
+
+   $ pip install dds-cli 
+
+A detailed user guide for Rackham can be found here: https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/
+
+Bianca
+""""""""
+* Bianca 
+   * ssh into transit: $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
+   * you get to home directory - any files that are created here are not persistent - if you download data from dds  here is will not persist beyond their ssh session!!!
+   * Mount specific directory of a SENS project on transit: username@transit:~$ mount_wharf <sens_project>
+   * Set mount point as destination in the dds get command: dds data get --destination <sens_project>/<destination>/ (!!!)
+      * downloaded data ends up in a non-backed up storage on bianca 
+   * TO BE AWARE OF:
+      * Mount the correct SENS project on transit
+      * The size of the data they need to download vs the nobackup storage allocation of the corresponding SENS project
+      * start the download in a screen/tmux session for anything larger than a few hundreds of GB
+   * Bianca user guide: https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/
+   * Transit user guide: https://www.uppmax.uu.se/support/user-guides/transit-user-guide/
+
+
 
 -------
 
@@ -115,16 +140,19 @@ The six group commands
 
 The DDS CLI has the following group commands: 
 * :ref:`auth<auth-info>`
+
    .. admonition:: Accessible by
       
       All user roles.
 
 * :ref:`user<user-info>`
+
    .. admonition:: Accessible by
       
       All user roles. Some subcommands are limited to Unit Admins, Unit Personnel and in come cases Researchers marked as Project Owners for specific projects.
 
 * :ref:`project<project-info>`
+
    .. admonition:: Accessible by
       
       Researchers can use the ``dds project ls``.
@@ -132,17 +160,20 @@ The DDS CLI has the following group commands:
       The rest of the subcommands are limited to Unit Admins and Unit Personnel.
 
 * :ref:`data<data-info>`
+
    .. admonition:: Accessible by
       
       Researchers can use `dds data get`.
       The rest of the subcommands are limited to Unit Admins and Unit Personnel.
 
 * :ref:`unit<unit-info>`
+
    .. admonition:: Accessible by
       
       Super Admins only.
 
 * :ref:`ls<ls-info>`.
+
    .. admonition:: Accessible by
       
       All user roles.
@@ -188,9 +219,6 @@ The ``dds ls`` group command can be used for listing both projects and project c
 
 See the test protocol and the command documentation :ref:`here<dds-ls>`.
 
-How to test the web interface
-==============================
-The DDS web interface can be found at https://delivery.scilifelab.se/. There will only be a log in page and the possibility of requesting a password change. A guide on how to test out the existing web can be found :ref:`here<web>`.
 
 Command documentation and guide
 ================================

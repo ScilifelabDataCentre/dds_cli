@@ -6,6 +6,7 @@ import pathlib
 import pkg_resources
 import prompt_toolkit
 import rich.console
+import sys
 
 
 ###############################################################################
@@ -148,3 +149,13 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
 
 # Determine if the user is on an old terminal without proper Unicode support
 dds_on_legacy_console = rich.console.detect_legacy_windows()
+
+
+# Required to make the standalone executables build with PyInstaller work.
+if __name__ == "__main__":
+    from dds_cli.__main__ import dds_main
+
+    if getattr(sys, "frozen", False):
+        dds_main(sys.argv[1:])
+    else:
+        dds_main()

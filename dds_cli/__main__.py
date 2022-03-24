@@ -1511,7 +1511,15 @@ def list_data(ctx, project, folder, json, size, tree, users):
 )
 @click.pass_obj
 def rm_data(click_ctx, project, file, folder, rm_all):
-    """Delete project data."""
+    """Delete data within a specific project.
+
+    Limited to Unit Admins and Personnel.
+
+    Project data can only be deleted if the project has the status 'In Progress' and it has never
+    had the status 'Available'.
+
+    This command should be used with caution; once the data is deleted there is no getting it back.
+    """
     no_prompt = click_ctx.get("NO_PROMPT", False)
 
     # Either all or a file
@@ -1576,7 +1584,7 @@ def rm_data(click_ctx, project, file, folder, rm_all):
 def unit_group_command(_):
     """Group command for managing units.
 
-    Only for Super Admins.
+    Limited to Super Admins.
     """
 
 
@@ -1588,7 +1596,7 @@ def unit_group_command(_):
 @unit_group_command.command(name="ls", no_args_is_help=False)
 @click.pass_obj
 def list_units(click_ctx):
-    """List all units."""
+    """List all units and their information."""
     try:
         with dds_cli.unit_manager.UnitManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),

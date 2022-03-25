@@ -453,7 +453,7 @@ class DataLister(base.DDSBaseClass):
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(
                 message=(
-                    "Failed go get list of users"
+                    "Failed to get list of users"
                     + (
                         ": The database seems to be down."
                         if isinstance(err, requests.exceptions.ConnectionError)

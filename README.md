@@ -11,8 +11,8 @@ This tool is written and maintained by the [SciLifeLab Data Centre](https://www.
 
 ## Table of contents
 
-* [Installation](#installation)
-* [Overview of commands](#overview-of-commands)
+- [Installation](#installation)
+- [Overview of commands](#overview-of-commands)
 
 ## Installation
 
@@ -30,31 +30,34 @@ After installing, run `dds` and verify that the output looks like this:
 
 ```bash
 $ dds
-     ︵ 
- ︵ (  )   ︵ 
-(  ) ) (  (  )   SciLifeLab Data Delivery System 
- ︶  (  ) ) (    https://delivery.scilifelab.se/ 
-      ︶ (  )    Version 0.0.6 
-          ︶ 
-Current user: dds_admin
-                                                                                                                                                                                                             
- Usage: dds [OPTIONS] COMMAND [ARGS]...                                                                                                                                                                      
-                                                                                                                                                                                                             
- SciLifeLab Data Delivery System (DDS) command line interface.                                                                                                                                               
- Access token is saved in a .dds_cli_token file in the home directory.                                                                                                                                       
-                                                                                                                                                                                                             
+     ︵
+ ︵ (  )   ︵
+(  ) ) (  (  )   SciLifeLab Data Delivery System
+ ︶  (  ) ) (    https://delivery.scilifelab.se/
+      ︶ (  )    Version 1.0.0
+          ︶
+
+ Usage: dds [OPTIONS] COMMAND [ARGS]...
+
+ SciLifeLab Data Delivery System (DDS) command line interface.
+ Access token is saved in a .dds_cli_token file in the home directory.
+
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
-│  --verbose    -v              Print verbose output to the console.                               │
-│  --log-file   -l  <filename>  Save a log to a file.                                              │
-│  --no-prompt                  Run without any interactive features.                              │
-│  --version                    Show the version and exit.                                         │
-│  --help                       Show this message and exit.                                        │
+│  --verbose     -v               Print verbose output to the console.                             │
+│  --log-file    -l   <filename>  Save a log to a file.                                            │
+│  --no-prompt                    Run without any interactive features.                            │
+│  --token-path  -tp  TEXT        The path where the authentication token will be stored. For a    │
+│                                 normal use-case, this should not be needed.                      │
+│  --version                      Display the version of this software.                            │
+│  --help                         List the options of any DDS subcommand and its default           │
+│                                 settings.                                                        │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
 │  auth     Group command for creating and managing authenticated sessions.                        │
 │  data     Group command for uploading, downloading and managing project data.                    │
 │  ls       List the projects you have access to or the project contents.                          │
 │  project  Group command for creating and managing projects within the DDS.                       │
+│  unit     Group command for managing units.                                                      │
 │  user     Group command for managing user accounts, including your own.                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
@@ -78,8 +81,8 @@ pip install --upgrade -r requirements-dev.txt -e .
 
 Once installed you can use the command `dds` in a terminal session. This has the following subcommands:
 
-* `auth`: Create and manage authenticated sessions.
-* `user`: Create and manage user accounts, including your own. 
-* `project`: Create and manage projects.
-* `data`: Upload, download and manage project data.
-* `ls`: List projects and project contents.
+- `auth`: Create and manage authenticated sessions.
+- `user`: Create and manage user accounts, including your own.
+- `project`: Create and manage projects.
+- `data`: Upload, download and manage project data.
+- `ls`: List projects and project contents.

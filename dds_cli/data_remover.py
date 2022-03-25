@@ -125,7 +125,14 @@ class DataRemover(base.DDSBaseClass):
                 DDSEndpoint.REMOVE_PROJ_CONT, params={"project": self.project}, headers=self.token
             )
         except requests.exceptions.RequestException as err:
-            raise SystemExit from err
+            raise SystemExit(
+                "Failed to delete project contents"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            ) from err
 
         if not response.ok:
             raise dds_cli.exceptions.APIError(f"Failed to delete files in project: {response.text}")
@@ -153,7 +160,14 @@ class DataRemover(base.DDSBaseClass):
                 headers=self.token,
             )
         except requests.exceptions.RequestException as err:
-            raise SystemExit from err
+            raise SystemExit(
+                f"Failed to delete file from project {self.project}"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            ) from err
 
         if not response.ok:
             raise dds_cli.exceptions.APIError(
@@ -179,7 +193,14 @@ class DataRemover(base.DDSBaseClass):
                 headers=self.token,
             )
         except requests.exceptions.RequestException as err:
-            raise SystemExit from err
+            raise SystemExit(
+                f"Failed to delete folder(s) from project '{self.project}'"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            ) from err
 
         if not response.ok:
             raise dds_cli.exceptions.APIError(

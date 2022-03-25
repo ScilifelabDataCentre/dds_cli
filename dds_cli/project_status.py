@@ -56,7 +56,16 @@ class ProjectStatusManager(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to get project status"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         # Check response
         if not response.ok:
@@ -122,7 +131,16 @@ class ProjectStatusManager(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to update project status"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         # Check response
         if not response.ok:

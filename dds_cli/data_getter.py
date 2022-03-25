@@ -24,6 +24,7 @@ from dds_cli import text_handler as txt
 from dds_cli.custom_decorators import verify_proceed, update_status, subpath_required
 from dds_cli import base
 import dds_cli.utils
+import dds_cli.exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -231,7 +232,13 @@ class DataGetter(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise SystemExit from err
+            error = "Failed to update file information" + (
+                ": The database seems to be down."
+                if isinstance(err, requests.exceptions.ConnectionError)
+                else "."
+            )
+            LOG.exception(error)
+            return updated_in_db, error
 
         # Error if failed
         if not response.ok:

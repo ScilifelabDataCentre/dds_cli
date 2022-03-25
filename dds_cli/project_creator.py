@@ -67,7 +67,16 @@ class ProjectCreator(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to create project"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         else:
             # Error if failed
             if not response.ok:

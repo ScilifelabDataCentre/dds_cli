@@ -161,7 +161,16 @@ def request_get(
         )
         response_json = response.json()
     except requests.exceptions.RequestException as err:
-        raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        raise dds_cli.exceptions.ApiRequestError(
+            message=(
+                error_message
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            )
+        )
     except simplejson.JSONDecodeError as err:
         raise dds_cli.exceptions.ApiResponseError(message=str(err))
 

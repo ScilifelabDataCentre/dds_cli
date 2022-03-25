@@ -155,7 +155,14 @@ class DDSBaseClass:
             )
         except requests.exceptions.RequestException as err:
             LOG.fatal(str(err))
-            raise SystemExit from err
+            raise SystemExit(
+                "Failed to get cloud information"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            ) from err
 
         if not response.ok:
             message = "Failed getting key from DDS API"

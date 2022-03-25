@@ -232,14 +232,13 @@ class DataGetter(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(
-                message="Failed to update file information"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
+            error = "Failed to update file information" + (
+                ": The database seems to be down."
+                if isinstance(err, requests.exceptions.ConnectionError)
+                else "."
             )
+            LOG.exception(error)
+            return updated_in_db, error
 
         # Error if failed
         if not response.ok:

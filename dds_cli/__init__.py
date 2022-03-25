@@ -3,18 +3,18 @@
 import datetime
 import os
 import pathlib
-import pkg_resources
 import prompt_toolkit
 import rich.console
 import sys
 
+from dds_cli.version import __version__ as version_number
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
 ###############################################################################
 
 __title__ = "Data Delivery System"
-__version__ = pkg_resources.get_distribution("dds_cli").version
+__version__ = version_number
 __url__ = "https://delivery.scilifelab.se/"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"

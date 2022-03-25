@@ -86,7 +86,6 @@ class ApiRequestError(requests.exceptions.RequestException):
 
     def __init__(self, message):
         """Log and raise."""
-        LOG.exception(message)
         super().__init__(message)
 
 

@@ -87,7 +87,16 @@ class DataLister(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to get list of projects"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         # Check response
         if not response.ok:
@@ -148,7 +157,16 @@ class DataLister(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.APIError(f"Problem with database response: '{err}'")
+            raise exceptions.APIError(
+                message=(
+                    f"Failed to get list of files in project '{self.project}'"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         if not response.ok:
             raise exceptions.APIError(f"Failed to get list of files: '{response.text}'")
@@ -433,7 +451,16 @@ class DataLister(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to get list of users"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         # Check resposne
         if not response.ok:

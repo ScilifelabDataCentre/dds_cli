@@ -947,6 +947,9 @@ def release_project(click_ctx, project, deadline, no_mail):
     Make project data available for user download. Data cannot be deleted and additional data cannot
     be uploaded. The count-down for when the data access expires starts.
 
+    The `--deadline` option can be used when changing the project status from 'In Progress' to
+    'Available' for the first time. In all other cases the deadline option will be ignored.
+
     Only usable by: Unit Admins / Personnel.
     """
     try:

@@ -139,3 +139,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Change log to correct json ([#426](https://github.com/ScilifelabDataCentre/dds_cli/pull/426))
 - `--is-invite` option in `dds user delete` to allow delete of invites (temporary) ([#415](https://github.com/ScilifelabDataCentre/dds_cli/pull/415))
 - Github Action to automatically build the executables (with help from @zishanmirza) and the documentations with Sphinx.([#419](https://github.com/ScilifelabDataCentre/dds_cli/pull/419),[#423](https://github.com/ScilifelabDataCentre/dds_cli/pull/423))
+- Github Action to automatically deploy the documentation to Github Pages. ([#436](https://github.com/ScilifelabDataCentre/dds_cli/pull/436))

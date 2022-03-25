@@ -21,7 +21,7 @@ jobs:
           pre-build-command: "pip install ."
           build-command: "make dirhtml"
           docs-folder: "docs/"
-      - name: Deploy 🚀
+      - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
           branch: gh-pages

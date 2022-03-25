@@ -88,11 +88,13 @@ class DataLister(base.DDSBaseClass):
             )
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(
-                message="Failed to get list of projects"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
+                message=(
+                    "Failed to get list of projects"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
                 )
             )
 

@@ -85,7 +85,14 @@ class RemoteFileHandler(fh.FileHandler):
             # Get file info from response
             file_info = response.json()
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message="Failed to collect file information"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 

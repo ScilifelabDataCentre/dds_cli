@@ -113,7 +113,16 @@ class User:
             )
             response_json = response.json()
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err)) from err
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to authenticate user"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            ) from err
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -162,7 +171,16 @@ class User:
                 )
                 response_json = response.json()
             except requests.exceptions.RequestException as err:
-                raise exceptions.ApiRequestError(message=str(err)) from err
+                raise exceptions.ApiRequestError(
+                    message=(
+                        "Failed to authenticate with second factor"
+                        + (
+                            ": The database seems to be down."
+                            if isinstance(err, requests.exceptions.ConnectionError)
+                            else "."
+                        )
+                    )
+                ) from err
 
             if response.ok:
                 # Step out of the while-loop

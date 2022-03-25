@@ -474,7 +474,10 @@ def list_users(click_ctx, unit):
         choices=["Super Admin", "Unit Admin", "Unit Personnel", "Project Owner", "Researcher"],
         case_sensitive=False,
     ),
-    help="Type of account.",
+    help=(
+        "Type of account. To include a space in the chosen role, use quotes "
+        '(e.g. "Unit Personnel") or escape the space (e.g. Unit\ Personnel)'
+    ),
 )
 @click.option(
     "--unit",
@@ -550,6 +553,8 @@ def delete_user(click_ctx, email, self, is_invite):
 
     If you have sufficient admin privileges, you may also delete the accounts of some other users.
     Specify the e-mail address as argument to the main command to initiate the removal process.
+
+    Deleting a user will not delete any data.
 
     \b
     Super Admins: All users.

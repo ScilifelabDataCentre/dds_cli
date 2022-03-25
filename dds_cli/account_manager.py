@@ -73,9 +73,17 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
             # Get response
             response_json = response.json()
-            LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to add user"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -124,7 +132,16 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             message = response_json["message"]
 
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to delete user"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -154,7 +171,16 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             dds_cli.auth.Auth.logout(self)
 
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to request deletion of account"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -183,7 +209,16 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             response_json = response.json()
             LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to change project status"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -217,7 +252,16 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                     response_json["info"][field] = rich.markup.escape(response_json["info"][field])
             LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to get user information"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -253,9 +297,17 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
             # Get response
             response_json = response.json()
-            LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    f"Failed to {action} user"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -286,7 +338,16 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             response_json = response.json()
 
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    f"Failed to fix project access for user '{email}'"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 

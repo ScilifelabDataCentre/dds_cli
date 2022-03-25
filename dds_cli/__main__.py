@@ -301,6 +301,7 @@ def list_projects_and_contents(
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -355,6 +356,7 @@ def login(click_ctx):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -374,7 +376,7 @@ def logout(click_ctx):
         ) as authenticator:
             authenticator.logout()
 
-    except dds_cli.exceptions.DDSCLIException as err:
+    except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
         sys.exit(1)
 
@@ -395,7 +397,7 @@ def info(click_ctx):
             authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
             authenticator.check()
-    except dds_cli.exceptions.DDSCLIException as err:
+    except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
         sys.exit(1)
 
@@ -645,6 +647,7 @@ def get_info_user(click_ctx):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -875,6 +878,7 @@ def create(
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -929,6 +933,7 @@ def display_project_status(click_ctx, project, show_history):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -969,6 +974,7 @@ def release_project(click_ctx, project, deadline, no_mail):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1000,6 +1006,7 @@ def retract_project(click_ctx, project):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1044,6 +1051,7 @@ def archive_project(click_ctx, project: str, abort: bool = False):
             dds_cli.exceptions.AuthenticationError,
             dds_cli.exceptions.DDSCLIException,
             dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.ApiRequestError,
         ) as err:
             LOG.error(err)
             sys.exit(1)
@@ -1078,6 +1086,7 @@ def delete_project(click_ctx, project: str):
             dds_cli.exceptions.AuthenticationError,
             dds_cli.exceptions.DDSCLIException,
             dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.ApiRequestError,
         ) as err:
             LOG.error(err)
             sys.exit(1)
@@ -1163,6 +1172,7 @@ def revoke_project_access(click_ctx, project, email):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1195,6 +1205,7 @@ def fix_project_access(click_ctx, email, project):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1293,6 +1304,7 @@ def put_data(
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.UploadError,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1575,6 +1587,7 @@ def rm_data(click_ctx, project, file, folder, rm_all):
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)

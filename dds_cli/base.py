@@ -48,6 +48,7 @@ class DDSBaseClass:
         self,
         project=None,
         dds_directory: pathlib.Path = None,
+        mount_dir: pathlib.Path = None,
         method: str = None,
         authenticate: bool = True,
         method_check: bool = True,
@@ -70,15 +71,21 @@ class DDSBaseClass:
 
             # Use user defined destination if any specified
             if self.method in DDS_DIR_REQUIRED_METHODS:
-                self.dds_directory = dds_cli.directory.DDSDirectory(
-                    path=dds_directory
-                    if dds_directory
-                    else pathlib.Path.cwd()
-                    / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
+                default_dir = pathlib.Path(
+                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}"
                 )
+                if mount_dir:
+                    new_directory = mount_dir / default_dir
+                elif dds_directory:
+                    new_directory = dds_directory
+                else:
+                    new_directory = pathlib.Path.cwd() / default_dir
 
+                self.temporary_directory = new_directory
+
+                self.dds_directory = dds_cli.directory.DDSDirectory(path=new_directory)
                 self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
-                    "dds_failed_delivery.txt"
+                    "dds_failed_delivery.json"
                 )
 
         # Keyboardinterrupt
@@ -148,7 +155,14 @@ class DDSBaseClass:
             )
         except requests.exceptions.RequestException as err:
             LOG.fatal(str(err))
-            raise SystemExit from err
+            raise SystemExit(
+                "Failed to get cloud information"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            ) from err
 
         if not response.ok:
             message = "Failed getting key from DDS API"

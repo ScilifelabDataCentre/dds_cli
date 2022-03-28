@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import pathlib
+import threading
 
 # Installed
 
@@ -21,6 +22,7 @@ import dds_cli.exceptions
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
+lock = threading.Lock()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -58,23 +60,23 @@ class FileHandler:
     @staticmethod
     def append_errors_to_file(log_file: pathlib.Path, file, info, status):
         """Save errors to specific json file."""
-
-        failed_to_save = {
-            str(file): {
-                **FileHandler.make_json_serializable(non_json=info),
-                "status": FileHandler.make_json_serializable(non_json=status),
-            }
-        }
         try:
-            with log_file.open(mode="a") as errfile:
-                json_output = json.dumps(
-                    failed_to_save,
-                    indent=4,
-                )
-                # Each line is valid json, but the entire file is not.
-                # Multiple threads are appending to this file, so valid json for
-                # the entire file is not trivial.
-                errfile.write(json_output + "\n")
+            with lock:
+                # Create file if it doesn't exist
+                if not log_file.exists():
+                    with log_file.open(mode="w+") as file_obj:
+                        json.dump({}, file_obj)
+
+                # Keep file as correct json by loading and "appending"
+                with log_file.open(mode="r+") as json_file:
+                    file_data = json.load(json_file)
+                    file_data[str(file)] = {
+                        **FileHandler.make_json_serializable(non_json=info),
+                        "status": FileHandler.make_json_serializable(non_json=status),
+                    }
+                    json_file.seek(0)
+                    json.dump(file_data, json_file, indent=4)
+
         except (OSError, TypeError) as err:
             LOG.warning(str(err))
 

@@ -99,7 +99,7 @@ def project_option(
 def sort_projects_option(
     long="--sort",
     name="sort",
-    choices=["id", "title", "pi", "status", "updated", "size", "usage", "cost"],
+    choices=("id", "title", "pi", "status", "updated", "size", "usage", "cost"),
     case_sensitive=False,
     default="Updated",
     required=False,

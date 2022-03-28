@@ -99,7 +99,14 @@ class S3Connector:
             )
         except requests.exceptions.RequestException as err:
             LOG.warning(err)
-            raise SystemExit from err
+            raise SystemExit(
+                "Failed to get cloud information"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            ) from err
 
         # Error
         if not response.ok:

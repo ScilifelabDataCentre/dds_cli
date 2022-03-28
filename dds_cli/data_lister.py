@@ -52,6 +52,7 @@ class DataLister(base.DDSBaseClass):
         no_prompt: bool = False,
         json: bool = False,
         token_path: str = None,
+        binary: bool = False,
     ):
         """Handle actions regarding data listing in the cli."""
         # Only method "ls" can use the DataLister class
@@ -71,6 +72,7 @@ class DataLister(base.DDSBaseClass):
         self.show_usage = show_usage
         self.tree = tree
         self.json = json
+        self.binary = binary
 
     # Public methods ########################### Public methods #
 
@@ -85,7 +87,16 @@ class DataLister(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to get list of projects"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         # Check response
         if not response.ok:
@@ -101,6 +112,7 @@ class DataLister(base.DDSBaseClass):
         usage_info = resp_json.get("total_usage")
         total_size = resp_json.get("total_size")
         project_info = resp_json.get("project_info")
+        always_show = resp_json.get("always_show", False)
         if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
 
@@ -122,7 +134,7 @@ class DataLister(base.DDSBaseClass):
         sorted_projects = self.__sort_projects(projects=project_info, sort_by=sort_by)
 
         if not self.json:
-            self.__print_project_table(sorted_projects, usage_info, total_size)
+            self.__print_project_table(sorted_projects, usage_info, total_size, always_show)
 
         # Return the list of projects
         return sorted_projects
@@ -145,7 +157,16 @@ class DataLister(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.APIError(f"Problem with database response: '{err}'")
+            raise exceptions.APIError(
+                message=(
+                    f"Failed to get list of files in project '{self.project}'"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         if not response.ok:
             raise exceptions.APIError(f"Failed to get list of files: '{response.text}'")
@@ -179,7 +200,11 @@ class DataLister(base.DDSBaseClass):
         # Get max length of size string
         max_size = max(
             [
-                len(x["size"].split(" ")[0])
+                len(
+                    dds_cli.utils.format_api_response(
+                        response=x["size"], key="Size", binary=self.binary
+                    ).split(" ", maxsplit=1)[0]
+                )
                 for x in sorted_files_folders
                 if show_size and "size" in x
             ],
@@ -209,13 +234,16 @@ class DataLister(base.DDSBaseClass):
 
             # Add size to line if option specified
             if show_size and "size" in x:
-                line += f"{tab}{x['size'].split()[0]}"
+                size = dds_cli.utils.format_api_response(
+                    response=x["size"], key="Size", binary=self.binary
+                )
+                line += f"{tab}{size.split()[0]}"
 
                 # Define space between number and size format
                 tabs_bf_format = th.TextHandler.format_tabs(
-                    string_len=len(x["size"]), max_string_len=max_size, tab_len=2
+                    string_len=len(size), max_string_len=max_size, tab_len=2
                 )
-                line += f"{tabs_bf_format}{x['size'].split()[1]}"
+                line += f"{tabs_bf_format}{size.split()[1]}"
             tree.add(line)
 
         # Print output to stdout
@@ -423,7 +451,16 @@ class DataLister(base.DDSBaseClass):
                 timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to get list of users"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         # Check resposne
         if not response.ok:
@@ -526,9 +563,16 @@ class DataLister(base.DDSBaseClass):
                 }
             )
 
+        column_formatting["Access"] = {
+            "justify": "left",
+            "style": default_format.get("style"),
+            "footer": default_format.get("footer"),
+            "overflow": default_format.get("overflow"),
+        }
+
         return column_formatting
 
-    def __print_project_table(self, sorted_projects, usage_info, total_size):
+    def __print_project_table(self, sorted_projects, usage_info, total_size, always_show):
         # Column format
         column_formatting = self.__format_project_columns(
             total_size=total_size, usage_info=usage_info
@@ -539,7 +583,7 @@ class DataLister(base.DDSBaseClass):
             title="Your Project(s)",
             show_header=True,
             header_style="bold",
-            show_footer=self.show_usage,
+            show_footer=self.show_usage and "Usage" in column_formatting,
             caption=(
                 "The cost is calculated from the pricing provided by Safespring (unit kr/GB/month) "
                 "and is therefore approximate. Contact the Data Centre for more details."
@@ -558,31 +602,28 @@ class DataLister(base.DDSBaseClass):
                 overflow=colformat["overflow"],
             )
 
-        # calculate the magnitudes for keeping the unit prefix constant across all projects
-        magnitudes = dds_cli.utils.calculate_magnitude(sorted_projects, column_formatting.keys())
-
         # Add all column values for each row to table
         for proj in sorted_projects:
-            table.add_row(
-                *[
-                    escape(dds_cli.utils.format_api_response(proj[i], i, magnitudes[i]))
-                    for i in column_formatting
-                ]
-            )
+            new_row = []
+            for column in column_formatting:
+                if column == "Size" and proj["Status"] != "Available" and not always_show:
+                    new_row.append("---")
+                else:
+                    new_row.append(
+                        escape(
+                            dds_cli.utils.format_api_response(
+                                response=proj[column], key=column, binary=self.binary
+                            )
+                        )
+                    )
+            table.add_row(*new_row)
 
         # Print to stdout if there are any lines
-        if table.columns:
-            # Use a pager if output is taller than the visible terminal
-            if len(sorted_projects) + 5 > dds_cli.utils.console.height:
-                with dds_cli.utils.console.pager():
-                    dds_cli.utils.console.print(table)
-            else:
-                dds_cli.utils.console.print(table)
-        else:
-            raise exceptions.NoDataError("No projects found.")
+        dds_cli.utils.print_or_page(item=table)
 
     # User listing
     def __print_users_table(self, research_users):
+        # TODO: call on future list_project_users function, will be implemented for dds user ls --project
         default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
         column_formatting = {
             **{x: default_format for x in ["User Name", "Primary email", "Role"]},

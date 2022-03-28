@@ -3,17 +3,18 @@
 import datetime
 import os
 import pathlib
-import pkg_resources
 import prompt_toolkit
 import rich.console
+import sys
 
+from dds_cli.version import __version__ as version_number
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
 ###############################################################################
 
 __title__ = "Data Delivery System"
-__version__ = pkg_resources.get_distribution("dds_cli").version
+__version__ = version_number
 __url__ = "https://delivery.scilifelab.se/"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
@@ -94,6 +95,8 @@ class DDSEndpoint:
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
     LIST_FILES = BASE_ENDPOINT + "/files/list"
     LIST_PROJ_USERS = BASE_ENDPOINT + "/proj/users"
+    LIST_UNITS_ALL = BASE_ENDPOINT + "/unit/info/all"
+    LIST_UNIT_USERS = BASE_ENDPOINT + "/unit/users"
 
     # Deleting urls
     REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm"
@@ -146,3 +149,13 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
 
 # Determine if the user is on an old terminal without proper Unicode support
 dds_on_legacy_console = rich.console.detect_legacy_windows()
+
+
+# Required to make the standalone executables build with PyInstaller work.
+if __name__ == "__main__":
+    from dds_cli.__main__ import dds_main
+
+    if getattr(sys, "frozen", False):
+        dds_main(sys.argv[1:])
+    else:
+        dds_main()

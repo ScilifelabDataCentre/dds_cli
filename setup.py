@@ -1,6 +1,10 @@
 from setuptools import setup, find_packages
+import os
 
-version = "0.0.12"
+version = {}
+with open("./dds_cli/version.py") as fp:
+    exec(fp.read(), version)
+VERSION = version["__version__"]
 
 with open("README.md") as f:
     readme = f.read()
@@ -10,7 +14,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="dds_cli",
-    version=version,
+    version=VERSION,
     description="A command line tool to manage data and projects in the SciLifeLab Data Delivery System.",
     long_description=readme,
     long_description_content_type="text/markdown",

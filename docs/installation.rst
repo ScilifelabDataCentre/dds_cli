@@ -52,13 +52,7 @@ PyPi
    This should display something like this
 
    .. code-block:: bash
-
-           ︵ 
-      ︵ (  )   ︵ 
-      (  ) ) (  (  )   SciLifeLab Data Delivery System 
-      ︶  (  ) ) (    https://delivery.scilifelab.se/ 
-            ︶ (  )    Version 1.0.0 
-               ︶
+      
       Data Delivery System, version 1.0.0
    
    If the version does not say the same as what is displayed on PyPi, run the following command and try again.

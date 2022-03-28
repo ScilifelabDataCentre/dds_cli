@@ -1,3 +1,8 @@
+Installation guide
+####################
+
+Independent on operating system (OS), we recommend installing the ``dds-cli`` from `PyPi <https://pypi.org/project/dds-cli/>`_. However, you can also install it via the executables, located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases>`_.
+
 .. _mac-linux:
 
 MacOS / Linux
@@ -8,7 +13,7 @@ You can either install the DDS CLI using pip (https://pypi.org/project/dds-cli/)
 PyPi
 -----
 
-1. To perform these steps you need to have Python version 3.7 or higher installed. It's possible that it could work with other versions, but this cannot be guaranteed. 
+1. To perform these steps you need to have Python version 3.7 or higher installed.
 
    * To install Python, please first run
       
@@ -38,17 +43,34 @@ PyPi
 
       $ pip install dds-cli
 
-3. Once the installation has finished, test that everything is working correctly:
+3. Once the installation has finished, test that the CLI has been installed correctly by verifying the version:
 
    .. code-block:: bash
 
-      $ dds --help
+      $ dds --version
 
-   This should display a logo, version information and a short usage message. If there are no errors when running this command, the test has succeeded and you should be able to move on to use the CLI.
+   This should display something like this
+
+   .. code-block:: bash
+
+           ︵ 
+      ︵ (  )   ︵ 
+      (  ) ) (  (  )   SciLifeLab Data Delivery System 
+      ︶  (  ) ) (    https://delivery.scilifelab.se/ 
+            ︶ (  )    Version 1.0.0 
+               ︶
+      Data Delivery System, version 1.0.0
+   
+   If the version does not say the same as what is displayed on PyPi, run the following command and try again.
+
+   .. code-block:: bash
+
+      $ pip install --upgrade dds-cli
+   
 
 Executable
 ----------
-<instructions here>
+*I need the latest release link before I can put this here* 
 
 
 ---
@@ -57,8 +79,14 @@ Executable
 
 Windows
 =======
-* As with MacOS and Linux, you can use PyPi or an executable to install the DDS CLI. We recommend the executable.
-* Detailed instructions on how install the DDS CLI on Windows `here <https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md>`_.
+
+PyPi
+-----
+Detailed instructions on how install the DDS CLI on Windows `here <https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md>`_.
+
+Executable
+----------
+*I need the latest release link before I can put this here* 
 
 ---
 
@@ -81,15 +109,45 @@ A detailed user guide for Rackham can be found here: https://www.uppmax.uu.se/su
 
 Bianca
 -------
-* Bianca 
-   * ssh into transit: $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
-   * you get to home directory - any files that are created here are not persistent - if you download data from dds  here is will not persist beyond their ssh session!!!
-   * Mount specific directory of a SENS project on transit: username@transit:~$ mount_wharf <sens_project>
-   * Set mount point as destination in the dds get command: dds data get --destination <sens_project>/<destination>/ (!!!)
-      * downloaded data ends up in a non-backed up storage on bianca 
-   * TO BE AWARE OF:
-      * Mount the correct SENS project on transit
-      * The size of the data they need to download vs the nobackup storage allocation of the corresponding SENS project
-      * start the download in a screen/tmux session for anything larger than a few hundreds of GB
+
+.. admonition:: To be aware of
+
+   * Mount the correct SENS project on transit
+   * You need to have enough space on the nobackup storage allocation in the corresponding SENS project. If the data you are trying to download is larger than the allocated space, the download will fail.
+   * If your data is larger than a few hundreds of GB: start the download in a screen/tmux session
+
+
+1. ssh into transit
+   
+   .. code-block:: bash
+
+      $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
+
+   You will get into the home directory. 
+
+   .. danger:: 
+
+      Any files that are created here are not persistent; If you download data from DDS to this directory, your data will be deleted as soon as you exit the session.
+
+2.  Mount your specific SENS project directory on transit
+   
+   .. code-block:: bash
+
+      username@transit:~$ mount_wharf <sens_project>
+
+3.  Download the data with the DDS CLI
+
+   .. danger:: 
+
+      You **must use** the ``--destination`` option. If you do not, the data will end up in your home directory and will be deleted when your ssh session ends.
+
+   .. code-block:: bash
+
+      $ dds data get --destination <sens_project>/<destination>/
+
+   The downloaded data ends up in a non-backed up storage on Bianca.
+
+.. admonition:: Links
+
    * Bianca user guide: https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/
    * Transit user guide: https://www.uppmax.uu.se/support/user-guides/transit-user-guide/

@@ -1,6 +1,10 @@
 from setuptools import setup, find_packages
+import os
 
-VERSION = "0.0.16"
+version = {}
+with open("./dds_cli/version.py") as fp:
+    exec(fp.read(), version)
+VERSION = version["__version__"]
 
 with open("README.md") as f:
     readme = f.read()

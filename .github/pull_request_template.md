@@ -5,4 +5,4 @@ Before submitting a PR to the `dev` branch:
 - [ ] Note in the CHANGELOG
 
 Additional checks before submitting a PR to the `master` branch:
-- Change version in `setup.py` (?) 
+- Change version in `dds_cli/version.py` (?) 

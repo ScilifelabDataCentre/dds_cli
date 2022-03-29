@@ -1,7 +1,7 @@
 Installation guide
 ####################
 
-Independent on operating system (OS), we recommend installing the ``dds-cli`` from `PyPi <https://pypi.org/project/dds-cli/>`_. However, you can also install it via the executables, located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases>`_.
+Independent on operating system (OS), we recommend installing the ``dds-cli`` from `PyPi <https://pypi.org/project/dds-cli/>`_. However, you can also install it via the executables, located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_.
 
 .. _mac-linux:
 
@@ -64,7 +64,20 @@ PyPi
 
 Executable
 ----------
-*I need the latest release link before I can put this here* 
+
+1. Download the executable from the GitHub release page: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64
+   If you have an M1 Mac, you need to download this one instead: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_arm64
+2. Open the terminal and go to the directory where the downloaded file is located
+3. You should now be able to run the dds with the following command
+   
+   .. code-block:: bash
+
+      $ ./<name-of-file> 
+
+      Example:
+      $ ./dds_cli_macos_x86_64
+
+4. To specify options, follow the documentation instructions. The only difference should be that you may need to change the permissions regarding executables, allowing your laptop to trust the software and finally running the dds by specifying the executables name instead of ``dds``. 
 
 
 ---
@@ -80,7 +93,12 @@ Detailed instructions on how install the DDS CLI on Windows `here <https://githu
 
 Executable
 ----------
-*I need the latest release link before I can put this here* 
+
+1. Download the executable from the GitHub release page: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe
+2. Open the Powershell (Start -> Search "Powershell" -> Click) or terminal (Powershell recommended)
+3. Drag the executable into the Powershell window and press enter. This should result in the help text being displayed.
+4. To run the dds command, press the up arrow and use the options that you want, specified in this documentation. The only difference should be that you run the dds by specifying the executables name (/path) instead of ``dds``. You may need to change the permissions regarding executables and allow your laptop to trust the software.
+
 
 ---
 

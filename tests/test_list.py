@@ -19,6 +19,7 @@ RETURNED_PROJECTS_JSON = {
             "Size": 20,
             "Status": "Available",
             "Title": "First Project",
+            "Access": True,
         },
         {
             "Last updated": "Wed, 24 Nov 2021 10:27:42 GMT",
@@ -27,6 +28,7 @@ RETURNED_PROJECTS_JSON = {
             "Size": 30,
             "Status": "In Progress",
             "Title": "Second Project",
+            "Access": False,
         },
     ],
     "total_size": 0,
@@ -73,8 +75,10 @@ def list_request():
     """
     with unittest.mock.patch.object(requests, "get") as mock_obj:
 
-        def _request_mock(status_code, return_json=dict(), ok=True, side_effect=None):
-            mock_returned_request = unittest.mock.MagicMock(status_code=status_code, ok=ok)
+        def _request_mock(status_code, return_json=dict(), ok=True, side_effect=None, timeout=None):
+            mock_returned_request = unittest.mock.MagicMock(
+                status_code=status_code, ok=ok, timeout=timeout
+            )
             if side_effect:
                 mock_returned_request.json.side_effect = side_effect
             else:
@@ -98,6 +102,7 @@ def list_no_projects(ls_runner, list_request, command):
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
         json={"usage": False},
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     assert "No project info was retrieved" in result.stderr
@@ -127,23 +132,28 @@ def list_no_project_specified(ls_runner, list_request, command):
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
         json={"usage": False},
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
-
     for substring in [
         "project_1",
         "project_2",
         "PI Name 1",
         "PI Name 2",
         "Available",
-        "In Progress",
-        "Tue, 23 Nov",
-        "Wed, 24 Nov",
-        "20 B",
-        "30 B",
-        "────────────────",  # Hack to test that there's a table printed
+        "In",  # The table doesn't always like spaces within the cells
+        "Progress",
+        "Tue, ",
+        "23",
+        "Nov",
+        "Wed",
+        "24",
+        "Nov",
+        # ":white_heavy_check_mark:", # This currently doesn't work, will have to fix at a later time
+        # ":x",
+        "───────",  # Hack to test that there's a table printed
     ]:
         assert substring in result.stdout
-    print(result.stderr)
+
     assert "" == result.stderr  # Click testing framework aborts any interactivity
 
 
@@ -172,6 +182,7 @@ def list_no_project_specified_json(ls_runner, list_request, command):
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
         json={"usage": False},
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     try:
@@ -213,6 +224,7 @@ def list_no_project_specified_json_sort(ls_runner, list_request, command):
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
         json={"usage": False},
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     try:
@@ -254,8 +266,9 @@ def list_with_project(ls_runner, list_request, command):
     list_request_OK.assert_called_with(
         dds_cli.DDSEndpoint.LIST_FILES,
         params={"project": "project_1"},
-        json={"subpath": None, "show_size": False},
+        json={"subpath": "", "show_size": False},
         headers=unittest.mock.ANY,
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
     print(result.stdout)
     for substring in [
@@ -309,6 +322,7 @@ def list_with_project_and_tree(ls_runner, list_request, command):
         params={"project": "project_1"},
         json={"subpath": None, "show_size": False},
         headers=unittest.mock.ANY,
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     list_request_OK.assert_any_call(
@@ -316,6 +330,7 @@ def list_with_project_and_tree(ls_runner, list_request, command):
         params={"project": "project_1"},
         json={"subpath": "subdir1", "show_size": False},
         headers=unittest.mock.ANY,
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     list_request_OK.assert_any_call(
@@ -323,6 +338,7 @@ def list_with_project_and_tree(ls_runner, list_request, command):
         params={"project": "project_1"},
         json={"subpath": "subdir2", "show_size": False},
         headers=unittest.mock.ANY,
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     for substring in [
@@ -377,6 +393,7 @@ def list_with_project_and_tree_json(ls_runner, list_request, command):
         params={"project": "project_1"},
         json={"subpath": None, "show_size": False},
         headers=unittest.mock.ANY,
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     list_request_OK.assert_any_call(
@@ -384,6 +401,7 @@ def list_with_project_and_tree_json(ls_runner, list_request, command):
         params={"project": "project_1"},
         json={"subpath": "subdir1", "show_size": False},
         headers=unittest.mock.ANY,
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     list_request_OK.assert_any_call(
@@ -391,6 +409,7 @@ def list_with_project_and_tree_json(ls_runner, list_request, command):
         params={"project": "project_1"},
         json={"subpath": "subdir2", "show_size": False},
         headers=unittest.mock.ANY,
+        timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 
     try:

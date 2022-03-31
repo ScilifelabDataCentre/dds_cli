@@ -1,18 +1,203 @@
 """DDS CLI utils module."""
 
 import numbers
+from pathlib import Path
 
+import requests
 import rich.console
 import simplejson
 from jwcrypto.common import InvalidJWEOperation
 from jwcrypto.jwe import InvalidJWEData
 from jwcrypto.jws import InvalidJWSObject
 from jwcrypto import jwt
+import http
+from rich.table import Table
+from typing import List, Union
 
 import dds_cli.exceptions
+from dds_cli import DDSEndpoint
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
+
+# Classes
+
+
+class HumanBytes:
+    """Format as human readable.
+
+    Copied from Stack Overflow: https://stackoverflow.com/a/63839503.
+    """
+
+    METRIC_LABELS: List[str] = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+    BINARY_LABELS: List[str] = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+    PRECISION_OFFSETS: List[float] = [0.5, 0.05, 0.005, 0.0005]  # PREDEFINED FOR SPEED.
+    PRECISION_FORMATS: List[str] = [
+        "{}{:.0f} {}",
+        "{}{:.1f} {}",
+        "{}{:.2f} {}",
+        "{}{:.3f} {}",
+    ]  # PREDEFINED FOR SPEED.
+
+    @staticmethod
+    def format(num: Union[int, float], metric: bool = False, precision: int = 1) -> str:
+        """Human-readable formatting of bytes, using binary (powers of 1024)
+        or metric (powers of 1000) representation.
+        """
+        assert isinstance(num, (int, float)), "num must be an int or float"
+        assert isinstance(metric, bool), "metric must be a bool"
+        assert (
+            isinstance(precision, int) and precision >= 0 and precision <= 3
+        ), "precision must be an int (range 0-3)"
+
+        unit_labels = HumanBytes.METRIC_LABELS if metric else HumanBytes.BINARY_LABELS
+        last_label = unit_labels[-1]
+        unit_step = 1000 if metric else 1024
+        unit_step_thresh = unit_step - HumanBytes.PRECISION_OFFSETS[precision]
+
+        is_negative = num < 0
+        if is_negative:  # Faster than ternary assignment or always running abs().
+            num = abs(num)
+
+        for unit in unit_labels:
+            if num < unit_step_thresh:
+                # VERY IMPORTANT:
+                # Only accepts the CURRENT unit if we're BELOW the threshold where
+                # float rounding behavior would place us into the NEXT unit: F.ex.
+                # when rounding a float to 1 decimal, any number ">= 1023.95" will
+                # be rounded to "1024.0". Obviously we don't want ugly output such
+                # as "1024.0 KiB", since the proper term for that is "1.0 MiB".
+                break
+            if unit != last_label:
+                # We only shrink the number if we HAVEN'T reached the last unit.
+                # NOTE: These looped divisions accumulate floating point rounding
+                # errors, but each new division pushes the rounding errors further
+                # and further down in the decimals, so it doesn't matter at all.
+                num /= unit_step
+
+        return HumanBytes.PRECISION_FORMATS[precision].format("-" if is_negative else "", num, unit)
+
+
+# Functions
+
+
+def sort_items(items: list, sort_by: str) -> list:
+    """Sort list of dicts according to specified key."""
+    return sorted(items, key=lambda i: i[sort_by])
+
+
+def create_table(
+    title: str,
+    columns: list,
+    rows: list,
+    show_header: bool = True,
+    header_style: str = "bold",
+    show_footer: bool = False,
+    caption: str = "",
+    ints_as_string=False,
+) -> Table:
+    """Create table."""
+    # Create table
+    table = Table(
+        title=title,
+        show_header=show_header,
+        header_style=header_style,
+        show_footer=show_footer,
+        caption=caption,
+    )
+
+    # Add columns
+    for col in columns:
+        table.add_column(col, justify="left", overflow="fold")
+
+    # Add rows
+    for row in rows:
+        table.add_row(
+            *[
+                rich.markup.escape(
+                    dds_cli.utils.format_api_response(
+                        str(row[x]) if ints_as_string and isinstance(row[x], int) else row[x], x
+                    )
+                )
+                for x in columns
+            ]
+        )
+
+    return table
+
+
+def get_required_in_response(keys: list, response: dict) -> tuple:
+    """Verify that required info is present."""
+    not_returned = []
+    for key in keys:
+        item = response.get(key)
+        if not item:
+            not_returned.append(key)
+
+    if not_returned:
+        raise dds_cli.exceptions.ApiResponseError(
+            message=f"The following information was returned: {not_returned}"
+        )
+
+    return tuple(response.get(x) for x in keys)
+
+
+def request_get(
+    endpoint,
+    headers,
+    params=None,
+    json=None,
+    error_message="API Request failed.",
+    timeout=DDSEndpoint.TIMEOUT,
+):
+    """Perform get request."""
+    try:
+        response = requests.get(
+            url=endpoint,
+            headers=headers,
+            params=params,
+            json=json,
+            timeout=timeout,
+        )
+        response_json = response.json()
+    except requests.exceptions.RequestException as err:
+        raise dds_cli.exceptions.ApiRequestError(
+            message=(
+                error_message
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            )
+        )
+    except simplejson.JSONDecodeError as err:
+        raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+    # Check if response is ok.
+    if not response.ok:
+        message = error_message
+        if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
+            raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+
+        raise dds_cli.exceptions.DDSCLIException(
+            message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+        )
+
+    return response_json
+
+
+def parse_project_errors(errors):
+    """Parse all errors related to projects."""
+    msg = ""
+    if errors:
+        for unique_error in set(errors.values()):
+            msg += unique_error
+            affected_projects = [x for x, y in errors.items() if y == unique_error]
+            for proj in affected_projects:
+                msg += f"\n   - {proj}"
+
+    return msg
 
 
 def multiple_help_text(item):
@@ -30,108 +215,24 @@ def get_json_response(response):
     return json_response
 
 
-def calculate_magnitude(projects, keys, iec_standard=False):
-    """Calculate magnitude of values.
-
-    Uses the project list, obtains the values assigned to a particular key iteratively and
-    calculates the best magnitude to format this set of values consistently.
-    """
-    # initialize the dictionary to be returned
-    magnitudes = dict(zip(keys, [None] * len(keys)))
-
-    for key in keys:
-
-        values = [proj[key] for proj in projects]
-
-        if all(isinstance(x, numbers.Number) for x in values):
-
-            if key in ["Size", "Usage"] and iec_standard:
-                base = 1024.0
-            else:
-                base = 1000.0
-
-            # exclude values smaller than base, such that empty projects don't interfer with
-            # the calculation ensures that a minimum can be calculated if no val is larger than base
-            minimum = (lambda x: min(x) if x else 1)([val for val in values if val >= base])
-            mag = 0
-
-            while abs(minimum) >= base:
-                mag += 1
-                minimum /= base
-
-            magnitudes[key] = mag
-    return magnitudes
-
-
-def format_api_response(response, key, magnitude=None, iec_standard=False):
+def format_api_response(response, key: str, binary: bool = False, always_show: bool = False):
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
-    if isinstance(response, str):
-        return response  # pass the response if already a string
-
-    if isinstance(response, numbers.Number):
-        response = float("{:.3g}".format(response))
-        mag = 0
-
+    formatted_response = response
+    if isinstance(response, bool):
+        formatted_response = ":white_heavy_check_mark:" if response else ":x:"
+    elif isinstance(response, numbers.Number):
         if key in ["Size", "Usage"]:
-            if iec_standard:
-                # The IEC created prefixes such as kibi, mebi, gibi, etc.,
-                # to unambiguously denote powers of 1024
-                prefixlist = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
-                base = 1024.0
-            else:
-                prefixlist = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"]
-                base = 1000.0
-            spacerA = " "
-            spacerB = ""
-        else:
-            # Default to the prefixes of the International System of Units (SI)
-            prefixlist = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"]
-            base = 1000.0
-            spacerA = ""
-            spacerB = " "
-
-        if not magnitude:
-            # calculate a suitable magnitude if not given
-            while abs(response) >= base:
-                mag += 1
-                response /= base
-        else:
-            # utilize the given magnitude
-            response /= base**magnitude
-
-        if key == "Size":
-            unit = "B"  # lock
-        elif key == "Usage":
-            unit = "Bh"  # arrow up
+            formatted_response = HumanBytes.format(num=response, metric=not binary)
+            if key == "Usage":
+                formatted_response += "H"
         elif key == "Cost":
-            unit = "SEK"
-            prefixlist[1] = "K"  # for currencies, the capital K is more common.
-            prefixlist[3] = "B"  # for currencies, Billions are used instead of Giga
+            formatted_response = HumanBytes.format(num=response, metric=True)[0:-1] + "kr"
 
-        if response > 0:
-            # if magnitude was given, then use fixed number of digits
-            # to allow for easier comparisons across projects
-            if magnitude:
-                return "{}{}{}".format(
-                    "{:.2f}".format(response),
-                    spacerA,
-                    prefixlist[magnitude] + spacerB + unit,
-                )
-            else:  # if values are anyway prefixed individually, then strip trailing 0 for readability
-                return "{}{}{}".format(
-                    "{:.2f}".format(response).rstrip("0").rstrip("."),
-                    spacerA,
-                    prefixlist[mag] + spacerB + unit,
-                )
-        else:
-            return f"0 {unit}"
-    else:
-        # Since table.add.row() expects a string, try to return whatever is not yet a string but also not numeric as string
-        return str(response)
+    return str(formatted_response)
 
 
 def get_token_header_contents(token):
-    """Function to extract the jose header of the DDS token (JWE)
+    """Function to extract the jose header of the DDS token (JWE).
 
     :param token: a token that is not None
 
@@ -139,10 +240,10 @@ def get_token_header_contents(token):
     try:
         token = jwt.JWT(jwt=token)
         return token.token.jose_header
-    except (ValueError, InvalidJWEData, InvalidJWEOperation, InvalidJWSObject):
+    except (ValueError, InvalidJWEData, InvalidJWEOperation, InvalidJWSObject) as exc:
         raise dds_cli.exceptions.TokenDeserializationError(
             message="Token could not be deserialized."
-        )
+        ) from exc
 
 
 def get_token_expiration_time(token):
@@ -181,3 +282,38 @@ def readable_timedelta(duration):
         return " ".join(time_parts)
     else:
         return "less than a minute"
+
+
+def get_deletion_confirmation(action: str, project: str) -> bool:
+    """Confirm that the user wants to perform deletion."""
+    question = f"Are you sure you want to {action} {project}? All its contents "
+    if action in ["delete", "abort"]:
+        question = question + "and metainfo "
+    question += "will be deleted!"
+
+    proceed_deletion = rich.prompt.Confirm.ask(question)
+    return proceed_deletion
+
+
+def print_or_page(item):
+    """Paginate or print out depending on size of item."""
+    if isinstance(item, rich.table.Table):
+        if item.columns:
+            if item.row_count + 5 > dds_cli.utils.console.height:
+                with dds_cli.utils.console.pager():
+                    dds_cli.utils.console.print(item)
+            else:
+                dds_cli.utils.console.print(item)
+        else:
+            raise dds_cli.exceptions.NoDataError("No users found.")
+
+
+# Adapted from <https://stackoverflow.com/a/49782093>.
+def delete_folder(folder):
+    folder = Path(folder)
+    for file_or_folder in folder.iterdir():
+        if file_or_folder.is_dir():
+            delete_folder(file_or_folder)
+        else:
+            file_or_folder.unlink()
+    folder.rmdir()

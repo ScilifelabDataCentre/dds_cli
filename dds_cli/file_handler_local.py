@@ -222,7 +222,14 @@ class LocalFileHandler(fh.FileHandler):
             )
         except requests.exceptions.RequestException as err:
             LOG.warning(err)
-            raise SystemExit from err
+            raise SystemExit(
+                "Failed to check previous upload status"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            ) from err
 
         if not response.ok:
             message = "Failed getting information about previously uploaded files"

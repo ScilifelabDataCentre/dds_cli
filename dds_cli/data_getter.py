@@ -11,6 +11,7 @@ import pathlib
 # Installed
 import requests
 import simplejson
+from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
@@ -23,6 +24,7 @@ from dds_cli import text_handler as txt
 from dds_cli.custom_decorators import verify_proceed, update_status, subpath_required
 from dds_cli import base
 import dds_cli.utils
+import dds_cli.exceptions
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -40,7 +42,6 @@ class DataGetter(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str,
         project: str = None,
         break_on_fail: bool = False,
         get_all: bool = False,
@@ -51,15 +52,16 @@ class DataGetter(base.DDSBaseClass):
         verify_checksum: bool = False,
         method: str = "get",
         no_prompt: bool = False,
+        token_path: str = None,
     ):
         """Handle actions regarding downloading data."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username,
             project=project,
             dds_directory=destination,
             method=method,
             no_prompt=no_prompt,
+            token_path=token_path,
         )
 
         # Initiate DataGetter specific attributes
@@ -98,6 +100,9 @@ class DataGetter(base.DDSBaseClass):
                 )
 
             if not self.filehandler.data:
+                if self.temporary_directory and self.temporary_directory.is_dir():
+                    LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
+                    dds_cli.utils.delete_folder(self.temporary_directory)
                 raise dds_cli.exceptions.DownloadError("No files to download.")
 
             self.status = self.filehandler.create_download_status_dict()
@@ -114,7 +119,7 @@ class DataGetter(base.DDSBaseClass):
 
         # File task for downloading
         task = progress.add_task(
-            description=txt.TextHandler.task_name(file=file, step="get"),
+            description=txt.TextHandler.task_name(file=escape(str(file)), step="get"),
             total=file_info["size_stored"],
             visible=not self.silent,
         )
@@ -125,17 +130,17 @@ class DataGetter(base.DDSBaseClass):
         # Update progress task for decryption
         progress.reset(
             task,
-            description=txt.TextHandler.task_name(file=file, step="decrypt"),
+            description=txt.TextHandler.task_name(file=escape(str(file)), step="decrypt"),
             total=file_info["size_original"],
         )
 
-        LOG.debug(f"File {file} downloaded: {file_downloaded}")
+        LOG.debug(f"File {escape(str(file))} downloaded: {file_downloaded}")
 
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
             LOG.debug(f"Database updated: {db_updated}")
 
-            LOG.debug(f"Beginning decryption of file {file}...")
+            LOG.debug(f"Beginning decryption of file {escape(str(file))}...")
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
@@ -220,10 +225,20 @@ class DataGetter(base.DDSBaseClass):
         # Send file info to API
         try:
             response = requests.put(
-                DDSEndpoint.FILE_UPDATE, params=params, json=filename, headers=self.token
+                DDSEndpoint.FILE_UPDATE,
+                params=params,
+                json=filename,
+                headers=self.token,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise SystemExit from err
+            error = "Failed to update file information" + (
+                ": The database seems to be down."
+                if isinstance(err, requests.exceptions.ConnectionError)
+                else "."
+            )
+            LOG.exception(error)
+            return updated_in_db, error
 
         # Error if failed
         if not response.ok:

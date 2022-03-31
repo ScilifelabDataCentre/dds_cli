@@ -1,0 +1,28 @@
+---
+name: Deploy documentation to github pages
+on:
+  push:
+    branches:
+      - master
+      - ghp-test
+jobs:
+  ddsclidocumentation:
+    name: Build the DDS CLI Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Make dependencies available to Docker container
+        run: |
+          cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
+      - name: Build the HTML documentation
+        uses: matthiaszepper/sphinx-action-v4@latest
+        with:
+          container: latest
+          pre-build-command: "pip install ."
+          build-command: "make dirhtml"
+          docs-folder: "docs/"
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages
+          folder: docs/_build/dirhtml/

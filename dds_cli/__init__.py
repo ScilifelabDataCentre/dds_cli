@@ -3,18 +3,19 @@
 import datetime
 import os
 import pathlib
-import pkg_resources
 import prompt_toolkit
 import rich.console
+import sys
 
+from dds_cli.version import __version__ as version_number
 
 ###############################################################################
 # PROJECT SPEC ################################################# PROJECT SPEC #
 ###############################################################################
 
 __title__ = "Data Delivery System"
-__version__ = pkg_resources.get_distribution("dds_cli").version
-__url__ = "https://www.scilifelab.se/data"
+__version__ = version_number
+__url__ = "https://delivery.scilifelab.se/"
 __author__ = "SciLifeLab Data Centre"
 __author_email__ = "datacentre@scilifelab.se"
 __license__ = "MIT"
@@ -56,10 +57,14 @@ class DDSEndpoint:
 
     # Base url - local or remote
     BASE_ENDPOINT_LOCAL = "http://127.0.0.1:5000/api/v1"
-    BASE_ENDPOINT_REMOTE = "https://dds.dckube.scilifelab.se/api/v1"
-    BASE_ENDPOINT = (
-        BASE_ENDPOINT_LOCAL if os.getenv("DDS_CLI_ENV") == "development" else BASE_ENDPOINT_REMOTE
-    )
+    BASE_ENDPOINT_DOCKER = "http://dds_backend:5000/api/v1"
+    BASE_ENDPOINT_REMOTE = "https://delivery.scilifelab.se/api/v1"
+    if os.getenv("DDS_CLI_ENV") == "development":
+        BASE_ENDPOINT = BASE_ENDPOINT_LOCAL
+    elif os.getenv("DDS_CLI_ENV") == "docker-dev":
+        BASE_ENDPOINT = BASE_ENDPOINT_DOCKER
+    else:
+        BASE_ENDPOINT = BASE_ENDPOINT_REMOTE
 
     # User management
     USER_ADD = BASE_ENDPOINT + "/user/add"
@@ -91,6 +96,8 @@ class DDSEndpoint:
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"
     LIST_FILES = BASE_ENDPOINT + "/files/list"
     LIST_PROJ_USERS = BASE_ENDPOINT + "/proj/users"
+    LIST_UNITS_ALL = BASE_ENDPOINT + "/unit/info/all"
+    LIST_UNIT_USERS = BASE_ENDPOINT + "/unit/users"
 
     # Deleting urls
     REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm"
@@ -111,7 +118,7 @@ class DDSEndpoint:
     # Project status updation
     UPDATE_PROJ_STATUS = BASE_ENDPOINT + "/proj/status"
 
-    TIMEOUT = 5
+    TIMEOUT = 30
 
 
 class FileSegment:
@@ -143,3 +150,13 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
 
 # Determine if the user is on an old terminal without proper Unicode support
 dds_on_legacy_console = rich.console.detect_legacy_windows()
+
+
+# Required to make the standalone executables build with PyInstaller work.
+if __name__ == "__main__":
+    from dds_cli.__main__ import dds_main
+
+    if getattr(sys, "frozen", False):
+        dds_main(sys.argv[1:])
+    else:
+        dds_main()

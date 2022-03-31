@@ -10,14 +10,16 @@ import logging
 # Installed
 import http
 import requests
+import rich.markup
+from rich.table import Table
 import simplejson
-
 
 # Own modules
 import dds_cli
 import dds_cli.auth
 import dds_cli.base
 import dds_cli.exceptions
+import dds_cli.utils
 
 
 ####################################################################################################
@@ -36,22 +38,29 @@ class AccountManager(dds_cli.base.DDSBaseClass):
     """Admin class for adding users, etc."""
 
     def __init__(
-        self, username: str, authenticate: bool = True, method: str = "add", no_prompt: bool = False
+        self,
+        authenticate: bool = True,
+        method: str = "add",
+        no_prompt: bool = False,
+        token_path: str = None,
     ):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username, authenticate=authenticate, method=method, no_prompt=no_prompt
+            authenticate=authenticate,
+            method=method,
+            no_prompt=no_prompt,
+            token_path=token_path,
         )
 
         # Only methods "add", "delete" and "revoke" can use the AccountManager class
         if self.method not in ["add", "delete", "revoke"]:
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
-    def add_user(self, email, role, project, no_mail=False):
+    def add_user(self, email, role, project, unit=None, no_mail=False):
         """Invite new user or associate existing users with projects."""
         # Perform request to API
-        json = {"email": email, "role": role, "send_email": not no_mail}
+        json = {"email": email, "role": role, "send_email": not no_mail, "unit": unit}
 
         try:
             response = requests.post(
@@ -59,32 +68,57 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 headers=self.token,
                 params={"project": project},
                 json=json,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
 
             # Get response
             response_json = response.json()
-            LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to add user"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        errors = response_json.get("errors")
+        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
 
         # Format response message
         if not response.ok:
             message = "Could not add user"
+            message += ": " + response_json.get("message", "Unexpected error!")
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+                raise dds_cli.exceptions.ApiResponseError(message=message)
+
+            show_warning = True
+            if error_messages:
+                message += f"\n{error_messages}"
+                show_warning = False
 
             raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+                message=message,
+                show_emojis=show_warning,
             )
 
-        dds_cli.utils.console.print(response_json.get("message", "User successfully added."))
+        if error_messages:
+            LOG.warning(f"Could not give the user '{email}' access to the following projects:")
+            msg = error_messages
+        else:
+            msg = response_json.get("message", "User successfully added.")
 
-    def delete_user(self, email):
+        LOG.info(msg)
+
+    def delete_user(self, email, is_invite: bool = False):
         """Delete users from the system"""
         # Perform request to API
-        json = {"email": email}
+        json = {"email": email, "is_invite": is_invite}
 
         try:
             response = requests.delete(
@@ -98,7 +132,16 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             message = response_json["message"]
 
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to delete user"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -112,7 +155,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             LOG.info(message)
 
     def delete_own_account(self):
-        """Delete users from the system"""
+        """Delete users from the system."""
         # Perform request to API
 
         try:
@@ -125,9 +168,19 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             # Get response
             response_json = response.json()
             message = response_json["message"]
+            dds_cli.auth.Auth.logout(self)
 
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to request deletion of account"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -135,13 +188,13 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         if not response.ok:
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message)
-            else:
-                raise dds_cli.exceptions.DDSCLIException(message)
-        else:
-            LOG.info(message)
+
+            raise dds_cli.exceptions.DDSCLIException(message)
+
+        LOG.info(message)
 
     def revoke_project_access(self, project, email):
-        """Revoke a user's access to a project"""
+        """Revoke a user's access to a project."""
         json = {"email": email}
         try:
             response = requests.post(
@@ -149,13 +202,23 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 headers=self.token,
                 params={"project": project},
                 json=json,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
 
             # Get response
             response_json = response.json()
             LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to change project status"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -174,19 +237,31 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         )
 
     def get_user_info(self):
-        """Get a users info"""
+        """Get a users info."""
         try:
             response = requests.get(
                 dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
                 headers=self.token,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
 
             # Get response
             response_json = response.json()
+            for field in response_json.get("info", []):
+                if isinstance(response_json["info"][field], str):
+                    response_json["info"][field] = rich.markup.escape(response_json["info"][field])
             LOG.debug(response_json)
-            info = response_json["info"]
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    "Failed to get user information"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -200,12 +275,14 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
             )
 
-        LOG.info(
-            f"User Name: {info['username']} \nRole: {info['role']} \
-            \nName: {info['name']} \
-            \nPrimary Email: {info['email_primary']} \
-            \nAssociated Emails: {', '.join(str(x) for x in info['emails_all'])}"
-        )
+        info = response_json.get("info")
+        if info:
+            LOG.info(
+                f"User Name: {info['username']} \nRole: {info['role']} \
+                \nName: {info['name']} \
+                \nPrimary Email: {info['email_primary']} \
+                \nAssociated Emails: {', '.join(str(x) for x in info['emails_all'])}"
+            )
 
     def user_activation(self, email, action):
         """Deactivate/Reactivate users"""
@@ -215,13 +292,22 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 dds_cli.DDSEndpoint.USER_ACTIVATION,
                 headers=self.token,
                 json=json,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
 
             # Get response
             response_json = response.json()
-            LOG.debug(response_json)
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    f"Failed to {action} user"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
@@ -231,9 +317,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
-            )
+            response_message = response_json.get("message", "Unexpected error!")
+            if "Insufficient credentials" in response_message:
+                response_message = f"You do not have the required permissions to {action} a user."
+            raise dds_cli.exceptions.DDSCLIException(message=f"{message}: {response_message}")
 
         LOG.info(response_json.get("message", f"User successfully {action}d."))
 
@@ -246,29 +333,75 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 headers=self.token,
                 params={"project": project},
                 json=json,
+                timeout=dds_cli.DDSEndpoint.TIMEOUT,
             )
             response_json = response.json()
 
         except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+            raise dds_cli.exceptions.ApiRequestError(
+                message=(
+                    f"Failed to fix project access for user '{email}'"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
         except simplejson.JSONDecodeError as err:
             raise dds_cli.exceptions.ApiResponseError(message=str(err))
+
+        errors = response_json.get("errors")
+        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
 
         if not response.ok:
             message = f"Failed updating user '{email}' project access"
             if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
                 raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
-            )
+            message += ": " + response_json.get("message", "Unexpected error!")
+            show_warning = True
+            if error_messages:
+                message += f"\n{error_messages}"
+                show_warning = False
 
-        LOG.info(
-            response_json.get(
+            raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
+
+        if error_messages:
+            LOG.warning(f"Could not fix user '{email}' access to the following projects:")
+            msg = error_messages
+        else:
+            msg = response_json.get(
                 "message",
                 (
                     f"Project access fixed for user '{email}'. "
                     "They should now have access to all project data."
                 ),
             )
+
+    def list_unit_users(self, unit: str = None) -> None:
+        """List all unit users within a specific unit."""
+        response = dds_cli.utils.request_get(
+            endpoint=dds_cli.DDSEndpoint.LIST_UNIT_USERS,
+            headers=self.token,
+            json={"unit": unit},
+            error_message="Failed getting unit users from API",
         )
+
+        users, keys, unit = dds_cli.utils.get_required_in_response(
+            keys=["users", "keys", "unit"], response=response
+        )
+
+        # Sort users according to name
+        users = dds_cli.utils.sort_items(items=users, sort_by="Name")
+
+        # Create table
+        table = dds_cli.utils.create_table(
+            title=f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}.",
+            columns=keys,
+            rows=users,
+            caption="All users (Unit Personnel and Admins) within your unit.",
+        )
+
+        # Print out table
+        dds_cli.utils.print_or_page(item=table)

@@ -1,5 +1,4 @@
 testing
-.DS_Store
 docs/build
 *.pyc
 __pycache__
@@ -40,4 +39,9 @@ timings
 *dict_structure.json
 *.code-workspace
 .DDS_CLI.env
-/docs/_build/
+/docs/_build/latex/*
+/docs/_build/html/*
+/docs/_build/doctrees/*
+!*datadeliverysystem.pdf
+!*docs/_static/**
+.DS_Store

@@ -46,22 +46,23 @@ class DDSBaseClass:
 
     def __init__(
         self,
-        username,
         project=None,
         dds_directory: pathlib.Path = None,
+        mount_dir: pathlib.Path = None,
         method: str = None,
         authenticate: bool = True,
         method_check: bool = True,
         force_renew_token: bool = False,
         totp: str = None,
         no_prompt: bool = False,
+        token_path: str = None,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
-        self.username = username
         self.project = project
         self.method_check = method_check
         self.method = method
         self.no_prompt = no_prompt
+        self.token_path = token_path
 
         if self.method_check:
             # Get attempted operation e.g. put/ls/rm/get
@@ -71,15 +72,21 @@ class DDSBaseClass:
 
             # Use user defined destination if any specified
             if self.method in DDS_DIR_REQUIRED_METHODS:
-                self.dds_directory = dds_cli.directory.DDSDirectory(
-                    path=dds_directory
-                    if dds_directory
-                    else pathlib.Path.cwd()
-                    / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}")
+                default_dir = pathlib.Path(
+                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}"
                 )
+                if mount_dir:
+                    new_directory = mount_dir / default_dir
+                elif dds_directory:
+                    new_directory = dds_directory
+                else:
+                    new_directory = pathlib.Path.cwd() / default_dir
 
+                self.temporary_directory = new_directory
+
+                self.dds_directory = dds_cli.directory.DDSDirectory(path=new_directory)
                 self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
-                    "dds_failed_delivery.txt"
+                    "dds_failed_delivery.json"
                 )
 
         # Keyboardinterrupt
@@ -88,9 +95,9 @@ class DDSBaseClass:
         # Authenticate the user and get the token
         if authenticate:
             dds_user = user.User(
-                username=username,
                 force_renew_token=force_renew_token,
                 no_prompt=no_prompt,
+                token_path=token_path,
                 totp=totp,
             )
             self.token = dds_user.token_dict
@@ -150,7 +157,14 @@ class DDSBaseClass:
             )
         except requests.exceptions.RequestException as err:
             LOG.fatal(str(err))
-            raise SystemExit from err
+            raise SystemExit(
+                "Failed to get cloud information"
+                + (
+                    ": The database seems to be down."
+                    if isinstance(err, requests.exceptions.ConnectionError)
+                    else "."
+                )
+            ) from err
 
         if not response.ok:
             message = "Failed getting key from DDS API"
@@ -178,11 +192,13 @@ class DDSBaseClass:
         """Print out the delivery summary if any files were cancelled."""
         # TODO: Look into a better summary print out - old deleted for now
         any_failed = self.__collect_all_failed()
+        true_failed = [entry for entry in any_failed if entry["message"] != "File already uploaded"]
+        nr_uploaded = len(any_failed) - len(true_failed)
 
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
-        if any_failed:
+        if true_failed:
             intro_error_message = (
                 f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
             )
@@ -208,6 +224,11 @@ class DDSBaseClass:
                 f"See {self.failed_delivery_log} for more information."
             )
 
+        elif nr_uploaded:
+            dds_cli.utils.console.print(
+                (f"\nUpload completed!\n{nr_uploaded} files were already uploaded.\n")
+            )
+
         else:
             # Printout if no cancelled/failed files
             dds_cli.utils.console.print(
@@ -217,7 +238,7 @@ class DDSBaseClass:
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
             LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
 
-    def __collect_all_failed(self, sort: bool = True):
+    def __collect_all_failed(self, sort: bool = True) -> list:
         """Put cancelled files from status in to failed dict and sort the output."""
         # Transform all items to string
         self.filehandler.data = {
@@ -242,12 +263,12 @@ class DDSBaseClass:
             }
         )
 
-        # Sort by which directory the files are in
         LOG.debug(self.filehandler.failed)
 
-        # TODO: Sort more?
-        return (
-            sorted(self.filehandler.failed.items(), key=lambda g: g)
-            if sort
-            else self.filehandler.failed
-        )
+        # Sort by which directory the files are in
+        out_data = self.filehandler.failed
+        out_data = [{"filepath": entry[0], **entry[1]} for entry in self.filehandler.failed.items()]
+        if sort:
+            out_data.sort(key=lambda x: x["filepath"])
+
+        return out_data

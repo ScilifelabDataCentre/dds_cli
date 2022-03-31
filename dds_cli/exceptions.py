@@ -30,15 +30,17 @@ class InvalidMethodError(Exception):
 class DDSCLIException(click.ClickException):
     """Base exception for click in DDS."""
 
-    def __init__(self, message, sign=":warning-emoji:"):
+    def __init__(self, message, sign=":warning-emoji:", show_emojis=True):
         """Init base exception."""
         self.message = message
+        self.show_emojis = show_emojis
         self.sign = sign
         super().__init__(message)
 
     def __str__(self):
         """Format error message and return with signs."""
-        return f"{self.sign} {self.message} {self.sign}"
+        msg = f"{self.sign} {self.message} {self.sign}" if self.show_emojis else self.message
+        return msg
 
 
 class AuthenticationError(click.ClickException):
@@ -84,7 +86,6 @@ class ApiRequestError(requests.exceptions.RequestException):
 
     def __init__(self, message):
         """Log and raise."""
-        LOG.exception(message)
         super().__init__(message)
 
 
@@ -93,7 +94,6 @@ class ApiResponseError(Exception):
 
     def __init__(self, message):
         """Log and raise."""
-        LOG.exception(message)
         super().__init__(message)
 
 

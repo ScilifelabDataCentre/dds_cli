@@ -14,6 +14,7 @@ import pathlib
 import boto3
 import botocore
 import requests
+from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn, BarColumn
 import simplejson
 
@@ -43,7 +44,7 @@ LOG = logging.getLogger(__name__)
 
 
 def put(
-    username,
+    mount_dir,
     project,
     source,
     source_path_file,
@@ -52,11 +53,12 @@ def put(
     num_threads,
     silent,
     no_prompt,
+    token_path,
 ):
     """Handle upload of data."""
     # Initialize delivery - check user access etc
     with DataPutter(
-        username=username,
+        mount_dir=mount_dir,
         project=project,
         source=source,
         source_path_file=source_path_file,
@@ -64,6 +66,7 @@ def put(
         overwrite=overwrite,
         silent=silent,
         no_prompt=no_prompt,
+        token_path=token_path,
     ) as putter:
 
         # Progress object to keep track of progress tasks
@@ -91,7 +94,7 @@ def put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.debug(f"Starting: {file}")
+                    LOG.debug(f"Starting: {escape(file)}")
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -115,14 +118,18 @@ def put(
                         # Get result from future and schedule database update
                         for fut in done:
                             uploaded_file = upload_threads.pop(fut)
-                            LOG.debug(f"Future done for file: {uploaded_file}")
+                            LOG.debug(f"Future done for file: {escape(uploaded_file)}")
 
                             # Get result
                             try:
                                 file_uploaded = fut.result()
-                                LOG.debug(f"Upload of {uploaded_file} successful: {file_uploaded}")
+                                LOG.debug(
+                                    f"Upload of {escape(str(uploaded_file))} successful: {file_uploaded}"
+                                )
                             except concurrent.futures.BrokenExecutor as err:
-                                LOG.error(f"Upload of file {uploaded_file} failed! Error: {err}")
+                                LOG.error(
+                                    f"Upload of file {escape(uploaded_file)} failed! Error: {err}"
+                                )
                                 continue
 
                             # Increase the main progress bar
@@ -133,7 +140,7 @@ def put(
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug(f"Starting: {next_file}")
+                            LOG.debug(f"Starting: {escape(next_file)}")
                             upload_threads[
                                 texec.submit(
                                     putter.protect_and_upload,
@@ -171,8 +178,8 @@ class DataPutter(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str,
         project: str = None,
+        mount_dir: pathlib.Path = None,
         break_on_fail: bool = False,
         overwrite: bool = False,
         source: tuple = (),
@@ -180,10 +187,17 @@ class DataPutter(base.DDSBaseClass):
         silent: bool = False,
         method: str = "put",
         no_prompt: bool = False,
+        token_path: str = None,
     ):
         """Handle actions regarding upload of data."""
         # Initiate DDSBaseClass to authenticate user
-        super().__init__(username=username, project=project, method=method, no_prompt=no_prompt)
+        super().__init__(
+            project=project,
+            mount_dir=mount_dir,
+            method=method,
+            no_prompt=no_prompt,
+            token_path=token_path,
+        )
 
         # Initiate DataPutter specific attributes
         self.break_on_fail = break_on_fail
@@ -234,6 +248,9 @@ class DataPutter(base.DDSBaseClass):
             progress.remove_task(wait_task)
 
         if not self.filehandler.data:
+            if self.temporary_directory and self.temporary_directory.is_dir():
+                LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
+                dds_cli.utils.delete_folder(self.temporary_directory)
             raise exceptions.UploadError("No data to upload.")
 
     # Public methods ###################### Public methods #
@@ -248,7 +265,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Progress bar for processing
         task = progress.add_task(
-            description=txt.TextHandler.task_name(file=file, step="encrypt"),
+            description=txt.TextHandler.task_name(file=escape(file), step="encrypt"),
             total=file_info["size_raw"],
             visible=not self.silent,
         )
@@ -279,12 +296,12 @@ class DataPutter(base.DDSBaseClass):
 
         if saved:
             LOG.debug(
-                f"File successfully encrypted: {file}. New location: {file_info['path_processed']}"
+                f"File successfully encrypted: {escape(file)}. New location: {escape(str(file_info['path_processed']))}"
             )
             # Update progress bar for upload
             progress.reset(
                 task,
-                description=txt.TextHandler.task_name(file=file, step="put"),
+                description=txt.TextHandler.task_name(file=escape(file), step="put"),
                 total=self.filehandler.data[file]["size_processed"],
                 step="put",
             )
@@ -298,12 +315,14 @@ class DataPutter(base.DDSBaseClass):
 
                 if db_updated:
                     all_ok = True
-                    LOG.debug(f"File successfully uploaded and added to the database: {file}")
+                    LOG.debug(
+                        f"File successfully uploaded and added to the database: {escape(file)}"
+                    )
 
         if not saved or all_ok:
             # Delete temporary processed file locally
             LOG.debug(
-                f"Deleting file {file_info['path_processed']} - "
+                f"Deleting file {escape(str(file_info['path_processed']))} - "
                 f"exists: {file_info['path_processed'].exists()}"
             )
             dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
@@ -349,8 +368,8 @@ class DataPutter(base.DDSBaseClass):
             FileNotFoundError,
             TypeError,
         ) as err:
-            error = f"S3 upload of file '{file}' failed: {err}"
-            LOG.exception(f"{file}: {err}")
+            error = f"S3 upload of file '{escape(file)}' failed: {err}"
+            LOG.exception(f"{escape(file)}: {err}")
         else:
             uploaded = True
 

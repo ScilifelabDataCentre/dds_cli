@@ -10,8 +10,7 @@ import logging
 import pathlib
 
 # Installed
-import rich
-import rich.table
+from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
@@ -42,19 +41,19 @@ def verify_proceed(func):
         # Check if keyboardinterrupt in dds
         if self.stop_doing:
             # TODO (ina): Add save to status here
-            message = "KeyBoardInterrupt - cancelling file {file}"
+            message = "KeyBoardInterrupt - cancelling file {escape(file)}"
             LOG.warning(message)
             return False  # Do not proceed
 
         # Return if file cancelled by another file
         if self.status[file]["cancel"]:
-            message = f"File already cancelled, stopping file {file}"
+            message = f"File already cancelled, stopping file {escape(file)}"
             LOG.warning(message)
             return False
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.debug(f"File {file} started {func.__name__}")
+        LOG.debug(f"File {escape(str(file))} started {func.__name__}")
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
@@ -100,7 +99,7 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.debug(f"File {file} status updated to {func.__name__}: started")
+        LOG.debug(f"File {escape(str(file))} status updated to {func.__name__}: started")
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
@@ -115,7 +114,7 @@ def update_status(func):
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.debug(f"File {file} status updated to {func.__name__}: done")
+            LOG.debug(f"File {escape(str(file))} status updated to {func.__name__}: done")
 
         return ok_to_continue, message
 

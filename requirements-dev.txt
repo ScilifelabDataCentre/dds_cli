@@ -1,3 +1,5 @@
 black
 Sphinx
 sphinx_rtd_theme
+sphinx_click
+pyinstaller

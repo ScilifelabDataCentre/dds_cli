@@ -31,32 +31,41 @@ class ProjectStatusManager(base.DDSBaseClass):
 
     def __init__(
         self,
-        username: str,
         project: str,
         no_prompt: bool = False,
+        token_path: str = None,
     ):
         """Handle actions regarding project status in the cli."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
-            username=username,
             no_prompt=no_prompt,
             method_check=False,
+            token_path=token_path,
         )
         self.project = project
 
     # Public methods ###################### Public methods #
     def get_status(self, show_history):
-        """Get current status and status history of the project"""
-
+        """Get current status and status history of the project."""
         try:
             response = requests.get(
                 DDSEndpoint.UPDATE_PROJ_STATUS,
                 headers=self.token,
                 params={"project": self.project},
                 json={"history": show_history},
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to get project status"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         # Check response
         if not response.ok:
@@ -102,7 +111,7 @@ class ProjectStatusManager(base.DDSBaseClass):
                         row[1] = date.astimezone(tzlocal.get_localzone()).strftime(
                             "%a, %d %b %Y %H:%M:%S %Z"
                         )
-                    history += ", ".join([item for item in row]) + " \n"
+                    history += ", ".join(list(row)) + " \n"
                 LOG.info(history)
 
     def update_status(self, new_status, deadline=None, is_aborted=False, no_mail=False):
@@ -119,9 +128,19 @@ class ProjectStatusManager(base.DDSBaseClass):
                 headers=self.token,
                 params={"project": self.project},
                 json=extra_params,
+                timeout=DDSEndpoint.TIMEOUT,
             )
         except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(message=str(err))
+            raise exceptions.ApiRequestError(
+                message=(
+                    "Failed to update project status"
+                    + (
+                        ": The database seems to be down."
+                        if isinstance(err, requests.exceptions.ConnectionError)
+                        else "."
+                    )
+                )
+            )
 
         # Check response
         if not response.ok:

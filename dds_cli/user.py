@@ -83,7 +83,7 @@ class User:
                 )
             else:
                 LOG.info("Attempting to create the session token")
-            self.token = self.__authenticate_user(topt=totp)
+            self.token = self.__authenticate_user(totp=totp)
             token_file.save_token(self.token)
 
     def __authenticate_user(self, totp: str = None):

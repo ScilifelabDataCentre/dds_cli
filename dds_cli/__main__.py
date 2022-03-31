@@ -418,9 +418,7 @@ def info(click_ctx):
 def twofactor(totp=True):
     """Requests regarding configuration of second factor authentication."""
     try:
-        with dds_cli.auth.Auth(
-            username=None, authenticate=True, force_renew_token=False
-        ) as authenticator:
+        with dds_cli.auth.Auth(authenticate=True) as authenticator:
             authenticator.twofactor(totp=totp)
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
         LOG.error(err)

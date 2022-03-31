@@ -335,26 +335,14 @@ def auth_group_command(_):
 
 # -- dds auth login -- #
 @auth_group_command.command(name="login")
-<<<<<<< HEAD
-@username_option()
 @click.option(
     "--TOTP",
     type=str,
     default=None,
     help="TOTP code for 2FA authentication. Default is to use one-time authentication code via mail.",
 )
-||||||| merged common ancestors
-@username_option()
-=======
->>>>>>> dev
 @click.pass_obj
-<<<<<<< HEAD
-def login(click_ctx, username, totp):
-||||||| merged common ancestors
-def login(click_ctx, username):
-=======
-def login(click_ctx):
->>>>>>> dev
+def login(click_ctx, totp):
     """Start or renew an authenticated session.
 
     Creates or renews the authentication token stored in the '.dds_cli_token' file.
@@ -366,13 +354,7 @@ def login(click_ctx):
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-<<<<<<< HEAD
-        with dds_cli.auth.Auth(username=username, totp=totp):
-||||||| merged common ancestors
-        with dds_cli.auth.Auth(username=username):
-=======
-        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH")):
->>>>>>> dev
+        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH"), totp=totp):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication token created![/green]")
     except (

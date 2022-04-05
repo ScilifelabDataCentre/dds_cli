@@ -378,6 +378,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                     "They should now have access to all project data."
                 ),
             )
+        dds_cli.utils.console.print(msg)
 
     def list_unit_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""

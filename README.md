@@ -60,6 +60,10 @@ $ dds
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
+### Executables
+
+Executables are available for Windows, MacOS and Linux. These allow you to run the CLI without needing to install it (and the pip / Python requirements) yourself. Download them from the (bottom of the) latest release page: [Latest Release](https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/)
+
 ### Development version
 
 If you would like the latest development version of tools, the command is:

@@ -1665,7 +1665,7 @@ def set_motd(click_ctx):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as setter:
-            message = click.prompt('Please enter a new MOTD message', type=str)
+            message = click.prompt("Enter a new MOTD message", type=str)
             setter.add_new_motd(message)
 
     except (

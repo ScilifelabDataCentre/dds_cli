@@ -26,6 +26,7 @@ import questionary
 import dds_cli
 import dds_cli.account_manager
 import dds_cli.unit_manager
+import dds_cli.motd_manager
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -1624,6 +1625,49 @@ def list_units(click_ctx):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             lister.list_all_units()
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+####################################################################################################
+####################################################################################################
+## MOTD #################################################################################### MOTD ##
+####################################################################################################
+####################################################################################################
+
+
+@dds_main.group(name="motd", no_args_is_help=True)
+@click.pass_obj
+def motd_group_command(_):
+    """Group command for managing motd messages.
+
+    Limited to Super Admins.
+    """
+
+
+# ************************************************************************************************ #
+# MOTD COMMANDS ******************************************************************** MOTD COMMANDS #
+# ************************************************************************************************ #
+
+# -- dds motd -- #
+@motd_group_command.command(name="add", no_args_is_help=False)
+@click.pass_obj
+def set_motd(click_ctx):
+    """Add a new MOTD."""
+    try:
+        with dds_cli.motd_manager.MotdManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as setter:
+            message = click.prompt('Please enter a new MOTD message', type=str)
+            setter.add_new_motd(message)
+
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

@@ -117,6 +117,9 @@ class DDSEndpoint:
     # Project status updation
     UPDATE_PROJ_STATUS = BASE_ENDPOINT + "/proj/status"
 
+    # Adding new MOTD
+    ADD_NEW_MOTD = BASE_ENDPOINT + "/unit/motd"
+
     TIMEOUT = 30
 
 

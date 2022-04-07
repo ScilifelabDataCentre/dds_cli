@@ -143,4 +143,10 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Refactor version handling to allow PyInstaller builds. ([#439](https://github.com/ScilifelabDataCentre/dds_cli/pull/439))
 
 ## Sprint (2022-03-23 - 2022-04-06)
+
 - Patch: Add a message when the project access would be fixed for a user. ([#446](https://github.com/ScilifelabDataCentre/dds_cli/pull/446))
+
+
+## Sprint(2022-04-06 - 2022-04-20)
+
+- `motd` command to add new message of the day via new endpoint ([#449](https://github.com/ScilifelabDataCentre/dds_cli/pull/449))

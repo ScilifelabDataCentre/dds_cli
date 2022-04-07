@@ -26,6 +26,7 @@ import questionary
 import dds_cli
 import dds_cli.account_manager
 import dds_cli.unit_manager
+import dds_cli.motd_manager
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -1624,6 +1625,57 @@ def list_units(click_ctx):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             lister.list_all_units()
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+####################################################################################################
+####################################################################################################
+## MOTD #################################################################################### MOTD ##
+####################################################################################################
+####################################################################################################
+# Will rethink and discuss the name of the group and command
+# Probably need a super admin only group or similar
+# For now this is good, just need the functionality
+
+
+@dds_main.group(name="motd", no_args_is_help=True)
+@click.pass_obj
+def motd_group_command(_):
+    """Group command for managing Message of the Day within DDS.
+
+    Limited to Super Admins.
+    """
+
+
+# ************************************************************************************************ #
+# MOTD COMMANDS ******************************************************************** MOTD COMMANDS #
+# ************************************************************************************************ #
+
+# -- dds motd add-- #
+@motd_group_command.command(name="add", no_args_is_help=True)
+@click.argument("message", metavar="[MESSAGE]", nargs=1, type=str, required=True)
+@click.pass_obj
+def add_new_motd(click_ctx, message):
+    """Add a new Message Of The Day.
+
+    Only usable by Super Admins.
+
+    [MESSAGE] is the MOTD that you wish do display to the DDS users.
+    """
+    try:
+        with dds_cli.motd_manager.MotdManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as setter:
+            setter.add_new_motd(message)
+
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

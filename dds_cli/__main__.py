@@ -1658,7 +1658,7 @@ def motd_group_command(_):
 # ************************************************************************************************ #
 
 # -- dds motd add-- #
-@motd_group_command.command(name="create", no_args_is_help=True)
+@motd_group_command.command(name="add", no_args_is_help=True)
 @click.option(
     "--message", "-m", required=True, type=str, help="The MOTD text enclosed in quotation marks"
 )

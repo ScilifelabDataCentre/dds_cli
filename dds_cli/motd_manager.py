@@ -63,7 +63,6 @@ class MotdManager(dds_cli.base.DDSBaseClass):
     def add_new_motd(self, message):
         """Add a new motd."""
         err_message = "Failed adding a new MOTD"
-        cred_err_message = "Only Super Admin can add a MOTD"
 
         try:
             response = requests.post(
@@ -93,8 +92,9 @@ class MotdManager(dds_cli.base.DDSBaseClass):
                 raise dds_cli.exceptions.ApiResponseError(
                     message=f"{err_message}: {response.reason}"
                 )
-
+            
+            cred_err_message = ": Only Super Admin can add a MOTD" if response.status_code == http.HTTPStatus.FORBIDDEN else ""
             raise dds_cli.exceptions.DDSCLIException(
-                message=f"{response_json.get('message', 'Unexpected error!')}: {cred_err_message}"
+                message=f"{response_json.get('message', 'Unexpected error!')}{cred_err_message}"
             )
         LOG.info("A new MOTD was added to the database")

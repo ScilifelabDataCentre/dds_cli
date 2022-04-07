@@ -1662,9 +1662,11 @@ def motd_group_command(_):
 @click.argument("message", metavar="[MESSAGE]", nargs=1, type=str, required=True)
 @click.pass_obj
 def add_new_motd(click_ctx, message):
-    """Add a new MOTD.
+    """Add a new Message Of The Day. 
 
     Only usable by Super Admins.
+
+    [MESSAGE] is the MOTD that you wish do display to the DDS users.
     """
     try:
         with dds_cli.motd_manager.MotdManager(

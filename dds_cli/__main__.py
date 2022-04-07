@@ -1663,7 +1663,7 @@ def motd_group_command(_):
     "--message", "-m", required=True, type=str, help="The MOTD text enclosed in quotation marks"
 )
 @click.pass_obj
-def add(click_ctx, message):
+def add_new_motd(click_ctx, message):
     """Add a new MOTD.
 
     Only usable by Super Admins.

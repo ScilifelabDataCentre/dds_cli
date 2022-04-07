@@ -409,17 +409,27 @@ def info(click_ctx):
 
 
 @auth_group_command.command(name="twofactor")
-@click.option(
-    "--TOTP",
-    is_flag=True,
-    default=False,
-    help="Attempt to activate TOTP for second factor authentication.",
-)
-def twofactor(totp=True):
-    """Requests regarding configuration of second factor authentication."""
+def twofactor():
+    """Configure your preferred method of two-factor authentication."""
     try:
-        with dds_cli.auth.Auth(authenticate=True) as authenticator:
-            authenticator.twofactor(totp=totp)
+        LOG.info("Starting configuration of one-time authentication code method.")
+        auth_method_choice = questionary.select(
+            "Which method would you like to use?", choices=["Email", "Authenticator App", "Cancel"]
+        ).ask()
+
+        if auth_method_choice == "Cancel":
+            LOG.info("Two-factor authentication method not configured.")
+            sys.exit(0)
+        elif auth_method_choice == "Authenticator App":
+            auth_method = "totp"
+        elif auth_method_choice == "Email":
+            auth_method = "hotp"
+        else:
+            # This shouldn't happen right?
+            raise dds_cli.exceptions.DDSCLIException("Invalid selection.")
+
+        with dds_cli.auth.Auth(authenticate=True, force_renew_token=False) as authenticator:
+            authenticator.twofactor(auth_method=auth_method)
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
         LOG.error(err)
         sys.exit(1)

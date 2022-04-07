@@ -26,6 +26,7 @@ class Auth(base.DDSBaseClass):
     def __init__(
         self,
         authenticate: bool = True,
+        force_renew_token: bool = True,  # Only used if authenticate is True
         token_path: str = None,
         totp: str = None,
     ):
@@ -34,7 +35,7 @@ class Auth(base.DDSBaseClass):
         super().__init__(
             authenticate=authenticate,
             method_check=False,
-            force_renew_token=True,  # Only used if authenticate is True
+            force_renew_token=force_renew_token,
             token_path=token_path,
             totp=totp,
         )
@@ -57,8 +58,8 @@ class Auth(base.DDSBaseClass):
         else:
             LOG.info("[green]Already logged out![/green]")
 
-    def twofactor(self, totp):
-        if totp:
+    def twofactor(self, auth_method: str = None):
+        if auth_method == "totp":
             try:
                 response = requests.post(
                     dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
@@ -74,3 +75,5 @@ class Auth(base.DDSBaseClass):
                 raise dds_cli.exceptions.ApiResponseError(message=response.reason)
 
             LOG.info(response_json.get("message"))
+        elif auth_method == "hotp":
+            raise dds_cli.exceptions.DDSCLIException(message="Not implemented yet!")

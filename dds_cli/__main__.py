@@ -1640,7 +1640,9 @@ def list_units(click_ctx):
 ## MOTD #################################################################################### MOTD ##
 ####################################################################################################
 ####################################################################################################
-
+# Will rethink and discuss the name of the group and command
+# Probably need a super admin only group or similar
+# For now this is good, just need the functionality
 
 @dds_main.group(name="motd", no_args_is_help=True)
 @click.pass_obj

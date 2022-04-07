@@ -1645,7 +1645,7 @@ def list_units(click_ctx):
 @dds_main.group(name="motd", no_args_is_help=True)
 @click.pass_obj
 def motd_group_command(_):
-    """Group command for managing motd messages.
+    """Group command for managing Message of the Day within DDS.
 
     Limited to Super Admins.
     """
@@ -1655,17 +1655,22 @@ def motd_group_command(_):
 # MOTD COMMANDS ******************************************************************** MOTD COMMANDS #
 # ************************************************************************************************ #
 
-# -- dds motd -- #
-@motd_group_command.command(name="add", no_args_is_help=False)
+# -- dds motd add-- #
+@motd_group_command.command(no_args_is_help=True)
+@click.option(
+    "--message", "-m", required=True, type=str, help="The MOTD text enclosed in quotation marks"
+)
 @click.pass_obj
-def set_motd(click_ctx):
-    """Add a new MOTD."""
+def add(click_ctx, message):
+    """Add a new MOTD.
+
+    Only usable by Super Admins.
+    """
     try:
         with dds_cli.motd_manager.MotdManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as setter:
-            message = click.prompt("Enter a new MOTD message", type=str)
             setter.add_new_motd(message)
 
     except (

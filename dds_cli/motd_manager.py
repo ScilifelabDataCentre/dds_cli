@@ -97,3 +97,4 @@ class MotdManager(dds_cli.base.DDSBaseClass):
             raise dds_cli.exceptions.DDSCLIException(
                 message=f"{response_json.get('message', 'Unexpected error!')}: {cred_err_message}"
             )
+        LOG.info("A new MOTD was added to the database")

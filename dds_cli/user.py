@@ -139,13 +139,24 @@ class User:
 
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
+        secondfactor_method = response_json.get("secondfactor_method")
+
+        totp_enabled = secondfactor_method == "TOTP"
 
         # Verify Second Factor
         if totp is None:
-            LOG.info(
-                "Please enter the one-time authentication code sent "
-                "to your email address (leave empty to exit):"
-            )
+            if totp_enabled:
+                LOG.info(
+                    "Please enter the one-time authentication code from your authenticator app."
+                )
+                nr_digits = 6
+            else:
+                LOG.info(
+                    "Please enter the one-time authentication code sent "
+                    "to your email address (leave empty to exit):"
+                )
+                nr_digits = 8
+
             done = False
             while not done:
                 entered_one_time_code = rich.prompt.Prompt.ask("Authentication one-time code")
@@ -159,18 +170,23 @@ class User:
                         "Please enter a valid one-time code. It should consist of only digits."
                     )
                     continue
-                if len(entered_one_time_code) != 8:
+                if len(entered_one_time_code) != nr_digits:
                     LOG.info(
-                        "Please enter a valid one-time code. It should consist of 8 digits "
+                        f"Please enter a valid one-time code. It should consist of {nr_digits} digits "
                         f"(you entered {len(entered_one_time_code)} digits)."
                     )
                     continue
+
+                if totp_enabled:
+                    json_request = {"TOTP": entered_one_time_code}
+                else:
+                    json_request = {"HOTP": entered_one_time_code}
 
                 try:
                     response = requests.get(
                         dds_cli.DDSEndpoint.SECOND_FACTOR,
                         headers={"Authorization": f"Bearer {partial_auth_token}"},
-                        json={"HOTP": entered_one_time_code},
+                        json=json_request,
                         timeout=dds_cli.DDSEndpoint.TIMEOUT,
                     )
                     response_json = response.json()
@@ -196,6 +212,10 @@ class User:
                     else:
                         raise exceptions.ApiResponseError(message=message)
         else:  # TOTP
+            if not totp_enabled:
+                raise exceptions.AuthenticationError(
+                    "Authentication failed, you have not yet activated one-time authentication codes from authenticator app."
+                )
             try:
                 response = requests.get(
                     dds_cli.DDSEndpoint.SECOND_FACTOR,
@@ -207,7 +227,7 @@ class User:
             except requests.exceptions.RequestException as err:
                 raise exceptions.ApiRequestError(
                     message=(
-                        "Failed to authenticate with second factor"
+                        "Failed to authenticate with one-time authentication code"
                         + (
                             ": The database seems to be down."
                             if isinstance(err, requests.exceptions.ConnectionError)

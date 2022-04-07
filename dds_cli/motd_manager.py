@@ -92,8 +92,12 @@ class MotdManager(dds_cli.base.DDSBaseClass):
                 raise dds_cli.exceptions.ApiResponseError(
                     message=f"{err_message}: {response.reason}"
                 )
-            
-            cred_err_message = ": Only Super Admin can add a MOTD" if response.status_code == http.HTTPStatus.FORBIDDEN else ""
+
+            cred_err_message = (
+                ": Only Super Admin can add a MOTD"
+                if response.status_code == http.HTTPStatus.FORBIDDEN
+                else ""
+            )
             raise dds_cli.exceptions.DDSCLIException(
                 message=f"{response_json.get('message', 'Unexpected error!')}{cred_err_message}"
             )

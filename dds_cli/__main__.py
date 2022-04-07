@@ -1659,7 +1659,7 @@ def motd_group_command(_):
 
 # -- dds motd add-- #
 @motd_group_command.command(name="add", no_args_is_help=True)
-@click.argument("message", metavar="[MESSAGE]", nargs=1, type=str, required=True, help="The MOTD text enclosed in quotation marks")
+@click.argument("message", metavar="[MESSAGE]", nargs=1, type=str, required=True)
 @click.pass_obj
 def add_new_motd(click_ctx, message):
     """Add a new MOTD.

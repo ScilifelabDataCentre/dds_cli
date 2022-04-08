@@ -90,7 +90,7 @@ class ProjectCreator(base.DDSBaseClass):
                 response_json.get("title"),
                 response_json.get("description"),
                 response_json.get("pi"),
-                response_json.get("email")
+                response_json.get("email"),
             )
 
             messages = [message, title, description, pi, email]
@@ -132,10 +132,10 @@ class ProjectCreator(base.DDSBaseClass):
             )
 
         created, created_project_id, user_addition_statuses, error = (
-                True,
-                response_json.get("project_id"),
-                response_json.get("user_addition_statuses"),
-                response_json.get("message"),
-            )
-        
+            True,
+            response_json.get("project_id"),
+            response_json.get("user_addition_statuses"),
+            response_json.get("message"),
+        )
+
         return created, created_project_id, user_addition_statuses, error

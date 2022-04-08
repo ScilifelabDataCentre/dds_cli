@@ -115,6 +115,10 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     """SciLifeLab Data Delivery System (DDS) command line interface.
 
     Access token is saved in a .dds_cli_token file in the home directory.
+
+    The token is valid for 7 days. Make sure your token is valid long enough for the
+    delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
+    reauthenticating yourself before each delivery ('dds data put' / 'get').
     """
     # Get token metadata
     username = dds_cli.user.User.get_user_name_if_logged_in(token_path=token_path)
@@ -1275,6 +1279,8 @@ def put_data(
 ):
     """Upload data to a project.
 
+    Limited to Unit Admins and Personnel.
+
     To upload a file (with the same name) a second time, use the `--overwrite` flag.
 
     Prior to the upload, the DDS checks if the files are compressed and if not compresses them,
@@ -1286,7 +1292,9 @@ def put_data(
     changed by altering the `--num-threads` option, but whether or not it works depends on the
     machine you are running the CLI on.
 
-    Limited to Unit Admins and Personnel.
+    The token is valid for 7 days. Make sure your token is valid long enough for the
+    delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
+    reauthenticating yourself before uploading data.
     """
     try:
         dds_cli.data_putter.put(
@@ -1372,6 +1380,10 @@ def get_data(
     The default number of files to download, decrypt and decompress at a time is four. This can be
     changed by altering the `--num-threads` option, but whether or not it works depends on the
     machine you are running the CLI on.
+
+    The token is valid for 7 days. Make sure your token is valid long enough for the
+    delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
+    reauthenticating yourself before downloading data.
     """
     if get_all and (source or source_path_file):
         LOG.error(

@@ -150,3 +150,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint(2022-04-06 - 2022-04-20)
 
 - `motd` command to add new message of the day via new endpoint ([#449](https://github.com/ScilifelabDataCentre/dds_cli/pull/449))
+- Patch: Message in docstrings to urge users to reauthenticate before upload and download ([#450](https://github.com/ScilifelabDataCentre/dds_cli/pull/450))

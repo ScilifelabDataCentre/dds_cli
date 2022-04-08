@@ -115,6 +115,10 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     """SciLifeLab Data Delivery System (DDS) command line interface.
 
     Access token is saved in a .dds_cli_token file in the home directory.
+
+    The token is valid for 7 days. Make sure your token is valid long enough for the 
+    delivery to finish. To avoid that a delivery fails because of an expired token, we recommend 
+    reauthenticating yourself before each delivery ('dds data put' / 'get'). 
     """
     # Get token metadata
     username = dds_cli.user.User.get_user_name_if_logged_in(token_path=token_path)

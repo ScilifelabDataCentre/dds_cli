@@ -389,6 +389,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             error_message="Failed getting unit users from API",
         )
 
+        if response.get("empty"):
+            LOG.info(f"There are no Unit Admins or Unit Personnel connected to unit '{unit}'")
+            return
+
         users, keys, unit = dds_cli.utils.get_required_in_response(
             keys=["users", "keys", "unit"], response=response
         )

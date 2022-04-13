@@ -102,13 +102,13 @@ jobs:
         with:
           container: latest
           pre-build-command: "pip install ."
-          build-command: "make clean html"
+          build-command: "make html"
           docs-folder: "docs/"
       - name: Build the pdf with Sphinx
         uses: matthiaszepper/sphinx-action-v4@pdflatex
         with:
           container: pdflatex
-          build-command: "make clean latexpdf"
+          build-command: "make latexpdf"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML
         uses: actions/upload-artifact@v3

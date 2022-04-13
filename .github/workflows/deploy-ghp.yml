@@ -19,7 +19,7 @@ jobs:
         with:
           container: latest
           pre-build-command: "pip install ."
-          build-command: "make dirhtml"
+          build-command: "make clean dirhtml"
           docs-folder: "docs/"
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.2.5

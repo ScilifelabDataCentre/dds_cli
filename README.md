@@ -18,8 +18,6 @@ This tool is written and maintained by the [SciLifeLab Data Centre](https://www.
 
 ### Python Package Index
 
-> :warning: Only pre-releases so far.
-
 The `dds-cli` package can be installed from [PyPI](https://pypi.python.org/pypi/dds_cli/) using pip as follows:
 
 ```bash
@@ -61,6 +59,10 @@ $ dds
 │  user     Group command for managing user accounts, including your own.                          │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
+
+### Executables
+
+Executables are available for Windows, MacOS and Linux. These allow you to run the CLI without needing to install it (and the pip / Python requirements) yourself. Download them from the (bottom of the) latest release page: [Latest Release](https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/)
 
 ### Development version
 

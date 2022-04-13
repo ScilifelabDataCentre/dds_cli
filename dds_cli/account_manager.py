@@ -378,6 +378,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                     "They should now have access to all project data."
                 ),
             )
+        dds_cli.utils.console.print(msg)
 
     def list_unit_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
@@ -387,6 +388,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             json={"unit": unit},
             error_message="Failed getting unit users from API",
         )
+
+        if response.get("empty"):
+            LOG.info(f"There are no Unit Admins or Unit Personnel connected to unit '{unit}'")
+            return
 
         users, keys, unit = dds_cli.utils.get_required_in_response(
             keys=["users", "keys", "unit"], response=response

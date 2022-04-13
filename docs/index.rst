@@ -7,7 +7,7 @@
 Welcome to the Data Delivery Systems' Documentation!
 =====================================================================
 
-The Data Delivery System (DDS, https://delivery.scilifelab.se/) consists of a command line interface (CLI) and a currently minimal web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
+The Data Delivery System (DDS, https://delivery.scilifelab.se/) consists of a command line interface (CLI) and a web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
 
 How do I get my user account?
 ===============================

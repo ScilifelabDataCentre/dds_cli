@@ -141,3 +141,13 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Github Action to automatically build the executables (with help from @zishanmirza) and the documentations with Sphinx.([#419](https://github.com/ScilifelabDataCentre/dds_cli/pull/419),[#423](https://github.com/ScilifelabDataCentre/dds_cli/pull/423))
 - Github Action to automatically deploy the documentation to Github Pages. ([#436](https://github.com/ScilifelabDataCentre/dds_cli/pull/436))
 - Refactor version handling to allow PyInstaller builds. ([#439](https://github.com/ScilifelabDataCentre/dds_cli/pull/439))
+
+## Sprint (2022-03-23 - 2022-04-06)
+
+- Patch: Add a message when the project access would be fixed for a user. ([#446](https://github.com/ScilifelabDataCentre/dds_cli/pull/446))
+
+
+## Sprint(2022-04-06 - 2022-04-20)
+
+- `motd` command to add new message of the day via new endpoint ([#449](https://github.com/ScilifelabDataCentre/dds_cli/pull/449))
+- Patch: Message in docstrings to urge users to reauthenticate before upload and download ([#450](https://github.com/ScilifelabDataCentre/dds_cli/pull/450))

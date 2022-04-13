@@ -9,6 +9,7 @@ import rich.prompt
 # Own modules
 from dds_cli import base
 from dds_cli import exceptions
+from dds_cli import utils
 from dds_cli import DDSEndpoint
 
 ###############################################################################
@@ -66,6 +67,8 @@ class ProjectCreator(base.DDSBaseClass):
                 },
                 timeout=DDSEndpoint.TIMEOUT,
             )
+            # Get response
+            response_json = response.json()
         except requests.exceptions.RequestException as err:
             raise exceptions.ApiRequestError(
                 message=(
@@ -77,62 +80,62 @@ class ProjectCreator(base.DDSBaseClass):
                     )
                 )
             )
-        else:
-            # Error if failed
-            if not response.ok:
-                message = response.json().get("message")
-                title = response.json().get("title")
-                description = response.json().get("description")
-                pi = response.json().get("pi")
-                email = response.json().get("email")
+        except simplejson.JSONDecodeError as err:
+            raise exceptions.ApiResponseError(message=str(err))
 
-                messages = [message, title, description, pi, email]
+        # Error if failed
+        if not response.ok:
+            message, title, description, pi, email = (
+                response_json.get("message"),
+                response_json.get("title"),
+                response_json.get("description"),
+                response_json.get("pi"),
+                response_json.get("email"),
+            )
 
-                error = next(message for message in messages if message)
+            messages = [message, title, description, pi, email]
 
-                if isinstance(error, list):
-                    error = error[0]
+            error = next(message for message in messages if message)
 
-                if "Insufficient credentials" in error:
-                    error = "You do not have the required permissions to create a project."
-                LOG.error(error)
+            if isinstance(error, list):
+                error = error[0]
+
+            if "Insufficient credentials" in error:
+                error = "You do not have the required permissions to create a project."
+            LOG.error(error)
+            return created, created_project_id, user_addition_statuses, error
+
+        warning_message = response_json.get("warning")
+
+        if warning_message:
+            if self.no_prompt:
+                LOG.warning(
+                    f"{warning_message}\n\n`--no-prompt` option used: Not creating project."
+                )
+                proceed_creation = False
+            else:
+                proceed_creation = rich.prompt.Confirm.ask(
+                    f"[red][bold]WARNING!![/bold][/red] {warning_message}"
+                    "\n\nAre you sure you wish to create this project anyway?"
+                )
+
+            if not proceed_creation:
                 return created, created_project_id, user_addition_statuses, error
 
-            warning_message = response.json().get("warning")
+            return self.create_project(
+                title=title,
+                description=description,
+                principal_investigator=principal_investigator,
+                non_sensitive=non_sensitive,
+                users_to_add=users_to_add,
+                force=True,
+            )
 
-            if warning_message:
-                if self.no_prompt:
-                    LOG.warning(
-                        f"{warning_message}\n\n`--no-prompt` option used: Not creating project."
-                    )
-                    proceed_creation = False
-                else:
-                    proceed_creation = rich.prompt.Confirm.ask(
-                        f"[red][bold]WARNING!![/bold][/red] {warning_message}"
-                        "\n\nAre you sure you wish to create this project anyway?"
-                    )
-
-                if not proceed_creation:
-                    return created, created_project_id, user_addition_statuses, error
-
-                return self.create_project(
-                    title=title,
-                    description=description,
-                    principal_investigator=principal_investigator,
-                    non_sensitive=non_sensitive,
-                    users_to_add=users_to_add,
-                    force=True,
-                )
-
-            try:
-                created, created_project_id, user_addition_statuses, error = (
-                    True,
-                    response.json().get("project_id"),
-                    response.json().get("user_addition_statuses"),
-                    response.json().get("message"),
-                )
-            except simplejson.JSONDecodeError as err:
-                error = str(err)
-                LOG.warning(error)
+        created, created_project_id, user_addition_statuses, error = (
+            True,
+            response_json.get("project_id"),
+            response_json.get("user_addition_statuses"),
+            response_json.get("message"),
+        )
 
         return created, created_project_id, user_addition_statuses, error

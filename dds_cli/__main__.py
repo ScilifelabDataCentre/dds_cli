@@ -26,6 +26,7 @@ import questionary
 import dds_cli
 import dds_cli.account_manager
 import dds_cli.unit_manager
+import dds_cli.motd_manager
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -114,6 +115,10 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     """SciLifeLab Data Delivery System (DDS) command line interface.
 
     Access token is saved in a .dds_cli_token file in the home directory.
+
+    The token is valid for 7 days. Make sure your token is valid long enough for the
+    delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
+    reauthenticating yourself before each delivery ('dds data put' / 'get').
     """
     # Get token metadata
     username = dds_cli.user.User.get_user_name_if_logged_in(token_path=token_path)
@@ -1274,6 +1279,8 @@ def put_data(
 ):
     """Upload data to a project.
 
+    Limited to Unit Admins and Personnel.
+
     To upload a file (with the same name) a second time, use the `--overwrite` flag.
 
     Prior to the upload, the DDS checks if the files are compressed and if not compresses them,
@@ -1285,7 +1292,9 @@ def put_data(
     changed by altering the `--num-threads` option, but whether or not it works depends on the
     machine you are running the CLI on.
 
-    Limited to Unit Admins and Personnel.
+    The token is valid for 7 days. Make sure your token is valid long enough for the
+    delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
+    reauthenticating yourself before uploading data.
     """
     try:
         dds_cli.data_putter.put(
@@ -1371,6 +1380,10 @@ def get_data(
     The default number of files to download, decrypt and decompress at a time is four. This can be
     changed by altering the `--num-threads` option, but whether or not it works depends on the
     machine you are running the CLI on.
+
+    The token is valid for 7 days. Make sure your token is valid long enough for the
+    delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
+    reauthenticating yourself before downloading data.
     """
     if get_all and (source or source_path_file):
         LOG.error(
@@ -1624,6 +1637,57 @@ def list_units(click_ctx):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             lister.list_all_units()
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+####################################################################################################
+####################################################################################################
+## MOTD #################################################################################### MOTD ##
+####################################################################################################
+####################################################################################################
+# Will rethink and discuss the name of the group and command
+# Probably need a super admin only group or similar
+# For now this is good, just need the functionality
+
+
+@dds_main.group(name="motd", no_args_is_help=True)
+@click.pass_obj
+def motd_group_command(_):
+    """Group command for managing Message of the Day within DDS.
+
+    Limited to Super Admins.
+    """
+
+
+# ************************************************************************************************ #
+# MOTD COMMANDS ******************************************************************** MOTD COMMANDS #
+# ************************************************************************************************ #
+
+# -- dds motd add-- #
+@motd_group_command.command(name="add", no_args_is_help=True)
+@click.argument("message", metavar="[MESSAGE]", nargs=1, type=str, required=True)
+@click.pass_obj
+def add_new_motd(click_ctx, message):
+    """Add a new Message Of The Day.
+
+    Only usable by Super Admins.
+
+    [MESSAGE] is the MOTD that you wish do display to the DDS users.
+    """
+    try:
+        with dds_cli.motd_manager.MotdManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as setter:
+            setter.add_new_motd(message)
+
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

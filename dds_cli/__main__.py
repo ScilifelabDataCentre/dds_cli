@@ -114,8 +114,6 @@ dds_cli.utils.stderr_console.print(
 def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     """SciLifeLab Data Delivery System (DDS) command line interface.
 
-    TEST
-
     Access token is saved in a .dds_cli_token file in the home directory.
 
     The token is valid for 7 days. Make sure your token is valid long enough for the
@@ -325,8 +323,6 @@ def list_projects_and_contents(
 @click.pass_obj
 def auth_group_command(_):
     """Group command for creating and managing authenticated sessions.
-
-    TESTING AUTH
 
     Authenticate yourself once and run multiple commands within a certain amount of time
     (currently 7 days) without specifying your user credentials.

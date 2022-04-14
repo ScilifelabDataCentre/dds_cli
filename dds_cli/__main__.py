@@ -326,6 +326,8 @@ def list_projects_and_contents(
 def auth_group_command(_):
     """Group command for creating and managing authenticated sessions.
 
+    TESTING AUTH
+
     Authenticate yourself once and run multiple commands within a certain amount of time
     (currently 7 days) without specifying your user credentials.
     If you do not authenticate yourself and start a new session, you will need to provide your

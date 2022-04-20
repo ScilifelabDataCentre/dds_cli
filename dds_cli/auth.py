@@ -61,9 +61,10 @@ class Auth(base.DDSBaseClass):
     def twofactor(self, auth_method: str = None):
         if auth_method == "totp":
             try:
-                response = requests.post(
+                response = requests.put(
                     dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
                     headers=self.token,
+                    json={"activate_totp": True},
                 )
                 response_json = response.json()
             except requests.exceptions.RequestException as err:

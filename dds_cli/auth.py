@@ -59,22 +59,19 @@ class Auth(base.DDSBaseClass):
             LOG.info("[green]Already logged out![/green]")
 
     def twofactor(self, auth_method: str = None):
-        if auth_method == "totp":
-            try:
-                response = requests.put(
-                    dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
-                    headers=self.token,
-                    json={"activate_totp": True},
-                )
-                response_json = response.json()
-            except requests.exceptions.RequestException as err:
-                raise dds_cli.exceptions.ApiRequestError(message=str(err))
-            except simplejson.JSONDecodeError as err:
-                raise dds_cli.exceptions.ApiResponseError(message=str(err))
+        try:
+            response = requests.put(
+                dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
+                headers=self.token,
+                json={"activate_totp": True if auth_method == "totp" else False},
+            )
+            response_json = response.json()
+        except requests.exceptions.RequestException as err:
+            raise dds_cli.exceptions.ApiRequestError(message=str(err))
+        except simplejson.JSONDecodeError as err:
+            raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
-            if not response.ok:
-                raise dds_cli.exceptions.ApiResponseError(message=response.reason)
+        if not response.ok:
+            raise dds_cli.exceptions.ApiResponseError(message=response.reason)
 
-            LOG.info(response_json.get("message"))
-        elif auth_method == "hotp":
-            raise dds_cli.exceptions.DDSCLIException(message="Not implemented yet!")
+        LOG.info(response_json.get("message"))

@@ -16,7 +16,7 @@ def runner_motd(runner):
     """Run dds motd add."""
 
     def _run():
-         return runner(["motd", "add", ADD_JSON["message"]])
+        return runner(["motd", "add", ADD_JSON["message"]])
 
     yield _run
 
@@ -42,8 +42,8 @@ def add_motd():
 def test_add_motd_OK(runner_motd, add_motd):
     add_motd_OK = add_motd(200)
     result = runner_motd()
-    
-    assert result.exit_code == 0    
+
+    assert result.exit_code == 0
     add_motd_OK.assert_called_with(
         dds_cli.DDSEndpoint.ADD_NEW_MOTD,
         json={**ADD_JSON},
@@ -55,7 +55,7 @@ def test_add_motd_OK(runner_motd, add_motd):
 def test_add_motd_fail(runner_motd, add_motd):
     add_motd_FAIL = add_motd(403, message="Passed message", ok=False)
     result = runner_motd()
-    
+
     assert result.exit_code != 0
     assert "Only Super Admin can add a MOTD" in result.stderr
     assert "Passed message" in result.stderr

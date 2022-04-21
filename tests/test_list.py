@@ -102,6 +102,7 @@ def list_no_projects(ls_runner, list_request, command):
         dds_cli.DDSEndpoint.LIST_PROJ,
         headers=unittest.mock.ANY,
         json={"usage": False},
+        params=None,
         timeout=dds_cli.DDSEndpoint.TIMEOUT,
     )
 

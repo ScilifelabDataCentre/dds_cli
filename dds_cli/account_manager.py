@@ -238,44 +238,19 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
     def get_user_info(self):
         """Get a users info."""
-        try:
-            response = requests.get(
-                dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
-                headers=self.token,
-                timeout=dds_cli.DDSEndpoint.TIMEOUT,
-            )
+        response = dds_cli.utils.request_get(
+            dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
+            headers=self.token,
+            error_message="Failed to get user information",
+            timeout=dds_cli.DDSEndpoint.TIMEOUT,
+        )
 
-            # Get response
-            response_json = response.json()
-            for field in response_json.get("info", []):
-                if isinstance(response_json["info"][field], str):
-                    response_json["info"][field] = rich.markup.escape(response_json["info"][field])
-            LOG.debug(response_json)
-        except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(
-                message=(
-                    "Failed to get user information"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            )
-        except simplejson.JSONDecodeError as err:
-            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+        for field in response.get("info", []):
+            if isinstance(response["info"][field], str):
+                response["info"][field] = rich.markup.escape(response["info"][field])
+        LOG.debug(response)
 
-        # Format response message
-        if not response.ok:
-            message = "Could not get user info"
-            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
-
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
-            )
-
-        info = response_json.get("info")
+        info = response.get("info")
         if info:
             LOG.info(
                 f"User Name: {info['username']} \nRole: {info['role']} \

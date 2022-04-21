@@ -144,7 +144,6 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 ## Sprint (2022-03-23 - 2022-04-06)
 
-- Possible to use TOTP (Authenticator app) for second factor authentication. ([#259](https://github.com/ScilifelabDataCentre/dds_cli/pull/259))
 - Patch: Add a message when the project access would be fixed for a user. ([#446](https://github.com/ScilifelabDataCentre/dds_cli/pull/446))
 
 

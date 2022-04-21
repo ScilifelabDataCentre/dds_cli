@@ -144,7 +144,35 @@ class User:
         totp_enabled = secondfactor_method == "TOTP"
 
         # Verify Second Factor
-        if totp is None:
+        if totp:
+            if not totp_enabled:
+                raise exceptions.AuthenticationError(
+                    "Authentication failed, you have not yet activated one-time authentication codes from authenticator app."
+                )
+            try:
+                response = requests.get(
+                    dds_cli.DDSEndpoint.SECOND_FACTOR,
+                    headers={"Authorization": f"Bearer {partial_auth_token}"},
+                    json={"TOTP": totp},
+                    timeout=dds_cli.DDSEndpoint.TIMEOUT,
+                )
+                response_json = response.json()
+            except requests.exceptions.RequestException as err:
+                raise exceptions.ApiRequestError(
+                    message=(
+                        "Failed to authenticate with one-time authentication code"
+                        + (
+                            ": The database seems to be down."
+                            if isinstance(err, requests.exceptions.ConnectionError)
+                            else "."
+                        )
+                    )
+                ) from err
+
+            if not response.ok:
+                message = response_json.get("message", "Unexpected error!")
+                raise exceptions.ApiResponseError(message=message)
+        else:
             if totp_enabled:
                 LOG.info(
                     "Please enter the one-time authentication code from your authenticator app."
@@ -211,34 +239,6 @@ class User:
                             )
                     else:
                         raise exceptions.ApiResponseError(message=message)
-        else:  # TOTP
-            if not totp_enabled:
-                raise exceptions.AuthenticationError(
-                    "Authentication failed, you have not yet activated one-time authentication codes from authenticator app."
-                )
-            try:
-                response = requests.get(
-                    dds_cli.DDSEndpoint.SECOND_FACTOR,
-                    headers={"Authorization": f"Bearer {partial_auth_token}"},
-                    json={"TOTP": totp},
-                    timeout=dds_cli.DDSEndpoint.TIMEOUT,
-                )
-                response_json = response.json()
-            except requests.exceptions.RequestException as err:
-                raise exceptions.ApiRequestError(
-                    message=(
-                        "Failed to authenticate with one-time authentication code"
-                        + (
-                            ": The database seems to be down."
-                            if isinstance(err, requests.exceptions.ConnectionError)
-                            else "."
-                        )
-                    )
-                ) from err
-
-            if not response.ok:
-                message = response_json.get("message", "Unexpected error!")
-                raise exceptions.ApiResponseError(message=message)
 
         # Get token from response
         token = response_json.get("token")

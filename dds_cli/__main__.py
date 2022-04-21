@@ -341,10 +341,10 @@ def auth_group_command(_):
 # -- dds auth login -- #
 @auth_group_command.command(name="login")
 @click.option(
-    "--TOTP",
+    "--totp",
     type=str,
     default=None,
-    help="TOTP code for 2FA authentication. Default is to use one-time authentication code via mail.",
+    help="2FA authentication via authentication app. Default is to use one-time authentication code via mail.",
 )
 @click.pass_obj
 def login(click_ctx, totp):
@@ -429,9 +429,6 @@ def twofactor():
             auth_method = "totp"
         elif auth_method_choice == "Email":
             auth_method = "hotp"
-        else:
-            # This shouldn't happen right?
-            raise dds_cli.exceptions.DDSCLIException("Invalid selection.")
 
         with dds_cli.auth.Auth(authenticate=True, force_renew_token=False) as authenticator:
             authenticator.twofactor(auth_method=auth_method)

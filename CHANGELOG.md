@@ -147,8 +147,12 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Patch: Add a message when the project access would be fixed for a user. ([#446](https://github.com/ScilifelabDataCentre/dds_cli/pull/446))
 
 
-## Sprint(2022-04-06 - 2022-04-20)
+## Sprint (2022-04-06 - 2022-04-20)
 
 - `motd` command to add new message of the day via new endpoint ([#449](https://github.com/ScilifelabDataCentre/dds_cli/pull/449))
 - Patch: Message in docstrings to urge users to reauthenticate before upload and download ([#450](https://github.com/ScilifelabDataCentre/dds_cli/pull/450))
 - Pin versions in `requirements-dev.txt`: New version of `sphinx-click` makes `:nested: full` not work anymore (direct commit: https://github.com/ScilifelabDataCentre/dds_cli/commit/b91332b43e9cdee40a8132eab15e2fea3201bab6)
+
+## Sprint (2022-04-20 - 2022-05-04)
+- Patch: Update help message about `--principal-investigator` option ([#465](https://github.com/ScilifelabDataCentre/dds_cli/pull/465))
+- Removed all CLI tests because needs redo ([#469](https://github.com/ScilifelabDataCentre/dds_cli/pull/469))

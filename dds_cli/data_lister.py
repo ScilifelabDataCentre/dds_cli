@@ -79,40 +79,19 @@ class DataLister(base.DDSBaseClass):
     def list_projects(self, sort_by="Updated"):
         """Get a list of project(s) the user is involved in."""
         # Get projects from API
-        try:
-            response = requests.get(
-                DDSEndpoint.LIST_PROJ,
-                headers=self.token,
-                json={"usage": self.show_usage},
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(
-                message=(
-                    "Failed to get list of projects"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            )
-
-        # Check response
-        if not response.ok:
-            raise exceptions.APIError(f"Failed to get any projects: {response.text}")
-
-        # Get result from API
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise exceptions.APIError(f"Could not decode JSON response: {err}")
+        response = dds_cli.utils.request_get(
+            DDSEndpoint.LIST_PROJ,
+            headers=self.token,
+            json={"usage": self.show_usage},
+            error_message="Failed to get list of projects",
+            timeout=DDSEndpoint.TIMEOUT,
+        )
 
         # Cancel if user not involved in any projects
-        usage_info = resp_json.get("total_usage")
-        total_size = resp_json.get("total_size")
-        project_info = resp_json.get("project_info")
-        always_show = resp_json.get("always_show", False)
+        usage_info = response.get("total_usage")
+        total_size = response.get("total_size")
+        project_info = response.get("project_info")
+        always_show = response.get("always_show", False)
         if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
 

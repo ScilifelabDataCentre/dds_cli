@@ -167,7 +167,7 @@ def request_get(
                 + (
                     ": The database seems to be down."
                     if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
+                    else ": Unknown request error."
                 )
             )
         )

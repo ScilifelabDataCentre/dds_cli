@@ -147,7 +147,7 @@ def request_get(
     headers,
     params=None,
     json=None,
-    error_message=None,
+    error_message="API Request failed.",
     timeout=DDSEndpoint.TIMEOUT,
 ):
     """Perform get request."""
@@ -167,7 +167,7 @@ def request_get(
                 + (
                     ": The database seems to be down."
                     if isinstance(err, requests.exceptions.ConnectionError)
-                    else ": API Request failed."
+                    else ": Unknown request error."
                 )
             )
         )

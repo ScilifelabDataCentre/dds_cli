@@ -794,7 +794,11 @@ def list_projects(ctx, json, sort, usage):
     "-pi",
     required=True,
     type=str,
-    help="The name of the Principal Investigator.",
+    help=(
+        "Email of the Principal Investigator. "
+        "Note: The PI will not be added as a user in the DDS. "
+        "Add the same email as the `--owner` if the PI should have an account."
+    ),
 )
 @click.option(
     "--researcher",

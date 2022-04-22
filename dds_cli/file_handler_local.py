@@ -215,7 +215,6 @@ class LocalFileHandler(fh.FileHandler):
             headers=token,
             json=files,
             error_message="Failed getting information about previously uploaded files",
-            timeout=DDSEndpoint.TIMEOUT,
         )
 
         # API failure

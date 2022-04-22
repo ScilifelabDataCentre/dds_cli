@@ -8,7 +8,6 @@
 import dataclasses
 import logging
 import traceback
-import requests
 
 # Installed
 import boto3
@@ -90,28 +89,12 @@ class S3Connector:
     def __get_s3_info(project_id, token):
         """Get information required to connect to cloud."""
         # Perform request to API
-        try:
-            response = requests.get(
-                DDSEndpoint.S3KEYS,
-                params={"project": project_id},
-                headers=token,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            LOG.warning(err)
-            raise SystemExit(
-                "Failed to get cloud information"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
-
-        # Error
-        if not response.ok:
-            message = f"Connection error: {response.text}"
-            raise exceptions.ApiResponseError(message)  # TODO: Change
+        s3info = request_get(
+            DDSEndpoint.S3KEYS,
+            params={"project": project_id},
+            headers=token,
+            error_message="Failed to get cloud information",
+        )
 
         # Get s3 info
         s3info = utils.get_json_response(response=response)

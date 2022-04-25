@@ -22,6 +22,7 @@ import rich
 import dds_cli
 from dds_cli import exceptions
 from dds_cli.utils import get_token_expiration_time, readable_timedelta
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -162,39 +163,15 @@ class User:
                 )
                 continue
 
-            try:
-                response = requests.get(
-                    dds_cli.DDSEndpoint.SECOND_FACTOR,
-                    headers={"Authorization": f"Bearer {partial_auth_token}"},
-                    json={"HOTP": entered_one_time_code},
-                    timeout=dds_cli.DDSEndpoint.TIMEOUT,
-                )
-                response_json = response.json()
-            except requests.exceptions.RequestException as err:
-                raise exceptions.ApiRequestError(
-                    message=(
-                        "Failed to authenticate with second factor"
-                        + (
-                            ": The database seems to be down."
-                            if isinstance(err, requests.exceptions.ConnectionError)
-                            else "."
-                        )
-                    )
-                ) from err
+            response_json = dds_cli.utils.request_get(
+                dds_cli.DDSEndpoint.SECOND_FACTOR,
+                headers={"Authorization": f"Bearer {partial_auth_token}"},
+                json={"HOTP": entered_one_time_code},
+                error_message="Failed to authenticate with second factor",
+            )
 
-            if response.ok:
-                # Step out of the while-loop
-                done = True
-            if not response.ok:
-                message = response_json.get("message", "Unexpected error!")
-                if response.status_code == 401:
-                    try_again = rich.prompt.Confirm.ask(
-                        "Second factor authentication failed, would you like to try again?"
-                    )
-                    if not try_again:
-                        raise exceptions.AuthenticationError(message="Exited due to user choice.")
-                else:
-                    raise exceptions.ApiResponseError(message=message)
+            # Step out of the while-loop
+            done = True
 
         # Get token from response
         token = response_json.get("token")
@@ -217,13 +194,12 @@ class User:
             token = tokenfile.read_token()
             if token and not tokenfile.token_expired(token=token):
                 try:
-                    response = requests.get(
+                    response_json = dds_cli.utils.request_get(
                         dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
                         headers={"Authorization": f"Bearer {token}"},
-                        timeout=dds_cli.DDSEndpoint.TIMEOUT,
+                        error_message="Failed to get a username",
                     )
                     # Get response
-                    response_json = response.json()
                     username = response_json["info"]["username"]
                 except:
                     pass

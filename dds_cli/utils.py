@@ -146,6 +146,7 @@ def perform_request(
     endpoint,
     headers,
     method,
+    auth=None,
     params=None,
     json=None,
     error_message="API Request failed.",
@@ -160,6 +161,7 @@ def perform_request(
         response = request_method(
             url=endpoint,
             headers=headers,
+            auth=auth,
             params=params,
             json=json,
             timeout=timeout,

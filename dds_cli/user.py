@@ -106,36 +106,13 @@ class User:
                 message="Non-empty password needed to be able to authenticate."
             )
 
-        try:
-            response = requests.get(
-                dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
-                auth=(username, password),
-                timeout=dds_cli.DDSEndpoint.TIMEOUT,
-            )
-            response_json = response.json()
-        except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(
-                message=(
-                    "Failed to authenticate user"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            ) from err
-        except simplejson.JSONDecodeError as err:
-            raise dds_cli.exceptions.ApiResponseError(message=str(err))
-
-        if not response.ok:
-            if response.status_code == 401:
-                raise exceptions.AuthenticationError(
-                    "Authentication failed, incorrect username and/or password."
-                )
-
-            raise dds_cli.exceptions.ApiResponseError(
-                message=f"API returned an error: {response_json.get('message', 'Unknown Error!')}"
-            )
+        response_json = dds_cli.utils.perform_request(
+            dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
+            headers=None,
+            method="get",
+            auth=(username, password),
+            error_message="Failed to authenticate user",
+        )
 
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")

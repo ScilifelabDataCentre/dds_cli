@@ -89,7 +89,7 @@ class S3Connector:
     def __get_s3_info(project_id, token):
         """Get information required to connect to cloud."""
         # Perform request to API
-        s3info = request_get(
+        s3info = utils.request_get(
             DDSEndpoint.S3KEYS,
             params={"project": project_id},
             headers=token,

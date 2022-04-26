@@ -97,7 +97,6 @@ class S3Connector:
         )
 
         # Get s3 info
-        s3info = utils.get_json_response(response=response)
 
         safespring_project, keys, url, bucket = (
             s3info.get("safespring_project"),

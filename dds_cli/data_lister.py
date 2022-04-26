@@ -79,9 +79,10 @@ class DataLister(base.DDSBaseClass):
     def list_projects(self, sort_by="Updated"):
         """Get a list of project(s) the user is involved in."""
         # Get projects from API
-        response = dds_cli.utils.request_get(
+        response = dds_cli.utils.perform_request(
             DDSEndpoint.LIST_PROJ,
             headers=self.token,
+            method="get",
             json={"usage": self.show_usage},
             error_message="Failed to get list of projects",
             timeout=DDSEndpoint.TIMEOUT,
@@ -127,8 +128,9 @@ class DataLister(base.DDSBaseClass):
         if folder is None:
             folder = ""
         # Make call to API
-        response = dds_cli.utils.request_get(
+        response = dds_cli.utils.perform_request(
             DDSEndpoint.LIST_FILES,
+            method="get",
             params={"project": self.project},
             json={"subpath": folder, "show_size": show_size},
             headers=self.token,
@@ -227,18 +229,14 @@ class DataLister(base.DDSBaseClass):
 
         def __api_call_list_files(folder: str):
             # Make call to API
-            try:
-                resp_json = requests.get(
-                    DDSEndpoint.LIST_FILES,
-                    params={"project": self.project},
-                    json={"subpath": folder, "show_size": show_size},
-                    headers=self.token,
-                    timeout=DDSEndpoint.TIMEOUT,
-                )
-            except requests.exceptions.RequestException as err:
-                raise exceptions.APIError(f"Problem with database response: '{err}'")
-
-            resp_json = resp_json.json()
+            resp_json = dds_cli.utils.perform_request(
+                DDSEndpoint.LIST_FILES,
+                method="get",
+                params={"project": self.project},
+                json={"subpath": folder, "show_size": show_size},
+                headers=self.token,
+                error_message="Failed to list the project's directory tree",
+            )
 
             if not "files_folders" in resp_json:
                 raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
@@ -402,34 +400,13 @@ class DataLister(base.DDSBaseClass):
     def list_users(self):
         """Get a list of user(s) involved in a project."""
         # Get user list from API
-        try:
-            response = requests.get(
-                DDSEndpoint.LIST_PROJ_USERS,
-                headers=self.token,
-                params={"project": self.project},
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(
-                message=(
-                    "Failed to get list of users"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            )
-
-        # Check resposne
-        if not response.ok:
-            raise exceptions.APIError(f"Failed to get any users: {response.text}")
-
-        # Get result from API
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise exceptions.APIError(f"Could not decode JSON response: {err}")
+        resp_json = dds_cli.utils.perform_request(
+            DDSEndpoint.LIST_PROJ_USERS,
+            method="get",
+            headers=self.token,
+            params={"project": self.project},
+            error_message="Failed to get list of users",
+        )
 
         research_users = resp_json.get("research_users")
 

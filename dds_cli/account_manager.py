@@ -238,9 +238,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
     def get_user_info(self):
         """Get a users info."""
-        response = dds_cli.utils.request_get(
+        response = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
             headers=self.token,
+            method="get",
             error_message="Failed to get user information",
             timeout=dds_cli.DDSEndpoint.TIMEOUT,
         )
@@ -357,8 +358,9 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
     def list_unit_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
-        response = dds_cli.utils.request_get(
+        response = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.LIST_UNIT_USERS,
+            method="get",
             headers=self.token,
             json={"unit": unit},
             error_message="Failed getting unit users from API",

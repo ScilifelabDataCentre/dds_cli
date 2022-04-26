@@ -142,17 +142,22 @@ def get_required_in_response(keys: list, response: dict) -> tuple:
     return tuple(response.get(x) for x in keys)
 
 
-def request_get(
+def perform_request(
     endpoint,
     headers,
+    method,
     params=None,
     json=None,
     error_message="API Request failed.",
     timeout=DDSEndpoint.TIMEOUT,
 ):
+    request_method = None
+    if method == "get":
+        request_method = requests.get
+
     """Perform get request."""
     try:
-        response = requests.get(
+        response = request_method(
             url=endpoint,
             headers=headers,
             params=params,

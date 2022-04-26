@@ -163,8 +163,9 @@ class User:
                 )
                 continue
 
-            response_json = dds_cli.utils.request_get(
+            response_json = dds_cli.utils.perform_request(
                 dds_cli.DDSEndpoint.SECOND_FACTOR,
+                method="get",
                 headers={"Authorization": f"Bearer {partial_auth_token}"},
                 json={"HOTP": entered_one_time_code},
                 error_message="Failed to authenticate with second factor",
@@ -194,8 +195,9 @@ class User:
             token = tokenfile.read_token()
             if token and not tokenfile.token_expired(token=token):
                 try:
-                    response_json = dds_cli.utils.request_get(
+                    response_json = dds_cli.utils.perform_request(
                         dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
+                        method="get",
                         headers={"Authorization": f"Bearer {token}"},
                         error_message="Failed to get a username",
                     )

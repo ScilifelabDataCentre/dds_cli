@@ -11,7 +11,6 @@ import pathlib
 
 # Installed
 import http
-import requests
 import simplejson
 
 # Own modules
@@ -146,41 +145,16 @@ class DDSBaseClass:
         """Get public key for project."""
         key_type = "private" if private else "public"
         # Get key from API
-        try:
-            response = requests.get(
-                DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
-                params={"project": self.project},
-                headers=self.token,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            LOG.fatal(str(err))
-            raise SystemExit(
-                "Failed to get cloud information"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
-
-        if not response.ok:
-            message = "Failed getting key from DDS API"
-            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
-
-            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
-
-        # Get key from response
-        try:
-            project_public = response.json()
-        except simplejson.JSONDecodeError as err:
-            LOG.fatal(str(err))
-            raise SystemExit from err
+        project_public = utils.request_get(
+            DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
+            params={"project": self.project},
+            headers=self.token,
+            error_message="Failed to get project key",
+        )
 
         if key_type not in project_public:
             utils.console.print(
-                "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
+                f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
             )
             os._exit(1)
 

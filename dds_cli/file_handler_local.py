@@ -209,8 +209,9 @@ class LocalFileHandler(fh.FileHandler):
         # Get files from db
         files = list(x for x in self.data)
 
-        files_in_db = dds_cli.utils.request_get(
+        files_in_db = dds_cli.utils.perform_request(
             DDSEndpoint.FILE_MATCH,
+            method="get",
             params={"project": self.project},
             headers=token,
             json=files,

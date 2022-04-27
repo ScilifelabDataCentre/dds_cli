@@ -47,8 +47,9 @@ class ProjectStatusManager(base.DDSBaseClass):
     # Public methods ###################### Public methods #
     def get_status(self, show_history):
         """Get current status and status history of the project."""
-        resp_json = dds_cli.utils.request_get(
+        resp_json = dds_cli.utils.perform_request(
             DDSEndpoint.UPDATE_PROJ_STATUS,
+            method="get",
             headers=self.token,
             params={"project": self.project},
             json={"history": show_history},

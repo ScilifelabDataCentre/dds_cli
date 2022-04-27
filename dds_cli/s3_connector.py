@@ -14,8 +14,8 @@ import boto3
 import botocore
 
 # Own modules
+import dds_cli.utils
 from dds_cli import DDSEndpoint
-from dds_cli import utils
 from dds_cli import exceptions
 
 ###############################################################################
@@ -89,8 +89,9 @@ class S3Connector:
     def __get_s3_info(project_id, token):
         """Get information required to connect to cloud."""
         # Perform request to API
-        s3info = utils.request_get(
+        s3info = dds_cli.utils.perform_request(
             DDSEndpoint.S3KEYS,
+            method="get",
             params={"project": project_id},
             headers=token,
             error_message="Failed to get cloud information",

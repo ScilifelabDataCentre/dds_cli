@@ -9,7 +9,6 @@ import logging
 import pathlib
 
 # Installed
-import requests
 import simplejson
 
 # Own modules
@@ -73,34 +72,14 @@ class RemoteFileHandler(fh.FileHandler):
     def __collect_file_info_remote(self, all_paths, token):
         """Get information on files in db."""
         # Get file info from db via API
-        try:
-            response = requests.get(
-                DDSEndpoint.FILE_INFO_ALL if self.get_all else DDSEndpoint.FILE_INFO,
-                params={"project": self.project},
-                headers=token,
-                json=all_paths,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-
-            # Get file info from response
-            file_info = response.json()
-        except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(
-                message=(
-                    "Failed to collect file information"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            )
-        except simplejson.JSONDecodeError as err:
-            raise dds_cli.exceptions.ApiResponseError(message=str(err))
-
-        # Server error or error in response
-        if not response.ok:
-            raise dds_cli.exceptions.ApiResponseError(response.text)
+        file_info = dds_cli.utils.perform_request(
+            DDSEndpoint.FILE_INFO_ALL if self.get_all else DDSEndpoint.FILE_INFO,
+            method="get",
+            params={"project": self.project},
+            headers=token,
+            json=all_paths,
+            error_message="Failed to collect file information",
+        )
 
         # Folder info required if specific files requested
         if all_paths and not all(x in file_info for x in ["files", "folder_contents", "not_found"]):

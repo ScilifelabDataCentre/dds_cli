@@ -22,6 +22,7 @@ import rich
 import dds_cli
 from dds_cli import exceptions
 from dds_cli.utils import get_token_expiration_time, readable_timedelta
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -106,36 +107,13 @@ class User:
                 message="Non-empty password needed to be able to authenticate."
             )
 
-        try:
-            response = requests.get(
-                dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
-                auth=(username, password),
-                timeout=dds_cli.DDSEndpoint.TIMEOUT,
-            )
-            response_json = response.json()
-        except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(
-                message=(
-                    "Failed to authenticate user"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            ) from err
-        except simplejson.JSONDecodeError as err:
-            raise dds_cli.exceptions.ApiResponseError(message=str(err))
-
-        if not response.ok:
-            if response.status_code == 401:
-                raise exceptions.AuthenticationError(
-                    "Authentication failed, incorrect username and/or password."
-                )
-
-            raise dds_cli.exceptions.ApiResponseError(
-                message=f"API returned an error: {response_json.get('message', 'Unknown Error!')}"
-            )
+        response_json = dds_cli.utils.perform_request(
+            dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
+            headers=None,
+            method="get",
+            auth=(username, password),
+            error_message="Failed to authenticate user",
+        )
 
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
@@ -149,29 +127,14 @@ class User:
                 raise exceptions.AuthenticationError(
                     "Authentication failed, you have not yet activated one-time authentication codes from authenticator app."
                 )
-            try:
-                response = requests.get(
-                    dds_cli.DDSEndpoint.SECOND_FACTOR,
-                    headers={"Authorization": f"Bearer {partial_auth_token}"},
-                    json={"TOTP": totp},
-                    timeout=dds_cli.DDSEndpoint.TIMEOUT,
-                )
-                response_json = response.json()
-            except requests.exceptions.RequestException as err:
-                raise exceptions.ApiRequestError(
-                    message=(
-                        "Failed to authenticate with one-time authentication code"
-                        + (
-                            ": The database seems to be down."
-                            if isinstance(err, requests.exceptions.ConnectionError)
-                            else "."
-                        )
-                    )
-                ) from err
+            response_json = dds_cli.utils.perform_request(
+                dds_cli.DDSEndpoint.SECOND_FACTOR,
+                method="get",
+                headers={"Authorization": f"Bearer {partial_auth_token}"},
+                json={"TOTP": totp},
+                error_message="Failed to authenticate with one-time authentication code",
+            )
 
-            if not response.ok:
-                message = response_json.get("message", "Unexpected error!")
-                raise exceptions.ApiResponseError(message=message)
         else:
             if totp_enabled:
                 LOG.info(
@@ -210,35 +173,16 @@ class User:
                 else:
                     json_request = {"HOTP": entered_one_time_code}
 
-                try:
-                    response = requests.get(
-                        dds_cli.DDSEndpoint.SECOND_FACTOR,
-                        headers={"Authorization": f"Bearer {partial_auth_token}"},
-                        json=json_request,
-                        timeout=dds_cli.DDSEndpoint.TIMEOUT,
-                    )
-                    response_json = response.json()
-                except requests.exceptions.RequestException as err:
-                    raise exceptions.ApiRequestError(message=str(err)) from err
+            response_json = dds_cli.utils.perform_request(
+                dds_cli.DDSEndpoint.SECOND_FACTOR,
+                method="get",
+                headers={"Authorization": f"Bearer {partial_auth_token}"},
+                json=json_request,
+                error_message="Failed to authenticate with second factor",
+            )
 
-                if response.ok:
-                    # Step out of the while-loop
-                    done = True
-                if not response.ok:
-                    message = response_json.get(
-                        "message", "Unexpected error with second factor authentication!"
-                    )
-                    if response.status_code == 401:
-                        LOG.error(message)
-                        try_again = rich.prompt.Confirm.ask(
-                            "Second factor authentication failed, would you like to try again?"
-                        )
-                        if not try_again:
-                            raise exceptions.AuthenticationError(
-                                message="Exited due to user choice."
-                            )
-                    else:
-                        raise exceptions.ApiResponseError(message=message)
+            # Step out of the while-loop
+            done = True
 
         # Get token from response
         token = response_json.get("token")
@@ -261,13 +205,13 @@ class User:
             token = tokenfile.read_token()
             if token and not tokenfile.token_expired(token=token):
                 try:
-                    response = requests.get(
+                    response_json = dds_cli.utils.perform_request(
                         dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
+                        method="get",
                         headers={"Authorization": f"Bearer {token}"},
-                        timeout=dds_cli.DDSEndpoint.TIMEOUT,
+                        error_message="Failed to get a username",
                     )
                     # Get response
-                    response_json = response.json()
                     username = response_json["info"]["username"]
                 except:
                     pass

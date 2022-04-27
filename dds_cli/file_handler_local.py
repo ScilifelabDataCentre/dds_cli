@@ -13,10 +13,6 @@ import pathlib
 import uuid
 import random
 
-# Installed
-import requests
-import simplejson
-
 # Own modules
 from dds_cli import DDSEndpoint
 from dds_cli import file_compressor as fc
@@ -212,37 +208,15 @@ class LocalFileHandler(fh.FileHandler):
 
         # Get files from db
         files = list(x for x in self.data)
-        try:
-            response = requests.get(
-                DDSEndpoint.FILE_MATCH,
-                params={"project": self.project},
-                headers=token,
-                json=files,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            LOG.warning(err)
-            raise SystemExit(
-                "Failed to check previous upload status"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
 
-        if not response.ok:
-            message = "Failed getting information about previously uploaded files"
-            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
-
-            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
-
-        try:
-            files_in_db = response.json()
-        except simplejson.JSONDecodeError as err:
-            LOG.warning(err)
-            raise SystemExit from err
+        files_in_db = dds_cli.utils.perform_request(
+            DDSEndpoint.FILE_MATCH,
+            method="get",
+            params={"project": self.project},
+            headers=token,
+            json=files,
+            error_message="Failed getting information about previously uploaded files",
+        )
 
         # API failure
         if "files" not in files_in_db:

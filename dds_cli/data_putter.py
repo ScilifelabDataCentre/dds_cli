@@ -13,7 +13,6 @@ import pathlib
 # Installed
 import boto3
 import botocore
-import requests
 from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn, BarColumn
 import simplejson
@@ -399,28 +398,15 @@ class DataPutter(base.DDSBaseClass):
         }
 
         # Send file info to API - post if new file, put if overwrite
-        put_or_post = requests.put if fileinfo["overwrite"] else requests.post
-        try:
-            response = put_or_post(
-                DDSEndpoint.FILE_NEW,
-                params=params,
-                json=file_info,
-                headers=self.token,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            error = str(err)
-            LOG.warning(error)
-        else:
-            # Error if failed
-            if not response.ok:
-                error = f"Failed to add file '{file}' to database: {response.text}"
-                return added_to_db, error
+        request_method = "put" if fileinfo["overwrite"] else "post"
+        response_json = dds_cli.utils.perform_request(
+            DDSEndpoint.FILE_NEW,
+            method=request_method,
+            params=params,
+            json=file_info,
+            headers=self.token,
+            error_message="Failed to add file '{file}' to database",
+        )
 
-            try:
-                added_to_db, error = (True, response.json().get("message"))
-            except simplejson.JSONDecodeError as err:
-                error = str(err)
-                LOG.warning(error)
-
-        return added_to_db, error
+        added_to_db, message = (True, response_json)
+        return added_to_db, message

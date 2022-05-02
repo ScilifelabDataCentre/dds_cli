@@ -5,7 +5,6 @@
 ###############################################################################
 
 # Standard library
-from email import message
 import logging
 import pathlib
 

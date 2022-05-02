@@ -62,46 +62,22 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         # Perform request to API
         json = {"email": email, "role": role, "send_email": not no_mail, "unit": unit}
 
-        try:
-            response = requests.post(
-                dds_cli.DDSEndpoint.USER_ADD,
-                headers=self.token,
-                params={"project": project},
-                json=json,
-                timeout=dds_cli.DDSEndpoint.TIMEOUT,
-            )
-
-            # Get response
-            response_json = response.json()
-        except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(
-                message=(
-                    "Failed to add user"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            )
-        except simplejson.JSONDecodeError as err:
-            raise dds_cli.exceptions.ApiResponseError(message=str(err))
+        # try:
+        response_json = dds_cli.utils.perform_request(
+            dds_cli.DDSEndpoint.USER_ADD,
+            method="post",
+            headers=self.token,
+            params={"project": project},
+            json=json,
+            error_message="Failed to add user",
+        )
 
         errors = response_json.get("errors")
         error_messages = dds_cli.utils.parse_project_errors(errors=errors)
 
-        # Format response message
-        if not response.ok:
-            message = "Could not add user"
-            message += ": " + response_json.get("message", "Unexpected error!")
-            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(message=message)
-
-            show_warning = True
-            if error_messages:
-                message += f"\n{error_messages}"
-                show_warning = False
-
+        if error_messages:
+            message += f"\n{error_messages}"
+            show_warning = False
             raise dds_cli.exceptions.DDSCLIException(
                 message=message,
                 show_emojis=show_warning,

@@ -155,6 +155,8 @@ def perform_request(
     request_method = None
     if method == "get":
         request_method = requests.get
+    elif method == "put":
+        request_method = requests.put
 
     """Perform get request."""
     try:

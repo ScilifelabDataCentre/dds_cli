@@ -5,6 +5,7 @@
 ###############################################################################
 
 # Standard library
+from email import message
 import logging
 import pathlib
 
@@ -223,32 +224,15 @@ class DataGetter(base.DDSBaseClass):
         params = {"project": self.project}
 
         # Send file info to API
-        try:
-            response = requests.put(
-                DDSEndpoint.FILE_UPDATE,
-                params=params,
-                json=filename,
-                headers=self.token,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            error = "Failed to update file information" + (
-                ": The database seems to be down."
-                if isinstance(err, requests.exceptions.ConnectionError)
-                else "."
-            )
-            LOG.exception(error)
-            return updated_in_db, error
+        response_json = dds_cli.utils.perform_request(
+            DDSEndpoint.FILE_UPDATE,
+            method="put",
+            params=params,
+            json=filename,
+            headers=self.token,
+            error_message="Failed to update file information",
+        )
 
-        # Error if failed
-        if not response.ok:
-            error = f"Failed to update file '{file}' in db: {response.text}"
-            LOG.exception(error)
-            return updated_in_db, error
+        updated_in_db, message = (True, response_json["message"])
 
-        try:
-            updated_in_db, error = (True, response.json()["message"])
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        return updated_in_db, error
+        return updated_in_db, message

@@ -139,35 +139,17 @@ class DataRemover(base.DDSBaseClass):
     @removal_spinner
     def remove_file(self, files):
         """Remove specific files."""
-        try:
-            response = requests.delete(
-                DDSEndpoint.REMOVE_FILE,
-                params={"project": self.project},
-                json=files,
-                headers=self.token,
-            )
-        except requests.exceptions.RequestException as err:
-            raise SystemExit(
-                f"Failed to delete file from project {self.project}"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
-
-        if not response.ok:
-            raise dds_cli.exceptions.APIError(
-                f"Failed to delete file(s) '{files}' in project {self.project}: {response.text}"
-            )
+        response_json = dds_cli.utils.perform_request(
+            DDSEndpoint.REMOVE_FILE,
+            method="delete",
+            params={"project": self.project},
+            json=files,
+            headers=self.token,
+            error_message=f"Failed to delete file from project {self.project}",
+        )
 
         # Get info in response
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        self.__create_failed_table(resp_json=resp_json)
+        self.__create_failed_table(resp_json=response_json)
 
     @removal_spinner
     def remove_folder(self, folder):

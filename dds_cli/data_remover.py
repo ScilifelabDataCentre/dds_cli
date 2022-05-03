@@ -18,6 +18,7 @@ import simplejson
 
 # Own modules
 import dds_cli
+import dds_cli.utils
 from dds_cli.custom_decorators import removal_spinner
 from dds_cli import base
 from dds_cli import DDSEndpoint
@@ -120,30 +121,16 @@ class DataRemover(base.DDSBaseClass):
     def remove_all(self, *_, **__):
         """Remove all files in project."""
         # Perform request to API to perform deletion
-        try:
-            response = requests.delete(
-                DDSEndpoint.REMOVE_PROJ_CONT, params={"project": self.project}, headers=self.token
-            )
-        except requests.exceptions.RequestException as err:
-            raise SystemExit(
-                "Failed to delete project contents"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
-
-        if not response.ok:
-            raise dds_cli.exceptions.APIError(f"Failed to delete files in project: {response.text}")
+        response_json = dds_cli.utils.perform_request(
+            DDSEndpoint.REMOVE_PROJ_CONT,
+            method="delete",
+            params={"project": self.project},
+            headers=self.token,
+            error_message="Failed to delete project contents",
+        )
 
         # Print out response - deleted or not?
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        if "removed" not in resp_json:
+        if "removed" not in response_json:
             raise dds_cli.exceptions.APIError(
                 "Malformatted response detected when attempting "
                 f"to remove all files from {self.project}."

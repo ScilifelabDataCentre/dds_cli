@@ -9,12 +9,10 @@ import logging
 import pathlib
 
 # Installed
-import requests
 import rich
 import rich.markup
 import rich.table
 import rich.padding
-import simplejson
 
 # Own modules
 import dds_cli
@@ -154,41 +152,21 @@ class DataRemover(base.DDSBaseClass):
     @removal_spinner
     def remove_folder(self, folder):
         """Remove specific folders."""
-        try:
-            response = requests.delete(
-                DDSEndpoint.REMOVE_FOLDER,
-                params={"project": self.project},
-                json=folder,
-                headers=self.token,
-            )
-        except requests.exceptions.RequestException as err:
-            raise SystemExit(
-                f"Failed to delete folder(s) from project '{self.project}'"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
+        response_json = dds_cli.utils.perform_request(
+            DDSEndpoint.REMOVE_FOLDER,
+            method="delete",
+            params={"project": self.project},
+            json=folder,
+            headers=self.token,
+            error_message=f"Failed to delete folder(s) from project '{self.project}'",
+        )
 
-        if not response.ok:
-            raise dds_cli.exceptions.APIError(
-                f"Failed to delete folder(s) '{folder}' "
-                f"in project {self.project}: {response.text}"
-            )
+        self.__create_failed_table(resp_json=response_json, level="Folder")
 
-        # Make sure required info is returned
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        self.__create_failed_table(resp_json=resp_json, level="Folder")
-
-        if resp_json.get("nr_deleted"):
-            LOG.info(f"{resp_json['nr_deleted']} files were successfully deleted in {folder}.")
+        if response_json.get("nr_deleted"):
+            LOG.info(f"{response_json['nr_deleted']} files were successfully deleted in {folder}.")
         # Print extra warning if s3 deletion succeeded, db failed
-        if resp_json.get("fail_type") == "db":
+        if response_json.get("fail_type") == "db":
             LOG.error(
                 "Some files were deleted, but their database entries were not. "
                 + "Try to run the command again, and contact Data Centre if the problem persists."

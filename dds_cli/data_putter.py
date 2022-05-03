@@ -405,7 +405,7 @@ class DataPutter(base.DDSBaseClass):
             params=params,
             json=file_info,
             headers=self.token,
-            error_message="Failed to add file '{file}' to database",
+            error_message=f"Failed to add file '{file}' to database",
         )
 
         added_to_db, message = (True, response_json)

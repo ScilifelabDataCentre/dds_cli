@@ -53,7 +53,7 @@ class ProjectCreator(base.DDSBaseClass):
         user_addition_statuses = {}
 
         # Submit request to API
-        response_json = utils.perform_request(
+        response_json = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.CREATE_PROJ,
             headers=self.token,
             method="post",

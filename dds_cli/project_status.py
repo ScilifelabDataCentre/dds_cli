@@ -102,34 +102,14 @@ class ProjectStatusManager(base.DDSBaseClass):
             extra_params["deadline"] = deadline
         if is_aborted:
             extra_params["is_aborted"] = is_aborted
-        try:
-            response = requests.post(
-                DDSEndpoint.UPDATE_PROJ_STATUS,
-                headers=self.token,
-                params={"project": self.project},
-                json=extra_params,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(
-                message=(
-                    "Failed to update project status"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            )
 
-        # Check response
-        if not response.ok:
-            raise exceptions.APIError(f"An Error occured: {response.json().get('message')}")
+        response_json = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.UPDATE_PROJ_STATUS,
+            headers=self.token,
+            method="post",
+            params={"project": self.project},
+            json=extra_params,
+            error_message="Failed to update project status",
+        )
 
-        # Get result from API
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise exceptions.APIError(f"Could not decode JSON response: {err}")
-        else:
-            dds_cli.utils.console.print(f"Project {resp_json.get('message')}")
+        dds_cli.utils.console.print(f"Project {response_json.get('message')}")

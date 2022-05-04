@@ -173,9 +173,6 @@ def perform_request(
             timeout=timeout,
         )
         response_json = response.json()
-        print(endpoint)
-        print(response)
-        print(response_json)
     except requests.exceptions.RequestException as err:
         raise dds_cli.exceptions.ApiRequestError(
             message=(

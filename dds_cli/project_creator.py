@@ -57,6 +57,7 @@ class ProjectCreator(base.DDSBaseClass):
         response_json = utils.perform_request(
             endpoint=DDSEndpoint.CREATE_PROJ,
             headers=self.token,
+            method="post",
             json={
                 "title": title,
                 "description": description,

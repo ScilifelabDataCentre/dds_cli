@@ -70,5 +70,4 @@ class MotdManager(dds_cli.base.DDSBaseClass):
             error_message="Failed adding a new MOTD",
         )
 
-        message = response_json.get("message", "A new MOTD was added to the database")
-        LOG.info(message)
+        LOG.info("A new MOTD was added to the database")

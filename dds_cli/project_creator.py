@@ -2,9 +2,8 @@
 import logging
 
 # Installed
-import requests
-import simplejson
 import dds_cli
+import dds_cli.utils
 import rich.prompt
 
 # Own modules

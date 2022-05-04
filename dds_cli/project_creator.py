@@ -4,6 +4,7 @@ import logging
 # Installed
 import requests
 import simplejson
+import dds_cli
 import rich.prompt
 
 # Own modules
@@ -53,57 +54,19 @@ class ProjectCreator(base.DDSBaseClass):
         user_addition_statuses = {}
 
         # Submit request to API
-        try:
-            response = requests.post(
-                DDSEndpoint.CREATE_PROJ,
-                headers=self.token,
-                json={
-                    "title": title,
-                    "description": description,
-                    "pi": principal_investigator,
-                    "non_sensitive": non_sensitive,
-                    "users_to_add": users_to_add,
-                    "force": force,
-                },
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-            # Get response
-            response_json = response.json()
-        except requests.exceptions.RequestException as err:
-            raise exceptions.ApiRequestError(
-                message=(
-                    "Failed to create project"
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            )
-        except simplejson.JSONDecodeError as err:
-            raise exceptions.ApiResponseError(message=str(err))
-
-        # Error if failed
-        if not response.ok:
-            message, title, description, pi, email = (
-                response_json.get("message"),
-                response_json.get("title"),
-                response_json.get("description"),
-                response_json.get("pi"),
-                response_json.get("email"),
-            )
-
-            messages = [message, title, description, pi, email]
-
-            error = next(message for message in messages if message)
-
-            if isinstance(error, list):
-                error = error[0]
-
-            if "Insufficient credentials" in error:
-                error = "You do not have the required permissions to create a project."
-            LOG.error(error)
-            return created, created_project_id, user_addition_statuses, error
+        response_json = utils.perform_request(
+            endpoint=DDSEndpoint.CREATE_PROJ,
+            headers=self.token,
+            json={
+                "title": title,
+                "description": description,
+                "pi": principal_investigator,
+                "non_sensitive": non_sensitive,
+                "users_to_add": users_to_add,
+                "force": force,
+            },
+            error_message="Failed to create project",
+        )
 
         warning_message = response_json.get("warning")
 

@@ -204,7 +204,7 @@ class DataLister(base.DDSBaseClass):
                 tabs_bf_format = th.TextHandler.format_tabs(
                     string_len=len(size), max_string_len=max_size, tab_len=2
                 )
-                line += f"{tabs_bf_format}{size.split()[1]}"
+                line += f"{tabs_bf_format}{size.split()[0]}"
             tree.add(line)
 
         # Print output to stdout

@@ -69,21 +69,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             error_message="Failed to add user",
         )
 
-        errors = response_json.get("errors")
-        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
-
-        if error_messages:
-            message += f"\n{error_messages}"
-            show_warning = False
-            LOG.warning(f"Could not give the user '{email}' access to the following projects:")
-            msg = error_messages
-            raise dds_cli.exceptions.DDSCLIException(
-                message=message,
-                show_emojis=show_warning,
-            )
-        else:
-            msg = response_json.get("message", "User successfully added.")
-
+        msg = response_json.get("message", "User successfully added.")
         LOG.info(msg)
 
     def delete_user(self, email, is_invite: bool = False):
@@ -111,7 +97,6 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             dds_cli.DDSEndpoint.USER_DELETE_SELF,
             method="delete",
             headers=self.token,
-            json=None,
             error_message="Failed to request deletion of account",
         )
 
@@ -132,8 +117,6 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             json=json,
             error_message="Could not revoke user access",
         )
-
-        LOG.debug(response_json)
 
         message = response_json.get("message", "User access successfully revoked.")
         LOG.info(message)
@@ -188,25 +171,13 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             error_message=f"Failed to fix project access for user '{email}'",
         )
 
-        errors = response_json.get("errors")
-        error_messages = dds_cli.utils.parse_project_errors(errors=errors)
-
-        if error_messages:
-            LOG.warning(f"Could not fix user '{email}' access to the following projects:")
-            msg = error_messages
-            show_warning = False
-            raise dds_cli.exceptions.DDSCLIException(
-                message=error_messages, show_emojis=show_warning
-            )
-        else:
-            msg = response_json.get(
-                "message",
-                (
-                    f"Project access fixed for user '{email}'. "
-                    "They should now have access to all project data."
-                ),
-            )
-
+        msg = response_json.get(
+            "message",
+            (
+                f"Project access fixed for user '{email}'. "
+                "They should now have access to all project data."
+            ),
+        )
         LOG.info(msg)
 
     def list_unit_users(self, unit: str = None) -> None:

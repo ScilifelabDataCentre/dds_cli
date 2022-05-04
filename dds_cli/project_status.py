@@ -106,6 +106,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         response_json = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.UPDATE_PROJ_STATUS,
             headers=self.token,
+            method="post",
             params={"project": self.project},
             json=extra_params,
             error_message="Failed to update project status",

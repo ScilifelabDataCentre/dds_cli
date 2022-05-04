@@ -155,6 +155,12 @@ def perform_request(
     request_method = None
     if method == "get":
         request_method = requests.get
+    elif method == "put":
+        request_method = requests.put
+    elif method == "post":
+        request_method = requests.post
+    elif method == "delete":
+        request_method = requests.delete
 
     """Perform get request."""
     try:

@@ -1,12 +1,11 @@
 """Data Delivery System saved authentication token manager."""
 import logging
-import requests
-import simplejson
 
 # Own modules
 import dds_cli
 from dds_cli import base
 from dds_cli import user
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -59,19 +58,12 @@ class Auth(base.DDSBaseClass):
             LOG.info("[green]Already logged out![/green]")
 
     def twofactor(self, auth_method: str = None):
-        try:
-            response = requests.put(
-                dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
-                headers=self.token,
-                json={"activate_totp": True if auth_method == "totp" else False},
-            )
-            response_json = response.json()
-        except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(message=str(err))
-        except simplejson.JSONDecodeError as err:
-            raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
-        if not response.ok:
-            raise dds_cli.exceptions.ApiResponseError(message=response.reason)
+        response_json = dds_cli.utils.perform_request(
+            endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
+            headers=self.token,
+            method="post",
+            json={"activate_totp": True if auth_method == "totp" else False},
+        )
 
         LOG.info(response_json.get("message"))

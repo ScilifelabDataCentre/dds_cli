@@ -173,16 +173,16 @@ class User:
                 else:
                     json_request = {"HOTP": entered_one_time_code}
 
-            response_json = dds_cli.utils.perform_request(
-                dds_cli.DDSEndpoint.SECOND_FACTOR,
-                method="get",
-                headers={"Authorization": f"Bearer {partial_auth_token}"},
-                json=json_request,
-                error_message="Failed to authenticate with second factor",
-            )
+                response_json = dds_cli.utils.perform_request(
+                    dds_cli.DDSEndpoint.SECOND_FACTOR,
+                    method="get",
+                    headers={"Authorization": f"Bearer {partial_auth_token}"},
+                    json=json_request,
+                    error_message="Failed to authenticate with second factor",
+                )
 
-            # Step out of the while-loop
-            done = True
+                # Step out of the while-loop
+                done = True
 
         # Get token from response
         token = response_json.get("token")

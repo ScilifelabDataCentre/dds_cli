@@ -9,7 +9,6 @@ import concurrent.futures
 import itertools
 import logging
 import os
-from re import T
 import sys
 
 # Installed

@@ -1,9 +1,15 @@
-"""Data Delivery System saved authentication token manager."""
+"""Data Delivery System authentication manager."""
+# Standard library
 import logging
+import getpass
+
+# Installed
+import rich
 
 # Own modules
 import dds_cli
 from dds_cli import base
+from dds_cli import exceptions
 from dds_cli import user
 import dds_cli.utils
 
@@ -58,12 +64,30 @@ class Auth(base.DDSBaseClass):
             LOG.info("[green]Already logged out![/green]")
 
     def twofactor(self, auth_method: str = None):
+        if auth_method == "totp":
+            response_json = dds_cli.utils.perform_request(
+                endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
+                headers=self.token,
+                method="post",
+            )
+        else:
+            # Need to authenticate again since TOTP might have been lost
+            LOG.info(
+                "Activating authentication via email, please (re-)enter your username and password:"
+            )
+            username = rich.prompt.Prompt.ask("DDS username")
+            password = getpass.getpass(prompt="DDS password: ")
 
-        response_json = dds_cli.utils.perform_request(
-            endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
-            headers=self.token,
-            method="post",
-            json={"activate_totp": True if auth_method == "totp" else False},
-        )
+            if password == "":
+                raise exceptions.AuthenticationError(
+                    message="Non-empty password needed to be able to authenticate."
+                )
+
+            response_json = dds_cli.utils.perform_request(
+                endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_HOTP,
+                headers=None,
+                method="post",
+                auth=(username, password),
+            )
 
         LOG.info(response_json.get("message"))

@@ -74,6 +74,7 @@ class DDSEndpoint:
     DISPLAY_USER_INFO = BASE_ENDPOINT + "/user/info"
     USER_ACTIVATION = BASE_ENDPOINT + "/user/activation"
     USER_ACTIVATE_TOTP = BASE_ENDPOINT + "/user/totp/activate"
+    USER_ACTIVATE_HOTP = BASE_ENDPOINT + "/user/hotp/activate"
 
     # Authentication - user and project
     ENCRYPTED_TOKEN = BASE_ENDPOINT + "/user/encrypted_token"

@@ -201,6 +201,12 @@ def perform_request(
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
             raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
+        if response.status_code == http.HTTPStatus.FORBIDDEN:
+            if DDSEndpoint.ADD_NEW_MOTD in endpoint:
+                message += ": Only Super Admin can add a MOTD"
+
+            raise dds_cli.exceptions.DDSCLIException(message=message)
+
         raise dds_cli.exceptions.DDSCLIException(
             message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
         )

@@ -2,7 +2,7 @@
 
 [![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds-cli/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![codecov](https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/master/graph/badge.svg?token=zsrDpNqs6v)](https://codecov.io/gh/ScilifelabDataCentre/dds_cli)
+[![codecov](https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=zsrDpNqs6v)](https://codecov.io/gh/ScilifelabDataCentre/dds_cli)
 
 ![Tests](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-app.yml/badge.svg)
 ![Linting](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg)

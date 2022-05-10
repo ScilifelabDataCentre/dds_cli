@@ -31,4 +31,3 @@ jobs:
           pytest --color=yes
 
       - uses: codecov/codecov-action@v2
-        with:

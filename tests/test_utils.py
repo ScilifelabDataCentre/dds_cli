@@ -66,3 +66,20 @@ def test_perform_request_project_creation_error_insufficient_credentials() -> No
             exc_info.value.args[0]
             == "API Request failed.: You do not have the required permissions to create a project."
         )
+
+
+def test_perform_request_add_motd_error_insufficient_credentials() -> None:
+    response_json: Dict = {
+        "message": "Only Super Admin can add a MOTD.",
+        "title": "",
+        "description": "",
+        "pi": "",
+        "email": "",
+    }
+    with Mocker() as mock:
+        mock.post(DDSEndpoint.ADD_NEW_MOTD, status_code=403, json=response_json)
+        with raises(DDSCLIException) as exc_info:
+            perform_request(endpoint=DDSEndpoint.ADD_NEW_MOTD, headers={}, method="post")
+
+        assert len(exc_info.value.args) == 1
+        assert exc_info.value.args[0] == "API Request failed.: Only Super Admin can add a MOTD."

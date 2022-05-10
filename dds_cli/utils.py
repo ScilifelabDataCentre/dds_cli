@@ -198,7 +198,7 @@ def perform_request(
             raise dds_cli.exceptions.DDSCLIException(message=message)
 
         if response.status_code == http.HTTPStatus.FORBIDDEN:
-            if DDSEndpoint.CREATE_PROJ in endpoint:
+            if DDSEndpoint.CREATE_PROJ or DDSEndpoint.ADD_NEW_MOTD in endpoint:
                 message += f": {response_json.get('message')}"
 
             raise dds_cli.exceptions.DDSCLIException(message=message)

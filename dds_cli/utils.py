@@ -12,7 +12,7 @@ from jwcrypto.jws import InvalidJWSObject
 from jwcrypto import jwt
 import http
 from rich.table import Table
-from typing import List, Union
+from typing import Dict, List, Union
 
 import dds_cli.exceptions
 from dds_cli import DDSEndpoint
@@ -190,6 +190,19 @@ def perform_request(
     # Check if response is ok.
     if not response.ok:
         message = error_message
+
+        if response.status_code == http.HTTPStatus.BAD_REQUEST:
+            if DDSEndpoint.CREATE_PROJ in endpoint:
+                message += f": {__project_creation_error(response_json)}"
+
+            raise dds_cli.exceptions.DDSCLIException(message=message)
+
+        if response.status_code == http.HTTPStatus.FORBIDDEN:
+            if DDSEndpoint.CREATE_PROJ in endpoint:
+                message += f": {response_json.get('message')}"
+
+            raise dds_cli.exceptions.DDSCLIException(message=message)
+
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
             raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
@@ -330,3 +343,22 @@ def delete_folder(folder):
         else:
             file_or_folder.unlink()
     folder.rmdir()
+
+
+def __project_creation_error(response_json: Dict) -> str:
+    message, title, description, pi, email = (
+        response_json.get("message"),
+        response_json.get("title"),
+        response_json.get("description"),
+        response_json.get("pi"),
+        response_json.get("email"),
+    )
+
+    messages: List = [message, title, description, pi, email]
+
+    error = next(message for message in messages if message)
+
+    if isinstance(error, List):
+        return error[0]
+
+    return error

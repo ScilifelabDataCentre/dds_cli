@@ -346,6 +346,7 @@ def delete_folder(folder):
 
 
 def __project_creation_error(response_json: Dict) -> str:
+    """Parse response from project creation endpoint."""
     message, title, description, pi, email = (
         response_json.get("message"),
         response_json.get("title"),

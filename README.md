@@ -1,11 +1,13 @@
 # SciLifeLab Data Delivery System - Command line interface
 
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds-cli/)
-![CodeQL](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg)
-![Linting](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg)
 ![Tests](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-app.yml/badge.svg)
 [![codecov](https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/master/graph/badge.svg?token=zsrDpNqs6v)](https://codecov.io/gh/ScilifelabDataCentre/dds_cli)
+
+![CodeQL](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+![Linting](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg)
+
 
 > **A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery Service.**
 

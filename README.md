@@ -9,8 +9,6 @@
 ![CodeQL](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg)
 
 
-
-
 > **A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery Service.**
 
 This will be used for data delivery within larger projects and/or projects resulting in the production of large amounts of data, for example next-generation sequencing data and imaging.

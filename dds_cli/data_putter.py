@@ -400,7 +400,7 @@ class DataPutter(base.DDSBaseClass):
         # Send file info to API - post if new file, put if overwrite
         request_method = "put" if fileinfo["overwrite"] else "post"
         try:
-            response_json = dds_cli.utils.perform_request(
+            response_json, _ = dds_cli.utils.perform_request(
                 DDSEndpoint.FILE_NEW,
                 method=request_method,
                 params=params,

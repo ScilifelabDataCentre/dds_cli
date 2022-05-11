@@ -223,7 +223,7 @@ class DataGetter(base.DDSBaseClass):
         params = {"project": self.project}
 
         # Send file info to API
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             DDSEndpoint.FILE_UPDATE,
             method="put",
             params=params,

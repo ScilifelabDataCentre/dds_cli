@@ -156,3 +156,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint (2022-04-20 - 2022-05-04)
 - Patch: Update help message about `--principal-investigator` option ([#465](https://github.com/ScilifelabDataCentre/dds_cli/pull/465))
 - Removed all CLI tests because needs redo ([#469](https://github.com/ScilifelabDataCentre/dds_cli/pull/469))
+- (Re)Added parsing of project specific errors for `dds project access fix` and `dds user add -p` ([#491](https://github.com/ScilifelabDataCentre/dds_cli/pull/491))

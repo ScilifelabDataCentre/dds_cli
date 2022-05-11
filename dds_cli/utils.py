@@ -194,24 +194,30 @@ def perform_request(
     # Check if response is ok.
     if not response.ok:
         message = error_message
-        show_warning = True
+        show_warning = True  # Show emojis or not - may look weird in some cases 
 
+        # Handle 400 Bad Request
         if response.status_code == http.HTTPStatus.BAD_REQUEST:
+            # Parse messages and additional errors returned from the API
             if any(ep in endpoint for ep in [DDSEndpoint.USER_ADD, DDSEndpoint.PROJ_ACCESS]) and additional_errors: 
                 message += f"\n{additional_errors}"
                 show_warning = False
-                
-            if any(ep in endpoint for ep in [DDSEndpoint.CREATE_PROJ, DDSEndpoint.PROJ_ACCESS]):
+            elif DDSEndpoint.CREATE_PROJ in endpoint:
                 message += f": {__project_creation_error(response_json)}"
+            else: 
+                message += f": {response_json.get('message')}"
 
             raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
 
+        # Handle 403 
         if response.status_code == http.HTTPStatus.FORBIDDEN:
+            # Parse message from the API
             if any(ep in endpoint for ep in [DDSEndpoint.CREATE_PROJ, DDSEndpoint.ADD_NEW_MOTD, DDSEndpoint.USER_ADD]):
                 message += f": {response_json.get('message')}"
 
             raise dds_cli.exceptions.DDSCLIException(message=message)
 
+        # Handle 500
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
             raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 

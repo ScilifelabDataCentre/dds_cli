@@ -95,4 +95,22 @@ def test_perform_request_project_access_errors() -> None:
         mock.post(DDSEndpoint.PROJ_ACCESS, status_code=400, json=response_json)
         with raises(DDSCLIException) as exc_info:
             perform_request(endpoint=DDSEndpoint.PROJ_ACCESS, headers={}, method="post", error_message="Project access error")
+        
+        # Make sure that errors are parsed correctly
         assert "Project access error\ntest message\n   - project_1\n   - project_2" in str(exc_info.value)
+    
+def test_perform_request_add_user_() -> None:
+    """Attempt to invite user, but the user does not have access."""
+    response_json: Dict = {
+            "email": "test_email@mail.com",
+            "message": "test message",
+            "status": 400,
+            "errors":  {"project_1": "test message", "project_2": "test message"},
+        }
+    with Mocker() as mock:
+        mock.post(DDSEndpoint.USER_ADD, status_code=400, json=response_json)
+        with raises(DDSCLIException) as exc_info:
+            perform_request(endpoint=DDSEndpoint.USER_ADD, headers={}, method="post", error_message="Invite error")
+        
+        # Make sure that errors are parsed correctly
+        assert "Invite error\ntest message\n   - project_1\n   - project_2" in str(exc_info.value)

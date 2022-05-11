@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Welcome to the Data Delivery Systems’ Documentation! &#8212; Data Delivery System  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+    <script data-url_root="#" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex/" />
+    <link rel="search" title="Search" href="search/" />
+    <link rel="next" title="Installation guide" href="installation/" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="welcome-to-the-data-delivery-systems-documentation">
+<h1>Welcome to the Data Delivery Systems’ Documentation!<a class="headerlink" href="#welcome-to-the-data-delivery-systems-documentation" title="Permalink to this headline">¶</a></h1>
+<p>The Data Delivery System (DDS, <a class="reference external" href="https://delivery.scilifelab.se/">https://delivery.scilifelab.se/</a>) consists of a command line interface (CLI) and a web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list.</p>
+<section id="how-do-i-get-my-user-account">
+<h2>How do I get my user account?<a class="headerlink" href="#how-do-i-get-my-user-account" title="Permalink to this headline">¶</a></h2>
+<p>An invite from an existing user is required in order for you to get an account within the DDS. The email will be from <cite>dsw&#64;scilifelab.se</cite>, we will notify you if and when this changes. Note that any emails sent to this address regarding the DDS <em>will not be responded to</em>. If you do not get an email, please have a look in the junk/spam folder. If your email adress has the <cite>scilifelab.se</cite> domain, keep in mind that your emails may take a while to deliver due to the KTH spam filters. If you do not receive an email, please contact the Data Centre and we will look into it.</p>
+<p>Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system. To be able to use the CLI (which contains most of the functionality) please follow the installation guide <a class="reference internal" href="#cli"><span class="std std-ref">below</span></a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Forgetting passwords in the DDS means that you will lose access to all project data. We highly recommend that you use a password management system such as <a class="reference external" href="https://www.lastpass.com/">LastPass</a> or similar.</p>
+<p>When resetting a password you can, of course, regain access to the projects you lost access to. You will get information on how when you perform a password reset.</p>
+</div>
+<p>Your account will be either a <em>Unit Admin</em>, <em>Unit Personnel</em> or a <em>Researcher</em> account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. The roles are defined <a class="reference external" href="https://app.diagrams.net/?page-id=iAQ0dwp1xBzZl6jLjueX&amp;hide-pages=1#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z">on this board</a>.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="installation/#mac-linux"><span class="std std-ref">MacOS / Linux</span></a></p></li>
+<li><p><a class="reference internal" href="installation/#windows"><span class="std std-ref">Windows</span></a></p></li>
+<li><p><a class="reference internal" href="installation/#uppmax"><span class="std std-ref">Uppmax</span></a></p></li>
+</ul>
+<hr class="docutils" />
+</section>
+<section id="how-to-run-the-cli">
+<span id="cli"></span><h2>How to run the CLI<a class="headerlink" href="#how-to-run-the-cli" title="Permalink to this headline">¶</a></h2>
+<p>The main command <code class="docutils literal notranslate"><span class="pre">dds</span></code> has some options and possible customisations. A detailed list of these can be found <a class="reference internal" href="main/#dds-main"><span class="std std-ref">here</span></a>. The sub/group commands are <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">auth</span></code>, <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">user</span></code>, <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span></code>, <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">data</span></code>, <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">ls</span></code> and <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">unit</span></code>.</p>
+<p>Some commands should not be possible to successfully run from a Researcher account. The affected commands are marked with asterisks (***).</p>
+<section id="dds-auth">
+<span id="auth-info"></span><h3><a class="reference internal" href="auth/#dds-auth"><span class="std std-ref">dds auth</span></a><a class="headerlink" href="#dds-auth" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">auth</span></code> and its subcommands are used for creating and managing sessions. This will enable you to use the CLI without specifying your user credentials for a certain amount of time, currently 7 days.</p>
+<div class="admonition-accessible-by admonition">
+<p class="admonition-title">Accessible by</p>
+<p>All user roles.</p>
+</div>
+<p>See the command documentation <a class="reference internal" href="auth/#dds-auth"><span class="std std-ref">here</span></a>.</p>
+</section>
+<section id="dds-user">
+<span id="user-info"></span><h3><a class="reference internal" href="user/#dds-user"><span class="std std-ref">dds user</span></a><a class="headerlink" href="#dds-user" title="Permalink to this headline">¶</a></h3>
+<p>You can use the <code class="docutils literal notranslate"><span class="pre">add</span> <span class="pre">user</span></code> group command to manage your own and (if you have administrative permissions) other user accounts.</p>
+<div class="admonition-accessible-by admonition">
+<p class="admonition-title">Accessible by</p>
+<p>All user roles. Some subcommands are limited to Unit Admins, Unit Personnel and in come cases Researchers marked as Project Owners for specific projects.</p>
+</div>
+<p>See the command documentation <a class="reference internal" href="user/#dds-user"><span class="std std-ref">here</span></a>.</p>
+</section>
+<section id="dds-project">
+<span id="project-info"></span><h3><a class="reference internal" href="project/#dds-project"><span class="std std-ref">dds project</span></a><a class="headerlink" href="#dds-project" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span></code> command is for creating and managing projects. The majority of the functionalities regarding project management is only available to <em>Unit Admin</em> and <em>Unit Personnel</em> accounts.</p>
+<div class="admonition-accessible-by admonition">
+<p class="admonition-title">Accessible by</p>
+<p>Researchers can use the <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span> <span class="pre">ls</span></code>.
+Researchers marked as Project Owners in specific projects can also use <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span> <span class="pre">access</span> <span class="pre">grant/revoke</span></code>.
+The rest of the subcommands are limited to Unit Admins and Unit Personnel.</p>
+</div>
+<p>See the command documentation <a class="reference internal" href="project/#dds-project"><span class="std std-ref">here</span></a>.</p>
+</section>
+<section id="dds-data">
+<span id="data-info"></span><h3><a class="reference internal" href="data/#dds-data"><span class="std std-ref">dds data</span></a><a class="headerlink" href="#dds-data" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">data</span></code> group command is used for uploading, downloading, listing and deleting data. Only <strong>Unit Admin</strong> and <strong>Unit Personnel</strong> accounts can upload and delete data. All account types can list and download.</p>
+<div class="admonition-accessible-by admonition">
+<p class="admonition-title">Accessible by</p>
+<p>Researchers can use <cite>dds data get</cite>.
+The rest of the subcommands are limited to Unit Admins and Unit Personnel.</p>
+</div>
+<p>See the command documentation <a class="reference internal" href="data/#dds-data"><span class="std std-ref">here</span></a>.</p>
+</section>
+<section id="dds-ls">
+<span id="ls-info"></span><h3><a class="reference internal" href="ls/#dds-ls"><span class="std std-ref">dds ls</span></a><a class="headerlink" href="#dds-ls" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">ls</span></code> group command can be used for listing both projects and project contents. Calling the <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">ls</span></code> command should produce the same output as <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span> <span class="pre">ls</span></code>, and calling <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">ls</span> <span class="pre">--project</span></code> should result in the same output as when calling <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">data</span> <span class="pre">ls</span></code>.</p>
+<div class="admonition-accessible-by admonition">
+<p class="admonition-title">Accessible by</p>
+<p>All user roles.</p>
+</div>
+<p>See the command documentation <a class="reference internal" href="ls/#dds-ls"><span class="std std-ref">here</span></a>.</p>
+</section>
+<section id="dds-unit">
+<span id="unit-info"></span><h3><a class="reference internal" href="unit/#dds-unit"><span class="std std-ref">dds unit</span></a><a class="headerlink" href="#dds-unit" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">unit</span></code> group command can be used by Super Admins to list all units and their information.</p>
+<div class="admonition-accessible-by admonition">
+<p class="admonition-title">Accessible by</p>
+<p>Super Admins only.</p>
+</div>
+</section>
+</section>
+<section id="command-documentation-and-guide">
+<h2>Command documentation and guide<a class="headerlink" href="#command-documentation-and-guide" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation/">Installation guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main/">dds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auth/">dds auth</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/">dds user</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project/">dds project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data/">dds data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ls/">dds ls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unit/">dds unit</a></li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex/"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex/"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search/"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="#">
+    <img class="logo" src="_static/SciLifeLab_symbol_green.svg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=scilifelabdatacentre&repo=dds_cli&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation/">Installation guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main/">dds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auth/">dds auth</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user/">dds user</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project/">dds project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data/">dds data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ls/">dds ls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unit/">dds unit</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="installation/" title="next chapter">Installation guide</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search/" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021-2022, SciLifeLab Data Centre.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

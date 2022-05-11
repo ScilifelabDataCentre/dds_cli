@@ -1,0 +1,436 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>dds project &#8212; Data Delivery System  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="dds data" href="../data/" />
+    <link rel="prev" title="dds user" href="../user/" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="dds-project">
+<span id="dds-project"></span><h1>dds project<a class="headerlink" href="#dds-project" title="Permalink to this headline">¶</a></h1>
+<p>Group command for creating and managing projects within the DDS.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="dds-project-access">
+<h2>access<a class="headerlink" href="#dds-project-access" title="Permalink to this headline">¶</a></h2>
+<p>Manage specific users access to a project.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project access <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="dds-project-access-fix">
+<h3>fix<a class="headerlink" href="#dds-project-access-fix" title="Permalink to this headline">¶</a></h3>
+<p>Re-grant project access to user that has lost access due to password reset.</p>
+<p>When a password is reset, all project access is lost. To use the DDS in a meaningful way again,
+the access to the active projects need to be updated.</p>
+<p>Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+in question.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project access fix <span class="o">[</span>OPTIONS<span class="o">]</span> <span class="o">[</span>EMAIL<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-access-fix-p">
+<span id="cmdoption-dds-project-access-fix-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-access-fix-p" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project ID.</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-access-fix-arg-EMAIL">
+<span id="cmdoption-dds-project-access-fix-arg-email"></span><span class="sig-name descname"><span class="pre">[EMAIL]</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-access-fix-arg-EMAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="dds-project-access-grant">
+<h3>grant<a class="headerlink" href="#dds-project-access-grant" title="Permalink to this headline">¶</a></h3>
+<p>Grant a user access to a project.</p>
+<p>Users can only grant project access to project they themselves have access to, and only to
+users with the role ‘Researcher’. To set the Researcher as a Project Owner in this
+specific project, use the <cite>–owner</cite> flag.</p>
+<p>Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+in question.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project access grant <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-access-grant-p">
+<span id="cmdoption-dds-project-access-grant-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-access-grant-p" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project ID.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-access-grant-e">
+<span id="cmdoption-dds-project-access-grant-email"></span><span class="sig-name descname"><span class="pre">-e</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--email</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;email&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-access-grant-e" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Email of the user you would like to grant access to the project.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-access-grant-owner">
+<span class="sig-name descname"><span class="pre">--owner</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-access-grant-owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grant access as project owner. If not specified, the user gets Researcher permissions within the project.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-access-grant-no-mail">
+<span class="sig-name descname"><span class="pre">--no-mail</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-access-grant-no-mail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do not send e-mail notifications regarding project updates.</p>
+</dd></dl>
+
+</section>
+<section id="dds-project-access-revoke">
+<h3>revoke<a class="headerlink" href="#dds-project-access-revoke" title="Permalink to this headline">¶</a></h3>
+<p>Revoke a users access to a project.</p>
+<p>Users can only revoke project access for users with the role ‘Researcher’. To set the Researcher
+as a Project Owner in this specific project, use the <cite>–owner</cite> flag.</p>
+<p>Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
+in question.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project access revoke <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-access-revoke-p">
+<span id="cmdoption-dds-project-access-revoke-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-access-revoke-p" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project ID.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-access-revoke-e">
+<span id="cmdoption-dds-project-access-revoke-email"></span><span class="sig-name descname"><span class="pre">-e</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--email</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;email&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-access-revoke-e" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Email of the user for whom project access is to be revoked.</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="dds-project-create">
+<h2>create<a class="headerlink" href="#dds-project-create" title="Permalink to this headline">¶</a></h2>
+<p>Create a project within the DDS.</p>
+<p>Only usable by Unit Admins / Personnel.</p>
+<p>To give new or existing users access to the new project, specify their emails with
+<cite>–researcher</cite> or <cite>–owner</cite>. Both of these will give the user the role Researcher, but <cite>–owner</cite>
+will mark the user as a Project Owner for this specific project, which will give that person
+some additional administrative rights within the project such as adding users etc.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project create <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-create-t">
+<span id="cmdoption-dds-project-create-title"></span><span class="sig-name descname"><span class="pre">-t</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--title</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;title&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-create-t" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> The title of the project.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-create-d">
+<span id="cmdoption-dds-project-create-description"></span><span class="sig-name descname"><span class="pre">-d</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--description</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;description&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-create-d" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> A description of the project.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-create-pi">
+<span id="cmdoption-dds-project-create-principal-investigator"></span><span class="sig-name descname"><span class="pre">-pi</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--principal-investigator</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;principal_investigator&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-create-pi" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Email of the Principal Investigator. Note: The PI will not be added as a user in the DDS. Add the same email as the <cite>–owner</cite> if the PI should have an account.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-create-researcher">
+<span class="sig-name descname"><span class="pre">--researcher</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;researcher&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-create-researcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Email of a user to be added to the project as Researcher. Use the option multiple times to specify more than one researcher [multiple]</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-create-owner">
+<span class="sig-name descname"><span class="pre">--owner</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;owner&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-create-owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Email of user to be added to the project as Project Owner. Use the option multiple times to specify more than one project owner [multiple]</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-create-non-sensitive">
+<span class="sig-name descname"><span class="pre">--non-sensitive</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-create-non-sensitive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicate whether the project contains only non-sensitive data. NB! Currently all data is encrypted independent of whether the projects is marked as sensitive or not.</p>
+</dd></dl>
+
+</section>
+<section id="dds-project-ls">
+<h2>ls<a class="headerlink" href="#dds-project-ls" title="Permalink to this headline">¶</a></h2>
+<p>List all projects you have access to in the DDS.</p>
+<p>Calls the <cite>dds ls</cite> function.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project ls <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-ls-sort">
+<span class="sig-name descname"><span class="pre">--sort</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;sort&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-ls-sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Which column to sort the project list by.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options</dt>
+<dd class="field-odd"><p>id | title | pi | status | updated | size | usage | cost</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-ls-usage">
+<span class="sig-name descname"><span class="pre">--usage</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-ls-usage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show the usage for available projects, in GBHours and cost.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p>False</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-ls-json">
+<span class="sig-name descname"><span class="pre">--json</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-ls-json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output project list as json.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default</dt>
+<dd class="field-odd"><p>False</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="dds-project-status">
+<h2>status<a class="headerlink" href="#dds-project-status" title="Permalink to this headline">¶</a></h2>
+<p>Manage project statuses.</p>
+<p>Display or change the status of a project.</p>
+<p>Displaying the project status is available for all user roles. Changing the project status
+is limited to Unit Admins and Personnel.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="dds-project-status-archive">
+<h3>archive<a class="headerlink" href="#dds-project-status-archive" title="Permalink to this headline">¶</a></h3>
+<p>Change the project status to ‘Archived’.</p>
+<p>Certain meta data is kept and it will still be listed in your projects. All data within the
+project is deleted. You cannot revert this change.</p>
+<p>Use the <cite>–abort</cite> flag to indicate that something has gone wrong in the project.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status archive <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-archive-p">
+<span id="cmdoption-dds-project-status-archive-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-status-archive-p" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project ID.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-archive-abort">
+<span class="sig-name descname"><span class="pre">--abort</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-status-archive-abort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Something has one wrong in the project.</p>
+</dd></dl>
+
+</section>
+<section id="dds-project-status-delete">
+<h3>delete<a class="headerlink" href="#dds-project-status-delete" title="Permalink to this headline">¶</a></h3>
+<p>Delete an unreleased project (change project status to ‘Deleted’).</p>
+<p>Certain meta data is kept (nothing sensitive) and it will still be listed in your projects. All
+data within the project is deleted. You cannot revert this change.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status delete <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-delete-p">
+<span id="cmdoption-dds-project-status-delete-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-status-delete-p" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project ID.</p>
+</dd></dl>
+
+</section>
+<section id="dds-project-status-display">
+<h3>display<a class="headerlink" href="#dds-project-status-display" title="Permalink to this headline">¶</a></h3>
+<p>Display the status of a specific project.</p>
+<p>Use <cite>–show-history</cite> to see all previous statuses of the project.</p>
+<p>Usable by all user roles.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status display <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-display-p">
+<span id="cmdoption-dds-project-status-display-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-status-display-p" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project ID.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-display-show-history">
+<span class="sig-name descname"><span class="pre">--show-history</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-status-display-show-history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show history of project statuses in addition to current status.</p>
+</dd></dl>
+
+</section>
+<section id="dds-project-status-release">
+<h3>release<a class="headerlink" href="#dds-project-status-release" title="Permalink to this headline">¶</a></h3>
+<p>Change project status to ‘Available’.</p>
+<p>Make project data available for user download. Data cannot be deleted and additional data cannot
+be uploaded. The count-down for when the data access expires starts.</p>
+<p>The <cite>–deadline</cite> option can be used when changing the project status from ‘In Progress’ to
+‘Available’ for the first time. In all other cases the deadline option will be ignored.</p>
+<p>Only usable by: Unit Admins / Personnel.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status release <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-release-p">
+<span id="cmdoption-dds-project-status-release-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-status-release-p" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project ID.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-release-deadline">
+<span class="sig-name descname"><span class="pre">--deadline</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;deadline&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-status-release-deadline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deadline in days when releasing a project.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-release-no-mail">
+<span class="sig-name descname"><span class="pre">--no-mail</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-project-status-release-no-mail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do not send e-mail notifications regarding project updates.</p>
+</dd></dl>
+
+</section>
+<section id="dds-project-status-retract">
+<h3>retract<a class="headerlink" href="#dds-project-status-retract" title="Permalink to this headline">¶</a></h3>
+<p>Change the project status to ‘In Progress’.</p>
+<p>‘In Progress’ is the default status when a project is created. Retracting the project changes
+the status from ‘Available’ to ‘In Progress’ again.</p>
+<p>Make project data unavailable to Researchers, and allow Unit Admins / Personnel to upload
+additional data to the project. Data cannot be deleted. Data cannot be overwritten.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status retract <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-retract-p">
+<span id="cmdoption-dds-project-status-retract-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-status-retract-p" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project ID.</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../">
+    <img class="logo" src="../_static/SciLifeLab_symbol_green.svg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=scilifelabdatacentre&repo=dds_cli&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation/">Installation guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../main/">dds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auth/">dds auth</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/">dds user</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">dds project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/">dds data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ls/">dds ls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit/">dds unit</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../">Documentation overview</a><ul>
+      <li>Previous: <a href="../user/" title="previous chapter">dds user</a></li>
+      <li>Next: <a href="../data/" title="next chapter">dds data</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search/" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021-2022, SciLifeLab Data Centre.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/project.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

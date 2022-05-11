@@ -187,15 +187,23 @@ def perform_request(
     except simplejson.JSONDecodeError as err:
         raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+    errors = response_json.get("errors")
+    error_messages = dds_cli.utils.parse_project_errors(errors=errors)
+
     # Check if response is ok.
     if not response.ok:
         message = error_message
+        show_warning = True
 
         if response.status_code == http.HTTPStatus.BAD_REQUEST:
+            if DDSEndpoint.USER_ADD in endpoint and error_messages: 
+                message += f"\n{error_messages}"
+                show_warning = False
+                
             if DDSEndpoint.CREATE_PROJ in endpoint:
                 message += f": {__project_creation_error(response_json)}"
 
-            raise dds_cli.exceptions.DDSCLIException(message=message)
+            raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
 
         if response.status_code == http.HTTPStatus.FORBIDDEN:
             if any(ep in endpoint for ep in [DDSEndpoint.CREATE_PROJ, DDSEndpoint.ADD_NEW_MOTD]):

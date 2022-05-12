@@ -79,7 +79,7 @@ class DataLister(base.DDSBaseClass):
     def list_projects(self, sort_by="Updated"):
         """Get a list of project(s) the user is involved in."""
         # Get projects from API
-        response = dds_cli.utils.perform_request(
+        response, _ = dds_cli.utils.perform_request(
             DDSEndpoint.LIST_PROJ,
             headers=self.token,
             method="get",
@@ -128,7 +128,7 @@ class DataLister(base.DDSBaseClass):
         if folder is None:
             folder = ""
         # Make call to API
-        response = dds_cli.utils.perform_request(
+        response, _ = dds_cli.utils.perform_request(
             DDSEndpoint.LIST_FILES,
             method="get",
             params={"project": self.project},
@@ -229,7 +229,7 @@ class DataLister(base.DDSBaseClass):
 
         def __api_call_list_files(folder: str):
             # Make call to API
-            resp_json = dds_cli.utils.perform_request(
+            resp_json, _ = dds_cli.utils.perform_request(
                 DDSEndpoint.LIST_FILES,
                 method="get",
                 params={"project": self.project},
@@ -400,7 +400,7 @@ class DataLister(base.DDSBaseClass):
     def list_users(self):
         """Get a list of user(s) involved in a project."""
         # Get user list from API
-        resp_json = dds_cli.utils.perform_request(
+        resp_json, _ = dds_cli.utils.perform_request(
             DDSEndpoint.LIST_PROJ_USERS,
             method="get",
             headers=self.token,

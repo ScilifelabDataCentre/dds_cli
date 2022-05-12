@@ -72,7 +72,7 @@ class RemoteFileHandler(fh.FileHandler):
     def __collect_file_info_remote(self, all_paths, token):
         """Get information on files in db."""
         # Get file info from db via API
-        file_info = dds_cli.utils.perform_request(
+        file_info, _ = dds_cli.utils.perform_request(
             DDSEndpoint.FILE_INFO_ALL if self.get_all else DDSEndpoint.FILE_INFO,
             method="get",
             params={"project": self.project},

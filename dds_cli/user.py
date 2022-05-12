@@ -107,7 +107,7 @@ class User:
                 message="Non-empty password needed to be able to authenticate."
             )
 
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
             headers=None,
             method="get",
@@ -127,7 +127,8 @@ class User:
                 raise exceptions.AuthenticationError(
                     "Authentication failed, you have not yet activated one-time authentication codes from authenticator app."
                 )
-            response_json = dds_cli.utils.perform_request(
+
+            response_json, _ = dds_cli.utils.perform_request(
                 dds_cli.DDSEndpoint.SECOND_FACTOR,
                 method="get",
                 headers={"Authorization": f"Bearer {partial_auth_token}"},
@@ -205,7 +206,7 @@ class User:
             token = tokenfile.read_token()
             if token and not tokenfile.token_expired(token=token):
                 try:
-                    response_json = dds_cli.utils.perform_request(
+                    response_json, _ = dds_cli.utils.perform_request(
                         dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
                         method="get",
                         headers={"Authorization": f"Bearer {token}"},

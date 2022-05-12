@@ -62,7 +62,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
 
     def add_new_motd(self, message):
         """Add a new motd."""
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.ADD_NEW_MOTD,
             headers=self.token,
             method="post",

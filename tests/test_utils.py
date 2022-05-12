@@ -116,7 +116,7 @@ def test_perform_request_project_access_errors() -> None:
         )
 
 
-def test_perform_request_add_user_() -> None:
+def test_perform_request_add_user_errors() -> None:
     """Attempt to invite user, but the user does not have access."""
     response_json: Dict = {
         "email": "test_email@mail.com",

@@ -83,3 +83,37 @@ def test_perform_request_add_motd_error_insufficient_credentials() -> None:
 
         assert len(exc_info.value.args) == 1
         assert exc_info.value.args[0] == "API Request failed.: Only Super Admin can add a MOTD."
+
+
+def test_perform_request_actiate_TOTP_error() -> None:
+    response_json: Dict = {
+        "message": ["message"],
+        "title": "",
+        "description": "",
+        "pi": "",
+        "email": "",
+    }
+    with Mocker() as mock:
+        mock.post(DDSEndpoint.USER_ACTIVATE_TOTP, status_code=400, json=response_json)
+        with raises(DDSCLIException) as exc_info:
+            perform_request(endpoint=DDSEndpoint.USER_ACTIVATE_TOTP, headers={}, method="post")
+
+        assert len(exc_info.value.args) == 1
+        assert exc_info.value.args[0] == "API Request failed.: message"
+
+
+def test_perform_request_activate_HOTP_error() -> None:
+    response_json: Dict = {
+        "message": ["message"],
+        "title": "",
+        "description": "",
+        "pi": "",
+        "email": "",
+    }
+    with Mocker() as mock:
+        mock.post(DDSEndpoint.USER_ACTIVATE_HOTP, status_code=400, json=response_json)
+        with raises(DDSCLIException) as exc_info:
+            perform_request(endpoint=DDSEndpoint.USER_ACTIVATE_HOTP, headers={}, method="post")
+
+        assert len(exc_info.value.args) == 1
+        assert exc_info.value.args[0] == "API Request failed.: message"

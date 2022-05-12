@@ -25,7 +25,9 @@ def test_perform_request_project_creation_error() -> None:
     with Mocker() as mock:
         mock.post(DDSEndpoint.CREATE_PROJ, status_code=400, json=response_json)
         with raises(DDSCLIException) as exc_info:
-            _: tuple(Response, str) = perform_request(endpoint=DDSEndpoint.CREATE_PROJ, headers={}, method="post")
+            _: tuple(Response, str) = perform_request(
+                endpoint=DDSEndpoint.CREATE_PROJ, headers={}, method="post"
+            )
 
         assert len(exc_info.value.args) == 1
         assert exc_info.value.args[0] == "API Request failed.: message"
@@ -42,7 +44,9 @@ def test_perform_request_project_creation_error_list() -> None:
     with Mocker() as mock:
         mock.post(DDSEndpoint.CREATE_PROJ, status_code=400, json=response_json)
         with raises(DDSCLIException) as exc_info:
-            _: tuple(Response, str) = perform_request(endpoint=DDSEndpoint.CREATE_PROJ, headers={}, method="post")
+            _: tuple(Response, str) = perform_request(
+                endpoint=DDSEndpoint.CREATE_PROJ, headers={}, method="post"
+            )
 
         assert len(exc_info.value.args) == 1
         assert exc_info.value.args[0] == "API Request failed.: message"
@@ -59,7 +63,9 @@ def test_perform_request_project_creation_error_insufficient_credentials() -> No
     with Mocker() as mock:
         mock.post(DDSEndpoint.CREATE_PROJ, status_code=403, json=response_json)
         with raises(DDSCLIException) as exc_info:
-            _: tuple(Response, str) = perform_request(endpoint=DDSEndpoint.CREATE_PROJ, headers={}, method="post")
+            _: tuple(Response, str) = perform_request(
+                endpoint=DDSEndpoint.CREATE_PROJ, headers={}, method="post"
+            )
 
         assert len(exc_info.value.args) == 1
         assert (
@@ -79,7 +85,9 @@ def test_perform_request_add_motd_error_insufficient_credentials() -> None:
     with Mocker() as mock:
         mock.post(DDSEndpoint.ADD_NEW_MOTD, status_code=403, json=response_json)
         with raises(DDSCLIException) as exc_info:
-            _: tuple(Response, str) = perform_request(endpoint=DDSEndpoint.ADD_NEW_MOTD, headers={}, method="post")
+            _: tuple(Response, str) = perform_request(
+                endpoint=DDSEndpoint.ADD_NEW_MOTD, headers={}, method="post"
+            )
 
         assert len(exc_info.value.args) == 1
         assert exc_info.value.args[0] == "API Request failed.: Only Super Admin can add a MOTD."

@@ -65,7 +65,7 @@ class Auth(base.DDSBaseClass):
 
     def twofactor(self, auth_method: str = None):
         if auth_method == "totp":
-            response_json = dds_cli.utils.perform_request(
+            response_json, _ = dds_cli.utils.perform_request(
                 endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
                 headers=self.token,
                 method="post",
@@ -83,7 +83,7 @@ class Auth(base.DDSBaseClass):
                     message="Non-empty password needed to be able to authenticate."
                 )
 
-            response_json = dds_cli.utils.perform_request(
+            response_json, _ = dds_cli.utils.perform_request(
                 endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_HOTP,
                 headers=None,
                 method="post",

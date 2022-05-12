@@ -140,7 +140,7 @@ def test_perform_request_add_user_errors() -> None:
 
 def test_perform_request_activate_TOTP_error() -> None:
     response_json: Dict = {
-        "message": ["message"],
+        "message": "test message",
         "title": "",
         "description": "",
         "pi": "",
@@ -152,12 +152,12 @@ def test_perform_request_activate_TOTP_error() -> None:
             perform_request(endpoint=DDSEndpoint.USER_ACTIVATE_TOTP, headers={}, method="post")
 
         assert len(exc_info.value.args) == 1
-        assert exc_info.value.args[0] == "API Request failed."
+        assert exc_info.value.args[0] == "API Request failed.: test message"
 
 
 def test_perform_request_activate_HOTP_error() -> None:
     response_json: Dict = {
-        "message": ["message"],
+        "message": "test message",
         "title": "",
         "description": "",
         "pi": "",
@@ -169,4 +169,4 @@ def test_perform_request_activate_HOTP_error() -> None:
             perform_request(endpoint=DDSEndpoint.USER_ACTIVATE_HOTP, headers={}, method="post")
 
         assert len(exc_info.value.args) == 1
-        assert exc_info.value.args[0] == "API Request failed."
+        assert exc_info.value.args[0] == "API Request failed.: test message"

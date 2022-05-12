@@ -12,7 +12,7 @@ from jwcrypto.jws import InvalidJWSObject
 from jwcrypto import jwt
 import http
 from rich.table import Table
-from typing import List, Union
+from typing import Dict, List, Union
 
 import dds_cli.exceptions
 from dds_cli import DDSEndpoint
@@ -142,19 +142,32 @@ def get_required_in_response(keys: list, response: dict) -> tuple:
     return tuple(response.get(x) for x in keys)
 
 
-def request_get(
+def perform_request(
     endpoint,
     headers,
+    method,
+    auth=None,
     params=None,
     json=None,
     error_message="API Request failed.",
     timeout=DDSEndpoint.TIMEOUT,
 ):
+    request_method = None
+    if method == "get":
+        request_method = requests.get
+    elif method == "put":
+        request_method = requests.put
+    elif method == "post":
+        request_method = requests.post
+    elif method == "delete":
+        request_method = requests.delete
+
     """Perform get request."""
     try:
-        response = requests.get(
+        response = request_method(
             url=endpoint,
             headers=headers,
+            auth=auth,
             params=params,
             json=json,
             timeout=timeout,
@@ -174,9 +187,43 @@ def request_get(
     except simplejson.JSONDecodeError as err:
         raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
+    # Get and parse project specific errors
+    errors = response_json.get("errors")
+    additional_errors = dds_cli.utils.parse_project_errors(errors=errors)
+
     # Check if response is ok.
     if not response.ok:
         message = error_message
+        show_warning = True  # Show emojis or not - may look weird in some cases
+
+        # Handle 400 Bad Request
+        if response.status_code == http.HTTPStatus.BAD_REQUEST:
+            # Parse messages and additional errors returned from the API
+            if (
+                any(ep in endpoint for ep in [DDSEndpoint.USER_ADD, DDSEndpoint.PROJ_ACCESS])
+                and additional_errors
+            ):
+                message += f"\n{additional_errors}"
+                show_warning = False
+            elif DDSEndpoint.CREATE_PROJ in endpoint:
+                message += f": {__project_creation_error(response_json)}"
+            else:
+                message += f": {response_json.get('message')}"
+
+            raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
+
+        # Handle 403
+        if response.status_code == http.HTTPStatus.FORBIDDEN:
+            # Parse message from the API
+            if any(
+                ep in endpoint
+                for ep in [DDSEndpoint.CREATE_PROJ, DDSEndpoint.ADD_NEW_MOTD, DDSEndpoint.USER_ADD]
+            ):
+                message += f": {response_json.get('message')}"
+
+            raise dds_cli.exceptions.DDSCLIException(message=message)
+
+        # Handle 500
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
             raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
 
@@ -184,7 +231,7 @@ def request_get(
             message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
         )
 
-    return response_json
+    return response_json, additional_errors
 
 
 def parse_project_errors(errors):
@@ -317,3 +364,23 @@ def delete_folder(folder):
         else:
             file_or_folder.unlink()
     folder.rmdir()
+
+
+def __project_creation_error(response_json: Dict) -> str:
+    """Parse response from project creation endpoint."""
+    message, title, description, pi, email = (
+        response_json.get("message"),
+        response_json.get("title"),
+        response_json.get("description"),
+        response_json.get("pi"),
+        response_json.get("email"),
+    )
+
+    messages: List = [message, title, description, pi, email]
+
+    error = next(message for message in messages if message)
+
+    if isinstance(error, List):
+        return error[0]
+
+    return error

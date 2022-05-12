@@ -11,12 +11,12 @@ import pathlib
 
 # Installed
 import http
-import requests
 import simplejson
 
 # Own modules
 import dds_cli.directory
 import dds_cli.timestamp
+import dds_cli.utils
 
 from dds_cli import (
     DDS_METHODS,
@@ -27,7 +27,6 @@ from dds_cli import DDSEndpoint
 from dds_cli import s3_connector as s3
 from dds_cli import user
 from dds_cli import exceptions
-from dds_cli import utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -146,41 +145,17 @@ class DDSBaseClass:
         """Get public key for project."""
         key_type = "private" if private else "public"
         # Get key from API
-        try:
-            response = requests.get(
-                DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
-                params={"project": self.project},
-                headers=self.token,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-        except requests.exceptions.RequestException as err:
-            LOG.fatal(str(err))
-            raise SystemExit(
-                "Failed to get cloud information"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
-
-        if not response.ok:
-            message = "Failed getting key from DDS API"
-            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise exceptions.ApiResponseError(message=f"{message}: {response.reason}")
-
-            raise exceptions.DDSCLIException(message=f"{message}: {response.json().get('message')}")
-
-        # Get key from response
-        try:
-            project_public = response.json()
-        except simplejson.JSONDecodeError as err:
-            LOG.fatal(str(err))
-            raise SystemExit from err
+        project_public, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
+            method="get",
+            params={"project": self.project},
+            headers=self.token,
+            error_message="Failed to get project key",
+        )
 
         if key_type not in project_public:
-            utils.console.print(
-                "\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
+            dds_cli.utils.console.print(
+                f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
             )
             os._exit(1)
 
@@ -216,7 +191,7 @@ class DDSBaseClass:
                     "automatically be created and all files will be downloaded again."
                 )
 
-            utils.stderr_console.print(
+            dds_cli.utils.stderr_console.print(
                 f"{intro_error_message}. \n"
                 f"{retry_message} \n\n"
                 f"See {self.failed_delivery_log} for more information."

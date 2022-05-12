@@ -9,15 +9,14 @@ import logging
 import pathlib
 
 # Installed
-import requests
 import rich
 import rich.markup
 import rich.table
 import rich.padding
-import simplejson
 
 # Own modules
 import dds_cli
+import dds_cli.utils
 from dds_cli.custom_decorators import removal_spinner
 from dds_cli import base
 from dds_cli import DDSEndpoint
@@ -120,30 +119,16 @@ class DataRemover(base.DDSBaseClass):
     def remove_all(self, *_, **__):
         """Remove all files in project."""
         # Perform request to API to perform deletion
-        try:
-            response = requests.delete(
-                DDSEndpoint.REMOVE_PROJ_CONT, params={"project": self.project}, headers=self.token
-            )
-        except requests.exceptions.RequestException as err:
-            raise SystemExit(
-                "Failed to delete project contents"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
-
-        if not response.ok:
-            raise dds_cli.exceptions.APIError(f"Failed to delete files in project: {response.text}")
+        response_json, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.REMOVE_PROJ_CONT,
+            method="delete",
+            params={"project": self.project},
+            headers=self.token,
+            error_message="Failed to delete project contents",
+        )
 
         # Print out response - deleted or not?
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        if "removed" not in resp_json:
+        if "removed" not in response_json:
             raise dds_cli.exceptions.APIError(
                 "Malformatted response detected when attempting "
                 f"to remove all files from {self.project}."
@@ -152,74 +137,36 @@ class DataRemover(base.DDSBaseClass):
     @removal_spinner
     def remove_file(self, files):
         """Remove specific files."""
-        try:
-            response = requests.delete(
-                DDSEndpoint.REMOVE_FILE,
-                params={"project": self.project},
-                json=files,
-                headers=self.token,
-            )
-        except requests.exceptions.RequestException as err:
-            raise SystemExit(
-                f"Failed to delete file from project {self.project}"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
-
-        if not response.ok:
-            raise dds_cli.exceptions.APIError(
-                f"Failed to delete file(s) '{files}' in project {self.project}: {response.text}"
-            )
+        response_json, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.REMOVE_FILE,
+            method="delete",
+            params={"project": self.project},
+            json=files,
+            headers=self.token,
+            error_message=f"Failed to delete file from project {self.project}",
+        )
 
         # Get info in response
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        self.__create_failed_table(resp_json=resp_json)
+        self.__create_failed_table(resp_json=response_json)
 
     @removal_spinner
     def remove_folder(self, folder):
         """Remove specific folders."""
-        try:
-            response = requests.delete(
-                DDSEndpoint.REMOVE_FOLDER,
-                params={"project": self.project},
-                json=folder,
-                headers=self.token,
-            )
-        except requests.exceptions.RequestException as err:
-            raise SystemExit(
-                f"Failed to delete folder(s) from project '{self.project}'"
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else "."
-                )
-            ) from err
+        response_json, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.REMOVE_FOLDER,
+            method="delete",
+            params={"project": self.project},
+            json=folder,
+            headers=self.token,
+            error_message=f"Failed to delete folder(s) from project '{self.project}'",
+        )
 
-        if not response.ok:
-            raise dds_cli.exceptions.APIError(
-                f"Failed to delete folder(s) '{folder}' "
-                f"in project {self.project}: {response.text}"
-            )
+        self.__create_failed_table(resp_json=response_json, level="Folder")
 
-        # Make sure required info is returned
-        try:
-            resp_json = response.json()
-        except simplejson.JSONDecodeError as err:
-            raise SystemExit from err
-
-        self.__create_failed_table(resp_json=resp_json, level="Folder")
-
-        if resp_json.get("nr_deleted"):
-            LOG.info(f"{resp_json['nr_deleted']} files were successfully deleted in {folder}.")
+        if response_json.get("nr_deleted"):
+            LOG.info(f"{response_json['nr_deleted']} files were successfully deleted in {folder}.")
         # Print extra warning if s3 deletion succeeded, db failed
-        if resp_json.get("fail_type") == "db":
+        if response_json.get("fail_type") == "db":
             LOG.error(
                 "Some files were deleted, but their database entries were not. "
                 + "Try to run the command again, and contact Data Centre if the problem persists."

@@ -62,43 +62,12 @@ class MotdManager(dds_cli.base.DDSBaseClass):
 
     def add_new_motd(self, message):
         """Add a new motd."""
-        err_message = "Failed adding a new MOTD"
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.ADD_NEW_MOTD,
+            headers=self.token,
+            method="post",
+            json={"message": message},
+            error_message="Failed adding a new MOTD",
+        )
 
-        try:
-            response = requests.post(
-                DDSEndpoint.ADD_NEW_MOTD,
-                json={"message": message},
-                headers=self.token,
-                timeout=DDSEndpoint.TIMEOUT,
-            )
-            response_json = response.json()
-        except requests.exceptions.RequestException as err:
-            raise dds_cli.exceptions.ApiRequestError(
-                message=(
-                    err_message
-                    + (
-                        ": The database seems to be down."
-                        if isinstance(err, requests.exceptions.ConnectionError)
-                        else "."
-                    )
-                )
-            )
-        except simplejson.JSONDecodeError as err:
-            raise dds_cli.exceptions.ApiResponseError(message=str(err))
-
-        # Check if response is ok.
-        if not response.ok:
-            if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-                raise dds_cli.exceptions.ApiResponseError(
-                    message=f"{err_message}: {response.reason}"
-                )
-
-            cred_err_message = (
-                ": Only Super Admin can add a MOTD"
-                if response.status_code == http.HTTPStatus.FORBIDDEN
-                else ""
-            )
-            raise dds_cli.exceptions.DDSCLIException(
-                message=f"{response_json.get('message', 'Unexpected error!')}{cred_err_message}"
-            )
         LOG.info("A new MOTD was added to the database")

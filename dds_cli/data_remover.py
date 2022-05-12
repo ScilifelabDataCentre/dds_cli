@@ -119,7 +119,7 @@ class DataRemover(base.DDSBaseClass):
     def remove_all(self, *_, **__):
         """Remove all files in project."""
         # Perform request to API to perform deletion
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             DDSEndpoint.REMOVE_PROJ_CONT,
             method="delete",
             params={"project": self.project},
@@ -137,7 +137,7 @@ class DataRemover(base.DDSBaseClass):
     @removal_spinner
     def remove_file(self, files):
         """Remove specific files."""
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             DDSEndpoint.REMOVE_FILE,
             method="delete",
             params={"project": self.project},
@@ -152,7 +152,7 @@ class DataRemover(base.DDSBaseClass):
     @removal_spinner
     def remove_folder(self, folder):
         """Remove specific folders."""
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             DDSEndpoint.REMOVE_FOLDER,
             method="delete",
             params={"project": self.project},

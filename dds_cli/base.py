@@ -145,7 +145,7 @@ class DDSBaseClass:
         """Get public key for project."""
         key_type = "private" if private else "public"
         # Get key from API
-        project_public = dds_cli.utils.perform_request(
+        project_public, _ = dds_cli.utils.perform_request(
             DDSEndpoint.PROJ_PRIVATE if private else DDSEndpoint.PROJ_PUBLIC,
             method="get",
             params={"project": self.project},

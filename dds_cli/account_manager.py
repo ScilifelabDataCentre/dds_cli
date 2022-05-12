@@ -60,7 +60,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         json = {"email": email, "role": role, "send_email": not no_mail, "unit": unit}
 
         # try:
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.USER_ADD,
             method="post",
             headers=self.token,
@@ -77,7 +77,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         # Perform request to API
         json = {"email": email, "is_invite": is_invite}
 
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.USER_DELETE,
             method="delete",
             headers=self.token,
@@ -93,7 +93,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
     def delete_own_account(self):
         """Delete users from the system."""
         # Perform request to API
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.USER_DELETE_SELF,
             method="delete",
             headers=self.token,
@@ -109,7 +109,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
     def revoke_project_access(self, project, email):
         """Revoke a user's access to a project."""
         json = {"email": email}
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.REVOKE_PROJECT_ACCESS,
             method="post",
             headers=self.token,
@@ -123,7 +123,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
     def get_user_info(self):
         """Get a users info."""
-        response = dds_cli.utils.perform_request(
+        response, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
             headers=self.token,
             method="get",
@@ -148,7 +148,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
     def user_activation(self, email, action):
         """Deactivate/Reactivate users"""
         json = {"email": email, "action": action}
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.USER_ACTIVATION,
             method="post",
             headers=self.token,
@@ -162,7 +162,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
     def fix_project_access(self, email, project):
         """Fix project access for specific user."""
         json = {"email": email}
-        response_json = dds_cli.utils.perform_request(
+        response_json, project_errors = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.PROJ_ACCESS,
             method="post",
             headers=self.token,
@@ -171,18 +171,23 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             error_message=f"Failed to fix project access for user '{email}'",
         )
 
-        msg = response_json.get(
-            "message",
-            (
-                f"Project access fixed for user '{email}'. "
-                "They should now have access to all project data."
-            ),
-        )
-        LOG.info(msg)
+        if project_errors:
+            LOG.warning(f"Could not fix user '{email}' access to the following projects:")
+            msg = project_errors
+        else:
+            msg = response_json.get(
+                "message",
+                (
+                    f"Project access fixed for user '{email}'. "
+                    "They should now have access to all project data."
+                ),
+            )
+
+        dds_cli.utils.console.print(msg)
 
     def list_unit_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
-        response = dds_cli.utils.perform_request(
+        response, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.LIST_UNIT_USERS,
             method="get",
             headers=self.token,

@@ -59,7 +59,7 @@ class UnitManager(dds_cli.base.DDSBaseClass):
 
     def list_all_units(self):
         """Get info about all units."""
-        response = dds_cli.utils.perform_request(
+        response, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.LIST_UNITS_ALL,
             method="get",
             headers=self.token,

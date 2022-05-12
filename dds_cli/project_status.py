@@ -47,7 +47,7 @@ class ProjectStatusManager(base.DDSBaseClass):
     # Public methods ###################### Public methods #
     def get_status(self, show_history):
         """Get current status and status history of the project."""
-        resp_json = dds_cli.utils.perform_request(
+        resp_json, _ = dds_cli.utils.perform_request(
             DDSEndpoint.UPDATE_PROJ_STATUS,
             method="get",
             headers=self.token,
@@ -103,7 +103,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         if is_aborted:
             extra_params["is_aborted"] = is_aborted
 
-        response_json = dds_cli.utils.perform_request(
+        response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.UPDATE_PROJ_STATUS,
             headers=self.token,
             method="post",

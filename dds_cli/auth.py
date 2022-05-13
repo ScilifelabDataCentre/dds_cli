@@ -1,9 +1,17 @@
-"""Data Delivery System saved authentication token manager."""
+"""Data Delivery System authentication manager."""
+# Standard library
 import logging
+import getpass
+
+# Installed
+import rich
 
 # Own modules
+import dds_cli
 from dds_cli import base
+from dds_cli import exceptions
 from dds_cli import user
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -23,15 +31,18 @@ class Auth(base.DDSBaseClass):
     def __init__(
         self,
         authenticate: bool = True,
+        force_renew_token: bool = True,  # Only used if authenticate is True
         token_path: str = None,
+        totp: str = None,
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             authenticate=authenticate,
             method_check=False,
-            force_renew_token=True,  # Only used if authenticate is True
+            force_renew_token=force_renew_token,
             token_path=token_path,
+            totp=totp,
         )
 
     def check(self):
@@ -51,3 +62,32 @@ class Auth(base.DDSBaseClass):
             LOG.info("[green] :white_check_mark: Successfully logged out![/green]")
         else:
             LOG.info("[green]Already logged out![/green]")
+
+    def twofactor(self, auth_method: str = None):
+        if auth_method == "totp":
+            response_json, _ = dds_cli.utils.perform_request(
+                endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
+                headers=self.token,
+                method="post",
+            )
+        else:
+            # Need to authenticate again since TOTP might have been lost
+            LOG.info(
+                "Activating authentication via email, please (re-)enter your username and password:"
+            )
+            username = rich.prompt.Prompt.ask("DDS username")
+            password = getpass.getpass(prompt="DDS password: ")
+
+            if password == "":
+                raise exceptions.AuthenticationError(
+                    message="Non-empty password needed to be able to authenticate."
+                )
+
+            response_json, _ = dds_cli.utils.perform_request(
+                endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_HOTP,
+                headers=None,
+                method="post",
+                auth=(username, password),
+            )
+
+        LOG.info(response_json.get("message"))

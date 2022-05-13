@@ -150,7 +150,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 - `motd` command to add new message of the day via new endpoint ([#449](https://github.com/ScilifelabDataCentre/dds_cli/pull/449))
 - Patch: Message in docstrings to urge users to reauthenticate before upload and download ([#450](https://github.com/ScilifelabDataCentre/dds_cli/pull/450))
-- Pin versions in `requirements-dev.txt`: New version of `sphinx-click` makes `:nested: full` not work anymore (direct commit: <https://github.com/ScilifelabDataCentre/dds_cli/commit/b91332b43e9cdee40a8132eab15e2fea3201bab6>)
+- Pin versions in `requirements-dev.txt`: New version of `sphinx-click` makes `:nested: full` not work anymore (direct commit: https://github.com/ScilifelabDataCentre/dds_cli/commit/b91332b43e9cdee40a8132eab15e2fea3201bab6)
 
 ## Sprint (2022-04-20 - 2022-05-04)
 

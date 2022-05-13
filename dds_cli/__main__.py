@@ -9,7 +9,6 @@ import concurrent.futures
 import itertools
 import logging
 import os
-from re import T
 import sys
 
 # Installed
@@ -340,8 +339,14 @@ def auth_group_command(_):
 
 # -- dds auth login -- #
 @auth_group_command.command(name="login")
+@click.option(
+    "--totp",
+    type=str,
+    default=None,
+    help="2FA authentication via authentication app. Default is to use one-time authentication code via mail.",
+)
 @click.pass_obj
-def login(click_ctx):
+def login(click_ctx, totp):
     """Start or renew an authenticated session.
 
     Creates or renews the authentication token stored in the '.dds_cli_token' file.
@@ -353,7 +358,7 @@ def login(click_ctx):
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH")):
+        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH"), totp=totp):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication token created![/green]")
     except (
@@ -403,6 +408,30 @@ def info(click_ctx):
         ) as authenticator:
             authenticator.check()
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+@auth_group_command.command(name="twofactor")
+def twofactor():
+    """Configure your preferred method of two-factor authentication."""
+    try:
+        LOG.info("Starting configuration of one-time authentication code method.")
+        auth_method_choice = questionary.select(
+            "Which method would you like to use?", choices=["Email", "Authenticator App", "Cancel"]
+        ).ask()
+
+        if auth_method_choice == "Cancel":
+            LOG.info("Two-factor authentication method not configured.")
+            sys.exit(0)
+        elif auth_method_choice == "Authenticator App":
+            auth_method = "totp"
+        elif auth_method_choice == "Email":
+            auth_method = "hotp"
+
+        with dds_cli.auth.Auth(authenticate=True, force_renew_token=False) as authenticator:
+            authenticator.twofactor(auth_method=auth_method)
+    except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
         LOG.error(err)
         sys.exit(1)
 

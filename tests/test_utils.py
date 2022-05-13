@@ -136,3 +136,37 @@ def test_perform_request_add_user_errors() -> None:
 
         # Make sure that errors are parsed correctly
         assert "Invite error\ntest message\n   - project_1\n   - project_2" in str(exc_info.value)
+
+
+def test_perform_request_activate_TOTP_error() -> None:
+    response_json: Dict = {
+        "message": "test message",
+        "title": "",
+        "description": "",
+        "pi": "",
+        "email": "",
+    }
+    with Mocker() as mock:
+        mock.post(DDSEndpoint.USER_ACTIVATE_TOTP, status_code=400, json=response_json)
+        with raises(DDSCLIException) as exc_info:
+            perform_request(endpoint=DDSEndpoint.USER_ACTIVATE_TOTP, headers={}, method="post")
+
+        assert len(exc_info.value.args) == 1
+        assert exc_info.value.args[0] == "API Request failed.: test message"
+
+
+def test_perform_request_activate_HOTP_error() -> None:
+    response_json: Dict = {
+        "message": "test message",
+        "title": "",
+        "description": "",
+        "pi": "",
+        "email": "",
+    }
+    with Mocker() as mock:
+        mock.post(DDSEndpoint.USER_ACTIVATE_HOTP, status_code=400, json=response_json)
+        with raises(DDSCLIException) as exc_info:
+            perform_request(endpoint=DDSEndpoint.USER_ACTIVATE_HOTP, headers={}, method="post")
+
+        assert len(exc_info.value.args) == 1
+        assert exc_info.value.args[0] == "API Request failed.: test message"

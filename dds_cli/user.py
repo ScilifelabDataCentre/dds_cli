@@ -46,6 +46,7 @@ class User:
         force_renew_token: bool = False,
         no_prompt: bool = False,
         token_path: str = None,
+        totp: str = None,
     ):
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt
@@ -53,7 +54,7 @@ class User:
         self.token_path = token_path
 
         # Fetch encrypted JWT token or authenticate against API
-        self.__retrieve_token()
+        self.__retrieve_token(totp=totp)
 
     @property
     def token_dict(self):
@@ -61,7 +62,7 @@ class User:
         return {"Authorization": f"Bearer {self.token}"}
 
     # Private methods ######################### Private methods #
-    def __retrieve_token(self):
+    def __retrieve_token(self, totp: str = None):
         """Fetch saved token from file otherwise authenticate user and saves the new token."""
         token_file = TokenFile(token_path=self.token_path)
 
@@ -83,10 +84,10 @@ class User:
                 )
             else:
                 LOG.info("Attempting to create the session token")
-            self.token = self.__authenticate_user()
+            self.token = self.__authenticate_user(totp=totp)
             token_file.save_token(self.token)
 
-    def __authenticate_user(self):
+    def __authenticate_user(self, totp: str = None):
         """Authenticates the username and password via a call to the API."""
         LOG.debug("Starting authentication on the API.")
 
@@ -116,40 +117,73 @@ class User:
 
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
+        secondfactor_method = response_json.get("secondfactor_method")
 
-        # Verify 2fa email token
-        LOG.info(
-            "Please enter the one-time authentication code sent "
-            "to your email address (leave empty to exit):"
-        )
-        done = False
-        while not done:
-            entered_one_time_code = rich.prompt.Prompt.ask("Authentication one-time code")
-            if entered_one_time_code == "":
+        totp_enabled = secondfactor_method == "TOTP"
+
+        # Verify Second Factor
+        if totp:
+            if not totp_enabled:
                 raise exceptions.AuthenticationError(
-                    message="Exited due to no one-time authentication code entered."
+                    "Authentication failed, you have not yet activated one-time authentication codes from authenticator app."
                 )
-
-            if not entered_one_time_code.isdigit():
-                LOG.info("Please enter a valid one-time code. It should consist of only digits.")
-                continue
-            if len(entered_one_time_code) != 8:
-                LOG.info(
-                    "Please enter a valid one-time code. It should consist of 8 digits "
-                    f"(you entered {len(entered_one_time_code)} digits)."
-                )
-                continue
 
             response_json, _ = dds_cli.utils.perform_request(
                 dds_cli.DDSEndpoint.SECOND_FACTOR,
                 method="get",
                 headers={"Authorization": f"Bearer {partial_auth_token}"},
-                json={"HOTP": entered_one_time_code},
-                error_message="Failed to authenticate with second factor",
+                json={"TOTP": totp},
+                error_message="Failed to authenticate with one-time authentication code",
             )
 
-            # Step out of the while-loop
-            done = True
+        else:
+            if totp_enabled:
+                LOG.info(
+                    "Please enter the one-time authentication code from your authenticator app."
+                )
+                nr_digits = 6
+            else:
+                LOG.info(
+                    "Please enter the one-time authentication code sent "
+                    "to your email address (leave empty to exit):"
+                )
+                nr_digits = 8
+
+            done = False
+            while not done:
+                entered_one_time_code = rich.prompt.Prompt.ask("Authentication one-time code")
+                if entered_one_time_code == "":
+                    raise exceptions.AuthenticationError(
+                        message="Exited due to no one-time authentication code entered."
+                    )
+
+                if not entered_one_time_code.isdigit():
+                    LOG.info(
+                        "Please enter a valid one-time code. It should consist of only digits."
+                    )
+                    continue
+                if len(entered_one_time_code) != nr_digits:
+                    LOG.info(
+                        f"Please enter a valid one-time code. It should consist of {nr_digits} digits "
+                        f"(you entered {len(entered_one_time_code)} digits)."
+                    )
+                    continue
+
+                if totp_enabled:
+                    json_request = {"TOTP": entered_one_time_code}
+                else:
+                    json_request = {"HOTP": entered_one_time_code}
+
+                response_json, _ = dds_cli.utils.perform_request(
+                    dds_cli.DDSEndpoint.SECOND_FACTOR,
+                    method="get",
+                    headers={"Authorization": f"Bearer {partial_auth_token}"},
+                    json=json_request,
+                    error_message="Failed to authenticate with second factor",
+                )
+
+                # Step out of the while-loop
+                done = True
 
         # Get token from response
         token = response_json.get("token")

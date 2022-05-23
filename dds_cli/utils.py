@@ -1,5 +1,6 @@
 """DDS CLI utils module."""
 
+import logging
 import numbers
 from pathlib import Path
 
@@ -15,10 +16,12 @@ from rich.table import Table
 from typing import Dict, List, Union
 
 import dds_cli.exceptions
-from dds_cli import DDSEndpoint
+from dds_cli import __version__, DDSEndpoint
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
+
+LOG = logging.getLogger(__name__)
 
 # Classes
 
@@ -144,14 +147,15 @@ def get_required_in_response(keys: list, response: dict) -> tuple:
 
 def perform_request(
     endpoint,
-    headers,
     method,
+    headers={},
     auth=None,
     params=None,
     json=None,
     error_message="API Request failed.",
     timeout=DDSEndpoint.TIMEOUT,
 ):
+    version_header_name: str = "X-CLI-Version"
     request_method = None
     if method == "get":
         request_method = requests.get
@@ -164,6 +168,7 @@ def perform_request(
 
     """Perform get request."""
     try:
+        headers[version_header_name] = __version__
         response = request_method(
             url=endpoint,
             headers=headers,
@@ -188,6 +193,10 @@ def perform_request(
         raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
     # Get and parse project specific errors
+    if "X-Server-Message" in response.headers:
+        message = response.headers["X-Server-Message"]
+        if message:
+            LOG.warning(f"{message}")
     errors = response_json.get("errors")
     additional_errors = dds_cli.utils.parse_project_errors(errors=errors)
 

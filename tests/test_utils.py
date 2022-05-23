@@ -1,5 +1,6 @@
 from requests_mock.mocker import Mocker
 from pytest import raises
+from _pytest.logging import LogCaptureFixture
 
 from dds_cli import DDSEndpoint
 from dds_cli.exceptions import ApiResponseError, DDSCLIException
@@ -170,3 +171,12 @@ def test_perform_request_activate_HOTP_error() -> None:
 
         assert len(exc_info.value.args) == 1
         assert exc_info.value.args[0] == "API Request failed.: test message"
+
+
+def test_perform_request_custom_header_message(caplog: LogCaptureFixture) -> None:
+    url: str = "http://localhost"
+    with Mocker() as mock:
+        mock.get(url, status_code=200, headers={"X-Server-Message": "message"}, json={})
+        perform_request(endpoint=url, method="get")
+
+        assert "message" in caplog.text

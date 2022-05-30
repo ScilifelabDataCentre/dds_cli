@@ -168,7 +168,7 @@ def perform_request(
 
     """Perform get request."""
     try:
-        headers[version_header_name] = __version__
+        headers[version_header_name] = "0.0.0"
         response = request_method(
             url=endpoint,
             headers=headers,
@@ -193,10 +193,6 @@ def perform_request(
         raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
     # Get and parse project specific errors
-    if "X-Server-Message" in response.headers:
-        message = response.headers["X-Server-Message"]
-        if message:
-            LOG.warning(f"{message}")
     errors = response_json.get("errors")
     additional_errors = dds_cli.utils.parse_project_errors(errors=errors)
 
@@ -223,18 +219,13 @@ def perform_request(
 
         # Handle 403
         if response.status_code == http.HTTPStatus.FORBIDDEN:
-            # Parse message from the API
-            if any(
-                ep in endpoint
-                for ep in [DDSEndpoint.CREATE_PROJ, DDSEndpoint.ADD_NEW_MOTD, DDSEndpoint.USER_ADD]
-            ):
-                message += f": {response_json.get('message')}"
-
+            message += f": {response_json.get('message')}"
             raise dds_cli.exceptions.DDSCLIException(message=message)
 
         # Handle 500
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-            raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+            message += f": {response_json.get('message', response.reason)}"
+            raise dds_cli.exceptions.ApiResponseError(message=message)
 
         raise dds_cli.exceptions.DDSCLIException(
             message=f"{message}: {response_json.get('message', 'Unexpected error!')}"

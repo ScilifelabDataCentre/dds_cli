@@ -178,6 +178,8 @@ def perform_request(
             timeout=timeout,
         )
         response_json = response.json()
+    except simplejson.JSONDecodeError as err:
+        raise dds_cli.exceptions.ApiResponseError(message=str(err))
     except requests.exceptions.RequestException as err:
         raise dds_cli.exceptions.ApiRequestError(
             message=(
@@ -189,8 +191,6 @@ def perform_request(
                 )
             )
         )
-    except simplejson.JSONDecodeError as err:
-        raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
     # Get and parse project specific errors
     errors = response_json.get("errors")

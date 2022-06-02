@@ -168,7 +168,7 @@ def perform_request(
 
     """Perform get request."""
     try:
-        headers[version_header_name] = __version__
+        headers[version_header_name] = "0.0.0"
         response = request_method(
             url=endpoint,
             headers=headers,

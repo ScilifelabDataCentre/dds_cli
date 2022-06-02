@@ -582,3 +582,13 @@ def test_sort_items_unsorted() -> None:
         items=[{"column": 5}, {"column": 4}, {"column": 3}, {"column": 2}, {"column": 1}],
         sort_by="column",
     ) == [{"column": 1}, {"column": 2}, {"column": 3}, {"column": 4}, {"column": 5}]
+
+# perform_request
+
+def test_perform_request_custom_header_message(caplog: LogCaptureFixture) -> None:
+    url: str = "http://localhost"
+    with Mocker() as mock:
+        mock.get(url, status_code=403, json={"message": "this is a special testing message"})
+        perform_request(endpoint=url, method="get")
+
+        assert "this is a special testing message" in caplog.text

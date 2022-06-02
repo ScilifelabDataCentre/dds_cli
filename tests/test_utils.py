@@ -10,6 +10,7 @@ from requests.exceptions import JSONDecodeError
 from flask import Response
 import rich
 from rich.table import Table
+import pytest
 
 from _pytest.capture import CaptureFixture
 from requests_mock.adapter import _Matcher
@@ -596,7 +597,8 @@ def test_sort_items_unsorted() -> None:
 def test_perform_request_custom_header_message(caplog: LogCaptureFixture) -> None:
     url: str = "http://localhost"
     with Mocker() as mock:
-        mock.get(url, status_code=403, json={"message": "this is a special testing message"})
-        perform_request(endpoint=url, method="get")
+        with pytest.raises(DDSCLIException) as err:
+            mock.get(url, status_code=403, json={"message": "this is a special testing message"})
+            perform_request(endpoint=url, method="get")
 
-        assert "this is a special testing message" in caplog.text
+        assert "this is a special testing message" in str(err.value)

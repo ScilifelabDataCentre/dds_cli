@@ -109,7 +109,6 @@ class User:
 
         response_json, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
-            headers=None,
             method="get",
             auth=(username, password),
             error_message="Failed to authenticate user",

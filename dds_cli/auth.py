@@ -85,7 +85,6 @@ class Auth(base.DDSBaseClass):
 
             response_json, _ = dds_cli.utils.perform_request(
                 endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_HOTP,
-                headers=None,
                 method="post",
                 auth=(username, password),
             )

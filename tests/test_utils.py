@@ -10,11 +10,13 @@ from requests.exceptions import JSONDecodeError
 from flask import Response
 import rich
 from rich.table import Table
+import pytest
 
 from _pytest.capture import CaptureFixture
 from requests_mock.adapter import _Matcher
 from requests_mock.mocker import Mocker
 from pytest import raises
+from _pytest.logging import LogCaptureFixture
 from pyfakefs.fake_filesystem import FakeFilesystem
 from unittest import mock
 from unittest.mock import MagicMock
@@ -581,3 +583,16 @@ def test_sort_items_unsorted() -> None:
         items=[{"column": 5}, {"column": 4}, {"column": 3}, {"column": 2}, {"column": 1}],
         sort_by="column",
     ) == [{"column": 1}, {"column": 2}, {"column": 3}, {"column": 4}, {"column": 5}]
+
+
+# perform_request
+
+
+def test_perform_request_custom_header_message(caplog: LogCaptureFixture) -> None:
+    url: str = "http://localhost"
+    with Mocker() as mock:
+        with pytest.raises(DDSCLIException) as err:
+            mock.get(url, status_code=403, json={"message": "this is a special testing message"})
+            perform_request(endpoint=url, method="get")
+
+        assert "this is a special testing message" in str(err.value)

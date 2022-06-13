@@ -63,7 +63,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
     def add_new_motd(self, message):
         """Add a new motd."""
         response_json, _ = dds_cli.utils.perform_request(
-            endpoint=DDSEndpoint.ADD_NEW_MOTD,
+            endpoint=DDSEndpoint.MOTD,
             headers=self.token,
             method="post",
             json={"message": message},
@@ -71,3 +71,15 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         )
 
         LOG.info("A new MOTD was added to the database")
+
+
+    def get_latest_motd(self):
+        """Get the latest MOTD from dabase"""
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.MOTD,
+            headers=self.token,
+            method="get",
+            error_message="Failed getting MOTD",
+        )
+        
+        return response_json

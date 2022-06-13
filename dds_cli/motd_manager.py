@@ -70,5 +70,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
             error_message="Failed adding a new MOTD",
         )
 
-        msg = response_json.get("message", "A new message of the day should now be on display on the DDS web.")
+        msg = response_json.get(
+            "message", "A new message of the day should now be on display on the DDS web."
+        )
         LOG.info(msg)

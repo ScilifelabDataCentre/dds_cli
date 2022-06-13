@@ -194,7 +194,9 @@ def perform_request(
         )
 
     if not response_json:
-        raise dds_cli.exceptions.ApiResponseError("No response returned. Cannot collect any information.")
+        raise dds_cli.exceptions.ApiResponseError(
+            "No response returned. Cannot collect any information."
+        )
 
     # Get and parse project specific errors
     errors: typing.Dict = response_json.get("errors")

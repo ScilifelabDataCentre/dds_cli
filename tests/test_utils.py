@@ -326,13 +326,14 @@ def test_perform_request_json_decode_error() -> None:
     with Mocker() as mock:
         mock.get(url, status_code=200, text="str", json=None)
         with raises(ApiResponseError) as exc_info:
-            response = perform_request(
+            perform_request(
                 endpoint=url,
                 headers={},
                 method="get",
             )
         
-        assert str(exc_info.value) == "[Errno Expecting value] str: 0"
+        assert len(exc_info.value.args) == 1
+        assert exc_info.value.args[0] == "[Errno Expecting value] str: 0"
 
 
 def test_perform_request_api_response_error_internal_server_error() -> None:

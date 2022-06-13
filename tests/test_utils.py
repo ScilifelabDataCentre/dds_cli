@@ -318,7 +318,7 @@ def test_perform_request_request_exception() -> None:
 
     assert len(exc_info.value.args) == 1
     assert exc_info.value.args[0] == "API Request failed.: The database seems to be down."
-    
+
 
 def test_perform_request_api_response_error_internal_server_error() -> None:
     url: str = "http://localhost"

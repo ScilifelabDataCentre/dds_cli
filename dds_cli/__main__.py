@@ -95,11 +95,7 @@ try:
     with dds_cli.motd_manager.MotdManager() as getter:
         motd = getter.get_latest_motd()
         # message = motd.get("message")
-    dds_cli.utils.stderr_console.print(
-        "[bold]Important information:",
-        motd.get("message"),
-        "\n"
-    )
+    dds_cli.utils.stderr_console.print("[bold]Important information:", motd.get("message"), "\n")
 except (
     dds_cli.exceptions.AuthenticationError,
     dds_cli.exceptions.ApiResponseError,

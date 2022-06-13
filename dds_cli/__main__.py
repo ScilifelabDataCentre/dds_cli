@@ -91,20 +91,9 @@ dds_cli.utils.stderr_console.print(
     highlight=False,
 )
 
-try:
-    with dds_cli.motd_manager.MotdManager() as getter:
-        motd = getter.get_latest_motd()
-        # message = motd.get("message")
-    dds_cli.utils.stderr_console.print("[bold]Important information:", motd.get("message"), "\n")
-except (
-    dds_cli.exceptions.AuthenticationError,
-    dds_cli.exceptions.ApiResponseError,
-    dds_cli.exceptions.ApiRequestError,
-    dds_cli.exceptions.DDSCLIException,
-) as err:
-    LOG.error(err)
-    sys.exit(1)
-
+motd = dds_cli.motd_manager.MotdManager.get_latest_motd()
+if motd:
+    dds_cli.utils.stderr_console.print(f"[bold]Important information: {motd} \n")
 # -- dds -- #
 @click.group()
 @click.option(

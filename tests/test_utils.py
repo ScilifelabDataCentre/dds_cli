@@ -304,8 +304,7 @@ def test_perform_request_error() -> None:
                 method="get",
             )
 
-        assert len(exc_info.value.args) == 1
-        assert exc_info.value.args[0] == "API Request failed.: Unexpected error!"
+        assert "No response returned. Cannot collect any information." in str(exc_info.value)
 
 
 def test_perform_request_request_exception() -> None:
@@ -320,11 +319,11 @@ def test_perform_request_request_exception() -> None:
     assert exc_info.value.args[0] == "API Request failed.: The database seems to be down."
 
 
-def test_perform_request_json_decode_error() -> None:
+def test_perform_request_no_json() -> None:
     """Parse json from string"""
     url: str = "http://localhost"
     with Mocker() as mock:
-        mock.get(url, status_code=200, text="str")
+        mock.get(url, status_code=200, text="None")
         with raises(ApiResponseError) as exc_info:
             perform_request(
                 endpoint=url,
@@ -333,7 +332,39 @@ def test_perform_request_json_decode_error() -> None:
             )
 
         assert len(exc_info.value.args) == 1
-        assert exc_info.value.args[0] == "[Errno Expecting value] str: 0"
+        assert exc_info.value.args[0] == "Expecting value: line 1 column 1 (char 0)"
+
+
+def test_perform_request_no_response_object() -> None:
+    """Parse json from string"""
+    url: str = "http://localhost"
+    with Mocker() as mock:
+        mock.get(url, status_code=200, json=None)
+        with raises(ApiResponseError) as exc_info:
+            perform_request(
+                endpoint=url,
+                headers={},
+                method="get",
+            )
+
+        assert "No response returned" in str(exc_info.value)
+
+
+def test_perform_request_no_response_object() -> None:
+    """Parse json from string"""
+    url: str = "http://localhost"
+    with Mocker() as mock:
+        mock.get(url, status_code=200, json={"test": "message"})
+        with raises(ApiResponseError) as exc_info:
+            perform_request(
+                endpoint=url,
+                headers={},
+                method="get",
+            )
+
+        assert "A new message of the day should now be on display on the DDS web." in str(
+            exc_info.value
+        )
 
 
 def test_perform_request_api_response_error_internal_server_error() -> None:

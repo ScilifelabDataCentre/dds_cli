@@ -332,8 +332,7 @@ def test_perform_request_json_decode_error() -> None:
                 method="get",
             )
 
-        assert len(exc_info.value.args) == 1
-        assert exc_info.value.args[0] == "[Errno Expecting value] str: 0"
+        assert str(exc_info.value) == "[Errno Expecting value] str: 0"
 
 
 def test_perform_request_api_response_error_internal_server_error() -> None:

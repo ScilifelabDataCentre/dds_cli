@@ -81,6 +81,6 @@ class MotdManager(dds_cli.base.DDSBaseClass):
                 method="get",
                 error_message="Failed getting MOTD",
             )
-        except: 
+        except:
             pass
         return response_json.get("message")

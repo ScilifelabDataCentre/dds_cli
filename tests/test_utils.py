@@ -324,14 +324,14 @@ def test_perform_request_json_decode_error() -> None:
     """Parse json from string"""
     url: str = "http://localhost"
     with Mocker() as mock:
-        mock.get(url, status_code=200, text="str")
+        mock.get(url, status_code=200, text="str", json=None)
         with raises(ApiResponseError) as exc_info:
-            perform_request(
+            response = perform_request(
                 endpoint=url,
                 headers={},
                 method="get",
             )
-
+        
         assert str(exc_info.value) == "[Errno Expecting value] str: 0"
 
 

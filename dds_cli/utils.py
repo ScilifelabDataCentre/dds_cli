@@ -195,7 +195,7 @@ def perform_request(
 
     if not response_json:
         LOG.warning("No response returned. Cannot collect any information.")
-        return response_json, None 
+        return response_json, None
 
     # Get and parse project specific errors
     errors: typing.Dict = response_json.get("errors")

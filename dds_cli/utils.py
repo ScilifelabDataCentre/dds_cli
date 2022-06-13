@@ -4,6 +4,7 @@ import logging
 import numbers
 from pathlib import Path
 
+import typing
 import requests
 import rich.console
 import simplejson
@@ -192,9 +193,13 @@ def perform_request(
             )
         )
 
+    if not response_json:
+        LOG.warning("No response returned. Cannot collect any information.")
+        return response_json, None 
+
     # Get and parse project specific errors
-    errors = response_json.get("errors")
-    additional_errors = dds_cli.utils.parse_project_errors(errors=errors)
+    errors: typing.Dict = response_json.get("errors")
+    additional_errors: str = parse_project_errors(errors=errors)
 
     # Check if response is ok.
     if not response.ok:

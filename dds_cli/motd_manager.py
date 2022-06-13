@@ -74,11 +74,13 @@ class MotdManager(dds_cli.base.DDSBaseClass):
 
     def get_latest_motd(self):
         """Get the latest MOTD from dabase"""
-        response_json, _ = dds_cli.utils.perform_request(
-            endpoint=DDSEndpoint.MOTD,
-            headers=self.token,
-            method="get",
-            error_message="Failed getting MOTD",
-        )
-
-        return response_json
+        try:
+            response_json, _ = dds_cli.utils.perform_request(
+                endpoint=DDSEndpoint.MOTD,
+                headers=self.token,
+                method="get",
+                error_message="Failed getting MOTD",
+            )
+        except: 
+            pass
+        return response_json.get("message")

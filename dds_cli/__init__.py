@@ -99,6 +99,7 @@ class DDSEndpoint:
     LIST_PROJ_USERS = BASE_ENDPOINT + "/proj/users"
     LIST_UNITS_ALL = BASE_ENDPOINT + "/unit/info/all"
     LIST_UNIT_USERS = BASE_ENDPOINT + "/unit/users"
+    LIST_ACTIVE_MOTDS = BASE_ENDPOINT + "/motd/active"
 
     # Deleting urls
     REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm"
@@ -120,7 +121,7 @@ class DDSEndpoint:
     UPDATE_PROJ_STATUS = BASE_ENDPOINT + "/proj/status"
 
     # Adding new MOTD
-    ADD_NEW_MOTD = BASE_ENDPOINT + "/unit/motd"
+    ADD_NEW_MOTD = BASE_ENDPOINT + "/motd"
 
     TIMEOUT = 30
 

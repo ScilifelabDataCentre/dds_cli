@@ -1729,3 +1729,33 @@ def add_new_motd(click_ctx, message):
     ) as err:
         LOG.error(err)
         sys.exit(1)
+
+# -- dds motd ls -- #
+@motd_group_command.command(name="ls", no_args_is_help=False)
+@click.pass_obj
+def list_active_motds(click_ctx):
+    """List all active MOTDs."""
+    try:
+        with dds_cli.motd_manager.MotdManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as lister:
+            lister.list_all_active_motds()
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+# -- dds motd deactivate-- #
+@motd_group_command.command(name="deactivate")
+@click.option("--motd", type=int, required=True)
+@click.pass_obj
+def deactivate_motd(click_ctx, motd):
+    """Deactivate Message Of The Day.
+
+    Only usable by Super Admins.
+    """

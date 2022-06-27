@@ -354,7 +354,7 @@ def auth_group_command(_):
     is_flag=True,
     required=False,
     default=False,
-    help="[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600."
+    help="[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600.",
 )
 @click.pass_obj
 def login(click_ctx, totp, allow_group):
@@ -369,7 +369,9 @@ def login(click_ctx, totp, allow_group):
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group):
+        with dds_cli.auth.Auth(
+            token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group
+        ):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication token created![/green]")
     except (

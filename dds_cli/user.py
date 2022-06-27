@@ -47,7 +47,7 @@ class User:
         no_prompt: bool = False,
         token_path: str = None,
         totp: str = None,
-        allow_group: bool = False
+        allow_group: bool = False,
     ):
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt

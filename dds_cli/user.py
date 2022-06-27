@@ -223,6 +223,7 @@ class TokenFile:
     """A class to manage the saved token."""
 
     def __init__(self, token_path=None, allow_group: bool = False):
+        # 600: -rw-------, 640: -rw-r-----, 660: -rw-rw----
         self.token_permission = 0o640 if allow_group else 0o600
         if token_path is None:
             self.token_file = dds_cli.TOKEN_FILE

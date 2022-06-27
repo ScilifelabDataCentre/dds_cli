@@ -63,7 +63,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
     def add_new_motd(self, message):
         """Add a new motd."""
         response_json, _ = dds_cli.utils.perform_request(
-            endpoint=DDSEndpoint.ADD_NEW_MOTD,
+            endpoint=DDSEndpoint.MOTD,
             headers=self.token,
             method="post",
             json={"message": message},
@@ -75,7 +75,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
     def list_all_active_motds(self):
         """Get all active MOTDs."""
         response, _ = dds_cli.utils.perform_request(
-            endpoint=dds_cli.DDSEndpoint.LIST_ACTIVE_MOTDS,
+            endpoint=dds_cli.DDSEndpoint.MOTD,
             method="get",
             headers=self.token,
             error_message="Failed getting MOTDs from API",
@@ -105,3 +105,15 @@ class MotdManager(dds_cli.base.DDSBaseClass):
 
         # Print out table
         dds_cli.utils.print_or_page(item=table)
+
+    def deactivate_motd(self, motd_id):
+        """Deactivate specific MOTD."""
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.MOTD,
+            headers=self.token,
+            method="put",
+            json={"motd_id": motd_id},
+            error_message="Failed deactivating the MOTD",
+        )
+
+        LOG.info(f"MOTD #{motd_id} was successfully deactivated")

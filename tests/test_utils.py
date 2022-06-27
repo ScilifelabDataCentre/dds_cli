@@ -424,10 +424,10 @@ def test_perform_request_add_motd_error_insufficient_credentials() -> None:
         "email": "",
     }
     with Mocker() as mock:
-        mock.post(DDSEndpoint.ADD_NEW_MOTD, status_code=403, json=response_json)
+        mock.post(DDSEndpoint.MOTD, status_code=403, json=response_json)
         with raises(DDSCLIException) as exc_info:
             _: tuple(Response, str) = perform_request(
-                endpoint=DDSEndpoint.ADD_NEW_MOTD, headers={}, method="post"
+                endpoint=DDSEndpoint.MOTD, headers={}, method="post"
             )
 
         assert len(exc_info.value.args) == 1

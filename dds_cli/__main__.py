@@ -122,6 +122,15 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
     # Get token metadata
     username = dds_cli.user.User.get_user_name_if_logged_in(token_path=token_path)
 
+    # motd = dds_cli.utils.get_active_motds()
+    motd = "List of active MOTDs comes here"
+    dds_cli.utils.stderr_console.print(
+        "[bold]Important Information:[/]",
+        f"\n[red]{motd}",
+        "\n",
+        highlight=False,
+    )
+
     if username:
         dds_cli.utils.stderr_console.print(
             f"[green]Current user:[/] [red]{username}", highlight=False
@@ -1730,11 +1739,15 @@ def add_new_motd(click_ctx, message):
         LOG.error(err)
         sys.exit(1)
 
+
 # -- dds motd ls -- #
 @motd_group_command.command(name="ls", no_args_is_help=False)
 @click.pass_obj
 def list_active_motds(click_ctx):
-    """List all active MOTDs."""
+    """List all active MOTDs.
+
+    Only usable by Super Admins.
+    """
     try:
         with dds_cli.motd_manager.MotdManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -1750,12 +1763,27 @@ def list_active_motds(click_ctx):
         LOG.error(err)
         sys.exit(1)
 
+
 # -- dds motd deactivate-- #
 @motd_group_command.command(name="deactivate")
-@click.option("--motd", type=int, required=True)
+@click.argument("motd_id", metavar="[MOTD_ID]", nargs=1, type=int, required=True)
 @click.pass_obj
-def deactivate_motd(click_ctx, motd):
+def deactivate_motd(click_ctx, motd_id):
     """Deactivate Message Of The Day.
 
     Only usable by Super Admins.
     """
+    try:
+        with dds_cli.motd_manager.MotdManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as data_putter:
+            data_putter.deactivate_motd(motd_id)
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)

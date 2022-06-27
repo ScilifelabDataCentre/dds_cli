@@ -161,3 +161,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint (2022-05-04 - 2022-05-18)
 
 - Enable use of app for second factor authentication instead of email. ([#259](https://github.com/ScilifelabDataCentre/dds_cli/pull/259))
+
+## Sprint (2022-06-15 - 2022-06-29)
+
+- Display message of the day at top before output ([#498](https://github.com/ScilifelabDataCentre/dds_cli/pull/498))

@@ -320,22 +320,6 @@ def test_perform_request_request_exception() -> None:
     assert exc_info.value.args[0] == "API Request failed.: The database seems to be down."
 
 
-def test_perform_request_json_decode_error() -> None:
-    """Parse json from string"""
-    url: str = "http://localhost"
-    with Mocker() as mock:
-        mock.get(url, status_code=200, text="str")
-        with raises(ApiResponseError) as exc_info:
-            perform_request(
-                endpoint=url,
-                headers={},
-                method="get",
-            )
-
-        assert len(exc_info.value.args) == 1
-        assert exc_info.value.args[0] == "[Errno Expecting value] str: 0"
-
-
 def test_perform_request_api_response_error_internal_server_error() -> None:
     url: str = "http://localhost"
     response_json: Dict = {

@@ -305,7 +305,7 @@ class TokenFile:
                     message=f"Token file permissions are not properly set, (got {permissions_readable} instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."
                 )
         else:
-            LOG.info("Unable to confirm whether file permissions are correct on Windows.")
+            LOG.info(f"Storing the login information locally - please ensure no one else an access the file at {self.token_file}.")
 
     def token_expired(self, token):
         """Check if the token has expired or is about to expire soon based on the UTC time.

@@ -300,12 +300,8 @@ class TokenFile:
         """
         if os.name != "nt":
             st_mode = os.stat(self.token_file).st_mode
-            print(f"st_mode: {st_mode}")
-            print(f"stat.S_IMODE(st_mode): {stat.S_IMODE(st_mode)}")
             permissions_octal = oct(stat.S_IMODE(st_mode))
-            print(f"permissions_octal: {permissions_octal}")
             permissions_readable = stat.filemode(st_mode)
-            print(f"permissions_readable: {permissions_readable}")
             if permissions_octal not in ["0o600", "0o640"]:
                 raise exceptions.DDSCLIException(
                     message=f"Token file permissions are not properly set, (got {permissions_readable} instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."

@@ -91,6 +91,10 @@ dds_cli.utils.stderr_console.print(
     highlight=False,
 )
 
+motd = dds_cli.motd_manager.MotdManager.get_latest_motd()
+if motd:
+    dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold] {motd} \n")
+
 # -- dds -- #
 @click.group()
 @click.option(

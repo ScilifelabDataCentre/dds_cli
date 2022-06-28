@@ -487,6 +487,7 @@ def list_users(click_ctx, unit):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             lister.list_unit_users(unit=unit)
+
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

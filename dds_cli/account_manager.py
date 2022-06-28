@@ -5,6 +5,7 @@
 ###################################################################################################
 
 # Standard library
+from email import header
 import logging
 
 # Installed
@@ -188,7 +189,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
     def list_unit_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
         response, _ = dds_cli.utils.perform_request(
-            endpoint=dds_cli.DDSEndpoint.LIST_UNIT_USERS,
+            endpoint=dds_cli.DDSEndpoint.LIST_USERS,
             method="get",
             headers=self.token,
             json={"unit": unit},
@@ -216,3 +217,28 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Print out table
         dds_cli.utils.print_or_page(item=table)
+
+    # def list_all_users(self) -> None:
+    #     """List all users with accounts in the DDS."""
+    #     response, _ = dds_cli.utils.perform_request(
+    #         endpoint=dds_cli.DDSEndpoint.LIST_USERS_ALL,
+    #         method="get", 
+    #         headers=self.token,
+    #         error_message="Failed getting users from API",
+    #     )
+    #     if response.get("empty"):
+    #         LOG.info(f"There are no users registered in the DDS.")
+    #         return
+        
+    #     users, keys = dds_cli.utils.get_required_in_response(keys=["users", "keys"], response=response)
+
+    #     users = dds_cli.utils.sort_items(items=users, sort_by="Name")
+
+    #     table = dds_cli.utils.create_table(
+    #         title="All users, all roles.",
+    #         columns=keys,
+    #         rows=users,
+    #         caption="All users within the DDS."
+    #     )
+
+    #     dds_cli.utils.print_or_page(item=table)

@@ -123,6 +123,9 @@ class DDSEndpoint:
     # MOTD
     MOTD = BASE_ENDPOINT + "/motd"
 
+    # Find user
+    USER_FIND = BASE_ENDPOINT + "/user/find"
+
     TIMEOUT = 30
 
 

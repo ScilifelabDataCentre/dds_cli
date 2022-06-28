@@ -193,8 +193,13 @@ def perform_request(
         )
 
     # Get and parse project specific errors
-    errors = response_json.get("errors")
-    additional_errors = dds_cli.utils.parse_project_errors(errors=errors)
+    response_message = ""
+    errors = None
+    additional_errors = ""
+    if isinstance(response_json, dict):
+        response_message = response_json.get("message")
+        errors = response_json.get("errors")
+        additional_errors = parse_project_errors(errors=errors)
 
     # Check if response is ok.
     if not response.ok:
@@ -213,22 +218,22 @@ def perform_request(
             elif DDSEndpoint.CREATE_PROJ in endpoint:
                 message += f": {__project_creation_error(response_json)}"
             else:
-                message += f": {response_json.get('message')}"
+                message += f": {response_message}"
 
             raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
 
         # Handle 403
         if response.status_code == http.HTTPStatus.FORBIDDEN:
-            message += f": {response_json.get('message')}"
+            message += f": {response_message}"
             raise dds_cli.exceptions.DDSCLIException(message=message)
 
         # Handle 500
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-            message += f": {response_json.get('message', response.reason)}"
+            message += f": {response_message or response.reason}"
             raise dds_cli.exceptions.ApiResponseError(message=message)
 
         raise dds_cli.exceptions.DDSCLIException(
-            message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            message=f"{message}: {response_message or 'Unexpected error!'}"
         )
 
     return response_json, additional_errors

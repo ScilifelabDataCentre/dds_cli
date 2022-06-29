@@ -486,7 +486,38 @@ def list_users(click_ctx, unit):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
-            lister.list_unit_users(unit=unit)
+            lister.list_users(unit=unit)
+
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds user find -- #
+# TODO: Move this to dds unit?
+@user_group_command.command(name="find")
+@click.option(
+    "--username",
+    "-u",
+    required=True,
+    type=str,
+    help="Super Admins only: The username of the account you want to check.",
+)
+@click.pass_obj
+def list_users(click_ctx, username):
+    """Check if a username is registered to an account in the DDS."""
+    try:
+        with dds_cli.account_manager.AccountManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as lister:
+            lister.find_user(user_to_find=username)
+
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

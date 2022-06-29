@@ -91,6 +91,10 @@ dds_cli.utils.stderr_console.print(
     highlight=False,
 )
 
+motd = dds_cli.motd_manager.MotdManager.get_latest_motd()
+if motd:
+    dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold] {motd} \n")
+
 # -- dds -- #
 @click.group()
 @click.option(
@@ -345,20 +349,34 @@ def auth_group_command(_):
     default=None,
     help="2FA authentication via authentication app. Default is to use one-time authentication code via mail.",
 )
+@click.option(
+    "--allow-group",
+    is_flag=True,
+    required=False,
+    default=False,
+    help="[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600.",
+)
 @click.pass_obj
-def login(click_ctx, totp):
+def login(click_ctx, totp, allow_group):
     """Start or renew an authenticated session.
 
     Creates or renews the authentication token stored in the '.dds_cli_token' file.
 
     Run this command before running the cli in a non-interactive fashion as this enables the longest
     possible session time before a password needs to be entered again.
+
+    The permissions of tokens cannot be changed after the tokens are established.
+    If you began an authenticated session without the use of the --allow-group option,
+    but want to use it in a new session, use 'dds auth logout' to end the current session.
+    Then use the --allow-group option and start a new session. This also applies to the reverse.
     """
     no_prompt = click_ctx.get("NO_PROMPT", False)
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH"), totp=totp):
+        with dds_cli.auth.Auth(
+            token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group
+        ):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication token created![/green]")
     except (
@@ -482,7 +500,38 @@ def list_users(click_ctx, unit):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
-            lister.list_unit_users(unit=unit)
+            lister.list_users(unit=unit)
+
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds user find -- #
+# TODO: Move this to dds unit?
+@user_group_command.command(name="find")
+@click.option(
+    "--username",
+    "-u",
+    required=True,
+    type=str,
+    help="Super Admins only: The username of the account you want to check.",
+)
+@click.pass_obj
+def list_users(click_ctx, username):
+    """Check if a username is registered to an account in the DDS."""
+    try:
+        with dds_cli.account_manager.AccountManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as lister:
+            lister.find_user(user_to_find=username)
+
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

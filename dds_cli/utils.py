@@ -1,5 +1,6 @@
 """DDS CLI utils module."""
 
+import logging
 import numbers
 from pathlib import Path
 
@@ -15,10 +16,12 @@ from rich.table import Table
 from typing import Dict, List, Union
 
 import dds_cli.exceptions
-from dds_cli import DDSEndpoint
+from dds_cli import __version__, DDSEndpoint
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
+
+LOG = logging.getLogger(__name__)
 
 # Classes
 
@@ -138,20 +141,20 @@ def get_required_in_response(keys: list, response: dict) -> tuple:
         raise dds_cli.exceptions.ApiResponseError(
             message=f"The following information was not returned: {not_returned}"
         )
-
     return tuple(response.get(x) for x in keys)
 
 
 def perform_request(
     endpoint,
-    headers,
     method,
+    headers={},
     auth=None,
     params=None,
     json=None,
     error_message="API Request failed.",
     timeout=DDSEndpoint.TIMEOUT,
 ):
+    version_header_name: str = "X-CLI-Version"
     request_method = None
     if method == "get":
         request_method = requests.get
@@ -164,6 +167,7 @@ def perform_request(
 
     """Perform get request."""
     try:
+        headers[version_header_name] = __version__
         response = request_method(
             url=endpoint,
             headers=headers,
@@ -173,6 +177,8 @@ def perform_request(
             timeout=timeout,
         )
         response_json = response.json()
+    except simplejson.JSONDecodeError as err:
+        raise dds_cli.exceptions.ApiResponseError(message=str(err))
     except requests.exceptions.RequestException as err:
         raise dds_cli.exceptions.ApiRequestError(
             message=(
@@ -184,8 +190,6 @@ def perform_request(
                 )
             )
         )
-    except simplejson.JSONDecodeError as err:
-        raise dds_cli.exceptions.ApiResponseError(message=str(err))
 
     # Get and parse project specific errors
     errors = response_json.get("errors")
@@ -214,18 +218,13 @@ def perform_request(
 
         # Handle 403
         if response.status_code == http.HTTPStatus.FORBIDDEN:
-            # Parse message from the API
-            if any(
-                ep in endpoint
-                for ep in [DDSEndpoint.CREATE_PROJ, DDSEndpoint.ADD_NEW_MOTD, DDSEndpoint.USER_ADD]
-            ):
-                message += f": {response_json.get('message')}"
-
+            message += f": {response_json.get('message')}"
             raise dds_cli.exceptions.DDSCLIException(message=message)
 
         # Handle 500
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-            raise dds_cli.exceptions.ApiResponseError(message=f"{message}: {response.reason}")
+            message += f": {response_json.get('message', response.reason)}"
+            raise dds_cli.exceptions.ApiResponseError(message=message)
 
         raise dds_cli.exceptions.DDSCLIException(
             message=f"{message}: {response_json.get('message', 'Unexpected error!')}"

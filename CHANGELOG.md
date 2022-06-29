@@ -161,3 +161,10 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint (2022-05-04 - 2022-05-18)
 
 - Enable use of app for second factor authentication instead of email. ([#259](https://github.com/ScilifelabDataCentre/dds_cli/pull/259))
+
+## Sprint (2022-06-15 - 2022-06-29)
+
+- Display message of the day at top before output ([#498](https://github.com/ScilifelabDataCentre/dds_cli/pull/498))
+- Change token check message for Windows to more user friendly ([#500](https://github.com/ScilifelabDataCentre/dds_cli/pull/500))
+- New command: List all users as Super Admin and find existing users ([#504](https://github.com/ScilifelabDataCentre/dds_cli/pull/504))
+- Add possibility of allowing group access to authenticated session ([#502](https://github.com/ScilifelabDataCentre/dds_cli/pull/502))

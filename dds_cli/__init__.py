@@ -98,7 +98,8 @@ class DDSEndpoint:
     LIST_FILES = BASE_ENDPOINT + "/files/list"
     LIST_PROJ_USERS = BASE_ENDPOINT + "/proj/users"
     LIST_UNITS_ALL = BASE_ENDPOINT + "/unit/info/all"
-    LIST_UNIT_USERS = BASE_ENDPOINT + "/unit/users"
+    LIST_USERS = BASE_ENDPOINT + "/users"
+    # LIST_USERS_ALL = BASE_ENDPOINT + "/users"
 
     # Deleting urls
     REMOVE_PROJ_CONT = BASE_ENDPOINT + "/proj/rm"
@@ -119,8 +120,11 @@ class DDSEndpoint:
     # Project status updation
     UPDATE_PROJ_STATUS = BASE_ENDPOINT + "/proj/status"
 
-    # Adding new MOTD
-    ADD_NEW_MOTD = BASE_ENDPOINT + "/unit/motd"
+    # MOTD
+    MOTD = BASE_ENDPOINT + "/motd"
+
+    # Find user
+    USER_FIND = BASE_ENDPOINT + "/user/find"
 
     TIMEOUT = 30
 

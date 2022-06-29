@@ -5,6 +5,7 @@
 ###################################################################################################
 
 # Standard library
+from email import header
 import logging
 
 # Installed
@@ -185,10 +186,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         dds_cli.utils.console.print(msg)
 
-    def list_unit_users(self, unit: str = None) -> None:
+    def list_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
         response, _ = dds_cli.utils.perform_request(
-            endpoint=dds_cli.DDSEndpoint.LIST_UNIT_USERS,
+            endpoint=dds_cli.DDSEndpoint.LIST_USERS,
             method="get",
             headers=self.token,
             json={"unit": unit},
@@ -199,20 +200,48 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             LOG.info(f"There are no Unit Admins or Unit Personnel connected to unit '{unit}'")
             return
 
-        users, keys, unit = dds_cli.utils.get_required_in_response(
-            keys=["users", "keys", "unit"], response=response
+        users, keys = dds_cli.utils.get_required_in_response(
+            keys=["users", "keys"], response=response
         )
 
         # Sort users according to name
         users = dds_cli.utils.sort_items(items=users, sort_by="Name")
 
-        # Create table
+        # Specific info if unit returned
+        unit = response.get("unit")
+        if unit:
+            title = f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}."
+            caption = "All users (Unit Personnel and Admins) within your unit."
+        else:
+            title = "All accounts in the DDS."
+            caption = "All accounts in the DDS (all roles)."
+
         table = dds_cli.utils.create_table(
-            title=f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}.",
+            title=title,
             columns=keys,
             rows=users,
-            caption="All users (Unit Personnel and Admins) within your unit.",
+            caption=caption,
         )
 
         # Print out table
         dds_cli.utils.print_or_page(item=table)
+
+    def find_user(self, user_to_find: str) -> None:
+        """List all users with accounts in the DDS."""
+        response, _ = dds_cli.utils.perform_request(
+            endpoint=dds_cli.DDSEndpoint.USER_FIND,
+            method="get",
+            headers=self.token,
+            json={"username": user_to_find},
+            error_message="Failed getting users from API",
+        )
+
+        exists = response.get("exists")
+        if exists is None:
+            raise dds_cli.exceptions.ApiResponseError(
+                message="No information returned from API. Could not determine if user account exists."
+            )
+
+        LOG.info(
+            f"Account exists: {'[blue][bold]Yes[/bold][/blue]' if exists else '[red][bold]No[/bold][/red]'}"
+        )

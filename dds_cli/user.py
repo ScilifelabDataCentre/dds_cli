@@ -47,6 +47,7 @@ class User:
         no_prompt: bool = False,
         token_path: str = None,
         totp: str = None,
+        allow_group: bool = False,
     ):
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt
@@ -54,7 +55,7 @@ class User:
         self.token_path = token_path
 
         # Fetch encrypted JWT token or authenticate against API
-        self.__retrieve_token(totp=totp)
+        self.__retrieve_token(totp=totp, allow_group=allow_group)
 
     @property
     def token_dict(self):
@@ -62,9 +63,9 @@ class User:
         return {"Authorization": f"Bearer {self.token}"}
 
     # Private methods ######################### Private methods #
-    def __retrieve_token(self, totp: str = None):
+    def __retrieve_token(self, totp: str = None, allow_group: bool = False):
         """Fetch saved token from file otherwise authenticate user and saves the new token."""
-        token_file = TokenFile(token_path=self.token_path)
+        token_file = TokenFile(token_path=self.token_path, allow_group=allow_group)
 
         if not self.force_renew_token:
             LOG.debug("Retrieving token.")
@@ -109,7 +110,6 @@ class User:
 
         response_json, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
-            headers=None,
             method="get",
             auth=(username, password),
             error_message="Failed to authenticate user",
@@ -222,7 +222,9 @@ class User:
 class TokenFile:
     """A class to manage the saved token."""
 
-    def __init__(self, token_path=None):
+    def __init__(self, token_path=None, allow_group: bool = False):
+        # 600: -rw-------, 640: -rw-r-----, 660: -rw-rw----
+        self.token_permission = 0o640 if allow_group else 0o600
         if token_path is None:
             self.token_file = dds_cli.TOKEN_FILE
         else:
@@ -260,7 +262,7 @@ class TokenFile:
         """Saves the token to the token file."""
 
         if not self.token_file.is_file():
-            self.token_file.touch(mode=0o600)
+            self.token_file.touch(mode=self.token_permission)
 
         self.check_token_file_permissions()
 
@@ -301,12 +303,14 @@ class TokenFile:
             st_mode = os.stat(self.token_file).st_mode
             permissions_octal = oct(stat.S_IMODE(st_mode))
             permissions_readable = stat.filemode(st_mode)
-            if permissions_octal != "0o600":
+            if permissions_octal not in ["0o600", "0o640"]:
                 raise exceptions.DDSCLIException(
                     message=f"Token file permissions are not properly set, (got {permissions_readable} instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."
                 )
         else:
-            LOG.info("Unable to confirm whether file permissions are correct on Windows.")
+            LOG.info(
+                f"Storing the login information locally - please ensure no one else an access the file at {self.token_file}."
+            )
 
     def token_expired(self, token):
         """Check if the token has expired or is about to expire soon based on the UTC time.

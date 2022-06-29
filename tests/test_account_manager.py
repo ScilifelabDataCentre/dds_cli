@@ -10,10 +10,11 @@ import pytest
 
 from dds_cli.__main__ import LOG
 
+
 def test_list_users_no_unit_none_response(fs: FakeFilesystem):
     # Set response in mocked request
     response_json: Dict = None
-    
+
     # Create mocker
     with Mocker() as mock:
         # Create mocked request - real request not executed
@@ -24,8 +25,8 @@ def test_list_users_no_unit_none_response(fs: FakeFilesystem):
             # Create accountmanager needed for access to list_users and set token to dict
             with account_manager.AccountManager(authenticate=False, no_prompt=True) as acm:
                 acm.token = {}  # required, otherwise none
-                acm.list_users() # run list users
-        
+                acm.list_users()  # run list users
+
         # json decode error
         assert "[Errno Expecting value]" in str(exc_info.value)
 
@@ -33,7 +34,7 @@ def test_list_users_no_unit_none_response(fs: FakeFilesystem):
 def test_list_users_no_unit_empty_response(fs: FakeFilesystem):
     # Set response in mocked request
     response_json: Dict = {}
-    
+
     # Create mocker
     with Mocker() as mock:
         # Create mocked request - real request not executed
@@ -44,6 +45,8 @@ def test_list_users_no_unit_empty_response(fs: FakeFilesystem):
             # Create accountmanager needed for access to list_users and set token to dict
             with account_manager.AccountManager(authenticate=False, no_prompt=True) as acm:
                 acm.token = {}  # required, otherwise none
-                acm.list_users() # run list users
-        
-        assert "The following information was not returned: ['users', 'keys']" in str(exc_info.value)
+                acm.list_users()  # run list users
+
+        assert "The following information was not returned: ['users', 'keys']" in str(
+            exc_info.value
+        )

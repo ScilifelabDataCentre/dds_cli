@@ -27,9 +27,6 @@ def test_list_users_no_unit_none_response(fs: FakeFilesystem):
                 acm.token = {}  # required, otherwise none
                 acm.list_users()  # run list users
 
-        # json decode error
-        assert "[Errno Expecting value]" in str(exc_info.value)
-
 
 def test_list_users_no_unit_empty_response(fs: FakeFilesystem):
     # Set response in mocked request

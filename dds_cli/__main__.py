@@ -365,9 +365,9 @@ def login(click_ctx, totp, allow_group):
     Run this command before running the cli in a non-interactive fashion as this enables the longest
     possible session time before a password needs to be entered again.
 
-    The permissions of tokens cannot be changed after the tokens are established. 
-    If you began an authenticated session without the use of the --allow-group option, 
-    but want to use it in a new session, use 'dds auth logout' to end the current session. 
+    The permissions of tokens cannot be changed after the tokens are established.
+    If you began an authenticated session without the use of the --allow-group option,
+    but want to use it in a new session, use 'dds auth logout' to end the current session.
     Then use the --allow-group option and start a new session. This also applies to the reverse.
     """
     no_prompt = click_ctx.get("NO_PROMPT", False)

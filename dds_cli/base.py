@@ -55,6 +55,7 @@ class DDSBaseClass:
         totp: str = None,
         no_prompt: bool = False,
         token_path: str = None,
+        allow_group: bool = False,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.project = project
@@ -98,6 +99,7 @@ class DDSBaseClass:
                 no_prompt=no_prompt,
                 token_path=token_path,
                 totp=totp,
+                allow_group=allow_group,
             )
             self.token = dds_user.token_dict
 

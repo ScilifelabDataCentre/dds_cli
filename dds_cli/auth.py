@@ -34,6 +34,7 @@ class Auth(base.DDSBaseClass):
         force_renew_token: bool = True,  # Only used if authenticate is True
         token_path: str = None,
         totp: str = None,
+        allow_group: bool = False,
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
@@ -43,6 +44,7 @@ class Auth(base.DDSBaseClass):
             force_renew_token=force_renew_token,
             token_path=token_path,
             totp=totp,
+            allow_group=allow_group,
         )
 
     def check(self):

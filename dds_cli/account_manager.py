@@ -241,7 +241,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             raise dds_cli.exceptions.ApiResponseError(
                 message="No information returned from API. Could not determine if user account exists."
             )
-            
+
         LOG.info(
             f"Account exists: {'[blue][bold]Yes[/bold][/blue]' if exists else '[red][bold]No[/bold][/red]'}"
         )

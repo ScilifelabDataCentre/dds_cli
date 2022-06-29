@@ -166,3 +166,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 - Display message of the day at top before output ([#498](https://github.com/ScilifelabDataCentre/dds_cli/pull/498))
 - Change token check message for Windows to more user friendly ([#500](https://github.com/ScilifelabDataCentre/dds_cli/pull/500))
+- New command: List all users as Super Admin and find existing users ([#504](https://github.com/ScilifelabDataCentre/dds_cli/pull/504))

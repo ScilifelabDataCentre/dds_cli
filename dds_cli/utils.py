@@ -141,7 +141,6 @@ def get_required_in_response(keys: list, response: dict) -> tuple:
         raise dds_cli.exceptions.ApiResponseError(
             message=f"The following information was not returned: {not_returned}"
         )
-
     return tuple(response.get(x) for x in keys)
 
 

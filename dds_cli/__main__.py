@@ -91,10 +91,12 @@ dds_cli.utils.stderr_console.print(
     highlight=False,
 )
 
-# motd = dds_cli.motd_manager.MotdManager.list_all_active_motds()
-motd = "List of active MOTDs comes here"
-if motd:
-    dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold] {motd} \n")
+motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
+# dds_cli.utils.stderr_console.print(f"{motds} \n")
+if motds:
+    dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold]")
+    for motd in motds:
+        dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
 
 # -- dds -- #
 @click.group()
@@ -1793,7 +1795,7 @@ def list_active_motds(click_ctx):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
-            lister.list_all_active_motds()
+            lister.list_all_active_motds(table=True)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

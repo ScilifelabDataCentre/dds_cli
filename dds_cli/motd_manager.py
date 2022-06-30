@@ -92,7 +92,6 @@ class MotdManager(dds_cli.base.DDSBaseClass):
                 )
             else:
                 LOG.info("No active Message Of The Day found")
-                exit()
 
             # Sort the active MOTDs according to date created
             motds = dds_cli.utils.sort_items(items=motds, sort_by="Created")

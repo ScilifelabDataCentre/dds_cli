@@ -73,7 +73,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         LOG.info("A new MOTD was added to the database")
 
     @staticmethod
-    def list_all_active_motds():
+    def list_all_active_motds(table=False):
         """Get all active MOTDs."""
         response, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.MOTD,
@@ -94,17 +94,20 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         # Sort the active MOTDs according to date created
         motds = dds_cli.utils.sort_items(items=motds, sort_by="Created")
 
-        # Create table
-        table = dds_cli.utils.create_table(
-            title="Active MOTDs.",
-            columns=keys,
-            rows=motds,
-            ints_as_string=True,
-            caption="Active MOTDs.",
-        )
+        if table:
+            # Create table
+            table = dds_cli.utils.create_table(
+                title="Active MOTDs.",
+                columns=keys,
+                rows=motds,
+                ints_as_string=True,
+                caption="Active MOTDs.",
+            )
 
-        # Print out table
-        dds_cli.utils.print_or_page(item=table)
+            # Print out table
+            dds_cli.utils.print_or_page(item=table)
+        else:
+            return motds
 
     def deactivate_motd(self, motd_id):
         """Deactivate specific MOTD."""

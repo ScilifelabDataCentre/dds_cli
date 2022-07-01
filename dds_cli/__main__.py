@@ -92,7 +92,6 @@ dds_cli.utils.stderr_console.print(
 )
 
 motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
-# dds_cli.utils.stderr_console.print(f"{motds} \n")
 if motds:
     dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold]")
     for motd in motds:

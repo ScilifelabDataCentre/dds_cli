@@ -86,30 +86,35 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         else:
             # Get items from response
             motd = response.get("motds")
-            if motd:
+            if not motd:
+                message = response.get("message")
+                if not message:
+                    LOG.info("No motds or info message returned from API.")
+
+                LOG.info(message)
+            else:
                 motds, keys = dds_cli.utils.get_required_in_response(
                     keys=["motds", "keys"], response=response
                 )
-            else:
-                LOG.info("No active Message Of The Day found")
+                # Sort the active MOTDs according to date created
+                motds = dds_cli.utils.sort_items(items=motds, sort_by="Created")
 
-            # Sort the active MOTDs according to date created
-            motds = dds_cli.utils.sort_items(items=motds, sort_by="Created")
+                # when called from "dds modt ls" with table=True
+                if table:
+                    # Create table
+                    table = dds_cli.utils.create_table(
+                        title="Active MOTDs.",
+                        columns=keys,
+                        rows=motds,
+                        ints_as_string=True,
+                        caption="Active MOTDs.",
+                    )
 
-            if table:
-                # Create table
-                table = dds_cli.utils.create_table(
-                    title="Active MOTDs.",
-                    columns=keys,
-                    rows=motds,
-                    ints_as_string=True,
-                    caption="Active MOTDs.",
-                )
-
-                # Print out table
-                dds_cli.utils.print_or_page(item=table)
-            else:
-                return motds
+                    # Print out table
+                    dds_cli.utils.print_or_page(item=table)
+                else:
+                    # on every dds call
+                    return motds
 
     def deactivate_motd(self, motd_id):
         """Deactivate specific MOTD."""

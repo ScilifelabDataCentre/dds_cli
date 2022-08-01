@@ -91,11 +91,12 @@ dds_cli.utils.stderr_console.print(
     highlight=False,
 )
 
-motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
-if motds:
-    dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold]")
-    for motd in motds:
-        dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
+if sys.argv[1] != "motd":
+    motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
+    if motds:
+        dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold]")
+        for motd in motds:
+            dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
 
 # -- dds -- #
 @click.group()

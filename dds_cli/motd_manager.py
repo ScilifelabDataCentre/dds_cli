@@ -125,5 +125,6 @@ class MotdManager(dds_cli.base.DDSBaseClass):
             json={"motd_id": motd_id},
             error_message="Failed deactivating the MOTD",
         )
-
-        LOG.info(f"MOTD #{motd_id} was successfully deactivated")
+        
+        response_message = response_json.get("message", "No response. Cannot confirm MOTD deactivation.")
+        LOG.info(response_message)

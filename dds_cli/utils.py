@@ -186,7 +186,7 @@ def perform_request(
                 + (
                     ": The database seems to be down."
                     if isinstance(err, requests.exceptions.ConnectionError)
-                    else ": Unknown request error."
+                    else f": Unknown request error -- \n {err}"
                 )
             )
         )

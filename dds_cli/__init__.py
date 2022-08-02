@@ -129,7 +129,7 @@ class DDSEndpoint:
     # Find user
     USER_FIND = BASE_ENDPOINT + "/user/find"
 
-    TIMEOUT = 30
+    TIMEOUT = 120
 
 
 class FileSegment:

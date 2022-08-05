@@ -129,6 +129,20 @@ def test_list_all_active_motds_nottable(capsys: CaptureFixture):
     assert all(x in motds for x in returned_dict["motds"])
 
 
+def test_list_all_active_motds_exceptionraised(capsys: CaptureFixture):
+    """List motds when exception raised."""
+    returned_dict: Dict = {}
+    # Create mocker
+    with Mocker() as mock:
+
+        # Create mocked request - real request not executed
+        mock.get(DDSEndpoint.MOTD, status_code=500, json=returned_dict)
+
+        with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+            motds = mtdm.list_all_active_motds(table=False)  # Run active motds listing
+            assert not motds  # If exception raised, nothing happens because of pass
+
+
 # deactivate_motd
 
 

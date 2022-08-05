@@ -87,10 +87,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
             # Get items from response
             motd = response.get("motds")
             if not motd:
-                message = response.get("message")
-                if not message:
-                    LOG.info("No motds or info message returned from API.")
-
+                message = response.get("message", "No motds or info message returned from API.")
                 LOG.info(message)
             else:
                 motds, keys = dds_cli.utils.get_required_in_response(

@@ -58,7 +58,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
 
         # Only method "add"can use the MotdManager class
         if self.method not in ["add"]:
-            raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
+            raise dds_cli.exceptions.InvalidMethodError(f"Unauthorized method: '{self.method}'")
 
     def add_new_motd(self, message):
         """Add a new motd."""

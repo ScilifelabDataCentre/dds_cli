@@ -10,18 +10,25 @@ from dds_cli.exceptions import ApiResponseError, InvalidMethodError
 
 # init
 
+
 def test_init_motdmanager_incorrect_method():
     """Init with incorrect method."""
-    method="rm"
+    method = "rm"
     with pytest.raises(InvalidMethodError) as err:
-        _: motd_manager.MotdManager = motd_manager.MotdManager(method=method, authenticate=False, no_prompt=True)
+        _: motd_manager.MotdManager = motd_manager.MotdManager(
+            method=method, authenticate=False, no_prompt=True
+        )
 
     assert f"Unauthorized method: '{method}'" in str(err.value)
 
+
 def test_init_motdmanager():
     """Create manager."""
-    motdmanager: motd_manager.MotdManager = motd_manager.MotdManager(authenticate=False, no_prompt=True)
+    motdmanager: motd_manager.MotdManager = motd_manager.MotdManager(
+        authenticate=False, no_prompt=True
+    )
     assert isinstance(motdmanager, motd_manager.MotdManager)
+
 
 # list_all_active_motds
 def test_list_all_active_motds_no_motds(caplog: LogCaptureFixture):
@@ -164,7 +171,9 @@ def test_deactivate_motd_ok(caplog: LogCaptureFixture):
                 "Message from API about deactivation.",
             ) in caplog.record_tuples
 
+
 # add_new_motd
+
 
 def test_add_new_motd_no_response(caplog: LogCaptureFixture):
     """Add new MOTD without any returned response."""
@@ -184,6 +193,7 @@ def test_add_new_motd_no_response(caplog: LogCaptureFixture):
                 logging.INFO,
                 "No response. Cannot confirm MOTD creation.",
             ) in caplog.record_tuples
+
 
 def test_add_new_motd_ok(caplog: LogCaptureFixture):
     """Add new MOTD without any returned response."""

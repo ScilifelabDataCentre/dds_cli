@@ -74,7 +74,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
             "message", "No response. Cannot confirm MOTD creation."
         )
         LOG.info(response_message)
-        
+
     @staticmethod
     def list_all_active_motds(table=False):
         """Get all active MOTDs."""

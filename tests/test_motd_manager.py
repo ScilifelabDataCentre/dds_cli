@@ -8,6 +8,7 @@ from _pytest.logging import LogCaptureFixture
 import logging
 from dds_cli.exceptions import ApiResponseError
 
+# list_all_active_motds
 def test_list_all_active_motds_no_motds(caplog: LogCaptureFixture):
     """No motds returned."""
     test_dicts: List[Dict] = [{}, {"message": "Test message when no motds."}, {"motds": {}}]
@@ -84,3 +85,43 @@ def test_list_all_active_motds_nottable(capsys: CaptureFixture):
     assert captured.out == ""
 
     assert all(x in motds for x in returned_dict["motds"])
+
+# deactivate_motd
+
+def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
+    """No response from API."""
+    returned_response: Dict = {}
+    with caplog.at_level(logging.INFO):
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.put(DDSEndpoint.MOTD, status_code=200, json=returned_response)
+
+            with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+                mtdm.token = {} # required, otherwise none
+                mtdm.deactivate_motd(motd_id=1)  # Run deactivation
+
+            assert (
+                "dds_cli.motd_manager",
+                logging.INFO,
+                "No response. Cannot confirm MOTD deactivation."
+            ) in caplog.record_tuples
+
+def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
+    """No response from API."""
+    returned_response: Dict = {"message": "Message from API about deactivation."}
+    with caplog.at_level(logging.INFO):
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.put(DDSEndpoint.MOTD, status_code=200, json=returned_response)
+
+            with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+                mtdm.token = {} # required, otherwise none
+                mtdm.deactivate_motd(motd_id=1)  # Run deactivation
+
+            assert (
+                "dds_cli.motd_manager",
+                logging.INFO,
+                "Message from API about deactivation."
+            ) in caplog.record_tuples

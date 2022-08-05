@@ -30,63 +30,85 @@ def test_list_all_active_motds_no_motds(caplog: LogCaptureFixture):
                     retd.get("message", "No motds or info message returned from API."),
                 ) in caplog.record_tuples
 
+
 def test_list_all_active_motds_no_keys():
     """List motds without any keys returned."""
-    returned_dict: Dict = {"motds": [{"MOTD ID": 1, "Message": "Test", "Created": "2022-08-05 08:31"}]}
+    returned_dict: Dict = {
+        "motds": [{"MOTD ID": 1, "Message": "Test", "Created": "2022-08-05 08:31"}]
+    }
     # Create mocker
     with Mocker() as mock:
 
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
-        
+
         with pytest.raises(ApiResponseError) as err:
             with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
                 mtdm.list_all_active_motds(table=True)  # Run active motds listing
 
         assert "The following information was not returned: ['keys']" in str(err.value)
 
+
 def test_list_all_active_motds_table(capsys: CaptureFixture):
     """List motds without any keys returned."""
-    returned_dict: Dict = {"motds": [{"MOTD ID": 1, "Message": "Test", "Created": "2022-08-05 08:31"}, {"MOTD ID": 2, "Message": "Test 2", "Created": "2022-08-05 08:54"}], "keys": ["MOTD ID", "Message", "Created"]}
+    returned_dict: Dict = {
+        "motds": [
+            {"MOTD ID": 1, "Message": "Test", "Created": "2022-08-05 08:31"},
+            {"MOTD ID": 2, "Message": "Test 2", "Created": "2022-08-05 08:54"},
+        ],
+        "keys": ["MOTD ID", "Message", "Created"],
+    }
     # Create mocker
     with Mocker() as mock:
 
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
-        
+
         with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
             mtdm.list_all_active_motds(table=True)  # Run active motds listing
 
-    
     captured = capsys.readouterr()
-    assert "\n".join([
-        "┏━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓",
-        "┃ MOTD ID ┃ Message ┃ Created          ┃",
-        "┡━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩",
-        "│ 1       │ Test    │ 2022-08-05 08:31 │",
-        "│ 2       │ Test 2  │ 2022-08-05 08:54 │",
-        "└─────────┴─────────┴──────────────────┘"
-        ]) in captured.out
+    assert (
+        "\n".join(
+            [
+                "┏━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓",
+                "┃ MOTD ID ┃ Message ┃ Created          ┃",
+                "┡━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩",
+                "│ 1       │ Test    │ 2022-08-05 08:31 │",
+                "│ 2       │ Test 2  │ 2022-08-05 08:54 │",
+                "└─────────┴─────────┴──────────────────┘",
+            ]
+        )
+        in captured.out
+    )
+
 
 def test_list_all_active_motds_nottable(capsys: CaptureFixture):
     """List motds without any keys returned."""
-    returned_dict: Dict = {"motds": [{"MOTD ID": 1, "Message": "Test", "Created": "2022-08-05 08:31"}, {"MOTD ID": 2, "Message": "Test 2", "Created": "2022-08-05 08:54"}], "keys": ["MOTD ID", "Message", "Created"]}
+    returned_dict: Dict = {
+        "motds": [
+            {"MOTD ID": 1, "Message": "Test", "Created": "2022-08-05 08:31"},
+            {"MOTD ID": 2, "Message": "Test 2", "Created": "2022-08-05 08:54"},
+        ],
+        "keys": ["MOTD ID", "Message", "Created"],
+    }
     # Create mocker
     with Mocker() as mock:
 
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
-        
+
         with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
             motds = mtdm.list_all_active_motds(table=False)  # Run active motds listing
 
-    
     captured = capsys.readouterr()
     assert captured.out == ""
 
     assert all(x in motds for x in returned_dict["motds"])
 
+
 # deactivate_motd
+
 
 def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
     """No response from API."""
@@ -98,14 +120,15 @@ def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
             mock.put(DDSEndpoint.MOTD, status_code=200, json=returned_response)
 
             with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
-                mtdm.token = {} # required, otherwise none
+                mtdm.token = {}  # required, otherwise none
                 mtdm.deactivate_motd(motd_id=1)  # Run deactivation
 
             assert (
                 "dds_cli.motd_manager",
                 logging.INFO,
-                "No response. Cannot confirm MOTD deactivation."
+                "No response. Cannot confirm MOTD deactivation.",
             ) in caplog.record_tuples
+
 
 def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
     """No response from API."""
@@ -117,11 +140,11 @@ def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
             mock.put(DDSEndpoint.MOTD, status_code=200, json=returned_response)
 
             with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
-                mtdm.token = {} # required, otherwise none
+                mtdm.token = {}  # required, otherwise none
                 mtdm.deactivate_motd(motd_id=1)  # Run deactivation
 
             assert (
                 "dds_cli.motd_manager",
                 logging.INFO,
-                "Message from API about deactivation."
+                "Message from API about deactivation.",
             ) in caplog.record_tuples

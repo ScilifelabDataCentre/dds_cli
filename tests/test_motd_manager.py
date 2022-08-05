@@ -22,7 +22,7 @@ def test_init_motdmanager():
     """Create manager."""
     motdmanager: motd_manager.MotdManager = motd_manager.MotdManager(authenticate=False, no_prompt=True)
     assert isinstance(motdmanager, motd_manager.MotdManager)
-    
+
 # list_all_active_motds
 def test_list_all_active_motds_no_motds(caplog: LogCaptureFixture):
     """No motds returned."""
@@ -145,7 +145,7 @@ def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
             ) in caplog.record_tuples
 
 
-def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
+def test_deactivate_motd_ok(caplog: LogCaptureFixture):
     """No response from API."""
     returned_response: Dict = {"message": "Message from API about deactivation."}
     with caplog.at_level(logging.INFO):
@@ -164,4 +164,42 @@ def test_deactivate_motd_no_response(caplog: LogCaptureFixture):
                 "Message from API about deactivation.",
             ) in caplog.record_tuples
 
-# 
+# add_new_motd
+
+def test_add_new_motd_no_response(caplog: LogCaptureFixture):
+    """Add new MOTD without any returned response."""
+    returned_response: Dict = {}
+    with caplog.at_level(logging.INFO):
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.post(DDSEndpoint.MOTD, status_code=200, json=returned_response)
+
+            with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+                mtdm.token = {}  # required, otherwise none
+                mtdm.add_new_motd(message="Adding this message as a MOTD.")  # Add motd
+
+            assert (
+                "dds_cli.motd_manager",
+                logging.INFO,
+                "No response. Cannot confirm MOTD creation.",
+            ) in caplog.record_tuples
+
+def test_add_new_motd_ok(caplog: LogCaptureFixture):
+    """Add new MOTD without any returned response."""
+    returned_response: Dict = {"message": "Response from API about adding a MOTD."}
+    with caplog.at_level(logging.INFO):
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.post(DDSEndpoint.MOTD, status_code=200, json=returned_response)
+
+            with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+                mtdm.token = {}  # required, otherwise none
+                mtdm.add_new_motd(message="Adding this message as a MOTD.")  # Add motd
+
+            assert (
+                "dds_cli.motd_manager",
+                logging.INFO,
+                "Response from API about adding a MOTD.",
+            ) in caplog.record_tuples

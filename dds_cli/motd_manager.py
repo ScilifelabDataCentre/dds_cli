@@ -70,8 +70,11 @@ class MotdManager(dds_cli.base.DDSBaseClass):
             error_message="Failed adding a new MOTD",
         )
 
-        LOG.info("A new MOTD was added to the database")
-
+        response_message = response_json.get(
+            "message", "No response. Cannot confirm MOTD creation."
+        )
+        LOG.info(response_message)
+        
     @staticmethod
     def list_all_active_motds(table=False):
         """Get all active MOTDs."""

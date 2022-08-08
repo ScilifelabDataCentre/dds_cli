@@ -27,7 +27,7 @@ jobs:
 
       - name: Publish dist to PyPI
         if: github.repository == 'ScilifelabDataCentre/dds_cli'
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/latest
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}

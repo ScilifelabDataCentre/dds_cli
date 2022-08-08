@@ -11,7 +11,9 @@ import pathlib
 
 # Installed
 import http
+import time
 import simplejson
+from rich.progress import Progress, SpinnerColumn
 
 # Own modules
 import dds_cli.directory
@@ -141,7 +143,23 @@ class DDSBaseClass:
         public = self.__get_key()
 
         # Project private only required for get
-        private = self.__get_key(private=True) if self.method == "get" else None
+        private = None
+        if self.method == "get":
+            # Key derivation on server is slow - display spinner
+            information_to_user = "Preparing for download. This may be slow. Please wait..."
+            with Progress(
+                SpinnerColumn(spinner_name="dots12", style="blue"),
+                "{task.description}",
+                console=dds_cli.utils.stderr_console,
+            ) as spinner:
+                # Start spinner
+                task = spinner.add_task(description=information_to_user)
+                try:
+                    # Get key
+                    private = self.__get_key(private=True)
+                finally:
+                    # Always remove spinner
+                    spinner.remove_task(task)
 
         return private, public
 

@@ -91,9 +91,12 @@ dds_cli.utils.stderr_console.print(
     highlight=False,
 )
 
-motd = dds_cli.motd_manager.MotdManager.get_latest_motd()
-if motd:
-    dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold] {motd} \n")
+if sys.argv[1] != "motd":
+    motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
+    if motds:
+        dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold]")
+        for motd in motds:
+            dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
 
 # -- dds -- #
 @click.group()
@@ -1770,6 +1773,53 @@ def add_new_motd(click_ctx, message):
         ) as setter:
             setter.add_new_motd(message)
 
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds motd ls -- #
+@motd_group_command.command(name="ls", no_args_is_help=False)
+@click.pass_obj
+def list_active_motds(click_ctx):
+    """List all active MOTDs.
+    Only usable by Super Admins.
+    """
+    try:
+        with dds_cli.motd_manager.MotdManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as lister:
+            lister.list_all_active_motds(table=True)
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds motd deactivate-- #
+@motd_group_command.command(name="deactivate")
+@click.argument("motd_id", metavar="[MOTD_ID]", nargs=1, type=int, required=True)
+@click.pass_obj
+def deactivate_motd(click_ctx, motd_id):
+    """Deactivate Message Of The Day.
+    Only usable by Super Admins.
+    """
+    try:
+        with dds_cli.motd_manager.MotdManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as data_putter:
+            data_putter.deactivate_motd(motd_id)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

@@ -22,6 +22,7 @@ Please delete options that are not relevant.
 - [ ] Any dependent changes have been merged and published in downstream modules
 - [ ] Rebase/merge the branch which this PR is made to
 - [ ] Product Owner / Scrum Master: This PR is made to the `master` branch and I have updated the [version](../dds_cli/version.py)
+- [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x) and I have made the corresponding changes to the API version
 
 ## Formatting and documentation
 

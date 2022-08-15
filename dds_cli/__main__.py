@@ -91,7 +91,7 @@ dds_cli.utils.stderr_console.print(
     highlight=False,
 )
 
-if sys.argv[1] != "motd":
+if "motd" not in sys.argv:
     motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
     if motds:
         dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold]")

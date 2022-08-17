@@ -97,6 +97,7 @@ class Auth(base.DDSBaseClass):
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.TOTP_DEACTIVATE,
             headers=self.token,
+            json={"username": username},
             method="put",
         )
         LOG.info(response_json.get("message"))

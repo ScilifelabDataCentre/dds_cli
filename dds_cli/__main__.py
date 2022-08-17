@@ -436,7 +436,7 @@ def info(click_ctx):
 @auth_group_command.group(name="twofactor", no_args_is_help=True)
 @click.pass_obj
 def twofactor_group_command(_):
-    """Group command for creating and managing projects within the DDS."""
+    """Group command for activating and deactivating methods of two factor authentication."""
 
 
 @twofactor_group_command.command(name="activate")
@@ -471,13 +471,14 @@ def activate():
     type=str,
     help="Super Admins only: The user you wish to deactivate TOTP for.",
 )
+@click.pass_obj
 def deactivate(click_ctx, username):
     """Deactivate another users TOTP.
 
     Only usable by Super Admins.
     """
     try:
-        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH")) as authenticator:
+        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH"), force_renew_token=False) as authenticator:
             authenticator.deactivate(username=username)
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
         LOG.error(err)

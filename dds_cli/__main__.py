@@ -440,7 +440,7 @@ def twofactor_group_command(_):
 
 
 @twofactor_group_command.command(name="activate")
-def activate():
+def configure():
     """Configure your preferred method of two-factor authentication."""
     try:
         LOG.info("Starting configuration of one-time authentication code method.")

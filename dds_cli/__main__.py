@@ -478,7 +478,9 @@ def deactivate(click_ctx, username):
     Only usable by Super Admins.
     """
     try:
-        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH"), force_renew_token=False) as authenticator:
+        with dds_cli.auth.Auth(
+            token_path=click_ctx.get("TOKEN_PATH"), force_renew_token=False
+        ) as authenticator:
             authenticator.deactivate(username=username)
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
         LOG.error(err)

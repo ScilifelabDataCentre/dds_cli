@@ -432,10 +432,12 @@ def info(click_ctx):
         LOG.error(err)
         sys.exit(1)
 
+
 @auth_group_command.group(name="twofactor", no_args_is_help=True)
 @click.pass_obj
 def twofactor_group_command(_):
     """Group command for creating and managing projects within the DDS."""
+
 
 @twofactor_group_command.command(name="activate")
 def activate():
@@ -460,6 +462,7 @@ def activate():
         LOG.error(err)
         sys.exit(1)
 
+
 @twofactor_group_command.command(name="deactivate")
 @click.option(
     "--username",
@@ -469,8 +472,8 @@ def activate():
     help="Super Admins only: The user you wish to deactivate TOTP for.",
 )
 def deactivate(click_ctx, username):
-    """Deactivate another users TOTP. 
-    
+    """Deactivate another users TOTP.
+
     Only usable by Super Admins.
     """
     try:

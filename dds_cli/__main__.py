@@ -439,7 +439,7 @@ def twofactor_group_command(_):
     """Group command for activating and deactivating methods of two factor authentication."""
 
 
-@twofactor_group_command.command(name="activate")
+@twofactor_group_command.command(name="configure")
 def configure():
     """Configure your preferred method of two-factor authentication."""
     try:

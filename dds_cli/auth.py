@@ -92,3 +92,11 @@ class Auth(base.DDSBaseClass):
             )
 
         LOG.info(response_json.get("message"))
+
+    def deactivate(self, username: str = None):
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=dds_cli.DDSEndpoint.TOTP_DEACTIVATE,
+            headers=self.token,
+            method="put",
+        )
+        LOG.info(response_json.get("message"))

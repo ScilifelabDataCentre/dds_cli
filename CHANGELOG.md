@@ -174,3 +174,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Check for DDS_CLI_ENV = "test-instance" in order to allow testing of features before production ([#506](https://github.com/ScilifelabDataCentre/dds_cli/pull/506))
 - List all active motds instead of latest and new command for deactivating motds ([#505](https://github.com/ScilifelabDataCentre/dds_cli/pull/505))
 - New spinner when getting project private ([#510](https://github.com/ScilifelabDataCentre/dds_cli/pull/510))
+- Change in command: twofactor - activate and deactivate ([]())

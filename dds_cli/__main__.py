@@ -432,9 +432,13 @@ def info(click_ctx):
         LOG.error(err)
         sys.exit(1)
 
+@auth_group_command.group(name="twofactor", no_args_is_help=True)
+@click.pass_obj
+def twofactor_group_command(_):
+    """Group command for creating and managing projects within the DDS."""
 
-@auth_group_command.command(name="twofactor")
-def twofactor():
+@twofactor_group_command.command(name="activate")
+def activate():
     """Configure your preferred method of two-factor authentication."""
     try:
         LOG.info("Starting configuration of one-time authentication code method.")
@@ -452,6 +456,26 @@ def twofactor():
 
         with dds_cli.auth.Auth(authenticate=True, force_renew_token=False) as authenticator:
             authenticator.twofactor(auth_method=auth_method)
+    except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+@twofactor_group_command.command(name="deactivate")
+@click.option(
+    "--username",
+    "-u",
+    required=True,
+    type=str,
+    help="Super Admins only: The user you wish to deactivate TOTP for.",
+)
+def deactivate(click_ctx, username):
+    """Deactivate another users TOTP. 
+    
+    Only usable by Super Admins.
+    """
+    try:
+        with dds_cli.auth.Auth(token_path=click_ctx.get("TOKEN_PATH")) as authenticator:
+            authenticator.deactivate(username=username)
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
         LOG.error(err)
         sys.exit(1)

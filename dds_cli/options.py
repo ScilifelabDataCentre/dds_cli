@@ -187,6 +187,22 @@ def token_path_option(
     )
 
 
+def username_option(help_message, long="--username", short="-u", name="username", required=False):
+    """
+    Username option standard definition.
+
+    Use as decorator for commands.
+    """
+    return click.option(
+        long,
+        short,
+        name,
+        required=required,
+        type=str,
+        help=help_message,
+    )
+
+
 # Flags
 def break_on_fail_flag(
     help_message,

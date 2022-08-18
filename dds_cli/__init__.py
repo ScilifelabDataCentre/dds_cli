@@ -129,6 +129,9 @@ class DDSEndpoint:
     # Find user
     USER_FIND = BASE_ENDPOINT + "/user/find"
 
+    # Deactivate TOTP
+    TOTP_DEACTIVATE = BASE_ENDPOINT + "/user/totp/deactivate"
+
     TIMEOUT = 120
 
 

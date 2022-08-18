@@ -186,6 +186,7 @@ def token_path_option(
         help=help_message,
     )
 
+
 def username_option(help_message, long="--username", short="-u", name="username", required=False):
     """
     Username option standard definition.
@@ -200,6 +201,7 @@ def username_option(help_message, long="--username", short="-u", name="username"
         type=str,
         help=help_message,
     )
+
 
 # Flags
 def break_on_fail_flag(

@@ -46,6 +46,7 @@ from dds_cli.options import (
     source_option,
     source_path_file_option,
     token_path_option,
+    username_option,
     break_on_fail_flag,
     json_flag,
     nomail_flag,
@@ -432,6 +433,12 @@ def info(click_ctx):
         LOG.error(err)
         sys.exit(1)
 
+# ************************************************************************************************ #
+# AUTH SUB GROUPS **************************************************************** AUTH SUB GROUPS #
+# ************************************************************************************************ #
+
+
+# TWOFACTOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TWOFACTOR #
 
 @auth_group_command.group(name="twofactor", no_args_is_help=True)
 @click.pass_obj
@@ -439,6 +446,7 @@ def twofactor_group_command(_):
     """Group command for activating and deactivating methods of two factor authentication."""
 
 
+# -- dds auth twofactor configure -- #
 @twofactor_group_command.command(name="configure")
 def configure():
     """Configure your preferred method of two-factor authentication."""
@@ -463,14 +471,9 @@ def configure():
         sys.exit(1)
 
 
+# -- dds auth twofactor configure -- #
 @twofactor_group_command.command(name="deactivate")
-@click.option(
-    "--username",
-    "-u",
-    required=True,
-    type=str,
-    help="Super Admins only: The user you wish to deactivate TOTP for.",
-)
+@username_option(required=True, help_message="Super Admins only: The user you wish to deactivate TOTP for.")
 @click.pass_obj
 def deactivate(click_ctx, username):
     """Deactivate another users TOTP.
@@ -548,13 +551,7 @@ def list_users(click_ctx, unit):
 # -- dds user find -- #
 # TODO: Move this to dds unit?
 @user_group_command.command(name="find")
-@click.option(
-    "--username",
-    "-u",
-    required=True,
-    type=str,
-    help="Super Admins only: The username of the account you want to check.",
-)
+@username_option(required=True, help_message="Super Admins only: The username of the account you want to check.")
 @click.pass_obj
 def list_users(click_ctx, username):
     """Check if a username is registered to an account in the DDS."""

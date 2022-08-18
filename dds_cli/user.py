@@ -67,9 +67,8 @@ class User:
         """Fetch saved token from file otherwise authenticate user and saves the new token."""
         LOG.info(f"Token file: {self.token_path}")
         token_file = TokenFile(token_path=self.token_path, allow_group=allow_group)
-        LOG.info(f"Fource renew? {self.force_renew_token}")
         if not self.force_renew_token:
-            LOG.info("Retrieving token.")
+            LOG.debug("Retrieving token.")
 
             # Get token from file
             try:

@@ -66,7 +66,6 @@ class User:
     def __retrieve_token(self, totp: str = None, allow_group: bool = False):
         """Fetch saved token from file otherwise authenticate user and saves the new token."""
         token_file = TokenFile(token_path=self.token_path, allow_group=allow_group)
-
         if not self.force_renew_token:
             LOG.debug("Retrieving token.")
 

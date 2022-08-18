@@ -46,6 +46,7 @@ from dds_cli.options import (
     source_option,
     source_path_file_option,
     token_path_option,
+    username_option,
     break_on_fail_flag,
     json_flag,
     nomail_flag,
@@ -433,12 +434,27 @@ def info(click_ctx):
         sys.exit(1)
 
 
-@auth_group_command.command(name="twofactor")
-def twofactor():
+# ************************************************************************************************ #
+# AUTH SUB GROUPS **************************************************************** AUTH SUB GROUPS #
+# ************************************************************************************************ #
+
+
+# TWOFACTOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TWOFACTOR #
+
+
+@auth_group_command.group(name="twofactor", no_args_is_help=True)
+@click.pass_obj
+def twofactor_group_command(_):
+    """Group command for configuring and deactivating methods of two factor authentication."""
+
+
+# -- dds auth twofactor configure -- #
+@twofactor_group_command.command(name="configure")
+def configure():
     """Configure your preferred method of two-factor authentication."""
     try:
         LOG.info("Starting configuration of one-time authentication code method.")
-        auth_method_choice = questionary.select(
+        auth_method_choice: str = questionary.select(
             "Which method would you like to use?", choices=["Email", "Authenticator App", "Cancel"]
         ).ask()
 
@@ -446,12 +462,33 @@ def twofactor():
             LOG.info("Two-factor authentication method not configured.")
             sys.exit(0)
         elif auth_method_choice == "Authenticator App":
-            auth_method = "totp"
+            auth_method: str = "totp"
         elif auth_method_choice == "Email":
-            auth_method = "hotp"
+            auth_method: str = "hotp"
 
         with dds_cli.auth.Auth(authenticate=True, force_renew_token=False) as authenticator:
             authenticator.twofactor(auth_method=auth_method)
+    except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds auth twofactor configure -- #
+@twofactor_group_command.command(name="deactivate")
+@username_option(
+    required=True, help_message="Super Admins only: The user you wish to deactivate TOTP for."
+)
+@click.pass_obj
+def deactivate(click_ctx, username):
+    """Deactivate another users TOTP.
+
+    Only usable by Super Admins.
+    """
+    try:
+        with dds_cli.auth.Auth(
+            token_path=click_ctx.get("TOKEN_PATH"), force_renew_token=False
+        ) as authenticator:
+            authenticator.deactivate(username=username)
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiResponseError) as err:
         LOG.error(err)
         sys.exit(1)
@@ -518,12 +555,8 @@ def list_users(click_ctx, unit):
 # -- dds user find -- #
 # TODO: Move this to dds unit?
 @user_group_command.command(name="find")
-@click.option(
-    "--username",
-    "-u",
-    required=True,
-    type=str,
-    help="Super Admins only: The username of the account you want to check.",
+@username_option(
+    required=True, help_message="Super Admins only: The username of the account you want to check."
 )
 @click.pass_obj
 def list_users(click_ctx, username):

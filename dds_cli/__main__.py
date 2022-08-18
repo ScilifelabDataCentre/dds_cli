@@ -445,7 +445,7 @@ def info(click_ctx):
 @auth_group_command.group(name="twofactor", no_args_is_help=True)
 @click.pass_obj
 def twofactor_group_command(_):
-    """Group command for activating and deactivating methods of two factor authentication."""
+    """Group command for configuring and deactivating methods of two factor authentication."""
 
 
 # -- dds auth twofactor configure -- #
@@ -454,7 +454,7 @@ def configure():
     """Configure your preferred method of two-factor authentication."""
     try:
         LOG.info("Starting configuration of one-time authentication code method.")
-        auth_method_choice = questionary.select(
+        auth_method_choice: str = questionary.select(
             "Which method would you like to use?", choices=["Email", "Authenticator App", "Cancel"]
         ).ask()
 
@@ -462,9 +462,9 @@ def configure():
             LOG.info("Two-factor authentication method not configured.")
             sys.exit(0)
         elif auth_method_choice == "Authenticator App":
-            auth_method = "totp"
+            auth_method: str = "totp"
         elif auth_method_choice == "Email":
-            auth_method = "hotp"
+            auth_method: str = "hotp"
 
         with dds_cli.auth.Auth(authenticate=True, force_renew_token=False) as authenticator:
             authenticator.twofactor(auth_method=auth_method)

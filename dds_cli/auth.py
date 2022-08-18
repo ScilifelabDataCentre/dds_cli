@@ -77,8 +77,8 @@ class Auth(base.DDSBaseClass):
             LOG.info(
                 "Activating authentication via email, please (re-)enter your username and password:"
             )
-            username = rich.prompt.Prompt.ask("DDS username")
-            password = getpass.getpass(prompt="DDS password: ")
+            username: str = rich.prompt.Prompt.ask("DDS username")
+            password: str = getpass.getpass(prompt="DDS password: ")
 
             if password == "":
                 raise exceptions.AuthenticationError(

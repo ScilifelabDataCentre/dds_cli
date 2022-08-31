@@ -12,11 +12,10 @@
 ![Linting](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg)
 ![CodeQL](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg)
 
-> **A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery Service.**
 
-This will be used for data delivery within larger projects and/or projects resulting in the production of large amounts of data, for example next-generation sequencing data and imaging.
+**A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery System.**
 
-This tool is written and maintained by the [SciLifeLab Data Centre](https://www.scilifelab.se/data).
+This tool (and the web/API located at https://delivery.scilifelab.se/) is written and maintained by the [SciLifeLab Data Centre](https://www.scilifelab.se/data).
 
 ## Table of contents
 
@@ -100,3 +99,5 @@ Once installed you can use the command `dds` in a terminal session. This has the
 - `project`: Create and manage projects.
 - `data`: Upload, download and manage project data.
 - `ls`: List projects and project contents.
+- `motd`: List and manage important messages displayed to the users ("Message of the Day")
+- `unit`: Manage units using the DDS

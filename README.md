@@ -43,11 +43,7 @@ $ dds
  ︶  (  ) ) (    https://delivery.scilifelab.se/ 
       ︶ (  )    Version 1.1.0 
           ︶
-Important information:
-2022-08-19 07:04 - Unit Personnel / Admins: We have recently found a bug in the usage- and cost calculations. These numbers are very incorrect. Please avoid using the 
---usage flag when listing the projects, until the problem is resolved. 
-
-                                                                                                    
+          
  Usage: dds [OPTIONS] COMMAND [ARGS]...                                                             
                                                                                                     
  SciLifeLab Data Delivery System (DDS) command line interface.                                      

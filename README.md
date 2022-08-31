@@ -4,6 +4,7 @@
 [![Documentation](https://img.shields.io/badge/-Documentation-222222?logo=github-pages)](https://scilifelabdatacentre.github.io/dds_cli/)
 [![Technical Overview](https://img.shields.io/badge/-Technical%20Overview-informational?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Technical-Overview.pdf)
 [![Troubleshooting](https://img.shields.io/badge/-Troubleshooting%20Guide-red?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Troubleshooting.pdf)
+[![Backend](https://img.shields.io/badge/-Web\/API-yellow?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Troubleshooting.pdf)
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![codecov](https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=zsrDpNqs6v)](https://codecov.io/gh/ScilifelabDataCentre/dds_cli)

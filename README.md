@@ -37,35 +37,42 @@ After installing, run `dds` and verify that the output looks like this:
 
 ```bash
 $ dds
-     ︵
- ︵ (  )   ︵
-(  ) ) (  (  )   SciLifeLab Data Delivery System
- ︶  (  ) ) (    https://delivery.scilifelab.se/
-      ︶ (  )    Version 1.0.0
+     ︵ 
+ ︵ (  )   ︵ 
+(  ) ) (  (  )   SciLifeLab Data Delivery System 
+ ︶  (  ) ) (    https://delivery.scilifelab.se/ 
+      ︶ (  )    Version 1.1.0 
           ︶
+Important information:
+2022-08-19 07:04 - Unit Personnel / Admins: We have recently found a bug in the usage- and cost calculations. These numbers are very incorrect. Please avoid using the 
+--usage flag when listing the projects, until the problem is resolved. 
 
- Usage: dds [OPTIONS] COMMAND [ARGS]...
-
- SciLifeLab Data Delivery System (DDS) command line interface.
- Access token is saved in a .dds_cli_token file in the home directory.
-
+                                                                                                    
+ Usage: dds [OPTIONS] COMMAND [ARGS]...                                                             
+                                                                                                    
+ SciLifeLab Data Delivery System (DDS) command line interface.                                      
+ Access token is saved in a .dds_cli_token file in the home directory.                              
+ The token is valid for 7 days. Make sure your token is valid long enough for the delivery to       
+ finish. To avoid that a delivery fails because of an expired token, we recommend reauthenticating  
+ yourself before each delivery ('dds data put' / 'get').                                            
+                                                                                                    
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
-│  --verbose     -v               Print verbose output to the console.                             │
-│  --log-file    -l   <filename>  Save a log to a file.                                            │
-│  --no-prompt                    Run without any interactive features.                            │
-│  --token-path  -tp  TEXT        The path where the authentication token will be stored. For a    │
-│                                 normal use-case, this should not be needed.                      │
-│  --version                      Display the version of this software.                            │
-│  --help                         List the options of any DDS subcommand and its default           │
-│                                 settings.                                                        │
+│ --verbose     -v               Print verbose output to the console.                              │
+│ --log-file    -l   <filename>  Save a log to a file.                                             │
+│ --no-prompt                    Run without any interactive features.                             │
+│ --token-path  -tp  TEXT        The path where the authentication token will be stored. For a     │
+│                                normal use-case, this should not be needed.                       │
+│ --version                      Display the version of this software.                             │
+│ --help                         List the options of any DDS subcommand and its default settings.  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
-│  auth     Group command for creating and managing authenticated sessions.                        │
-│  data     Group command for uploading, downloading and managing project data.                    │
-│  ls       List the projects you have access to or the project contents.                          │
-│  project  Group command for creating and managing projects within the DDS.                       │
-│  unit     Group command for managing units.                                                      │
-│  user     Group command for managing user accounts, including your own.                          │
+│ auth        Group command for creating and managing authenticated sessions.                      │
+│ data        Group command for uploading, downloading and managing project data.                  │
+│ ls          List the projects you have access to or the project contents.                        │
+│ motd        Group command for managing Message of the Day within DDS.                            │
+│ project     Group command for creating and managing projects within the DDS.                     │
+│ unit        Group command for managing units.                                                    │
+│ user        Group command for managing user accounts, including your own.                        │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 

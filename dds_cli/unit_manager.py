@@ -79,7 +79,7 @@ class UnitManager(dds_cli.base.DDSBaseClass):
             title="Units within the DDS.",
             columns=keys,
             rows=units,
-            ints_as_string=True,
+            ints_as_string=False,
             caption="All units within the DDS.",
         )
 

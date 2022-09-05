@@ -119,7 +119,8 @@ def create_table(
             *[
                 rich.markup.escape(
                     dds_cli.utils.format_api_response(
-                        str(row[x]) if ints_as_string and isinstance(row[x], int) else row[x], x
+                        row[x],
+                        x,
                     )
                 )
                 for x in columns

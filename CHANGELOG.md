@@ -178,3 +178,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint (2022-08-18 - 2022-09-02)
 
 - Change in command: twofactor - activate and deactivate ([#519](https://github.com/ScilifelabDataCentre/dds_cli/pull/519))
+
+## Sprint (2022-09-02 - 2022-09-16)
+
+- Add storage usage information in the Units listing table for Super Admin ([#523](https://github.com/ScilifelabDataCentre/dds_cli/pull/523))

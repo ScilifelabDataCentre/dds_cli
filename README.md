@@ -1,19 +1,26 @@
-# SciLifeLab Data Delivery System - Command line interface
+# Data Delivery System CLI
 
-[![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg)](https://pypi.org/project/dds-cli/)
+![Release](https://img.shields.io/github/v/release/SciLifeLabDataCentre/dds_cli)
+[![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg?logo=pypi)](https://pypi.org/project/dds-cli/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![codecov](https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=zsrDpNqs6v)](https://codecov.io/gh/ScilifelabDataCentre/dds_cli)
 
-![Tests](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-app.yml/badge.svg)
 ![Linting](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg)
 ![CodeQL](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg)
+[![codecov](https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=zsrDpNqs6v)](https://codecov.io/gh/ScilifelabDataCentre/dds_cli)
+![Tests](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-app.yml/badge.svg)
 
+**A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery System.**
 
-> **A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery Service.**
+The Data Delivery System (DDS) is a cloud-based system for all SciLifeLab platforms where data generated throughout each project can be delivered to the research groups in a fast, secure and simple way. The CLI makes requests to the API (see badge below for link) in order to use the API functionality.
 
-This will be used for data delivery within larger projects and/or projects resulting in the production of large amounts of data, for example next-generation sequencing data and imaging.
+[![Documentation](https://img.shields.io/badge/-Documentation-222222?logo=github-pages)](https://scilifelabdatacentre.github.io/dds_cli/)
+[![Technical Overview](https://img.shields.io/badge/-Technical%20Overview-informational?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Technical-Overview.pdf)
+[![Architecture Decision Record](https://img.shields.io/badge/-ADR-000000?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/wiki/Architecture-Decision-Record,-ADR)
+[![Troubleshooting](https://img.shields.io/badge/-Troubleshooting%20Guide-red?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Troubleshooting.pdf)
+[![Backend](https://img.shields.io/badge/-Web\/API-yellow?logo=github)](https://github.com/ScilifelabDataCentre/dds_web)
 
-This tool is written and maintained by the [SciLifeLab Data Centre](https://www.scilifelab.se/data).
+------
 
 ## Table of contents
 
@@ -34,35 +41,38 @@ After installing, run `dds` and verify that the output looks like this:
 
 ```bash
 $ dds
-     ︵
- ︵ (  )   ︵
-(  ) ) (  (  )   SciLifeLab Data Delivery System
- ︶  (  ) ) (    https://delivery.scilifelab.se/
-      ︶ (  )    Version 1.0.0
+     ︵ 
+ ︵ (  )   ︵ 
+(  ) ) (  (  )   SciLifeLab Data Delivery System 
+ ︶  (  ) ) (    https://delivery.scilifelab.se/ 
+      ︶ (  )    Version 1.1.0 
           ︶
-
- Usage: dds [OPTIONS] COMMAND [ARGS]...
-
- SciLifeLab Data Delivery System (DDS) command line interface.
- Access token is saved in a .dds_cli_token file in the home directory.
-
+          
+ Usage: dds [OPTIONS] COMMAND [ARGS]...                                                             
+                                                                                                    
+ SciLifeLab Data Delivery System (DDS) command line interface.                                      
+ Access token is saved in a .dds_cli_token file in the home directory.                              
+ The token is valid for 7 days. Make sure your token is valid long enough for the delivery to       
+ finish. To avoid that a delivery fails because of an expired token, we recommend reauthenticating  
+ yourself before each delivery ('dds data put' / 'get').                                            
+                                                                                                    
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
-│  --verbose     -v               Print verbose output to the console.                             │
-│  --log-file    -l   <filename>  Save a log to a file.                                            │
-│  --no-prompt                    Run without any interactive features.                            │
-│  --token-path  -tp  TEXT        The path where the authentication token will be stored. For a    │
-│                                 normal use-case, this should not be needed.                      │
-│  --version                      Display the version of this software.                            │
-│  --help                         List the options of any DDS subcommand and its default           │
-│                                 settings.                                                        │
+│ --verbose     -v               Print verbose output to the console.                              │
+│ --log-file    -l   <filename>  Save a log to a file.                                             │
+│ --no-prompt                    Run without any interactive features.                             │
+│ --token-path  -tp  TEXT        The path where the authentication token will be stored. For a     │
+│                                normal use-case, this should not be needed.                       │
+│ --version                      Display the version of this software.                             │
+│ --help                         List the options of any DDS subcommand and its default settings.  │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮
-│  auth     Group command for creating and managing authenticated sessions.                        │
-│  data     Group command for uploading, downloading and managing project data.                    │
-│  ls       List the projects you have access to or the project contents.                          │
-│  project  Group command for creating and managing projects within the DDS.                       │
-│  unit     Group command for managing units.                                                      │
-│  user     Group command for managing user accounts, including your own.                          │
+│ auth        Group command for creating and managing authenticated sessions.                      │
+│ data        Group command for uploading, downloading and managing project data.                  │
+│ ls          List the projects you have access to or the project contents.                        │
+│ motd        Group command for managing Message of the Day within DDS.                            │
+│ project     Group command for creating and managing projects within the DDS.                     │
+│ unit        Group command for managing units.                                                    │
+│ user        Group command for managing user accounts, including your own.                        │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -94,3 +104,5 @@ Once installed you can use the command `dds` in a terminal session. This has the
 - `project`: Create and manage projects.
 - `data`: Upload, download and manage project data.
 - `ls`: List projects and project contents.
+- `motd`: List and manage important messages displayed to the users ("Message of the Day")
+- `unit`: Manage units using the DDS

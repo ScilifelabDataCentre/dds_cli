@@ -1,21 +1,26 @@
-# SciLifeLab Data Delivery System - Command line interface
+# Data Delivery System CLI
 
+![Release](https://img.shields.io/github/v/release/SciLifeLabDataCentre/dds_cli)
 [![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg?logo=pypi)](https://pypi.org/project/dds-cli/)
-[![Documentation](https://img.shields.io/badge/-Documentation-222222?logo=github-pages)](https://scilifelabdatacentre.github.io/dds_cli/)
-[![Technical Overview](https://img.shields.io/badge/-Technical%20Overview-informational?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Technical-Overview.pdf)
-[![Troubleshooting](https://img.shields.io/badge/-Troubleshooting%20Guide-red?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Troubleshooting.pdf)
-[![Backend](https://img.shields.io/badge/-Web\/API-yellow?logo=github)](https://github.com/ScilifelabDataCentre/dds_web)
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![codecov](https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=zsrDpNqs6v)](https://codecov.io/gh/ScilifelabDataCentre/dds_cli)
-![Tests](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-app.yml/badge.svg)
+
 ![Linting](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg)
 ![CodeQL](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg)
-
+[![codecov](https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=zsrDpNqs6v)](https://codecov.io/gh/ScilifelabDataCentre/dds_cli)
+![Tests](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-app.yml/badge.svg)
 
 **A command line tool `dds` to manage data and projects in the SciLifeLab Data Delivery System.**
 
-This tool (and the web/API located at https://delivery.scilifelab.se/) is written and maintained by the [SciLifeLab Data Centre](https://www.scilifelab.se/data).
+The Data Delivery System (DDS) is a cloud-based system for all SciLifeLab platforms where data generated throughout each project can be delivered to the research groups in a fast, secure and simple way. The CLI makes requests to the API (see badge below for link) in order to use the API functionality.
+
+[![Documentation](https://img.shields.io/badge/-Documentation-222222?logo=github-pages)](https://scilifelabdatacentre.github.io/dds_cli/)
+[![Technical Overview](https://img.shields.io/badge/-Technical%20Overview-informational?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Technical-Overview.pdf)
+[![Architecture Decision Record](https://img.shields.io/badge/-ADR-000000?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/wiki/Architecture-Decision-Record,-ADR)
+[![Troubleshooting](https://img.shields.io/badge/-Troubleshooting%20Guide-red?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Troubleshooting.pdf)
+[![Backend](https://img.shields.io/badge/-Web\/API-yellow?logo=github)](https://github.com/ScilifelabDataCentre/dds_web)
+
+------
 
 ## Table of contents
 

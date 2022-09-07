@@ -171,6 +171,7 @@ def put(
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
+
 class DataPutter(base.DDSBaseClass):
     """Data putter class."""
 
@@ -208,7 +209,9 @@ class DataPutter(base.DDSBaseClass):
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
         # Set project to busy
-        set_to_busy: bool = self.change_busy_status(token=self.token, project=self.project, set_to_busy=True)
+        set_to_busy: bool = self.change_busy_status(
+            token=self.token, project=self.project, set_to_busy=True
+        )
         if not set_to_busy:
             raise exceptions.DDSCLIException(
                 message=(

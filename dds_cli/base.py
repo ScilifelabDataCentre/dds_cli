@@ -8,7 +8,7 @@
 import logging
 import os
 import pathlib
-import typing 
+import typing
 
 # Installed
 import http

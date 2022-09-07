@@ -45,7 +45,6 @@ class DDSCLIException(click.ClickException):
 
 class AuthenticationError(click.ClickException):
     """Errors due to user authentication."""
-    
     def __init__(self, message, sign=":no_entry_sign:"):
         """Update error message."""
         self.message = message

@@ -202,7 +202,6 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
-        self.busy = False
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
@@ -260,7 +259,7 @@ class DataPutter(base.DDSBaseClass):
             if self.temporary_directory and self.temporary_directory.is_dir():
                 LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
                 dds_cli.utils.delete_folder(self.temporary_directory)
-            raise exceptions.UploadError(message="No data to upload.", busy=set_to_busy)
+            raise exceptions.UploadError(message="No data to upload.")
 
     # Public methods ###################### Public methods #
     @verify_proceed

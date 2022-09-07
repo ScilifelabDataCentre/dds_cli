@@ -171,7 +171,6 @@ def put(
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
 
-
 class DataPutter(base.DDSBaseClass):
     """Data putter class."""
 
@@ -203,10 +202,21 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
+        self.busy = False
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
+
+        # Set project to busy
+        set_to_busy: bool = self.change_busy_status(token=self.token, project=self.project, set_to_busy=True)
+        if not set_to_busy:
+            raise exceptions.DDSCLIException(
+                message=(
+                    "Cannot upload data at this time due: "
+                    f"The '{self.project}' is currently busy with another task."
+                )
+            )
 
         # Start file prep progress
         with Progress(
@@ -250,7 +260,7 @@ class DataPutter(base.DDSBaseClass):
             if self.temporary_directory and self.temporary_directory.is_dir():
                 LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
                 dds_cli.utils.delete_folder(self.temporary_directory)
-            raise exceptions.UploadError("No data to upload.")
+            raise exceptions.UploadError(message="No data to upload.", busy=set_to_busy)
 
     # Public methods ###################### Public methods #
     @verify_proceed

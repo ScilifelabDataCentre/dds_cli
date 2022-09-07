@@ -8,6 +8,7 @@
 import logging
 import os
 import pathlib
+import typing 
 
 # Installed
 import http
@@ -131,6 +132,27 @@ class DDSBaseClass:
             return False
 
         return True
+
+    # Static methods ################################# Static methods #
+
+    @staticmethod
+    def change_busy_status(token: typing.Dict, project: str, set_to_busy: bool) -> bool:
+        """Set project as busy."""
+        response, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.PROJ_BUSY,
+            method="put",
+            headers=token,
+            params={"project": project},
+            json={"busy": set_to_busy},
+            error_message="Failed setting project as busy.",
+        )
+        LOG.debug(
+            response.get(
+                "message",
+                "No message was returned from the ProjectBusy endpoint, there's an error somewhere.",
+            )
+        )
+        return response.get("ok", False)
 
     # Private methods ############################### Private methods #
     def __get_safespring_keys(self):

@@ -198,30 +198,3 @@ def removal_spinner(func):
             dds_cli.utils.console.print(f"Successfully finished {description_lc}")
 
     return create_and_remove_task
-
-def reset_busy(func):
-    def inner_function(*args, **kwargs):
-        from dds_cli import base
-        
-        busy = kwargs.get("busy")
-        token = kwargs.get("token")
-        project = kwargs.get("project")
-
-        if busy:
-            if not token or not project:
-                LOG.warning(
-                    "Unblocking project actions requires input that was not found. "
-                    "Contact the responsible unit and include this message."
-                )
-                return func(*args, **kwargs)
-
-            set_to_not_busy: bool = base.DDSBaseClass.change_busy_status(token=token, project=project, set_to_busy=False)
-            if not set_to_not_busy:
-                LOG.warning(
-                    "Failed to set the project as not busy. "
-                    "This means that certain actions in this project may be blocked."
-                    "Contact the responsible unit and include this message."
-                )
-        
-        return func(*args, **kwargs)
-    return inner_function

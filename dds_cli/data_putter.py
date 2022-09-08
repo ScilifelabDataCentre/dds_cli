@@ -218,7 +218,7 @@ class DataPutter(base.DDSBaseClass):
                 )
             )
         LOG.debug(f"Project '{self.project}' set to busy: {set_to_busy}")
-        try: 
+        try:
             # Start file prep progress
             with Progress(
                 "[bold]{task.description}",

@@ -147,7 +147,6 @@ class DDSBaseClass:
             )
         LOG.debug(f"Project '{self.project}' busy status reset: {set_to_not_busy}")
 
-
     def change_busy_status(self, busy: bool) -> bool:
         """Set project as busy."""
         response, _ = dds_cli.utils.perform_request(

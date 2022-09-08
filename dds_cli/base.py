@@ -126,9 +126,10 @@ class DDSBaseClass:
 
         This is not entered if there's an error during __init__.
         """
-        if self.method in ["put", "get"]:
+        if self.method in ["put", "get", "rm"]:
             self.cleanup_busy_status()
-            self.__printout_delivery_summary()
+            if self.method != "rm":
+                self.__printout_delivery_summary()
 
         # Exception is not handled
         if exc_type is not None:

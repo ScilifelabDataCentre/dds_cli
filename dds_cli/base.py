@@ -124,6 +124,7 @@ class DDSBaseClass:
     def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
         """Finish and print out delivery summary."""
         if self.method in ["put", "get"]:
+            self.cleanup_busy_status()
             self.__printout_delivery_summary()
 
         # Exception is not handled
@@ -133,17 +134,28 @@ class DDSBaseClass:
 
         return True
 
-    # Static methods ################################# Static methods #
+    # Public methods ################################# Public methods #
 
-    @staticmethod
-    def change_busy_status(token: typing.Dict, project: str, set_to_busy: bool) -> bool:
+    def cleanup_busy_status(self):
+        """Reset busy to False."""
+        # Set project to busy
+        set_to_not_busy: bool = self.change_busy_status(busy=False)
+        if not set_to_not_busy:
+            LOG.warning(
+                "Failed to clear busy status. New actions in project "
+                f"'{self.project}' may be blocked. Contact the responsible unit."
+            )
+        LOG.debug(f"Project '{self.project}' busy status reset: {set_to_not_busy}")
+
+
+    def change_busy_status(self, busy: bool) -> bool:
         """Set project as busy."""
         response, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.PROJ_BUSY,
             method="put",
-            headers=token,
-            params={"project": project},
-            json={"busy": set_to_busy},
+            headers=self.token,
+            params={"project": self.project},
+            json={"busy": busy},
             error_message="Failed setting project as busy.",
         )
         LOG.debug(

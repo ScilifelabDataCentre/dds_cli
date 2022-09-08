@@ -149,17 +149,19 @@ class DDSBaseClass:
                 f"'{self.project}' may be blocked. Contact the responsible unit."
             )
         LOG.debug(f"Project '{self.project}' busy status reset: {set_to_not_busy}")
-    
+
     def set_as_busy(self) -> None:
         """Set busy to True."""
-        # 'upload' or 'download' for error message 
+        # 'upload' or 'download' for error message
         if self.method == "put":
             action: str = "upload"
         elif self.method == "get":
             action: str = "download"
         else:
-            raise dds_cli.exceptions.DDSCLIException("The busy status is not applicable for this method.")
-        
+            raise dds_cli.exceptions.DDSCLIException(
+                "The busy status is not applicable for this method."
+            )
+
         # Set the project as busy
         set_to_busy: bool = self.change_busy_status(busy=True)
         if not set_to_busy:

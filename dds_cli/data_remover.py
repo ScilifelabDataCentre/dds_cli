@@ -59,6 +59,8 @@ class DataRemover(base.DDSBaseClass):
             raise dds_cli.exceptions.InvalidMethodError(
                 attempted_method=method, message="DataRemover attempting unauthorized method"
             )
+        
+        self.set_as_busy()
 
     def __create_failed_table(self, resp_json, level="File"):
         """Output a response after deletion."""

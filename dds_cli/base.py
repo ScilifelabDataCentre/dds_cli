@@ -157,6 +157,8 @@ class DDSBaseClass:
             action: str = "upload"
         elif self.method == "get":
             action: str = "download"
+        elif self.method == "rm":
+            action: str = "remove"
         else:
             raise dds_cli.exceptions.DDSCLIException(
                 "The busy status is not applicable for this method."

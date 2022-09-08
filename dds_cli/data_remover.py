@@ -60,8 +60,6 @@ class DataRemover(base.DDSBaseClass):
                 attempted_method=method, message="DataRemover attempting unauthorized method"
             )
 
-        self.set_as_busy()
-
     def __create_failed_table(self, resp_json, level="File"):
         """Output a response after deletion."""
         # Check that enough info

@@ -122,7 +122,10 @@ class DDSBaseClass:
         return self
 
     def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
-        """Finish and print out delivery summary."""
+        """Finish and print out delivery summary.
+        
+        This is not entered if there's an error during __init__.
+        """
         if self.method in ["put", "get"]:
             self.cleanup_busy_status()
             self.__printout_delivery_summary()

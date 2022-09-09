@@ -139,7 +139,7 @@ class DDSBaseClass:
 
     # Public methods ################################# Public methods #
 
-    def cleanup_busy_status(self):
+    def cleanup_busy_status(self) -> None:
         """Reset busy to False."""
         # Set project to busy
         set_to_not_busy: bool = self.change_busy_status(busy=False)
@@ -149,6 +149,31 @@ class DDSBaseClass:
                 f"'{self.project}' may be blocked. Contact the responsible unit."
             )
         LOG.debug(f"Project '{self.project}' busy status reset: {set_to_not_busy}")
+
+    def set_as_busy(self) -> None:
+        """Set busy to True."""
+        # 'upload' or 'download' for error message
+        if self.method == "put":
+            action: str = "upload"
+        elif self.method == "get":
+            action: str = "download"
+        elif self.method == "rm":
+            action: str = "remove"
+        else:
+            raise dds_cli.exceptions.DDSCLIException(
+                "The busy status is not applicable for this method."
+            )
+
+        # Set the project as busy
+        set_to_busy: bool = self.change_busy_status(busy=True)
+        if not set_to_busy:
+            raise dds_cli.exceptions.DDSCLIException(
+                message=(
+                    f"Cannot {action} data at this time: "
+                    f"The '{self.project}' is currently busy with another task."
+                )
+            )
+        LOG.debug("Project '{self.project}' set to busy.")
 
     def change_busy_status(self, busy: bool) -> bool:
         """Set project as busy."""
@@ -293,8 +318,6 @@ class DDSBaseClass:
                 if self.status[file]["cancel"] in [True, "True"]
             }
         )
-
-        LOG.debug(self.filehandler.failed)
 
         # Sort by which directory the files are in
         out_data = self.filehandler.failed

@@ -209,15 +209,8 @@ class DataPutter(base.DDSBaseClass):
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
         # Set project to busy
-        set_to_busy: bool = self.change_busy_status(busy=True)
-        if not set_to_busy:
-            raise exceptions.DDSCLIException(
-                message=(
-                    "Cannot upload data at this time: "
-                    f"The '{self.project}' is currently busy with another task."
-                )
-            )
-        LOG.debug(f"Project '{self.project}' set to busy: {set_to_busy}")
+        self.set_as_busy()
+
         try:
             # Start file prep progress
             with Progress(

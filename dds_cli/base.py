@@ -174,7 +174,7 @@ class DDSBaseClass:
                     f"The '{self.project}' is currently busy with another task."
                 )
             )
-        LOG.debug(f"Project '{self.project}' set to busy: {set_to_busy}")
+        LOG.debug("Project '{self.project}' set to busy.")
 
     def change_busy_status(self, busy: bool) -> bool:
         """Set project as busy."""

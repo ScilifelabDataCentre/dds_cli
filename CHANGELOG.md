@@ -182,3 +182,6 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint (2022-09-02 - 2022-09-16)
 
 - Add storage usage information in the Units listing table for Super Admin ([#523](https://github.com/ScilifelabDataCentre/dds_cli/pull/523))
+- Set project as busy / not busy when starting / finishing a upload ([#525](https://github.com/ScilifelabDataCentre/dds_cli/pull/525))
+- Set project as busy / not busy when starting / finishing a download ([#526](https://github.com/ScilifelabDataCentre/dds_cli/pull/526))
+- Set project as busy / not busy when starting / finishing a deletion ([#527](https://github.com/ScilifelabDataCentre/dds_cli/pull/527))

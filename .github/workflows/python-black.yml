@@ -2,10 +2,10 @@ name: Lint Python
 on:
   push:
     paths:
-      - '**.py'
+      - "**.py"
   pull_request:
     paths:
-      - '**.py'
+      - "**.py"
 
 jobs:
   PythonLint:

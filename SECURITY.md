@@ -9,9 +9,8 @@ currently being supported with security updates.
 | ------- | ------------------ |
 | 1.0.0   | :white_check_mark: |
 
-
 ## Reporting security issues
 
 Please send us your report privately via: **email comming**
 
-DO NOT file a public issue. 
+DO NOT file a public issue.

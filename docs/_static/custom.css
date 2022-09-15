@@ -13,18 +13,18 @@
 /* ... */
 
 h1 {
-    font-weight: 700;
-    font-size: 30pt;
+  font-weight: 700;
+  font-size: 30pt;
 }
 
 h2 {
-    font-size: 25pt;
-    font-weight: 20;
-    text-decoration: underline;
+  font-size: 25pt;
+  font-weight: 20;
+  text-decoration: underline;
 }
 
 h3 {
-    font-size: 20pt;
-    font-weight: 20;
-    font-style: italic;
+  font-size: 20pt;
+  font-weight: 20;
+  font-style: italic;
 }

@@ -18,9 +18,9 @@ The Data Delivery System (DDS) is a cloud-based system for all SciLifeLab platfo
 [![Technical Overview](https://img.shields.io/badge/-Technical%20Overview-informational?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Technical-Overview.pdf)
 [![Architecture Decision Record](https://img.shields.io/badge/-ADR-000000?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/wiki/Architecture-Decision-Record,-ADR)
 [![Troubleshooting](https://img.shields.io/badge/-Troubleshooting%20Guide-red?logo=github)](https://github.com/ScilifelabDataCentre/dds_web/blob/master/doc/Troubleshooting.pdf)
-[![Backend](https://img.shields.io/badge/-Web\/API-yellow?logo=github)](https://github.com/ScilifelabDataCentre/dds_web)
+[![Backend](https://img.shields.io/badge/-Web/API-yellow?logo=github)](https://github.com/ScilifelabDataCentre/dds_web)
 
-------
+---
 
 ## Table of contents
 
@@ -41,21 +41,21 @@ After installing, run `dds` and verify that the output looks like this:
 
 ```bash
 $ dds
-     ︵ 
- ︵ (  )   ︵ 
-(  ) ) (  (  )   SciLifeLab Data Delivery System 
- ︶  (  ) ) (    https://delivery.scilifelab.se/ 
-      ︶ (  )    Version 1.1.0 
+     ︵
+ ︵ (  )   ︵
+(  ) ) (  (  )   SciLifeLab Data Delivery System
+ ︶  (  ) ) (    https://delivery.scilifelab.se/
+      ︶ (  )    Version 1.1.0
           ︶
-          
- Usage: dds [OPTIONS] COMMAND [ARGS]...                                                             
-                                                                                                    
- SciLifeLab Data Delivery System (DDS) command line interface.                                      
- Access token is saved in a .dds_cli_token file in the home directory.                              
- The token is valid for 7 days. Make sure your token is valid long enough for the delivery to       
- finish. To avoid that a delivery fails because of an expired token, we recommend reauthenticating  
- yourself before each delivery ('dds data put' / 'get').                                            
-                                                                                                    
+
+ Usage: dds [OPTIONS] COMMAND [ARGS]...
+
+ SciLifeLab Data Delivery System (DDS) command line interface.
+ Access token is saved in a .dds_cli_token file in the home directory.
+ The token is valid for 7 days. Make sure your token is valid long enough for the delivery to
+ finish. To avoid that a delivery fails because of an expired token, we recommend reauthenticating
+ yourself before each delivery ('dds data put' / 'get').
+
 ╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮
 │ --verbose     -v               Print verbose output to the console.                              │
 │ --log-file    -l   <filename>  Save a log to a file.                                             │

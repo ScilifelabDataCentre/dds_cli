@@ -1,39 +1,46 @@
+> **Before submitting the PR, please go through the sections below and fill in what you can. If there are any items that are irrelevant for the current PR, remove the row. If a relevant option is missing, please add it as an item and add a PR comment informing that the new option should be included into this template.**
+
+> **All _relevant_ items should be ticked before the PR is merged**
+
 # Description
 
-Please include the following in this section
-
-- [ ] Summary of the changes and the related issue
-- [ ] Relevant motivation and context
-- [ ] Any dependencies that are required for this change
-
-Fixes # (issue)
+- [ ] Add a summary of the changes and the related issue
+- [ ] Add motivation and context regarding why the change is needed
+- [ ] List / describe any dependencies or other changes required for this change
+- [ ] Fixes [link to issue / Jira issue ID]
 
 ## Type of change
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
+- [ ] Documentation
+- [ ] Workflow
+- [ ] Security Alert fix
+- [ ] Bug fix (non-breaking)
+- [ ] New feature (non-breaking)
+- [ ] Breaking change (breaking, will cause existing functionality to not work as expected)
 
 # Checklist:
 
-Please delete options that are not relevant.
-
-- [ ] Any dependent changes have been merged and published in downstream modules
-- [ ] Rebase/merge the branch which this PR is made to
-- [ ] Product Owner / Scrum Master: This PR is made to the `master` branch and I have updated the [version](../dds_cli/version.py)
-- [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x) and I have made the corresponding changes to the API version
-
-## Formatting and documentation
+## General
 
 - [ ] I have added a row in the [changelog](../CHANGELOG.md)
-- [ ] The code follows the style guidelines of this project: Black / Prettier formatting
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
+- [ ] Code change
+  - [ ] Self-review of code done
+  - [ ] Comments added, particularly in hard-to-understand areas
+  - [ ] Documentation is updated
 
-## Tests
+## Repository / Releases
 
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
+- [ ] Blocking PRs have been merged
+- [ ] Rebase / update of branch done
+- [ ] Product Owner / Scrum Master
+  - [ ] The [version](../dds_cli/version.py) is updated (PR to `master` branch)
+  - [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
+    - [ ] I have made the corresponding changes to the API version
+
+## Checks
+
+- [ ] Formatting: Black & Prettier checks pass
+- [ ] CodeQL passes
+- [ ] Tests
+  - [ ] I have added tests for the new code
+  - [ ] The tests pass

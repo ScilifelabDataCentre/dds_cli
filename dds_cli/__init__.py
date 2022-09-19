@@ -126,6 +126,7 @@ class DDSEndpoint:
 
     # MOTD
     MOTD = BASE_ENDPOINT + "/motd"
+    MOTD_SEND = BASE_ENDPOINT + "/motd/send"
 
     # Find user
     USER_FIND = BASE_ENDPOINT + "/user/find"

@@ -116,7 +116,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
                     # on every dds call
                     return motds
 
-    def deactivate_motd(self, motd_id):
+    def deactivate_motd(self, motd_id) -> None:
         """Deactivate specific MOTD."""
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.MOTD,
@@ -128,5 +128,20 @@ class MotdManager(dds_cli.base.DDSBaseClass):
 
         response_message = response_json.get(
             "message", "No response. Cannot confirm MOTD deactivation."
+        )
+        LOG.info(response_message)
+
+    def send_motd(self, motd_id: int) -> None:
+        """Send specific MOTD to users."""
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.MOTD_SEND,
+            headers=self.token,
+            method="post", 
+            json={"motd_id": motd_id}, 
+            error_message="Failed sending the MOTD to users"
+        )
+
+        response_message = response_json.get(
+            "message", "No response. Cannot confirm that MOTDs have been sent."
         )
         LOG.info(response_message)

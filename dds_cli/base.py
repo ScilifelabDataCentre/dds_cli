@@ -76,7 +76,7 @@ class DDSBaseClass:
             # Use user defined destination if any specified
             if self.method in DDS_DIR_REQUIRED_METHODS:
                 default_dir = pathlib.Path(
-                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}"
+                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{self.project}"
                 )
                 if mount_dir:
                     new_directory = mount_dir / default_dir

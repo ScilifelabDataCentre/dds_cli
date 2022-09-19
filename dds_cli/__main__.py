@@ -1869,7 +1869,7 @@ def deactivate_motd(click_ctx, motd_id):
 @click.pass_obj
 def send_motd(click_ctx, motd_id):
     """Send motd as email to all users.
-    
+
     Super Admins only.
     """
     try:

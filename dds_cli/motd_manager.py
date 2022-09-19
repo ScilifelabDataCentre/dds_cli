@@ -136,9 +136,9 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.MOTD_SEND,
             headers=self.token,
-            method="post", 
-            json={"motd_id": motd_id}, 
-            error_message="Failed sending the MOTD to users"
+            method="post",
+            json={"motd_id": motd_id},
+            error_message="Failed sending the MOTD to users",
         )
 
         response_message = response_json.get(

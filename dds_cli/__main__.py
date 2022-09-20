@@ -26,6 +26,7 @@ import dds_cli
 import dds_cli.account_manager
 import dds_cli.unit_manager
 import dds_cli.motd_manager
+import dds_cli.maintenance_manager
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -1878,6 +1879,72 @@ def send_motd(click_ctx, motd_id):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as sender:
             sender.send_motd(motd_id=motd_id)
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+##################################################################################################################
+##################################################################################################################
+## MAINTENANCE #################################################################################### MAINTENANCE ##
+##################################################################################################################
+##################################################################################################################
+
+
+@dds_main.group(name="maintenance", no_args_is_help=True)
+@click.pass_obj
+def maintenance_group_command(_):
+    """Group command for managing Maintenance mode of the DDS.
+
+    Limited to Super Admins.
+    """
+
+
+# ************************************************************************************************************** #
+# MAINTENANCE COMMANDS ******************************************************************** MAINTENANCE COMMANDS #
+# ************************************************************************************************************** #
+
+# -- dds maintenance on -- #
+@maintenance_group_command.command(name="on")
+@click.pass_obj
+def set_maintenance_on(click_ctx):
+    """Activate Maintenance mode.
+    Only usable by Super Admins.
+    """
+    try:
+        with dds_cli.maintenance_manager.MaintenanceManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as setter:
+            setter.maintenance_on()
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds maintenance off -- #
+@maintenance_group_command.command(name="off")
+@click.pass_obj
+def set_maintenance_off(click_ctx):
+    """Deactivate Maintenance mode.
+    Only usable by Super Admins.
+    """
+    try:
+        with dds_cli.maintenance_manager.MaintenanceManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as setter:
+            setter.maintenance_off()
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

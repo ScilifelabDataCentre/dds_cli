@@ -1839,7 +1839,7 @@ def list_active_motds(click_ctx):
         sys.exit(1)
 
 
-# -- dds motd deactivate-- #
+# -- dds motd deactivate -- #
 @motd_group_command.command(name="deactivate")
 @click.argument("motd_id", metavar="[MOTD_ID]", nargs=1, type=int, required=True)
 @click.pass_obj
@@ -1851,8 +1851,33 @@ def deactivate_motd(click_ctx, motd_id):
         with dds_cli.motd_manager.MotdManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
-        ) as data_putter:
-            data_putter.deactivate_motd(motd_id)
+        ) as deactivator:
+            deactivator.deactivate_motd(motd_id)
+    except (
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds motd send -- #
+@motd_group_command.command(name="send")
+@click.argument("motd_id", metavar="[MOTD_ID]", nargs=1, type=int, required=True)
+@click.pass_obj
+def send_motd(click_ctx, motd_id):
+    """Send motd as email to all users.
+
+    Super Admins only.
+    """
+    try:
+        with dds_cli.motd_manager.MotdManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as sender:
+            sender.send_motd(motd_id=motd_id)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

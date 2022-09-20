@@ -188,4 +188,5 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 ## Sprint (2022-09-16 - 2022-09-30)
 
+- New command: `dds motd send [id]` to send MOTds to users ([#532](https://github.com/ScilifelabDataCentre/dds_cli/pull/532))
 - Add project public_id to the temporary DDS directory to allow deliveries initiated at the same time ([#533](https://github.com/ScilifelabDataCentre/dds_cli/pull/533))

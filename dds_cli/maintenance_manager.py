@@ -60,28 +60,13 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
         if self.method not in ["on", "off"]:
             raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
-    def maintenance_on(self) -> None:
+    def change_maintenance_mode(self, setting) -> None:
         """Change Maintenance mode."""
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.MAINTENANCE,
             headers=self.token,
             method="put",
-            json={"state": "on"},
-            error_message="Failed setting maintenance mode",
-        )
-
-        response_message = response_json.get(
-            "message", "No response. Cannot confirm setting maintenance mode."
-        )
-        LOG.info(response_message)
-
-    def maintenance_off(self) -> None:
-        """Change Maintenance mode."""
-        response_json, _ = dds_cli.utils.perform_request(
-            endpoint=DDSEndpoint.MAINTENANCE,
-            headers=self.token,
-            method="put",
-            json={"state": "off"},
+            json={"state": setting},
             error_message="Failed setting maintenance mode",
         )
 

@@ -1901,7 +1901,7 @@ def send_motd(click_ctx, motd_id):
     "setting", metavar="[ON/OFF]", nargs=1, type=click.Choice(["on", "off"], case_sensitive=False)
 )
 @click.pass_obj
-def maintenance_group_command(click_ctx, setting):
+def set_maintenance_mode(click_ctx, setting):
     """Activate / Deactivate Maintenance mode.
 
     Only usable by Super Admins.
@@ -1911,7 +1911,7 @@ def maintenance_group_command(click_ctx, setting):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as setter:
-            setter.change_maintenance_setting(setting=setting)
+            setter.change_maintenance_mode(setting=setting)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

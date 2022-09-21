@@ -1897,7 +1897,9 @@ def send_motd(click_ctx, motd_id):
 
 
 @dds_main.command(name="maintenance", no_args_is_help=True)
-@click.argument("setting", metavar="[ON/OFF]", nargs=1, type=click.Choice(["on", "off"], case_sensitive=False))
+@click.argument(
+    "setting", metavar="[ON/OFF]", nargs=1, type=click.Choice(["on", "off"], case_sensitive=False)
+)
 @click.pass_obj
 def maintenance_group_command(click_ctx, setting):
     """Activate / Deactivate Maintenance mode.
@@ -1918,4 +1920,3 @@ def maintenance_group_command(click_ctx, setting):
     ) as err:
         LOG.error(err)
         sys.exit(1)
-

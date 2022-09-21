@@ -1896,24 +1896,12 @@ def send_motd(click_ctx, motd_id):
 ##################################################################################################################
 
 
-@dds_main.group(name="maintenance", no_args_is_help=True)
+@dds_main.command(name="maintenance", no_args_is_help=True)
+@click.argument("setting", metavar="[ON/OFF]", nargs=1, type=click.Choice(["on", "off"], case_sensitive=False))
 @click.pass_obj
-def maintenance_group_command(_):
-    """Group command for managing Maintenance mode of the DDS.
+def maintenance_group_command(click_ctx, setting):
+    """Activate / Deactivate Maintenance mode.
 
-    Limited to Super Admins.
-    """
-
-
-# ************************************************************************************************************** #
-# MAINTENANCE COMMANDS ******************************************************************** MAINTENANCE COMMANDS #
-# ************************************************************************************************************** #
-
-# -- dds maintenance on -- #
-@maintenance_group_command.command(name="on")
-@click.pass_obj
-def set_maintenance_on(click_ctx):
-    """Activate Maintenance mode.
     Only usable by Super Admins.
     """
     try:
@@ -1921,7 +1909,7 @@ def set_maintenance_on(click_ctx):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as setter:
-            setter.maintenance_on()
+            setter.change_maintenance_setting(setting=setting)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
@@ -1931,25 +1919,3 @@ def set_maintenance_on(click_ctx):
         LOG.error(err)
         sys.exit(1)
 
-
-# -- dds maintenance off -- #
-@maintenance_group_command.command(name="off")
-@click.pass_obj
-def set_maintenance_off(click_ctx):
-    """Deactivate Maintenance mode.
-    Only usable by Super Admins.
-    """
-    try:
-        with dds_cli.maintenance_manager.MaintenanceManager(
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as setter:
-            setter.maintenance_off()
-    except (
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.ApiResponseError,
-        dds_cli.exceptions.ApiRequestError,
-        dds_cli.exceptions.DDSCLIException,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)

@@ -34,7 +34,7 @@ __all__ = [
 ###############################################################################
 
 # Keep track of all allowed methods
-DDS_METHODS = ["put", "get", "ls", "rm", "create", "add", "delete"]
+DDS_METHODS = ["put", "get", "ls", "rm", "create", "add", "delete", "on", "off"]
 
 # Methods to which a directory created by DDS
 DDS_DIR_REQUIRED_METHODS = ["put", "get"]
@@ -126,12 +126,16 @@ class DDSEndpoint:
 
     # MOTD
     MOTD = BASE_ENDPOINT + "/motd"
+    MOTD_SEND = BASE_ENDPOINT + "/motd/send"
 
     # Find user
     USER_FIND = BASE_ENDPOINT + "/user/find"
 
     # Deactivate TOTP
     TOTP_DEACTIVATE = BASE_ENDPOINT + "/user/totp/deactivate"
+
+    # Activate / deactivate Maintenance mode
+    MAINTENANCE = BASE_ENDPOINT + "/maintenance"
 
     TIMEOUT = 120
 

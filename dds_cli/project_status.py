@@ -113,3 +113,35 @@ class ProjectStatusManager(base.DDSBaseClass):
         )
 
         dds_cli.utils.console.print(f"Project {response_json.get('message')}")
+
+
+class ProjectBusyStatusManager(base.DDSBaseClass):
+    """Project Busy Status manager class."""
+
+    def __init__(
+        self,
+        no_prompt: bool = False,
+        token_path: str = None,
+    ):
+        """Handle actions regarding project busy status in the cli."""
+        # Initiate DDSBaseClass to authenticate user
+        super().__init__(
+            no_prompt=no_prompt,
+            method_check=False,
+            token_path=token_path,
+        )
+
+    # Public methods ###################### Public methods #
+    def get_busy_projects(self, list):
+        """Check if there are busy projects"""
+
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.PROJ_BUSY_ANY,
+            method="get",
+            headers=self.token,
+            json={"list": list},
+            error_message="Failed to get projects with busy status",
+        )
+
+        dds_cli.utils.console.print(f"list: {list}")
+        dds_cli.utils.console.print(f"response: {response_json.get('projects')}")

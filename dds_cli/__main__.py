@@ -1217,25 +1217,23 @@ def delete_project(click_ctx, project: str):
 
 
 # -- dds project status busy -- #
-@project_status.command(name="busy", no_args_is_help=True)
+@project_status.command(name="busy", no_args_is_help=False)
 # Flags
-@click.option("--list", required=False, show_default=True, is_flag=True, help="List busy projects")
+@click.option("--show", required=False, show_default=True, is_flag=True, help="Show busy projects")
 @click.pass_obj
-def get_busy_projects(click_ctx, list):
+def get_busy_projects(click_ctx, show):
     """Display True or False depending on if there are any busy projects.
 
     Use `--list` to see a list of all busy projects.
     Available to Super Admin only
     """
-    dds_cli.utils.console.print(f"blas: {list}")
 
     try:
         with dds_cli.project_status.ProjectBusyStatusManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as getter:
-            getter.get_busy_projects(list)
-            dds_cli.utils.console.print(f"bla: {list}")
+            getter.get_busy_projects(show=show)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

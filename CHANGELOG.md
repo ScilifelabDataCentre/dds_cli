@@ -192,4 +192,3 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Add project public_id to the temporary DDS directory to allow deliveries initiated at the same time ([#533](https://github.com/ScilifelabDataCentre/dds_cli/pull/533))
 - New command: `dds maintenance [setting]` to set maintenance mode ([#535](https://github.com/ScilifelabDataCentre/dds_cli/pull/535))
 - New command: `dds project status busy [OPTIONS]` to check for / list busy projects as Super Admin ([#536](https://github.com/ScilifelabDataCentre/dds_cli/pull/536))
-

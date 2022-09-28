@@ -145,20 +145,15 @@ class ProjectBusyStatusManager(base.DDSBaseClass):
 
         num_busy: int = response_json.get("num")
         if num_busy is None:
-            raise exceptions.ApiResponseError(f"No info about busy projects returned from API.")
+            raise exceptions.ApiResponseError("No info about busy projects returned from API.")
 
         if num_busy:
             if not show:
                 LOG.info(f"There are {num_busy} busy projects at the moment.")
             else:
                 projects: typing.Dict = response_json.get("projects")
-                if not projects:
-                    raise exceptions.ApiResponseError(
-                        f"No info about busy projects returned from API."
-                    )
-                else:
-                    LOG.info(f"The following projects are busy:")
-                    for p in projects:
-                        dds_cli.utils.console.print(f"{p}: updated on {projects[p]}")
+                LOG.info(f"The following projects are busy:")
+                for p in projects:
+                    dds_cli.utils.console.print(f"{p}: updated on {projects[p]}")
         else:
             LOG.info(f"There are no busy projects at the moment.")

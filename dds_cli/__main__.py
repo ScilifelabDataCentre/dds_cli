@@ -1224,7 +1224,7 @@ def delete_project(click_ctx, project: str):
 def get_busy_projects(click_ctx, show):
     """Display True or False depending on if there are any busy projects.
 
-    Use `--list` to see a list of all busy projects.
+    Use `--show` to see a list of all busy projects.
     Available to Super Admin only
     """
 

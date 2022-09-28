@@ -1222,7 +1222,7 @@ def delete_project(click_ctx, project: str):
 @click.option("--show", required=False, show_default=True, is_flag=True, help="Show busy projects")
 @click.pass_obj
 def get_busy_projects(click_ctx, show):
-    """Display True or False depending on if there are any busy projects.
+    """Returns the number of busy projects.
 
     Use `--show` to see a list of all busy projects.
     Available to Super Admin only

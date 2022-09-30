@@ -86,7 +86,7 @@ Executable
    
    .. code-block:: bash
 
-      $ ./<name-of-file> 
+      $ ./<name-of-executable-file> 
 
       Example:
       $ ./dds_cli_macos_x86_64
@@ -99,7 +99,7 @@ Executable
 
       $ ./dds_cli_macos_x86_64 --version
 
-5. All sub-commands and options according to the documentation instructions, are run by specifying the executables name instead of ``dds``. Here are a couple of examples:
+5. All sub-commands and options according to the documentation instructions, are run by specifying the executable name instead of ``dds``. Here are a couple of examples:
 
    .. code-block:: bash
 
@@ -127,8 +127,8 @@ Executable
 
 1. Download the executable from the GitHub release page: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe
 2. Open the Powershell (Start -> Search "Powershell" -> Click) or terminal (Powershell recommended)
-3. Drag the executable into the Powershell window and press enter. This should result in the help text being displayed.
-4. To run the dds command, press the up arrow and use the options that you want, specified in this documentation. The only difference should be that you run the dds by specifying the executables name (/path) instead of ``dds``. You may need to change the permissions regarding executables and allow your laptop to trust the software.
+3. Drag the executable into the Powershell window and press enter. This should result in the help text being displayed. You may need to change the permissions regarding executables and allow your laptop to trust the software.
+4. To run the dds command, you need to specify the executable path and name instead of ``dds``. If you press the up arrow you will see the previous command which will reveal the exact path on you computer. 
 
 
 ---

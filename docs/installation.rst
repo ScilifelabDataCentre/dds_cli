@@ -65,7 +65,8 @@ PyPi
 Executable
 ----------
 
-1. Download the executable from the GitHub release page: 
+1. Download the executable from the GitHub release page:
+
    * for Linux: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64
    * for MacOS: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64
    

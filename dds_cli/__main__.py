@@ -522,8 +522,15 @@ def user_group_command(_):
     type=str,
     help="Super Admins only: The unit which you wish to list the users in.",
 )
+@click.option(
+    "--invites",
+    required=False,
+    is_flag=True,
+    default=False,
+    help="List all current invitations."
+)
 @click.pass_obj
-def list_users(click_ctx, unit):
+def list_users(click_ctx, unit, invites):
     """List Unit Admins and Personnel connected to a specific unit.
 
     \b
@@ -541,7 +548,7 @@ def list_users(click_ctx, unit):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
-            lister.list_users(unit=unit)
+            lister.list_users(unit=unit, invites=invites)
 
     except (
         dds_cli.exceptions.AuthenticationError,

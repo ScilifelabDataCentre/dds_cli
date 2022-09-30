@@ -70,8 +70,18 @@ Executable
    * for Linux: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64
    * for MacOS: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64
    
-2. Open the terminal and go to the directory where the downloaded file is located
-3. 
+2. Open the terminal, go to the directory where the downloaded file is located, and make the file executable by running the following command:
+
+   .. code-block:: bash
+
+      $ chmod +x dds-cli_ubuntu_x86_64   
+
+   or
+
+   .. code-block:: bash
+
+      $ chmod +x dds-cli_macos_x86_64   
+
 3. You should now be able to run the dds with the following command
    
    .. code-block:: bash

@@ -91,7 +91,24 @@ Executable
       Example:
       $ ./dds_cli_macos_x86_64
 
-4. To specify options, follow the documentation instructions. The only difference should be that you may need to change the permissions regarding executables, allowing your laptop to trust the software and finally running the dds by specifying the executables name instead of ``dds``. 
+   On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: https://support.apple.com/en-us/HT202491 and https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac
+   
+4. Now test that the CLI has been installed correctly by verifying the version:
+
+   .. code-block:: bash
+
+      $ ./dds_cli_macos_x86_64 --version
+
+5. All sub-commands and options according to the documentation instructions, are run by specifying the executables name instead of ``dds``. Here are a couple of examples:
+
+   .. code-block:: bash
+
+      $ ./dds_cli_macos_x86_64 ls
+      $ ./dds_cli_macos_x86_64 ls -p my_project
+      $ ./dds_cli_macos_x86_64 auth login
+      $ ./dds_cli_macos_x86_64 user info
+      ...
+   
 
 
 ---

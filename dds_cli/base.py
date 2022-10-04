@@ -248,7 +248,7 @@ class DDSBaseClass:
     def __printout_delivery_summary(self):
         """Print out the delivery summary if any files were cancelled."""
         if self.stop_doing:
-            LOG.info(f"{'Upload' if self.method == 'put' else 'Download'} interrupted.\n")
+            LOG.info(f"{'Upload' if self.method == 'put' else 'Download'} cancelled.\n")
             return
 
         # TODO: Look into a better summary print out - old deleted for now

@@ -262,7 +262,6 @@ class DataPutter(base.DDSBaseClass):
         except:
             self.cleanup_busy_status()
             raise
-        
 
     # Public methods ###################### Public methods #
     @verify_proceed

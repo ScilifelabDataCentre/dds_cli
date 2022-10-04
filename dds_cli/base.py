@@ -247,6 +247,10 @@ class DDSBaseClass:
 
     def __printout_delivery_summary(self):
         """Print out the delivery summary if any files were cancelled."""
+        if self.stop_doing:
+            LOG.info(f"{'Upload' if self.method == 'put' else 'Download'} interrupted.\n")
+            return
+
         # TODO: Look into a better summary print out - old deleted for now
         any_failed = self.__collect_all_failed()
         true_failed = [entry for entry in any_failed if entry["message"] != "File already uploaded"]

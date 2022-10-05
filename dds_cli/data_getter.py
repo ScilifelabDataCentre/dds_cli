@@ -210,7 +210,7 @@ class DataGetter(base.DDSBaseClass):
                 and hasattr(err.response, "status_code")
                 and err.response.status_code == 404
             ):
-                error = "File not found! Please report this to the SciLifeLab Data Centre."
+                error = "File not found! Please contact support."
             else:
                 error = str(err)
         else:

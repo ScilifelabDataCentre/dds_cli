@@ -94,6 +94,7 @@ def test_generate_shared_key_ok():
     # Verify same key
     assert encryptor.key == decryptor.key
 
+
 def test_generate_shared_key_ok():
     # Generate key pairs
     project_private_key, project_public_key = key_pair()
@@ -111,6 +112,7 @@ def test_generate_shared_key_ok():
 
     # Verify same key
     assert encryptor.key != decryptor.key
+
 
 # verify_checksum
 

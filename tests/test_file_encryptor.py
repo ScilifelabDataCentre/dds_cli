@@ -63,10 +63,9 @@ def test_decryptor():
     assert encryptor.my_private != decryptor.my_private
 
 
-def test_generate_shared_key():
+def test_generate_shared_key_ok():
     # Generate key pairs
     project_private_key, project_public_key = key_pair()
-    file_private_key, file_public_key = key_pair()
 
     # Generate encryption key
     encryptor = file_encryptor.Encryptor(project_keys=[project_private_key, project_public_key])
@@ -95,6 +94,23 @@ def test_generate_shared_key():
     # Verify same key
     assert encryptor.key == decryptor.key
 
+def test_generate_shared_key_ok():
+    # Generate key pairs
+    project_private_key, project_public_key = key_pair()
+    _, file_public_key = key_pair()
+
+    # Generate encryption key
+    encryptor = file_encryptor.Encryptor(project_keys=[project_private_key, project_public_key])
+
+    # Generate decryption key
+    decryptor = file_encryptor.Decryptor(
+        project_keys=(project_private_key, project_public_key),
+        peer_public=file_public_key,
+        key_salt=encryptor.salt,
+    )
+
+    # Verify same key
+    assert encryptor.key != decryptor.key
 
 # verify_checksum
 

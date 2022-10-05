@@ -7,8 +7,116 @@ from dds_cli import file_handler_local
 from pyfakefs.fake_filesystem import FakeFilesystem
 import os
 import csv
+from cryptography.hazmat.primitives import asymmetric, serialization
+from cryptography.hazmat.primitives.asymmetric import x25519
 
-# Text files
+# Encryptor.__init__ / Decryptor.__init__
+
+
+def key_pair():
+    """Generate a Curve 25519 key pair."""
+    private_key = asymmetric.x25519.X25519PrivateKey.generate()
+    private_key_bytes = private_key.private_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PrivateFormat.Raw,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    public_key_bytes = private_key.public_key().public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
+    return private_key_bytes.hex().upper(), public_key_bytes.hex().upper()
+
+
+def test_encryptor():
+    """Generate encryption key."""
+    # Generate key pairs
+    project_private_key, project_public_key = key_pair()
+
+    # Generate encryption key
+    encryptor = file_encryptor.Encryptor(project_keys=[project_private_key, project_public_key])
+    assert isinstance(encryptor.peer_public, x25519.X25519PublicKey)
+    assert isinstance(encryptor.my_private, x25519.X25519PrivateKey)
+    assert isinstance(encryptor.key, bytes)
+    assert isinstance(encryptor.salt, str)
+
+
+def test_decryptor():
+    """Generate decryption key"""
+    # Generate key pairs
+    project_private_key, project_public_key = key_pair()
+    _, file_public_key = key_pair()
+
+    # Generate encryption key
+    encryptor = file_encryptor.Encryptor(project_keys=[project_private_key, project_public_key])
+    decryptor = file_encryptor.Decryptor(
+        project_keys=(project_private_key, project_public_key),
+        peer_public=file_public_key,
+        key_salt=encryptor.salt,
+    )
+    assert isinstance(decryptor.peer_public, x25519.X25519PublicKey)
+    assert isinstance(decryptor.my_private, x25519.X25519PrivateKey)
+    assert isinstance(decryptor.key, bytes)
+
+    # Make sure they're not the same
+    assert encryptor.peer_public != decryptor.peer_public
+    assert encryptor.my_private != decryptor.my_private
+
+
+def test_generate_shared_key_ok():
+    # Generate key pairs
+    project_private_key, project_public_key = key_pair()
+
+    # Generate encryption key
+    encryptor = file_encryptor.Encryptor(project_keys=[project_private_key, project_public_key])
+    encryptor_public_key = encryptor.public_to_hex(public_key=encryptor.my_private.public_key())
+
+    # Generate decryption key
+    decryptor = file_encryptor.Decryptor(
+        project_keys=(project_private_key, project_public_key),
+        peer_public=encryptor_public_key,
+        key_salt=encryptor.salt,
+    )
+    decryptor_public_key = decryptor.public_to_hex(public_key=decryptor.my_private.public_key())
+
+    # Verify matching public / private
+    assert (
+        encryptor_public_key
+        == decryptor.public_to_hex(public_key=decryptor.peer_public)
+        == encryptor.public_to_hex(public_key=decryptor.peer_public)
+    )
+    assert (
+        decryptor_public_key
+        == encryptor.public_to_hex(public_key=encryptor.peer_public)
+        == decryptor.public_to_hex(public_key=encryptor.peer_public)
+    )
+
+    # Verify same key
+    assert encryptor.key == decryptor.key
+
+
+def test_generate_shared_key_ok():
+    # Generate key pairs
+    project_private_key, project_public_key = key_pair()
+    _, file_public_key = key_pair()
+
+    # Generate encryption key
+    encryptor = file_encryptor.Encryptor(project_keys=[project_private_key, project_public_key])
+
+    # Generate decryption key
+    decryptor = file_encryptor.Decryptor(
+        project_keys=(project_private_key, project_public_key),
+        peer_public=file_public_key,
+        key_salt=encryptor.salt,
+    )
+
+    # Verify same key
+    assert encryptor.key != decryptor.key
+
+
+# verify_checksum
+
+# - text files
 
 
 def verify_files_txt(fs: FakeFilesystem, magnitude: str):
@@ -97,7 +205,7 @@ def test_verify_checksum_more_than_chunk_textfile(fs: FakeFilesystem):
     verify_files_txt(fs=fs, magnitude="more")
 
 
-# Images
+# - Images
 
 
 def test_verify_checksum_images():
@@ -156,7 +264,7 @@ def test_verify_checksum_images():
     )
 
 
-# Csv files
+# - Csv files
 
 
 def verify_files_csv(fs: FakeFilesystem, magnitude: str):

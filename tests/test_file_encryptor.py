@@ -63,25 +63,37 @@ def test_decryptor():
     assert encryptor.my_private != decryptor.my_private
 
 
-def generate_shared_key():
+def test_generate_shared_key():
     # Generate key pairs
     project_private_key, project_public_key = key_pair()
     file_private_key, file_public_key = key_pair()
 
     # Generate encryption key
     encryptor = file_encryptor.Encryptor(project_keys=[project_private_key, project_public_key])
+    encryptor_public_key = encryptor.public_to_hex(public_key=encryptor.my_private.public_key())
+
+    # Generate decryption key
     decryptor = file_encryptor.Decryptor(
         project_keys=(project_private_key, project_public_key),
-        peer_public=file_public_key,
+        peer_public=encryptor_public_key,
         key_salt=encryptor.salt,
+    )
+    decryptor_public_key = decryptor.public_to_hex(public_key=decryptor.my_private.public_key())
+
+    # Verify matching public / private
+    assert (
+        encryptor_public_key
+        == decryptor.public_to_hex(public_key=decryptor.peer_public)
+        == encryptor.public_to_hex(public_key=decryptor.peer_public)
+    )
+    assert (
+        decryptor_public_key
+        == encryptor.public_to_hex(public_key=encryptor.peer_public)
+        == decryptor.public_to_hex(public_key=encryptor.peer_public)
     )
 
     # Verify same key
     assert encryptor.key == decryptor.key
-
-    # Verify matching public / private
-    assert encryptor.public_to_hex(public_key=encryptor.peer_public) == file_public_key
-    assert decryptor.public_to_hex(public_key=decryptor.peer_public) == project_public_key
 
 
 # verify_checksum

@@ -8,7 +8,9 @@ from pyfakefs.fake_filesystem import FakeFilesystem
 import os
 
 
-def verify_files(fs: FakeFilesystem, magnitude: str):
+# Text files
+
+def verify_files_txt(fs: FakeFilesystem, magnitude: str):
     """Perform checksum generation and verification for files of specific sizes."""
     # Specify number of lines to add
     num_lines: int = 0
@@ -16,7 +18,7 @@ def verify_files(fs: FakeFilesystem, magnitude: str):
         num_lines = 100
     elif magnitude == "more":
         num_lines = 10000
-
+    
     # Define lines to input
     line_contents: str = "abcdefghijklmnopqrstuvwxyzåäö"
     lines: typing.List = [line_contents] * num_lines
@@ -86,9 +88,67 @@ def verify_files(fs: FakeFilesystem, magnitude: str):
 
 def test_verify_checksum_less_than_chunk_textfile(fs: FakeFilesystem):
     """Check that the verify_checksum function verifies integrity when size less than 64 KiB."""
-    verify_files(fs=fs, magnitude="less")
+    verify_files_txt(fs=fs, magnitude="less")
 
 
 def test_verify_checksum_more_than_chunk_textfile(fs: FakeFilesystem):
     """Check that the verify_checksum function verifies integrity when size more than 64 KiB."""
-    verify_files(fs=fs, magnitude="more")
+    verify_files_txt(fs=fs, magnitude="more")
+
+
+# Images
+
+def test_verify_checksum_images():
+    """Perform checksum generation and verification for files of specific sizes."""
+    image_1a: pathlib.Path = pathlib.Path.cwd() / pathlib.Path("tests/images/test-image_1a.jpg")
+    print(image_1a, flush=True)
+    image_1b: pathlib.Path = pathlib.Path("tests/images/test-image_1b.jpg")
+    image_2: pathlib.Path = pathlib.Path("tests/images/test-image_2.jpg")
+    assert image_1a.exists()
+    assert image_1b.exists()
+    assert image_2.exists()
+
+    # Generate checksums
+    checksum_image_1a = hashlib.sha256()
+    for chunk in file_handler_local.LocalFileHandler.read_file(file=image_1a):
+        checksum_image_1a.update(chunk)
+
+    checksum_image_1b = hashlib.sha256()
+    for chunk in file_handler_local.LocalFileHandler.read_file(file=image_1b):
+        checksum_image_1b.update(chunk)
+
+    checksum_image_2 = hashlib.sha256()
+    for chunk in file_handler_local.LocalFileHandler.read_file(file=image_2):
+        checksum_image_2.update(chunk)
+
+    # Create hexdigests
+    checksum_image_1a_hex = checksum_image_1a.hexdigest()
+    checksum_image_1b_hex = checksum_image_1b.hexdigest()
+    checksum_image_2_hex = checksum_image_2.hexdigest()
+
+    # Check that they are identical when they should be 
+    assert checksum_image_1a_hex == checksum_image_1b_hex
+    assert checksum_image_1a_hex != checksum_image_2_hex != checksum_image_1b_hex
+
+    # Make sure verify_checksum gives the same
+    image_1a_verified, message1a = file_encryptor.Encryptor.verify_checksum(
+        file=image_1a, correct_checksum=checksum_image_1a_hex
+    )
+    assert image_1a_verified and message1a == "File integrity verified."
+    image_1b_verified, message1b = file_encryptor.Encryptor.verify_checksum(
+        file=image_1b, correct_checksum=checksum_image_1b_hex
+    )
+    assert image_1b_verified and message1b == "File integrity verified."
+    image_2_verified, message2 = file_encryptor.Encryptor.verify_checksum(
+        file=image_1b, correct_checksum=checksum_image_1b_hex
+    )
+    assert image_2_verified and message2 == "File integrity verified."
+
+    # Verify that verify_checksum fails to verify integrity
+    fake_1_altered_verified, message1altered = file_encryptor.Encryptor.verify_checksum(
+        file=image_1a, correct_checksum=checksum_image_2_hex
+    )
+    assert (
+        not fake_1_altered_verified
+        and message1altered == "Checksum verification failed. File compromised."
+    )

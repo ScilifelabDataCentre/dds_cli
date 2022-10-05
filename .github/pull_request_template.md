@@ -17,12 +17,13 @@
 - [ ] Bug fix (non-breaking)
 - [ ] New feature (non-breaking)
 - [ ] Breaking change (breaking, will cause existing functionality to not work as expected)
+- [ ] Tests (only)
 
 # Checklist:
 
 ## General
 
-- [ ] I have added a row in the [changelog](../CHANGELOG.md)
+- [ ] [Changelog](../CHANGELOG.md): New row added. Not needed when PR includes _only_ tests.
 - [ ] Code change
   - [ ] Self-review of code done
   - [ ] Comments added, particularly in hard-to-understand areas

@@ -1,6 +1,6 @@
 # Changelog
 
-Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes.
+Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes. Not needed when PR includes _only_ tests for already existing feature.
 
 ## Sprint (2021-08-11 - 2021-08-25)
 

@@ -1946,6 +1946,7 @@ def set_maintenance_mode(click_ctx, setting):
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
         dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.InvalidMethodError,
     ) as err:
         LOG.error(err)
         sys.exit(1)

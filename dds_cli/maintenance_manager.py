@@ -53,7 +53,7 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
 
         # Only methods "on" and "off" can use the Maintenance class
         if self.method not in ["on", "off"]:
-            raise dds_cli.exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
+            raise dds_cli.exceptions.InvalidMethodError(f"Unauthorized method: '{self.method}'")
 
     def change_maintenance_mode(self, setting) -> None:
         """Change Maintenance mode."""

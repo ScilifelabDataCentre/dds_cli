@@ -10,6 +10,7 @@ import csv
 
 # Text files
 
+
 def verify_files_txt(fs: FakeFilesystem, magnitude: str):
     """Perform checksum generation and verification for files of specific sizes."""
     # Specify number of lines to add
@@ -18,7 +19,7 @@ def verify_files_txt(fs: FakeFilesystem, magnitude: str):
         num_lines = 100
     elif magnitude == "more":
         num_lines = 10000
-    
+
     # Define lines to input
     line_contents: str = "abcdefghijklmnopqrstuvwxyzåäö"
     lines: typing.List = [line_contents] * num_lines
@@ -98,6 +99,7 @@ def test_verify_checksum_more_than_chunk_textfile(fs: FakeFilesystem):
 
 # Images
 
+
 def test_verify_checksum_images():
     """Perform checksum generation and verification for files of specific sizes."""
     image_1a: pathlib.Path = pathlib.Path.cwd() / pathlib.Path("tests/images/test-image_1a.jpg")
@@ -126,7 +128,7 @@ def test_verify_checksum_images():
     checksum_image_1b_hex = checksum_image_1b.hexdigest()
     checksum_image_2_hex = checksum_image_2.hexdigest()
 
-    # Check that they are identical when they should be 
+    # Check that they are identical when they should be
     assert checksum_image_1a_hex == checksum_image_1b_hex
     assert checksum_image_1a_hex != checksum_image_2_hex != checksum_image_1b_hex
 
@@ -153,7 +155,9 @@ def test_verify_checksum_images():
         and message1altered == "Checksum verification failed. File compromised."
     )
 
+
 # Csv files
+
 
 def verify_files_csv(fs: FakeFilesystem, magnitude: str):
     """Perform checksum generation and verification for files of specific sizes."""
@@ -163,7 +167,7 @@ def verify_files_csv(fs: FakeFilesystem, magnitude: str):
         num_lines = 100
     elif magnitude == "more":
         num_lines = 10000
-    
+
     # Define lines to input
     cell_contents: str = "abcdefghijklmnopqrstuvwxyzåäö0123456789"
     row_contents: typing.List = [cell_contents] * 10
@@ -241,4 +245,3 @@ def test_verify_checksum_less_than_chunk_csv(fs: FakeFilesystem):
 def test_verify_checksum_more_than_chunk_csv(fs: FakeFilesystem):
     """Check that the verify_checksum function verifies integrity when size more than 64 KiB."""
     verify_files_csv(fs=fs, magnitude="more")
-

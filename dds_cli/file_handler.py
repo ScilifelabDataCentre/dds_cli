@@ -49,7 +49,9 @@ class FileHandler:
                     with source_path_file.resolve().open(mode="r") as spf:
                         self.data_list += spf.read().splitlines()
                 except OSError as err:
-                    raise dds_cli.exceptions.UploadError(f"Failed to get files from source-path-file option: {err}")
+                    raise dds_cli.exceptions.UploadError(
+                        f"Failed to get files from source-path-file option: {err}"
+                    )
 
         self.failed = {}
 

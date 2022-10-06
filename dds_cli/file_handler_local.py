@@ -108,7 +108,7 @@ class LocalFileHandler(fh.FileHandler):
             if path.is_file():
                 with fc.Compressor() as compressor:
                     is_compressed, error = compressor.is_compressed(file=path)
-                    
+
                     if error != "":
                         raise exceptions.UploadError(error)
 

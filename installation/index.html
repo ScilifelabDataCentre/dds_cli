@@ -91,18 +91,44 @@
 <section id="executable">
 <h3>Executable<a class="headerlink" href="#executable" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
-<li><p>Download the executable from the GitHub release page: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64">https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64</a>
-If you have an M1 Mac, you need to download this one instead: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_arm64">https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_arm64</a></p></li>
-<li><p>Open the terminal and go to the directory where the downloaded file is located</p></li>
+<li><p>Download the executable from the GitHub release page:</p>
+<ul class="simple">
+<li><p>for Linux: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64">https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64</a></p></li>
+<li><p>for MacOS: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64">https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64</a></p></li>
+</ul>
+</li>
+<li><p>Open the terminal, go to the directory where the downloaded file is located, and make the file executable by running the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ chmod +x dds-cli_ubuntu_x86_64
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ chmod +x dds-cli_macos_x86_64
+</pre></div>
+</div>
+</li>
 <li><p>You should now be able to run the dds with the following command</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./&lt;name-of-file&gt;
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./&lt;name-of-executable-file&gt;
 
 Example:
 $ ./dds_cli_macos_x86_64
 </pre></div>
 </div>
+<p>On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: <a class="reference external" href="https://support.apple.com/en-us/HT202491">https://support.apple.com/en-us/HT202491</a> and <a class="reference external" href="https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac">https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac</a></p>
 </li>
-<li><p>To specify options, follow the documentation instructions. The only difference should be that you may need to change the permissions regarding executables, allowing your laptop to trust the software and finally running the dds by specifying the executables name instead of <code class="docutils literal notranslate"><span class="pre">dds</span></code>.</p></li>
+<li><p>Now test that the CLI has been installed correctly by verifying the version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./dds_cli_macos_x86_64 --version
+</pre></div>
+</div>
+</li>
+<li><p>All sub-commands and options according to the documentation instructions, are run by specifying the executable name instead of <code class="docutils literal notranslate"><span class="pre">dds</span></code>. Here are a couple of examples:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./dds_cli_macos_x86_64 ls
+$ ./dds_cli_macos_x86_64 ls -p my_project
+$ ./dds_cli_macos_x86_64 auth login
+$ ./dds_cli_macos_x86_64 user info
+...
+</pre></div>
+</div>
+</li>
 </ol>
 <p>—</p>
 </section>
@@ -118,8 +144,8 @@ $ ./dds_cli_macos_x86_64
 <ol class="arabic simple">
 <li><p>Download the executable from the GitHub release page: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe">https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe</a></p></li>
 <li><p>Open the Powershell (Start -&gt; Search “Powershell” -&gt; Click) or terminal (Powershell recommended)</p></li>
-<li><p>Drag the executable into the Powershell window and press enter. This should result in the help text being displayed.</p></li>
-<li><p>To run the dds command, press the up arrow and use the options that you want, specified in this documentation. The only difference should be that you run the dds by specifying the executables name (/path) instead of <code class="docutils literal notranslate"><span class="pre">dds</span></code>. You may need to change the permissions regarding executables and allow your laptop to trust the software.</p></li>
+<li><p>Drag the executable into the Powershell window and press enter. This should result in the help text being displayed. You may need to change the permissions regarding executables and allow your laptop to trust the software.</p></li>
+<li><p>To run the dds command, you need to specify the executable path and name instead of <code class="docutils literal notranslate"><span class="pre">dds</span></code>. If you press the up arrow you will see the previous command which will reveal the exact path on you computer.</p></li>
 </ol>
 <p>—</p>
 </section>

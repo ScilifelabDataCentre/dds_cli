@@ -254,7 +254,11 @@ class DataPutter(base.DDSBaseClass):
                 if self.temporary_directory and self.temporary_directory.is_dir():
                     LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
                     dds_cli.utils.delete_folder(self.temporary_directory)
-                raise exceptions.UploadError("No data to upload.")
+                raise exceptions.UploadError(
+                    "The specified data has already been uploaded. If you wish to redo the upload, "
+                    "use the '--overwrite' flag. Please use with caution as previously uploaded data "
+                    "with matching file paths will be overwritten."
+                )
         except:
             self.cleanup_busy_status()
             raise

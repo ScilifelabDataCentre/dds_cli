@@ -523,11 +523,7 @@ def user_group_command(_):
     help="Super Admins only: The unit which you wish to list the users in.",
 )
 @click.option(
-    "--invites",
-    required=False,
-    is_flag=True,
-    default=False,
-    help="List all current invitations."
+    "--invites", required=False, is_flag=True, default=False, help="List all current invitations."
 )
 @click.pass_obj
 def list_users(click_ctx, unit, invites):

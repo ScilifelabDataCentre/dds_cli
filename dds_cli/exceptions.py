@@ -111,3 +111,7 @@ class NoDataError(Exception):
 
 class APIError(Exception):
     """Error connecting to the dds web server."""
+
+
+class NoKeyError(Exception):
+    """Error when there's a missing key."""

@@ -1462,6 +1462,8 @@ def put_data(
         dds_cli.exceptions.UploadError,
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.NoKeyError,
+        dds_cli.exceptions.NoDataError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1633,6 +1635,7 @@ def get_data(
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.NoDataError,
         dds_cli.exceptions.DownloadError,
+        dds_cli.exceptions.NoKeyError,
     ) as err:
         LOG.error(err)
         sys.exit(1)

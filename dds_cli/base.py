@@ -238,10 +238,7 @@ class DDSBaseClass:
         )
 
         if key_type not in project_public:
-            dds_cli.utils.console.print(
-                f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
-            )
-            os._exit(1)
+            raise exceptions.NoKeyError(f"Project access denied: No {key_type} key.")
 
         return project_public[key_type]
 

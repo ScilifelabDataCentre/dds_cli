@@ -67,8 +67,7 @@ class LocalFileHandler(fh.FileHandler):
 
         # No data -- cannot proceed
         if not self.data_list:
-            dds_cli.utils.console.print("\n:warning-emoji: No data specified. :warning-emoji:\n")
-            os._exit(1)
+            raise exceptions.UploadError("No data specified.")
 
         self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
         self.data_list = None

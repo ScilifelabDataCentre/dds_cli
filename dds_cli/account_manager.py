@@ -186,7 +186,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         dds_cli.utils.console.print(msg)
 
-    def list_users(self, unit: str = None, invites: bool=None) -> None:
+    def list_users(self, unit: str = None, invites: bool = None) -> None:
         """List all unit users within a specific unit."""
         if invites:
             response, _ = dds_cli.utils.perform_request(
@@ -195,15 +195,14 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 headers=self.token,
                 error_message="Failed getting invites from API",
             )
-
             title = "Current invites"
             caption = "All invited users where you have access"
             invites = response.get("invites")
+
             if not invites:
                 LOG.info(f"There are no current invites")
                 return
 
-                
             table = dds_cli.utils.create_table(
                 title=title,
                 columns=response.get("keys"),
@@ -218,11 +217,11 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 json={"unit": unit},
                 error_message="Failed getting unit users from API",
             )
-            
+
             if response.get("empty"):
                 LOG.info(f"There are no Unit Admins or Unit Personnel connected to unit '{unit}'")
                 return
-        
+
             users, keys = dds_cli.utils.get_required_in_response(
                 keys=["users", "keys"], response=response
             )
@@ -248,7 +247,6 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Print out table
         dds_cli.utils.print_or_page(item=table)
-
 
     def find_user(self, user_to_find: str) -> None:
         """List all users with accounts in the DDS."""

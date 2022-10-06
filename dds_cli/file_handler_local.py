@@ -67,8 +67,7 @@ class LocalFileHandler(fh.FileHandler):
 
         # No data -- cannot proceed
         if not self.data_list:
-            dds_cli.utils.console.print("\n:warning-emoji: No data specified. :warning-emoji:\n")
-            os._exit(1)
+            raise exceptions.NoDataError("No data specified.")
 
         self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
         self.data_list = None
@@ -111,8 +110,7 @@ class LocalFileHandler(fh.FileHandler):
                     is_compressed, error = compressor.is_compressed(file=path)
 
                     if error != "":
-                        LOG.exception(error)
-                        os._exit(1)
+                        raise exceptions.UploadError(error)
 
                 path_processed = self.create_encrypted_name(
                     raw_file=path,
@@ -220,10 +218,7 @@ class LocalFileHandler(fh.FileHandler):
 
         # API failure
         if "files" not in files_in_db:
-            dds_cli.utils.console.print(
-                "\n:warning-emoji: Files not returned from API. :warning-emoji:\n"
-            )
-            os._exit(1)
+            raise exceptions.NoDataError("Files not returned from API.")
 
         LOG.debug("Previous upload check finished.")
 

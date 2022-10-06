@@ -113,3 +113,47 @@ class ProjectStatusManager(base.DDSBaseClass):
         )
 
         dds_cli.utils.console.print(f"Project {response_json.get('message')}")
+
+
+class ProjectBusyStatusManager(base.DDSBaseClass):
+    """Project Busy Status manager class."""
+
+    def __init__(
+        self,
+        no_prompt: bool = False,
+        token_path: str = None,
+    ):
+        """Handle actions regarding project busy status in the cli."""
+        # Initiate DDSBaseClass to authenticate user
+        super().__init__(
+            no_prompt=no_prompt,
+            method_check=False,
+            token_path=token_path,
+        )
+
+    # Public methods ###################### Public methods #
+    def get_busy_projects(self, show: bool = False):
+        """Check if there are busy projects"""
+
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.PROJ_BUSY_ANY,
+            method="get",
+            headers=self.token,
+            json={"list": show},
+            error_message="Failed to get projects with busy status",
+        )
+
+        num_busy: int = response_json.get("num")
+        if num_busy is None:
+            raise exceptions.ApiResponseError("No info about busy projects returned from API.")
+
+        if num_busy:
+            if not show:
+                LOG.info(f"There are {num_busy} busy projects at the moment.")
+            else:
+                projects: typing.Dict = response_json.get("projects")
+                LOG.info(f"The following projects are busy:")
+                for p in projects:
+                    dds_cli.utils.console.print(f"{p}: updated on {projects[p]}")
+        else:
+            LOG.info(f"There are no busy projects at the moment.")

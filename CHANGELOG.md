@@ -1,6 +1,6 @@
 # Changelog
 
-Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes.
+Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes. Not needed when PR includes _only_ tests for already existing feature.
 
 ## Sprint (2021-08-11 - 2021-08-25)
 
@@ -191,3 +191,9 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - New command: `dds motd send [id]` to send MOTds to users ([#532](https://github.com/ScilifelabDataCentre/dds_cli/pull/532))
 - Add project public_id to the temporary DDS directory to allow deliveries initiated at the same time ([#533](https://github.com/ScilifelabDataCentre/dds_cli/pull/533))
 - New command: `dds maintenance [setting]` to set maintenance mode ([#535](https://github.com/ScilifelabDataCentre/dds_cli/pull/535))
+- New command: `dds project status busy [OPTIONS]` to check for / list busy projects as Super Admin ([#536](https://github.com/ScilifelabDataCentre/dds_cli/pull/536))
+
+## Sprint (2022-09-30 - 2022-10-14)
+
+- Improved message displayed to user when data already uploaded ([#541](https://github.com/ScilifelabDataCentre/dds_cli/pull/541))
+- New message displayed when KeyboardInterrupt used during upload / download ([#542](https://github.com/ScilifelabDataCentre/dds_cli/pull/542))

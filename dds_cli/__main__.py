@@ -1216,6 +1216,35 @@ def delete_project(click_ctx, project: str):
             sys.exit(1)
 
 
+# -- dds project status busy -- #
+@project_status.command(name="busy", no_args_is_help=False)
+# Flags
+@click.option("--show", required=False, show_default=True, is_flag=True, help="Show busy projects")
+@click.pass_obj
+def get_busy_projects(click_ctx, show):
+    """Returns the number of busy projects.
+
+    Use `--show` to see a list of all busy projects.
+    Available to Super Admin only
+    """
+
+    try:
+        with dds_cli.project_status.ProjectBusyStatusManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as getter:
+            getter.get_busy_projects(show=show)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
 # ACCESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ACCESS #
 @project_group_command.group(name="access")
 @click.pass_obj
@@ -1433,6 +1462,8 @@ def put_data(
         dds_cli.exceptions.UploadError,
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.NoKeyError,
+        dds_cli.exceptions.NoDataError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1604,6 +1635,7 @@ def get_data(
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.NoDataError,
         dds_cli.exceptions.DownloadError,
+        dds_cli.exceptions.NoKeyError,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1917,6 +1949,7 @@ def set_maintenance_mode(click_ctx, setting):
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
         dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.InvalidMethodError,
     ) as err:
         LOG.error(err)
         sys.exit(1)

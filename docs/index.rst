@@ -11,7 +11,7 @@ The Data Delivery System (DDS, https://delivery.scilifelab.se/) consists of a co
 
 How do I get my user account?
 ===============================
-An invite from an existing user is required in order for you to get an account within the DDS. The email will be from `dsw@scilifelab.se`, we will notify you if and when this changes. Note that any emails sent to this address regarding the DDS *will not be responded to*. If you do not get an email, please have a look in the junk/spam folder. If your email adress has the `scilifelab.se` domain, keep in mind that your emails may take a while to deliver due to the KTH spam filters. If you do not receive an email, please contact the Data Centre and we will look into it. 
+An invite from an existing user is required in order for you to get an account within the DDS. The email will be from `services-noreply@scilifelab.se`, we will notify you if and when this changes. Note that any emails sent to this address regarding the DDS *will not be responded to*. If you do not get an email, please have a look in the junk/spam folder. If your email adress has the `scilifelab.se` domain, keep in mind that your emails may take a while to deliver due to the KTH spam filters. If you do not receive an email, please contact support. 
 
 Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system. To be able to use the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<cli>`.
 

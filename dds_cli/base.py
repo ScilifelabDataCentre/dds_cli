@@ -238,15 +238,16 @@ class DDSBaseClass:
         )
 
         if key_type not in project_public:
-            dds_cli.utils.console.print(
-                f"\n:no_entry_sign: Project access denied: No {key_type} key. :no_entry_sign:\n"
-            )
-            os._exit(1)
+            raise exceptions.NoKeyError(f"Project access denied: No {key_type} key.")
 
         return project_public[key_type]
 
     def __printout_delivery_summary(self):
         """Print out the delivery summary if any files were cancelled."""
+        if self.stop_doing:
+            LOG.info(f"{'Upload' if self.method == 'put' else 'Download'} cancelled.\n")
+            return
+
         # TODO: Look into a better summary print out - old deleted for now
         any_failed = self.__collect_all_failed()
         true_failed = [entry for entry in any_failed if entry["message"] != "File already uploaded"]

@@ -186,64 +186,68 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         dds_cli.utils.console.print(msg)
 
-    def list_users(self, unit: str = None, invites: bool = None) -> None:
+    def list_users(self, unit: str = None) -> None:
         """List all unit users within a specific unit."""
-        if invites:
-            response, _ = dds_cli.utils.perform_request(
-                endpoint=dds_cli.DDSEndpoint.LIST_INVITED_USERS,
-                method="get",
-                headers=self.token,
-                error_message="Failed getting invites from API",
-            )
-            title = "Current invites"
-            caption = "All invited users where you have access"
-            invites = response.get("invites")
+        response, _ = dds_cli.utils.perform_request(
+            endpoint=dds_cli.DDSEndpoint.LIST_USERS,
+            method="get",
+            headers=self.token,
+            json={"unit": unit},
+            error_message="Failed getting unit users from API",
+        )
 
-            if not invites:
-                LOG.info(f"There are no current invites")
-                return
+        if response.get("empty"):
+            LOG.info(f"There are no Unit Admins or Unit Personnel connected to unit '{unit}'")
+            return
 
-            table = dds_cli.utils.create_table(
-                title=title,
-                columns=response.get("keys"),
-                rows=invites,
-                caption=caption,
-            )
+        users, keys = dds_cli.utils.get_required_in_response(
+            keys=["users", "keys"], response=response
+        )
+
+        # Sort users according to name
+        users = dds_cli.utils.sort_items(items=users, sort_by="Name")
+
+        # Specific info if unit returned
+        unit = response.get("unit")
+        if unit:
+            title = f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}."
+            caption = "All users (Unit Personnel and Admins) within your unit."
         else:
-            response, _ = dds_cli.utils.perform_request(
-                endpoint=dds_cli.DDSEndpoint.LIST_USERS,
-                method="get",
-                headers=self.token,
-                json={"unit": unit},
-                error_message="Failed getting unit users from API",
-            )
+            title = "All accounts in the DDS."
+            caption = "All accounts in the DDS (all roles)."
 
-            if response.get("empty"):
-                LOG.info(f"There are no Unit Admins or Unit Personnel connected to unit '{unit}'")
-                return
+        table = dds_cli.utils.create_table(
+            title=title,
+            columns=keys,
+            rows=users,
+            caption=caption,
+        )
 
-            users, keys = dds_cli.utils.get_required_in_response(
-                keys=["users", "keys"], response=response
-            )
+        # Print out table
+        dds_cli.utils.print_or_page(item=table)
 
-            # Sort users according to name
-            users = dds_cli.utils.sort_items(items=users, sort_by="Name")
+    def list_invites(self, unit: str = None, invites: bool = None) -> None:
+        """List all unit users within a specific unit."""
+        response, _ = dds_cli.utils.perform_request(
+            endpoint=dds_cli.DDSEndpoint.LIST_INVITED_USERS,
+            method="get",
+            headers=self.token,
+            error_message="Failed getting invites from API",
+        )
+        title = "Current invites"
+        caption = "All invited users where you have access"
+        invites = response.get("invites")
 
-            # Specific info if unit returned
-            unit = response.get("unit")
-            if unit:
-                title = f"Unit Admins and Personnel within {f'unit: {unit}' or 'your unit'}."
-                caption = "All users (Unit Personnel and Admins) within your unit."
-            else:
-                title = "All accounts in the DDS."
-                caption = "All accounts in the DDS (all roles)."
+        if not invites:
+            LOG.info(f"There are no current invites")
+            return
 
-            table = dds_cli.utils.create_table(
-                title=title,
-                columns=keys,
-                rows=users,
-                caption=caption,
-            )
+        table = dds_cli.utils.create_table(
+            title=title,
+            columns=response.get("keys"),
+            rows=invites,
+            caption=caption,
+        )
 
         # Print out table
         dds_cli.utils.print_or_page(item=table)

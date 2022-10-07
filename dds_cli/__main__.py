@@ -544,7 +544,10 @@ def list_users(click_ctx, unit, invites):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
-            lister.list_users(unit=unit, invites=invites)
+            if invites:
+                lister.list_invites(unit=unit, invites=invites)
+            else:
+                lister.list_users(unit=unit)
 
     except (
         dds_cli.exceptions.AuthenticationError,

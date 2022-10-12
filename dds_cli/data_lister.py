@@ -51,6 +51,7 @@ class DataLister(base.DDSBaseClass):
         tree: bool = False,
         no_prompt: bool = False,
         json: bool = False,
+        all: bool = False,
         token_path: str = None,
         binary: bool = False,
     ):
@@ -72,6 +73,7 @@ class DataLister(base.DDSBaseClass):
         self.show_usage = show_usage
         self.tree = tree
         self.json = json
+        self.all = all
         self.binary = binary
 
     # Public methods ########################### Public methods #
@@ -95,7 +97,8 @@ class DataLister(base.DDSBaseClass):
         always_show = response.get("always_show", False)
         if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
-
+        if not self.all:
+            project_info = [p for p in project_info if p["Is Active"]]
         for project in project_info:
             try:
                 last_updated = pytz.timezone("UTC").localize(

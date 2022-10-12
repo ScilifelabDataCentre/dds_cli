@@ -208,60 +208,53 @@ class DataPutter(base.DDSBaseClass):
         if self.method != "put":
             raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
-        # Set project to busy
-        self.set_as_busy()
+        # Start file prep progress
+        with Progress(
+            "[bold]{task.description}",
+            SpinnerColumn(spinner_name="dots12", style="white"),
+            console=dds_cli.utils.stderr_console,
+        ) as progress:
+            # Spinner while collecting file info
+            wait_task = progress.add_task("Collecting and preparing data", step="prepare")
 
-        try:
-            # Start file prep progress
-            with Progress(
-                "[bold]{task.description}",
-                SpinnerColumn(spinner_name="dots12", style="white"),
-                console=dds_cli.utils.stderr_console,
-            ) as progress:
-                # Spinner while collecting file info
-                wait_task = progress.add_task("Collecting and preparing data", step="prepare")
+            # Get file info
+            self.filehandler = fhl.LocalFileHandler(
+                user_input=(source, source_path_file),
+                project=self.project,
+                temporary_destination=self.dds_directory.directories["FILES"],
+            )
 
-                # Get file info
-                self.filehandler = fhl.LocalFileHandler(
-                    user_input=(source, source_path_file),
-                    project=self.project,
-                    temporary_destination=self.dds_directory.directories["FILES"],
-                )
+            # Verify that the Safespring S3 bucket exists
+            # self.verify_bucket_exist()
 
-                # Verify that the Safespring S3 bucket exists
-                # self.verify_bucket_exist()
+            # Check which, if any, files exist in the db
+            files_in_db = self.filehandler.check_previous_upload(token=self.token)
 
-                # Check which, if any, files exist in the db
-                files_in_db = self.filehandler.check_previous_upload(token=self.token)
-
-                # Quit if error and flag
-                if files_in_db and self.break_on_fail and not self.overwrite:
-                    raise exceptions.UploadError(
-                        "Some files have already been uploaded (or have identical names to "
-                        "previously uploaded files) and the '--break-on-fail' flag was used. "
-                        "Try again with the '--overwrite' flag if you want to upload these files."
-                    )
-
-                # Generate status dict
-                self.status = self.filehandler.create_upload_status_dict(
-                    existing_files=files_in_db, overwrite=self.overwrite
-                )
-
-                # Remove spinner
-                progress.remove_task(wait_task)
-
-            if not self.filehandler.data:
-                if self.temporary_directory and self.temporary_directory.is_dir():
-                    LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
-                    dds_cli.utils.delete_folder(self.temporary_directory)
+            # Quit if error and flag
+            if files_in_db and self.break_on_fail and not self.overwrite:
                 raise exceptions.UploadError(
-                    "The specified data has already been uploaded. If you wish to redo the upload, "
-                    "use the '--overwrite' flag. Please use with caution as previously uploaded data "
-                    "with matching file paths will be overwritten."
+                    "Some files have already been uploaded (or have identical names to "
+                    "previously uploaded files) and the '--break-on-fail' flag was used. "
+                    "Try again with the '--overwrite' flag if you want to upload these files."
                 )
-        except:
-            self.cleanup_busy_status()
-            raise
+
+            # Generate status dict
+            self.status = self.filehandler.create_upload_status_dict(
+                existing_files=files_in_db, overwrite=self.overwrite
+            )
+
+            # Remove spinner
+            progress.remove_task(wait_task)
+
+        if not self.filehandler.data:
+            if self.temporary_directory and self.temporary_directory.is_dir():
+                LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
+                dds_cli.utils.delete_folder(self.temporary_directory)
+            raise exceptions.UploadError(
+                "The specified data has already been uploaded. If you wish to redo the upload, "
+                "use the '--overwrite' flag. Please use with caution as previously uploaded data "
+                "with matching file paths will be overwritten."
+            )
 
     # Public methods ###################### Public methods #
     @verify_proceed

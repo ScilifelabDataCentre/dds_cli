@@ -197,3 +197,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 - Improved message displayed to user when data already uploaded ([#541](https://github.com/ScilifelabDataCentre/dds_cli/pull/541))
 - New message displayed when KeyboardInterrupt used during upload / download ([#542](https://github.com/ScilifelabDataCentre/dds_cli/pull/542))
+- Do not set projects as busy when uploading/downloading/deleting ([#549](https://github.com/ScilifelabDataCentre/dds_cli/pull/549))

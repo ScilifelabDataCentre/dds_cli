@@ -127,7 +127,6 @@ class DDSBaseClass:
         This is not entered if there's an error during __init__.
         """
         if self.method in ["put", "get", "rm"]:
-            self.cleanup_busy_status()
             if self.method != "rm":
                 self.__printout_delivery_summary()
 
@@ -137,62 +136,6 @@ class DDSBaseClass:
             return False
 
         return True
-
-    # Public methods ################################# Public methods #
-
-    def cleanup_busy_status(self) -> None:
-        """Reset busy to False."""
-        # Set project to busy
-        set_to_not_busy: bool = self.change_busy_status(busy=False)
-        if not set_to_not_busy:
-            LOG.warning(
-                "Failed to clear busy status. New actions in project "
-                f"'{self.project}' may be blocked. Contact the responsible unit."
-            )
-        LOG.debug(f"Project '{self.project}' busy status reset: {set_to_not_busy}")
-
-    def set_as_busy(self) -> None:
-        """Set busy to True."""
-        # 'upload' or 'download' for error message
-        if self.method == "put":
-            action: str = "upload"
-        elif self.method == "get":
-            action: str = "download"
-        elif self.method == "rm":
-            action: str = "remove"
-        else:
-            raise dds_cli.exceptions.DDSCLIException(
-                "The busy status is not applicable for this method."
-            )
-
-        # Set the project as busy
-        set_to_busy: bool = self.change_busy_status(busy=True)
-        if not set_to_busy:
-            raise dds_cli.exceptions.DDSCLIException(
-                message=(
-                    f"Cannot {action} data at this time: "
-                    f"The '{self.project}' is currently busy with another task."
-                )
-            )
-        LOG.debug("Project '{self.project}' set to busy.")
-
-    def change_busy_status(self, busy: bool) -> bool:
-        """Set project as busy."""
-        response, _ = dds_cli.utils.perform_request(
-            endpoint=DDSEndpoint.PROJ_BUSY,
-            method="put",
-            headers=self.token,
-            params={"project": self.project},
-            json={"busy": busy},
-            error_message="Failed setting project as busy.",
-        )
-        LOG.debug(
-            response.get(
-                "message",
-                "No message was returned from the ProjectBusy endpoint, there's an error somewhere.",
-            )
-        )
-        return response.get("ok", False)
 
     # Private methods ############################### Private methods #
     def __get_safespring_keys(self):

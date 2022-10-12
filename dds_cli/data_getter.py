@@ -77,44 +77,37 @@ class DataGetter(base.DDSBaseClass):
                 message="DataGetter attempting unauthorized method",
             )
 
-        # Set project to busy
-        self.set_as_busy()
+        # Start file prep progress
+        with Progress(
+            "[bold]{task.description}",
+            SpinnerColumn(spinner_name="dots12", style="white"),
+            console=dds_cli.utils.stderr_console,
+        ) as progress:
+            wait_task = progress.add_task("Collecting and preparing data", step="prepare")
+            self.filehandler = fhr.RemoteFileHandler(
+                get_all=get_all,
+                user_input=(source, source_path_file),
+                token=self.token,
+                project=self.project,
+                destination=self.dds_directory.directories["FILES"],
+            )
 
-        try:
-            # Start file prep progress
-            with Progress(
-                "[bold]{task.description}",
-                SpinnerColumn(spinner_name="dots12", style="white"),
-                console=dds_cli.utils.stderr_console,
-            ) as progress:
-                wait_task = progress.add_task("Collecting and preparing data", step="prepare")
-                self.filehandler = fhr.RemoteFileHandler(
-                    get_all=get_all,
-                    user_input=(source, source_path_file),
-                    token=self.token,
-                    project=self.project,
-                    destination=self.dds_directory.directories["FILES"],
+            if self.filehandler.failed and self.break_on_fail:
+                raise dds_cli.exceptions.DownloadError(
+                    ":warning-emoji: Some specified files were not found in the system "
+                    "and '--break-on-fail' flag used. :warning-emoji:"
+                    f"Files not found: {self.filehandler.failed}"
                 )
 
-                if self.filehandler.failed and self.break_on_fail:
-                    raise dds_cli.exceptions.DownloadError(
-                        ":warning-emoji: Some specified files were not found in the system "
-                        "and '--break-on-fail' flag used. :warning-emoji:"
-                        f"Files not found: {self.filehandler.failed}"
-                    )
+            if not self.filehandler.data:
+                if self.temporary_directory and self.temporary_directory.is_dir():
+                    LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
+                    dds_cli.utils.delete_folder(self.temporary_directory)
+                raise dds_cli.exceptions.DownloadError("No files to download.")
 
-                if not self.filehandler.data:
-                    if self.temporary_directory and self.temporary_directory.is_dir():
-                        LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
-                        dds_cli.utils.delete_folder(self.temporary_directory)
-                    raise dds_cli.exceptions.DownloadError("No files to download.")
+            self.status = self.filehandler.create_download_status_dict()
 
-                self.status = self.filehandler.create_download_status_dict()
-
-                progress.remove_task(wait_task)
-        except:
-            self.cleanup_busy_status()
-            raise
+            progress.remove_task(wait_task)
 
     # Public methods ############ Public methods #
     @verify_proceed

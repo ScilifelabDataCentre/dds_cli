@@ -95,7 +95,7 @@ def test_generate_shared_key_ok():
     assert encryptor.key == decryptor.key
 
 
-def test_generate_shared_key_ok():
+def test_generate_shared_key_not_ok():
     # Generate key pairs
     project_private_key, project_public_key = key_pair()
     _, file_public_key = key_pair()
@@ -353,3 +353,38 @@ def test_verify_checksum_less_than_chunk_csv(fs: FakeFilesystem):
 def test_verify_checksum_more_than_chunk_csv(fs: FakeFilesystem):
     """Check that the verify_checksum function verifies integrity when size more than 64 KiB."""
     verify_files_csv(fs=fs, magnitude="more")
+
+
+# public_to_hex
+
+
+def test_public_to_hex_ok():
+    """Verify that public key in hex is returned correctly."""
+    # Generate keys
+    private_key = asymmetric.x25519.X25519PrivateKey.generate()
+    public_key = private_key.public_key()
+    public_key_bytes = public_key.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
+
+    # Get public_key in hex
+    public_hex: str = file_encryptor.ECDHKeyHandler.public_to_hex(public_key=public_key)
+    assert isinstance(public_hex, str)
+    assert public_hex == public_key_bytes.hex().upper()
+
+
+def test_public_to_hex_not_ok():
+    """Verify that public key in hex is returned correctly but that different keys don't match."""
+    # Generate keys
+    private_key_1 = asymmetric.x25519.X25519PrivateKey.generate()
+    public_key_1 = private_key_1.public_key()
+
+    private_key_2 = asymmetric.x25519.X25519PrivateKey.generate()
+    public_key_2 = private_key_2.public_key()
+
+    # Get public_key in hex
+    public_hex_1: str = file_encryptor.ECDHKeyHandler.public_to_hex(public_key=public_key_1)
+    public_hex_2: str = file_encryptor.ECDHKeyHandler.public_to_hex(public_key=public_key_2)
+
+    assert public_hex_1 != public_hex_2

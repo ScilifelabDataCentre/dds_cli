@@ -388,3 +388,33 @@ def test_public_to_hex_not_ok():
     public_hex_2: str = file_encryptor.ECDHKeyHandler.public_to_hex(public_key=public_key_2)
 
     assert public_hex_1 != public_hex_2
+
+# get_public_component_hex
+
+def test_get_public_component_hex_ok():
+    """Verify that public key generated correctly from private key."""
+    # Generate keys
+    private_key = asymmetric.x25519.X25519PrivateKey.generate()
+    public_key = private_key.public_key()
+    public_key_hex = public_key.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    ).hex().upper()
+
+    # Get public_key in hex
+    public_hex_from_function: str = file_encryptor.ECDHKeyHandler.get_public_component_hex(private_key=private_key)
+    assert isinstance(public_hex_from_function, str)
+    assert public_hex_from_function == public_key_hex
+
+
+def test_get_public_component_hex_not_ok():
+    """Two different private keys do not get the same public key."""
+    # Generate keys
+    private_key_1 = asymmetric.x25519.X25519PrivateKey.generate()
+    private_key_2 = asymmetric.x25519.X25519PrivateKey.generate()
+
+    # Get public_key in hex
+    public_hex_1: str = file_encryptor.ECDHKeyHandler.get_public_component_hex(private_key=private_key_1)
+    public_hex_2: str = file_encryptor.ECDHKeyHandler.get_public_component_hex(private_key=private_key_2)
+
+    assert public_hex_1 != public_hex_2

@@ -6,6 +6,7 @@ import logging
 
 from dds_cli import file_compressor
 
+
 def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Try to compress a file that doesn't exist."""
     # Define path to test
@@ -19,11 +20,10 @@ def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture
         assert (
             "dds_cli.file_compressor",
             logging.WARNING,
-            f"[Errno 2] No such file or directory in the fake filesystem: 'nonexistentfile.txt'"
+            f"[Errno 2] No such file or directory in the fake filesystem: 'nonexistentfile.txt'",
         ) in caplog.record_tuples
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression finished."
+            "Compression finished.",
         ) not in caplog.record_tuples
-

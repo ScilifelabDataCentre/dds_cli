@@ -4,8 +4,8 @@ from dds_cli import FileSegment
 import pathlib
 import logging
 import typing
-import os 
-import csv 
+import os
+import csv
 
 from dds_cli import file_compressor
 
@@ -31,10 +31,12 @@ def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture
             "Compression finished.",
         ) not in caplog.record_tuples
 
+
 def perform_compress_file(file: pathlib.Path, fs: FakeFilesystem = None):
     for chunk in file_compressor.Compressor.compress_file(file=file):
         assert isinstance(chunk, bytes)
         assert len(chunk) != FileSegment.SEGMENT_SIZE_RAW
+
 
 def test_compress_file_txt(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Compress a textfile."""
@@ -50,12 +52,12 @@ def test_compress_file_txt(fs: FakeFilesystem, caplog: LogCaptureFixture):
     # Define lines to input
     line_contents: str = "abcdefghijklmnopqrstuvwxyzåäö"
     lines: typing.List = [line_contents] * 10000
-    
+
     # Add contents to file
     with open(new_file, mode="w") as f:
         f.writelines(lines)
     assert os.stat(new_file).st_size > FileSegment.SEGMENT_SIZE_RAW
-    
+
     # Compress file
     with caplog.at_level(logging.DEBUG):
         perform_compress_file(file=new_file, fs=fs)
@@ -64,6 +66,7 @@ def test_compress_file_txt(fs: FakeFilesystem, caplog: LogCaptureFixture):
             logging.DEBUG,
             "Compression finished.",
         ) in caplog.record_tuples
+
 
 def test_compress_file_img(caplog: LogCaptureFixture):
     """Compress an image."""
@@ -76,6 +79,7 @@ def test_compress_file_img(caplog: LogCaptureFixture):
             logging.DEBUG,
             "Compression finished.",
         ) in caplog.record_tuples
+
 
 def test_compress_file_csv(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Compress a csvfile."""

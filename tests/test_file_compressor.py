@@ -11,6 +11,7 @@ import hashlib
 from dds_cli import file_compressor
 from dds_cli import file_encryptor
 
+
 def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Try to compress a file that doesn't exist."""
     # Define path to test
@@ -66,7 +67,7 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
                 assert isinstance(chunk, bytes)
                 assert len(chunk) != FileSegment.SEGMENT_SIZE_RAW
                 compfile.write(chunk)
-        
+
         # Verify that compressed file exists and that the sizes differ
         assert fs.exists(file_path=compressed_file)
         assert fs.stat(entry_path=new_file).st_size != fs.stat(entry_path=compressed_file).st_size
@@ -81,15 +82,17 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
         # Decompress file
         decompressed_file: pathlib.Path = pathlib.Path("decompressed.txt")
         chunks = file_handler_local.LocalFileHandler.read_file(file=compressed_file)
-        saved, message = file_compressor.Compressor.decompress_filechunks(chunks=chunks, outfile=decompressed_file)
+        saved, message = file_compressor.Compressor.decompress_filechunks(
+            chunks=chunks, outfile=decompressed_file
+        )
         assert saved and message == ""
-    
+
     # Verify original and decompressed checksums
     verified, message = file_encryptor.Encryptor.verify_checksum(
         file=decompressed_file, correct_checksum=checksum_new_file.hexdigest()
     )
     assert verified and message == "File integrity verified."
-                
+
 
 def test_compress_file_img(caplog: LogCaptureFixture):
     """Compress an image."""
@@ -156,9 +159,11 @@ def test_compress_file_csv(fs: FakeFilesystem, caplog: LogCaptureFixture):
         # Decompress file
         decompressed_file: pathlib.Path = pathlib.Path("decompressed.csv")
         chunks = file_handler_local.LocalFileHandler.read_file(file=compressed_file)
-        saved, message = file_compressor.Compressor.decompress_filechunks(chunks=chunks, outfile=decompressed_file)
+        saved, message = file_compressor.Compressor.decompress_filechunks(
+            chunks=chunks, outfile=decompressed_file
+        )
         assert saved and message == ""
-    
+
     # Verify original and decompressed checksums
     verified, message = file_encryptor.Encryptor.verify_checksum(
         file=decompressed_file, correct_checksum=checksum_new_file.hexdigest()

@@ -354,10 +354,12 @@ def test_verify_checksum_more_than_chunk_csv(fs: FakeFilesystem):
     """Check that the verify_checksum function verifies integrity when size more than 64 KiB."""
     verify_files_csv(fs=fs, magnitude="more")
 
+
 # public_to_hex
 
+
 def test_public_to_hex_ok():
-    """Verify that public key in hex is returned correctly."""    
+    """Verify that public key in hex is returned correctly."""
     # Generate keys
     private_key = asymmetric.x25519.X25519PrivateKey.generate()
     public_key = private_key.public_key()
@@ -371,8 +373,9 @@ def test_public_to_hex_ok():
     assert isinstance(public_hex, str)
     assert public_hex == public_key_bytes.hex().upper()
 
+
 def test_public_to_hex_not_ok():
-    """Verify that public key in hex is returned correctly but that different keys don't match."""    
+    """Verify that public key in hex is returned correctly but that different keys don't match."""
     # Generate keys
     private_key_1 = asymmetric.x25519.X25519PrivateKey.generate()
     public_key_1 = private_key_1.public_key()

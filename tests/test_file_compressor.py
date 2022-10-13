@@ -95,8 +95,8 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
 
 
 def test_compress_file_img(caplog: LogCaptureFixture):
-    """Compress an image. 
-    
+    """Compress an image.
+
     Not decompression since I can't get it to work when one file is fake and one is real.
     """
     image_file: pathlib.Path = pathlib.Path.cwd() / pathlib.Path("tests/images/test-image_1a.jpg")

@@ -35,7 +35,7 @@ def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture
 
 
 def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCaptureFixture):
-    """Compress a textfile."""
+    """Compress and decompress a textfile."""
     # Define path to test
     new_file: pathlib.Path = pathlib.Path("newfile.txt")
     assert not fs.exists(file_path=new_file)
@@ -95,7 +95,10 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
 
 
 def test_compress_file_img(caplog: LogCaptureFixture):
-    """Compress an image."""
+    """Compress an image. 
+    
+    Not decompression since I can't get it to work when one file is fake and one is real.
+    """
     image_file: pathlib.Path = pathlib.Path.cwd() / pathlib.Path("tests/images/test-image_1a.jpg")
     # Compress file
     with caplog.at_level(logging.DEBUG):
@@ -109,8 +112,8 @@ def test_compress_file_img(caplog: LogCaptureFixture):
         ) in caplog.record_tuples
 
 
-def test_compress_file_csv(fs: FakeFilesystem, caplog: LogCaptureFixture):
-    """Compress a csvfile."""
+def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCaptureFixture):
+    """Compress and decompress a csvfile."""
     # Define path to test
     new_file: pathlib.Path = pathlib.Path("newfile.csv")
     assert not fs.exists(file_path=new_file)

@@ -192,10 +192,10 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 @usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
-@click.option("--all", is_flag=True, help="List all project connected to your account.")
+@click.option("--show-all", is_flag=True, help="List all project connected to your account.")
 @click.pass_obj
 def list_projects_and_contents(
-    click_ctx, project, folder, sort, json, size, tree, usage, binary, users, projects, all
+    click_ctx, project, folder, sort, json, size, tree, usage, binary, users, projects, show_all
 ):
     """List the projects you have access to or the project contents.
 
@@ -212,7 +212,7 @@ def list_projects_and_contents(
                 show_usage=usage,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 json=json,
-                all=all,
+                show_all=show_all,
                 token_path=click_ctx.get("TOKEN_PATH"),
                 binary=binary,
             ) as lister:
@@ -886,14 +886,14 @@ def project_group_command(_):
 # Flags
 @usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @json_flag(help_message="Output project list as json.")  # users, json, tree
-@click.option("--all", is_flag=True, help="List all project connected to your account.")
+@click.option("--show-all", is_flag=True, help="List all project connected to your account.")
 @click.pass_context
-def list_projects(ctx, json, sort, usage, all):
+def list_projects(ctx, json, sort, usage, show_all):
     """List all projects you have access to in the DDS.
 
     Calls the `dds ls` function.
     """
-    ctx.invoke(list_projects_and_contents, json=json, sort=sort, usage=usage, all=all)
+    ctx.invoke(list_projects_and_contents, json=json, sort=sort, usage=usage, show_all=show_all)
 
 
 # -- dds project create -- #

@@ -191,15 +191,17 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 @tree_flag(help_message="Display the entire project(s) directory tree.")
 @usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @users_flag(help_message="Display users associated with a project(Requires a project id).")
-@click.option("--projects", "-lp", is_flag=True, help="List all project connected to your account.")
+@click.option(
+    "--projects", "-lp", is_flag=True, help="List all active project connected to your account."
+)
 @click.option("--show-all", is_flag=True, help="List all project connected to your account.")
 @click.pass_obj
 def list_projects_and_contents(
     click_ctx, project, folder, sort, json, size, tree, usage, binary, users, projects, show_all
 ):
-    """List the projects you have access to or the project contents.
+    """List the active projects you have access to or the project contents.
 
-    To list all projects, run `dds ls` without any arguments, or use the `--projects` flag.
+    To list all active projects, run `dds ls` without any arguments, or use the `--projects` flag.
 
     Specify a Project ID to list the files within a project.
     You can also follow this with a subfolder path to show files within that folder.
@@ -889,7 +891,7 @@ def project_group_command(_):
 @click.option("--show-all", is_flag=True, help="List all project connected to your account.")
 @click.pass_context
 def list_projects(ctx, json, sort, usage, show_all):
-    """List all projects you have access to in the DDS.
+    """List all active projects you have access to in the DDS.
 
     Calls the `dds ls` function.
     """

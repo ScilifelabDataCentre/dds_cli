@@ -218,11 +218,11 @@ def list_projects_and_contents(
                 show_usage=usage,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 json=json,
-                show_all=show_all,
+                # show_all=show_all,
                 token_path=click_ctx.get("TOKEN_PATH"),
                 binary=binary,
             ) as lister:
-                projects = lister.list_projects(sort_by=sort)
+                projects = lister.list_projects(sort_by=sort, show_all=show_all)
                 if json:
                     dds_cli.utils.console.print_json(data=projects)
                 else:

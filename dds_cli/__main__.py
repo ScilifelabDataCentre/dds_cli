@@ -192,9 +192,13 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 @usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @users_flag(help_message="Display users associated with a project(Requires a project id).")
 @click.option(
-    "--projects", "-lp", is_flag=True, help="List all active project connected to your account."
+    "--projects", "-lp", is_flag=True, help="List all active projects connected to your account."
 )
-@click.option("--show-all", is_flag=True, help="List all project connected to your account.")
+@click.option(
+    "--show-all",
+    is_flag=True,
+    help="List all projects connected to your account (including inactive).",
+)
 @click.pass_obj
 def list_projects_and_contents(
     click_ctx, project, folder, sort, json, size, tree, usage, binary, users, projects, show_all
@@ -888,7 +892,11 @@ def project_group_command(_):
 # Flags
 @usage_flag(help_message="Show the usage for available projects, in GBHours and cost.")
 @json_flag(help_message="Output project list as json.")  # users, json, tree
-@click.option("--show-all", is_flag=True, help="List all project connected to your account.")
+@click.option(
+    "--show-all",
+    is_flag=True,
+    help="List all projects connected to your account (including inactive).",
+)
 @click.pass_context
 def list_projects(ctx, json, sort, usage, show_all):
     """List all active projects you have access to in the DDS.

@@ -467,7 +467,7 @@ class DataLister(base.DDSBaseClass):
                 "footer": "Total" if self.show_usage else default_format.get("footer"),
                 "overflow": default_format.get("overflow"),
             },
-            **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
+            **{x: default_format for x in ["Title", "PI", "Created by", "Status", "Last updated"]},
         }
 
         if total_size is not None:

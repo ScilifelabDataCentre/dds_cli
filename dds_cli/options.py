@@ -15,6 +15,18 @@ def email_arg(required, email="email", metavar="[EMAIL]", nargs=1):
 
 
 # Options used multiple times
+
+def destination_option(help_message, option_type, long="--destination", short="-d", name="destination", required=False):
+    return click.option(
+    long,
+    short,
+    name,
+    required=required,
+    type=option_type,
+    multiple=False,
+    help=help_message,
+)
+
 def email_option(help_message, long="--email", short="-e", name="email", required=True):
     """
     Email option standard definition.

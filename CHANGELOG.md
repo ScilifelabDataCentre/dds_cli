@@ -198,3 +198,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Improved message displayed to user when data already uploaded ([#541](https://github.com/ScilifelabDataCentre/dds_cli/pull/541))
 - New message displayed when KeyboardInterrupt used during upload / download ([#542](https://github.com/ScilifelabDataCentre/dds_cli/pull/542))
 - Command for listing invites ([#547](https://github.com/ScilifelabDataCentre/dds_cli/pull/547))
+
+## Sprint (2022-10-14 - 2022-10-28)
+
+- Limit projects listing to active projects only; a `--show-all` flag can be used for listing all projects, active and inactive ([#556](https://github.com/ScilifelabDataCentre/dds_cli/pull/556))

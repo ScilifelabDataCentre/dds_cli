@@ -51,7 +51,6 @@ class DataLister(base.DDSBaseClass):
         tree: bool = False,
         no_prompt: bool = False,
         json: bool = False,
-        # show_all: bool = False,
         token_path: str = None,
         binary: bool = False,
     ):
@@ -73,7 +72,6 @@ class DataLister(base.DDSBaseClass):
         self.show_usage = show_usage
         self.tree = tree
         self.json = json
-        # self.show_all = show_all
         self.binary = binary
 
     # Public methods ########################### Public methods #

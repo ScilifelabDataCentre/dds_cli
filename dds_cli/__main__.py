@@ -218,7 +218,6 @@ def list_projects_and_contents(
                 show_usage=usage,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 json=json,
-                # show_all=show_all,
                 token_path=click_ctx.get("TOKEN_PATH"),
                 binary=binary,
             ) as lister:

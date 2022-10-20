@@ -45,7 +45,7 @@ $ dds
  ︵ (  )   ︵
 (  ) ) (  (  )   SciLifeLab Data Delivery System
  ︶  (  ) ) (    https://delivery.scilifelab.se/
-      ︶ (  )    Version 1.1.0
+      ︶ (  )    CLI Version 1.1.0
           ︶
 
  Usage: dds [OPTIONS] COMMAND [ARGS]...

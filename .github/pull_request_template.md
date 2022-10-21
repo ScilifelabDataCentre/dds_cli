@@ -33,10 +33,10 @@
 
 - [ ] Blocking PRs have been merged
 - [ ] Rebase / update of branch done
-- [ ] Product Owner / Scrum Master
-  - [ ] The [version](../dds_cli/version.py) is updated (PR to `master` branch)
-  - [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
-    - [ ] I have made the corresponding changes to the API version
+- [ ] PR to `master` branch (Product Owner / Scrum Master)
+  - [ ] The [version](../dds_cli/version.py) is updated
+    - [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
+      - [ ] I have made the corresponding changes to the API version
 
 ## Checks
 

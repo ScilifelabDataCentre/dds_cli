@@ -402,7 +402,6 @@ class DataPutter(base.DDSBaseClass):
             "salt": fileinfo["salt"],
             "public_key": fileinfo["public_key"],
             "checksum": fileinfo["checksum"],
-            "destination": "blablabla",
         }
 
         # Send file info to API - post if new file, put if overwrite

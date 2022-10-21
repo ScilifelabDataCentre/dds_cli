@@ -387,7 +387,6 @@ class DataPutter(base.DDSBaseClass):
 
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
-        LOG.debug(f"Fileinfo: {fileinfo}")
         params = {"project": self.project}
         file_info = {
             "name": file,
@@ -399,6 +398,7 @@ class DataPutter(base.DDSBaseClass):
             "salt": fileinfo["salt"],
             "public_key": fileinfo["public_key"],
             "checksum": fileinfo["checksum"],
+            "destination": "blablabla",
         }
 
         # Send file info to API - post if new file, put if overwrite

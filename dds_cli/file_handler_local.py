@@ -10,6 +10,7 @@ import http
 import logging
 import os
 import pathlib
+import typing
 import uuid
 import random
 
@@ -98,26 +99,33 @@ class LocalFileHandler(fh.FileHandler):
     # Private methods ############ Private methods #
     def __collect_file_info_local(self, all_paths, folder=pathlib.Path(""), task_name=""):
         """Get info on each file in each path specified."""
+        # Variables
+        file_info: typing.Dict = dict()
+        progress_tasks: typing.Dict = dict()
 
-        file_info = dict()
-        progress_tasks = dict()
+        # Iterate though paths
         for path in all_paths:
+            # Choose name for progress bar - unused?
             task_name = path.name if folder == pathlib.Path("") else task_name
+
             # Get info for all files
             # and feed back to same function for all folders
             if path.is_file():
+                # Check if file is compressed
                 with fc.Compressor() as compressor:
                     is_compressed, error = compressor.is_compressed(file=path)
 
-                    if error != "":
+                    if error != "":  # TODO: Move raise to is_compressed
                         raise exceptions.UploadError(error)
 
+                # Add suffixes to file path for processed file
                 path_processed = self.create_encrypted_name(
                     raw_file=path,
                     subpath=folder,
                     no_compression=is_compressed,
                 )
 
+                # Add file info to dict 
                 file_info[str(folder / path.name)] = {
                     "path_raw": path,
                     "subpath": folder,
@@ -133,12 +141,14 @@ class LocalFileHandler(fh.FileHandler):
                 }
 
             elif path.is_dir():
+                # Loop back to same function to get file into in dir
                 content_info, _ = self.__collect_file_info_local(
                     all_paths=path.glob("*"),
                     folder=folder / pathlib.Path(path.name),
                 )
                 file_info.update({**content_info})
             else:
+                # Symlinks are also identified as files - if here and symlink --> broken
                 if path.is_symlink():
                     try:
                         resolved = path.resolve()

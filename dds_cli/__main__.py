@@ -89,7 +89,7 @@ dds_cli.utils.stderr_console.print(
     "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}/[/link]".format(
         dds_url[: dds_url.index("/", 8)]
     ),
-    f"\n[green]      ︶ (  )[/]    [dim]Version {dds_cli.__version__}",
+    f"\n[green]      ︶ (  )[/]    [dim]CLI Version {dds_cli.__version__}",
     "\n[green]          ︶",
     highlight=False,
 )

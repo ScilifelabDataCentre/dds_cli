@@ -37,7 +37,7 @@ class LocalFileHandler(fh.FileHandler):
     """Collects the files specified by the user."""
 
     # Magic methods ################ Magic methods #
-    def __init__(self, user_input, temporary_destination, project):
+    def __init__(self, user_input, temporary_destination, project, remote_destination: str = None):
 
         LOG.debug("Collecting file info...")
 
@@ -70,7 +70,7 @@ class LocalFileHandler(fh.FileHandler):
         if not self.data_list:
             raise exceptions.NoDataError("No data specified.")
 
-        self.data, _ = self.__collect_file_info_local(all_paths=self.data_list)
+        self.data, _ = self.__collect_file_info_local(all_paths=self.data_list, folder=pathlib.Path(remote_destination or ""))
         self.data_list = None
 
         LOG.debug("File info computed/collected")

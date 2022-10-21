@@ -1477,6 +1477,7 @@ def put_data(
             silent=silent,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
+            destination=destination,
         )
     except (
         dds_cli.exceptions.AuthenticationError,

@@ -53,6 +53,7 @@ def put(
     silent,
     no_prompt,
     token_path,
+    destination,
 ):
     """Handle upload of data."""
     # Initialize delivery - check user access etc
@@ -66,6 +67,7 @@ def put(
         silent=silent,
         no_prompt=no_prompt,
         token_path=token_path,
+        destination=destination,
     ) as putter:
 
         # Progress object to keep track of progress tasks
@@ -187,6 +189,7 @@ class DataPutter(base.DDSBaseClass):
         method: str = "put",
         no_prompt: bool = False,
         token_path: str = None,
+        destination: str = None,
     ):
         """Handle actions regarding upload of data."""
         # Initiate DDSBaseClass to authenticate user
@@ -222,6 +225,7 @@ class DataPutter(base.DDSBaseClass):
                 user_input=(source, source_path_file),
                 project=self.project,
                 temporary_destination=self.dds_directory.directories["FILES"],
+                remote_destination=destination,
             )
 
             # Verify that the Safespring S3 bucket exists

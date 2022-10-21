@@ -70,7 +70,9 @@ class LocalFileHandler(fh.FileHandler):
         if not self.data_list:
             raise exceptions.NoDataError("No data specified.")
 
-        self.data, _ = self.__collect_file_info_local(all_paths=self.data_list, folder=pathlib.Path(remote_destination or ""))
+        self.data, _ = self.__collect_file_info_local(
+            all_paths=self.data_list, folder=pathlib.Path(remote_destination or "")
+        )
         self.data_list = None
 
         LOG.debug("File info computed/collected")
@@ -125,7 +127,7 @@ class LocalFileHandler(fh.FileHandler):
                     no_compression=is_compressed,
                 )
 
-                # Add file info to dict 
+                # Add file info to dict
                 file_info[str(folder / path.name)] = {
                     "path_raw": path,
                     "subpath": folder,

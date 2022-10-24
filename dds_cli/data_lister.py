@@ -415,6 +415,26 @@ class DataLister(base.DDSBaseClass):
 
         return research_users
 
+    def show_project_info(self, project):
+        """Get a project info."""
+        # Get info about a project from API
+        response, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.PROJ_INFO,
+            method="get",
+            headers=self.token,
+            params={"project": project},
+            error_message="Failed to get project information",
+        )
+
+        project_info = response.get("project_info")
+
+        # Print project info table
+        self.__print_project_info_table(project_info)
+
+        # Print Totle and Description below the table
+        dds_cli.utils.console.print(f"[b]Project title:[/b]       {project_info['Title']}")
+        dds_cli.utils.console.print(f"[b]Project description:[/b] {project_info['Description']}")
+
     # Private methods ###################################################### Private methods #
 
     # Project listing
@@ -592,3 +612,43 @@ class DataLister(base.DDSBaseClass):
                 dds_cli.utils.console.print(table)
         else:
             raise exceptions.NoDataError("No users found.")
+
+    # Project info listing
+    def __print_project_info_table(self, project_info):
+        # Column formatting
+        default_format = {"justify": "left", "style": "", "footer": "", "overflow": "fold"}
+        column_formatting = {
+            **{
+                x: default_format
+                for x in ["Project ID", "Created by", "Status", "Last updated", "Size"]
+            },
+        }
+        table = Table(
+            title="Project info",
+            show_header=True,
+            header_style="bold",
+            caption=(f"Information about project {project_info['Project ID']}"),
+        )
+        # Add columns to table
+        for colname, colformat in column_formatting.items():
+            table.add_column(
+                colname,
+                justify=colformat["justify"],
+                style=colformat["style"],
+                footer=colformat["footer"],
+                overflow=colformat["overflow"],
+            )
+
+        # Add all column values for the project row to table
+        new_row = []
+        for c in column_formatting:
+            new_row.append(
+                escape(
+                    dds_cli.utils.format_api_response(
+                        response=project_info[c], key=c, binary=self.binary
+                    )
+                )
+            )
+        table.add_row(*new_row)
+
+        dds_cli.utils.console.print(table)

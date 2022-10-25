@@ -110,8 +110,8 @@ class Compressor:
                         yield chunk
         except Exception as err:
             LOG.warning(str(err))
-
-        LOG.debug("Compression finished.")
+        else:
+            LOG.debug("Compression finished.")
 
     @staticmethod
     def decompress_filechunks(chunks, outfile: pathlib.Path, **_):

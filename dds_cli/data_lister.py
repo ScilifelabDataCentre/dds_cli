@@ -76,14 +76,14 @@ class DataLister(base.DDSBaseClass):
 
     # Public methods ########################### Public methods #
 
-    def list_projects(self, sort_by="Updated"):
+    def list_projects(self, sort_by="Updated", show_all: bool = False):
         """Get a list of project(s) the user is involved in."""
         # Get projects from API
         response, _ = dds_cli.utils.perform_request(
             DDSEndpoint.LIST_PROJ,
             headers=self.token,
             method="get",
-            json={"usage": self.show_usage},
+            json={"usage": self.show_usage, "show_all": show_all},
             error_message="Failed to get list of projects",
             timeout=DDSEndpoint.TIMEOUT,
         )
@@ -95,7 +95,6 @@ class DataLister(base.DDSBaseClass):
         always_show = response.get("always_show", False)
         if not project_info:
             raise exceptions.NoDataError("No project info was retrieved. No files to list.")
-
         for project in project_info:
             try:
                 last_updated = pytz.timezone("UTC").localize(
@@ -467,7 +466,7 @@ class DataLister(base.DDSBaseClass):
                 "footer": "Total" if self.show_usage else default_format.get("footer"),
                 "overflow": default_format.get("overflow"),
             },
-            **{x: default_format for x in ["Title", "PI", "Status", "Last updated"]},
+            **{x: default_format for x in ["Title", "PI", "Created by", "Status", "Last updated"]},
         }
 
         if total_size is not None:

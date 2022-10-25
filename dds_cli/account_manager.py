@@ -226,6 +226,32 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         # Print out table
         dds_cli.utils.print_or_page(item=table)
 
+    def list_invites(self, unit: str = None, invites: bool = None) -> None:
+        """List all unit users within a specific unit."""
+        response, _ = dds_cli.utils.perform_request(
+            endpoint=dds_cli.DDSEndpoint.LIST_INVITED_USERS,
+            method="get",
+            headers=self.token,
+            error_message="Failed getting invites from API",
+        )
+        title = "Current invites"
+        caption = "All invited users where you have access"
+        invites = response.get("invites")
+
+        if not invites:
+            LOG.info(f"There are no current invites")
+            return
+
+        table = dds_cli.utils.create_table(
+            title=title,
+            columns=response.get("keys"),
+            rows=invites,
+            caption=caption,
+        )
+
+        # Print out table
+        dds_cli.utils.print_or_page(item=table)
+
     def find_user(self, user_to_find: str) -> None:
         """List all users with accounts in the DDS."""
         response, _ = dds_cli.utils.perform_request(

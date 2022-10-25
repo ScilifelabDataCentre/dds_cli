@@ -103,6 +103,7 @@ class DDSEndpoint:
     LIST_PROJ_USERS = BASE_ENDPOINT + "/proj/users"
     LIST_UNITS_ALL = BASE_ENDPOINT + "/unit/info/all"
     LIST_USERS = BASE_ENDPOINT + "/users"
+    LIST_INVITED_USERS = BASE_ENDPOINT + "/user/invites"
     # LIST_USERS_ALL = BASE_ENDPOINT + "/users"
 
     # Deleting urls

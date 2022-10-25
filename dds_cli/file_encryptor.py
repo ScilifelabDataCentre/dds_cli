@@ -67,7 +67,7 @@ class ECDHKeyHandler:
         return derived_shared_key, salt.hex().upper()
 
     @staticmethod
-    def public_to_hex(public_key):
+    def public_to_hex(public_key: x25519.X25519PublicKey):
         """Converts public key to hexstring."""
 
         # public = self.private.public_key()

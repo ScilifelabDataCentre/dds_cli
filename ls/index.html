@@ -36,8 +36,8 @@
             
   <section id="dds-ls">
 <span id="dds-ls"></span><h1>dds ls<a class="headerlink" href="#dds-ls" title="Permalink to this headline">¶</a></h1>
-<p>List the projects you have access to or the project contents.</p>
-<p>To list all projects, run <cite>dds ls</cite> without any arguments, or use the <cite>–projects</cite> flag.</p>
+<p>List the active projects you have access to or the project contents.</p>
+<p>To list all active projects, run <cite>dds ls</cite> without any arguments, or use the <cite>–projects</cite> flag.</p>
 <p>Specify a Project ID to list the files within a project.
 You can also follow this with a subfolder path to show files within that folder.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds ls <span class="o">[</span>OPTIONS<span class="o">]</span>
@@ -131,7 +131,13 @@ You can also follow this with a subfolder path to show files within that folder.
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-dds-ls-lp">
 <span id="cmdoption-dds-ls-projects"></span><span class="sig-name descname"><span class="pre">-lp</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--projects</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-ls-lp" title="Permalink to this definition">¶</a></dt>
-<dd><p>List all project connected to your account.</p>
+<dd><p>List all active projects connected to your account.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-ls-show-all">
+<span class="sig-name descname"><span class="pre">--show-all</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-ls-show-all" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all projects connected to your account (including inactive).</p>
 </dd></dl>
 
 </section>

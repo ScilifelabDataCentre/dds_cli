@@ -1,10 +1,5 @@
 import pathlib
 from pyfakefs.fake_filesystem import FakeFilesystem
-from requests_mock.mocker import Mocker
-from unittest import mock
-from dds_cli.base import DDSBaseClass
-from dds_cli import DDSEndpoint
-from dds_cli.data_putter import DataPutter
 from dds_cli.file_handler_local import LocalFileHandler
 
 def test_localfilehandler_with_destination(fs: FakeFilesystem):
@@ -67,6 +62,9 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
             "checksum": "",
         }
     }
+
+    # Verify correctness
+    # file is what will be put into the database as the file name
     for file, info in expected_data_1.items():
         actual_data = filehandler.data.get(file)
         assert actual_data

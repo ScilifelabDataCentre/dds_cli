@@ -237,7 +237,7 @@ class LocalFileHandler(fh.FileHandler):
         return dict() if files_in_db["files"] is None else files_in_db["files"]
 
     def create_encrypted_name(
-        self, raw_file: pathlib.Path, subpath: str = "", no_compression: bool = True
+        self, raw_file: pathlib.Path, subpath: str = pathlib.Path(""), no_compression: bool = True
     ):
         """Create new file name to save encrypted file."""
 

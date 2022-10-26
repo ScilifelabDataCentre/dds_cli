@@ -1,3 +1,4 @@
+import pathlib
 from pyfakefs.fake_filesystem import FakeFilesystem
 from requests_mock.mocker import Mocker
 from unittest import mock
@@ -34,4 +35,41 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
 
     # Call LocalFileHandler
     filehandler = LocalFileHandler(user_input=(("parentdir",), None), project="someproject", temporary_destination="temporarydestination", remote_destination="remote_destination")
-    assert filehandler.data == ""
+    expected_data_1 = {
+        "remote_destination/parentdir/fileinparentdir.file": {
+            "path_raw": pathlib.Path("/parentdir/fileinparentdir.file"),
+            "subpath": pathlib.Path("remote_destination/parentdir/"),
+            "size_raw": 0,
+            "compressed": False,
+            "path_processed": filehandler.create_encrypted_name(raw_file=pathlib.Path("parentdir/fileinparentdir.file"), subpath=pathlib.Path("remote_destination/parentdir"), no_compression=False),
+            "size_processed": 0,
+            "overwrite": False,
+            "checksum": "",
+        },
+        "remote_destination/parentdir/somedir/fileinsomedir.file": {
+            "path_raw": pathlib.Path("/parentdir/somedir/fileinsomedir.file"),
+            "subpath": pathlib.Path("remote_destination/parentdir/somedir/"),
+            "size_raw": 0,
+            "compressed": False,
+            "path_processed": filehandler.create_encrypted_name(raw_file=pathlib.Path("parentdir/somedir/fileinsomedir.file"), subpath=pathlib.Path("remote_destination/parentdir/somedir"), no_compression=False),
+            "size_processed": 0,
+            "overwrite": False,
+            "checksum": "",
+        },
+        "remote_destination/parentdir/somedir/subdir/fileinsubdir.file": {
+            "path_raw": pathlib.Path("/parentdir/somedir/subdir/fileinsubdir.file"),
+            "subpath": pathlib.Path("remote_destination/parentdir/somedir/subdir/"),
+            "size_raw": 0,
+            "compressed": False,
+            "path_processed": filehandler.create_encrypted_name(raw_file=pathlib.Path("parentdir/somedir/subdir/fileinsubdir.file"), subpath=pathlib.Path("remote_destination/parentdir/somedir/subdir"), no_compression=False),
+            "size_processed": 0,
+            "overwrite": False,
+            "checksum": "",
+        }
+    }
+    for file, info in expected_data_1.items():
+        actual_data = filehandler.data.get(file)
+        assert actual_data
+        for x in info:
+            assert actual_data[x] == info[x]
+    

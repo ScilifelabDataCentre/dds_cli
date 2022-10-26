@@ -2,6 +2,7 @@ import pathlib
 from pyfakefs.fake_filesystem import FakeFilesystem
 from dds_cli.file_handler_local import LocalFileHandler
 
+
 def test_localfilehandler_with_destination(fs: FakeFilesystem):
     """Test that the destination flag works."""
     # Create directories
@@ -29,14 +30,23 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
     assert not fs.exists(file_path="parentdir/somefile.file")
 
     # Call LocalFileHandler
-    filehandler = LocalFileHandler(user_input=(("parentdir",), None), project="someproject", temporary_destination="temporarydestination", remote_destination="remote_destination")
+    filehandler = LocalFileHandler(
+        user_input=(("parentdir",), None),
+        project="someproject",
+        temporary_destination="temporarydestination",
+        remote_destination="remote_destination",
+    )
     expected_data_1 = {
         "remote_destination/parentdir/fileinparentdir.file": {
             "path_raw": pathlib.Path("/parentdir/fileinparentdir.file"),
             "subpath": pathlib.Path("remote_destination/parentdir/"),
             "size_raw": 0,
             "compressed": False,
-            "path_processed": filehandler.create_encrypted_name(raw_file=pathlib.Path("parentdir/fileinparentdir.file"), subpath=pathlib.Path("remote_destination/parentdir"), no_compression=False),
+            "path_processed": filehandler.create_encrypted_name(
+                raw_file=pathlib.Path("parentdir/fileinparentdir.file"),
+                subpath=pathlib.Path("remote_destination/parentdir"),
+                no_compression=False,
+            ),
             "size_processed": 0,
             "overwrite": False,
             "checksum": "",
@@ -46,7 +56,11 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
             "subpath": pathlib.Path("remote_destination/parentdir/somedir/"),
             "size_raw": 0,
             "compressed": False,
-            "path_processed": filehandler.create_encrypted_name(raw_file=pathlib.Path("parentdir/somedir/fileinsomedir.file"), subpath=pathlib.Path("remote_destination/parentdir/somedir"), no_compression=False),
+            "path_processed": filehandler.create_encrypted_name(
+                raw_file=pathlib.Path("parentdir/somedir/fileinsomedir.file"),
+                subpath=pathlib.Path("remote_destination/parentdir/somedir"),
+                no_compression=False,
+            ),
             "size_processed": 0,
             "overwrite": False,
             "checksum": "",
@@ -56,11 +70,15 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
             "subpath": pathlib.Path("remote_destination/parentdir/somedir/subdir/"),
             "size_raw": 0,
             "compressed": False,
-            "path_processed": filehandler.create_encrypted_name(raw_file=pathlib.Path("parentdir/somedir/subdir/fileinsubdir.file"), subpath=pathlib.Path("remote_destination/parentdir/somedir/subdir"), no_compression=False),
+            "path_processed": filehandler.create_encrypted_name(
+                raw_file=pathlib.Path("parentdir/somedir/subdir/fileinsubdir.file"),
+                subpath=pathlib.Path("remote_destination/parentdir/somedir/subdir"),
+                no_compression=False,
+            ),
             "size_processed": 0,
             "overwrite": False,
             "checksum": "",
-        }
+        },
     }
 
     # Verify correctness
@@ -70,4 +88,3 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
         assert actual_data
         for x in info:
             assert actual_data[x] == info[x]
-    

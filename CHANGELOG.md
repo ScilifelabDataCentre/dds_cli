@@ -204,3 +204,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 - Limit projects listing to active projects only; a `--show-all` flag can be used for listing all projects, active and inactive ([#556](https://github.com/ScilifelabDataCentre/dds_cli/pull/556))
 - Display name of creator when listing projects ([#557](https://github.com/ScilifelabDataCentre/dds_cli/pull/557))
+- New option for `dds data put`: `--destination` - allow upload to existing or new directory ([#559](https://github.com/ScilifelabDataCentre/dds_cli/pull/559))

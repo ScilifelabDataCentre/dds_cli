@@ -1057,10 +1057,11 @@ def get_info_project(
     """
     try:
         with dds_cli.data_lister.DataLister(
+            project=project,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as get_info:
-            get_info.show_project_info(project=project)
+            get_info.show_project_info()
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

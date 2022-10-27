@@ -415,14 +415,14 @@ class DataLister(base.DDSBaseClass):
 
         return research_users
 
-    def show_project_info(self, project):
+    def show_project_info(self):
         """Get a project info."""
         # Get info about a project from API
         response, _ = dds_cli.utils.perform_request(
             DDSEndpoint.PROJ_INFO,
             method="get",
             headers=self.token,
-            params={"project": project},
+            params={"project": self.project},
             error_message="Failed to get project information",
         )
 

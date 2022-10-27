@@ -38,6 +38,7 @@ import dds_cli.project_status
 import dds_cli.user
 import dds_cli.utils
 from dds_cli.options import (
+    destination_option,
     email_arg,
     email_option,
     folder_option,
@@ -1466,6 +1467,7 @@ def data_group_command(_):
 )
 @source_path_file_option()
 @num_threads_option()
+@destination_option(help_message="Destination of uploaded data.", option_type=str)
 @click.option(
     "--overwrite",
     is_flag=True,
@@ -1485,6 +1487,7 @@ def put_data(
     project,
     source,
     source_path_file,
+    destination,
     break_on_fail,
     overwrite,
     num_threads,
@@ -1521,6 +1524,7 @@ def put_data(
             silent=silent,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
+            destination=destination,
         )
     except (
         dds_cli.exceptions.AuthenticationError,
@@ -1541,13 +1545,9 @@ def put_data(
 @num_threads_option()
 @source_option(help_message="Path to file or directory.", option_type=str)
 @source_path_file_option()
-@click.option(
-    "--destination",
-    "-d",
-    required=False,
-    type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
-    multiple=False,
-    help="Destination of downloaded files.",
+@destination_option(
+    help_message="Destination of downloaded data.",
+    option_type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
 )
 # Flags
 @break_on_fail_flag(help_message="Cancel download of all files if one fails.")

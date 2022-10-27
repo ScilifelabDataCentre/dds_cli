@@ -1027,6 +1027,53 @@ def create(
         sys.exit(1)
 
 
+# -- dds project info -- #
+@project_group_command.command(name="info")
+# Options
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="The ID of the project.",
+)
+@click.pass_obj
+def get_info_project(
+    click_ctx,
+    project,
+):
+    """Display information about a specific project.
+
+    Usable by all user roles.
+
+    \b
+    The following information should be displayed:
+    - Project ID
+    - Creator
+    - Status
+    - Date updated
+    - Size
+    - Title
+    - Description
+    """
+    try:
+        with dds_cli.data_lister.DataLister(
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as get_info:
+            get_info.show_project_info()
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
 # ************************************************************************************************ #
 # PROJECT SUB GROUPS ********************************************************** PROJECT SUB GROUPS #
 # ************************************************************************************************ #

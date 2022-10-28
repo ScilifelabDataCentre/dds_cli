@@ -1611,7 +1611,9 @@ def get_data(
         )
         sys.exit(1)
     elif not get_all and not (source or source_path_file):
-        LOG.error( "The command 'dds data get' reuires either the flag '--get-all' or some of the options '--source'/'--source-path-fail'.")
+        LOG.error(
+            "The command 'dds data get' reuires either the flag '--get-all' or some of the options '--source'/'--source-path-fail'."
+        )
         sys.exit(1)
 
     try:

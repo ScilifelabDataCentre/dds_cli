@@ -1605,6 +1605,11 @@ def get_data(
             "Flag '--get-all' cannot be used together with options '--source'/'--source-path-fail'."
         )
         sys.exit(1)
+    elif not get_all and not (source or source_path_file):
+        LOG.error(
+            "Specify either '--source' or '--source-path-file' to download specific directories/files, or '--get-all' to download all project contents."
+        )
+        sys.exit(1)
 
     try:
         # Begin delivery

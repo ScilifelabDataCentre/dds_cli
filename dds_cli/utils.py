@@ -196,16 +196,15 @@ def perform_request(
     except simplejson.JSONDecodeError as err:
         raise dds_cli.exceptions.ApiResponseError(message=str(err))
     except requests.exceptions.RequestException as err:
+        if isinstance(err, requests.exceptions.ConnectionError):
+            error_message += ": The database seems to be down."
+        elif isinstance(err, requests.exceptions.Timeout):
+            error_message += ": The request timed out."
+        else: 
+            error_message += f": Unknown request error -- \n {err}"
         raise dds_cli.exceptions.ApiRequestError(
-            message=(
-                error_message
-                + (
-                    ": The database seems to be down."
-                    if isinstance(err, requests.exceptions.ConnectionError)
-                    else f": Unknown request error -- \n {err}"
-                )
-            )
-        )
+            message=error_message
+        )        
 
     # Get and parse project specific errors
     errors = response_json.get("errors")

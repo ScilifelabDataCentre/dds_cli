@@ -1607,7 +1607,7 @@ def get_data(
         sys.exit(1)
     elif not get_all and not (source or source_path_file):
         LOG.error(
-            "The command 'dds data get' reuires either the flag '--get-all' or some of the options '--source'/'--source-path-fail'."
+            "Specify either '--source'/'--source-path-file' to download specific directories / files, or '--get-all' to download all project contents."
         )
         sys.exit(1)
 

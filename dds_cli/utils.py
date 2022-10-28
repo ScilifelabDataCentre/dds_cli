@@ -184,11 +184,9 @@ def perform_request(
             error_message += ": The database seems to be down."
         elif isinstance(err, requests.exceptions.Timeout):
             error_message += ": The request timed out."
-        else: 
+        else:
             error_message += f": Unknown request error -- \n {err}"
-        raise dds_cli.exceptions.ApiRequestError(
-            message=error_message
-        )        
+        raise dds_cli.exceptions.ApiRequestError(message=error_message)
 
     # Get and parse project specific errors
     errors = response_json.get("errors")

@@ -206,3 +206,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Display name of creator when listing projects ([#557](https://github.com/ScilifelabDataCentre/dds_cli/pull/557))
 - New command: `dds project info [OPTIONS]` to display information about specific project ([#561](https://github.com/ScilifelabDataCentre/dds_cli/pull/561))
 - New option for `dds data put`: `--destination` - allow upload to existing or new directory ([#559](https://github.com/ScilifelabDataCentre/dds_cli/pull/559))
+
+## Sprint (2022-10-28 - 2022-11-11)
+
+- Bug: Catch Timeout exception for when requests are too slow ([#563](https://github.com/ScilifelabDataCentre/dds_cli/pull/563))

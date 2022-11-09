@@ -122,7 +122,7 @@ class DataLister(base.DDSBaseClass):
         """Create a tree displaying the files within the project."""
         LOG.info(f"Listing files for project '{self.project}'")
         if folder:
-            LOG.info(f"Showing files in folder '{escape(folder)}'")
+            LOG.info(f"Showing files in folder '{escape(str(folder))}'")
 
         if folder is None:
             folder = ""
@@ -148,7 +148,7 @@ class DataLister(base.DDSBaseClass):
         sorted_files_folders = sorted(files_folders, key=lambda f: f["name"])
 
         # Create tree
-        tree_title = escape(folder) or f"Files / directories in project: [green]{self.project}"
+        tree_title = escape(str(folder)) or f"Files / directories in project: [green]{self.project}"
         tree = Tree(f"[bold magenta]{tree_title}")
 
         if not sorted_files_folders:

@@ -304,12 +304,15 @@ def list_projects_and_contents(
                                 # If didn't enter anything, convert to None and exit
                                 except (KeyboardInterrupt, AssertionError):
                                     break
-
+                                
+                                import pathlib
                                 # Prepend existing file path
                                 if last_folder is not None and folder is not None:
-                                    folder = os.path.join(last_folder, folder)
+                                    # folder = str(pathlib.Path(last_folder, folder).as_posix())
+                                    folder = pathlib.Path(last_folder, folder)
 
                                 # List files
+                                LOG.info(folder)
                                 folders = lister.list_files(folder=folder, show_size=size)
 
                                 if len(folders) == 0:

@@ -128,7 +128,7 @@ class LocalFileHandler(fh.FileHandler):
                 )
 
                 # Add file info to dict
-                file_info[str(folder / path.name)] = {
+                file_info[str((folder / path.name).as_posix())] = {
                     "path_raw": path,
                     "subpath": folder,
                     "size_raw": path.stat().st_size,

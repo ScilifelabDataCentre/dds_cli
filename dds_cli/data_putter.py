@@ -392,10 +392,11 @@ class DataPutter(base.DDSBaseClass):
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
         params = {"project": self.project}
+
         file_info = {
-            "name": file,
-            "name_in_bucket": str(fileinfo["path_remote"]),
-            "subpath": str(fileinfo["subpath"]),
+            "name": pathlib.Path(file),
+            "name_in_bucket": fileinfo["path_remote"],
+            "subpath": fileinfo["subpath"],
             "size": fileinfo["size_raw"],
             "size_processed": fileinfo["size_processed"],
             "compressed": not fileinfo["compressed"],

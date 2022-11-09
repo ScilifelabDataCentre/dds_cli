@@ -40,19 +40,19 @@ class FileHandler:
         self.project = project
         self.local_destination = local_destination
         self.data_list = []
-        if source is not None:
+        if source:
             self.data_list += list(source)
-        if source_path_file is not None:
-            source_path_file = pathlib.Path(source_path_file)
+        if source_path_file:
+            # source_path_file = pathlib.Path(source_path_file)
             if source_path_file.exists():
                 try:
                     with source_path_file.resolve().open(mode="r") as spf:
-                        self.data_list += spf.read().splitlines()
+                        self.data_list += [pathlib.Path(x) for x in spf.read().splitlines()]
                 except OSError as err:
                     raise dds_cli.exceptions.UploadError(
                         f"Failed to get files from source-path-file option: {err}"
                     )
-
+        LOG.debug(f"3: {self.data_list}")
         self.failed = {}
 
     # Static methods ############ Static methods #

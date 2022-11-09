@@ -48,9 +48,10 @@ class LocalFileHandler(fh.FileHandler):
 
         # Remove duplicates and save all files for later use
         all_files = set(self.data_list)
-
+        LOG.debug(f"4: {[type(x) for x in all_files]}")
+        
         # Remove non existent files
-        self.data_list = {x for x in self.data_list if pathlib.Path(x).exists()}
+        self.data_list = {x for x in self.data_list if x.exists()}
 
         non_existent_files = all_files.difference(self.data_list)
         if len(non_existent_files) > 0:
@@ -62,9 +63,13 @@ class LocalFileHandler(fh.FileHandler):
             )
 
         # Get absolute paths for all data
+        # os.path.expanduser(path): e.g. C:\Users\inaod568/repos/dds_cli
+        # path.expanduser(), pathlib.Path: e.g. C:\Users\inaod568\repos\dds_cli 
         self.data_list = [
-            pathlib.Path(os.path.abspath(os.path.expanduser(path))) for path in self.data_list
+            pathlib.Path(os.path.abspath(path.expanduser())) for path in self.data_list
         ]
+        LOG.debug(f"os: {self.data_list}")
+        os._exit(0)
 
         # No data -- cannot proceed
         if not self.data_list:

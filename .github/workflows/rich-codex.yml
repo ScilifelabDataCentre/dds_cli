@@ -21,7 +21,7 @@ jobs:
       - name: Generate terminal images with rich-codex
         uses: ewels/rich-codex@v1
         env:
-          use_pty: "true"
+          USE_PTY: "true"
         with:
           skip_git_checks: "true"
           commit_changes: "true"

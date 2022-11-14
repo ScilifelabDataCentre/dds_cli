@@ -5,8 +5,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install your custom tools
-        run: pip install lolcat
+      - name: Install dds-cli
+        run: pip install .
 
       - name: Generate terminal images with rich-codex
         uses: ewels/rich-codex@v1

@@ -1,0 +1,14 @@
+on: [push]
+jobs:
+  rich_codex:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install your custom tools
+        run: pip install lolcat
+
+      - name: Generate terminal images with rich-codex
+        uses: ewels/rich-codex@v1
+        with:
+          commit_changes: "true"

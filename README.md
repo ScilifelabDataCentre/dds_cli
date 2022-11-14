@@ -1,6 +1,6 @@
 # Data Delivery System CLI
 
-![`dds --help`](img/dds-help.svg)
+![`dds`](img/dds-help.svg)
 
 
 ![Release](https://img.shields.io/github/v/release/SciLifeLabDataCentre/dds_cli)

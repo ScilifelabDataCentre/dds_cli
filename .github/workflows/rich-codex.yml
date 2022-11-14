@@ -21,8 +21,6 @@ jobs:
       - name: Generate terminal images with rich-codex
         uses: ewels/rich-codex@v1
         with:
-          snippet_theme: monokai
-          terminal_theme: SVG_EXPORT_THEME
           skip_git_checks: "true"
           commit_changes: "true"
           clean_img_paths: docs/img/*.svg

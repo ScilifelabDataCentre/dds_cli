@@ -1,6 +1,6 @@
 # Data Delivery System CLI
 
-![`dds --use-pty`](img/dds-help.svg)
+![`dds`](img/dds-help.svg)
 
 ![Release](https://img.shields.io/github/v/release/SciLifeLabDataCentre/dds_cli)
 [![install with PyPI](https://img.shields.io/badge/install%20with-PyPI-blue.svg?logo=pypi)](https://pypi.org/project/dds-cli/)

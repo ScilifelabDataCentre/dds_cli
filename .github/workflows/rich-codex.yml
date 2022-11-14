@@ -13,5 +13,6 @@ jobs:
       - name: Generate terminal images with rich-codex
         uses: ewels/rich-codex@v1
         with:
+          skip_git_checks: "true"
           commit_changes: "true"
           clean_img_paths: docs/img/*.svg

@@ -1,5 +1,5 @@
 name: Rich-codex
-on: workflow_dispatch
+on: push
 jobs:
   rich_codex:
     runs-on: ubuntu-latest

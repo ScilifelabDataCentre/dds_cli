@@ -7,8 +7,15 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
 
-      - name: Install your custom tools
-        run: pip install .
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install .
 
       - name: Generate terminal images with rich-codex
         uses: ewels/rich-codex@v1

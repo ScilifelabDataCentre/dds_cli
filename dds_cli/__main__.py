@@ -38,6 +38,7 @@ import dds_cli.project_status
 import dds_cli.user
 import dds_cli.utils
 from dds_cli.options import (
+    destination_option,
     email_arg,
     email_option,
     folder_option,
@@ -1026,6 +1027,53 @@ def create(
         sys.exit(1)
 
 
+# -- dds project info -- #
+@project_group_command.command(name="info")
+# Options
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="The ID of the project.",
+)
+@click.pass_obj
+def get_info_project(
+    click_ctx,
+    project,
+):
+    """Display information about a specific project.
+
+    Usable by all user roles.
+
+    \b
+    The following information should be displayed:
+    - Project ID
+    - Creator
+    - Status
+    - Date updated
+    - Size
+    - Title
+    - Description
+    """
+    try:
+        with dds_cli.data_lister.DataLister(
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as get_info:
+            get_info.show_project_info()
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
 # ************************************************************************************************ #
 # PROJECT SUB GROUPS ********************************************************** PROJECT SUB GROUPS #
 # ************************************************************************************************ #
@@ -1419,6 +1467,7 @@ def data_group_command(_):
 )
 @source_path_file_option()
 @num_threads_option()
+@destination_option(help_message="Destination of uploaded data.", option_type=str)
 @click.option(
     "--overwrite",
     is_flag=True,
@@ -1438,6 +1487,7 @@ def put_data(
     project,
     source,
     source_path_file,
+    destination,
     break_on_fail,
     overwrite,
     num_threads,
@@ -1474,6 +1524,7 @@ def put_data(
             silent=silent,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
+            destination=destination,
         )
     except (
         dds_cli.exceptions.AuthenticationError,
@@ -1494,13 +1545,9 @@ def put_data(
 @num_threads_option()
 @source_option(help_message="Path to file or directory.", option_type=str)
 @source_path_file_option()
-@click.option(
-    "--destination",
-    "-d",
-    required=False,
-    type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
-    multiple=False,
-    help="Destination of downloaded files.",
+@destination_option(
+    help_message="Destination of downloaded data.",
+    option_type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
 )
 # Flags
 @break_on_fail_flag(help_message="Cancel download of all files if one fails.")
@@ -1556,6 +1603,11 @@ def get_data(
     if get_all and (source or source_path_file):
         LOG.error(
             "Flag '--get-all' cannot be used together with options '--source'/'--source-path-fail'."
+        )
+        sys.exit(1)
+    elif not get_all and not (source or source_path_file):
+        LOG.error(
+            "Specify either '--source' or '--source-path-file' to download specific directories/files, or '--get-all' to download all project contents."
         )
         sys.exit(1)
 

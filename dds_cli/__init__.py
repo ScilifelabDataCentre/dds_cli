@@ -96,6 +96,7 @@ class DDSEndpoint:
     # Project specific urls
     PROJ_ACCESS = BASE_ENDPOINT + "/proj/access"
     PROJ_BUSY_ANY = BASE_ENDPOINT + "/proj/busy/any"
+    PROJ_INFO = BASE_ENDPOINT + "/proj/info"
 
     # Listing urls
     LIST_PROJ = BASE_ENDPOINT + "/proj/list"

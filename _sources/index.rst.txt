@@ -9,9 +9,14 @@ Welcome to the Data Delivery Systems' Documentation!
 
 The Data Delivery System (DDS, https://delivery.scilifelab.se/) consists of a command line interface (CLI) and a web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
 
+.. _account:
+
 How do I get my user account?
 ===============================
 An invite from an existing user is required in order for you to get an account within the DDS. The email will be from `services-noreply@scilifelab.se`, we will notify you if and when this changes. Note that any emails sent to this address regarding the DDS *will not be responded to*. If you do not get an email, please have a look in the junk/spam folder. If your email adress has the `scilifelab.se` domain, keep in mind that your emails may take a while to deliver due to the KTH spam filters. If you do not receive an email, please contact support. 
+
+* **I want data delivered to me from a SciLifeLab Unit**: Please contact the unit responsible for delivering the data to you.
+* **I'm a data producer, wishing to deliver data to my users**: If your unit does not have DDS set up, start by contacting the SciLifeLab Data Centre. If your unit *has* started using the DDS for data deliveries, contact your colleagues. 
 
 Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system. To be able to use the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<cli>`.
 
@@ -20,7 +25,7 @@ Once you get the invitation email, follow the link in the email and register you
 
    When resetting a password you can, of course, regain access to the projects you lost access to. You will get information on how when you perform a password reset.
 
-Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. The roles are defined `on this board <https://app.diagrams.net/?page-id=iAQ0dwp1xBzZl6jLjueX&hide-pages=1#G1ophR0vtGByHxPG90mzjAPXgMTCjVcN_Z>`_. 
+Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. For more information about the roles, please read the `technical overview <https://github.com/ScilifelabDataCentre/dds_web/blob/dev/doc/Technical-Overview.pdf>`_. 
 
 
 Installation

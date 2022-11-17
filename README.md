@@ -21,6 +21,7 @@
 <a href="https://prettier.io/">
     <img alt="Code style: prettier" src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg">
 </a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2FScilifelabDataCentre%2Fdds_cli?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2FScilifelabDataCentre%2Fdds_cli.svg?type=shield"/></a>
 <br />
 <img alt="Linting" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg">
 <img alt="CodeQL" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg">
@@ -49,6 +50,9 @@
     <img alt="CLI" src="https://img.shields.io/badge/-Web / API-yellow?logo=github">
 </a>
 </p>
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FScilifelabDataCentre%2Fdds_cli.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FScilifelabDataCentre%2Fdds_cli?ref=badge_large)
 
 ## About
 

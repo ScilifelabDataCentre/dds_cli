@@ -229,6 +229,7 @@ class DataLister(base.DDSBaseClass):
             name: str = None
 
         def __api_call_list_files(folder: str):
+            LOG.debug(f"Folder: {folder}")
             # Make call to API
             resp_json, _ = dds_cli.utils.perform_request(
                 DDSEndpoint.LIST_FILES,
@@ -239,17 +240,17 @@ class DataLister(base.DDSBaseClass):
                 error_message="Failed to list the project's directory tree",
             )
             
-            LOG.debug(resp_json)
+            LOG.debug(f"project contents: {resp_json}")
 
             if not "files_folders" in resp_json:
                 raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
 
-            os._exit(0)
             sorted_files_folders = sorted(resp_json["files_folders"], key=lambda f: f["name"])
 
             if not sorted_files_folders:
                 raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
 
+            LOG.debug(f"sorted_files_folders: {sorted_files_folders}")
             return sorted_files_folders
 
         def __construct_file_tree(folder: str, basename: str) -> Tuple[FileTree, int, int]:
@@ -288,10 +289,15 @@ class DataLister(base.DDSBaseClass):
                 if not is_folder:
                     tree.subtrees.append((escape(f["name"]), f.get("size") if show_size else None))
                 else:
+                    # TODO: JOIN IS MESSING SHIT UP
+                    import pathlib
+                    LOG.debug(f'join: {os.path.join(folder, f["name"]) if folder else f["name"]}')
+                    LOG.debug(f'pathlib: {pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"]}')
                     subtree, _max_string, _max_size = __construct_file_tree(
                         os.path.join(folder, f["name"]) if folder else f["name"],
                         f"[bold deep_sky_blue3]{escape(f['name'])}",
                     )
+                    LOG.debug(f"subtree: {subtree}\t_max_string: {_max_string}\t_max_size: {_max_size}")
                     # Due to indentation, the filename strings of
                     # subdirectories are 4 characters deeper than
                     # their parent directories

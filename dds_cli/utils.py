@@ -168,6 +168,8 @@ def perform_request(
     import pathlib
     import typing
     def transform_paths(json_input):
+        """Make paths serializable."""
+        # Transform dict and list contents
         if isinstance(json_input, typing.Dict):
             for x, y in json_input.items():
                 if isinstance(y, pathlib.Path):
@@ -177,7 +179,7 @@ def perform_request(
         return json_input
 
     json = transform_paths(json_input=json)
-    LOG.debug(json)
+    LOG.debug(f"transformed: {json}")
     """Perform get request."""
     try:
         headers[version_header_name] = __version__

@@ -409,6 +409,7 @@ class DataPutter(base.DDSBaseClass):
             "public_key": fileinfo["public_key"],
             "checksum": fileinfo["checksum"],
         }
+        LOG.debug(f"file_info to be added to db: \n{file_info}")
 
         # Send file info to API - post if new file, put if overwrite
         request_method = "put" if fileinfo["overwrite"] else "post"

@@ -136,6 +136,8 @@ class DataLister(base.DDSBaseClass):
             error_message="Failed to get list of files in project",
             timeout=DDSEndpoint.TIMEOUT,
         )
+        LOG.debug(response)
+        
 
         # Check if project empty
         if "num_items" in response and response["num_items"] == 0:
@@ -236,10 +238,13 @@ class DataLister(base.DDSBaseClass):
                 headers=self.token,
                 error_message="Failed to list the project's directory tree",
             )
+            
+            LOG.debug(resp_json)
 
             if not "files_folders" in resp_json:
                 raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
 
+            os._exit(0)
             sorted_files_folders = sorted(resp_json["files_folders"], key=lambda f: f["name"])
 
             if not sorted_files_folders:

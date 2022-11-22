@@ -69,7 +69,6 @@ class LocalFileHandler(fh.FileHandler):
             pathlib.Path(os.path.abspath(path.expanduser())) for path in self.data_list
         ]
         LOG.debug(f"os: {self.data_list}")
-        os._exit(0)
 
         # No data -- cannot proceed
         if not self.data_list:
@@ -79,7 +78,9 @@ class LocalFileHandler(fh.FileHandler):
             all_paths=self.data_list, folder=pathlib.Path(remote_destination or "")
         )
         self.data_list = None
-
+        
+        LOG.debug(self.data)
+    
         LOG.debug("File info computed/collected")
 
     # Static methods ############## Static methods #
@@ -114,7 +115,7 @@ class LocalFileHandler(fh.FileHandler):
         for path in all_paths:
             # Choose name for progress bar - unused?
             task_name = path.name if folder == pathlib.Path("") else task_name
-
+            path_key = folder / path.name
             # Get info for all files
             # and feed back to same function for all folders
             if path.is_file():
@@ -133,7 +134,7 @@ class LocalFileHandler(fh.FileHandler):
                 )
 
                 # Add file info to dict
-                file_info[str((folder / path.name).as_posix())] = {
+                file_info[path_key.as_posix()] = {
                     "path_raw": path,
                     "subpath": folder,
                     "size_raw": path.stat().st_size,
@@ -146,12 +147,14 @@ class LocalFileHandler(fh.FileHandler):
                     "overwrite": False,
                     "checksum": "",
                 }
+                LOG.debug(path_key.as_posix())
+                LOG.debug(file_info[path_key.as_posix()])
 
             elif path.is_dir():
                 # Loop back to same function to get file into in dir
                 content_info, _ = self.__collect_file_info_local(
                     all_paths=path.glob("*"),
-                    folder=folder / pathlib.Path(path.name),
+                    folder=path_key,
                 )
                 file_info.update({**content_info})
             else:
@@ -214,16 +217,17 @@ class LocalFileHandler(fh.FileHandler):
 
         LOG.debug("Initial statuses created.")
 
+        LOG.debug(f"status_dict: {status_dict}")
         return status_dict
 
     def check_previous_upload(self, token):
         """Do API call and check for the files in the DB."""
 
         LOG.debug("Checking if files have been previously uploaded.")
-
+        LOG.debug(self.data)
         # Get files from db
-        files = list(x for x in self.data)
-
+        # files = list(x for x in self.data)
+        files = list(self.data.keys())
         files_in_db, _ = dds_cli.utils.perform_request(
             DDSEndpoint.FILE_MATCH,
             method="get",
@@ -232,7 +236,8 @@ class LocalFileHandler(fh.FileHandler):
             json=files,
             error_message="Failed getting information about previously uploaded files",
         )
-
+        LOG.debug(files_in_db)
+        
         # API failure
         if "files" not in files_in_db:
             raise exceptions.NoDataError("Files not returned from API.")

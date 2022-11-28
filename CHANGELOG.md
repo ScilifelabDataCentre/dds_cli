@@ -210,7 +210,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 ## Sprint (2022-10-28 - 2022-11-11)
 
 - Bug: Catch Timeout exception for when requests are too slow ([#563](https://github.com/ScilifelabDataCentre/dds_cli/pull/563))
-<<<<<<< HEAD
 - Check that `dds data get` is used with either `--get-all` or `--source`/`--source-path-fail` and display appropriate message ([#564](https://github.com/ScilifelabDataCentre/dds_cli/pull/564))
-=======
->>>>>>> 0841805 (changelog)

@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Tuple, Union, List
 import datetime
+import pathlib
 
 # Installed
 import requests
@@ -122,7 +123,7 @@ class DataLister(base.DDSBaseClass):
         """Create a tree displaying the files within the project."""
         LOG.info(f"Listing files for project '{self.project}'")
         if folder:
-            LOG.info(f"Showing files in folder '{escape(folder)}'")
+            LOG.info(f"Showing files in folder '{escape(str(folder))}'")
 
         if folder is None:
             folder = ""
@@ -148,7 +149,7 @@ class DataLister(base.DDSBaseClass):
         sorted_files_folders = sorted(files_folders, key=lambda f: f["name"])
 
         # Create tree
-        tree_title = escape(folder) or f"Files / directories in project: [green]{self.project}"
+        tree_title = escape(str(folder)) or f"Files / directories in project: [green]{self.project}"
         tree = Tree(f"[bold magenta]{tree_title}")
 
         if not sorted_files_folders:
@@ -284,7 +285,7 @@ class DataLister(base.DDSBaseClass):
                     tree.subtrees.append((escape(f["name"]), f.get("size") if show_size else None))
                 else:
                     subtree, _max_string, _max_size = __construct_file_tree(
-                        os.path.join(folder, f["name"]) if folder else f["name"],
+                        pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"],
                         f"[bold deep_sky_blue3]{escape(f['name'])}",
                     )
                     # Due to indentation, the filename strings of
@@ -323,7 +324,7 @@ class DataLister(base.DDSBaseClass):
                         tree[f["name"]]["size"] = f.get("size")
                 else:
                     children = __construct_file_dict_tree(
-                        os.path.join(folder, name) if folder else name
+                        pathlib.Path(folder, name).as_posix() if folder else name,
                     )
                     tree[name] = {"name": name, "is_folder": True, "children": children}
 

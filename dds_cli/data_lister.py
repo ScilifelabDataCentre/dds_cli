@@ -138,7 +138,6 @@ class DataLister(base.DDSBaseClass):
             timeout=DDSEndpoint.TIMEOUT,
         )
         LOG.debug(response)
-        
 
         # Check if project empty
         if "num_items" in response and response["num_items"] == 0:
@@ -240,7 +239,7 @@ class DataLister(base.DDSBaseClass):
                 headers=self.token,
                 error_message="Failed to list the project's directory tree",
             )
-            
+
             LOG.debug(f"project contents: {resp_json}")
 
             if not "files_folders" in resp_json:
@@ -293,14 +292,18 @@ class DataLister(base.DDSBaseClass):
                     # TODO: JOIN IS MESSING SHIT UP
                     LOG.debug("")
                     LOG.debug(f'join: {os.path.join(folder, f["name"]) if folder else f["name"]}')
-                    LOG.debug(f'pathlib: {pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"]}')
+                    LOG.debug(
+                        f'pathlib: {pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"]}'
+                    )
                     LOG.debug("")
                     subtree, _max_string, _max_size = __construct_file_tree(
                         pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"],
                         # os.path.join(folder, f["name"]) if folder else f["name"],
                         f"[bold deep_sky_blue3]{escape(f['name'])}",
                     )
-                    LOG.debug(f"subtree: {subtree}\t_max_string: {_max_string}\t_max_size: {_max_size}")
+                    LOG.debug(
+                        f"subtree: {subtree}\t_max_string: {_max_string}\t_max_size: {_max_size}"
+                    )
                     # Due to indentation, the filename strings of
                     # subdirectories are 4 characters deeper than
                     # their parent directories
@@ -338,7 +341,7 @@ class DataLister(base.DDSBaseClass):
                 else:
                     children = __construct_file_dict_tree(
                         pathlib.Path(folder, name).as_posix() if folder else name,
-                        #os.path.join(folder, name) if folder else name
+                        # os.path.join(folder, name) if folder else name
                     )
                     tree[name] = {"name": name, "is_folder": True, "children": children}
 

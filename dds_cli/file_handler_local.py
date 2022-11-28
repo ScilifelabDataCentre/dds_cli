@@ -49,7 +49,7 @@ class LocalFileHandler(fh.FileHandler):
         # Remove duplicates and save all files for later use
         all_files = set(self.data_list)
         LOG.debug(f"4: {[type(x) for x in all_files]}")
-        
+
         # Remove non existent files
         self.data_list = {x for x in self.data_list if x.exists()}
 
@@ -64,7 +64,7 @@ class LocalFileHandler(fh.FileHandler):
 
         # Get absolute paths for all data
         # os.path.expanduser(path): e.g. C:\Users\inaod568/repos/dds_cli
-        # path.expanduser(), pathlib.Path: e.g. C:\Users\inaod568\repos\dds_cli 
+        # path.expanduser(), pathlib.Path: e.g. C:\Users\inaod568\repos\dds_cli
         self.data_list = [
             pathlib.Path(os.path.abspath(path.expanduser())) for path in self.data_list
         ]
@@ -78,9 +78,9 @@ class LocalFileHandler(fh.FileHandler):
             all_paths=self.data_list, folder=pathlib.Path(remote_destination or "")
         )
         self.data_list = None
-        
+
         LOG.debug(self.data)
-    
+
         LOG.debug("File info computed/collected")
 
     # Static methods ############## Static methods #
@@ -237,7 +237,7 @@ class LocalFileHandler(fh.FileHandler):
             error_message="Failed getting information about previously uploaded files",
         )
         LOG.debug(files_in_db)
-        
+
         # API failure
         if "files" not in files_in_db:
             raise exceptions.NoDataError("Files not returned from API.")

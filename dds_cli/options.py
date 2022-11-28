@@ -146,7 +146,6 @@ def source_option(
     """
     Source option standard definition.
 
-
     Use as decorator for commands.
     """
     return click.option(

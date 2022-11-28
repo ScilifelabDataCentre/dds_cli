@@ -50,7 +50,7 @@ class LocalFileHandler(fh.FileHandler):
         all_files = set(self.data_list)
 
         # Remove non existent files
-        self.data_list = {x for x in self.data_list if pathlib.Path(x).exists()}
+        self.data_list = {x for x in self.data_list if x.exists()}
 
         non_existent_files = all_files.difference(self.data_list)
         if len(non_existent_files) > 0:
@@ -62,8 +62,10 @@ class LocalFileHandler(fh.FileHandler):
             )
 
         # Get absolute paths for all data
+        # os.path.expanduser(path): e.g. C:\Users\inaod568/repos/dds_cli
+        # path.expanduser(), pathlib.Path: e.g. C:\Users\inaod568\repos\dds_cli
         self.data_list = [
-            pathlib.Path(os.path.abspath(os.path.expanduser(path))) for path in self.data_list
+            pathlib.Path(os.path.abspath(path.expanduser())) for path in self.data_list
         ]
 
         # No data -- cannot proceed
@@ -109,7 +111,7 @@ class LocalFileHandler(fh.FileHandler):
         for path in all_paths:
             # Choose name for progress bar - unused?
             task_name = path.name if folder == pathlib.Path("") else task_name
-
+            path_key = folder / path.name
             # Get info for all files
             # and feed back to same function for all folders
             if path.is_file():
@@ -128,7 +130,7 @@ class LocalFileHandler(fh.FileHandler):
                 )
 
                 # Add file info to dict
-                file_info[str(folder / path.name)] = {
+                file_info[path_key.as_posix()] = {
                     "path_raw": path,
                     "subpath": folder,
                     "size_raw": path.stat().st_size,
@@ -146,7 +148,7 @@ class LocalFileHandler(fh.FileHandler):
                 # Loop back to same function to get file into in dir
                 content_info, _ = self.__collect_file_info_local(
                     all_paths=path.glob("*"),
-                    folder=folder / pathlib.Path(path.name),
+                    folder=path_key,
                 )
                 file_info.update({**content_info})
             else:
@@ -217,7 +219,7 @@ class LocalFileHandler(fh.FileHandler):
         LOG.debug("Checking if files have been previously uploaded.")
 
         # Get files from db
-        files = list(x for x in self.data)
+        files = list(self.data.keys())
 
         files_in_db, _ = dds_cli.utils.perform_request(
             DDSEndpoint.FILE_MATCH,

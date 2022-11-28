@@ -221,7 +221,6 @@ class DataPutter(base.DDSBaseClass):
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")
 
             # Get file info
-            LOG.debug(f"2: {[type(x) for x in source]}")
             self.filehandler = fhl.LocalFileHandler(
                 user_input=(source, source_path_file),
                 project=self.project,

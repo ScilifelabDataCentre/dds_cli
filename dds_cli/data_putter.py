@@ -234,7 +234,6 @@ class DataPutter(base.DDSBaseClass):
 
             # Check which, if any, files exist in the db
             files_in_db = self.filehandler.check_previous_upload(token=self.token)
-            LOG.debug(f"files in db: {files_in_db}")
 
             # Quit if error and flag
             if files_in_db and self.break_on_fail and not self.overwrite:
@@ -267,8 +266,6 @@ class DataPutter(base.DDSBaseClass):
     @subpath_required
     def protect_and_upload(self, file, progress):
         """Process and upload the file while handling the progress bars."""
-        LOG.debug(f"file: {file}")
-
         # Variables
         all_ok, saved, message = (False, False, "")  # Error catching
         file_info = self.filehandler.data[file]  # Info on current file
@@ -309,7 +306,6 @@ class DataPutter(base.DDSBaseClass):
             LOG.debug(
                 f"File successfully encrypted: {escape(file)}. New location: {escape(str(file_info['path_processed']))}"
             )
-
             # Update progress bar for upload
             progress.reset(
                 task,
@@ -397,7 +393,6 @@ class DataPutter(base.DDSBaseClass):
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]
         params = {"project": self.project}
-
         file_info = {
             "name": pathlib.Path(file),
             "name_in_bucket": fileinfo["path_remote"],
@@ -409,7 +404,6 @@ class DataPutter(base.DDSBaseClass):
             "public_key": fileinfo["public_key"],
             "checksum": fileinfo["checksum"],
         }
-        LOG.debug(f"file_info to be added to db: \n{file_info}")
 
         # Send file info to API - post if new file, put if overwrite
         request_method = "put" if fileinfo["overwrite"] else "post"

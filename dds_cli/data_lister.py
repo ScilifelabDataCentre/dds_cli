@@ -291,10 +291,13 @@ class DataLister(base.DDSBaseClass):
                 else:
                     # TODO: JOIN IS MESSING SHIT UP
                     import pathlib
+                    LOG.debug("")
                     LOG.debug(f'join: {os.path.join(folder, f["name"]) if folder else f["name"]}')
                     LOG.debug(f'pathlib: {pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"]}')
+                    LOG.debug("")
                     subtree, _max_string, _max_size = __construct_file_tree(
-                        os.path.join(folder, f["name"]) if folder else f["name"],
+                        pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"],
+                        # os.path.join(folder, f["name"]) if folder else f["name"],
                         f"[bold deep_sky_blue3]{escape(f['name'])}",
                     )
                     LOG.debug(f"subtree: {subtree}\t_max_string: {_max_string}\t_max_size: {_max_size}")
@@ -333,8 +336,10 @@ class DataLister(base.DDSBaseClass):
                     if show_size:
                         tree[f["name"]]["size"] = f.get("size")
                 else:
+                    import pathlib
                     children = __construct_file_dict_tree(
-                        os.path.join(folder, name) if folder else name
+                        pathlib.Path(folder, name).as_posix() if folder else name,
+                        #os.path.join(folder, name) if folder else name
                     )
                     tree[name] = {"name": name, "is_folder": True, "children": children}
 

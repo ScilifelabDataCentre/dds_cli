@@ -2,7 +2,8 @@
 
 import logging
 import numbers
-from pathlib import Path
+import pathlib
+import typing
 
 import requests
 import rich.console
@@ -164,6 +165,19 @@ def perform_request(
         request_method = requests.post
     elif method == "delete":
         request_method = requests.delete
+
+    def transform_paths(json_input):
+        """Make paths serializable."""
+        # Transform dict and list contents
+        if isinstance(json_input, typing.Dict):
+            for x, y in json_input.items():
+                if isinstance(y, pathlib.Path):
+                    json_input[x] = y.as_posix()
+        elif isinstance(json_input, typing.List):
+            json_input = [x.as_posix() if isinstance(x, pathlib.Path) else x for x in json_input]
+        return json_input
+
+    json = transform_paths(json_input=json)
 
     """Perform get request."""
     try:
@@ -353,7 +367,7 @@ def print_or_page(item):
 
 # Adapted from <https://stackoverflow.com/a/49782093>.
 def delete_folder(folder):
-    folder = Path(folder)
+    folder = pathlib.Path(folder)
     for file_or_folder in folder.iterdir():
         if file_or_folder.is_dir():
             delete_folder(file_or_folder)

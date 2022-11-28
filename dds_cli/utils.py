@@ -164,9 +164,10 @@ def perform_request(
         request_method = requests.post
     elif method == "delete":
         request_method = requests.delete
-    
+
     import pathlib
     import typing
+
     def transform_paths(json_input):
         """Make paths serializable."""
         # Transform dict and list contents
@@ -174,7 +175,7 @@ def perform_request(
             for x, y in json_input.items():
                 if isinstance(y, pathlib.Path):
                     json_input[x] = y.as_posix()
-        elif isinstance(json_input, typing.List): 
+        elif isinstance(json_input, typing.List):
             json_input = [x.as_posix() if isinstance(x, pathlib.Path) else x for x in json_input]
         return json_input
 

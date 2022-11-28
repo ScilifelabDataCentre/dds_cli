@@ -1463,7 +1463,8 @@ def data_group_command(_):
 )
 @project_option(required=True, help_message="Project ID to which you're uploading data.")
 @source_option(
-    help_message="Path to file or directory (local).", option_type=click.Path(exists=True, path_type=pathlib.Path)
+    help_message="Path to file or directory (local).",
+    option_type=click.Path(exists=True, path_type=pathlib.Path),
 )
 @source_path_file_option()
 @num_threads_option()

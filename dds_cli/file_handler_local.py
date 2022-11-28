@@ -62,7 +62,7 @@ class LocalFileHandler(fh.FileHandler):
 
         # Get absolute paths for all data
         # os.path.expanduser(path): e.g. C:\Users\inaod568/repos/dds_cli
-        # path.expanduser(), pathlib.Path: e.g. C:\Users\inaod568\repos\dds_cli 
+        # path.expanduser(), pathlib.Path: e.g. C:\Users\inaod568\repos\dds_cli
         self.data_list = [
             pathlib.Path(os.path.abspath(path.expanduser())) for path in self.data_list
         ]

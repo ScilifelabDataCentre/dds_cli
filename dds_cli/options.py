@@ -143,7 +143,6 @@ def sort_projects_option(
 def source_option(
     help_message, option_type, long="--source", short="-s", name="source", required=False
 ):
-
     """
     Source option standard definition.
 

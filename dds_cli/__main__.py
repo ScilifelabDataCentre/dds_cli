@@ -308,11 +308,9 @@ def list_projects_and_contents(
 
                                 # Prepend existing file path
                                 if last_folder is not None and folder is not None:
-                                    # folder = str(pathlib.Path(last_folder, folder).as_posix())
                                     folder = pathlib.Path(last_folder, folder)
 
                                 # List files
-                                LOG.info(folder)
                                 folders = lister.list_files(folder=folder, show_size=size)
 
                                 if len(folders) == 0:
@@ -1516,7 +1514,6 @@ def put_data(
     delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
     reauthenticating yourself before uploading data.
     """
-    LOG.debug(f"1: {[type(x) for x in source]}")
     try:
         dds_cli.data_putter.put(
             mount_dir=mount_dir,

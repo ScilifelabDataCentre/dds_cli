@@ -48,7 +48,6 @@ class LocalFileHandler(fh.FileHandler):
 
         # Remove duplicates and save all files for later use
         all_files = set(self.data_list)
-        LOG.debug(f"4: {[type(x) for x in all_files]}")
 
         # Remove non existent files
         self.data_list = {x for x in self.data_list if x.exists()}
@@ -68,7 +67,6 @@ class LocalFileHandler(fh.FileHandler):
         self.data_list = [
             pathlib.Path(os.path.abspath(path.expanduser())) for path in self.data_list
         ]
-        LOG.debug(f"os: {self.data_list}")
 
         # No data -- cannot proceed
         if not self.data_list:
@@ -78,8 +76,6 @@ class LocalFileHandler(fh.FileHandler):
             all_paths=self.data_list, folder=pathlib.Path(remote_destination or "")
         )
         self.data_list = None
-
-        LOG.debug(self.data)
 
         LOG.debug("File info computed/collected")
 
@@ -147,8 +143,6 @@ class LocalFileHandler(fh.FileHandler):
                     "overwrite": False,
                     "checksum": "",
                 }
-                LOG.debug(path_key.as_posix())
-                LOG.debug(file_info[path_key.as_posix()])
 
             elif path.is_dir():
                 # Loop back to same function to get file into in dir
@@ -217,16 +211,13 @@ class LocalFileHandler(fh.FileHandler):
 
         LOG.debug("Initial statuses created.")
 
-        LOG.debug(f"status_dict: {status_dict}")
         return status_dict
 
     def check_previous_upload(self, token):
         """Do API call and check for the files in the DB."""
 
         LOG.debug("Checking if files have been previously uploaded.")
-        LOG.debug(self.data)
         # Get files from db
-        # files = list(x for x in self.data)
         files = list(self.data.keys())
         files_in_db, _ = dds_cli.utils.perform_request(
             DDSEndpoint.FILE_MATCH,
@@ -236,7 +227,6 @@ class LocalFileHandler(fh.FileHandler):
             json=files,
             error_message="Failed getting information about previously uploaded files",
         )
-        LOG.debug(files_in_db)
 
         # API failure
         if "files" not in files_in_db:

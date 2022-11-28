@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Tuple, Union, List
 import datetime
+import pathlib
 
 # Installed
 import requests
@@ -290,7 +291,6 @@ class DataLister(base.DDSBaseClass):
                     tree.subtrees.append((escape(f["name"]), f.get("size") if show_size else None))
                 else:
                     # TODO: JOIN IS MESSING SHIT UP
-                    import pathlib
                     LOG.debug("")
                     LOG.debug(f'join: {os.path.join(folder, f["name"]) if folder else f["name"]}')
                     LOG.debug(f'pathlib: {pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"]}')
@@ -336,7 +336,6 @@ class DataLister(base.DDSBaseClass):
                     if show_size:
                         tree[f["name"]]["size"] = f.get("size")
                 else:
-                    import pathlib
                     children = __construct_file_dict_tree(
                         pathlib.Path(folder, name).as_posix() if folder else name,
                         #os.path.join(folder, name) if folder else name

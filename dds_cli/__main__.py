@@ -12,6 +12,7 @@ import os
 import sys
 
 # Installed
+import pathlib
 import rich_click as click
 import click_pathlib
 import rich
@@ -307,7 +308,7 @@ def list_projects_and_contents(
 
                                 # Prepend existing file path
                                 if last_folder is not None and folder is not None:
-                                    folder = os.path.join(last_folder, folder)
+                                    folder = pathlib.Path(last_folder, folder)
 
                                 # List files
                                 folders = lister.list_files(folder=folder, show_size=size)
@@ -1463,7 +1464,8 @@ def data_group_command(_):
 )
 @project_option(required=True, help_message="Project ID to which you're uploading data.")
 @source_option(
-    help_message="Path to file or directory (local).", option_type=click.Path(exists=True)
+    help_message="Path to file or directory (local).",
+    option_type=click.Path(exists=True, path_type=pathlib.Path),
 )
 @source_path_file_option()
 @num_threads_option()

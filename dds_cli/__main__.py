@@ -306,7 +306,6 @@ def list_projects_and_contents(
                                 except (KeyboardInterrupt, AssertionError):
                                     break
                                 
-                                import pathlib
                                 # Prepend existing file path
                                 if last_folder is not None and folder is not None:
                                     # folder = str(pathlib.Path(last_folder, folder).as_posix())

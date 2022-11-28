@@ -1028,7 +1028,7 @@ def create(
 
 
 # -- dds project info -- #
-@project_group_command.command(name="info")
+@project_group_command.group(name="info")
 # Options
 @click.option(
     "--project",
@@ -1073,6 +1073,10 @@ def get_info_project(
         LOG.error(err)
         sys.exit(1)
 
+
+@get_info_project.command(name="change", no_args_is_help=True)
+def change_project_info(click_ctx, project):
+    pass
 
 # ************************************************************************************************ #
 # PROJECT SUB GROUPS ********************************************************** PROJECT SUB GROUPS #
@@ -1429,6 +1433,8 @@ def fix_project_access(click_ctx, email, project):
         LOG.error(err)
         sys.exit(1)
 
+
+# INFO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INFO #
 
 ####################################################################################################
 ####################################################################################################

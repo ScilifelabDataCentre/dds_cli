@@ -216,7 +216,6 @@ class LocalFileHandler(fh.FileHandler):
 
         LOG.debug("Checking if files have been previously uploaded.")
         # Get files from db
-        # files = list(x for x in self.data)
         files = list(self.data.keys())
         files_in_db, _ = dds_cli.utils.perform_request(
             DDSEndpoint.FILE_MATCH,

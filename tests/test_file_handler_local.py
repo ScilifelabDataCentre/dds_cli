@@ -31,7 +31,7 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
 
     # Call LocalFileHandler
     filehandler = LocalFileHandler(
-        user_input=(("parentdir",), None),
+        user_input=((pathlib.Path("parentdir"),), None),
         project="someproject",
         temporary_destination="temporarydestination",
         remote_destination="remote_destination",

@@ -45,3 +45,4 @@ timings
 !*datadeliverysystem.pdf
 !*docs/_static/**
 .DS_Store
+*test-venv*

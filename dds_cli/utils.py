@@ -180,7 +180,7 @@ def perform_request(
         return json_input
 
     json = transform_paths(json_input=json)
-    """Perform request."""
+    # Perform request.
     try:
         headers[version_header_name] = __version__
         response = request_method(

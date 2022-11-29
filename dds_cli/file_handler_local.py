@@ -56,7 +56,7 @@ class LocalFileHandler(fh.FileHandler):
             # Issue warning that some of the files don't exist
             LOG.warning(
                 "The following files from '{}' does not exist: '{}'".format(
-                    user_input[1], "', '".join(non_existent_files)
+                    user_input[1], "', '".join([str(x) for x in non_existent_files])
                 )
             )
 

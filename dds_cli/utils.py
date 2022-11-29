@@ -180,7 +180,6 @@ def perform_request(
         return json_input
 
     json = transform_paths(json_input=json)
-    LOG.debug(f"transformed: {json}")
     """Perform get request."""
     try:
         headers[version_header_name] = __version__

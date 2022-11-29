@@ -87,10 +87,15 @@ class ProjectInfoManager(base.DDSBaseClass):
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.PROJ_INFO,
             headers=self.token,
-            method="post",
+            method="put",
             params={"project": self.project},
             json=info_items,
             error_message="Failed to update project info",
         )
 
         dds_cli.utils.console.print(f"Project {response_json.get('message')}")
+        dds_cli.utils.console.print(f"[b]Project title:[/b]       {response_json.get('title')}")
+        dds_cli.utils.console.print(
+            f"[b]Project description:[/b] {response_json.get('description')}"
+        )
+        dds_cli.utils.console.print(f"[b]Project PI:[/b] {response_json.get('pi')}")

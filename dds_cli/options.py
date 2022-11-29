@@ -2,6 +2,7 @@
 
 # Imports
 import click
+import pathlib
 from dds_cli.utils import multiple_help_text
 
 # Args used multiple times
@@ -175,7 +176,7 @@ def source_path_file_option(
         short,
         name,
         required=required,
-        type=click.Path(exists=True),
+        type=click.Path(exists=True, path_type=pathlib.Path),
         multiple=False,
         help=help_message,
     )

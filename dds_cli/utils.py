@@ -2,7 +2,8 @@
 
 import logging
 import numbers
-from pathlib import Path
+import pathlib
+import typing
 
 import requests
 import rich.console
@@ -164,9 +165,6 @@ def perform_request(
         request_method = requests.post
     elif method == "delete":
         request_method = requests.delete
-
-    import pathlib
-    import typing
 
     def transform_paths(json_input):
         """Make paths serializable."""
@@ -368,7 +366,7 @@ def print_or_page(item):
 
 # Adapted from <https://stackoverflow.com/a/49782093>.
 def delete_folder(folder):
-    folder = Path(folder)
+    folder = pathlib.Path(folder)
     for file_or_folder in folder.iterdir():
         if file_or_folder.is_dir():
             delete_folder(file_or_folder)

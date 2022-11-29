@@ -1427,7 +1427,7 @@ def display_project_info(
     - Description
     """
     try:
-        with dds_cli.data_lister.DataLister(
+        with dds_cli.project_info.ProjectInfoManager(
             project=project,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
@@ -1489,7 +1489,7 @@ def change_project_info(click_ctx, project, title, description, principal_invest
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as updater:
-            updater.update_info(title=title, description=description,pi=principal_investigator)
+            updater.update_info(title=title, description=description, pi=principal_investigator)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -1499,7 +1499,8 @@ def change_project_info(click_ctx, project, title, description, principal_invest
     ) as err:
         LOG.error(err)
         sys.exit(1)
-  
+
+
 ####################################################################################################
 ####################################################################################################
 ## DATA #################################################################################### DATA ##

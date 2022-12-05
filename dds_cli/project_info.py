@@ -7,6 +7,8 @@ import simplejson
 import pytz
 import tzlocal
 import datetime
+import rich
+import sys
 
 # Own modules
 from dds_cli import base
@@ -79,10 +81,21 @@ class ProjectInfoManager(base.DDSBaseClass):
         info_items = {}
         if title:
             info_items["title"] = title
+            dds_cli.utils.console.print(f"[b]New project title:[/b]         {info_items['title']}")
         if description:
             info_items["description"] = description
+            dds_cli.utils.console.print(
+                f"[b]New project description:[/b]   {info_items['description']}"
+            )
         if pi:
             info_items["pi"] = pi
+            dds_cli.utils.console.print(f"[b]New project PI:[/b]            {info_items['pi']}")
+
+        if not rich.prompt.Confirm.ask(
+            f"Are you sure you want to change the info for project '{self.project}'?"
+        ):
+            LOG.info("Probably for the best. Exiting.")
+            sys.exit(0)
 
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.PROJ_INFO,
@@ -94,8 +107,8 @@ class ProjectInfoManager(base.DDSBaseClass):
         )
 
         dds_cli.utils.console.print(f"Project {response_json.get('message')}")
-        dds_cli.utils.console.print(f"[b]Project title:[/b]       {response_json.get('title')}")
+        dds_cli.utils.console.print(f"[b]Project title:[/b]         {response_json.get('title')}")
         dds_cli.utils.console.print(
-            f"[b]Project description:[/b] {response_json.get('description')}"
+            f"[b]Project description:[/b]   {response_json.get('description')}"
         )
-        dds_cli.utils.console.print(f"[b]Project PI:[/b] {response_json.get('pi')}")
+        dds_cli.utils.console.print(f"[b]Project PI:[/b]            {response_json.get('pi')}")

@@ -1481,7 +1481,7 @@ def change_project_info(click_ctx, project, title, description, principal_invest
     \b
     Use the `--title` option to change the Title of a project.
     Use the `--description` option to change the Description of a project.
-    Use the `"--principal-investigator"` option to change the PI of a project.
+    Use the `--principal-investigator` option to change the PI of a project.
     """
     try:
         with dds_cli.project_info.ProjectInfoManager(

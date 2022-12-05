@@ -78,6 +78,7 @@ class ProjectInfoManager(base.DDSBaseClass):
     def update_info(self, title=None, description=None, pi=None):
         """Update project info"""
 
+        # Collect the items for change and print them before asking for confirmation
         info_items = {}
         if title:
             info_items["title"] = title
@@ -91,12 +92,14 @@ class ProjectInfoManager(base.DDSBaseClass):
             info_items["pi"] = pi
             dds_cli.utils.console.print(f"[b]New project PI:[/b]            {info_items['pi']}")
 
+        # Ask the user for confirmation
         if not rich.prompt.Confirm.ask(
             f"Are you sure you want to change the info for project '{self.project}'?"
         ):
             LOG.info("Probably for the best. Exiting.")
             sys.exit(0)
 
+        # Run the request
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.PROJ_INFO,
             headers=self.token,
@@ -106,6 +109,7 @@ class ProjectInfoManager(base.DDSBaseClass):
             error_message="Failed to update project info",
         )
 
+        # Print the information items after the change
         dds_cli.utils.console.print(f"Project {response_json.get('message')}")
         dds_cli.utils.console.print(f"[b]Project title:[/b]         {response_json.get('title')}")
         dds_cli.utils.console.print(

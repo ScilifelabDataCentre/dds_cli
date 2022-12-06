@@ -202,8 +202,11 @@ def perform_request(
         raise dds_cli.exceptions.ApiRequestError(message=error_message)
 
     # Get and parse project specific errors
-    errors = response_json.get("errors")
-    additional_errors = dds_cli.utils.parse_project_errors(errors=errors)
+    default_message: str = ""
+    if hasattr(response_json, "get"):
+        default_message = response_json.get("message")
+        errors = response_json.get("errors")
+        additional_errors = dds_cli.utils.parse_project_errors(errors=errors)
 
     # Check if response is ok.
     if not response.ok:
@@ -221,23 +224,26 @@ def perform_request(
                 show_warning = False
             elif DDSEndpoint.CREATE_PROJ in endpoint:
                 message += f": {__project_creation_error(response_json)}"
+            elif DDSEndpoint.PROJ_INFO in endpoint and isinstance(response_json, typing.List):
+                show_warning = False
+                message += "\n - " + "\n - ".join(response_json)
             else:
-                message += f": {response_json.get('message')}"
+                message += f": {default_message}"
 
             raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
 
         # Handle 403
         if response.status_code == http.HTTPStatus.FORBIDDEN:
-            message += f": {response_json.get('message')}"
+            message += f": {default_message}"
             raise dds_cli.exceptions.DDSCLIException(message=message)
 
         # Handle 500
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
-            message += f": {response_json.get('message', response.reason)}"
+            message += f": {default_message or response.reason}"
             raise dds_cli.exceptions.ApiResponseError(message=message)
 
         raise dds_cli.exceptions.DDSCLIException(
-            message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            message=f"{message}: {default_message or 'Unexpected error!'}"
         )
 
     return response_json, additional_errors

@@ -86,6 +86,11 @@ class ProjectInfoManager(base.DDSBaseClass):
     def update_info(self, title=None, description=None, pi=None):
         """Update project info"""
 
+        if all(item is None for item in [title, description, pi]):
+            raise exceptions.NoDataError(
+                "Please specify which information you would like to change: '--title', '--description' or/and '--principal-investigator'."
+            )
+
         # Get project info from API
         project_info = self.get_project_info()
 

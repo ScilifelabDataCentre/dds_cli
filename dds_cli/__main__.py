@@ -1496,6 +1496,7 @@ def change_project_info(click_ctx, project, title, description, principal_invest
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.NoDataError,
     ) as err:
         LOG.error(err)
         sys.exit(1)

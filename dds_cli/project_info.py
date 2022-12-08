@@ -47,8 +47,7 @@ class ProjectInfoManager(base.DDSBaseClass):
         self.project = project
 
     # Public methods ###################### Public methods #
-    def show_project_info(self):
-        """Get a project info."""
+    def get_project_info(self):
         # Get info about a project from API
         response, _ = dds_cli.utils.perform_request(
             DDSEndpoint.PROJ_INFO,
@@ -59,6 +58,15 @@ class ProjectInfoManager(base.DDSBaseClass):
         )
 
         project_info = response.get("project_info")
+        if not project_info:
+            raise dds_cli.exceptions.ApiResponseError(message="No project information to display.")
+
+        return project_info
+
+    def show_project_info(self):
+        """Display info about a project."""
+        # Get project info from API
+        project_info = self.get_project_info()
 
         # Print project info table
         table = dds_cli.utils.create_table(
@@ -78,19 +86,36 @@ class ProjectInfoManager(base.DDSBaseClass):
     def update_info(self, title=None, description=None, pi=None):
         """Update project info"""
 
+        # Get project info from API
+        project_info = self.get_project_info()
+
+        dds_cli.utils.console.print(f"You are about to change:")
         # Collect the items for change and print them before asking for confirmation
         info_items = {}
         if title:
             info_items["title"] = title
-            dds_cli.utils.console.print(f"[b]New project title:[/b]         {info_items['title']}")
+            dds_cli.utils.console.print(
+                f"title",
+                f"\n[b]{project_info['Title']}[/b]",
+                "\nto",
+                f"\n[b]{info_items['title']}[/b]",
+            )
         if description:
             info_items["description"] = description
             dds_cli.utils.console.print(
-                f"[b]New project description:[/b]   {info_items['description']}"
+                f"\ndescription",
+                f"\n[b]{project_info['Description']}[/b]",
+                "\nto",
+                f"\n[b]{info_items['description']}[/b]",
             )
         if pi:
             info_items["pi"] = pi
-            dds_cli.utils.console.print(f"[b]New project PI:[/b]            {info_items['pi']}")
+            dds_cli.utils.console.print(
+                f"\nPI",
+                f"\n[b]project_info['pi'] if we chage the API[/b]",
+                "\nto",
+                f"\n[b]{info_items['pi']}[/b]",
+            )
 
         # Ask the user for confirmation
         if not rich.prompt.Confirm.ask(

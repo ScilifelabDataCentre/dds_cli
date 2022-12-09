@@ -108,7 +108,7 @@ class ProjectInfoManager(base.DDSBaseClass):
             info_items["description"] = description
             # Ask the user for confirmation
             if not rich.prompt.Confirm.ask(
-                f"You are about to change the description for project [b]'{self.project}'[/b] \nfrom [b]{project_info['Description']}[/b] \nto   [b]{info_items['description']}[/b] \nAre you sure?"
+                f"You are about to change the [i]description[/i] for project '[b]{self.project}[/b]' \n[b][blue]from[/blue][/b]\t{project_info['Description']}\n[b][green]to[/green][/b]\t{info_items['description']} \nAre you sure?"
             ):
                 LOG.info("Probably for the best. Exiting.")
                 sys.exit(0)
@@ -116,7 +116,7 @@ class ProjectInfoManager(base.DDSBaseClass):
             info_items["pi"] = pi
             # Ask the user for confirmation
             if not rich.prompt.Confirm.ask(
-                f"You are about to change the PI for project [b]'{self.project}'[/b] \nfrom [b]{project_info['PI']}[/b] \nto   [b]{info_items['pi']}[/b] \nAre you sure?"
+                f"You are about to change the [i]PI[/i] for project '[b]{self.project}[/b]' \n[b][blue]from[/blue][/b]\t{project_info['PI']}\n[b][green]to[/green][/b]\t{info_items['pi']} \nAre you sure?"
             ):
                 LOG.info("Probably for the best. Exiting.")
                 sys.exit(0)

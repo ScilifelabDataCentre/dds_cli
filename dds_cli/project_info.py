@@ -94,40 +94,32 @@ class ProjectInfoManager(base.DDSBaseClass):
         # Get project info from API
         project_info = self.get_project_info()
 
-        dds_cli.utils.console.print(f"You are about to change:")
-        # Collect the items for change and print them before asking for confirmation
+        # Collect the items for change and ask for confirmation for each of them
         info_items = {}
         if title:
             info_items["title"] = title
-            dds_cli.utils.console.print(
-                f"title",
-                f"\n[b]{project_info['Title']}[/b]",
-                "\nto",
-                f"\n[b]{info_items['title']}[/b]",
-            )
+            # Ask the user for confirmation
+            if not rich.prompt.Confirm.ask(
+                f"You are about to change the title for project [b]'{self.project}'[/b] \nfrom [b]{project_info['Title']}[/b] \nto   [b]{info_items['title']}[/b] \nAre you sure?"
+            ):
+                LOG.info("Probably for the best. Exiting.")
+                sys.exit(0)
         if description:
             info_items["description"] = description
-            dds_cli.utils.console.print(
-                f"\ndescription",
-                f"\n[b]{project_info['Description']}[/b]",
-                "\nto",
-                f"\n[b]{info_items['description']}[/b]",
-            )
+            # Ask the user for confirmation
+            if not rich.prompt.Confirm.ask(
+                f"You are about to change the description for project [b]'{self.project}'[/b] \nfrom [b]{project_info['Description']}[/b] \nto   [b]{info_items['description']}[/b] \nAre you sure?"
+            ):
+                LOG.info("Probably for the best. Exiting.")
+                sys.exit(0)
         if pi:
             info_items["pi"] = pi
-            dds_cli.utils.console.print(
-                f"\nPI",
-                f"\n[b]project_info['pi'] if we chage the API[/b]",
-                "\nto",
-                f"\n[b]{info_items['pi']}[/b]",
-            )
-
-        # Ask the user for confirmation
-        if not rich.prompt.Confirm.ask(
-            f"Are you sure you want to change the info for project '{self.project}'?"
-        ):
-            LOG.info("Probably for the best. Exiting.")
-            sys.exit(0)
+            # Ask the user for confirmation
+            if not rich.prompt.Confirm.ask(
+                f"You are about to change the PI for project [b]'{self.project}'[/b] \nfrom [b]{project_info['PI']}[/b] \nto   [b]{info_items['pi']}[/b] \nAre you sure?"
+            ):
+                LOG.info("Probably for the best. Exiting.")
+                sys.exit(0)
 
         # Run the request
         response_json, _ = dds_cli.utils.perform_request(

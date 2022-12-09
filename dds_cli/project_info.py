@@ -101,6 +101,7 @@ class ProjectInfoManager(base.DDSBaseClass):
             # Ask the user for confirmation
             if not rich.prompt.Confirm.ask(
                 f"You are about to change the [i]title[/i] for project '[b]{self.project}[/b]' \n[b][blue]from[/blue][/b]\t{project_info['Title']}\n[b][green]to[/green][/b]\t{info_items['title']} \nAre you sure?"
+                # f"You are about to change the title for project '[b]{self.project}[/b]' \nfrom\t{project_info['Title']}\nto\t{info_items['title']} \nAre you sure?"
             ):
                 LOG.info("Probably for the best. Exiting.")
                 sys.exit(0)

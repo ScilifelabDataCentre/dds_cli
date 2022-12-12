@@ -215,3 +215,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 # Sprint (2022-11-25 - 2022-12-09)
 
 - Bug: Switch from using `os.path` to `pathlib` in order to facilitate cross-OS uploads-/downloads- and listing operations ([#573](https://github.com/ScilifelabDataCentre/dds_cli/pull/573))
+
+# Sprint (2022-12-09 - 2022-12-23)
+
+- Dependency: Bump `jwcrypto` due to CVE-2022-3102 ([#557](https://github.com/ScilifelabDataCentre/dds_cli/pull/577))

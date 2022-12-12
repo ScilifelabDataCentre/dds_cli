@@ -294,7 +294,7 @@ def get_token_header_contents(token):
 
     returns the jose header of the token on successful deserialization"""
     try:
-        token = jwt.JWT(jwt=token)
+        token = jwt.JWT(jwt=token, expected_type="JWE")
         return token.token.jose_header
     except (ValueError, InvalidJWEData, InvalidJWEOperation, InvalidJWSObject) as exc:
         raise dds_cli.exceptions.TokenDeserializationError(

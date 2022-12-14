@@ -38,7 +38,6 @@ _"Breaking": The change will cause existing functionality to not work as expecte
     - [ ] Done
     - [ ] Not needed
 
-
 ## Repository / Releases
 
 - [ ] Blocking PRs have been merged

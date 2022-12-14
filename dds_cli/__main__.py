@@ -36,6 +36,7 @@ import dds_cli.directory
 import dds_cli.project_creator
 import dds_cli.auth
 import dds_cli.project_status
+import dds_cli.project_info
 import dds_cli.user
 import dds_cli.utils
 from dds_cli.options import (
@@ -1027,53 +1028,6 @@ def create(
         sys.exit(1)
 
 
-# -- dds project info -- #
-@project_group_command.command(name="info")
-# Options
-@click.option(
-    "--project",
-    "-p",
-    required=True,
-    type=str,
-    help="The ID of the project.",
-)
-@click.pass_obj
-def get_info_project(
-    click_ctx,
-    project,
-):
-    """Display information about a specific project.
-
-    Usable by all user roles.
-
-    \b
-    The following information should be displayed:
-    - Project ID
-    - Creator
-    - Status
-    - Date updated
-    - Size
-    - Title
-    - Description
-    """
-    try:
-        with dds_cli.data_lister.DataLister(
-            project=project,
-            no_prompt=click_ctx.get("NO_PROMPT", False),
-            token_path=click_ctx.get("TOKEN_PATH"),
-        ) as get_info:
-            get_info.show_project_info()
-    except (
-        dds_cli.exceptions.APIError,
-        dds_cli.exceptions.AuthenticationError,
-        dds_cli.exceptions.DDSCLIException,
-        dds_cli.exceptions.ApiResponseError,
-        dds_cli.exceptions.ApiRequestError,
-    ) as err:
-        LOG.error(err)
-        sys.exit(1)
-
-
 # ************************************************************************************************ #
 # PROJECT SUB GROUPS ********************************************************** PROJECT SUB GROUPS #
 # ************************************************************************************************ #
@@ -1425,6 +1379,124 @@ def fix_project_access(click_ctx, email, project):
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# INFO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ INFO #
+@project_group_command.group(name="info", no_args_is_help=True)
+@click.pass_obj
+def project_info(_):
+    """Manage project information.
+
+    Display or change the information of a project.
+
+    Displaying the project information is available for all user roles. Changing the project information
+    is limited to Unit Admins and Personnel.
+    """
+
+
+# -- dds project info display -- #
+@project_info.command(name="display")
+# Options
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="The ID of the project.",
+)
+@click.pass_obj
+def display_project_info(
+    click_ctx,
+    project,
+):
+    """Display information about a specific project.
+
+    Usable by all user roles.
+
+    \b
+    The following information should be displayed:
+    - Project ID
+    - Creator
+    - Status
+    - Date updated
+    - Size
+    - Title
+    - Description
+    """
+    try:
+        with dds_cli.project_info.ProjectInfoManager(
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as get_info:
+            get_info.show_project_info()
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project info change -- #
+@project_info.command(name="change", no_args_is_help=True)
+# Options
+@click.option(
+    "--project",
+    "-p",
+    required=True,
+    type=str,
+    help="The ID of the project.",
+)
+@click.option(
+    "--title",
+    "-t",
+    required=False,
+    help="Change the title of the project.",
+)
+@click.option(
+    "--description",
+    "-d",
+    required=False,
+    help="Change the description of the project.",
+)
+@click.option(
+    "--principal-investigator",
+    "-pi",
+    required=False,
+    help="Change the PI of the project.",
+)
+@click.pass_obj
+def change_project_info(click_ctx, project, title, description, principal_investigator):
+    """Change project information.
+
+    Not available for Researchers, unless they are marked as Project Owner for a specific project.
+
+    \b
+    Use the `--title` option to change the Title of a project.
+    Use the `--description` option to change the Description of a project.
+    Use the `--principal-investigator` option to change the PI of a project.
+    """
+    try:
+        with dds_cli.project_info.ProjectInfoManager(
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as updater:
+            updater.update_info(title=title, description=description, pi=principal_investigator)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.NoDataError,
     ) as err:
         LOG.error(err)
         sys.exit(1)

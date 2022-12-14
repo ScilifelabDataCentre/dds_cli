@@ -219,3 +219,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 # Sprint (2022-12-09 - 2022-12-23)
 
 - Dependency: Bump `jwcrypto` due to CVE-2022-3102 ([#557](https://github.com/ScilifelabDataCentre/dds_cli/pull/577))
+- New command: `dds project info change [OPTIONS]` to change project information ([#575](https://github.com/ScilifelabDataCentre/dds_cli/pull/575))

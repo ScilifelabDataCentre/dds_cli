@@ -4,20 +4,27 @@
 
 # Description
 
-- [ ] Add a summary of the changes and the related issue
-- [ ] Add motivation and context regarding why the change is needed
-- [ ] List / describe any dependencies or other changes required for this change
-- [ ] Fixes [link to issue / Jira issue ID]
+- [ ] Summary of the changes and the related issue:
+- [ ] Motivation and context regarding why the change is needed:
+- [ ] List / description of any dependencies or other changes required for this change:
+- Fixes an issue in GitHub / Jira:
+  - [ ] Yes: _[link to GitHub issue / Jira task ID]_
+  - [ ] No
 
 ## Type of change
 
+- [ ] Bug fix
+  - [ ] Breaking: _Describe_
+  - [ ] Non-breaking
 - [ ] Documentation
-- [ ] Workflow
+- [ ] New feature
+  - [ ] Breaking: _Describe_
+  - [ ] Non-breaking
 - [ ] Security Alert fix
-- [ ] Bug fix (non-breaking)
-- [ ] New feature (non-breaking)
-- [ ] Breaking change (breaking, will cause existing functionality to not work as expected)
-- [ ] Tests (only)
+- [ ] Tests **(only)**
+- [ ] Workflow
+
+_"Breaking": The change will cause existing functionality to not work as expected._
 
 # Checklist:
 
@@ -27,7 +34,9 @@
 - [ ] Code change
   - [ ] Self-review of code done
   - [ ] Comments added, particularly in hard-to-understand areas
-  - [ ] Documentation is updated
+  - Documentation update
+    - [ ] Done
+    - [ ] Not needed
 
 ## Repository / Releases
 
@@ -40,8 +49,8 @@
 
 ## Checks
 
-- [ ] Formatting: Black & Prettier checks pass
 - [ ] CodeQL passes
-- [ ] Tests
+- [ ] Formatting: Black & Prettier checks pass
+- Tests
   - [ ] I have added tests for the new code
   - [ ] The tests pass

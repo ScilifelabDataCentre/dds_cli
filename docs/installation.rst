@@ -164,7 +164,7 @@ Bianca
    
    .. code-block:: bash
 
-      $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
+      $ ssh -A <username>@transit.uppmax.uu.se
 
    You will get into the home directory. 
 

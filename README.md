@@ -27,7 +27,7 @@
 <a href="https://codecov.io/gh/ScilifelabDataCentre/dds_web">
     <img alt="codecov" src="https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=r5tM6o08Sd">
 </a>
-<img alt="Tests" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-app.yml/badge.svg">
+<img alt="Tests" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/pytest-cli.yml/badge.svg">
 </p>
 
 <p align="center">

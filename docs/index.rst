@@ -42,8 +42,10 @@ Installation
 How to run the CLI
 ====================
 
-The main command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>`. The sub/group commands are ``dds auth``, ``dds user``, ``dds project``, ``dds data``, ``dds ls`` and ``dds unit``.
+The main command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>` or by running ``dds --help``. The sub/group commands are ``dds auth``, ``dds user``, ``dds project``, ``dds data``, ``dds ls`` and ``dds unit``, as seen in the output below.
 
+.. image:: ../img/dds-help-2.svg
+   
 Some commands should not be possible to successfully run from a Researcher account. The affected commands are marked with asterisks (\*\*\*).
 
 .. _auth-info:
@@ -51,6 +53,8 @@ Some commands should not be possible to successfully run from a Researcher accou
 :ref:`dds auth<dds-auth>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 ``dds auth`` and its subcommands are used for creating and managing sessions. This will enable you to use the CLI without specifying your user credentials for a certain amount of time, currently 7 days. 
+
+.. image:: ../img/dds-auth.svg
 
 .. admonition:: Accessible by
    
@@ -64,6 +68,8 @@ See the command documentation :ref:`here<dds-auth>`.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 You can use the ``add user`` group command to manage your own and (if you have administrative permissions) other user accounts. 
 
+.. image:: ../img/dds-user.svg
+
 .. admonition:: Accessible by
    
    All user roles. Some subcommands are limited to Unit Admins, Unit Personnel and in come cases Researchers marked as Project Owners for specific projects.
@@ -75,6 +81,8 @@ See the command documentation :ref:`here<dds-user>`.
 :ref:`dds project<dds-project>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``dds project`` command is for creating and managing projects. The majority of the functionalities regarding project management is only available to *Unit Admin* and *Unit Personnel* accounts.
+
+.. image:: ../img/dds-project.svg
 
 .. admonition:: Accessible by
    
@@ -89,6 +97,8 @@ See the command documentation :ref:`here<dds-project>`.
 :ref:`dds data<dds-data>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``dds data`` group command is used for uploading, downloading, listing and deleting data. Only **Unit Admin** and **Unit Personnel** accounts can upload and delete data. All account types can list and download. 
+
+.. image:: ../img/dds-data.svg
 
 .. admonition:: Accessible by
    

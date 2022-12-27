@@ -1910,10 +1910,7 @@ def rm_data(click_ctx, project, file, folder, rm_all):
 @dds_main.group(name="unit", no_args_is_help=True)
 @click.pass_obj
 def unit_group_command(_):
-    """Group command for managing units.
-
-    Limited to Super Admins.
-    """
+    """Super Admins only. Group command for managing units."""
 
 
 # ************************************************************************************************ #
@@ -2077,10 +2074,7 @@ def send_motd(click_ctx, motd_id):
 )
 @click.pass_obj
 def set_maintenance_mode(click_ctx, setting):
-    """Activate / Deactivate Maintenance mode.
-
-    Only usable by Super Admins.
-    """
+    """Super Admins only. Activate / Deactivate Maintenance mode."""
     try:
         with dds_cli.maintenance_manager.MaintenanceManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),

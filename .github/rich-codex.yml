@@ -14,3 +14,15 @@ outputs:
     tail: 19
     img_paths:
       - img/dds-auth.svg
+  - command: dds user
+    tail: 18
+    img_paths:
+      - img/dds-user.svg
+  - command: dds project
+    tail: 16
+    img_paths:
+      - img/dds-project.svg
+  - command: dds data
+    tail: 15
+    img_paths:
+      - img/dds-data.svg

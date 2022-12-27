@@ -1,4 +1,4 @@
-name: Lint Python
+name: Linting Black
 on:
   push:
     paths:

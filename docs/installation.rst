@@ -142,11 +142,11 @@ Rackham
 --------
 .. warning:: Do not deliver sensitive data to Rackham.
 
-The DDS CLI will be made a global module at Uppmax and you will be able to load it after having ssh:ed into Rackham. Until it is a module though, you can install the CLI with PyPi as in the previous sections.
+The DDS CLI is a global module at Uppmax. To use it, you need to load it after having ssh:ed into Rackham.
 
 .. code-block:: bash
 
-   $ pip install dds-cli 
+   $ ml bioinfo-tools dds-cli
 
 A detailed user guide for Rackham can be found here: https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/
 
@@ -155,16 +155,16 @@ Bianca
 
 .. admonition:: To be aware of
 
-   * Mount the correct SENS project on transit
+   * Mount the correct SENS project on transit. The SENS project (written as `<SENS-project>` in commands below) is the project on Uppmax Bianca to which you want to download your data.
    * You need to have enough space on the nobackup storage allocation in the corresponding SENS project. If the data you are trying to download is larger than the allocated space, the download will fail.
    * If your data is larger than a few hundreds of GB: start the download in a screen/tmux session
 
 
-1. ssh into transit
+1. ssh into **transit**
    
    .. code-block:: bash
 
-      $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
+      $ ssh -A <username>-<SENS-project>@transit.uppmax.uu.se
 
    You will get into the home directory. 
 
@@ -176,17 +176,17 @@ Bianca
    
    .. code-block:: bash
 
-      username@transit:~$ mount_wharf <sens_project>
+      <username>@transit:~$ mount_wharf <SENS-project>
 
 3.  Download the data with the DDS CLI
 
    .. danger:: 
 
-      You **must use** the ``--destination`` option. If you do not, the data will end up in your home directory and will be deleted when your ssh session ends.
+      You **must use** the ``--destination`` option. If you do not, the data will end up in your home directory and will be deleted when your ssh session ends. This `<destination>` should be a **new** directory in the affected SENS project; If `<destination>` exists, the DDS will not run the download since there is a built-in safety mechanism to avoid overwriting existing files. 
 
    .. code-block:: bash
 
-      $ dds data get --destination <sens_project>/<destination>/
+      $ dds data get --destination <SENS-project>/<destination>/
 
    The downloaded data ends up in a non-backed up storage on Bianca.
 

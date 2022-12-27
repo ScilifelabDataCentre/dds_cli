@@ -22,12 +22,12 @@
     <img alt="Code style: prettier" src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg">
 </a>
 <br />
-<img alt="Linting" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg">
-<img alt="CodeQL" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg">
+<img alt="Linting" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-black-cli.yml/badge.svg">
+<img alt="CodeQL" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-cli.yml/badge.svg">
 <a href="https://codecov.io/gh/ScilifelabDataCentre/dds_web">
     <img alt="codecov" src="https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=r5tM6o08Sd">
 </a>
-<img alt="Tests" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-app.yml/badge.svg">
+<img alt="Tests" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/pytest-cli.yml/badge.svg">
 </p>
 
 <p align="center">

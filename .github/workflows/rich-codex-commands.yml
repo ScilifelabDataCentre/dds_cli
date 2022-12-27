@@ -1,3 +1,4 @@
+on: [push]
 timeout: 300
 outputs:
   - command: dds auth

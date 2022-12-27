@@ -12,10 +12,10 @@ jobs:
       - uses: actions/checkout@v2
         name: Check out source-code repository
 
-      - name: Set up Python 3.9
+      - name: Set up Python 3.11
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.11.1
 
       - name: Install python dependencies
         run: |
@@ -62,10 +62,10 @@ jobs:
             ASSET_MIME: application/x-elf
     steps:
       - uses: actions/checkout@v2
-      - name: Python 3.9 setup
+      - name: Python 3.11 setup
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.11.1
           # architecture: 'x64'
       - name: Install dependencies
         run: |

@@ -16,6 +16,8 @@ PyPi
 1. To perform these steps you need to have Python version 3.7 or higher installed.
 
    * To install Python, please first run
+
+      ![`dds auth`](img/dds-auth.svg)
       
       .. code-block::
 

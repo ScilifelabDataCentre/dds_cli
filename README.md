@@ -78,7 +78,6 @@ pip install dds-cli
 After installing, run `dds` and verify that the output looks like this:
 
 ![`dds`](img/dds-help.svg)
-<!-- ![`dds auth`](img/dds-auth.svg) -->
 
 ### Executables
 

@@ -186,7 +186,7 @@ Bianca
 
    .. code-block:: bash
 
-      $ dds data get --destination <SENS-project>/<destination>/
+      $ dds data get --destination <SENS-project>/<destination>/ --project <DDS-project>
 
    The downloaded data ends up in a non-backed up storage on Bianca.
 

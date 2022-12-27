@@ -78,7 +78,7 @@ pip install dds-cli
 After installing, run `dds` and verify that the output looks like this:
 
 ![`dds`](img/dds-help.svg)
-
+![`dds auth`](img/dds-auth.svg)
 ### Executables
 
 Executables are available for Windows, MacOS and Linux. These allow you to run the CLI without needing to install it (and the pip / Python requirements) yourself. Download them from the (bottom of the) latest release page: [Latest Release](https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/)

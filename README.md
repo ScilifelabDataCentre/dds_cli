@@ -23,7 +23,7 @@
 </a>
 <br />
 <img alt="Linting" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/python-black.yml/badge.svg">
-<img alt="CodeQL" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-analysis.yml/badge.svg">
+<img alt="CodeQL" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-cli.yml/badge.svg">
 <a href="https://codecov.io/gh/ScilifelabDataCentre/dds_web">
     <img alt="codecov" src="https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=r5tM6o08Sd">
 </a>

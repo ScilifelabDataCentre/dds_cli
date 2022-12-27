@@ -1,6 +1,0 @@
-timeout: 300
-outputs:
-  - command: dds auth
-    head: 3
-    img_paths:
-      - img/dds-auth.svg

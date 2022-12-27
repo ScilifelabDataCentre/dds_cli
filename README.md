@@ -22,7 +22,9 @@
     <img alt="Code style: prettier" src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg">
 </a>
 <br />
-[![Linting Black](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-black-cli.yml/badge.svg?event=push)](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-black-cli.yml)
+<a href="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-black-cli.yml">
+    <img alt="codecov" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-black-cli.yml/badge.svg?event=push">
+</a>
 <img alt="CodeQL" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-cli.yml/badge.svg">
 <a href="https://codecov.io/gh/ScilifelabDataCentre/dds_web">
     <img alt="codecov" src="https://codecov.io/gh/ScilifelabDataCentre/dds_cli/branch/dev/graph/badge.svg?token=r5tM6o08Sd">

@@ -42,12 +42,33 @@ How do I use the DDS?
     * *My unit does not have DDS set up:* Start by contacting the SciLifeLab Data Centre. 
     * *My unit has started using the DDS for data deliveries:* Contact your colleagues. 
 
+   .. note:: 
+
+      The invitation email will be from `services-noreply@scilifelab.se`. Note that any emails sent to this address **will not be responded to**. 
+      
+      **No email?**
+      
+      * Please check in the junk/spam folder. 
+      * My email address has the `scilifelab.se` domain: It may take a while for your email to be delivered, due to KTH spam filters.
+      * If none of these help you, contact support. 
+
+   Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system. To be able to use the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<install>`.
+
+   .. warning::
+      Forgetting passwords in the DDS means that you will lose access to all project data. We highly recommend that you use a password management system such as `Bitwarden <https://bitwarden.com/>`_, `LastPass <https://www.lastpass.com/>`_ or similar.
+
+      When resetting a password you can, of course, regain access to the projects you lost access to. You will get information on how when you perform a password reset.
+
+Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. For more information about the roles, please read the `technical overview <https://github.com/ScilifelabDataCentre/dds_web/blob/dev/doc/Technical-Overview.pdf>`_. 
+
+.. _install:
+
 2. Install the command line interface (CLI): ``dds-cli``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note:: 
    
-   At this time, the DDS CLI is required to use the majority of the DDS features, including the upload and download of data. 
+   At this time you must use the DDS CLI in order to utilize the majority of the DDS functionalities. This includes upload and download of data. 
 
 In order to use the DDS, you first need to install the CLI. The installation process varies depending on which operating system you are on, or if you are on Uppmax.
 
@@ -57,39 +78,10 @@ In order to use the DDS, you first need to install the CLI. The installation pro
 * :ref:`Windows<windows>`
 * :ref:`Uppmax<uppmax>`
 
+.. _runit:
 
-.. _account:
-
-How do I get my user account?
-===============================
-An invite from an existing user is required in order for you to get an account within the DDS. The email will be from `services-noreply@scilifelab.se`, we will notify you if and when this changes. Note that any emails sent to this address regarding the DDS *will not be responded to*. If you do not get an email, please have a look in the junk/spam folder. If your email adress has the `scilifelab.se` domain, keep in mind that your emails may take a while to deliver due to the KTH spam filters. If you do not receive an email, please contact support. 
-
-* **I want data delivered to me from a SciLifeLab Unit**: Please contact the unit responsible for delivering the data to you.
-* **I'm a data producer, wishing to deliver data to my users**: If your unit does not have DDS set up, start by contacting the SciLifeLab Data Centre. If your unit *has* started using the DDS for data deliveries, contact your colleagues. 
-
-Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system. To be able to use the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<cli>`.
-
-.. warning::
-   Forgetting passwords in the DDS means that you will lose access to all project data. We highly recommend that you use a password management system such as `LastPass <https://www.lastpass.com/>`_ or similar.
-
-   When resetting a password you can, of course, regain access to the projects you lost access to. You will get information on how when you perform a password reset.
-
-Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. For more information about the roles, please read the `technical overview <https://github.com/ScilifelabDataCentre/dds_web/blob/dev/doc/Technical-Overview.pdf>`_. 
-
-
-Installation
-=============
-
-* :ref:`MacOS / Linux<mac-linux>` 
-* :ref:`Windows<windows>`
-* :ref:`Uppmax<uppmax>`
-
--------
-
-.. _cli:
-
-How to run the CLI
-====================
+3. Run the CLI
+~~~~~~~~~~~~~~~
 
 The main command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>` or by running ``dds --help``. The sub/group commands are ``dds auth``, ``dds user``, ``dds project``, ``dds data``, ``dds ls`` and ``dds unit``, as seen in the output below.
 
@@ -99,17 +91,23 @@ Some commands should not be possible to successfully run from a Researcher accou
 
 .. _auth-info:
 
-:ref:`dds auth<dds-auth>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-``dds auth`` and its subcommands are used for creating and managing sessions. This will enable you to use the CLI without specifying your user credentials for a certain amount of time, currently 7 days. 
+"Logging in" / Authentication
+--------------------------------------
+
+In order to use the ``dds-cli`` functionality, you first need to authenticate yourself. Authentication is handled by the ``dds auth`` command, which creates and manages authenticated sessions. These sessions are *valid for 7 days*.
 
 .. image:: ../img/dds-auth.svg
 
-.. admonition:: Accessible by
-   
-   All user roles.
+* Examples on how to use ``dds auth`` :ref:`here<logging-in>`
+* Full ``dds auth`` documentation :ref:`here<dds-auth>`
 
-See the command documentation :ref:`here<dds-auth>`.
+
+How do I know which role my account has?
+------------------------------------------
+
+
+
+
 
 .. _user-info:
 

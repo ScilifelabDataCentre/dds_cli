@@ -52,8 +52,11 @@ Install from **PyPi**
 
       $ dds --version
 
-   This should display something like this
+   The output should be the following:
 
+   .. image:: ../img/dds-version.svg
+
+      
    .. code-block:: bash
       
       Data Delivery System, version 1.0.0

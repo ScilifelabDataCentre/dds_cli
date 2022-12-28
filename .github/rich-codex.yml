@@ -32,6 +32,15 @@ outputs:
     tail: 18
     img_paths:
       - img/dds-user.svg
+  - snippet: |
+      Current user: myusername
+      INFO    User Name: myusername
+              Role: Researcher
+              Name: First Last
+              Primary Email: someemail@somedomain.com
+              Associated Emails: someemail@somedomain.com
+    img_paths:
+      - img/dds-user-info.svg
   - command: dds project
     tail: 16
     img_paths:
@@ -40,3 +49,4 @@ outputs:
     tail: 15
     img_paths:
       - img/dds-data.svg
+    

@@ -92,7 +92,8 @@ Install via the **executable**
       $ ./<name-of-executable-file> 
 
    **Example:** 
-      $ ./dds_cli_macos_x86_64
+   
+   .. image:: ../img/mac-executable-help.svg
 
    On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: https://support.apple.com/en-us/HT202491 and https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac
    

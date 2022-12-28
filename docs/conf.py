@@ -33,6 +33,7 @@ extensions = [
     "sphinx_click.ext",
     "sphinx.ext.duration",
     "sphinx.ext.autosummary",
+    "sphinx_copybutton"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

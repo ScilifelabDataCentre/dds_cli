@@ -21,6 +21,8 @@ MacOS / Linux
 
 As mentioned above, you can install the ``dds-cli`` from PyPi or via an executable. 
 
+.. _pypi-unix:
+
 Install from **PyPi**
 -----------------------
 
@@ -63,6 +65,8 @@ Install from **PyPi**
    .. image:: ../img/dds-version.svg
    
 
+.. _exec-unix:
+
 Install via the **executable**
 -------------------------------
 
@@ -95,80 +99,113 @@ Install via the **executable**
    
    .. image:: ../img/mac-executable-help.svg
 
-   On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: https://support.apple.com/en-us/HT202491 and https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac
    
-4. Now test that the CLI has been installed correctly by verifying the version:
+   .. admonition:: Information to MacOS users 
+      
+      On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: https://support.apple.com/en-us/HT202491 and https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac
+
+4. When reading through the rest of the documentation and running the commands, replace ``dds`` with the path to the executable. For example:
 
    .. code-block:: bash
-
-      $ ./dds_cli_macos_x86_64 --version
-
-5. All sub-commands and options according to the documentation instructions, are run by specifying the executable name instead of ``dds``. Here are a couple of examples:
-
-   .. code-block:: bash
-
-      $ ./dds_cli_macos_x86_64 ls
-      $ ./dds_cli_macos_x86_64 ls -p my_project
+      
       $ ./dds_cli_macos_x86_64 auth login
       $ ./dds_cli_macos_x86_64 user info
+      $ ./dds_cli_macos_x86_64 ls
       ...
    
 
-
----
 
 .. _windows:
 
 Windows
 =======
 
+.. _pypi-windows:
+
 PyPi
 -----
 Detailed instructions on how install the DDS CLI on Windows `here <https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md>`_.
 
+.. _exec-windows:
+
 Executable
 ----------
 
-1. Download the executable from the GitHub release page: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe
-2. Open the Powershell (Start -> Search "Powershell" -> Click) or terminal (Powershell recommended)
-3. Drag the executable into the Powershell window and press enter. This should result in the help text being displayed. You may need to change the permissions regarding executables and allow your laptop to trust the software.
-4. To run the dds command, you need to specify the executable path and name instead of ``dds``. If you press the up arrow you will see the previous command which will reveal the exact path on you computer. 
+1. Download the executable from the GitHub release page: `Download <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe>`_
+2. Open the Powershell
+  a. Click on ``Start`` (Windows symbol in corner)
+  b. Type "Powershell" or "Command Prompt" (**Powershell** recommended)
+  c. Click on the Powershell or Command Prompt symbol
+3. Open the file explorer and navigate to the location of the downloaded executable. 
+4. Drag the executable into the Powershell/Command Prompt window and press enter. This should result in the help text being displayed. 
+   
+   .. note:: 
+      
+      You may need to change the permissions regarding executables and allow your laptop to trust the software.
 
+5. When reading through the rest of the documentation and running the commands, replace ``dds`` with the path to the executable. If you press the up arrow you will see the previous command which will reveal the exact path on you computer. 
 
----
 
 .. _uppmax:
 
 Uppmax 
 =======
 
+The ``dds-cli`` is a global module on Uppmax; No installation required. However, there are a few steps you need to perform prior to using it. These steps differ between Rackham and Bianca. 
+
+.. note:: 
+
+   When there is a new version of ``dds-cli``, Uppmax upgrades the version automatically the following day.
+
+.. _rackham:
+
 Rackham
 --------
+
 .. warning:: Do not deliver sensitive data to Rackham.
 
-The DDS CLI will be made a global module at Uppmax and you will be able to load it after having ssh:ed into Rackham. Until it is a module though, you can install the CLI with PyPi as in the previous sections.
+1. SSH into Rackham
 
-.. code-block:: bash
+   .. code-block:: 
+      
+      ssh -AX <username>@rackham.uppmax.uu.se
 
-   $ pip install dds-cli 
+2. Load the ``bioinfo-tools`` module and ``dds-cli``
 
-A detailed user guide for Rackham can be found here: https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/
+   .. code-block:: 
+
+      ml bioinfo-tools dds-cli
+
+3. Run ``dds --help``. The output should look like this:
+
+   .. image:: ../img/dds-help-2.svg
+
+.. admonition:: Rackham user guide
+
+   A detailed user guide for Rackham can be found here: https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/
+
+.. _bianca: 
 
 Bianca
 -------
 
-.. admonition:: To be aware of
+.. admonition:: Terminology in this section
+
+   * **SENS project** / ``<SENS-project>``: The active SNIC SENS research project, connected to Uppmax. Not a DDS delivery project.
+   * **DDS project** / ``<DDS-project>``: The active DDS delivery project you want to upload data to / download data from or manage. 
+
+.. admonition:: Important
 
    * Mount the correct SENS project on transit
    * You need to have enough space on the nobackup storage allocation in the corresponding SENS project. If the data you are trying to download is larger than the allocated space, the download will fail.
    * If your data is larger than a few hundreds of GB: start the download in a screen/tmux session
 
 
-1. ssh into transit
+1. SSH into transit
    
    .. code-block:: bash
 
-      $ ssh -A <username>-<projid>@bianca.uppmax.uu.se
+      $ ssh -A <username>@transit.uppmax.uu.se
 
    You will get into the home directory. 
 
@@ -176,25 +213,41 @@ Bianca
 
       Any files that are created here are not persistent; If you download data from DDS to this directory, your data will be deleted as soon as you exit the session.
 
-2.  Mount your specific SENS project directory on transit
+2.  Mount your specific **SENS project** directory on transit
    
    .. code-block:: bash
 
-      username@transit:~$ mount_wharf <sens_project>
+      <username>@transit:~$ mount_wharf <SENS-project>
 
-3.  Download the data with the DDS CLI
+3.  Download the data
 
    .. danger:: 
 
       You **must use** the ``--destination`` option. If you do not, the data will end up in your home directory and will be deleted when your ssh session ends.
 
-   .. code-block:: bash
+   Either specify a file or directory with ``--source``, or download the full project contents with ``--get-all``.
 
-      $ dds data get --destination <sens_project>/<destination>/
+   **Examples:**
+   
+   * Download everything in DDS project:
+
+      .. code-block:: bash
+
+         $ dds data get --project <DDS-project> --get-all --destination <SENS-project>/<directory>/
+
+   * Download one or more files or directories:
+
+      .. code-block:: bash
+
+         $ dds data get --project <DDS-project> --source <file or directory in DDS project> --destination <SENS-project>/<directory>/
+
+   .. note:: 
+      
+      ``<directory>`` should be a non-existent directory where you would like your data to be located after download.
 
    The downloaded data ends up in a non-backed up storage on Bianca.
 
-.. admonition:: Links
+.. admonition:: Bianca- and Transit user guides
 
    * Bianca user guide: https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/
    * Transit user guide: https://www.uppmax.uu.se/support/user-guides/transit-user-guide/

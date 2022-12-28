@@ -24,11 +24,9 @@ Install from **PyPi**
 
       .. image:: ../img/python-version.svg 
 
-      If this displays ``Python 2.7``, run ``
+      If this displays ``Python 2.7``, run ``python3 --version`` instead.
 
-      .. code-block::
-
-         python3 --version
+      .. image:: ../img/python3-version.svg
 
       If this does not return ``Python 3.7.x`` or higher, you will need to `install Python <https://www.python.org/downloads/>`_.
    

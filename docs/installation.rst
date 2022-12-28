@@ -13,20 +13,20 @@ The following sections describe the installation process on :ref:`MacOS / Linux<
 MacOS / Linux
 ==============
 
-You can either install the DDS CLI using pip (https://pypi.org/project/dds-cli/) or with an executable.
+As mentioned above, you can install the ``dds-cli`` from PyPi or via an executable. 
 
-PyPi
------
+Install from **PyPi**
+-----------------------
 
 1. To perform these steps you need to have Python version 3.7 or higher installed.
 
-   * To install Python, please first run
+   * First check which Python version you have
       
       .. code-block::
 
          python --version
 
-      It's possible that this shows ``Python 2.7``, in which case you should run 
+      If this displays ``Python 2.7``, in which case you should run 
 
       .. code-block::
 

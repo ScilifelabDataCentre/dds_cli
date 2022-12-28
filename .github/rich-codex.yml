@@ -1,5 +1,11 @@
 timeout: 300
 outputs:
+  - command: python --version
+    img_paths:
+      - img/python-version.svg
+  - command: python3 --version
+    img_paths:
+      - img/python3-version.svg
   - command: dds
     head: 6
     tail: 29

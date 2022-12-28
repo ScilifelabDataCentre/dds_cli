@@ -21,12 +21,10 @@ Install from **PyPi**
 1. To perform these steps you need to have Python version 3.7 or higher installed.
 
    * First check which Python version you have
-      
-      .. code-block::
 
-         python --version
+      .. image:: ../img/python-version.svg 
 
-      If this displays ``Python 2.7``, in which case you should run 
+      If this displays ``Python 2.7``, run ``
 
       .. code-block::
 

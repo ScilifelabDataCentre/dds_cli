@@ -44,7 +44,7 @@ Install from **PyPi**
 
    .. code-block:: bash
 
-      $ pip install dds-cli
+      $ pip install --upgrade dds-cli
 
 3. Once the installation has finished, test that the CLI has been installed correctly by verifying the version:
 

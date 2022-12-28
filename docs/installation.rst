@@ -38,6 +38,8 @@ Install from **PyPi**
 
             python3 -m pip install --upgrade pip
 
+         .. image:: ../img/pip-upgrade.svg
+
 2. The DDS CLI is available on `PyPi <https://pypi.org/project/dds-cli/>`_. To install the DDS CLI, open the terminal and run
 
    .. code-block:: bash

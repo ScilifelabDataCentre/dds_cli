@@ -55,17 +55,6 @@ Install from **PyPi**
    The output should be the following:
 
    .. image:: ../img/dds-version.svg
-
-      
-   .. code-block:: bash
-      
-      Data Delivery System, version 1.0.0
-   
-   If the version does not say the same as what is displayed on PyPi, run the following command and try again.
-
-   .. code-block:: bash
-
-      $ pip install --upgrade dds-cli
    
 
 Executable

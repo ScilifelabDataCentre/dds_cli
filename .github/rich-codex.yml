@@ -12,7 +12,8 @@ outputs:
       - img/pip-upgrade.svg
   - command: dds --version
     tail: 1
-    img_paths: img/dds-version.svg
+    img_paths: 
+      - img/dds-version.svg
   - command: dds
     head: 6
     tail: 29

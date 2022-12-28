@@ -57,8 +57,8 @@ Install from **PyPi**
    .. image:: ../img/dds-version.svg
    
 
-Executable
-----------
+Install via the **executable**
+-------------------------------
 
 1. Download the executable from the GitHub release page:
 

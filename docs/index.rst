@@ -4,10 +4,59 @@
    contain the root `toctree` directive.
 
 =====================================================================
-Welcome to the Data Delivery Systems' Documentation!
+Welcome to the Data Delivery System's Documentation!
 =====================================================================
 
-The Data Delivery System (DDS, https://delivery.scilifelab.se/) consists of a command line interface (CLI) and a web interface. The web interface will be improved on as soon as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
+.. contents::
+   :local:
+
+.. _whatisit: 
+
+What is the Data Delivery System? 
+==================================
+
+The Data Delivery System (DDS, https://delivery.scilifelab.se/) is a tool built for the simple and secure delivery 
+of data from SciLifeLab platforms to their users. The system uses Safespring's object storage service as the delivery 
+medium, thereby keeping the data within the Swedish borders. The DDS has built-in encryption and key management, 
+enabling protection of the data without requiring the users to perform these steps themselves prior to delivery. 
+
+The DDS consists of a command line interface (CLI) and a web interface. The web interface will be improved on as soon 
+as possible, but we have decided that having a working CLI and its corresponding API is highest on the priority list. 
+
+.. _howtouse:
+
+How do I use the DDS?
+======================
+
+.. _getaccount: 
+
+1. Get an account
+~~~~~~~~~~~~~~~~~~
+
+* **I already have an account:** <proceed to>
+* **How do I get an account?** You will need an invite from an existing user. Who the existing user is depends on what you're intending to use the DDS for.
+  
+  * **I want data delivered to me from a SciLifeLab Unit**: Please contact the unit responsible for delivering the data to you.
+  * **I'm a data producer, wishing to deliver data to my users**
+    
+    * *My unit does not have DDS set up:* Start by contacting the SciLifeLab Data Centre. 
+    * *My unit has started using the DDS for data deliveries:* Contact your colleagues. 
+
+2. Install the command line interface (CLI): ``dds-cli``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note:: 
+   
+   At this time, the DDS CLI is required to use the majority of the DDS features, including the upload and download of data. 
+
+In order to use the DDS, you first need to install the CLI. The installation process varies depending on which operating system you are on, or if you are on Uppmax.
+
+**I am on...**
+
+* :ref:`MacOS / Linux<mac-linux>` 
+* :ref:`Windows<windows>`
+* :ref:`Uppmax<uppmax>`
+
 
 .. _account:
 

@@ -1,7 +1,12 @@
 Installation guide
 ####################
 
-Independent on operating system (OS), we recommend installing the ``dds-cli`` from `PyPi <https://pypi.org/project/dds-cli/>`_. However, you can also install it via the executables, located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_.
+You can install the ``dds-cli`` in two different ways: 
+
+* From `PyPi <https://pypi.org/project/dds-cli/>`_. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax. 
+* Via executables. These are located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_.
+
+The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>`, :ref:`Windows<windows>` and :ref:`Uppmax<uppmax>`.
 
 .. _mac-linux:
 

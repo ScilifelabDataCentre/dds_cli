@@ -4,9 +4,15 @@ Installation guide
 You can install the ``dds-cli`` in two different ways: 
 
 * From `PyPi <https://pypi.org/project/dds-cli/>`_. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax. 
-* Via executables. These are located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_.
+* Via executables. These are located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_. 
 
-The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>`, :ref:`Windows<windows>` and :ref:`Uppmax<uppmax>`.
+.. note:: 
+   
+   Since we are using GitHubs official images to generate the executables, these are only available for Ubuntu, MacOS and Windows.
+   
+   If you want to request an executable for another OS, please contact us at `delivery@scilifelab.se <delivery@scilifelab.se>`_. Start the subject line with "Feature Request".
+
+The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>` and :ref:`Windows<windows>`, and how to load the ``dds-cli`` on :ref:`Uppmax<uppmax>`. 
 
 .. _mac-linux:
 
@@ -62,28 +68,30 @@ Install via the **executable**
 
 1. Download the executable from the GitHub release page:
 
-   * for Linux: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64
-   * for MacOS: https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64
+   * Executable for Linux: `Download <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64>`_
+   * Executable for MacOS: `Download <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64>`_
    
 2. Open the terminal, go to the directory where the downloaded file is located, and make the file executable by running the following command:
 
-   .. code-block:: bash
+   * On Linux: 
 
-      $ chmod +x dds-cli_ubuntu_x86_64   
+      .. code-block:: bash
 
-   or
+         $ chmod +x dds-cli_ubuntu_x86_64   
 
-   .. code-block:: bash
+   * On MacOS: 
 
-      $ chmod +x dds-cli_macos_x86_64   
+      .. code-block:: bash
 
-3. You should now be able to run the dds with the following command
+         $ chmod +x dds-cli_macos_x86_64   
+
+3. Test that the ``dds-cli`` command works by running the following:
    
    .. code-block:: bash
 
       $ ./<name-of-executable-file> 
 
-      Example:
+   **Example:** 
       $ ./dds_cli_macos_x86_64
 
    On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: https://support.apple.com/en-us/HT202491 and https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac

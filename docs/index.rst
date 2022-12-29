@@ -107,8 +107,7 @@ How do I know which role my account has?
 
 The ``dds user`` command allows you to manage your own and (in some cases, if you have administrative permissions) other user accounts. You can get information about your account by running ``dds user info`` (after authenticating)
 
-
-
+.. image:: ../img/dds-user-info.svg
 
 
 .. _user-info:

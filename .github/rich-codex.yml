@@ -39,7 +39,7 @@ outputs:
               Name: First Last
               Primary Email: someemail@somedomain.com
               Associated Emails: someemail@somedomain.com
-    snippet-syntax: Python
+    snippet_syntax: Python
     img_paths:
       - img/dds-user-info.svg
   - command: dds project

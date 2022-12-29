@@ -1,4 +1,6 @@
-.. _logging-in:
+.. _auth-examples:
+
+.. _user-examples:
 
 How to use
 ============

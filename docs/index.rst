@@ -59,7 +59,7 @@ How do I use the DDS?
 
       When resetting a password you can, of course, regain access to the projects you lost access to. You will get information on how when you perform a password reset.
 
-Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. For more information about the roles, please read the `technical overview <https://github.com/ScilifelabDataCentre/dds_web/blob/dev/doc/Technical-Overview.pdf>`_. 
+Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* account. These are called the different roles which define the commands and actions you are allowed to perform in the DDS, including some administrative permissions. For more information about the roles, please check out the `technical overview <https://delivery.scilifelab.se/technical>`_. 
 
 .. _install:
 
@@ -98,34 +98,46 @@ In order to use the ``dds-cli`` functionality, you first need to authenticate yo
 
 .. image:: ../img/dds-auth.svg
 
-* Examples on how to use ``dds auth`` :ref:`here<logging-in>`
-* Full ``dds auth`` documentation :ref:`here<dds-auth>`
-
-
-How do I know which role my account has?
-------------------------------------------
-
-The ``dds user`` command allows you to manage your own and (in some cases, if you have administrative permissions) other user accounts. You can get information about your account by running ``dds user info`` (after authenticating)
-
-.. image:: ../img/dds-user-info.svg
-
+.. admonition:: Examples and documentation
+   
+   * Examples on how to use ``dds auth`` :ref:`here<auth-examples>`
+   * Full ``dds auth`` documentation :ref:`here<dds-auth>`
 
 .. _user-info:
 
-:ref:`dds user<dds-user>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-You can use the ``add user`` group command to manage your own and (if you have administrative permissions) other user accounts. 
+I want to give someone else access to the DDS, how do I do that?
+------------------------------------------------------------------
+
+The ``dds user`` command allows you to manage your own and, if you have administrative permissions, other user accounts. This includes inviting new users. Your invitation privileges depends on your account role. 
 
 .. image:: ../img/dds-user.svg
 
-.. admonition:: Accessible by
-   
-   All user roles. Some subcommands are limited to Unit Admins, Unit Personnel and in come cases Researchers marked as Project Owners for specific projects.
+* **How do I know which role my account has?** 
+  You can get information about your account by running ``dds user info`` (after authenticating)
 
-See the command documentation :ref:`here<dds-user>`.
+   .. image:: ../img/dds-user-info.svg
+
+* **Which account roles can I invite?**
+  The `technical overview <https://delivery.scilifelab.se/technical>`_ has a detailed description of which actions each account role can perform.
+
+
+.. admonition:: Examples and documentation
+  
+  * Examples on how to use ``dds user`` :ref:`here<user-examples>`
+  * Full ``dds user`` documentation :ref:`here<dds-user>`
 
 .. _project-info:
 
+How do I deliver data to our users? 
+-------------------------------------
+
+.. note:: 
+
+   This section only applies to the account roles *Unit Admin* and *Unit Personnel*. 
+
+>HERE<
+
+   
 :ref:`dds project<dds-project>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``dds project`` command is for creating and managing projects. The majority of the functionalities regarding project management is only available to *Unit Admin* and *Unit Personnel* accounts.

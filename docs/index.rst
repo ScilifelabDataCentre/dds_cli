@@ -66,6 +66,8 @@ Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* a
 2. Install the command line interface (CLI): ``dds-cli``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+**I have already installed the CLI:** <proceed to>
+
 .. note:: 
    
    At this time you must use the DDS CLI in order to utilize the majority of the DDS functionalities. This includes upload and download of data. 
@@ -87,8 +89,6 @@ The main command ``dds`` has some options and possible customisations. A detaile
 
 .. image:: ../img/dds-help-2.svg
    
-Some commands should not be possible to successfully run from a Researcher account. The affected commands are marked with asterisks (\*\*\*).
-
 .. _auth-info:
 
 "Logging in" / Authentication
@@ -104,6 +104,8 @@ In order to use the ``dds-cli`` functionality, you first need to authenticate yo
 
 How do I know which role my account has?
 ------------------------------------------
+
+The ``dds user`` command allows you to manage your own and (in some cases, if you have administrative permissions) other user accounts. You can get information about your account by running ``dds user info`` (after authenticating)
 
 
 

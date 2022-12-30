@@ -32,10 +32,10 @@ outputs:
       export START_ITALIC="\e[3m"
       export END_ITALIC="\e[0m"
       echo "INFO     Attempting to create the session token"
-      echo "DDS username: ${START_ITALIC}fill in your username${END_ITALIC}"
-      echo "DDS password: fill in your password (will not be visible)"
+      echo "DDS username: ${START_ITALIC}<fill in your username>${END_ITALIC}"
+      echo "DDS password: ${START_ITALIC}<fill in your password (will not be visible)>${END_ITALIC}"
       echo "INFO     Please enter the one-time authentication code sent to your email address (leave empty to exit):"                                                                
-      echo "Authentication one-time code: fill in one-time code"
+      echo "Authentication one-time code: ${START_ITALIC}<fill in one-time code>${END_ITALIC}"
     fake_command: dds auth login
     img_paths:
       - img/dds-auth-login.svg

@@ -1,25 +1,25 @@
 Installation guide
 ####################
 
-You can install the ``dds-cli`` in two different ways: 
+You can install ``dds-cli`` in two different ways: 
 
 * From `PyPi <https://pypi.org/project/dds-cli/>`_. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax. 
 * Via executables. These are located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_. 
 
 .. note:: 
    
-   Since we are using GitHubs official images to generate the executables, these are only available for Ubuntu, MacOS and Windows.
+   The executables are only available for Ubuntu, MacOS and Windows.
    
    If you want to request an executable for another OS, please contact us at `delivery@scilifelab.se <delivery@scilifelab.se>`_. Start the subject line with "Feature Request".
 
-The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>` and :ref:`Windows<windows>`, and how to load the ``dds-cli`` on :ref:`Uppmax<uppmax>`. 
+The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>` and :ref:`Windows<windows>`, and how to load ``dds-cli`` on :ref:`Uppmax<uppmax>`. 
 
 .. _mac-linux:
 
 MacOS / Linux
 ==============
 
-As mentioned above, you can install the ``dds-cli`` from PyPi or via an executable. 
+As mentioned above, you can install ``dds-cli`` from PyPi or via an executable. 
 
 .. _pypi-unix:
 
@@ -151,7 +151,7 @@ Executable
 Uppmax 
 =======
 
-The ``dds-cli`` is a global module on Uppmax; No installation required. However, there are a few steps you need to perform prior to using it. These steps differ between Rackham and Bianca. 
+The ``dds-cli`` package is a global module on Uppmax; No installation required. However, there are a few steps you need to perform prior to using it. These steps differ between Rackham and Bianca. 
 
 .. note:: 
 

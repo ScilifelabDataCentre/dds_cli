@@ -33,7 +33,7 @@ How do I use the DDS?
 1. Get an account
 ~~~~~~~~~~~~~~~~~~
 
-* **I already have an account:** <proceed to>
+* **I already have an account:** :ref:`Install dds-cli<install>`
 * **How do I get an account?** You will need an invite from an existing user. Who the existing user is depends on what you're intending to use the DDS for.
   
   * **I want data delivered to me from a SciLifeLab Unit**: Please contact the unit responsible for delivering the data to you.
@@ -66,11 +66,13 @@ Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* a
 2. Install the command line interface (CLI): ``dds-cli``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**I have already installed the CLI:** <proceed to>
-
 .. note:: 
    
    At this time you must use the DDS CLI in order to utilize the majority of the DDS functionalities. This includes upload and download of data. 
+
+
+* **I have already installed the CLI:** :ref:`Run the CLI<runit>`
+* **I do not have the CLI installed:** Please follow the instructions below.
 
 In order to use the DDS, you first need to install the CLI. The installation process varies depending on which operating system you are on, or if you are on Uppmax.
 

@@ -29,8 +29,10 @@ outputs:
     img_paths:
       - img/dds-auth.svg
   - command: |
+      export START_ITALIC="\e[3m"
+      export END_ITALIC="\e[0m"
       echo "INFO     Attempting to create the session token"
-      echo "DDS username: \e[3mfill in your username\e[0m"
+      echo "DDS username: ${START_ITALIC}fill in your username${END_ITALIC}"
       echo "DDS password: fill in your password (will not be visible)"
       echo "INFO     Please enter the one-time authentication code sent to your email address (leave empty to exit):"                                                                
       echo "Authentication one-time code: fill in one-time code"

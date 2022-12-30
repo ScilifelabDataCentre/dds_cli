@@ -23,5 +23,4 @@ jobs:
         with:
           skip_git_checks: "true"
           commit_changes: "true"
-          use_pty: "true"
           clean_img_paths: docs/img/*.svg

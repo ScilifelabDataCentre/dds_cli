@@ -48,8 +48,7 @@ outputs:
       echo "        Name:              <First name> <Last name>"
       echo "        Primary Email:     <someemail>@<somedomain>.com"
       echo "        Associated Emails: <someemail>@<somedomain>.com"
-    snippet_syntax: Python
-    use_pty: true
+    fake_command: dds user info
     img_paths:
       - img/dds-user-info.svg
   - command: dds project

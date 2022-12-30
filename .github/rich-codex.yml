@@ -28,7 +28,7 @@ outputs:
     tail: 19
     img_paths:
       - img/dds-auth.svg
-  - command: BLUE='\033[0;34m'; echo "${BLUE}INFO     Attempting to create the session token\nDDS username:\nDDS password:"
+  - command: BLUE='\033[0;34m'; NOCOLOR='\033[0m'; echo "${BLUE}INFO${NOCOLOR}     Attempting to create the session token\nDDS username:\nDDS password:"
     fake_command: dds auth login
     img_paths:
       - img/dds-auth-login.svg

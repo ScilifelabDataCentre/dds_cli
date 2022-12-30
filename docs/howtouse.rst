@@ -28,6 +28,11 @@ After running the command ``dds auth login``, you will be prompted to fill in in
 .. image:: ../img/dds-auth-login.svg
 
 
+.. admonition:: Forgotten your...
+
+    * **Username?** Contact support. Changing username or authenticating with email is currently not possible.
+    * **Password?** You can reset your password `here <https://delivery.scilifelab.se/reset_password>`_.
+
 .. _2fa-config:
 
 Change Two-Factor Authentication (2FA) method: ``dds auth twofactor configure``

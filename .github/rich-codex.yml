@@ -28,7 +28,12 @@ outputs:
     tail: 19
     img_paths:
       - img/dds-auth.svg
-  - command: echo "INFO     Attempting to create the session token\nDDS username:\nDDS password:"
+  - command: |
+      echo "INFO     Attempting to create the session token"
+      echo "DDS username:"
+      echo "DDS password:"
+      echo "INFO     Please enter the one-time authentication code sent to your email address (leave empty to exit):"                                                                
+      echo "Authentication one-time code:"
     fake_command: dds auth login
     img_paths:
       - img/dds-auth-login.svg
@@ -37,12 +42,12 @@ outputs:
     img_paths:
       - img/dds-user.svg
   - snippet: |
-      Current user: myusername
-      INFO    User Name: myusername
-              Role: Researcher
-              Name: First Last
-              Primary Email: someemail@somedomain.com
-              Associated Emails: someemail@somedomain.com
+      Current user: <username>
+      INFO    Username:          <username>
+              Role:              <role> e.g. Researcher
+              Name:              <First name> <Last name>
+              Primary Email:     <someemail>@<somedomain>.com
+              Associated Emails: <someemail>@<somedomain>.com
     snippet_syntax: Python
     use_pty: true
     img_paths:

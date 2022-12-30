@@ -12,7 +12,7 @@ outputs:
       - img/pip-upgrade.svg
   - command: dds --version
     tail: 1
-    img_paths: 
+    img_paths:
       - img/dds-version.svg
   - command: dds
     head: 6
@@ -22,7 +22,7 @@ outputs:
   - command: dds --help
     head: 6
     tail: 29
-    img_paths: 
+    img_paths:
       - img/dds-help-2.svg
   - command: dds auth
     tail: 19
@@ -50,4 +50,3 @@ outputs:
     tail: 15
     img_paths:
       - img/dds-data.svg
-    

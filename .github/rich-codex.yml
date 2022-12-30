@@ -30,7 +30,7 @@ outputs:
       - img/dds-auth.svg
   - command: |
       echo "INFO     Attempting to create the session token"
-      echo "DDS username: fill in your username"
+      echo -e "DDS username: \e[3mfill in your username\e[0m"
       echo "DDS password: fill in your password (will not be visible)"
       echo "INFO     Please enter the one-time authentication code sent to your email address (leave empty to exit):"                                                                
       echo "Authentication one-time code: fill in one-time code"

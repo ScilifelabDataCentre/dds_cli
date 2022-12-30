@@ -91,23 +91,17 @@ def test_sort_items_empty_list() -> None:
 
 
 def test_sort_items_sorted() -> None:
-    assert (
-        sort_items(
-            items=[{"column": 1}, {"column": 2}, {"column": 3}, {"column": 4}, {"column": 5}],
-            sort_by="column",
-        )
-        == [{"column": 1}, {"column": 2}, {"column": 3}, {"column": 4}, {"column": 5}]
-    )
+    assert sort_items(
+        items=[{"column": 1}, {"column": 2}, {"column": 3}, {"column": 4}, {"column": 5}],
+        sort_by="column",
+    ) == [{"column": 1}, {"column": 2}, {"column": 3}, {"column": 4}, {"column": 5}]
 
 
 def test_sort_items_unsorted() -> None:
-    assert (
-        sort_items(
-            items=[{"column": 5}, {"column": 4}, {"column": 3}, {"column": 2}, {"column": 1}],
-            sort_by="column",
-        )
-        == [{"column": 1}, {"column": 2}, {"column": 3}, {"column": 4}, {"column": 5}]
-    )
+    assert sort_items(
+        items=[{"column": 5}, {"column": 4}, {"column": 3}, {"column": 2}, {"column": 1}],
+        sort_by="column",
+    ) == [{"column": 1}, {"column": 2}, {"column": 3}, {"column": 4}, {"column": 5}]
 
 
 # create_table

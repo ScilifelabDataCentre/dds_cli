@@ -30,10 +30,10 @@ outputs:
       - img/dds-auth.svg
   - command: |
       echo "INFO     Attempting to create the session token"
-      echo -e "DDS username: \e[3mfill in your username\e[0m"
-      echo -e "DDS password: \e[3mfill in your password (will not be visible)\e[0m"
+      echo "DDS username: \e[3mfill in your username\e[0m"
+      echo "DDS password: \e[3mfill in your password (will not be visible)\e[0m"
       echo "INFO     Please enter the one-time authentication code sent to your email address (leave empty to exit):"                                                                
-      echo -e "Authentication one-time code: \e[3mfill in one-time code\e[0m"
+      echo "Authentication one-time code: \e[3mfill in one-time code\e[0m"
     fake_command: dds auth login
     img_paths:
       - img/dds-auth-login.svg

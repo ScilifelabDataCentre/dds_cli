@@ -339,7 +339,7 @@ def list_projects_and_contents(
 @dds_main.group(name="auth", no_args_is_help=True)
 @click.pass_obj
 def auth_group_command(_):
-    """Group command for creating and managing authenticated sessions.
+    """Group command for creating and managing authenticated sessions (valid for 7 days).
 
     Authenticate yourself once and run multiple commands within a certain amount of time
     (currently 7 days) without specifying your user credentials.

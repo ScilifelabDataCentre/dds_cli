@@ -87,7 +87,7 @@ In order to use the DDS, you first need to install the CLI. The installation pro
 3. Run the CLI
 ~~~~~~~~~~~~~~~
 
-The main command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>` or by running ``dds --help``. The sub/group commands are ``dds auth``, ``dds user``, ``dds project``, ``dds data``, ``dds ls`` and ``dds unit``, as seen in the output below.
+The main command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>` or by running ``dds --help``.
 
 .. image:: ../img/dds-help-2.svg
    

@@ -122,14 +122,15 @@ Windows
 
 .. _pypi-windows:
 
-PyPi
------
+Install from **PyPi**
+-----------------------
+
 Detailed instructions on how install the DDS CLI on Windows `here <https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md>`_.
 
 .. _exec-windows:
 
-Executable
-----------
+Install via the **executable**
+-------------------------------
 
 1. Download the executable from the GitHub release page: `Download <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe>`_
 2. Open the Powershell

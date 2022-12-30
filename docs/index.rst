@@ -137,7 +137,6 @@ How do I deliver data to our users?
 
    This section only applies to the account roles *Unit Admin* and *Unit Personnel*. 
 
->HERE<
 
    
 :ref:`dds project<dds-project>`

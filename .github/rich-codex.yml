@@ -46,7 +46,7 @@ outputs:
       echo "  Authenticator App"
       echo "  Cancel"
     fake_command: dds auth twofactor configure
-    img_paths: 
+    img_paths:
       - img/dds-auth-twofactor-configure.svg
   - command: dds auth logout
     tail: 1

@@ -89,7 +89,7 @@ In order to use the DDS, you first need to install the CLI. The installation pro
 3. Run the CLI
 ~~~~~~~~~~~~~~~
 
-The main command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>` or by running ``dds --help``.
+Although the command line tool is installed as ``dds-cli``, the main command is run as ``dds``. The command ``dds`` has some options and possible customisations. A detailed list of these can be found :ref:`here<dds-main>` or by running ``dds --help``.
 
 .. image:: ../img/dds-help-2.svg
    
@@ -102,7 +102,7 @@ In order to use the ``dds-cli`` functionality, you first need to authenticate yo
 
 .. image:: ../img/dds-auth.svg
 
-.. admonition:: Examples and documentation
+.. seealso::
    
    * Examples on how to use ``dds auth`` :ref:`here<auth-examples>`
    * Full ``dds auth`` documentation :ref:`here<dds-auth>`
@@ -125,8 +125,8 @@ The ``dds user`` command allows you to manage your own and, if you have administ
   The `technical overview <https://delivery.scilifelab.se/technical>`_ has a detailed description of which actions each account role can perform.
 
 
-.. admonition:: Examples and documentation
-  
+.. seealso:: 
+
   * Examples on how to use ``dds user`` :ref:`here<user-examples>`
   * Full ``dds user`` documentation :ref:`here<dds-user>`
 
@@ -202,7 +202,7 @@ Command documentation and guide
 
    installation
    examples
-   main
+   Main command: dds <main>
    auth
    user
    project

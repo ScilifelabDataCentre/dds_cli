@@ -1837,9 +1837,7 @@ def list_data(ctx, project, folder, json, size, tree, users):
 )
 @click.pass_obj
 def rm_data(click_ctx, project, file, folder, rm_all):
-    """Delete data within a specific project.
-
-    Limited to Unit Admins and Personnel.
+    """[Unit Admins and Personnel only] Delete data within a specific project.
 
     Project data can only be deleted if the project has the status 'In Progress' and it has never
     had the status 'Available'.
@@ -2061,7 +2059,7 @@ def send_motd(click_ctx, motd_id):
 )
 @click.pass_obj
 def set_maintenance_mode(click_ctx, setting):
-    """Super Admins only. Activate / Deactivate Maintenance mode."""
+    """[Super Admins only] Activate / Deactivate Maintenance mode."""
     try:
         with dds_cli.maintenance_manager.MaintenanceManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),

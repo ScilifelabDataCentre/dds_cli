@@ -39,8 +39,13 @@ outputs:
     fake_command: dds auth login
     img_paths:
       - img/dds-auth-login.svg
-  - command: dds auth twofactor configure
-    tail: 4
+  - command: |
+      echo "INFO     Starting configuration of one-time authentication code method."
+      echo "? Which method would you like to use? (Use arrow keys)"
+      echo "> Email"
+      echo "  Authenticator App"
+      echo "  Cancel"
+    fake_command: dds auth twofactor configure
     img_paths: 
       - img/dds-auth-twofactor-configure.svg
   - command: dds user

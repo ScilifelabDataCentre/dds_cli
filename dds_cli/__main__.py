@@ -490,9 +490,7 @@ def configure():
 
 # -- dds auth twofactor configure -- #
 @twofactor_group_command.command(name="deactivate")
-@username_option(
-    required=True, help_message="The user you wish to deactivate TOTP for."
-)
+@username_option(required=True, help_message="The user you wish to deactivate TOTP for.")
 @click.pass_obj
 def deactivate(click_ctx, username):
     """[Super Admins only] Deactivate another users TOTP."""
@@ -801,7 +799,7 @@ def activate_user(click_ctx, email):
     """Activate/Reactivate user accounts.
 
     \b
-    [Super Admins and Unit Admins only] 
+    [Super Admins and Unit Admins only]
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
@@ -841,7 +839,7 @@ def deactivate_user(click_ctx, email):
     """Deactivate user accounts in the Data Delivery System.
 
     \b
-    [Super Admins and Unit Admins only] 
+    [Super Admins and Unit Admins only]
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
@@ -976,7 +974,7 @@ def create(
 ):
     """Create a project within the DDS.
 
-    [Unit Admins and Unit Personnel only] 
+    [Unit Admins and Unit Personnel only]
 
     To give new or existing users access to the new project, specify their emails with
     `--researcher` or `--owner`. Both of these will give the user the role Researcher, but `--owner`

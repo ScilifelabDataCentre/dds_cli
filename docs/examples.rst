@@ -95,8 +95,6 @@ In order to avoid unauthorized users accessing the DDS (and thereby your user-pr
 
     dds auth logout
 
-.. image:: ../img/dds-auth-logout.svg
-
 .. _user-examples:
 
 Manage accounts: ``dds user``

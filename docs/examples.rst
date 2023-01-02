@@ -5,7 +5,7 @@ Examples
 
 .. contents::
    :local:
-   
+
 .. _auth-examples:
 
 Authentication: ``dds auth``
@@ -38,6 +38,13 @@ After running the command ``dds auth login``, you will be prompted to fill in in
 
     * **Username?** Contact support. Changing username or authenticating with email is currently not possible.
     * **Password?** You can reset your password `here <https://delivery.scilifelab.se/reset_password>`_.
+
+.. danger:: 
+
+    After completing authentication, ``dds-cli`` will automatically save an authentication in the directory where you run the command, unless otherwise specified (see the command documentation). ``dds-cli`` will use this token as a session when you run future commands. 
+    The token, and therefore the authenticated session, is valid for 7 days. 
+    
+    The token is encrypted but **should be kept private**. 
 
 .. _2fa-config-example:
 
@@ -82,7 +89,13 @@ There are two possible configurations for the Two-Factor Authentication:
 End authenticated session ("Log out")
 ---------------------------------------
 
+In order to avoid unauthorized users accessing the DDS via your account, we recommend that you manually end your session after having run the operations with ``dds-cli``. To end the session, run:
 
+.. code-block:: 
+
+    dds auth logout
+
+.. image:: ../img/dds-auth-logout.svg
 
 .. _user-examples:
 

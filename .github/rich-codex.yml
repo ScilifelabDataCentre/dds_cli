@@ -40,7 +40,6 @@ outputs:
     img_paths:
       - img/dds-auth-login.svg
   - command: dds auth twofactor configure
-    head: 6 
     tail: 4
     img_paths: 
       - img/dds-auth-twofactor-configure.svg

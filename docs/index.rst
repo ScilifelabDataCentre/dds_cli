@@ -202,7 +202,7 @@ Command documentation and guide
 
    installation
    examples
-   Main command: dds <main>
+   dds (Main command) <main>
    auth
    user
    project

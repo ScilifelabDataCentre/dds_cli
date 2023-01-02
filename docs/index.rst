@@ -3,9 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-=====================================================================
-Welcome to the Data Delivery System's Documentation!
-=====================================================================
+==========================
+DDS: Data Delivery System
+==========================
+
+Welcome to the documentation of the SciLifeLab Data Delivery System's command line interface (``dds-cli``). 
 
 .. contents::
    :local:
@@ -199,6 +201,7 @@ Command documentation and guide
    :maxdepth: 1
 
    installation
+   examples
    main
    auth
    user

@@ -48,6 +48,10 @@ outputs:
     fake_command: dds auth twofactor configure
     img_paths: 
       - img/dds-auth-twofactor-configure.svg
+  - command: dds auth logout
+    tail: 1
+    img_paths:
+      - img/dds-auth-logout.svg
   - command: dds user
     tail: 18
     img_paths:

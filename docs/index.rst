@@ -39,7 +39,7 @@ How do I use the DDS?
 * **How do I get an account?** You will need an invite from an existing user. Who the existing user is depends on what you're intending to use the DDS for.
   
   * **I want data delivered to me from a SciLifeLab Unit**: Please contact the unit responsible for delivering the data to you.
-  * **I'm a data producer, wishing to deliver data to my users**
+  * **I'm a data producer, wanting to deliver data to my users**
     
     * *My unit does not have DDS set up:* Start by contacting the SciLifeLab Data Centre. 
     * *My unit has started using the DDS for data deliveries:* Contact your colleagues. 
@@ -147,7 +147,7 @@ How do I deliver data to our users?
 
 2. Upload the data with the ``dds data put`` command. 
 
-   .. image:: ../img/dds-data.svg
+   .. image:: ../img/dds-data-put.svg
    
    Examples on how to upload data can be found :ref:`here<upload-example>`
 

@@ -93,3 +93,7 @@ outputs:
     tail: 39
     img_paths:
       - img/dds-data-get.svg
+  - command: dds data put --help
+    tail: 40
+    img_paths:
+      - img/dds-data-put.svg

@@ -100,6 +100,27 @@ In order to avoid unauthorized users accessing the DDS (and thereby your user-pr
 Manage accounts: ``dds user``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _user-invite-example:
+
+Invite another user
+---------------------
+
+In order to invite another user to the DDS, you need to specify their email address and the role which their account should have. 
+
+.. code-block::
+
+    dds user add [Email address] --role "<Account role>"
+
+To invite a user to a specific project, or if they already have an account and should be granted access to the project, add the ``--project`` option.
+
+.. code-block:: 
+
+    dds user add [Email address] --role "<Account role>" --project "<Project ID>"
+
+.. seealso::
+
+    Granting a user access to a specific project can also be done with the ``dds project access`` command. 
+    
 .. _project-examples:
 
 Manage projects: ``dds project``

@@ -38,17 +38,17 @@ How do I use the DDS?
 * **I already have an account:** :ref:`Install dds-cli<install>`
 * **How do I get an account?** You will need an invite from an existing user. Who the existing user is depends on what you're intending to use the DDS for.
   
-  * **I want data delivered to me from a SciLifeLab Unit**: Please contact the unit responsible for delivering the data to you.
+  * **I want data delivered to me from a SciLifeLab Unit**: Please contact the unit responsible for delivering the data to you, and ask for an invitation.
   * **I'm a data producer, wanting to deliver data to my users**
     
     * *My unit does not have DDS set up:* Start by contacting the SciLifeLab Data Centre. 
-    * *My unit has started using the DDS for data deliveries:* Contact your colleagues. 
+    * *My unit has started using the DDS for data deliveries:* Contact your colleagues and ask for an invitation.
 
    .. note:: 
 
       The invitation email will be from `services-noreply@scilifelab.se`. Note that any emails sent to this address **will not be responded to**. 
       
-      **No email?**
+      **Not receiving an email?**
       
       * Please check in the junk/spam folder. 
       * My email address has the `scilifelab.se` domain: It may take a while for your email to be delivered, due to KTH spam filters.
@@ -149,7 +149,7 @@ How do I deliver data to our users?
 
    .. image:: ../img/dds-data-put.svg
    
-   Examples on how to upload data can be found :ref:`here<upload-example>`
+   Examples on how to upload data can be found :ref:`here<upload-examples>`
 
 3. Finally, you will need to make the data available to your users. This is called "releasing" the project and is also handled by the ``dds project`` command.
 

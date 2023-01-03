@@ -1,3 +1,4 @@
+# Rich-codex automatically searches for this file name in this location, and uses the commands to produce the examples.
 timeout: 300
 outputs:
   - command: python --version
@@ -70,6 +71,16 @@ outputs:
     tail: 16
     img_paths:
       - img/dds-project.svg
+  - command: |
+      echo "Project created with id: <Project ID>"
+    fake_command: dds project create --title "<Project Title>" --description "<Project Description>" --principal-investigator "<Email to PI>"
+    img_paths:
+      - img/dds-project-create.svg
+  - command: |
+      echo "Project someunit00002 updated to status Available. An e-mail notification has been sent."
+    fake_command: dds project status release --project "<Project ID>"
+    img_paths:
+      - img/dds-project-status-release.svg
   - command: dds data
     tail: 15
     img_paths:

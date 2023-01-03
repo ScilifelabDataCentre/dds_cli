@@ -100,4 +100,12 @@ In order to avoid unauthorized users accessing the DDS (and thereby your user-pr
 Manage accounts: ``dds user``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _project-examples:
 
+Manage projects: ``dds project``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _data-examples:
+
+Manage data: ``dds data``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

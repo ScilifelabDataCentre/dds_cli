@@ -130,7 +130,7 @@ The ``dds user`` command allows you to manage your own and, if you have administ
   * Examples on how to use ``dds user`` :ref:`here<user-examples>`
   * Full ``dds user`` documentation :ref:`here<dds-user>`
 
-.. _project-info:
+.. _how-to-deliver:
 
 How do I deliver data to our users? 
 -------------------------------------
@@ -139,60 +139,58 @@ How do I deliver data to our users?
 
    This section only applies to the account roles *Unit Admin* and *Unit Personnel*. 
 
+1. Create a project with the ``dds project create`` command
 
+   .. code-block:: 
+
+      dds project create --title "<Project Title>" --description "<Project Description>" --principal-investigator "<Email to PI>"
+
+   .. note::
+
+      Note that the email specified in the option ``--principal-investigator`` does not receive any emails; It's only for information purposes at this time. 
    
-:ref:`dds project<dds-project>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``dds project`` command is for creating and managing projects. The majority of the functionalities regarding project management is only available to *Unit Admin* and *Unit Personnel* accounts.
+   When the project is created, you should get an output similar to the one below.
 
-.. image:: ../img/dds-project.svg
+   .. image:: ../img/dds-project-create.svg
 
-.. admonition:: Accessible by
+2. Upload data with the ``dds data put`` command
+
+   .. code-block::
+
+      dds data put --project "<Project ID>" --source "<File or directory to upload>"
+
+3. Change project status to "Available" with the ``dds project status release`` command
+
+   .. code-block:: 
+
+      dds project status release --project "<Project ID>"
    
-   Researchers can use the ``dds project ls``.
-   Researchers marked as Project Owners in specific projects can also use ``dds project access grant/revoke``. 
-   The rest of the subcommands are limited to Unit Admins and Unit Personnel.
-
-See the command documentation :ref:`here<dds-project>`.
-
-.. _data-info:
-
-:ref:`dds data<dds-data>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``dds data`` group command is used for uploading, downloading, listing and deleting data. Only **Unit Admin** and **Unit Personnel** accounts can upload and delete data. All account types can list and download. 
-
-.. image:: ../img/dds-data.svg
-
-.. admonition:: Accessible by
+   .. image:: ../img/dds-project-status-release.svg
    
-   Researchers can use `dds data get`.
-   The rest of the subcommands are limited to Unit Admins and Unit Personnel.
+.. seealso:: 
 
-See the command documentation :ref:`here<dds-data>`.
+  * Examples on how to use ``dds project`` :ref:`here<project-examples>`
+  * Full ``dds project`` documentation :ref:`here<dds-project>`
 
-.. _ls-info:
+   * Examples on how to use ``dds data`` :ref:`here<data-examples>`
+   * Full ``dds data`` documentation :ref:`here<dds-data>`
 
-:ref:`dds ls<dds-ls>`
-~~~~~~~~~~~~~~~~~~~~~~
-The ``dds ls`` group command can be used for listing both projects and project contents. Calling the ``dds ls`` command should produce the same output as ``dds project ls``, and calling ``dds ls --project`` should result in the same output as when calling ``dds data ls``. 
+.. _how-to-download:
 
-.. admonition:: Accessible by
+How do I get my delivered data?
+---------------------------------
+
+1. I want to download everything in a project 
    
-   All user roles.
-
-
-See the command documentation :ref:`here<dds-ls>`.
-
-.. _unit-info:
-
-:ref:`dds unit<dds-unit>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The ``dds unit`` group command can be used by Super Admins to list all units and their information. 
-
-.. admonition:: Accessible by
+   .. code-block:: 
    
-   Super Admins only.
+      dds data get --get-all
+
+2. I want to download a specific file or folder
+
+   .. code-block::
+
+      dds data get --source 
 
 Command documentation and guide
 ================================

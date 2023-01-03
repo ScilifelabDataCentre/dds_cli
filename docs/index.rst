@@ -139,38 +139,26 @@ How do I deliver data to our users?
 
    This section only applies to the account roles *Unit Admin* and *Unit Personnel*. 
 
-1. Create a project with the ``dds project create`` command
+1. In order to deliver data, you first need to create a project in the DDS. Projects are created and managed with the ``dds project`` command.
 
-   .. code-block:: 
+   .. image:: ../img/dds-project.svg
 
-      dds project create --title "<Project Title>" --description "<Project Description>" --principal-investigator "<Email to PI>"
+   An example on how to create a project can be found :ref:`here<project-create-example>`
 
-   .. note::
+2. Upload the data with the ``dds data put`` command. 
 
-      Note that the email specified in the option ``--principal-investigator`` does not receive any emails; It's only for information purposes at this time. 
+   .. image:: ../img/dds-data.svg
    
-   When the project is created, you should get an output similar to the one below.
+   Examples on how to upload data can be found :ref:`here<upload-example>`
 
-   .. image:: ../img/dds-project-create.svg
+3. Finally, you will need to make the data available to your users. This is called "releasing" the project and is also handled by the ``dds project`` command.
 
-2. Upload data with the ``dds data put`` command
-
-   .. code-block::
-
-      dds data put --project "<Project ID>" --source "<File or directory to upload>"
-
-3. Change project status to "Available" with the ``dds project status release`` command
-
-   .. code-block:: 
-
-      dds project status release --project "<Project ID>"
-   
-   .. image:: ../img/dds-project-status-release.svg
+   An example on how to release the project can be found :ref:`here<project-release-example>`
    
 .. seealso:: 
 
-  * Examples on how to use ``dds project`` :ref:`here<project-examples>`
-  * Full ``dds project`` documentation :ref:`here<dds-project>`
+   * Examples on how to use ``dds project`` :ref:`here<project-examples>`
+   * Full ``dds project`` documentation :ref:`here<dds-project>`
 
    * Examples on how to use ``dds data`` :ref:`here<data-examples>`
    * Full ``dds data`` documentation :ref:`here<dds-data>`

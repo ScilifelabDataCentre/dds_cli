@@ -105,7 +105,73 @@ Manage accounts: ``dds user``
 Manage projects: ``dds project``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _project-create-example:
+
+Create a project
+-----------------
+
+.. code-block:: 
+
+      dds project create --title "<Project Title>" --description "<Project Description>" --principal-investigator "<Email to PI>"
+
+.. note::
+
+    Note that the email specified in the option ``--principal-investigator`` does not receive any emails; It's only for information purposes at this time. 
+   
+When the project is created, you should get an output similar to the one below.
+
+.. image:: ../img/dds-project-create.svg
+
+.. _project-status-display-example:
+
+How do I check the project status?
+-----------------------------------
+
+A newly created project always has the status "In Progress". 
+
+To check the current status of a project, run:
+
+.. code-block:: 
+
+    dds project status display --project "<Project ID>"
+
+.. _project-status-change-example:
+
+Changing the project status
+----------------------------
+
+The command structure when changing a project status is
+
+.. code-block::
+
+    dds project status <statuschange> --project "<Project ID>"
+
+Check the possible status commands with ``dds project status --help``
+
+.. image:: ../img/dds-project-status-help.svg
+
+.. _project-release-example: 
+
+Releasing a project
+""""""""""""""""""""
+
+   .. code-block:: 
+
+      dds project status release --project "<Project ID>"
+   
+   .. image:: ../img/dds-project-status-release.svg
+
 .. _data-examples:
 
 Manage data: ``dds data``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _upload-example:
+
+Upload data
+------------
+
+.. code-block::
+
+    dds data put --project "<Project ID>" --source "<File or directory to upload>"
+

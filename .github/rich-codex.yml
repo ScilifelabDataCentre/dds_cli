@@ -81,6 +81,10 @@ outputs:
     fake_command: dds project status release --project "<Project ID>"
     img_paths:
       - img/dds-project-status-release.svg
+  - command: dds project status --help
+    tail: 19
+    img_paths: 
+      - img/dds-project-status-help.svg
   - command: dds data
     tail: 15
     img_paths:

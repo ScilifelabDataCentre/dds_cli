@@ -179,10 +179,6 @@ Once the unit has uploaded your data and made it available to you, you can downl
 * **I want to download everything in a project:** See :ref:`this example<data-get-all>` 
 * **I want to download a specific file or folder:** See :ref:`this example<data-get-source>`
 
-   .. code-block::
-
-      dds data get --source 
-
 Command documentation and guide
 ================================
 

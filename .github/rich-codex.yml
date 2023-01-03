@@ -83,9 +83,13 @@ outputs:
       - img/dds-project-status-release.svg
   - command: dds project status --help
     tail: 19
-    img_paths: 
+    img_paths:
       - img/dds-project-status-help.svg
   - command: dds data
     tail: 15
     img_paths:
       - img/dds-data.svg
+  - command: dds data get --help
+    tail: 39
+    img_paths:
+      - img/dds-data-get.svg

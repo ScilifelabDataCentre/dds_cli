@@ -116,7 +116,7 @@ Create a project
 
 .. note::
 
-    Note that the email specified in the option ``--principal-investigator`` does not receive any emails; It's only for information purposes at this time. 
+    The email specified in the option ``--principal-investigator`` does not receive any emails; It's only for information purposes at this time. 
    
 When the project is created, you should get an output similar to the one below.
 
@@ -155,18 +155,20 @@ Check the possible status commands with ``dds project status --help``
 Releasing a project
 """"""""""""""""""""
 
-   .. code-block:: 
+Releasing a project changes the project status from "In Progress" to "Available". 
 
-      dds project status release --project "<Project ID>"
+.. code-block:: 
+
+    dds project status release --project "<Project ID>"
    
-   .. image:: ../img/dds-project-status-release.svg
+.. image:: ../img/dds-project-status-release.svg
 
 .. _data-examples:
 
 Manage data: ``dds data``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _upload-example:
+.. _upload-examples:
 
 Upload data
 ------------
@@ -175,3 +177,29 @@ Upload data
 
     dds data put --project "<Project ID>" --source "<File or directory to upload>"
 
+.. _download-examples:
+
+Download data
+---------------
+
+.. _data-get-all:
+
+Download full project contents
+""""""""""""""""""""""""""""""""
+
+Use the ``--get-all`` option. 
+
+.. code-block:: 
+
+    dds data get --get-all --project "<Project ID>"
+
+.. _data-get-source:
+
+Download specific files or directories
+""""""""""""""""""""""""""""""""""""""""
+
+Use the ``--source`` option to specify which file or directory you want to download within the project. If you want to download multiple individual files or directories, specify the ``--source`` option multiple times.
+
+.. code-block:: 
+
+    dds data get --source "<1st file or directory>" --source "<2nd file or directory>" [... etc] --project "<Project ID>"

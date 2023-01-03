@@ -168,13 +168,16 @@ How do I deliver data to our users?
 How do I get my delivered data?
 ---------------------------------
 
-1. I want to download everything in a project 
-   
-   .. code-block:: 
-   
-      dds data get --get-all
+Once the unit has uploaded your data and made it available to you, you can download it to your location of choice with the ``dds data get`` command.
 
-2. I want to download a specific file or folder
+.. note::
+   
+   **Downloading the data to Uppmax?** Follow the instructions :ref:`here<uppmax>` first.
+
+.. image:: ../img/dds-data-get.svg
+
+* **I want to download everything in a project:** See :ref:`this example<data-get-all>` 
+* **I want to download a specific file or folder:** See :ref:`this example<data-get-source>`
 
    .. code-block::
 

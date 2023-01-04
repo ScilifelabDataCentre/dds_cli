@@ -220,3 +220,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 - Dependency: Bump `jwcrypto` due to CVE-2022-3102 ([#557](https://github.com/ScilifelabDataCentre/dds_cli/pull/577))
 - New command: `dds project info change [OPTIONS]` to change project information ([#575](https://github.com/ScilifelabDataCentre/dds_cli/pull/575))
+- Bump Python to 3.11.1 ([#586](https://github.com/ScilifelabDataCentre/dds_cli/pull/586))

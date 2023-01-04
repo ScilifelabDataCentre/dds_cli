@@ -192,8 +192,6 @@ Rackham
 Bianca
 -------
 
-For downloading data to Bianca, you need to connect to a server called Transit, and not to your SENS project cluster.
-
 .. admonition:: Terminology in this section
 
    * **SENS project** / ``<SENS-project>``: The active SNIC SENS research project on the Bianca cluster at Uppmax. Not a DDS delivery project.
@@ -201,6 +199,7 @@ For downloading data to Bianca, you need to connect to a server called Transit, 
 
 .. admonition:: Important
 
+   * For downloading data to a SENS project on Bianca, you need to connect to a server called Transit, and not to your SENS project cluster.
    * Mount the correct SENS project on transit
    * You need to have enough space on the nobackup storage allocation in the corresponding SENS project. If the data you are trying to download is larger than the allocated space, the download will fail.
    * If your data is larger than a few hundreds of GB: start the download in a screen/tmux session

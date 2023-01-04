@@ -41,7 +41,7 @@ After running the command ``dds auth login``, you will be prompted to fill in in
 
 .. danger:: 
 
-    After completing authentication, ``dds-cli`` will automatically save an authentication in the home directory, unless otherwise specified (see the command documentation). ``dds-cli`` will use this token as a session when you run future commands. 
+    After completing authentication, ``dds-cli`` will automatically save an authentication token file (``.dds_cli_token``) in the home directory, unless otherwise specified (see the command documentation). ``dds-cli`` will use this token as a session when you run future commands. 
     The token, and therefore the authenticated session, is valid for 7 days. 
     
     The token is encrypted but **should be kept private**. 

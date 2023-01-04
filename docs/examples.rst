@@ -29,7 +29,7 @@ After running the command ``dds auth login``, you will be prompted to fill in in
    
    .. admonition:: Email is default
 
-        If you have not configure the 2FA method (see section :ref:`below<_2fa-config>`), a one time code is sent to your email. If you have set the 2FA method to *Authenticator App*, the one-time code will be shown in that app.
+        If you have not configure the 2FA method (see section :ref:`below<2fa-config-example>`), a one time code is sent to your email. If you have set the 2FA method to *Authenticator App*, the one-time code will be shown in that app.
 
 .. image:: ../img/dds-auth-login.svg
 
@@ -229,6 +229,8 @@ To view all files and directories in a project as a tree structure, use the ``--
 Upload data
 ------------
 
+The general upload command is ``dds data put``.
+
 .. code-block::
 
     dds data put --project "<Project ID>" --source "<File or directory to upload>"
@@ -253,6 +255,8 @@ After the upload is completed, the project contents will be the following:
 
 Download data
 ---------------
+
+Use ``dds data get`` to download data. 
 
 .. _data-get-all:
 

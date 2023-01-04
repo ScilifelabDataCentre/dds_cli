@@ -109,25 +109,25 @@ outputs:
     img_paths:
       - img/dds-data-ls.svg
   - command: |
-      echo "Files & directories in project: <Project ID>"                                                                                                                                          
-      echo "├── example_directory_1/"                                                                                                                                                                                  
-      echo "│   └── sub_directory_1/"                                                                                                                                                                         
-      echo "│       └── example_file_1.txt"                                                                                                                                                                                                                                                                                                                                
-      echo "└── example_directory_2/"                                                                                                                                                                                     
-      echo "    ├── example_file_2.txt"                                                                                                                                                                         
-      echo "    ├── sub_directory_2/"                                                                                                                                                                                
-      echo "    │   ├── example_file_3.txt"                                                                                                                                                               
-      echo "    │   └── example_file_4.txt"                                                                                                                                                                                                                                                                                                                                
+      echo "Files & directories in project: <Project ID>"
+      echo "├── example_directory_1/"
+      echo "│   └── sub_directory_1/"
+      echo "│       └── example_file_1.txt"
+      echo "└── example_directory_2/"
+      echo "    ├── example_file_2.txt"
+      echo "    ├── sub_directory_2/"
+      echo "    │   ├── example_file_3.txt"
+      echo "    │   └── example_file_4.txt"
       echo "    └── example_file_5.txt"
     fake_command: dds data ls --project "<Project ID>" --tree
     img_paths:
       - img/dds-data-ls-tree.svg
   - snippet: |
-      Files & directories in project: <Project ID>                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-      └── <destination>/                                                                                                                                                                                                                                                                                                                                                    
-          ├── <directory>/                                                                                                                                                                               
-          │   ├── directory_content_1.txt                                                                                                                                                            
-          │   └── directory_content_2.txt                                                                                                                                                                                                                                                                                                                               
+      Files & directories in project: <Project ID>
+      └── <destination>/
+          ├── <directory>/
+          │   ├── directory_content_1.txt
+          │   └── directory_content_2.txt
           └── <file>
     img_paths:
       - img/dds-data-ls-destination.svg

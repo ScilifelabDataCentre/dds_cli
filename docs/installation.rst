@@ -72,8 +72,8 @@ Install via the **executable**
 
 1. Download the executable from the GitHub release page:
 
-   * Executable for Linux: `Download <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64>`_
-   * Executable for MacOS: `Download <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64>`_
+   * Executable for Linux: `Download Linux Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64>`_
+   * Executable for MacOS: `Download MacOS Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64>`_
    
 2. Open the terminal, go to the directory where the downloaded file is located, and make the file executable by running the following command:
 
@@ -134,9 +134,11 @@ Install via the **executable**
 
 1. Download the executable from the GitHub release page: `Download <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe>`_
 2. Open the Powershell
+
   a. Click on ``Start`` (Windows symbol in corner)
   b. Type "Powershell" or "Command Prompt" (**Powershell** recommended)
   c. Click on the Powershell or Command Prompt symbol
+  
 3. Open the file explorer and navigate to the location of the downloaded executable. 
 4. Drag the executable into the Powershell/Command Prompt window and press enter. This should result in the help text being displayed. 
    

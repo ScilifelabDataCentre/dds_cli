@@ -185,6 +185,7 @@ Command documentation and guide
 .. toctree::
    :maxdepth: 1
 
+   Welcome page <self>
    installation
    examples
    dds (Main command) <main>

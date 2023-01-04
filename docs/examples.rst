@@ -145,8 +145,8 @@ When the project is created, you should get an output similar to the one below.
 
 .. _project-status-display-example:
 
-How do I check the project status?
------------------------------------
+Check the current status of a project
+--------------------------------------
 
 A newly created project always has the status "In Progress". 
 
@@ -189,6 +189,41 @@ Releasing a project changes the project status from "In Progress" to "Available"
 Manage data: ``dds data``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _data-list-contents:
+
+List project contents
+----------------------
+
+.. seealso::
+
+    You can also list project contents with the command ``dds ls``.
+
+.. _data-list-interactive:
+
+Interactively listing
+""""""""""""""""""""""
+
+The following command will list all contents in the *root* directory and ask if you want to view files in any directory. 
+
+.. code-block::
+
+    dds data ls --project "<Project ID>"
+
+.. image:: ../img/dds-data-ls.svg
+
+.. _data-list-tree:
+
+List full contents (tree)
+""""""""""""""""""""""""""
+
+To view all files and directories in a project as a tree structure, use the ``--tree`` opton.
+
+.. code-block::
+
+    dds data ls --project "<Project ID>" --tree
+
+.. image:: ../img/dds-data-ls-tree.svg
+
 .. _upload-examples:
 
 Upload data
@@ -197,6 +232,22 @@ Upload data
 .. code-block::
 
     dds data put --project "<Project ID>" --source "<File or directory to upload>"
+
+.. _data-put-destination:
+
+Upload to a specific directory
+""""""""""""""""""""""""""""""""
+
+To place your uploaded data in a specific (new or existing) directory, use the ``--destination`` option. In the example command below we are uploading one file (``<file>``) and one directory (``<directory>``) with contents of its own.
+
+.. code-block::
+
+    dds data put --project "<Project ID>" --source "<file>" --source "<directory>" --destination "<destination>"
+
+After the upload is completed, the project contents will be the following: 
+
+.. image:: ../img/dds-data-ls-destination.svg
+
 
 .. _download-examples:
 
@@ -224,3 +275,7 @@ Use the ``--source`` option to specify which file or directory you want to downl
 .. code-block:: 
 
     dds data get --source "<1st file or directory>" --source "<2nd file or directory>" [... etc] --project "<Project ID>"
+
+.. seealso::
+
+    In order to know which files or directories to specify with the ``--source`` option, you can first list the project contents. See :ref:`this example<data-list-contents>`. 

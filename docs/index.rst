@@ -41,7 +41,7 @@ How do I use the DDS?
   * **I want data delivered to me from a SciLifeLab Unit**: Please contact the unit responsible for delivering the data to you, and ask for an invitation.
   * **I'm a data producer, wanting to deliver data to my users**
     
-    * *My unit does not have DDS set up:* Start by contacting the SciLifeLab Data Centre. 
+    * *My unit does not have DDS set up:* Start by contacting the SciLifeLab Data Centre at **delivery@scilifelab.se**.
     * *My unit has started using the DDS for data deliveries:* Contact your colleagues and ask for an invitation.
 
    .. note:: 

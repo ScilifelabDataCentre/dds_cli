@@ -48,7 +48,7 @@ Install from **PyPi**
 
          .. image:: ../img/pip-upgrade.svg
 
-2. The DDS CLI is available on `PyPi <https://pypi.org/project/dds-cli/>`_. To install the DDS CLI, open the terminal and run
+2. The DDS CLI is available on `PyPi <https://pypi.org/project/dds-cli/>`_. To install the DDS CLI, run this command in the terminal:
 
    .. code-block:: bash
 
@@ -192,9 +192,11 @@ Rackham
 Bianca
 -------
 
+For downloading data to Bianca, you need to connect to a server called Transit, and not to your SENS project cluster.
+
 .. admonition:: Terminology in this section
 
-   * **SENS project** / ``<SENS-project>``: The active SNIC SENS research project, connected to Uppmax. Not a DDS delivery project.
+   * **SENS project** / ``<SENS-project>``: The active SNIC SENS research project on the Bianca cluster at Uppmax. Not a DDS delivery project.
    * **DDS project** / ``<DDS-project>``: The active DDS delivery project you want to upload data to / download data from or manage. 
 
 .. admonition:: Important

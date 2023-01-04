@@ -25,7 +25,7 @@ After running the command ``dds auth login``, you will be prompted to fill in in
     
         Note that the password *will not be printed out* when you type it; The password is hidden for security purposes.
 
-3. A one time code.
+3. A 2FA one time code.
    
    .. admonition:: Email is default
 
@@ -41,7 +41,7 @@ After running the command ``dds auth login``, you will be prompted to fill in in
 
 .. danger:: 
 
-    After completing authentication, ``dds-cli`` will automatically save an authentication in the directory where you run the command, unless otherwise specified (see the command documentation). ``dds-cli`` will use this token as a session when you run future commands. 
+    After completing authentication, ``dds-cli`` will automatically save an authentication in the home directory, unless otherwise specified (see the command documentation). ``dds-cli`` will use this token as a session when you run future commands. 
     The token, and therefore the authenticated session, is valid for 7 days. 
     
     The token is encrypted but **should be kept private**. 

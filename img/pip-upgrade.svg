@@ -19,27 +19,27 @@
         font-weight: 700;
     }
 
-    .terminal-2853247186-matrix {
+    .terminal-2411276314-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-2853247186-title {
+    .terminal-2411276314-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-2853247186-r1 { fill: #c5c8c6 }
+    .terminal-2411276314-r1 { fill: #c5c8c6 }
     </style>
 
     <defs>
-    <clipPath id="terminal-2853247186-clip-terminal">
+    <clipPath id="terminal-2411276314-clip-terminal">
       <rect x="0" y="0" width="975.0" height="47.8" />
     </clipPath>
-    <clipPath id="terminal-2853247186-line-0">
+    <clipPath id="terminal-2411276314-line-0">
     <rect x="0" y="1.5" width="976" height="24.65"/>
             </clipPath>
     </defs>
@@ -51,11 +51,11 @@
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-2853247186-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-2411276314-clip-terminal)">
     
-    <g class="terminal-2853247186-matrix">
-    <text class="terminal-2853247186-r1" x="0" y="20" textLength="463.6" clip-path="url(#terminal-2853247186-line-0)">$&#160;python3&#160;-m&#160;pip&#160;install&#160;--upgrade&#160;pip</text><text class="terminal-2853247186-r1" x="976" y="20" textLength="12.2" clip-path="url(#terminal-2853247186-line-0)">
-</text><text class="terminal-2853247186-r1" x="0" y="44.4" textLength="402.6" clip-path="url(#terminal-2853247186-line-1)">Successfully&#160;installed&#160;pip-22.3.1</text><text class="terminal-2853247186-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-2853247186-line-1)">
+    <g class="terminal-2411276314-matrix">
+    <text class="terminal-2411276314-r1" x="0" y="20" textLength="463.6" clip-path="url(#terminal-2411276314-line-0)">$&#160;python3&#160;-m&#160;pip&#160;install&#160;--upgrade&#160;pip</text><text class="terminal-2411276314-r1" x="976" y="20" textLength="12.2" clip-path="url(#terminal-2411276314-line-0)">
+</text><text class="terminal-2411276314-r1" x="0" y="44.4" textLength="402.6" clip-path="url(#terminal-2411276314-line-1)">Successfully&#160;installed&#160;pip-22.3.1</text><text class="terminal-2411276314-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-2411276314-line-1)">
 </text>
     </g>
     </g>

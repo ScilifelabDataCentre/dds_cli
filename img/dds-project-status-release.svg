@@ -19,27 +19,27 @@
         font-weight: 700;
     }
 
-    .terminal-4142805414-matrix {
+    .terminal-745619694-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-4142805414-title {
+    .terminal-745619694-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-4142805414-r1 { fill: #c5c8c6 }
+    .terminal-745619694-r1 { fill: #c5c8c6 }
     </style>
 
     <defs>
-    <clipPath id="terminal-4142805414-clip-terminal">
+    <clipPath id="terminal-745619694-clip-terminal">
       <rect x="0" y="0" width="1072.6" height="47.8" />
     </clipPath>
-    <clipPath id="terminal-4142805414-line-0">
+    <clipPath id="terminal-745619694-line-0">
     <rect x="0" y="1.5" width="1073.6" height="24.65"/>
             </clipPath>
     </defs>
@@ -51,11 +51,11 @@
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-4142805414-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-745619694-clip-terminal)">
     
-    <g class="terminal-4142805414-matrix">
-    <text class="terminal-4142805414-r1" x="0" y="20" textLength="646.6" clip-path="url(#terminal-4142805414-line-0)">$&#160;dds&#160;project&#160;status&#160;release&#160;--project&#160;&quot;&lt;Project&#160;ID&gt;&quot;</text><text class="terminal-4142805414-r1" x="1073.6" y="20" textLength="12.2" clip-path="url(#terminal-4142805414-line-0)">
-</text><text class="terminal-4142805414-r1" x="0" y="44.4" textLength="1073.6" clip-path="url(#terminal-4142805414-line-1)">Project&#160;someunit00002&#160;updated&#160;to&#160;status&#160;Available.&#160;An&#160;e-mail&#160;notification&#160;has&#160;been&#160;sent.</text><text class="terminal-4142805414-r1" x="1073.6" y="44.4" textLength="12.2" clip-path="url(#terminal-4142805414-line-1)">
+    <g class="terminal-745619694-matrix">
+    <text class="terminal-745619694-r1" x="0" y="20" textLength="646.6" clip-path="url(#terminal-745619694-line-0)">$&#160;dds&#160;project&#160;status&#160;release&#160;--project&#160;&quot;&lt;Project&#160;ID&gt;&quot;</text><text class="terminal-745619694-r1" x="1073.6" y="20" textLength="12.2" clip-path="url(#terminal-745619694-line-0)">
+</text><text class="terminal-745619694-r1" x="0" y="44.4" textLength="1073.6" clip-path="url(#terminal-745619694-line-1)">Project&#160;someunit00002&#160;updated&#160;to&#160;status&#160;Available.&#160;An&#160;e-mail&#160;notification&#160;has&#160;been&#160;sent.</text><text class="terminal-745619694-r1" x="1073.6" y="44.4" textLength="12.2" clip-path="url(#terminal-745619694-line-1)">
 </text>
     </g>
     </g>

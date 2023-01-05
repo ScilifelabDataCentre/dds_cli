@@ -45,10 +45,10 @@ _"Breaking": The change will cause existing functionality to not work as expecte
 
 - [ ] Blocking PRs have been merged
 - [ ] Rebase / update of branch done
-- [ ] PR to `master` branch (Product Owner / Scrum Master): Follow [the release instructions](../docs/procedures/new_release.md)
-  - [ ] The [version](../dds_cli/version.py) is updated
-    - [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
-      - [ ] I have made the corresponding changes to the API version
+- [ ] PR to `master` branch (Product Owner / Scrum Master)
+  - [ ] I have followed steps 1-5 in [the release instructions](../docs/procedures/new_release.md)
+  - [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
+  - [ ] I have made the corresponding changes to the API version
 
 ## Checks
 

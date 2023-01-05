@@ -9,15 +9,18 @@
     <title>Installation guide &#8212; Data Delivery System  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
-    <link rel="next" title="dds" href="../main/" />
-    <link rel="prev" title="Welcome to the Data Delivery Systems’ Documentation!" href="../" />
+    <link rel="next" title="Examples" href="../examples/" />
+    <link rel="prev" title="DDS: Data Delivery System" href="../" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -36,25 +39,29 @@
             
   <section id="installation-guide">
 <h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this headline">¶</a></h1>
-<p>Independent on operating system (OS), we recommend installing the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> from <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPi</a>. However, you can also install it via the executables, located in the latest release on <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest">GitHub</a>.</p>
+<p>You can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> in two different ways:</p>
+<ul class="simple">
+<li><p>From <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPi</a>. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax.</p></li>
+<li><p>Via executables. These are located in the latest release on <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest">GitHub</a>.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The executables are only available for Ubuntu, MacOS and Windows.</p>
+<p>If you want to request an executable for another OS, please contact us at <a class="reference external" href="mailto:delivery&#37;&#52;&#48;scilifelab&#46;se">delivery<span>&#64;</span>scilifelab<span>&#46;</span>se</a>. Start the subject line with “Feature Request”.</p>
+</div>
+<p>The following sections describe the installation process on <a class="reference internal" href="#mac-linux"><span class="std std-ref">MacOS / Linux</span></a> and <a class="reference internal" href="#windows"><span class="std std-ref">Windows</span></a>, and how to load <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> on <a class="reference internal" href="#uppmax"><span class="std std-ref">Uppmax</span></a>.</p>
 <section id="macos-linux">
 <span id="mac-linux"></span><h2>MacOS / Linux<a class="headerlink" href="#macos-linux" title="Permalink to this headline">¶</a></h2>
-<p>You can either install the DDS CLI using pip (<a class="reference external" href="https://pypi.org/project/dds-cli/">https://pypi.org/project/dds-cli/</a>) or with an executable.</p>
-<section id="id1">
-<h3>PyPi<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>As mentioned above, you can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> from PyPi or via an executable.</p>
+<section id="install-from-pypi">
+<span id="pypi-unix"></span><h3>Install from <strong>PyPi</strong><a class="headerlink" href="#install-from-pypi" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
 <li><p>To perform these steps you need to have Python version 3.7 or higher installed.</p>
 <ul>
-<li><p>To install Python, please first run</p>
+<li><p>First check which Python version you have</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">--</span><span class="n">version</span>
-</pre></div>
-</div>
-<p>It’s possible that this shows <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">2.7</span></code>, in which case you should run</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">--</span><span class="n">version</span>
-</pre></div>
-</div>
-<p>If this does not return <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3.7.x</span></code> or higher, you will need to <a class="reference external" href="https://www.python.org/downloads/">install Python</a>.</p>
+<div><img alt="../_images/python-version.svg" src="../_images/python-version.svg" /><p>If this displays <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">2.7</span></code>, run <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">--version</span></code> instead.</p>
+<img alt="../_images/python3-version.svg" src="../_images/python3-version.svg" /><p>If this does not return <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3.7.x</span></code> or higher, you will need to <a class="reference external" href="https://www.python.org/downloads/">install Python</a>.</p>
 </div></blockquote>
 </li>
 </ul>
@@ -65,11 +72,11 @@
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">pip</span>
 </pre></div>
 </div>
-</div></blockquote>
+<img alt="../_images/pip-upgrade.svg" src="../_images/pip-upgrade.svg" /></div></blockquote>
 </div>
 </li>
-<li><p>The DDS CLI is available on <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPi</a>. To install the DDS CLI, open the terminal and run</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install dds-cli
+<li><p>The DDS CLI is available on <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPi</a>. To install the DDS CLI, run this command in the terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install --upgrade dds-cli
 </pre></div>
 </div>
 </li>
@@ -77,106 +84,142 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds --version
 </pre></div>
 </div>
-<p>This should display something like this</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Data Delivery System, version <span class="m">1</span>.0.0
-</pre></div>
-</div>
-<p>If the version does not say the same as what is displayed on PyPi, run the following command and try again.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install --upgrade dds-cli
-</pre></div>
-</div>
-</li>
+<p>The output should be the following:</p>
+<img alt="../_images/dds-version.svg" src="../_images/dds-version.svg" /></li>
 </ol>
 </section>
-<section id="executable">
-<h3>Executable<a class="headerlink" href="#executable" title="Permalink to this headline">¶</a></h3>
+<section id="install-via-the-executable">
+<span id="exec-unix"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#install-via-the-executable" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
 <li><p>Download the executable from the GitHub release page:</p>
 <ul class="simple">
-<li><p>for Linux: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64">https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64</a></p></li>
-<li><p>for MacOS: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64">https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64</a></p></li>
+<li><p>Executable for Linux: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64">Download Linux Executable</a></p></li>
+<li><p>Executable for MacOS: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64">Download MacOS Executable</a></p></li>
 </ul>
 </li>
 <li><p>Open the terminal, go to the directory where the downloaded file is located, and make the file executable by running the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ chmod +x dds-cli_ubuntu_x86_64
+<ul>
+<li><p>On Linux:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ chmod +x dds-cli_ubuntu_x86_64
 </pre></div>
 </div>
-<p>or</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ chmod +x dds-cli_macos_x86_64
-</pre></div>
-</div>
+</div></blockquote>
 </li>
-<li><p>You should now be able to run the dds with the following command</p>
+<li><p>On MacOS:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ chmod +x dds-cli_macos_x86_64
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+</li>
+<li><p>Test that the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> command works by running the following:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./&lt;name-of-executable-file&gt;
-
-Example:
-$ ./dds_cli_macos_x86_64
 </pre></div>
 </div>
+<p><strong>Example:</strong></p>
+<img alt="../_images/mac-executable-help.svg" src="../_images/mac-executable-help.svg" /><div class="admonition-information-to-macos-users admonition">
+<p class="admonition-title">Information to MacOS users</p>
 <p>On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: <a class="reference external" href="https://support.apple.com/en-us/HT202491">https://support.apple.com/en-us/HT202491</a> and <a class="reference external" href="https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac">https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac</a></p>
-</li>
-<li><p>Now test that the CLI has been installed correctly by verifying the version:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./dds_cli_macos_x86_64 --version
-</pre></div>
 </div>
 </li>
-<li><p>All sub-commands and options according to the documentation instructions, are run by specifying the executable name instead of <code class="docutils literal notranslate"><span class="pre">dds</span></code>. Here are a couple of examples:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./dds_cli_macos_x86_64 ls
-$ ./dds_cli_macos_x86_64 ls -p my_project
-$ ./dds_cli_macos_x86_64 auth login
+<li><p>When reading through the rest of the documentation and running the commands, replace <code class="docutils literal notranslate"><span class="pre">dds</span></code> with the path to the executable. For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./dds_cli_macos_x86_64 auth login
 $ ./dds_cli_macos_x86_64 user info
+$ ./dds_cli_macos_x86_64 ls
 ...
 </pre></div>
 </div>
 </li>
 </ol>
-<p>—</p>
 </section>
 </section>
 <section id="windows">
-<span id="id3"></span><h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
-<section id="id4">
-<h3>PyPi<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<span id="id2"></span><h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
+<section id="pypi-windows">
+<span id="id3"></span><h3>Install from <strong>PyPi</strong><a class="headerlink" href="#pypi-windows" title="Permalink to this headline">¶</a></h3>
 <p>Detailed instructions on how install the DDS CLI on Windows <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md">here</a>.</p>
 </section>
-<section id="id5">
-<h3>Executable<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<section id="exec-windows">
+<span id="id4"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#exec-windows" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
-<li><p>Download the executable from the GitHub release page: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe">https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe</a></p></li>
-<li><p>Open the Powershell (Start -&gt; Search “Powershell” -&gt; Click) or terminal (Powershell recommended)</p></li>
-<li><p>Drag the executable into the Powershell window and press enter. This should result in the help text being displayed. You may need to change the permissions regarding executables and allow your laptop to trust the software.</p></li>
-<li><p>To run the dds command, you need to specify the executable path and name instead of <code class="docutils literal notranslate"><span class="pre">dds</span></code>. If you press the up arrow you will see the previous command which will reveal the exact path on you computer.</p></li>
+<li><p>Download the executable from the GitHub release page: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe">Download</a></p></li>
+<li><p>Open the Powershell</p></li>
 </ol>
-<p>—</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Click on <code class="docutils literal notranslate"><span class="pre">Start</span></code> (Windows symbol in corner)</p></li>
+<li><p>Type “Powershell” or “Command Prompt” (<strong>Powershell</strong> recommended)</p></li>
+<li><p>Click on the Powershell or Command Prompt symbol</p></li>
+</ol>
+</div></blockquote>
+<ol class="arabic" start="3">
+<li><p>Open the file explorer and navigate to the location of the downloaded executable.</p></li>
+<li><p>Drag the executable into the Powershell/Command Prompt window and press enter. This should result in the help text being displayed.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You may need to change the permissions regarding executables and allow your laptop to trust the software.</p>
+</div>
+</li>
+<li><p>When reading through the rest of the documentation and running the commands, replace <code class="docutils literal notranslate"><span class="pre">dds</span></code> with the path to the executable. If you press the up arrow you will see the previous command which will reveal the exact path on you computer.</p></li>
+</ol>
 </section>
 </section>
 <section id="uppmax">
-<span id="id6"></span><h2>Uppmax<a class="headerlink" href="#uppmax" title="Permalink to this headline">¶</a></h2>
+<span id="id5"></span><h2>Uppmax<a class="headerlink" href="#uppmax" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package is a global module on Uppmax; No installation required. However, there are a few steps you need to perform prior to using it. These steps differ between Rackham and Bianca.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When there is a new version of <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code>, Uppmax upgrades the version automatically the following day.</p>
+</div>
 <section id="rackham">
-<h3>Rackham<a class="headerlink" href="#rackham" title="Permalink to this headline">¶</a></h3>
+<span id="id6"></span><h3>Rackham<a class="headerlink" href="#rackham" title="Permalink to this headline">¶</a></h3>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Do not deliver sensitive data to Rackham.</p>
 </div>
-<p>The DDS CLI will be made a global module at Uppmax and you will be able to load it after having <a class="reference external" href="ssh:ed">ssh:ed</a> into Rackham. Until it is a module though, you can install the CLI with PyPi as in the previous sections.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install dds-cli
+<ol class="arabic">
+<li><p>SSH into Rackham</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">-</span><span class="n">AX</span> <span class="o">&lt;</span><span class="n">username</span><span class="o">&gt;</span><span class="nd">@rackham</span><span class="o">.</span><span class="n">uppmax</span><span class="o">.</span><span class="n">uu</span><span class="o">.</span><span class="n">se</span>
 </pre></div>
 </div>
+</li>
+<li><p>Load the <code class="docutils literal notranslate"><span class="pre">bioinfo-tools</span></code> module and <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ml</span> <span class="n">bioinfo</span><span class="o">-</span><span class="n">tools</span> <span class="n">dds</span><span class="o">-</span><span class="n">cli</span>
+</pre></div>
+</div>
+</li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">--help</span></code>. The output should look like this:</p>
+<img alt="../_images/dds-help-2.svg" src="../_images/dds-help-2.svg" /></li>
+</ol>
+<div class="admonition-rackham-user-guide admonition">
+<p class="admonition-title">Rackham user guide</p>
 <p>A detailed user guide for Rackham can be found here: <a class="reference external" href="https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/">https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/</a></p>
+</div>
 </section>
 <section id="bianca">
-<h3>Bianca<a class="headerlink" href="#bianca" title="Permalink to this headline">¶</a></h3>
-<div class="admonition-to-be-aware-of admonition">
-<p class="admonition-title">To be aware of</p>
+<span id="id7"></span><h3>Bianca<a class="headerlink" href="#bianca" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-terminology-in-this-section admonition">
+<p class="admonition-title">Terminology in this section</p>
 <ul class="simple">
+<li><p><strong>SENS project</strong> / <code class="docutils literal notranslate"><span class="pre">&lt;SENS-project&gt;</span></code>: The active SNIC SENS research project on the Bianca cluster at Uppmax. Not a DDS delivery project.</p></li>
+<li><p><strong>DDS project</strong> / <code class="docutils literal notranslate"><span class="pre">&lt;DDS-project&gt;</span></code>: The active DDS delivery project you want to upload data to / download data from or manage.</p></li>
+</ul>
+</div>
+<div class="admonition-important admonition">
+<p class="admonition-title">Important</p>
+<ul class="simple">
+<li><p>For downloading data to a SENS project on Bianca, you need to connect to a server called Transit, and not to your SENS project cluster.</p></li>
 <li><p>Mount the correct SENS project on transit</p></li>
 <li><p>You need to have enough space on the nobackup storage allocation in the corresponding SENS project. If the data you are trying to download is larger than the allocated space, the download will fail.</p></li>
 <li><p>If your data is larger than a few hundreds of GB: start the download in a screen/tmux session</p></li>
 </ul>
 </div>
 <ol class="arabic">
-<li><p>ssh into transit</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ssh -A &lt;username&gt;-&lt;projid&gt;@bianca.uppmax.uu.se
+<li><p>SSH into transit</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ssh -A &lt;username&gt;@transit.uppmax.uu.se
 </pre></div>
 </div>
 <p>You will get into the home directory.</p>
@@ -185,28 +228,47 @@ $ ./dds_cli_macos_x86_64 user info
 <p>Any files that are created here are not persistent; If you download data from DDS to this directory, your data will be deleted as soon as you exit the session.</p>
 </div>
 </li>
-<li><p>Mount your specific SENS project directory on transit</p></li>
+<li><p>Mount your specific <strong>SENS project</strong> directory on transit</p></li>
 </ol>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>username@transit:~$ mount_wharf &lt;sens_project&gt;
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;username&gt;@transit:~$ mount_wharf &lt;SENS-project&gt;
 </pre></div>
 </div>
 </div></blockquote>
 <ol class="arabic simple" start="3">
-<li><p>Download the data with the DDS CLI</p></li>
+<li><p>Download the data</p></li>
 </ol>
 <blockquote>
 <div><div class="admonition danger">
 <p class="admonition-title">Danger</p>
 <p>You <strong>must use</strong> the <code class="docutils literal notranslate"><span class="pre">--destination</span></code> option. If you do not, the data will end up in your home directory and will be deleted when your ssh session ends.</p>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds data get --destination &lt;sens_project&gt;/&lt;destination&gt;/
+<p>Either specify a file or directory with <code class="docutils literal notranslate"><span class="pre">--source</span></code>, or download the full project contents with <code class="docutils literal notranslate"><span class="pre">--get-all</span></code>.</p>
+<p><strong>Examples:</strong></p>
+<ul>
+<li><p>Download everything in DDS project:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds data get --project &lt;DDS-project&gt; --get-all --destination &lt;SENS-project&gt;/&lt;directory&gt;/
 </pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Download one or more files or directories:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds data get --project &lt;DDS-project&gt; --source &lt;file or directory <span class="k">in</span> DDS project&gt; --destination &lt;SENS-project&gt;/&lt;directory&gt;/
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;directory&gt;</span></code> should be a non-existent directory where you would like your data to be located after download.</p>
 </div>
 <p>The downloaded data ends up in a non-backed up storage on Bianca.</p>
 </div></blockquote>
-<div class="admonition-links admonition">
-<p class="admonition-title">Links</p>
+<div class="admonition-bianca-and-transit-user-guides admonition">
+<p class="admonition-title">Bianca- and Transit user guides</p>
 <ul class="simple">
 <li><p>Bianca user guide: <a class="reference external" href="https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/">https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/</a></p></li>
 <li><p>Transit user guide: <a class="reference external" href="https://www.uppmax.uu.se/support/user-guides/transit-user-guide/">https://www.uppmax.uu.se/support/user-guides/transit-user-guide/</a></p></li>
@@ -232,6 +294,8 @@ $ ./dds_cli_macos_x86_64 user info
 
 
 
+<p class="blurb">Version: 2.2.5</p>
+
 
 
 
@@ -246,8 +310,10 @@ $ ./dds_cli_macos_x86_64 user info
 
 <h3>Navigation</h3>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../main/">dds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../main/">dds (Main command)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../auth/">dds auth</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/">dds user</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../project/">dds project</a></li>
@@ -260,8 +326,8 @@ $ ./dds_cli_macos_x86_64 user info
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../">Documentation overview</a><ul>
-      <li>Previous: <a href="../" title="previous chapter">Welcome to the Data Delivery Systems’ Documentation!</a></li>
-      <li>Next: <a href="../main/" title="next chapter">dds</a></li>
+      <li>Previous: <a href="../" title="previous chapter">DDS: Data Delivery System</a></li>
+      <li>Next: <a href="../examples/" title="next chapter">Examples</a></li>
   </ul></li>
 </ul>
 </div>

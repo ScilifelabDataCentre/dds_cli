@@ -9,11 +9,14 @@
     <title>dds data &#8212; Data Delivery System  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
     <link rel="next" title="dds ls" href="../ls/" />
@@ -300,8 +303,7 @@ reauthenticating yourself before uploading data.</p>
 </section>
 <section id="dds-data-rm">
 <h2>rm<a class="headerlink" href="#dds-data-rm" title="Permalink to this headline">¶</a></h2>
-<p>Delete data within a specific project.</p>
-<p>Limited to Unit Admins and Personnel.</p>
+<p>[Unit Admins and Personnel only] Delete data within a specific project.</p>
 <p>Project data can only be deleted if the project has the status ‘In Progress’ and it has never
 had the status ‘Available’.</p>
 <p>This command should be used with caution; once the data is deleted there is no getting it back.</p>
@@ -352,6 +354,8 @@ had the status ‘Available’.</p>
 
 
 
+<p class="blurb">Version: 2.2.5</p>
+
 
 
 
@@ -366,8 +370,10 @@ had the status ‘Available’.</p>
 
 <h3>Navigation</h3>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../main/">dds</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../main/">dds (Main command)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../auth/">dds auth</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user/">dds user</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../project/">dds project</a></li>

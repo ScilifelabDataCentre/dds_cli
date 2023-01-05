@@ -216,7 +216,9 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 - Bug: Switch from using `os.path` to `pathlib` in order to facilitate cross-OS uploads-/downloads- and listing operations ([#573](https://github.com/ScilifelabDataCentre/dds_cli/pull/573))
 
-# Sprint (2022-12-09 - 2022-12-23)
+# Sprint (2022-12-09 - 2023-01-06) - Longer sprint due to Christmas
 
 - Dependency: Bump `jwcrypto` due to CVE-2022-3102 ([#557](https://github.com/ScilifelabDataCentre/dds_cli/pull/577))
 - New command: `dds project info change [OPTIONS]` to change project information ([#575](https://github.com/ScilifelabDataCentre/dds_cli/pull/575))
+- Documentation: Structure changes and examples ([#585](https://github.com/ScilifelabDataCentre/dds_cli/pull/585))
+- Workflow: Python-setup action v1 bumped to v2 ([#588](https://github.com/ScilifelabDataCentre/dds_cli/pull/588))

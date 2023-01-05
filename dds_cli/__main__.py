@@ -1,4 +1,4 @@
-"""CLI for the Data Delivery System."""
+"""Command line interface for the Data Delivery System."""
 
 ####################################################################################################
 # IMPORTS ################################################################################ IMPORTS #
@@ -339,10 +339,10 @@ def list_projects_and_contents(
 @dds_main.group(name="auth", no_args_is_help=True)
 @click.pass_obj
 def auth_group_command(_):
-    """Group command for creating and managing authenticated sessions.
+    """Group command for creating and managing authenticated sessions (valid for 7 days).
 
     Authenticate yourself once and run multiple commands within a certain amount of time
-    (currently 7 days) without specifying your user credentials.
+    without specifying your user credentials.
     If you do not authenticate yourself and start a new session, you will need to provide your
     DDS username when running the other commands.
 
@@ -360,15 +360,20 @@ def auth_group_command(_):
 @click.option(
     "--totp",
     type=str,
+    metavar="one-time code",
     default=None,
-    help="2FA authentication via authentication app. Default is to use one-time authentication code via mail.",
+    help=(
+        "One-time code from Authenticator app. Can only be used if the two factor authentication "
+        "method has been configured to 'Authenticator App'. Keep in mind that authentication must "
+        "take less than 30 seconds for this option to work."
+    ),
 )
 @click.option(
     "--allow-group",
     is_flag=True,
     required=False,
     default=False,
-    help="[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600.",
+    help="[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600, allowing others to access your authenticated session token.",
 )
 @click.pass_obj
 def login(click_ctx, totp, allow_group):
@@ -485,15 +490,10 @@ def configure():
 
 # -- dds auth twofactor configure -- #
 @twofactor_group_command.command(name="deactivate")
-@username_option(
-    required=True, help_message="Super Admins only: The user you wish to deactivate TOTP for."
-)
+@username_option(required=True, help_message="The user you wish to deactivate TOTP for.")
 @click.pass_obj
 def deactivate(click_ctx, username):
-    """Deactivate another users TOTP.
-
-    Only usable by Super Admins.
-    """
+    """[Super Admins only] Deactivate another users TOTP."""
     try:
         with dds_cli.auth.Auth(
             token_path=click_ctx.get("TOKEN_PATH"), force_renew_token=False
@@ -529,7 +529,7 @@ def user_group_command(_):
     "-u",
     required=False,
     type=str,
-    help="Super Admins only: The unit which you wish to list the users in.",
+    help="[Super Admins only] The unit which you wish to list the users in.",
 )
 @click.option(
     "--invites", required=False, is_flag=True, default=False, help="List all current invitations."
@@ -572,7 +572,7 @@ def list_users(click_ctx, unit, invites):
 # TODO: Move this to dds unit?
 @user_group_command.command(name="find")
 @username_option(
-    required=True, help_message="Super Admins only: The username of the account you want to check."
+    required=True, help_message="[Super Admins only] The username of the account you want to check."
 )
 @click.pass_obj
 def list_users(click_ctx, username):
@@ -619,7 +619,7 @@ def list_users(click_ctx, username):
 @click.option(
     "--unit",
     required=False,
-    help="Super Admins only: To specify which unit the user should belong to.",
+    help="[Super Admins only]  To specify which unit the user should belong to.",
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
@@ -799,7 +799,7 @@ def activate_user(click_ctx, email):
     """Activate/Reactivate user accounts.
 
     \b
-    Usable only by Super Admins and Unit Admins.
+    [Super Admins and Unit Admins only]
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
@@ -839,7 +839,7 @@ def deactivate_user(click_ctx, email):
     """Deactivate user accounts in the Data Delivery System.
 
     \b
-    Usable only by Super Admins and Unit Admins.
+    [Super Admins and Unit Admins only]
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
@@ -974,7 +974,7 @@ def create(
 ):
     """Create a project within the DDS.
 
-    Only usable by Unit Admins / Personnel.
+    [Unit Admins and Unit Personnel only]
 
     To give new or existing users access to the new project, specify their emails with
     `--researcher` or `--owner`. Both of these will give the user the role Researcher, but `--owner`
@@ -1242,10 +1242,9 @@ def delete_project(click_ctx, project: str):
 @click.option("--show", required=False, show_default=True, is_flag=True, help="Show busy projects")
 @click.pass_obj
 def get_busy_projects(click_ctx, show):
-    """Returns the number of busy projects.
+    """[Super Admins only] Returns the number of busy projects.
 
     Use `--show` to see a list of all busy projects.
-    Available to Super Admin only
     """
 
     try:
@@ -1838,9 +1837,7 @@ def list_data(ctx, project, folder, json, size, tree, users):
 )
 @click.pass_obj
 def rm_data(click_ctx, project, file, folder, rm_all):
-    """Delete data within a specific project.
-
-    Limited to Unit Admins and Personnel.
+    """[Unit Admins and Personnel only] Delete data within a specific project.
 
     Project data can only be deleted if the project has the status 'In Progress' and it has never
     had the status 'Available'.
@@ -1910,10 +1907,7 @@ def rm_data(click_ctx, project, file, folder, rm_all):
 @dds_main.group(name="unit", no_args_is_help=True)
 @click.pass_obj
 def unit_group_command(_):
-    """Group command for managing units.
-
-    Limited to Super Admins.
-    """
+    """[Super Admins only] Group command for managing units."""
 
 
 # ************************************************************************************************ #
@@ -1954,10 +1948,7 @@ def list_units(click_ctx):
 @dds_main.group(name="motd", no_args_is_help=True)
 @click.pass_obj
 def motd_group_command(_):
-    """Group command for managing Message of the Day within DDS.
-
-    Limited to Super Admins.
-    """
+    """[Super Admins only] Group command for managing Message of the Day within DDS."""
 
 
 # ************************************************************************************************ #
@@ -1970,8 +1961,6 @@ def motd_group_command(_):
 @click.pass_obj
 def add_new_motd(click_ctx, message):
     """Add a new Message Of The Day.
-
-    Only usable by Super Admins.
 
     [MESSAGE] is the MOTD that you wish do display to the DDS users.
     """
@@ -1996,9 +1985,7 @@ def add_new_motd(click_ctx, message):
 @motd_group_command.command(name="ls", no_args_is_help=False)
 @click.pass_obj
 def list_active_motds(click_ctx):
-    """List all active MOTDs.
-    Only usable by Super Admins.
-    """
+    """List all active MOTDs."""
     try:
         with dds_cli.motd_manager.MotdManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -2020,9 +2007,7 @@ def list_active_motds(click_ctx):
 @click.argument("motd_id", metavar="[MOTD_ID]", nargs=1, type=int, required=True)
 @click.pass_obj
 def deactivate_motd(click_ctx, motd_id):
-    """Deactivate Message Of The Day.
-    Only usable by Super Admins.
-    """
+    """[Super Admins only] Deactivate Message Of The Day."""
     try:
         with dds_cli.motd_manager.MotdManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -2044,10 +2029,7 @@ def deactivate_motd(click_ctx, motd_id):
 @click.argument("motd_id", metavar="[MOTD_ID]", nargs=1, type=int, required=True)
 @click.pass_obj
 def send_motd(click_ctx, motd_id):
-    """Send motd as email to all users.
-
-    Super Admins only.
-    """
+    """Send motd as email to all users."""
     try:
         with dds_cli.motd_manager.MotdManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
@@ -2077,10 +2059,7 @@ def send_motd(click_ctx, motd_id):
 )
 @click.pass_obj
 def set_maintenance_mode(click_ctx, setting):
-    """Activate / Deactivate Maintenance mode.
-
-    Only usable by Super Admins.
-    """
+    """[Super Admins only] Activate / Deactivate Maintenance mode."""
     try:
         with dds_cli.maintenance_manager.MaintenanceManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),

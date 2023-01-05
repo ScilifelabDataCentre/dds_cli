@@ -1,11 +1,14 @@
-> **Before submitting the PR, please go through the sections below and fill in what you can. If there are any items that are irrelevant for the current PR, remove the row. If a relevant option is missing, please add it as an item and add a PR comment informing that the new option should be included into this template.**
-
+> **Before submitting the PR**
+>
+> - Fill in and tick fields
+> - _Remove all rows_ that are not relevant for the current PR
+>   - Revelant option missing? Add it as an item and add a PR comment informing that the new option should be included into this template.
+>
 > **All _relevant_ items should be ticked before the PR is merged**
 
 # Description
 
 - [ ] Summary of the changes and the related issue:
-- [ ] Motivation and context regarding why the change is needed:
 - [ ] List / description of any dependencies or other changes required for this change:
 - Fixes an issue in GitHub / Jira:
   - [ ] Yes: _[link to GitHub issue / Jira task ID]_

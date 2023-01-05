@@ -140,9 +140,10 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         info = response.get("info")
         if info:
             LOG.info(
-                f"User Name: {info['username']} \nRole: {info['role']} \
-                \nName: {info['name']} \
-                \nPrimary Email: {info['email_primary']} \
+                f"Username:          {info['username']} \
+                \nRole:              {info['role']} \
+                \nName:              {info['name']} \
+                \nPrimary Email:     {info['email_primary']} \
                 \nAssociated Emails: {', '.join(str(x) for x in info['emails_all'])}"
             )
 

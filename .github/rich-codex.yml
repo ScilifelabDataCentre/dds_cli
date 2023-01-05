@@ -1,0 +1,133 @@
+# Rich-codex automatically searches for this file name in this location, and uses the commands to produce the examples.
+timeout: 300
+outputs:
+  - command: python --version
+    img_paths:
+      - img/python-version.svg
+  - command: python3 --version
+    img_paths:
+      - img/python3-version.svg
+  - command: echo 'Successfully installed pip-22.3.1'
+    fake_command: python3 -m pip install --upgrade pip
+    img_paths:
+      - img/pip-upgrade.svg
+  - command: dds --version
+    tail: 1
+    img_paths:
+      - img/dds-version.svg
+  - command: dds
+    head: 6
+    tail: 29
+    img_paths:
+      - img/dds-help-1.svg
+  - command: dds --help
+    head: 6
+    tail: 29
+    img_paths:
+      - img/dds-help-2.svg
+  - command: dds auth
+    tail: 19
+    img_paths:
+      - img/dds-auth.svg
+  - command: |
+      export START_ITALIC="\e[3m"
+      export END_ITALIC="\e[0m"
+      echo "INFO     Attempting to create the session token"
+      echo "DDS username: ${START_ITALIC}<fill in your username>${END_ITALIC}"
+      echo "DDS password: ${START_ITALIC}<fill in your password (will not be visible)>${END_ITALIC}"
+      echo "INFO     Please enter the one-time authentication code sent to your email address (leave empty to exit):"                                                                
+      echo "Authentication one-time code: ${START_ITALIC}<fill in one-time code>${END_ITALIC}"
+    fake_command: dds auth login
+    img_paths:
+      - img/dds-auth-login.svg
+  - command: |
+      echo "INFO     Starting configuration of one-time authentication code method."
+      echo "? Which method would you like to use? (Use arrow keys)"
+      echo "> Email"
+      echo "  Authenticator App"
+      echo "  Cancel"
+    fake_command: dds auth twofactor configure
+    img_paths:
+      - img/dds-auth-twofactor-configure.svg
+  - command: dds auth logout
+    tail: 1
+    img_paths:
+      - img/dds-auth-logout.svg
+  - command: dds user
+    tail: 18
+    img_paths:
+      - img/dds-user.svg
+  - command: |
+      echo "Current user: <username>"
+      echo "INFO    Username:          <username>"
+      echo "        Role:              <role> e.g. Researcher"
+      echo "        Name:              <First name> <Last name>"
+      echo "        Primary Email:     <someemail>@<somedomain>.com"
+      echo "        Associated Emails: <someemail>@<somedomain>.com"
+    fake_command: dds user info
+    img_paths:
+      - img/dds-user-info.svg
+  - command: dds project
+    tail: 16
+    img_paths:
+      - img/dds-project.svg
+  - command: |
+      echo "Project created with id: <Project ID>"
+    fake_command: dds project create --title "<Project Title>" --description "<Project Description>" --principal-investigator "<Email to PI>"
+    img_paths:
+      - img/dds-project-create.svg
+  - command: |
+      echo "Project someunit00002 updated to status Available. An e-mail notification has been sent."
+    fake_command: dds project status release --project "<Project ID>"
+    img_paths:
+      - img/dds-project-status-release.svg
+  - command: dds project status --help
+    tail: 19
+    img_paths:
+      - img/dds-project-status-help.svg
+  - command: dds data
+    tail: 15
+    img_paths:
+      - img/dds-data.svg
+  - command: dds data get --help
+    tail: 39
+    img_paths:
+      - img/dds-data-get.svg
+  - command: dds data put --help
+    tail: 40
+    img_paths:
+      - img/dds-data-put.svg
+  - command: |
+      echo "INFO     Listing files for project '<Project ID>'"                                                       
+      echo ""
+      echo "Files / directories in project: <Project ID>"
+      echo "└── example_directory/"
+      echo ""                                                                                                
+      echo "INFO     Would you like to view files within a directory? Leave blank to exit."                           
+      echo "? Folder:"
+    fake_command: dds data ls --project "<Project ID>"
+    img_paths:
+      - img/dds-data-ls.svg
+  - command: |
+      echo "Files & directories in project: <Project ID>"
+      echo "├── example_directory_1/"
+      echo "│   └── sub_directory_1/"
+      echo "│       └── example_file_1.txt"
+      echo "└── example_directory_2/"
+      echo "    ├── example_file_2.txt"
+      echo "    ├── sub_directory_2/"
+      echo "    │   ├── example_file_3.txt"
+      echo "    │   └── example_file_4.txt"
+      echo "    └── example_file_5.txt"
+    fake_command: dds data ls --project "<Project ID>" --tree
+    img_paths:
+      - img/dds-data-ls-tree.svg
+  - snippet: |
+      Files & directories in project: <Project ID>
+      └── <destination>/
+          ├── <directory>/
+          │   ├── directory_content_1.txt
+          │   └── directory_content_2.txt
+          └── <file>
+    img_paths:
+      - img/dds-data-ls-destination.svg

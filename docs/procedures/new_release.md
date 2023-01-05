@@ -2,9 +2,13 @@
 
 1. Fork a new branch from `dev`
 2. Update the version in [`version.py`](../../dds_cli/version.py)
+
    - _Minor changes, e.g. bug fix_: Minor version upgrade, e.g. `1.0.1 --> 1.0.2`
    - _Small changes, e.g. new feature_: Mid version upgrade, e.g. `1.1.0 --> 1.2.0`
    - _Breaking changes or large new feature(s)_: Major version upgrade, e.g. `1.0.0 --> 2.0.0`
+
+     > Will break if Web / API version not bumped as well
+
 3. Push version change to branch
 4. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose your current branch where it says "Run workflow"
    - `rich-codex` will push changes to your branch; these commits _will not be signed_

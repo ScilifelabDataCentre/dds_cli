@@ -222,3 +222,7 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - New command: `dds project info change [OPTIONS]` to change project information ([#575](https://github.com/ScilifelabDataCentre/dds_cli/pull/575))
 - Documentation: Structure changes and examples ([#585](https://github.com/ScilifelabDataCentre/dds_cli/pull/585))
 - Workflow: Python-setup action v1 bumped to v2 ([#588](https://github.com/ScilifelabDataCentre/dds_cli/pull/588))
+
+# Sprint (2023-01-09 - 2023-01-20)
+
+- Workflow: Scan with Trivy on PR and schedule ([#591](https://github.com/ScilifelabDataCentre/dds_cli/pull/591))

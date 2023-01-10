@@ -1,6 +1,6 @@
 name: Publish CLI to TestPyPi
 on:
-  push: 
+  push:
     branches: [dev, master]
   pull_request:
     branches: [dev]

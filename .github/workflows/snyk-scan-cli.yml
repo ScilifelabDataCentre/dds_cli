@@ -1,0 +1,45 @@
+# Snyk IaC:
+# A sample workflow which checks out your Infrastructure as Code Configuration files,
+# such as Kubernetes, Helm & Terraform and scans them for any security issues.
+# The results are then uploaded to GitHub Security Code Scanning
+#
+# For more examples, including how to limit scans to only high-severity issues
+# and fail PR checks, see https://github.com/snyk/actions/
+# -----------------------------------------------------------
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# ------------------------------------------------------------
+name: Snyk IaC
+
+on:
+  push:
+    branches: ["dev", master]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: ["dev"]
+  schedule:
+    - cron: "0 7,13 * * *"
+
+jobs:
+  snyk:
+    permissions:
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/python@master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: code test
+          args: --sarif-file-output=snyk.sarif
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: snyk.sarif
+          category: snyk

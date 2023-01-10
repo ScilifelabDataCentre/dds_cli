@@ -57,3 +57,8 @@ _"Breaking": The change will cause existing functionality to not work as expecte
 - Tests
   - [ ] I have added tests for the new code
   - [ ] The tests pass
+- Trivy:
+  - [ ] There are no new security alerts
+  - [ ] This PR fixes new security alerts
+  - [ ] Security alerts have been dismissed
+  - [ ] PR will be merged with new security alerts; This is why: _Please add a short description here_

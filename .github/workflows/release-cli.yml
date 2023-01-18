@@ -1,3 +1,8 @@
+# Release new CLI version
+# When a new release is made, this action will be run.
+# The action builds the CLI and publishes to PyPi,
+# and generates the executables for Windows, MacOS and Ubuntu.
+# It also builds the documentation and generates a PDF version of it.
 name: Release actions for the CLI
 on:
   release:

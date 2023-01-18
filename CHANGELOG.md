@@ -226,4 +226,5 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 # Sprint (2023-01-09 - 2023-01-20)
 
 - Workflow: Scan with Trivy on PR and schedule ([#591](https://github.com/ScilifelabDataCentre/dds_cli/pull/591))
+- Workflow: Publish to TestPyPi on PR and release ([#592](https://github.com/ScilifelabDataCentre/dds_cli/pull/592))
 - Workflow: Scan with Snyk on PR and schedule ([#593](https://github.com/ScilifelabDataCentre/dds_cli/pull/593))

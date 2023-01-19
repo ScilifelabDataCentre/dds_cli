@@ -12,6 +12,7 @@
 #
 import os
 import sys
+from dds_cli.version import __version__
 
 sys.path.insert(0, os.path.abspath(".."))
 
@@ -21,7 +22,6 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "Data Delivery System"
 copyright = "2021-2022, SciLifeLab Data Centre"
 author = "SciLifeLab Data Centre"
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -33,6 +33,7 @@ extensions = [
     "sphinx_click.ext",
     "sphinx.ext.duration",
     "sphinx.ext.autosummary",
+    "sphinx_copybutton",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -52,10 +53,12 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 html_theme = "alabaster"
 html_theme_options = {
     "logo": "SciLifeLab_symbol_green.svg",
+    "description": f"Version: {__version__}",
     "github_user": "scilifelabdatacentre",
     "github_repo": "dds_cli",
     "github_type": "star",
     "badge_branch": "master",
+    "page_width": "1100px",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

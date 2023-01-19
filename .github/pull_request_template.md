@@ -1,11 +1,14 @@
-> **Before submitting the PR, please go through the sections below and fill in what you can. If there are any items that are irrelevant for the current PR, remove the row. If a relevant option is missing, please add it as an item and add a PR comment informing that the new option should be included into this template.**
-
+> **Before submitting the PR**
+>
+> - Fill in and tick fields
+> - _Remove all rows_ that are not relevant for the current PR
+>   - Revelant option missing? Add it as an item and add a PR comment informing that the new option should be included into this template.
+>
 > **All _relevant_ items should be ticked before the PR is merged**
 
 # Description
 
 - [ ] Summary of the changes and the related issue:
-- [ ] Motivation and context regarding why the change is needed:
 - [ ] List / description of any dependencies or other changes required for this change:
 - Fixes an issue in GitHub / Jira:
   - [ ] Yes: _[link to GitHub issue / Jira task ID]_
@@ -43,9 +46,9 @@ _"Breaking": The change will cause existing functionality to not work as expecte
 - [ ] Blocking PRs have been merged
 - [ ] Rebase / update of branch done
 - [ ] PR to `master` branch (Product Owner / Scrum Master)
-  - [ ] The [version](../dds_cli/version.py) is updated
-    - [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
-      - [ ] I have made the corresponding changes to the API version
+  - [ ] I have followed steps 1-5 in [the release instructions](../docs/procedures/new_release.md)
+  - [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
+  - [ ] I have made the corresponding changes to the API version
 
 ## Checks
 
@@ -54,3 +57,8 @@ _"Breaking": The change will cause existing functionality to not work as expecte
 - Tests
   - [ ] I have added tests for the new code
   - [ ] The tests pass
+- Trivy:
+  - [ ] There are no new security alerts
+  - [ ] This PR fixes new security alerts
+  - [ ] Security alerts have been dismissed
+  - [ ] PR will be merged with new security alerts; This is why: _Please add a short description here_

@@ -72,12 +72,12 @@
 The `dds-cli` package can be installed from [PyPI](https://pypi.python.org/pypi/dds_cli/) using pip as follows:
 
 ```bash
-pip install dds-cli
+pip install --upgrade dds-cli
 ```
 
-After installing, run `dds` and verify that the output looks like this:
+After installing, run `dds` (or `dds --help`) and verify that the output looks like this:
 
-![`dds`](img/dds-help.svg)
+![dds help command](img/dds-help-1.svg)
 
 ### Executables
 

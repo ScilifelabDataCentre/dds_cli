@@ -1,3 +1,8 @@
+# Release new CLI version
+# When a new release is made, this action will be run.
+# The action builds the CLI and publishes to PyPi,
+# and generates the executables for Windows, MacOS and Ubuntu.
+# It also builds the documentation and generates a PDF version of it.
 name: Release actions for the CLI
 on:
   release:
@@ -25,10 +30,20 @@ jobs:
       - name: Build the distribution
         run: python setup.py sdist bdist_wheel
 
+      - name: Publish dist to TestPyPI
+        if: github.repository == 'ScilifelabDataCentre/dds_cli'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print_hash: true
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
+          skip_existing: true
+
       - name: Publish dist to PyPI
         if: github.repository == 'ScilifelabDataCentre/dds_cli'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          print_hash: true
           user: __token__
           password: ${{ secrets.pypi_password }}
           skip_existing: true

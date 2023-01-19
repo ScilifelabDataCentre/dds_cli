@@ -1,3 +1,8 @@
+# Rich-codex
+# Rich-codex automatically generates "screenshots" / snippets of commands and their output.
+# You can define the commands either in a MD file, but in our case the commands and snippets
+# are defined in the file "../rich-codex.yml", which is automatically searched for by the tool.
+# https://ewels.github.io/rich-codex/
 name: Rich-codex
 on: workflow_dispatch
 jobs:
@@ -24,5 +29,3 @@ jobs:
           skip_git_checks: "true"
           commit_changes: "true"
           clean_img_paths: docs/img/*.svg
-          head: 6
-          tail: 29

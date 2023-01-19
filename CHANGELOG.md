@@ -228,3 +228,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Workflow: Scan with Trivy on PR and schedule ([#591](https://github.com/ScilifelabDataCentre/dds_cli/pull/591))
 - Workflow: Publish to TestPyPi on PR and release ([#592](https://github.com/ScilifelabDataCentre/dds_cli/pull/592))
 - Workflow: Scan with Snyk on PR and schedule ([#593](https://github.com/ScilifelabDataCentre/dds_cli/pull/593))
+- Documentation: Important testing instructions and instructions on how to install from TestPyPi ([#597](https://github.com/ScilifelabDataCentre/dds_cli/pull/597))

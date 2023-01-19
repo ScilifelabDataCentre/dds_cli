@@ -1,59 +1,125 @@
-> **Before submitting the PR**
+<!--
+> **Before _submitting_ PR:**
 >
 > - Fill in and tick fields
 > - _Remove all rows_ that are not relevant for the current PR
 >   - Revelant option missing? Add it as an item and add a PR comment informing that the new option should be included into this template.
 >
-> **All _relevant_ items should be ticked before the PR is merged**
+> **Before _merging_ PR:**
+>
+> _Tick all relevant items._
+-->
 
-# Description
+## **1. This PR contains the following changes...**
 
-- [ ] Summary of the changes and the related issue:
-- [ ] List / description of any dependencies or other changes required for this change:
-- Fixes an issue in GitHub / Jira:
-  - [ ] Yes: _[link to GitHub issue / Jira task ID]_
-  - [ ] No
+_Add a summary of the changes and the related issue._
 
-## Type of change
+## **2. The following additional changes are required for this to work**
 
-- [ ] Bug fix
-  - [ ] Breaking: _Describe_
-  - [ ] Non-breaking
-- [ ] Documentation
+_Add information on additional changes required for the PR changes to work, both locally and in the deployments._
+
+> E.g. Does the deployment setup need anything for this to work?
+
+## **3. The PR fixes the following GitHub issue / Jira task**
+
+<!-- Comment out the item which does not apply here.-->
+
+- [ ] GitHub issue (link):
+- [ ] Jira task (ID, `DDS-xxxx`):
+- [ ] The PR does not fix a specific GitHub issue or Jira task
+
+## **4. What _type of change(s)_ does the PR contain?**
+
+<!--
+- "Breaking": The change will cause existing functionality to not work as expected.
+- Workflow: E.g. a new github action or changes to this PR template. Anything that alters our or the codes workflow.
+-->
+
 - [ ] New feature
-  - [ ] Breaking: _Describe_
+  - [ ] Breaking: _Please describe the reason for the break and how we can fix it._
+  - [ ] Non-breaking
+- [ ] Bug fix
+  - [ ] Breaking: _Please describe the reason for the break and how we can fix it._
   - [ ] Non-breaking
 - [ ] Security Alert fix
+- [ ] Documentation
 - [ ] Tests **(only)**
 - [ ] Workflow
 
-_"Breaking": The change will cause existing functionality to not work as expected._
+## **5. Checklist**
 
-# Checklist:
+<!-- Comment out the items which do not apply here.-->
 
-## General
+### **Always**
 
-- [ ] [Changelog](../CHANGELOG.md): New row added. Not needed when PR includes _only_ tests.
-- [ ] Code change
-  - [ ] Self-review of code done
-  - [ ] Comments added, particularly in hard-to-understand areas
-  - Documentation update
-    - [ ] Done
-    - [ ] Not needed
+<!-- Always go through the following items. -->
 
-## Repository / Releases
+- [Changelog](../CHANGELOG.md)
+  - [ ] Added
+  - [ ] Not needed (E.g. PR contains _only_ tests)
+- Rebase / Update / Merge _from_ base branch (the branch from which the current is forked)
+  - [ ] Done
+  - [ ] Not needed
+- Blocking PRs
+  - [ ] Merged
+  - [ ] No blocking PRs
+- PR to `master` branch
+  - [ ] Yes: Go to the section [PR to master](#pr-to-master)
+  - [ ] No
 
-- [ ] Blocking PRs have been merged
-- [ ] Rebase / update of branch done
-- [ ] PR to `master` branch (Product Owner / Scrum Master)
-  - [ ] I have followed steps 1-5 in [the release instructions](../docs/procedures/new_release.md)
-  - [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
-  - [ ] I have made the corresponding changes to the API version
+### If PR consists of **code change(s)**
 
-## Checks
+<!-- If the PR contains code changes, the following need to be checked.-->
 
-- [ ] CodeQL passes
-- [ ] Formatting: Black & Prettier checks pass
-- Tests
-  - [ ] I have added tests for the new code
-  - [ ] The tests pass
+- Self review
+  - [ ] Done
+- Comments, docstrings, etc
+  - [ ] Added / Updated
+- Documentation
+  - [ ] Updated
+  - [ ] Update not needed
+
+### If PR is to **master**
+
+<!-- Is your PR to the master branch? The following items need to be checked off. -->
+
+- [ ] I have followed steps 1-5 in [the release instructions](../docs/procedures/new_release.md)
+- [ ] I am bumping the major version (e.g. 1.x.x to 2.x.x)
+- [ ] I have made the corresponding changes to the web/API version
+
+**Is this version _backward compatible?_**
+
+- [ ] Yes: The code works together with `dds_web/master` branch
+- [ ] No: The code **does not** entirely / at all work together with the `dds_web/master` branch. _Please add detailed and clear information about the broken features_
+
+## **6. Actions / Scans**
+
+<!-- Go through all checkboxes. All actions must pass before merging is allowed.-->
+
+- **Black**: Python code formatter. Does not execute. Only tests.
+  Run `black .` locally to execute formatting.
+  - [ ] Passed
+- **Prettier**: General code formatter. Our use case: MD and yaml mainly.
+  Run `npx prettier --write .` locally to execute formatting.
+  - [ ] Passed
+- **Tests**: Pytest to verify that functionality works as expected.
+  - [ ] New tests added
+  - [ ] No new tests
+  - [ ] Passed
+- **TestPyPi**: Build CLI and publish to TestPyPi in order to verify before release.
+  - [ ] Passed
+- **CodeQL**: Scan for security vulnerabilities, bugs, errors
+  - [ ] New alerts: _Go through them and either fix, dismiss och ignore. Add reasoning in items below._
+  - [ ] Alerts fixed: _What?_
+  - [ ] Alerts ignored / dismissed: _Why?_
+  - [ ] Passed
+- **Trivy**: Security scanner
+  - [ ] New alerts: _Go through them and either fix, dismiss och ignore. Add reasoning in items below._
+  - [ ] Alerts fixed: _What?_
+  - [ ] Alerts ignored / dismissed: _Why?_
+  - [ ] Passed
+- **Snyk**: Security scanner
+  - [ ] New alerts: _Go through them and either fix, dismiss och ignore. Add reasoning in items below._
+  - [ ] Alerts fixed: _What?_
+  - [ ] Alerts ignored / dismissed: _Why?_
+  - [ ] Passed

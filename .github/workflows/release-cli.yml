@@ -34,6 +34,7 @@ jobs:
         if: github.repository == 'ScilifelabDataCentre/dds_cli'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          sign: true
           print_hash: true
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/

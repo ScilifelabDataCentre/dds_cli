@@ -195,6 +195,7 @@ Command documentation and guide
    data
    ls
    unit
+   motd
 
 Indices and tables
 ==================

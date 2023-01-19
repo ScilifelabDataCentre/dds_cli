@@ -23,6 +23,7 @@ S3-Upload-Proxy
 dp_testing_group.csv
 sensitive
 *testing*
+!testing.rst
 !tools_for_testing.py
 not_used*
 encryption.md

@@ -277,7 +277,7 @@ This installation guide is for those that want to verify that the ``dds-cli`` pa
 
    .. code-block:: bash
 
-      # [VERSION] should be replaced by the version you have downloaded from PyPI. When in doubt, simply type dds-downloaded/dds_cli and press tab; The path to the file will be filled in automatically.
+      # <VERSION> should be replaced by the version you have downloaded from PyPI. When in doubt, simply type dds-downloaded/dds_cli and press tab; The path to the file will be filled in automatically.
       pip hash dds-downloaded/dds_cli-<VERSION>-py3-none-any.whl
       # Example output:
       # dds_cli-<VERSION>-py3-none-any.whl:

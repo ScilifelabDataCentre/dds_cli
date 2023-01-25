@@ -285,7 +285,7 @@ This installation guide is for those that want to verify that the ``dds-cli`` pa
 
 4. Open a browser and go to the PyPI `"Download files" page <https://pypi.org/project/dds-cli/#files>`_
 
-   1. In the "Source Distribution" section, click "view hashes"
+   1. In the "Built Distribution" section, click "view hashes"
    2. Copy the *Hash digest* for the SHA256 *Algorithm*
 
 5. In the terminal, verify that the copied hash (step 4) matches the generated hash (step 3) by running

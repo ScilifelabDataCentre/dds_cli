@@ -41,7 +41,7 @@
 <h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this headline">¶</a></h1>
 <p>You can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> in two different ways:</p>
 <ul class="simple">
-<li><p>From <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPi</a>. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax.</p></li>
+<li><p>From <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPI</a>. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax.</p></li>
 <li><p>Via executables. These are located in the latest release on <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest">GitHub</a>.</p></li>
 </ul>
 <div class="admonition note">
@@ -49,12 +49,13 @@
 <p>The executables are only available for Ubuntu, MacOS and Windows.</p>
 <p>If you want to request an executable for another OS, please contact us at <a class="reference external" href="mailto:delivery&#37;&#52;&#48;scilifelab&#46;se">delivery<span>&#64;</span>scilifelab<span>&#46;</span>se</a>. Start the subject line with “Feature Request”.</p>
 </div>
-<p>The following sections describe the installation process on <a class="reference internal" href="#mac-linux"><span class="std std-ref">MacOS / Linux</span></a> and <a class="reference internal" href="#windows"><span class="std std-ref">Windows</span></a>, and how to load <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> on <a class="reference internal" href="#uppmax"><span class="std std-ref">Uppmax</span></a>.</p>
+<p>The following sections describe the installation process on <a class="reference internal" href="#mac-linux"><span class="std std-ref">MacOS / Linux</span></a> and <a class="reference internal" href="#windows"><span class="std std-ref">Windows</span></a>, and how to load <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> on <a class="reference internal" href="#uppmax"><span class="std std-ref">Uppmax</span></a>.
+Note that the sections describing installation from PyPI are focused on the <code class="docutils literal notranslate"><span class="pre">install</span></code> command, and do not provide a guide on how to verify the package integrity with checksums. Instructions on how to do this can be found at the <a class="reference internal" href="#verify-integrity"><span class="std std-ref">bottom of this page</span></a>.</p>
 <section id="macos-linux">
 <span id="mac-linux"></span><h2>MacOS / Linux<a class="headerlink" href="#macos-linux" title="Permalink to this headline">¶</a></h2>
-<p>As mentioned above, you can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> from PyPi or via an executable.</p>
+<p>As mentioned above, you can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> from PyPI or via an executable.</p>
 <section id="install-from-pypi">
-<span id="pypi-unix"></span><h3>Install from <strong>PyPi</strong><a class="headerlink" href="#install-from-pypi" title="Permalink to this headline">¶</a></h3>
+<span id="pypi-unix"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#install-from-pypi" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic">
 <li><p>To perform these steps you need to have Python version 3.7 or higher installed.</p>
 <ul>
@@ -75,7 +76,7 @@
 <img alt="../_images/pip-upgrade.svg" src="../_images/pip-upgrade.svg" /></div></blockquote>
 </div>
 </li>
-<li><p>The DDS CLI is available on <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPi</a>. To install the DDS CLI, run this command in the terminal:</p>
+<li><p>The DDS CLI is available on <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPI</a>. To install the DDS CLI, run this command in the terminal:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install --upgrade dds-cli
 </pre></div>
 </div>
@@ -139,7 +140,7 @@ $ ./dds_cli_macos_x86_64 ls
 <section id="windows">
 <span id="id2"></span><h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
 <section id="pypi-windows">
-<span id="id3"></span><h3>Install from <strong>PyPi</strong><a class="headerlink" href="#pypi-windows" title="Permalink to this headline">¶</a></h3>
+<span id="id3"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#pypi-windows" title="Permalink to this headline">¶</a></h3>
 <p>Detailed instructions on how install the DDS CLI on Windows <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md">here</a>.</p>
 </section>
 <section id="exec-windows">
@@ -276,6 +277,51 @@ $ ./dds_cli_macos_x86_64 ls
 </div>
 </section>
 </section>
+<section id="verify-the-package-integrity-prior-to-installing-it">
+<span id="verify-integrity"></span><h2>Verify the package integrity prior to installing it<a class="headerlink" href="#verify-the-package-integrity-prior-to-installing-it" title="Permalink to this headline">¶</a></h2>
+<p>This installation guide is for those that want to verify that the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package published on PyPI is identical to the one you install locally, thereby catching potential (albeit unlikely) corruptions in the package prior to running the installation. Note that the hashes used to verify this are generated by PyPI itself, not by the Data Centre.</p>
+<ol class="arabic">
+<li><p>Open the terminal</p></li>
+<li><p>Download the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># &quot;--dest dds-downloaded&quot; tells pip to put the downloaded files in the directory &quot;dds-downloaded&quot;</span>
+pip download dds-cli --dest dds-downloaded
+</pre></div>
+</div>
+</li>
+<li><p>Generate hash for the dds-cli file by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># &lt;VERSION&gt; should be replaced by the version you have downloaded from PyPI. When in doubt, simply type dds-downloaded/dds_cli and press tab; The path to the file will be filled in automatically.</span>
+pip <span class="nb">hash</span> dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none-any.whl
+<span class="c1"># Example output:</span>
+<span class="c1"># dds_cli-&lt;VERSION&gt;-py3-none-any.whl:</span>
+<span class="c1"># --hash=sha256:8ba6495b73d759e96c35652273cf4e4158acba02f1cf64f012cc67cf2e346cae</span>
+</pre></div>
+</div>
+</li>
+<li><p>Open a browser and go to the PyPI <a class="reference external" href="https://pypi.org/project/dds-cli/#files">“Download files” page</a></p>
+<ol class="arabic simple">
+<li><p>In the “Built Distribution” section, click “view hashes”</p></li>
+<li><p>Copy the <em>Hash digest</em> for the SHA256 <em>Algorithm</em></p></li>
+</ol>
+</li>
+<li><p>In the terminal, verify that the copied hash (step 4) matches the generated hash (step 3) by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;&lt;correct hash from step 4&gt;&quot;</span> <span class="o">=</span> <span class="s2">&quot;&lt;generated hash from step 3&gt;&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span> <span class="nb">echo</span> <span class="s2">&quot;Package integrity verified&quot;</span><span class="p">;</span> <span class="k">else</span> <span class="nb">echo</span> <span class="s2">&quot;Package compromised!&quot;</span><span class="p">;</span> <span class="k">fi</span>
+</pre></div>
+</div>
+<p>If this prints out “Package integrity verified”, continue to step 6. If it does not, the downloaded <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package is compromised and you should not perform step 6. Delete the downloaded directory <code class="docutils literal notranslate"><span class="pre">dds-downloaded</span></code> and start from step 1 again.</p>
+</li>
+<li><p>Install the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> tool by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none-any.whl
+</pre></div>
+</div>
+</li>
+<li><p>Once the installation has finished, test that the CLI has been installed correctly by verifying the version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds --version
+</pre></div>
+</div>
+<p>The output should be the following:</p>
+<img alt="../_images/dds-version.svg" src="../_images/dds-version.svg" /></li>
+</ol>
+</section>
 </section>
 
 
@@ -294,7 +340,7 @@ $ ./dds_cli_macos_x86_64 ls
 
 
 
-<p class="blurb">Version: 2.2.5</p>
+<p class="blurb">Version: 2.2.6</p>
 
 
 
@@ -320,6 +366,7 @@ $ ./dds_cli_macos_x86_64 ls
 <li class="toctree-l1"><a class="reference internal" href="../data/">dds data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ls/">dds ls</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../unit/">dds unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motd/">dds motd</a></li>
 </ul>
 
 <div class="relations">

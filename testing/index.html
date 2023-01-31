@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>The DDS Test instance &#8212; Data Delivery System  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="the-dds-test-instance">
+<span id="testing"></span><h1>The DDS Test instance<a class="headerlink" href="#the-dds-test-instance" title="Permalink to this headline">¶</a></h1>
+<p><strong>Welcome, and thank you for your interest in testing the Data Delivery System.</strong></p>
+<p>This page will give you information on:</p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#important-information-for-scilifelab-units" id="id1">1. Important information for SciLifeLab Units</a></p></li>
+<li><p><a class="reference internal" href="#where-the-dds-test-instance-is-located" id="id2">2. Where the DDS Test Instance is located</a></p></li>
+<li><p><a class="reference internal" href="#how-to-install-the-test-version-of-the-cli" id="id3">3. How to install the test version of the CLI</a></p></li>
+<li><p><a class="reference internal" href="#how-to-configure-the-test-version-of-the-cli" id="id4">4. How to configure the test version of the CLI</a></p></li>
+<li><p><a class="reference internal" href="#experiencing-issues-contact-us" id="id5">Experiencing issues? Contact us!</a></p></li>
+</ul>
+</div>
+<div class="admonition-target-audience admonition">
+<p class="admonition-title">Target audience</p>
+<p>This page targets any users invited to the development / testing instance of the Data Delivery System. If you have an account on the production instead (<a class="reference external" href="https://delivery.scilifelab.se">https://delivery.scilifelab.se</a>), please read the documentation here <a class="reference internal" href="../#start"><span class="std std-ref">here</span></a>.</p>
+</div>
+<section id="important-information-for-scilifelab-units">
+<span id="test-important"></span><h2><a class="toc-backref" href="#id1">1. Important information for SciLifeLab Units</a><a class="headerlink" href="#important-information-for-scilifelab-units" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If your testing account has the role “Researcher”, you can skip this section.</p>
+</div>
+<ul>
+<li><p>First and foremost, <strong>no sensitive data</strong> is allowed to be delivered within this test instance.</p></li>
+<li><dl class="simple">
+<dt>In order to create projects, which is required in order to test the upload / download functionality:</dt><dd><ul class="simple">
+<li><p>You must have the account role “Unit Admin” or “Unit Personnel”</p></li>
+<li><p>Your unit must have at least two “Unit Admins”</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>When listing your projects you will see your projects, and yours only. However, in order to not create a large number of separate storage locations for testing purposes, the actual storage location is shared by all units in the test setup. Since the data is always encrypted and another unit would need to hack the DDS and also crack the encryption, there should be no risk of anyone else accessing your data. In the production instance, there’s always a separate storage location per SciLifeLab unit.</p></li>
+<li><p>The storage quota (maximum data volume that can be uploaded in total by all units) for the testing instance is currently set to 5 TB. However, if you receive an error message indicating that the quota is met, contact <a class="reference external" href="mailto:delivery&#37;&#52;&#48;scilifelab&#46;se">delivery<span>&#64;</span>scilifelab<span>&#46;</span>se</a> and we will solve this for you.</p></li>
+<li><dl>
+<dt>Within the test instance of the DDS, all units have the following settings:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">days_in_available</span></code>: 7 days.</p>
+<blockquote>
+<div><p><strong>Explanation:</strong> When data has been uploaded to a project, and the data has been released (the project status has been set to “Available”), the data will be available for download for 7 days. After this, the project will automatically transition to the status “Expired”.</p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">days_in_expired</span></code>: 3 days</p>
+<blockquote>
+<div><p><strong>Explanation:</strong> When a project has transitioned to the status “Expired”, the project data will be kept for 3 days. During this time you can release the project data again (checkout the <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span> <span class="pre">status</span></code> command) and transition the status to “Available” again. If you do not, your project will be automatically archived (project status will be changed to “Archived”), and your data will be permanently deleted.</p>
+</div></blockquote>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>These statuses are described in the technical overview, located on the DDS test web page mentioned above.</p></li>
+<li><p>The short number of days is only for the test instance, making it easier for you (and us) to test that the statuses work as they should.</p></li>
+</ul>
+</div>
+</dd>
+</dl>
+</li>
+<li><p>Keep in mind that the test instance is where we try out new features etc. There may be some unexpected redeployments and there may be bugs in new features.</p></li>
+</ul>
+</section>
+<section id="where-the-dds-test-instance-is-located">
+<span id="test-where"></span><h2><a class="toc-backref" href="#id2">2. Where the DDS Test Instance is located</a><a class="headerlink" href="#where-the-dds-test-instance-is-located" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The test instance is located at <a class="reference external" href="https://dds-dev.dckube.scilifelab.se/">https://dds-dev.dckube.scilifelab.se/</a></p></li>
+<li><dl class="simple">
+<dt>Just like on the production site, you can find the following information on that page:</dt><dd><ul>
+<li><p><em>Documentation</em>, which points to the <code class="docutils literal notranslate"><span class="pre">Welcome</span> <span class="pre">page</span></code> in the navigation field to the left.</p></li>
+<li><p><em>Technical overview</em></p></li>
+<li><p><em>Troubleshooting guide</em></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="how-to-install-the-test-version-of-the-cli">
+<span id="test-install"></span><h2><a class="toc-backref" href="#id3">3. How to install the test version of the CLI</a><a class="headerlink" href="#how-to-install-the-test-version-of-the-cli" title="Permalink to this headline">¶</a></h2>
+<p>You need to install the test version of the CLI from TestPyPi. Run this command in the terminal.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install -i https://test.pypi.org/simple/ dds-cli
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is <strong>not</strong> the same command as shown in the installation guide.</p>
+<p>You can install the released version of the CLI by following the installation guide, however you will not have the latest version or any of the features that are currently being implemented. There may also be unexpected errors since the released CLI and the DDS test instance may not be completely compatible.</p>
+</div>
+</section>
+<section id="how-to-configure-the-test-version-of-the-cli">
+<span id="test-config"></span><h2><a class="toc-backref" href="#id4">4. How to configure the test version of the CLI</a><a class="headerlink" href="#how-to-configure-the-test-version-of-the-cli" title="Permalink to this headline">¶</a></h2>
+<p>After installing the CLI, you need to complete the following steps before you can start using it:</p>
+<ol class="arabic">
+<li><p>Set the CLI to point to the test instance by running the following command in the terminal</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">DDS_CLI_ENV</span><span class="o">=</span><span class="s2">&quot;test-instance&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Verify that the output of the following command contains <code class="docutils literal notranslate"><span class="pre">https://dds-dev.dckube.scilifelab.se/</span></code> and <strong>not</strong> <code class="docutils literal notranslate"><span class="pre">https://delivery.scilifelab.se/</span></code></p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>dds --version
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</section>
+<section id="experiencing-issues-contact-us">
+<h2><a class="toc-backref" href="#id5">Experiencing issues? Contact us!</a><a class="headerlink" href="#experiencing-issues-contact-us" title="Permalink to this headline">¶</a></h2>
+<p>Email us at <a class="reference external" href="mailto:delivery&#37;&#52;&#48;scilifelab&#46;se">delivery<span>&#64;</span>scilifelab<span>&#46;</span>se</a> if you need help or have any questions or feature requests. Start the email subject with <code class="docutils literal notranslate"><span class="pre">DDS</span> <span class="pre">Testing</span></code>.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../">
+    <img class="logo" src="../_static/SciLifeLab_symbol_green.svg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Version: 2.2.6</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=scilifelabdatacentre&repo=dds_cli&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/">Installation guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../main/">dds (Main command)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auth/">dds auth</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/">dds user</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project/">dds project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/">dds data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ls/">dds ls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit/">dds unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motd/">dds motd</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search/" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021-2022, SciLifeLab Data Centre.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/testing.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

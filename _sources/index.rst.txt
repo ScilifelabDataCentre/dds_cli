@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _start:
+
 ==========================
 DDS: Data Delivery System
 ==========================
@@ -51,7 +53,7 @@ How do I use the DDS?
       **Not receiving an email?**
       
       * Please check in the junk/spam folder. 
-      * My email address has the `scilifelab.se` domain: It may take a while for your email to be delivered, due to KTH spam filters.
+      * My email address has the ``scilifelab.se`` domain: It may take a while for your email to be delivered, due to KTH spam filters.
       * If none of these help you, contact support. 
 
    Once you get the invitation email, follow the link in the email and register your account. After this, you should have access to the system. To be able to use the CLI (which contains most of the functionality) please follow the installation guide :ref:`below<install>`.
@@ -195,6 +197,7 @@ Command documentation and guide
    data
    ls
    unit
+   motd
 
 Indices and tables
 ==================

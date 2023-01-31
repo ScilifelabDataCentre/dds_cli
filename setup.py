@@ -32,7 +32,7 @@ setup(
     packages=find_packages(exclude=("docs")),
     include_package_data=True,
     install_requires=requirements,
-    setup_requires=["twine>=1.11.0", "setuptools>=38.6."],
+    setup_requires=["twine>=1.11.0", "setuptools>=38.6"],
     entry_points={
         "console_scripts": [
             "dds = dds_cli.__main__:dds_main",

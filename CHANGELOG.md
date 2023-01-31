@@ -222,3 +222,15 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - New command: `dds project info change [OPTIONS]` to change project information ([#575](https://github.com/ScilifelabDataCentre/dds_cli/pull/575))
 - Documentation: Structure changes and examples ([#585](https://github.com/ScilifelabDataCentre/dds_cli/pull/585))
 - Workflow: Python-setup action v1 bumped to v2 ([#588](https://github.com/ScilifelabDataCentre/dds_cli/pull/588))
+
+# Sprint (2023-01-09 - 2023-01-20)
+
+- Workflow: Scan with Trivy on PR and schedule ([#591](https://github.com/ScilifelabDataCentre/dds_cli/pull/591))
+- Workflow: Publish to TestPyPi on PR and release ([#592](https://github.com/ScilifelabDataCentre/dds_cli/pull/592))
+- Workflow: Scan with Snyk on PR and schedule ([#593](https://github.com/ScilifelabDataCentre/dds_cli/pull/593))
+- Documentation: Important testing instructions and instructions on how to install from TestPyPi ([#597](https://github.com/ScilifelabDataCentre/dds_cli/pull/597))
+
+# Sprint (2023-01-20 - 2023-02-03)
+
+- Documentation: Instructions on how to verify PyPI package integrity ([#598](https://github.com/ScilifelabDataCentre/dds_cli/pull/598))
+- Version: 2.2.6 ([#601](https://github.com/ScilifelabDataCentre/dds_cli/pull/601))

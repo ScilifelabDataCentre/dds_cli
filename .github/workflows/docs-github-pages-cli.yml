@@ -1,4 +1,5 @@
----
+# GitHub pages
+# Deploys the documentation to github pages from the branch gh-pages.
 name: Deploy documentation to github pages
 on:
   push:

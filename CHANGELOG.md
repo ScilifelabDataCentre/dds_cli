@@ -233,3 +233,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 # Sprint (2023-01-20 - 2023-02-03)
 
 - Documentation: Instructions on how to verify PyPI package integrity ([#598](https://github.com/ScilifelabDataCentre/dds_cli/pull/598))
+- Version: 2.2.6 ([#601](https://github.com/ScilifelabDataCentre/dds_cli/pull/601))

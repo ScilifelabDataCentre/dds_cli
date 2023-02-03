@@ -5,6 +5,7 @@
 # It also builds the documentation and generates a PDF version of it.
 name: Release actions for the CLI
 on:
+  pull_request:
   release:
     types: [published]
     branches:
@@ -70,7 +71,7 @@ jobs:
             CMD_BUILD: PyInstaller -F -c -n dds_cli_win_x86_64.exe -i resources/scilifelab.ico  --exclude-module=tests --log-level INFO dds_cli/__init__.py
             OUT_FILE_NAME: dds_cli_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
-          - os: ubuntu-latest
+          - os: ubuntu-22.04, ubuntu-20.04
             TARGET: Linux_x86_64
             CMD_BUILD: pyinstaller -F -c -n  dds_cli_ubuntu_x86_64 -i resources/scilifelab.icns  --exclude-module=tests  --target-arch x86_64 --log-level INFO dds_cli/__init__.py
             OUT_FILE_NAME: dds_cli_ubuntu_x86_64

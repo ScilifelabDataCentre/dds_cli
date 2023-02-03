@@ -6,7 +6,6 @@
 ---
 name: New Release
 on:
-  pull_request:
   release:
     types: [published]
     branches:

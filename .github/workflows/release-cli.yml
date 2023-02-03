@@ -5,7 +5,6 @@
 # It also builds the documentation and generates a PDF version of it.
 name: Release actions for the CLI
 on:
-  pull_request:
   release:
     types: [published]
     branches:

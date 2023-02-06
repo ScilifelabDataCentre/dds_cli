@@ -38,7 +38,7 @@ outputs:
       echo "DDS password: ${START_ITALIC}<fill in your password " \
         "(will not be visible)>${END_ITALIC}"
       echo "INFO     Please enter the one-time authentication code sent " \
-        "to your email address (leave empty to exit):"                                                                
+        "to your email address (leave empty to exit):"
       echo "Authentication one-time code: ${START_ITALIC}<fill in one-time code>${END_ITALIC}"
     fake_command: dds auth login
     img_paths:
@@ -76,7 +76,9 @@ outputs:
       - img/dds-project.svg
   - command: |
       echo "Project created with id: <Project ID>"
-    fake_command: dds project create --title "<Project Title>" --description "<Project Description>" --principal-investigator "<Email to PI>"
+    fake_command: >
+      dds project create --title "<Project Title>" --description
+      "<Project Description>" --principal-investigator "<Email to PI>"
     img_paths:
       - img/dds-project-create.svg
   - command: |
@@ -101,7 +103,7 @@ outputs:
     img_paths:
       - img/dds-data-put.svg
   - command: |
-      echo "INFO     Listing files for project '<Project ID>'"                                                       
+      echo "INFO     Listing files for project '<Project ID>'"
       echo ""
       echo "Files / directories in project: <Project ID>"
       echo "└── example_directory/"

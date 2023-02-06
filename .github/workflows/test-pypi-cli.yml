@@ -1,3 +1,4 @@
+---
 name: Publish CLI to TestPyPi
 on:
   pull_request:

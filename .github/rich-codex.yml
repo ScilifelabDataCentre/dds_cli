@@ -107,8 +107,8 @@ outputs:
       echo ""
       echo "Files / directories in project: <Project ID>"
       echo "└── example_directory/"
-      echo ""                                                                                                
-      echo "INFO     Would you like to view files within a directory? Leave blank to exit."                           
+      echo ""
+      echo "INFO     Would you like to view files within a directory? Leave blank to exit."
       echo "? Folder:"
     fake_command: dds data ls --project "<Project ID>"
     img_paths:

@@ -1,4 +1,5 @@
 # Rich-codex automatically searches for this file name in this location, and uses the commands to produce the examples.
+---
 timeout: 300
 outputs:
   - command: python --version

@@ -29,7 +29,7 @@ from dds_cli.file_handler_local import LocalFileHandler as fh
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.file_encryptor")
+LOG = logging.getLogger(__name__)
 
 
 ###############################################################################

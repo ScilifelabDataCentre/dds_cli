@@ -35,7 +35,7 @@ import dds_cli.utils
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.data_putter")
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # MAIN FUNCTION ############################################### MAIN FUNCTION #

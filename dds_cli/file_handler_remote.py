@@ -20,7 +20,7 @@ import dds_cli.utils
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.file_handler_remote")
+LOG = logging.getLogger(z)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

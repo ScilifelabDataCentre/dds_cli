@@ -25,7 +25,7 @@ from dds_cli import DDSEndpoint
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.data_remover")
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

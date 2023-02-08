@@ -26,7 +26,7 @@ import dds_cli.utils
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.file_handler_local")
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

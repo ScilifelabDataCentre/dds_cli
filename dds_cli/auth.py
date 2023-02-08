@@ -17,7 +17,7 @@ import dds_cli.utils
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.auth")
+LOG = logging.getLogger(__name__)
 
 
 ###############################################################################

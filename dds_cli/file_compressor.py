@@ -21,7 +21,7 @@ from dds_cli import FileSegment
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.file_compressor")
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

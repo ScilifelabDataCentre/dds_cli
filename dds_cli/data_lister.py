@@ -34,7 +34,7 @@ from dds_cli import text_handler as th
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.data_lister")
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #

@@ -24,7 +24,7 @@ from dds_cli import DDSEndpoint
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
 ####################################################################################################
 
-LOG = logging.getLogger("dds_cli.maintenance_manager")
+LOG = logging.getLogger(__name__)
 
 
 ####################################################################################################

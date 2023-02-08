@@ -22,7 +22,7 @@ import dds_cli.file_handler
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger("dds_cli.custom_decorators")
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # DECORATORS ##################################################### DECORATORS #

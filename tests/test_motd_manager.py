@@ -39,7 +39,6 @@ def test_list_all_active_motds_no_motds(caplog: LogCaptureFixture):
         for retd in test_dicts:
             # Create mocker
             with Mocker() as mock:
-
                 # Create mocked request - real request not executed
                 mock.get(DDSEndpoint.MOTD, status_code=200, json=retd)
 
@@ -60,7 +59,6 @@ def test_list_all_active_motds_no_keys():
     }
     # Create mocker
     with Mocker() as mock:
-
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
 
@@ -82,7 +80,6 @@ def test_list_all_active_motds_table(capsys: CaptureFixture):
     }
     # Create mocker
     with Mocker() as mock:
-
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
 
@@ -116,7 +113,6 @@ def test_list_all_active_motds_nottable(capsys: CaptureFixture):
     }
     # Create mocker
     with Mocker() as mock:
-
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
 
@@ -134,7 +130,6 @@ def test_list_all_active_motds_exceptionraised(capsys: CaptureFixture):
     returned_dict: Dict = {}
     # Create mocker
     with Mocker() as mock:
-
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.MOTD, status_code=500, json=returned_dict)
 

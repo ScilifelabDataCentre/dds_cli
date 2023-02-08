@@ -37,7 +37,6 @@ def verify_proceed(func):
 
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
-
         # Check if keyboardinterrupt in dds
         if self.stop_doing:
             # TODO (ina): Add save to status here
@@ -90,7 +89,6 @@ def update_status(func):
 
     @functools.wraps(func)
     def wrapped(self, file, *args, **kwargs):
-
         # TODO (ina): add processing?
         if func.__name__ not in ["put", "add_file_db", "get", "update_db"]:
             raise Exception(f"The function {func.__name__} cannot be used with this decorator.")
@@ -151,7 +149,6 @@ def removal_spinner(func):
 
     @functools.wraps(func)
     def create_and_remove_task(self, *args, **kwargs):
-
         message = ""
 
         with Progress(
@@ -159,7 +156,6 @@ def removal_spinner(func):
             SpinnerColumn(spinner_name="dots12", style="white"),
             console=dds_cli.utils.stderr_console,
         ) as progress:
-
             # Determine spinner text
             if func.__name__ == "remove_all":
                 description = f"Removing all files in project {self.project}"

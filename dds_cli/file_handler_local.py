@@ -38,7 +38,6 @@ class LocalFileHandler(fh.FileHandler):
 
     # Magic methods ################ Magic methods #
     def __init__(self, user_input, temporary_destination, project, remote_destination: str = None):
-
         LOG.debug("Collecting file info...")
 
         # Initiate FileHandler from inheritance

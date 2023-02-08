@@ -69,7 +69,6 @@ def put(
         token_path=token_path,
         destination=destination,
     ) as putter:
-
         # Progress object to keep track of progress tasks
         with Progress(
             "{task.description}",
@@ -79,7 +78,6 @@ def put(
             refresh_per_second=2,
             console=dds_cli.utils.stderr_console,
         ) as progress:
-
             # Keep track of futures
             upload_threads = {}
 
@@ -282,7 +280,6 @@ class DataPutter(base.DDSBaseClass):
 
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:
-
             # Encrypt and save chunks
             saved, message = encryptor.encrypt_filechunks(
                 chunks=streamed_chunks,

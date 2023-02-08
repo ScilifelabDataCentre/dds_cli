@@ -4,7 +4,7 @@
 # and generates the executables for Windows, MacOS and Ubuntu.
 # It also builds the documentation and generates a PDF version of it.
 ---
-name: Release actions for the CLI
+name: New Release
 on:
   release:
     types: [published]

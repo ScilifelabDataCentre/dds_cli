@@ -22,7 +22,7 @@ from dds_cli import __version__, DDSEndpoint
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("dds_cli.utils")
 
 # Classes
 

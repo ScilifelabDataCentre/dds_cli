@@ -10,7 +10,7 @@ import click
 # Own modules
 
 # Logger
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("dds_cli.exceptions")
 
 
 class InvalidMethodError(Exception):

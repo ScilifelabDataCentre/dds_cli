@@ -65,7 +65,7 @@ from dds_cli.options import (
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
 ####################################################################################################
 
-LOG = logging.getLogger()
+LOG = logging.getLogger("dds_cli")
 
 # Configuration for rich-click output
 click.rich_click.MAX_WIDTH = 100

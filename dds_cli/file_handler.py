@@ -21,7 +21,7 @@ import dds_cli.exceptions
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("dds_cli.file_handler")
 lock = threading.Lock()
 
 ###############################################################################

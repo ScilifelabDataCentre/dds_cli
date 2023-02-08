@@ -16,7 +16,7 @@ from dds_cli import DDSEndpoint
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("dds_cli.project_creator")
 
 
 ###############################################################################

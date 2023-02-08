@@ -35,7 +35,7 @@ from dds_cli import exceptions
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
 ###############################################################################
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger("dds_cli.base")
 
 
 ###############################################################################

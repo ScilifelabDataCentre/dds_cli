@@ -79,12 +79,16 @@ jobs:
             ASSET_MIME: application/vnd.microsoft.portable-executable
           - os: ubuntu-20.04
             TARGET: Linux_x86_64
-            CMD_BUILD: pyinstaller -F -c -n  dds_cli_ubuntu-20.04_x86_64 -i resources/scilifelab.icns  --exclude-module=tests  --target-arch x86_64 --log-level INFO dds_cli/__init__.py
+            CMD_BUILD: > 
+              PyInstaller -F -c -n  dds_cli_ubuntu-20.04_x86_64 -i resources/scilifelab.icns
+              --exclude-module=tests  --target-arch x86_64 --log-level INFO dds_cli/__init__.py
             OUT_FILE_NAME: dds_cli_ubuntu-20.04_x86_64
             ASSET_MIME: application/x-elf
           - os: ubuntu-latest # ubuntu-22.04 at the moment
             TARGET: Linux_x86_64
-            CMD_BUILD: pyinstaller -F -c -n  dds_cli_ubuntu-latest_x86_64 -i resources/scilifelab.icns  --exclude-module=tests  --target-arch x86_64 --log-level INFO dds_cli/__init__.py
+            CMD_BUILD: > 
+              PyInstaller -F -c -n  dds_cli_ubuntu-latest_x86_64 -i resources/scilifelab.icns
+              --exclude-module=tests  --target-arch x86_64 --log-level INFO dds_cli/__init__.py
             OUT_FILE_NAME: dds_cli_ubuntu-latest_x86_64
             ASSET_MIME: application/x-elf
     steps:

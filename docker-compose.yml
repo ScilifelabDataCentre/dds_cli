@@ -1,0 +1,35 @@
+version: "3.9"
+# Use --profile full-dev and uncomment RATELIMIT_STORAGE_URI to use redis
+
+services:
+  ubuntu:
+    container_name: ubuntu
+    image: ubuntu-20.04-local:latest
+    build:
+      # dockerfile: Dockerfile-ubuntu-20.04
+      dockerfile: Dockerfile
+      # context: ./temp/docker-base
+      context: ./
+      # target: base
+    working_dir: /code
+    # command: sh -c "pip3 install -r /code/requirements.txt"
+    command: 
+       - /bin/bash
+       - -c
+       - |
+        #  pip3 install -r /code/requirements.txt
+         pyinstaller -F -c -n  dds_cli_ubuntu_x86_64 -i resources/scilifelab.icns  --exclude-module=tests  --target-arch x86_64 --log-level INFO dds_cli/__init__.py
+    # environment:
+    #   - DDS_VERSION=local-dev
+    #   - DDS_APP_CONFIG=/code/dds_web/sensitive/dds_app.cfg
+    #   - FLASK_ENV=development
+    #   - FLASK_APP=dds_web
+    #   - DB_TYPE=${DDS_DB_TYPE}
+      # - RATELIMIT_STORAGE_URI=redis://dds_redis
+    restart: on-failure
+    volumes:
+      # Migrations
+      - type: bind
+        source: .
+        target: /code
+

@@ -1,4 +1,5 @@
-name: Publish CLI to TestPyPi
+---
+name: TestPyPi
 on:
   pull_request:
     branches: [dev]

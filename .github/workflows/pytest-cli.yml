@@ -1,7 +1,8 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: DDS pytest
+# For more information see:
+# https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+---
+name: Pytest
 
 on:
   push:
@@ -28,7 +29,7 @@ jobs:
       - name: Test with pytest
         run: |
           pip install -r tests/requirements-test.txt
-          COVERAGE_FILE=./coverage/.coverage 
+          COVERAGE_FILE=./coverage/.coverage
           pytest --color=yes --cov=./dds_cli --cov-report=xml:coverage/report.xml
 
       - uses: codecov/codecov-action@v2

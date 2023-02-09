@@ -67,7 +67,7 @@ class User:
         """Fetch saved token from file otherwise authenticate user and saves the new token."""
         token_file = TokenFile(token_path=self.token_path, allow_group=allow_group)
         if not self.force_renew_token:
-            LOG.debug("Retrieving token.")
+            LOG.debug("Retrieving token...")
 
             # Get token from file
             try:
@@ -89,7 +89,7 @@ class User:
 
     def __authenticate_user(self, totp: str = None):
         """Authenticates the username and password via a call to the API."""
-        LOG.debug("Starting authentication on the API.")
+        LOG.debug("Starting authentication on the API...")
 
         if self.no_prompt:
             raise exceptions.AuthenticationError(

@@ -115,11 +115,10 @@ class RemoteFileHandler(fh.FileHandler):
             }
             for x, y in files.items()
         }
-        LOG.debug(f"Data (files):\n {data}")
+        # LOG.debug(f"Data (files):\n {data}")
 
         # Save info on files in a specific folder and return
         for x, y in folder_contents.items():
-            LOG.debug(f"{x}")
             data.update(
                 {
                     self.local_destination

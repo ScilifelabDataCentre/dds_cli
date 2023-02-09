@@ -250,6 +250,7 @@ def list_projects_and_contents(
 
                             # If didn't enter anything, convert to None and exit
                             except (KeyboardInterrupt, AssertionError):
+                                LOG.debug("No project entered, exiting.")
                                 break
 
         # List all files in a project if we know a project ID

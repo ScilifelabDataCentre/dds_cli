@@ -136,6 +136,7 @@ class User:
             )
 
         else:
+            LOG.debug(f"2FA method: {'TOTP' if totp_enabled else 'HOTP'}")
             if totp_enabled:
                 LOG.info(
                     "Please enter the one-time authentication code from your authenticator app."

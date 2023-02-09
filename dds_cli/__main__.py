@@ -160,7 +160,10 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
             log_fh = logging.FileHandler(log_file, encoding="utf-8")
             log_fh.setLevel(logging.DEBUG)
             log_fh.setFormatter(
-                logging.Formatter(fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+                logging.Formatter(
+                    fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                )
             )
             LOG.addHandler(log_fh)
 

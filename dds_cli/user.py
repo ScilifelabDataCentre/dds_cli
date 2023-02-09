@@ -234,7 +234,7 @@ class TokenFile:
         """Attempts to fetch a valid token from the token file.
 
         Returns None if no valid token can be found.
-        
+
         Debug, not warning. Run prior to logging configured.
         """
         LOG.debug("Attempting to retrieve token from file...")

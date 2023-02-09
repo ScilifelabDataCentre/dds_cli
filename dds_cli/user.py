@@ -232,11 +232,14 @@ class TokenFile:
     def read_token(self):
         """Attempts to fetch a valid token from the token file.
 
-        Returns None if no valid token can be found."""
+        Returns None if no valid token can be found.
+        
+        Debug, not warning. Run prior to logging configured.
+        """
         LOG.debug("Attempting to retrieve token from file...")
 
         if not self.file_exists():
-            LOG.warning(f"Token file {self.token_file} does not exist.")
+            LOG.debug(f"Token file {self.token_file} does not exist.")
             return None
 
         self.check_token_file_permissions()
@@ -248,7 +251,7 @@ class TokenFile:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
 
         if self.token_expired(token=token):
-            LOG.warning("The token has expired, reauthentication required.")
+            LOG.debug("The token has expired, reauthentication required.")
             return None
 
         LOG.debug("Token retrieved from file.")

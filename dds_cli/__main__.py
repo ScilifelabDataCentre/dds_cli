@@ -399,7 +399,7 @@ def login(click_ctx, totp, allow_group):
             token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group
         ):
             # Authentication token renewed in the init method.
-            LOG.info("[green] :white_check_mark: Authentication token created![/green]")
+            LOG.info(f"[green] :white_check_mark: Authentication successful![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

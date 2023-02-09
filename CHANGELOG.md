@@ -238,3 +238,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 # Sprint (2023-02-03 - 2023-02-17)
 
 - Workflow: Lint yaml files ([#605](https://github.com/ScilifelabDataCentre/dds_cli/pull/605))
+- Logging: Reduce debug level logging and remove logging from root ([#606](https://github.com/ScilifelabDataCentre/dds_cli/pull/606))

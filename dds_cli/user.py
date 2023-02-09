@@ -233,9 +233,10 @@ class TokenFile:
         """Attempts to fetch a valid token from the token file.
 
         Returns None if no valid token can be found."""
+        LOG.debug("Attempting to retrieve token from file...")
 
         if not self.file_exists():
-            LOG.debug(f"Token file {self.token_file} does not exist.")
+            LOG.warning(f"Token file {self.token_file} does not exist.")
             return None
 
         self.check_token_file_permissions()
@@ -247,7 +248,7 @@ class TokenFile:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
 
         if self.token_expired(token=token):
-            LOG.debug("No token retrieved from file, will fetch new token from API")
+            LOG.warning("The token has expired, reauthentication required.")
             return None
 
         LOG.debug("Token retrieved from file.")

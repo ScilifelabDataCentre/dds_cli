@@ -147,7 +147,6 @@ class DataGetter(base.DDSBaseClass):
                 peer_public=file_info["public_key"],
                 key_salt=file_info["salt"],
             ) as decryptor:
-
                 streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"])
 
                 stream_to_file_func = (

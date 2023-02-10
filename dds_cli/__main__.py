@@ -103,6 +103,7 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
         for motd in motds:
             dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
 
+
 # -- dds -- #
 @click.group()
 @click.option(
@@ -170,6 +171,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #
 # ************************************************************************************************ #
+
 
 # -- dds ls -- #
 @dds_main.command(name="ls")
@@ -316,7 +318,7 @@ def list_projects_and_contents(
                                 if len(folders) == 0:
                                     break
 
-    except (dds_cli.exceptions.NoDataError) as err:
+    except dds_cli.exceptions.NoDataError as err:
         LOG.warning(err)
         sys.exit(0)
     except (
@@ -520,6 +522,7 @@ def user_group_command(_):
 # ************************************************************************************************ #
 # USER COMMANDS ******************************************************************** USER COMMANDS #
 # ************************************************************************************************ #
+
 
 # -- dds user ls -- #
 # TODO: Move this to dds unit?
@@ -1697,7 +1700,6 @@ def get_data(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as getter:
-
             with rich.progress.Progress(
                 "{task.description}",
                 rich.progress.BarColumn(bar_width=None),
@@ -1706,7 +1708,6 @@ def get_data(
                 refresh_per_second=2,
                 console=dds_cli.utils.stderr_console,
             ) as progress:
-
                 # Keep track of futures
                 download_threads = {}
 
@@ -1876,7 +1877,6 @@ def rm_data(click_ctx, project, file, folder, rm_all):
             no_prompt=no_prompt,
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as remover:
-
             if rm_all:
                 remover.remove_all()
 
@@ -1913,6 +1913,7 @@ def unit_group_command(_):
 # ************************************************************************************************ #
 # UNIT COMMANDS ******************************************************************** UNIT COMMANDS #
 # ************************************************************************************************ #
+
 
 # -- dds unit ls -- #
 @unit_group_command.command(name="ls", no_args_is_help=False)
@@ -1954,6 +1955,7 @@ def motd_group_command(_):
 # ************************************************************************************************ #
 # MOTD COMMANDS ******************************************************************** MOTD COMMANDS #
 # ************************************************************************************************ #
+
 
 # -- dds motd add-- #
 @motd_group_command.command(name="add", no_args_is_help=True)

@@ -26,7 +26,6 @@ LOG = logging.getLogger(__name__)
 
 class TimeStamp:
     def __init__(self):
-
         self.sep_date_time = "_"
         self.sep_time = "-"
 

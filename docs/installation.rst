@@ -73,7 +73,10 @@ Install via the **executable**
 
 1. Download the executable from the GitHub release page:
 
-   * Executable for Linux: `Download Linux Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu_x86_64>`_
+   * Executable for Linux (Ubuntu latest): `Download Linux Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu-latest_x86_64>`_
+
+      You can find executables for other versions on the GitHub releases page linked at the top of this page.
+
    * Executable for MacOS: `Download MacOS Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64>`_
    
 2. Open the terminal, go to the directory where the downloaded file is located, and make the file executable by running the following command:

@@ -240,3 +240,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Workflow: Lint yaml files ([#605](https://github.com/ScilifelabDataCentre/dds_cli/pull/605))
 - Logging: Reduce debug level logging and remove logging from root ([#606](https://github.com/ScilifelabDataCentre/dds_cli/pull/606))
 - Add separate executables for Ubuntu latest (currently 22.04) and Ubuntu 20.04 ([#604](https://github.com/ScilifelabDataCentre/dds_cli/pull/604))
+- Bug: PyInstaller command not valid for Linux and macOS ([#612](https://github.com/ScilifelabDataCentre/dds_cli/pull/612))

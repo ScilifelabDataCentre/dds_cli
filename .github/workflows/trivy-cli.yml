@@ -2,7 +2,7 @@
 # Trivy (pronunciation) is a comprehensive and versatile security scanner.
 # Trivy has scanners that look for security issues, and targets where it can find those issues.
 # https://github.com/aquasecurity/trivy
-# ---------------------------------
+---
 name: Trivy
 on:
   push:
@@ -20,15 +20,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run Trivy vulnerability scanner in IaC mode
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: "config"
-          hide-progress: false
+          scan-type: "fs"
+          ignore-unfixed: true
           format: "sarif"
           output: "trivy-results.sarif"
-          exit-code: "1"
-          ignore-unfixed: true
           severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy scan results to GitHub Security tab

@@ -234,3 +234,8 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 - Documentation: Instructions on how to verify PyPI package integrity ([#598](https://github.com/ScilifelabDataCentre/dds_cli/pull/598))
 - Version: 2.2.6 ([#601](https://github.com/ScilifelabDataCentre/dds_cli/pull/601))
+
+# Sprint (2023-02-03 - 2023-02-17)
+
+- Workflow: Lint yaml files ([#605](https://github.com/ScilifelabDataCentre/dds_cli/pull/605))
+- Add separate executables for Ubuntu latest (currently 22.04) and Ubuntu 20.04 ([#604](https://github.com/ScilifelabDataCentre/dds_cli/pull/604))

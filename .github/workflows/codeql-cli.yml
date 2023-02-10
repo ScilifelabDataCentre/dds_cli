@@ -18,8 +18,8 @@
 # We have attempted to detect the languages in your repository. Please check
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
-#
-name: "CodeQL"
+---
+name: CodeQL
 
 on:
   push:
@@ -72,7 +72,7 @@ jobs:
       #    and modify them (or add more) to build your code if your project
       #    uses a compiled language
 
-      #- run: |
+      # - run: |
       #   make bootstrap
       #   make release
 

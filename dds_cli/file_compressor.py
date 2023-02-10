@@ -86,14 +86,13 @@ class Compressor:
     def compress_file(
         file: pathlib.Path,
         chunk_size: int = FileSegment.SEGMENT_SIZE_RAW,
-    ) -> (bytes):
+    ) -> bytes:
         """Compresses file by reading it chunk by chunk."""
 
         LOG.debug("Started compression...")
 
         try:
             with file.open(mode="rb") as infile:
-
                 # Initiate a Zstandard compressor
                 cctzx = zstd.ZstdCompressor(write_checksum=True, level=4)
 

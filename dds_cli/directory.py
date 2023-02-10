@@ -30,7 +30,6 @@ class DDSDirectory:
     """Data Delivery System directory class."""
 
     def __init__(self, path=pathlib.Path, add_file_dir: bool = True):
-
         dirs = {
             "ROOT": path,
             "META": path / pathlib.Path("meta/"),

@@ -93,8 +93,6 @@ class FileHandler:
 
         # Iterate through any existing subdirectories - recursive
         LOG.debug(f"Any in directory? {any(directory.iterdir())}")
-        for x in directory.iterdir():
-            LOG.debug(x)
         if any(directory.iterdir()):
             for p in directory.iterdir():
                 if p.is_dir():

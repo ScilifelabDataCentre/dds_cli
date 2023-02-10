@@ -30,7 +30,7 @@ class InvalidMethodError(Exception):
 class DDSCLIException(click.ClickException):
     """Base exception for click in DDS."""
 
-    def __init__(self, message, sign=":warning-emoji:", show_emojis=True):
+    def __init__(self, message, sign=":warning-emoji:", show_emojis=False):
         """Init base exception."""
         self.message = message
         self.show_emojis = show_emojis

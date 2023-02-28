@@ -1612,8 +1612,12 @@ def put_data(
         dds_cli.exceptions.ApiRequestError,
         dds_cli.exceptions.NoKeyError,
         dds_cli.exceptions.NoDataError,
+        dds_cli.exceptions.PartialUploadException,
     ) as err:
-        LOG.error(err)
+        if isinstance(err, dds_cli.exceptions.PartialUploadException):
+            LOG.warning(err)
+        else:
+            LOG.error(err)
         sys.exit(1)
 
 

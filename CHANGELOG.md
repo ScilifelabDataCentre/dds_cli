@@ -244,4 +244,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 # Sprint (2023-02-17 - 2023-03-03)
 
-- Bug: Return error code if not all files have been uploaded ([]())
+- Bug: Return error code if not all files have been uploaded ([#615](https://github.com/ScilifelabDataCentre/dds_cli/pull/615))

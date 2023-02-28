@@ -200,33 +200,24 @@ class DDSBaseClass:
         self.filehandler.failed.clear()
 
         if true_failed:
-            intro_error_message = (
-                f"Errors occurred during {'upload' if self.method == 'put' else 'download'}"
-            )
-
             if self.method == "put":
-                retry_message = (
-                    "If you wish to retry the upload, re-run the `dds data put` command again, "
-                    "specifying the same options as you did now. To also overwrite the files "
-                    "that were uploaded, also add the `--overwrite` flag at the end of the command."
-                )
                 # Raise exception in order to give exit code 1
                 raise exceptions.UploadError(
-                    f"{intro_error_message}. \n"
-                    f"{retry_message} \n\n"
-                    f"See {self.failed_delivery_log} for more information."
+                    "Errors occurred during upload.\n"
+                    "If you wish to retry the upload, re-run the `dds data put` command again, "
+                    "specifying the same options as you did now. To also overwrite the files "
+                    "that were uploaded, also add the `--overwrite` flag at the end of the command.\n\n"
+                    f"Please verify that the following error log has been generated: {self.failed_delivery_log}\n"
+                    "[red][bold]Do not[/bold][/red] delete this file; The Data Centre may need it during DDS support."
                 )
             else:
                 # TODO: --destination should be able to >at least< overwrite the files in the
                 # previously created download location.
-                retry_message = (
+                dds_cli.utils.stderr_console.print(
+                    "Errors occurred during download.\n"
                     "If you wish to retry the download, re-run the `dds data get` command again, "
                     "specifying the same options as you did now. A new directory will "
-                    "automatically be created and all files will be downloaded again."
-                )
-                dds_cli.utils.stderr_console.print(
-                    f"{intro_error_message}. \n"
-                    f"{retry_message} \n\n"
+                    "automatically be created and all files will be downloaded again.\n\n"
                     f"See {self.failed_delivery_log} for more information."
                 )
 

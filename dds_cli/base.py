@@ -210,6 +210,7 @@ class DDSBaseClass:
                     "specifying the same options as you did now. To also overwrite the files "
                     "that were uploaded, also add the `--overwrite` flag at the end of the command."
                 )
+                # Raise exception in order to give exit code 1
                 raise exceptions.UploadError(
                     f"{intro_error_message}. \n"
                     f"{retry_message} \n\n"
@@ -230,6 +231,7 @@ class DDSBaseClass:
                 )
 
         elif nr_uploaded:
+            # Raise exception in order to give exit code 1
             raise exceptions.PartialUploadException(
                 f"{nr_uploaded} files were already uploaded.\nUpload [bold]partially[/bold] completed!\n"
             )

@@ -101,6 +101,10 @@ class UploadError(Exception):
     """Errors relating to file uploads."""
 
 
+class PartialUploadException(Exception):
+    """Exception raised when some files failed to upload."""
+
+
 class DownloadError(Exception):
     """Errors relating to file download."""
 

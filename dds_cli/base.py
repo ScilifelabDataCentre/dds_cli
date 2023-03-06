@@ -210,6 +210,12 @@ class DDSBaseClass:
                     "specifying the same options as you did now. To also overwrite the files "
                     "that were uploaded, also add the `--overwrite` flag at the end of the command."
                 )
+                # Raise exception in order to give exit code 1
+                raise exceptions.UploadError(
+                    f"{intro_error_message}. \n"
+                    f"{retry_message} \n\n"
+                    f"See {self.failed_delivery_log} for more information."
+                )
             else:
                 # TODO: --destination should be able to >at least< overwrite the files in the
                 # previously created download location.
@@ -218,16 +224,16 @@ class DDSBaseClass:
                     "specifying the same options as you did now. A new directory will "
                     "automatically be created and all files will be downloaded again."
                 )
-
-            dds_cli.utils.stderr_console.print(
-                f"{intro_error_message}. \n"
-                f"{retry_message} \n\n"
-                f"See {self.failed_delivery_log} for more information."
-            )
+                dds_cli.utils.stderr_console.print(
+                    f"{intro_error_message}. \n"
+                    f"{retry_message} \n\n"
+                    f"See {self.failed_delivery_log} for more information."
+                )
 
         elif nr_uploaded:
-            dds_cli.utils.console.print(
-                (f"\nUpload completed!\n{nr_uploaded} files were already uploaded.\n")
+            # Raise exception in order to give exit code 1
+            raise exceptions.PartialUploadException(
+                f"{nr_uploaded} files were already uploaded.\nUpload [bold]partially[/bold] completed!\n"
             )
 
         else:

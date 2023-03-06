@@ -190,7 +190,7 @@ def perform_request(
         response_json = response.json()
     except UnicodeEncodeError as err:
         raise dds_cli.exceptions.ApiRequestError(
-            message=f"The entered username or password seems to contain invalid characters. Please try again."
+            message="The entered username or password seems to contain invalid characters. Please try again."
         )
     except simplejson.JSONDecodeError as err:
         raise dds_cli.exceptions.ApiResponseError(message=str(err))

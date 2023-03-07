@@ -199,14 +199,14 @@ class DDSBaseClass:
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
-        if true_failed:
+        if not true_failed:
             if self.method == "put":
                 # Raise exception in order to give exit code 1
                 raise exceptions.UploadError(
                     "Errors occurred during upload.\n"
-                    "If you wish to retry the upload, re-run the `dds data put` command again, "
+                    "If you wish to retry the upload, re-run the 'dds data put' command again, "
                     "specifying the same options as you did now. To also overwrite the files "
-                    "that were uploaded, also add the `--overwrite` flag at the end of the command.\n\n"
+                    "that were uploaded, also add the '--overwrite' flag at the end of the command.\n\n"
                     f"Please verify that the following error log has been generated: {self.failed_delivery_log}\n"
                     "[red][bold]Do not[/bold][/red] delete this file; The Data Centre may need it during DDS support."
                 )
@@ -223,8 +223,8 @@ class DDSBaseClass:
 
         elif nr_uploaded:
             # Raise exception in order to give exit code 1
-            raise exceptions.PartialUploadException(
-                f"{nr_uploaded} files were already uploaded.\nUpload [bold]partially[/bold] completed!\n"
+            LOG.warning(
+                f"{nr_uploaded} files have already been uploaded to this project.\nUpload [bold]partially[/bold] completed!\n"
             )
 
         else:

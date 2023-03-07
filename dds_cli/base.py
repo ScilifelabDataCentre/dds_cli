@@ -199,7 +199,7 @@ class DDSBaseClass:
         # Clear dict to not take up too much space
         self.filehandler.failed.clear()
 
-        if not true_failed:
+        if true_failed:
             if self.method == "put":
                 # Raise exception in order to give exit code 1
                 raise exceptions.UploadError(

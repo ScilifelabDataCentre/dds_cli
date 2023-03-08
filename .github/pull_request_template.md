@@ -54,7 +54,7 @@ _Add information on additional changes required for the PR changes to work, both
 
 <!-- Always go through the following items. -->
 
-- [Changelog](../CHANGELOG.md)
+- [Sprintlog](../SPRINTLOG.md)
   - [ ] Added
   - [ ] Not needed (E.g. PR contains _only_ tests)
 - Rebase / Update / Merge _from_ base branch (the branch from which the current is forked)

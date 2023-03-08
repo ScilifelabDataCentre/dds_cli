@@ -241,3 +241,8 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Logging: Reduce debug level logging and remove logging from root ([#606](https://github.com/ScilifelabDataCentre/dds_cli/pull/606))
 - Add separate executables for Ubuntu latest (currently 22.04) and Ubuntu 20.04 ([#604](https://github.com/ScilifelabDataCentre/dds_cli/pull/604))
 - Bug: PyInstaller command not valid for Linux and macOS ([#612](https://github.com/ScilifelabDataCentre/dds_cli/pull/612))
+
+# Sprint (2023-02-17 - 2023-03-03)
+
+- Bug: Return error code 1 if error during upload ([#615](https://github.com/ScilifelabDataCentre/dds_cli/pull/615))
+- Clarification: Users should check that the error-file has been generated, and keep it in case we need it for debugging purposes ([#616](https://github.com/ScilifelabDataCentre/dds_cli/pull/616))

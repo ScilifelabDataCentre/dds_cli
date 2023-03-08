@@ -106,7 +106,7 @@ class User:
             raise exceptions.AuthenticationError(
                 message="Non-empty password needed to be able to authenticate."
             )
-        
+
         try:
             response_json, _ = dds_cli.utils.perform_request(
                 dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
@@ -118,7 +118,7 @@ class User:
             raise dds_cli.exceptions.ApiRequestError(
                 message="The entered username or password seems to contain invalid characters. Please try again."
             )
-    
+
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
         secondfactor_method = response_json.get("secondfactor_method")

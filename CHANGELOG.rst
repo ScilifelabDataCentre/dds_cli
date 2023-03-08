@@ -60,3 +60,10 @@ Changelog
 - **Vulnerability:** ``cryptography`` bumped from ``38.0.1`` to ``38.0.3``.
 - Clarified "How do I get my user account" section in documentation.
 - Included automatically generated code examples by ``rich-codex``
+
+.. _earlier-versions:
+
+Earlier versions
+~~~~~~~~~~~~~~~~~
+
+Please see `the release page on GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases>`_ for detailed information about the changes in each release.

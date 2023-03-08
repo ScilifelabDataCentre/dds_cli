@@ -37,13 +37,33 @@ Changelog
 2.2.4 - 2022-12-15
 ~~~~~~~~~~~~~~~~~~~~
 
-- **Security issue:** Bump `jwcrypto` package from `1.4` to `1.4.2`
+- **Vulnerability:** ``jwcrypto`` bumped from ``1.4`` to ``1.4.2``
 - Changed command: ``dds project info`` to ``dds project info display``
 - New command to allow changes to project title, description and PI: ``dds project info change``.
 
 .. _2.2.3:
 
 2.2.3 - 2022-11-29
+~~~~~~~~~~~~~~~~~~~
+
+- Fixed bug (Windows): Backslashes were causing issues with listing and downloading project contents.
+
+.. _2.2.2:
+
+2.2.2 - 2022-11-17
+~~~~~~~~~~~~~~~~~~~
+
+- New ``--destination`` option for upload command: ``dds data put --destination [destination]`` will upload data to remote directory called "[destination]"
+- New command for displaying project information: ``dds project info``
+- Fixed bug: Requests taking too long and timing out should display an understandable message.
+- Added check in download command: User must use either ``--get-all`` to download all project contents or ``--source`` to specify specific data paths. 
+- **Vulnerability:** ``cryptography`` bumped from ``38.0.1`` to ``38.0.3``.
+- Clarified "How do I get my user account" section in documentation.
+- Included automatically generated code examples by ``rich-codex``
+
+.. _2.2.0:
+
+2.2.0 - 2022-10-26
 ~~~~~~~~~~~~~~~~~~~
 
 - 

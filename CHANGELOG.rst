@@ -1,3 +1,49 @@
 Changelog
 ==========
 
+.. _2.2.62:
+
+2.2.62 - 2023-02-10
+~~~~~~~~~~~~~~~~~~~~~
+
+- Fixed an error in generation of executable for Windows.
+
+.. _2.2.61:
+
+2.2.61 - 2023-02-10
+~~~~~~~~~~~~~~~~~~~~
+
+- New executable for Ubuntu 20.04. Latest Ubuntu is 22.04.
+- Updated security scanning.
+
+.. _2.2.6:
+
+2.2.6 - 2023-02-01
+~~~~~~~~~~~~~~~~~~~~
+
+- Add security scanning of code. 
+- Publish CLI to TestPyPi during development: `dds-cli <https://test.pypi.org/project/dds-cli/>`_
+- Added `new instructions <https://scilifelabdatacentre.github.io/dds_cli/testing/>`_ for testing instance of the DDS.
+
+.. _2.2.5:
+
+2.2.5 - 2023-01-05
+~~~~~~~~~~~~~~~~~~~~
+
+- Updated documentation and added examples.
+
+.. _2.2.4:
+
+2.2.4 - 2022-12-15
+~~~~~~~~~~~~~~~~~~~~
+
+- **Security issue:** Bump `jwcrypto` package from `1.4` to `1.4.2`
+- Changed command: ``dds project info`` to ``dds project info display``
+- New command to allow changes to project title, description and PI: ``dds project info change``.
+
+.. _2.2.3:
+
+2.2.3 - 2022-11-29
+~~~~~~~~~~~~~~~~~~~
+
+- 

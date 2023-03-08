@@ -246,3 +246,4 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 - Bug: Return error code 1 if error during upload ([#615](https://github.com/ScilifelabDataCentre/dds_cli/pull/615))
 - Clarification: Users should check that the error-file has been generated, and keep it in case we need it for debugging purposes ([#616](https://github.com/ScilifelabDataCentre/dds_cli/pull/616))
+- Workflow: Changelog changed to Sprintlog and CHANGELOG.rst created for version changes ([#621](https://github.com/ScilifelabDataCentre/dds_cli/pull/620))

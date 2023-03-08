@@ -213,7 +213,7 @@ class DDSBaseClass:
             else:
                 # TODO: --destination should be able to >at least< overwrite the files in the
                 # previously created download location.
-                dds_cli.utils.stderr_console.print(
+                raise exceptions.DownloadError(
                     "Errors occurred during download.\n"
                     "If you wish to retry the download, re-run the `dds data get` command again, "
                     "specifying the same options as you did now. A new directory will "

@@ -248,7 +248,7 @@ _Nothing merged in CLI during this sprint_
 
 # 2023-03-03 - 2023-03-17
 
-_Nothing CLI related merged during this sprint_ 
+_Nothing CLI related merged during this sprint_
 
 # Sprint (2023-03-03 - 2023-03-17)
 

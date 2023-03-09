@@ -244,6 +244,10 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 
 # 2023-02-17 - 2023-03-03
 
+_Nothing merged in CLI during this sprint_
+
+# 2023-03-03 - 2023-03-17
+
 - Bug: Return error code 1 if error during upload ([#615](https://github.com/ScilifelabDataCentre/dds_cli/pull/615))
 - Clarification: Users should check that the error-file has been generated, and keep it in case we need it for debugging purposes ([#616](https://github.com/ScilifelabDataCentre/dds_cli/pull/616))
 - Bug: Catch UnicodeEncodeError during API request to avoid unclear error message upon usage of non-latin1 characters in username and password ([#617](https://github.com/ScilifelabDataCentre/dds_cli/pull/617))

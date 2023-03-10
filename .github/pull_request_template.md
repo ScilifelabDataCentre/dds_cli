@@ -26,7 +26,7 @@
 
 ## Checklist
 
-- [Changelog](../CHANGELOG.md)
+- [Sprintlog](../SPRINTLOG.md)
   - [ ] Added
   - [ ] Not needed (E.g. PR contains _only_ tests)
 - Rebase / Update / Merge _from_ base branch (the branch from which the current is forked)

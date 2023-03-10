@@ -11,7 +11,7 @@ Changelog
 - Fixed bugs:
     - Errors during upload makes client return exit code 1.
     - UnicodeEncodeError is caught and displays an understandable message if an invalid special character is used during authentication. **Note** that the original issue lies in that the registration allows the 'invalid' characters; This is being fixed on the API side as we speak.
-- Clarified error / warning messages printed out after upload issues: The ``dds_failed_delivery.json`` file should be created and should not be deleted.
+- Clarified error / warning messages printed out after upload issues: The ``dds_failed_delivery.json`` file should not be deleted.
 
 .. _2.2.62:
 

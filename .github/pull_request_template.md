@@ -37,7 +37,7 @@
   - [ ] No blocking PRs
 - PR to `master` branch
   - [ ] Yes: Read [the release instructions](../docs/procedures/new_release.md)
-    - [ ] I have followed steps 1-6.
+    - [ ] I have followed steps 1-7.
   - [ ] No
 
 ## Actions / Scans

@@ -81,8 +81,8 @@
 
 10. Inform users that there is a new version by adding a Message of the Day: `dds motd add`
 
-   - If users do not upgrade the CLI when there is a new version, they may experience issues and errors.
-   - If there is a major version mismatch between the API and CLI (e.g. API version 1.0.0 and CLI version 2.0.0 or vice versa), the DDS will inform the users that they are blocked from using the DDS until they have upgraded.
-   - If there is no warning from the DDS and there is an error, the first thing they are asked to do in the troubleshooting documentation is to verify that the CLI version is correct.
+- If users do not upgrade the CLI when there is a new version, they may experience issues and errors.
+- If there is a major version mismatch between the API and CLI (e.g. API version 1.0.0 and CLI version 2.0.0 or vice versa), the DDS will inform the users that they are blocked from using the DDS until they have upgraded.
+- If there is no warning from the DDS and there is an error, the first thing they are asked to do in the troubleshooting documentation is to verify that the CLI version is correct.
 
-   > Possible to have a procedure where we notify via email when there is a major version bump but only use the MOTD functionality if the version bump is mid / minor, but updating everytime we release a new version will only lead to the users ignoring the emails and therefore not getting the truly important information when they actually need it.
+> Possible to have a procedure where we notify via email when there is a major version bump but only use the MOTD functionality if the version bump is mid / minor, but updating everytime we release a new version will only lead to the users ignoring the emails and therefore not getting the truly important information when they actually need it.

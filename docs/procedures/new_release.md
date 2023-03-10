@@ -2,6 +2,11 @@
 
 1. Fork a new branch from `dev`
 2. Update the version [changelog](../../CHANGELOG.rst)
+
+   - The new version should be at the top of the page
+   - List the changes that the users will / may notice
+   - Do not add information regarding workflow (e.g. GitHub Actions) etc
+
 3. Update the version in [`version.py`](../../dds_cli/version.py)
 
    - _Minor changes, e.g. bug fix_: Minor version upgrade, e.g. `1.0.1 --> 1.0.2`

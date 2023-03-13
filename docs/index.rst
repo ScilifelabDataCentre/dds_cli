@@ -198,6 +198,7 @@ Command documentation and guide
    ls
    unit
    motd
+   changelog
 
 Indices and tables
 ==================

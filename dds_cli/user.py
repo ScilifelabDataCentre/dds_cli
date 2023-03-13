@@ -67,7 +67,7 @@ class User:
         """Fetch saved token from file otherwise authenticate user and saves the new token."""
         token_file = TokenFile(token_path=self.token_path, allow_group=allow_group)
         if not self.force_renew_token:
-            LOG.debug("Retrieving token.")
+            LOG.debug("Retrieving token...")
 
             # Get token from file
             try:
@@ -89,7 +89,7 @@ class User:
 
     def __authenticate_user(self, totp: str = None):
         """Authenticates the username and password via a call to the API."""
-        LOG.debug("Starting authentication on the API.")
+        LOG.debug("Starting authentication on the API...")
 
         if self.no_prompt:
             raise exceptions.AuthenticationError(
@@ -107,12 +107,17 @@ class User:
                 message="Non-empty password needed to be able to authenticate."
             )
 
-        response_json, _ = dds_cli.utils.perform_request(
-            dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
-            method="get",
-            auth=(username, password),
-            error_message="Failed to authenticate user",
-        )
+        try:
+            response_json, _ = dds_cli.utils.perform_request(
+                dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
+                method="get",
+                auth=(username, password),
+                error_message="Failed to authenticate user",
+            )
+        except UnicodeEncodeError as err:
+            raise dds_cli.exceptions.ApiRequestError(
+                message="The entered username or password seems to contain invalid characters. Please try again."
+            )
 
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
@@ -136,6 +141,7 @@ class User:
             )
 
         else:
+            LOG.debug(f"2FA method: {'TOTP' if totp_enabled else 'HOTP'}")
             if totp_enabled:
                 LOG.info(
                     "Please enter the one-time authentication code from your authenticator app."
@@ -232,7 +238,11 @@ class TokenFile:
     def read_token(self):
         """Attempts to fetch a valid token from the token file.
 
-        Returns None if no valid token can be found."""
+        Returns None if no valid token can be found.
+
+        Debug, not warning. Run prior to logging configured.
+        """
+        LOG.debug("Attempting to retrieve token from file...")
 
         if not self.file_exists():
             LOG.debug(f"Token file {self.token_file} does not exist.")
@@ -247,7 +257,7 @@ class TokenFile:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
 
         if self.token_expired(token=token):
-            LOG.debug("No token retrieved from file, will fetch new token from API")
+            LOG.debug("The token has expired, reauthentication required.")
             return None
 
         LOG.debug("Token retrieved from file.")

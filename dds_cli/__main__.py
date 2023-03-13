@@ -65,7 +65,7 @@ from dds_cli.options import (
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
 ####################################################################################################
 
-LOG = logging.getLogger()
+LOG = logging.getLogger("dds_cli")
 
 # Configuration for rich-click output
 click.rich_click.MAX_WIDTH = 100
@@ -160,7 +160,10 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
             log_fh = logging.FileHandler(log_file, encoding="utf-8")
             log_fh.setLevel(logging.DEBUG)
             log_fh.setFormatter(
-                logging.Formatter("[%(asctime)s] %(name)-20s [%(levelname)-7s]  %(message)s")
+                logging.Formatter(
+                    fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                )
             )
             LOG.addHandler(log_fh)
 
@@ -250,6 +253,7 @@ def list_projects_and_contents(
 
                             # If didn't enter anything, convert to None and exit
                             except (KeyboardInterrupt, AssertionError):
+                                LOG.debug("No project entered, exiting.")
                                 break
 
         # List all files in a project if we know a project ID
@@ -399,7 +403,7 @@ def login(click_ctx, totp, allow_group):
             token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group
         ):
             # Authentication token renewed in the init method.
-            LOG.info("[green] :white_check_mark: Authentication token created![/green]")
+            LOG.info(f"[green] :white_check_mark: Authentication successful![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

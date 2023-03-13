@@ -80,8 +80,8 @@ class S3Connector:
         except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
             LOG.warning(f"S3 connection failed: {err}")
             raise
-
-        LOG.debug(f"Resource :{self.resource}")
+        else:
+            LOG.debug(f"Connected to S3.")
         return resource
 
     # Static methods ############ Static methods #

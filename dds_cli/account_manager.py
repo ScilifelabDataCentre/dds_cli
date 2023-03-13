@@ -135,7 +135,6 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         for field in response.get("info", []):
             if isinstance(response["info"][field], str):
                 response["info"][field] = rich.markup.escape(response["info"][field])
-        LOG.debug(response)
 
         info = response.get("info")
         if info:

@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Changelog &#8212; Data Delivery System  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="prev" title="dds motd" href="../motd/" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<section id="id1">
+<span id="id2"></span><h2>2.2.63 - 2023-02-13<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Added this version changelog to the documentation.</p></li>
+<li><p>Reduced debug-level logging.</p></li>
+<li><dl class="simple">
+<dt>Fixed bugs:</dt><dd><ul>
+<li><p>Errors during upload makes client return exit code 1.</p></li>
+<li><p>UnicodeEncodeError is caught and displays an understandable message if an invalid special character is used during authentication. <strong>Note</strong> that the original issue lies in that the registration allows the ‘invalid’ characters; This is being fixed on the API side as we speak.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Clarified error / warning messages printed out after upload issues: The <code class="docutils literal notranslate"><span class="pre">dds_failed_delivery.json</span></code> file should not be deleted.</p></li>
+</ul>
+</section>
+<section id="id3">
+<span id="id4"></span><h2>2.2.62 - 2023-02-10<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Fixed an error in generation of executable for Windows.</p></li>
+</ul>
+</section>
+<section id="id5">
+<span id="id6"></span><h2>2.2.61 - 2023-02-10<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>New executable for Ubuntu 20.04. Latest Ubuntu is 22.04.</p></li>
+<li><p>Updated security scanning.</p></li>
+</ul>
+</section>
+<section id="id7">
+<span id="id8"></span><h2>2.2.6 - 2023-02-01<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Add security scanning of code.</p></li>
+<li><p>Publish CLI to TestPyPi during development: <a class="reference external" href="https://test.pypi.org/project/dds-cli/">dds-cli</a></p></li>
+<li><p>Added <a class="reference external" href="https://scilifelabdatacentre.github.io/dds_cli/testing/">new instructions</a> for testing instance of the DDS.</p></li>
+</ul>
+</section>
+<section id="id9">
+<span id="id10"></span><h2>2.2.5 - 2023-01-05<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Updated documentation and added examples.</p></li>
+</ul>
+</section>
+<section id="id11">
+<span id="id12"></span><h2>2.2.4 - 2022-12-15<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Vulnerability:</strong> <code class="docutils literal notranslate"><span class="pre">jwcrypto</span></code> bumped from <code class="docutils literal notranslate"><span class="pre">1.4</span></code> to <code class="docutils literal notranslate"><span class="pre">1.4.2</span></code></p></li>
+<li><p>Changed command: <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span> <span class="pre">info</span></code> to <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span> <span class="pre">info</span> <span class="pre">display</span></code></p></li>
+<li><p>New command to allow changes to project title, description and PI: <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span> <span class="pre">info</span> <span class="pre">change</span></code>.</p></li>
+</ul>
+</section>
+<section id="id13">
+<span id="id14"></span><h2>2.2.3 - 2022-11-29<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Fixed bug (Windows): Backslashes were causing issues with listing and downloading project contents.</p></li>
+</ul>
+</section>
+<section id="id15">
+<span id="id16"></span><h2>2.2.2 - 2022-11-17<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>New <code class="docutils literal notranslate"><span class="pre">--destination</span></code> option for upload command: <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">data</span> <span class="pre">put</span> <span class="pre">--destination</span> <span class="pre">[destination]</span></code> will upload data to remote directory called “[destination]”</p></li>
+<li><p>New command for displaying project information: <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">project</span> <span class="pre">info</span></code></p></li>
+<li><p>Fixed bug: Requests taking too long and timing out should display an understandable message.</p></li>
+<li><p>Added check in download command: User must use either <code class="docutils literal notranslate"><span class="pre">--get-all</span></code> to download all project contents or <code class="docutils literal notranslate"><span class="pre">--source</span></code> to specify specific data paths.</p></li>
+<li><p><strong>Vulnerability:</strong> <code class="docutils literal notranslate"><span class="pre">cryptography</span></code> bumped from <code class="docutils literal notranslate"><span class="pre">38.0.1</span></code> to <code class="docutils literal notranslate"><span class="pre">38.0.3</span></code>.</p></li>
+<li><p>Clarified “How do I get my user account” section in documentation.</p></li>
+<li><p>Included automatically generated code examples by <code class="docutils literal notranslate"><span class="pre">rich-codex</span></code></p></li>
+</ul>
+</section>
+<section id="earlier-versions">
+<span id="id17"></span><h2>Earlier versions<a class="headerlink" href="#earlier-versions" title="Permalink to this headline">¶</a></h2>
+<p>Please see <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases">the release page on GitHub</a> for detailed information about the changes in each release.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../">
+    <img class="logo" src="../_static/SciLifeLab_symbol_green.svg" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">Version: 2.2.63</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=scilifelabdatacentre&repo=dds_cli&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/">Installation guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../main/">dds (Main command)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auth/">dds auth</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user/">dds user</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project/">dds project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/">dds data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ls/">dds ls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit/">dds unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motd/">dds motd</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../">Documentation overview</a><ul>
+      <li>Previous: <a href="../motd/" title="previous chapter">dds motd</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search/" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021-2022, SciLifeLab Data Centre.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/changelog.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

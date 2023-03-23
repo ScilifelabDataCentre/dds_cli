@@ -10,6 +10,7 @@ import itertools
 import logging
 import os
 import sys
+import typing
 
 # Installed
 import pathlib
@@ -2099,18 +2100,18 @@ def get_stats(click_ctx, stat_type):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             # Get projects, only active by default
-            projects = lister.list_projects(show_all=(stat_type == "all"))
+            projects: typing.List = lister.list_projects(show_all=(stat_type == "all"))
 
             if stat_type == "size": 
                 # Calculate total amount of saved data in active projects
-                title_bold_part = "Bytes"
-                title_rest = "currently stored in DDS"
-                value = sum([x["Size"] for x in projects])
+                title_bold_part: str = "Bytes"
+                title_rest: str = "currently stored in DDS"
+                value: int = sum([x["Size"] for x in projects])
             else: 
                 # Get number of projects
-                value = len(projects)
-                title_bold_part = "Active" if stat_type == "active" else "Total"
-                title_rest = "projects"
+                title_bold_part: str = "Active" if stat_type == "active" else "Total"
+                title_rest: str = "projects"
+                value: int = len(projects)
             
             LOG.info(f"[bold]{title_bold_part}[/bold] {title_rest}: {value}")
     except (

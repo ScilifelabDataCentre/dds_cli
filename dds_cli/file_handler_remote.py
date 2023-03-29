@@ -90,10 +90,6 @@ class RemoteFileHandler(fh.FileHandler):
         folder_contents = file_info.get("folder_contents", {})
         files = file_info.get("files")
 
-        LOG.debug(f"Attempted: \n{all_paths}")
-        LOG.debug(f"Files: \n{files}")
-        LOG.debug(f"Folder contents: \n{folder_contents}")
-
         # Cancel download of those files or folders not found in the db
         self.failed = {
             x: {"error": "Not found in DB."}
@@ -132,7 +128,6 @@ class RemoteFileHandler(fh.FileHandler):
                 }
             )
 
-        LOG.debug(f"Data (files and folders):\n {data}")
         return data
 
     # Public methods ############ Public methods #

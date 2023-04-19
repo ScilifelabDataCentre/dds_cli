@@ -258,3 +258,11 @@ _Nothing merged in CLI during this sprint_
 
 - New command: `dds stats` to get project and data statistics ([#624](https://github.com/ScilifelabDataCentre/dds_cli/pull/624))
 - Logging: Removed debug level logs ([#625](https://github.com/ScilifelabDataCentre/dds_cli/pull/625))
+
+# 2023-03-31 - 2023-04-14
+
+_Nothing merged in CLI during this sprint_
+
+# 2023-04-14 - 2023-04-28
+
+- Documentation: Password management recommendations ([#627](https://github.com/ScilifelabDataCentre/dds_cli/pull/627))

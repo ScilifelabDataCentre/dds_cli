@@ -6,7 +6,7 @@
 Securing your password
 =================================
 
-Your Data Delivery System (DDS) password will be used to protect your data from any unauthorized parties. Choosing a secure password is therefore essential since the complexity will determine how easy it is to guess the password and thereby gain access to your data. Remembering a number of different passwords to different services can be difficult, and many people resort to using the same or similar password for all, or saving them in insecure ways where they are easily lost or/and read by others.
+Your Data Delivery System (DDS) password will be used to protect your data from any unauthorized parties. Choosing a secure password is therefore essential since the password's complexity will determine how easy it is to guess the password and thereby gain access to your data. Remembering a number of different passwords for different services can be difficult, and many people resort to using the same or similar password for all, or saving them in insecure ways where they are easily lost or/and read by others.
 
 Due to this, we highly recommend that you use a password manager to store your passwords. An example of this is `Bitwarden <https://bitwarden.com/>`_ which is also used by the SciLifeLab Data Centre team. 
 

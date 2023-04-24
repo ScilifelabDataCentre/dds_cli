@@ -13,7 +13,7 @@ Due to this, we highly recommend that you use a password manager to store your p
 How to use password managers, e.g. Bitwarden
 =============================================
 
-Using a password manager such as Bitwarden means that you need to keep track of a single password: Your password for the password manager. The rest are stored within the password manager, allowing you to have different complex ones for each service you use. Many of these tools have mobile apps and plugins for different browsers, which simplifies password management significantly. 
+Using a password manager such as Bitwarden means that you need to keep track of a single password: The password you set for the password manager. The rest are stored within the password manager, allowing you to have different complex ones for each service you use. Many of these tools have mobile apps and plugins for different browsers, which simplifies password management significantly. 
 
 The following is an example of how to start using Bitwarden. 
 

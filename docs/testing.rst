@@ -83,11 +83,18 @@ You need to install the test version of the CLI from TestPyPi. Run this command 
 
 After installing the CLI, you need to complete the following steps before you can start using it: 
 
-1. Set the CLI to point to the test instance by running the following command in the terminal
+1. Set the CLI to point to the test instance by running the following command in the terminal / command prompt / PowerShell (depending on your OS, see below)
 
     .. code-block:: bash
         
-        export DDS_CLI_ENV="test-instance"  
+        # Linux / MacOS
+        export DDS_CLI_ENV="test-instance"
+
+        # Windows Command Prompt
+        set DDS_CLI_ENV=test-instance
+
+        # Windows PowerShell
+        $env:DDS_CLI_ENV = 'test-instance'
 
 2. Verify that the output of the following command contains ``https://dds-dev.dckube.scilifelab.se/`` and **not** ``https://delivery.scilifelab.se/``
 

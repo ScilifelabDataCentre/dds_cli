@@ -265,4 +265,5 @@ _Nothing merged in CLI during this sprint_
 
 # 2023-04-14 - 2023-04-28
 
+- Documentation: How to set environment variables in Windows ([#626](https://github.com/ScilifelabDataCentre/dds_cli/pull/626))
 - Documentation: Password management recommendations ([#627](https://github.com/ScilifelabDataCentre/dds_cli/pull/627))

@@ -10,7 +10,7 @@ Changelog
 - Removed debug-level logging.
 - New documentation:
     - How to set environment variables in Windows.
-    - Recommendations regarding password management
+    - Recommendations regarding password management.
 
 .. _2.2.63:
 

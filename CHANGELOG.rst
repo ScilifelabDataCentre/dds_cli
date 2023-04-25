@@ -1,9 +1,20 @@
 Changelog
 ==========
 
+.. _2.2.64:
+
+2.2.64 - 2023-04-26
+~~~~~~~~~~~~~~~~~~~~
+
+- New command for checking a few statistics in the DDS.
+- Removed debug-level logging.
+- New documentation:
+    - How to set environment variables in Windows.
+    - Recommendations regarding password management.
+
 .. _2.2.63:
 
-2.2.63 - 2023-02-13
+2.2.63 - 2023-03-13
 ~~~~~~~~~~~~~~~~~~~~
 
 - Added this version changelog to the documentation.

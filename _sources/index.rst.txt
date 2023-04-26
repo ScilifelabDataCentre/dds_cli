@@ -189,6 +189,7 @@ Command documentation and guide
 
    Welcome page <self>
    installation
+   password
    examples
    dds (Main command) <main>
    auth

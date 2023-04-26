@@ -127,9 +127,16 @@
 <span id="test-config"></span><h2><a class="toc-backref" href="#id4">4. How to configure the test version of the CLI</a><a class="headerlink" href="#how-to-configure-the-test-version-of-the-cli" title="Permalink to this headline">¶</a></h2>
 <p>After installing the CLI, you need to complete the following steps before you can start using it:</p>
 <ol class="arabic">
-<li><p>Set the CLI to point to the test instance by running the following command in the terminal</p>
+<li><p>Set the CLI to point to the test instance by running the following command in the terminal / command prompt / PowerShell (depending on your OS, see below)</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">DDS_CLI_ENV</span><span class="o">=</span><span class="s2">&quot;test-instance&quot;</span>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Linux / MacOS</span>
+<span class="nb">export</span> <span class="nv">DDS_CLI_ENV</span><span class="o">=</span><span class="s2">&quot;test-instance&quot;</span>
+
+<span class="c1"># Windows Command Prompt</span>
+<span class="nb">set</span> <span class="nv">DDS_CLI_ENV</span><span class="o">=</span>test-instance
+
+<span class="c1"># Windows PowerShell</span>
+<span class="nv">$env</span>:DDS_CLI_ENV <span class="o">=</span> <span class="s1">&#39;test-instance&#39;</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -165,7 +172,7 @@
 
 
 
-<p class="blurb">Version: 2.2.63</p>
+<p class="blurb">Version: 2.2.64</p>
 
 
 
@@ -183,6 +190,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../password/">Securing your password</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../main/">dds (Main command)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../auth/">dds auth</a></li>

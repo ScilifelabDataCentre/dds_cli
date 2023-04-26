@@ -253,3 +253,17 @@ _Nothing merged in CLI during this sprint_
 - Bug: Catch UnicodeEncodeError during API request to avoid unclear error message upon usage of non-latin1 characters in username and password ([#617](https://github.com/ScilifelabDataCentre/dds_cli/pull/617))
 - Workflow: Restructure and clarify PR template ([#618](https://github.com/ScilifelabDataCentre/dds_cli/pull/618))
 - Workflow: Changelog changed to Sprintlog and CHANGELOG.rst created for version changes ([#621](https://github.com/ScilifelabDataCentre/dds_cli/pull/620))
+
+# 2023-03-17 - 2023-03-31
+
+- New command: `dds stats` to get project and data statistics ([#624](https://github.com/ScilifelabDataCentre/dds_cli/pull/624))
+- Logging: Removed debug level logs ([#625](https://github.com/ScilifelabDataCentre/dds_cli/pull/625))
+
+# 2023-03-31 - 2023-04-14
+
+_Nothing merged in CLI during this sprint_
+
+# 2023-04-14 - 2023-04-28
+
+- Documentation: How to set environment variables in Windows ([#626](https://github.com/ScilifelabDataCentre/dds_cli/pull/626))
+- Documentation: Password management recommendations ([#627](https://github.com/ScilifelabDataCentre/dds_cli/pull/627))

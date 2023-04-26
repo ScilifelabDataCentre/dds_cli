@@ -10,6 +10,7 @@ import itertools
 import logging
 import os
 import sys
+import typing
 
 # Installed
 import pathlib
@@ -2078,6 +2079,49 @@ def set_maintenance_mode(click_ctx, setting):
         dds_cli.exceptions.ApiRequestError,
         dds_cli.exceptions.DDSCLIException,
         dds_cli.exceptions.InvalidMethodError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# Stats
+
+
+@dds_main.command(name="stats", no_args_is_help=False)
+@click.argument(
+    "stat_type", nargs=1, type=click.Choice(["active", "all", "size"], case_sensitive=True)
+)
+@click.pass_obj
+def get_stats(click_ctx, stat_type):
+    """Get statistics in the DDS."""
+    try:
+        # Num projects
+        with dds_cli.data_lister.DataLister(
+            show_usage=True,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            json=True,
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as lister:
+            # Get projects, only active by default
+            projects: typing.List = lister.list_projects(show_all=(stat_type == "all"))
+
+            if stat_type == "size":
+                # Calculate total amount of saved data in active projects
+                title_bold_part: str = "Bytes"
+                title_rest: str = "currently stored in DDS"
+                value: int = sum([x["Size"] for x in projects])
+            else:
+                # Get number of projects
+                title_bold_part: str = "Active" if stat_type == "active" else "Total"
+                title_rest: str = "projects"
+                value: int = len(projects)
+
+            LOG.info(f"[bold]{title_bold_part}[/bold] {title_rest}: {value}")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
     ) as err:
         LOG.error(err)
         sys.exit(1)

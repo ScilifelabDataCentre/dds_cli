@@ -1767,7 +1767,7 @@ def get_data(
 
                         # Schedule the next set of futures for download
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug(f"Starting: {rich.markup.escape(str(next_file))}")
+                            LOG.debug("Starting: %s", rich.markup.escape(str(next_file)))
                             # Execute download
                             download_threads[
                                 texec.submit(
@@ -2113,7 +2113,7 @@ def get_stats(click_ctx, stat_type):
                 # Calculate total amount of saved data in active projects
                 title_bold_part: str = "Bytes"
                 title_rest: str = "currently stored in DDS"
-                value: int = sum([x["Size"] for x in projects])
+                value: int = sum(x["Size"] for x in projects)
             else:
                 # Get number of projects
                 title_bold_part: str = "Active" if stat_type == "active" else "Total"

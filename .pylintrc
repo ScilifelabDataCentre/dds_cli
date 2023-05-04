@@ -3,4 +3,8 @@ max-line-length=120
 
 disable=
     too-many-lines,
-    fixme
+    fixme,
+    too-many-arguments, 
+    too-many-locals,
+    too-many-branches,
+    too-many-statements

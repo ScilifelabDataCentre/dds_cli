@@ -8,7 +8,6 @@
 import concurrent.futures
 import itertools
 import logging
-import os
 import sys
 import typing
 
@@ -100,7 +99,7 @@ dds_cli.utils.stderr_console.print(
 if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
     motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
     if motds:
-        dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold]")
+        dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
         for motd in motds:
             dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
 
@@ -407,7 +406,7 @@ def login(click_ctx, totp, allow_group):
             token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group
         ):
             # Authentication token renewed in the init method.
-            LOG.info(f"[green] :white_check_mark: Authentication successful![/green]")
+            LOG.info("[green] :white_check_mark: Authentication successful![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -624,7 +623,7 @@ def list_users(click_ctx, username):
     ),
     help=(
         "Type of account. To include a space in the chosen role, use quotes "
-        '(e.g. "Unit Personnel") or escape the space (e.g. Unit\ Personnel)'
+        '(e.g. "Unit Personnel") or escape the space (e.g. Unit \ Personnel)'
     ),
 )
 @click.option(

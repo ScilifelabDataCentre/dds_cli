@@ -142,8 +142,11 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 "Name:              %s \n"
                 "Primary Email:     %s \n"
                 "Associated Emails: %s \n",
-                info['username'], info['role'], info['name'], info['email_primary'],
-                ', '.join(str(x) for x in info['emails_all'])
+                info["username"],
+                info["role"],
+                info["name"],
+                info["email_primary"],
+                ", ".join(str(x) for x in info["emails_all"]),
             )
 
     def user_activation(self, email, action):
@@ -269,5 +272,5 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             )
 
         LOG.info(
-            "Account exists: [bold]%s[/bold]", '[blue]Yes[/blue]' if exists else '[red]No[/red]'
+            "Account exists: [bold]%s[/bold]", "[blue]Yes[/blue]" if exists else "[red]No[/red]"
         )

@@ -83,14 +83,14 @@ click.rich_click.MAX_WIDTH = 100
 
 
 DDS_URL = dds_cli.DDSEndpoint.BASE_ENDPOINT
+DDS_URL_BASE = DDS_URL[: DDS_URL.index("/", 8)]
+
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
-    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}/[/link]".format(
-        DDS_URL[: DDS_URL.index("/", 8)]
-    ),
+    f"\n[green] ︶  (  ) ) ([/]    [blue][link={DDS_URL_BASE}]{DDS_URL_BASE}/[/link]",
     f"\n[green]      ︶ (  )[/]    [dim]CLI Version {dds_cli.__version__}",
     "\n[green]          ︶",
     highlight=False,
@@ -585,7 +585,7 @@ def list_users(click_ctx, unit, invites):
     required=True, help_message="[Super Admins only] The username of the account you want to check."
 )
 @click.pass_obj
-def list_users(click_ctx, username):
+def find_users(click_ctx, username):
     """Check if a username is registered to an account in the DDS."""
     try:
         with dds_cli.account_manager.AccountManager(

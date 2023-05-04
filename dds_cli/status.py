@@ -42,7 +42,7 @@ class DeliveryStatus:
         """Cancel the failed file."""
 
 
-class ProgressPercentage(object):
+class ProgressPercentage:
     """Updates the progress bar with the callback from boto3."""
 
     def __init__(self, progress, task):

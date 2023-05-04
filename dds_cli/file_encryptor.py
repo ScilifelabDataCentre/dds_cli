@@ -63,7 +63,7 @@ class ECDHKeyHandler:
             backend=backends.default_backend(),
         ).derive(shared_key)
 
-        LOG.debug(f"Salt: {salt}")
+        LOG.debug("Salt: %s", salt)
         return derived_shared_key, salt.hex().upper()
 
     @staticmethod
@@ -108,9 +108,9 @@ class Encryptor(ECDHKeyHandler):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, exc_type, exc_value, traceb):
         if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
+            traceback.print_exception(exc_type, exc_value, traceb)
             return False  # uncomment to pass exception through
 
         return True
@@ -212,9 +212,9 @@ class Decryptor(ECDHKeyHandler):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, exc_type, exc_value, traceb):
         if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
+            traceback.print_exception(exc_type, exc_value, traceb)
             return False  # uncomment to pass exception through
 
         return True
@@ -261,6 +261,6 @@ class Decryptor(ECDHKeyHandler):
                 LOG.debug("Testing nonce...")
                 if last_nonce != nonce:
                     raise SystemExit("Nonces do not match!!")
-                LOG.debug(f"Last nonce should be: {last_nonce}, was: {nonce}")
-        except Exception as err:
+                LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)
+        except Exception as err: # pylint: disable=broad-exception-caught
             LOG.warning(str(err))

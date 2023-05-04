@@ -9,4 +9,5 @@ disable=
     too-many-branches,
     too-many-statements,
     too-many-instance-attributes,
-    missing-timeout
+    missing-timeout,
+    too-few-public-methods

@@ -74,9 +74,9 @@ class Compressor:
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, exc_type, exc_val, traceb):
         if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
+            traceback.print_exception(exc_type, exc_val, traceb)
             return False  # uncomment to pass exception through
 
         return True
@@ -107,7 +107,7 @@ class Compressor:
                     #     yield
                     for chunk in iter(lambda: compressor.read(chunk_size), b""):
                         yield chunk
-        except Exception as err:
+        except Exception as err: # pylint: disable=broad-exception-caught
             LOG.warning(str(err))
         else:
             LOG.debug("Compression finished.")
@@ -142,8 +142,8 @@ class Compressor:
 
         compressed, error = (False, "")
         try:
-            with file.open(mode="rb") as f:
-                file_start = f.read(self.max_magic_len)
+            with file.open(mode="rb") as file_obj:
+                file_start = file_obj.read(self.max_magic_len)
                 if file_start.startswith(tuple(x for x in self.fmt_magic)):
                     compressed = True
         except OSError as err:

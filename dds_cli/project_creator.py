@@ -2,14 +2,13 @@
 import logging
 
 # Installed
-import dds_cli
-import dds_cli.utils
 import rich.prompt
 
 # Own modules
+import dds_cli
+import dds_cli.utils
 from dds_cli import base
 from dds_cli import exceptions
-from dds_cli import utils
 from dds_cli import DDSEndpoint
 
 ###############################################################################
@@ -73,7 +72,7 @@ class ProjectCreator(base.DDSBaseClass):
         if warning_message:
             if self.no_prompt:
                 LOG.warning(
-                    f"{warning_message}\n\n`--no-prompt` option used: Not creating project."
+                    "%s\n\n`--no-prompt` option used: Not creating project.", warning_message
                 )
                 proceed_creation = False
             else:

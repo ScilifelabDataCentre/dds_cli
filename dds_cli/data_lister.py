@@ -101,14 +101,14 @@ class DataLister(base.DDSBaseClass):
                 last_updated = pytz.timezone("UTC").localize(
                     datetime.datetime.strptime(project["Last updated"], "%a, %d %b %Y %H:%M:%S GMT")
                 )
-            except ValueError as err:
+            except ValueError as exc:
                 raise exceptions.ApiResponseError(
                     f"Time zone mismatch: Incorrect zone '{project['Last updated'].split()[-1]}'"
-                )
-            else:
-                project["Last updated"] = last_updated.astimezone(tzlocal.get_localzone()).strftime(
-                    "%a, %d %b %Y %H:%M:%S %Z"
-                )
+                ) from exc
+
+            project["Last updated"] = last_updated.astimezone(tzlocal.get_localzone()).strftime(
+                "%a, %d %b %Y %H:%M:%S %Z"
+            )
 
         # Sort projects according to chosen or default, first ID
         sorted_projects = self.__sort_projects(projects=project_info, sort_by=sort_by)
@@ -121,9 +121,9 @@ class DataLister(base.DDSBaseClass):
 
     def list_files(self, folder: str = None, show_size: bool = False):
         """Create a tree displaying the files within the project."""
-        LOG.info(f"Listing files for project '{self.project}'")
+        LOG.info("Listing files for project '%s'", self.project)
         if folder:
-            LOG.info(f"Showing files in folder '{escape(str(folder))}'")
+            LOG.info("Showing files in folder '%s'", escape(str(folder)))
 
         if folder is None:
             folder = ""
@@ -156,11 +156,11 @@ class DataLister(base.DDSBaseClass):
             raise exceptions.NoDataError(f"Could not find folder: '{escape(folder)}'")
 
         # Get max length of file name
-        max_string = max([len(x["name"]) for x in sorted_files_folders])
+        max_string = max(len(x["name"]) for x in sorted_files_folders)
 
         # Get max length of size string
         max_size = max(
-            [
+            (
                 len(
                     dds_cli.utils.format_api_response(
                         response=x["size"], key="Size", binary=self.binary
@@ -168,7 +168,7 @@ class DataLister(base.DDSBaseClass):
                 )
                 for x in sorted_files_folders
                 if show_size and "size" in x
-            ],
+            ),
             default=0,
         )
 
@@ -176,13 +176,13 @@ class DataLister(base.DDSBaseClass):
         visible_folders = []
 
         # Add items to tree
-        for x in sorted_files_folders:
+        for item in sorted_files_folders:
             # Check if string is folder
-            is_folder = x.pop("folder")
+            is_folder = item.pop("folder")
 
             # Att 1 for folders due to trailing /
             tab = th.TextHandler.format_tabs(
-                string_len=len(x["name"]) + (1 if is_folder else 0),
+                string_len=len(item["name"]) + (1 if is_folder else 0),
                 max_string_len=max_string,
             )
 
@@ -190,13 +190,13 @@ class DataLister(base.DDSBaseClass):
             line = ""
             if is_folder:
                 line = "[bold deep_sky_blue3]"
-                visible_folders.append(x["name"])
-            line += escape(x["name"]) + ("/" if is_folder else "")
+                visible_folders.append(item["name"])
+            line += escape(item["name"]) + ("/" if is_folder else "")
 
             # Add size to line if option specified
-            if show_size and "size" in x:
+            if show_size and "size" in item:
                 size = dds_cli.utils.format_api_response(
-                    response=x["size"], key="Size", binary=self.binary
+                    response=item["size"], key="Size", binary=self.binary
                 )
                 line += f"{tab}{size.split()[0]}"
 
@@ -257,13 +257,13 @@ class DataLister(base.DDSBaseClass):
             tree = FileTree([], f"{basename}/")
             try:
                 sorted_files_folders = __api_call_list_files(folder)
-            except exceptions.NoDataError as e:
+            except exceptions.NoDataError as exc:
                 if folder is None:
                     raise exceptions.NoDataError(
                         "No files or folders found for the specified project"
-                    )
-                else:
-                    raise exceptions.NoDataError(f"Could not find folder: '{escape(folder)}'")
+                    ) from exc
+                
+                raise exceptions.NoDataError(f"Could not find folder: '{escape(folder)}'") from exc
 
             # Get max length of file name
             max_string = max([len(x["name"]) for x in sorted_files_folders])

@@ -52,13 +52,13 @@ def verify_proceed(func):
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.debug(f"File {escape(str(file))} started {func.__name__}")
+        LOG.debug("File '%s' started: %s", escape(str(file)), func.__name__)
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
         # Cancel file(s) if something failed
         if not ok_to_proceed:
-            LOG.warning(f"{func.__name__} failed: {message}")
+            LOG.warning("%s failed: %s", func.__name__, message)
             self.status[file].update({"cancel": True, "message": message})
             if self.status[file].get("failed_op") is None:
                 self.status[file]["failed_op"] = "crypto"
@@ -97,7 +97,7 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.debug(f"File {escape(str(file))} status updated to {func.__name__}: started")
+        LOG.debug("File '%s' status updated to %s: started", escape(str(file)), func.__name__)
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
@@ -107,12 +107,12 @@ def update_status(func):
             # Save info about which operation failed
 
             self.status[file]["failed_op"] = func.__name__
-            LOG.warning(f"{func.__name__} failed: {message}")
+            LOG.warning("%s failed: %s", func.__name__, message)
 
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.debug(f"File {escape(str(file))} status updated to {func.__name__}: done")
+            LOG.debug("File %s status updated to %s: done", escape(str(file)), func.__name__)
 
         return ok_to_continue, message
 
@@ -137,7 +137,7 @@ def subpath_required(func):
             except OSError as err:
                 return False, str(err)
 
-            LOG.debug(f"New directory created: {full_subpath}")
+            LOG.debug("New directory created: '%s'", full_subpath)
 
         return func(self, file=file, *args, **kwargs)
 
@@ -149,8 +149,6 @@ def removal_spinner(func):
 
     @functools.wraps(func)
     def create_and_remove_task(self, *args, **kwargs):
-        message = ""
-
         with Progress(
             "[bold]{task.description}",
             SpinnerColumn(spinner_name="dots12", style="white"),
@@ -186,7 +184,7 @@ def removal_spinner(func):
                     dds_cli.utils.console.print(self.failed_table)
             else:
                 dds_cli.utils.console.print(self.failed_table)
-            LOG.warning(f"Finished {description_lc} with errors, see table above")
+            LOG.warning("Finished %s with errors, see table above", description_lc)
         elif self.failed_files is not None:
             self.failed_files["result"] = f"Finished {description_lc} with errors"
             dds_cli.utils.console.print(self.failed_files)

@@ -83,14 +83,14 @@ click.rich_click.MAX_WIDTH = 100
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
 
-dds_url = dds_cli.DDSEndpoint.BASE_ENDPOINT
+DDS_URL = dds_cli.DDSEndpoint.BASE_ENDPOINT
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
     "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}/[/link]".format(
-        dds_url[: dds_url.index("/", 8)]
+        DDS_URL[: DDS_URL.index("/", 8)]
     ),
     f"\n[green]      ︶ (  )[/]    [dim]CLI Version {dds_cli.__version__}",
     "\n[green]          ︶",
@@ -2108,7 +2108,7 @@ def get_stats(click_ctx, stat_type):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             # Get projects, only active by default
-            projects: typing.List = lister.list_projects(show_all=(stat_type == "all"))
+            projects: typing.List = lister.list_projects(show_all=stat_type == "all")
 
             if stat_type == "size":
                 # Calculate total amount of saved data in active projects

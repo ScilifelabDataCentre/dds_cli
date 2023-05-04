@@ -380,7 +380,10 @@ def auth_group_command(_):
     is_flag=True,
     required=False,
     default=False,
-    help="[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600, allowing others to access your authenticated session token.",
+    help=(
+        "[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600, "
+        "allowing others to access your authenticated session token."
+    ),
 )
 @click.pass_obj
 def login(click_ctx, totp, allow_group):
@@ -1687,7 +1690,8 @@ def get_data(
         sys.exit(1)
     elif not get_all and not (source or source_path_file):
         LOG.error(
-            "Specify either '--source' or '--source-path-file' to download specific directories/files, or '--get-all' to download all project contents."
+            "Specify either '--source' or '--source-path-file' to download specific directories/files, "
+            "or '--get-all' to download all project contents."
         )
         sys.exit(1)
 
@@ -1750,7 +1754,8 @@ def get_data(
                             try:
                                 file_downloaded = dfut.result()
                                 LOG.debug(
-                                    f"Download of {rich.markup.escape(str(downloaded_file))} successful: {file_downloaded}"
+                                    f"Download of {rich.markup.escape(str(downloaded_file))} "
+                                    f"successful: {file_downloaded}"
                                 )
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.critical(

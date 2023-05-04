@@ -7,14 +7,11 @@
 # Standard library
 from dataclasses import dataclass
 import logging
-import os
 from typing import Tuple, Union, List
 import datetime
 import pathlib
 
 # Installed
-import requests
-import simplejson
 from rich.padding import Padding
 from rich.markup import escape
 from rich.table import Table
@@ -262,31 +259,34 @@ class DataLister(base.DDSBaseClass):
                     raise exceptions.NoDataError(
                         "No files or folders found for the specified project"
                     ) from exc
-                
+
                 raise exceptions.NoDataError(f"Could not find folder: '{escape(folder)}'") from exc
 
             # Get max length of file name
-            max_string = max([len(x["name"]) for x in sorted_files_folders])
+            max_string = max(len(x["name"]) for x in sorted_files_folders)
 
             # Get max length of size string
             max_size = max(
-                [
+                (
                     len(x["size"].split(" ")[0])
                     for x in sorted_files_folders
                     if show_size and "size" in x
-                ],
+                ),
                 default=0,
             )
+
             # Rich outputs precisely one line per file/folder
-            for f in sorted_files_folders:
-                is_folder = f.pop("folder")
+            for item in sorted_files_folders:
+                is_folder = item.pop("folder")
 
                 if not is_folder:
-                    tree.subtrees.append((escape(f["name"]), f.get("size") if show_size else None))
+                    tree.subtrees.append(
+                        (escape(item["name"]), item.get("size") if show_size else None)
+                    )
                 else:
                     subtree, _max_string, _max_size = __construct_file_tree(
-                        pathlib.Path(folder, f["name"]).as_posix() if folder else f["name"],
-                        f"[bold deep_sky_blue3]{escape(f['name'])}",
+                        pathlib.Path(folder, item["name"]).as_posix() if folder else item["name"],
+                        f"[bold deep_sky_blue3]{escape(item['name'])}",
                     )
                     # Due to indentation, the filename strings of
                     # subdirectories are 4 characters deeper than
@@ -305,23 +305,23 @@ class DataLister(base.DDSBaseClass):
             """
             try:
                 sorted_files_folders = __api_call_list_files(folder)
-            except exceptions.NoDataError as e:
+            except exceptions.NoDataError as exc:
                 if folder is None:
                     raise exceptions.NoDataError(
                         "No files or folders found for the specified project"
-                    )
-                else:
-                    raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
+                    ) from exc
+
+                raise exceptions.NoDataError(f"Could not find folder: '{folder}'") from exc
 
             tree = {}
 
-            for f in sorted_files_folders:
-                is_folder = f.pop("folder")
-                name = f["name"]
+            for item in sorted_files_folders:
+                is_folder = item.pop("folder")
+                name = item["name"]
                 if not is_folder:
                     tree[name] = {"name": name, "is_folder": False, "children": {}}
                     if show_size:
-                        tree[f["name"]]["size"] = f.get("size")
+                        tree[item["name"]]["size"] = item.get("size")
                 else:
                     children = __construct_file_dict_tree(
                         pathlib.Path(folder, name).as_posix() if folder else name,
@@ -364,38 +364,38 @@ class DataLister(base.DDSBaseClass):
         if self.json:
             tree_dict = __construct_file_dict_tree(None)
             return tree_dict
-        else:
-            # We use two tree walks, one for file search and one for Rich tree
-            # constructing, since it is difficult to compute the correct size
-            # indentation without the whole tree
-            file_tree, max_string, max_size = __construct_file_tree(
-                None, f"[bold magenta]Files & directories in project: [green]{self.project}"
-            )
 
-            tree, tree_length = __construct_rich_tree(file_tree, max_string, max_size, 0)
+        # We use two tree walks, one for file search and one for Rich tree
+        # constructing, since it is difficult to compute the correct size
+        # indentation without the whole tree
+        file_tree, max_string, max_size = __construct_file_tree(
+            None, f"[bold magenta]Files & directories in project: [green]{self.project}"
+        )
 
-            # The first header is not accounted for by the recursion
-            tree_length += 1
+        tree, tree_length = __construct_rich_tree(file_tree, max_string, max_size, 0)
 
-            # Check if the tree is too large to be printed directly
-            # and use a pager if that is the case
-            if tree_length > dds_cli.utils.console.height:
-                with dds_cli.utils.console.pager():
-                    dds_cli.utils.console.print(
-                        Padding(
-                            tree,
-                            1,
-                        )
-                    )
-            else:
+        # The first header is not accounted for by the recursion
+        tree_length += 1
+
+        # Check if the tree is too large to be printed directly
+        # and use a pager if that is the case
+        if tree_length > dds_cli.utils.console.height:
+            with dds_cli.utils.console.pager():
                 dds_cli.utils.console.print(
                     Padding(
                         tree,
                         1,
                     )
                 )
+        else:
+            dds_cli.utils.console.print(
+                Padding(
+                    tree,
+                    1,
+                )
+            )
 
-            return None
+        return None
 
     def list_users(self):
         """Get a list of user(s) involved in a project."""
@@ -438,7 +438,7 @@ class DataLister(base.DDSBaseClass):
 
         # Check if sorting column allowed
         if sort_by in ["usage", "cost"] and not self.show_usage:
-            LOG.warning(f"Can only sort by {sort_by} when using the --usage flag.")
+            LOG.warning("Can only sort by %s when using the --usage flag.", sort_by)
             sort_by = "updated"
 
         # Sort according to ID

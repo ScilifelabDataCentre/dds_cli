@@ -123,12 +123,14 @@ def put(
                                 file_uploaded = fut.result()
                                 LOG.debug(
                                     "Upload of '%s' successful: %s",
-                                    escape(str(uploaded_file)), file_uploaded
+                                    escape(str(uploaded_file)),
+                                    file_uploaded,
                                 )
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.error(
                                     "Upload of file '%s' failed! Error: %s",
-                                    escape(uploaded_file), err
+                                    escape(uploaded_file),
+                                    err,
                                 )
                                 continue
 
@@ -292,7 +294,7 @@ class DataPutter(base.DDSBaseClass):
             file_public_key = encryptor.get_public_component_hex(private_key=encryptor.my_private)
             salt = encryptor.salt
 
-        LOG.debug("Updating file processed size: %s", file_info['path_processed'])
+        LOG.debug("Updating file processed size: %s", file_info["path_processed"])
 
         # Update file info incl size, public key, salt
         self.filehandler.data[file]["public_key"] = file_public_key
@@ -302,7 +304,8 @@ class DataPutter(base.DDSBaseClass):
         if saved:
             LOG.debug(
                 "File successfully encrypted: '%s'. New location: '%s'",
-                escape(file), escape(str(file_info['path_processed']))
+                escape(file),
+                escape(str(file_info["path_processed"])),
             )
             # Update progress bar for upload
             progress.reset(
@@ -322,15 +325,15 @@ class DataPutter(base.DDSBaseClass):
                 if db_updated:
                     all_ok = True
                     LOG.debug(
-                        "File successfully uploaded and added to the database: '%s'",
-                        escape(file)
+                        "File successfully uploaded and added to the database: '%s'", escape(file)
                     )
 
         if not saved or all_ok:
             # Delete temporary processed file locally
             LOG.debug(
                 "Deleting file '%s' - exists: %s",
-                escape(str(file_info['path_processed'])), file_info['path_processed'].exists()
+                escape(str(file_info["path_processed"])),
+                file_info["path_processed"].exists(),
             )
             dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 

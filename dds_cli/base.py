@@ -6,14 +6,10 @@
 
 # Standard library
 import logging
-import os
 import pathlib
 import typing
 
 # Installed
-import http
-import time
-import simplejson
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
@@ -71,7 +67,7 @@ class DDSBaseClass:
             # Get attempted operation e.g. put/ls/rm/get
             if self.method not in DDS_METHODS:
                 raise exceptions.InvalidMethodError(attempted_method=self.method)
-            LOG.debug(f"Attempted operation: {self.method}")
+            LOG.debug("Attempted operation: %s", self.method)
 
             # Use user defined destination if any specified
             if self.method in DDS_DIR_REQUIRED_METHODS:
@@ -114,14 +110,14 @@ class DDSBaseClass:
 
             self.keys = self.__get_project_keys()
 
-            self.status = dict()
+            self.status: typing.Dict = {}
             self.filehandler = None
 
     def __enter__(self):
         """Return self when using context manager."""
         return self
 
-    def __exit__(self, exc_type, exc_value, tb, max_fileerrs: int = 40):
+    def __exit__(self, exception_type, exception_value, traceback, max_fileerrs: int = 40):
         """Finish and print out delivery summary.
 
         This is not entered if there's an error during __init__.
@@ -131,8 +127,8 @@ class DDSBaseClass:
                 self.__printout_delivery_summary()
 
         # Exception is not handled
-        if exc_type is not None:
-            LOG.debug(f"Exception: {exc_type} with value {exc_value}")
+        if exception_type is not None:
+            LOG.debug("Exception: %s with value %s", exception_type, exception_value)
             return False
 
         return True
@@ -188,7 +184,7 @@ class DDSBaseClass:
     def __printout_delivery_summary(self):
         """Print out the delivery summary if any files were cancelled."""
         if self.stop_doing:
-            LOG.info(f"{'Upload' if self.method == 'put' else 'Download'} cancelled.\n")
+            LOG.info("%s cancelled.\n", "Upload" if self.method == "put" else "Download")
             return
 
         # TODO: Look into a better summary print out - old deleted for now
@@ -210,21 +206,23 @@ class DDSBaseClass:
                     f"Please verify that the following error log has been generated: {self.failed_delivery_log}\n"
                     "[red][bold]Do not[/bold][/red] delete this file; The Data Centre may need it during DDS support."
                 )
-            else:
-                # TODO: --destination should be able to >at least< overwrite the files in the
-                # previously created download location.
-                raise exceptions.DownloadError(
-                    "Errors occurred during download.\n"
-                    "If you wish to retry the download, re-run the `dds data get` command again, "
-                    "specifying the same options as you did now. A new directory will "
-                    "automatically be created and all files will be downloaded again.\n\n"
-                    f"See {self.failed_delivery_log} for more information."
-                )
 
-        elif nr_uploaded:
+            # TODO: --destination should be able to >at least< overwrite the files in the
+            # previously created download location.
+            raise exceptions.DownloadError(
+                "Errors occurred during download.\n"
+                "If you wish to retry the download, re-run the `dds data get` command again, "
+                "specifying the same options as you did now. A new directory will "
+                "automatically be created and all files will be downloaded again.\n\n"
+                f"See {self.failed_delivery_log} for more information."
+            )
+
+        if nr_uploaded:
             # Raise exception in order to give exit code 1
             LOG.warning(
-                f"{nr_uploaded} files have already been uploaded to this project.\nUpload [bold]partially[/bold] completed!\n"
+                "%s files have already been uploaded to this project.\n"
+                "Upload [bold]partially[/bold] completed!\n",
+                nr_uploaded,
             )
 
         else:
@@ -234,7 +232,7 @@ class DDSBaseClass:
             )
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
-            LOG.info(f"Any downloaded files are located: {self.filehandler.local_destination}.")
+            LOG.info("Any downloaded files are located: %s.", self.filehandler.local_destination)
 
     def __collect_all_failed(self, sort: bool = True) -> list:
         """Put cancelled files from status in to failed dict and sort the output."""

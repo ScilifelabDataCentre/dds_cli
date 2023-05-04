@@ -6,7 +6,6 @@
 
 # Standard library
 import hashlib
-import http
 import logging
 import os
 import pathlib
@@ -54,9 +53,9 @@ class LocalFileHandler(fh.FileHandler):
         if len(non_existent_files) > 0:
             # Issue warning that some of the files don't exist
             LOG.warning(
-                "The following files from '{}' does not exist: '{}'".format(
-                    user_input[1], "', '".join([str(x) for x in non_existent_files])
-                )
+                "The following files from '%s' does not exist: '%s'",
+                user_input[1],
+                "', '".join([str(x) for x in non_existent_files]),
             )
 
         # Get absolute paths for all data
@@ -83,7 +82,7 @@ class LocalFileHandler(fh.FileHandler):
         called in the bucket."""
 
         # Generate new file name
-        new_name = f"{'%020x' % random.randrange(16**20)}_{uuid.uuid5(uuid.NAMESPACE_X500, str(folder))}{uuid.uuid5(uuid.NAMESPACE_X500, filename)}"  # pylint: disable=line-too-long
+        new_name = f"{'%020x' % random.randrange(16**20)}_{uuid.uuid5(uuid.NAMESPACE_X500, str(folder))}{uuid.uuid5(uuid.NAMESPACE_X500, filename)}"  # pylint: disable=line-too-long,consider-using-f-string
         return new_name
 
     @staticmethod
@@ -101,8 +100,8 @@ class LocalFileHandler(fh.FileHandler):
     def __collect_file_info_local(self, all_paths, folder=pathlib.Path(""), task_name=""):
         """Get info on each file in each path specified."""
         # Variables
-        file_info: typing.Dict = dict()
-        progress_tasks: typing.Dict = dict()
+        file_info: typing.Dict = {}
+        progress_tasks: typing.Dict = {}
 
         # Iterate though paths
         for path in all_paths:
@@ -155,15 +154,15 @@ class LocalFileHandler(fh.FileHandler):
                         resolved = path.resolve()
                     except RuntimeError:
                         LOG.warning(
-                            f"IGNORED: Link: {path} seems to contain infinite loop, will be ignored."
+                            "IGNORED: Link: '%s' seems to contain infinite loop, will be ignored.", path
                         )
                     else:
                         LOG.warning(
-                            f"IGNORED: Link: {path} -> {resolved} seems to be broken, will be ignored."
+                            "IGNORED: Link: '%s' -> '%s' seems to be broken, will be ignored.", path, resolved
                         )
                 else:
                     LOG.warning(
-                        f"IGNORED: Path of unsupported/unknown type: {path}, will be ignored."
+                        "IGNORED: Path of unsupported/unknown type: '%s', will be ignored.", path
                     )
 
         return file_info, progress_tasks
@@ -175,27 +174,27 @@ class LocalFileHandler(fh.FileHandler):
         LOG.debug("Creating the status dictionary.")
 
         status_dict = {}
-        for x in list(self.data):
-            in_db = bool(x in existing_files)
+        for item in list(self.data):
+            in_db = bool(item in existing_files)
             if in_db and not overwrite:
-                self.failed[x] = {
-                    **self.data.pop(x),
+                self.failed[item] = {
+                    **self.data.pop(item),
                     **{"message": "File already uploaded"},
                 }
             else:
                 if in_db:
                     if overwrite:
-                        self.data[x].update(
+                        self.data[item].update(
                             {
                                 "overwrite": True,
-                                "path_remote": existing_files[x],
+                                "path_remote": existing_files[item],
                             }
                         )
 
                 # filestream_funcname = (
                 #     "read_file" if self.data[x]["compressed"] else "compress_file"
                 # )
-                status_dict[x] = {
+                status_dict[item] = {
                     "cancel": False,
                     "started": False,
                     "message": "",
@@ -230,7 +229,7 @@ class LocalFileHandler(fh.FileHandler):
 
         LOG.debug("Previous upload check finished.")
 
-        return dict() if files_in_db["files"] is None else files_in_db["files"]
+        return {} if files_in_db["files"] is None else files_in_db["files"]
 
     def create_encrypted_name(
         self, raw_file: pathlib.Path, subpath: str = pathlib.Path(""), no_compression: bool = True

@@ -15,7 +15,6 @@ import boto3
 import botocore
 from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn, BarColumn
-import simplejson
 
 # Own modules
 from dds_cli import base
@@ -93,7 +92,7 @@ def put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.debug(f"Starting: {escape(file)}")
+                    LOG.debug("Starting: '%s'", escape(file))
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -117,17 +116,19 @@ def put(
                         # Get result from future and schedule database update
                         for fut in done:
                             uploaded_file = upload_threads.pop(fut)
-                            LOG.debug(f"Future done for file: {escape(uploaded_file)}")
+                            LOG.debug("Future done for file: %s", escape(uploaded_file))
 
                             # Get result
                             try:
                                 file_uploaded = fut.result()
                                 LOG.debug(
-                                    f"Upload of {escape(str(uploaded_file))} successful: {file_uploaded}"
+                                    "Upload of '%s' successful: %s",
+                                    escape(str(uploaded_file)), file_uploaded
                                 )
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.error(
-                                    f"Upload of file {escape(uploaded_file)} failed! Error: {err}"
+                                    "Upload of file '%s' failed! Error: %s",
+                                    escape(uploaded_file), err
                                 )
                                 continue
 
@@ -139,7 +140,7 @@ def put(
 
                         # Schedule the next set of futures for upload
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug(f"Starting: {escape(next_file)}")
+                            LOG.debug("Starting: '%s'", escape(next_file))
                             upload_threads[
                                 texec.submit(
                                     putter.protect_and_upload,
@@ -250,7 +251,7 @@ class DataPutter(base.DDSBaseClass):
 
         if not self.filehandler.data:
             if self.temporary_directory and self.temporary_directory.is_dir():
-                LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
+                LOG.debug("Deleting temporary folder %s.", self.temporary_directory)
                 dds_cli.utils.delete_folder(self.temporary_directory)
             raise exceptions.UploadError(
                 "The specified data has already been uploaded. If you wish to redo the upload, "
@@ -291,7 +292,7 @@ class DataPutter(base.DDSBaseClass):
             file_public_key = encryptor.get_public_component_hex(private_key=encryptor.my_private)
             salt = encryptor.salt
 
-        LOG.debug(f"Updating file processed size: {file_info['path_processed']}")
+        LOG.debug("Updating file processed size: %s", file_info['path_processed'])
 
         # Update file info incl size, public key, salt
         self.filehandler.data[file]["public_key"] = file_public_key
@@ -300,7 +301,8 @@ class DataPutter(base.DDSBaseClass):
 
         if saved:
             LOG.debug(
-                f"File successfully encrypted: {escape(file)}. New location: {escape(str(file_info['path_processed']))}"
+                "File successfully encrypted: '%s'. New location: '%s'",
+                escape(file), escape(str(file_info['path_processed']))
             )
             # Update progress bar for upload
             progress.reset(
@@ -320,14 +322,15 @@ class DataPutter(base.DDSBaseClass):
                 if db_updated:
                     all_ok = True
                     LOG.debug(
-                        f"File successfully uploaded and added to the database: {escape(file)}"
+                        "File successfully uploaded and added to the database: '%s'",
+                        escape(file)
                     )
 
         if not saved or all_ok:
             # Delete temporary processed file locally
             LOG.debug(
-                f"Deleting file {escape(str(file_info['path_processed']))} - "
-                f"exists: {file_info['path_processed'].exists()}"
+                "Deleting file '%s' - exists: %s",
+                escape(str(file_info['path_processed'])), file_info['path_processed'].exists()
             )
             dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
 
@@ -373,7 +376,7 @@ class DataPutter(base.DDSBaseClass):
             TypeError,
         ) as err:
             error = f"S3 upload of file '{escape(file)}' failed: {err}"
-            LOG.exception(f"{escape(file)}: {err}")
+            LOG.exception("'%s': %s", escape(file), err)
         else:
             uploaded = True
 
@@ -384,7 +387,6 @@ class DataPutter(base.DDSBaseClass):
         """Make API request to add file to DB."""
         # Variables
         added_to_db = False
-        error = ""
 
         # Get file info and specify info required in db
         fileinfo = self.filehandler.data[file]

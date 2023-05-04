@@ -91,9 +91,13 @@ def update_status(func):
     def wrapped(self, file, *args, **kwargs):
         # TODO (ina): add processing?
         if func.__name__ not in ["put", "add_file_db", "get", "update_db"]:
-            raise Exception(f"The function {func.__name__} cannot be used with this decorator.")
+            raise dds_cli.exceptions.DDSCLIException(
+                f"The function {func.__name__} cannot be used with this decorator."
+            )
         if func.__name__ not in self.status[file]:
-            raise Exception(f"No status found for function {func.__name__}.")
+            raise dds_cli.exceptions.DDSCLIException(
+                f"No status found for function {func.__name__}."
+            )
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})

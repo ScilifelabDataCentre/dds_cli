@@ -563,7 +563,7 @@ def list_users(click_ctx, unit, invites):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             if invites:
-                lister.list_invites(unit=unit, invites=invites)
+                lister.list_invites(invites=invites)
             else:
                 lister.list_users(unit=unit)
 

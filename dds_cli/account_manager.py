@@ -5,12 +5,10 @@
 ###################################################################################################
 
 # Standard library
-from email import header
 import logging
 
 # Installed
 import rich.markup
-from rich.table import Table
 
 # Own modules
 import dds_cli
@@ -228,7 +226,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         # Print out table
         dds_cli.utils.print_or_page(item=table)
 
-    def list_invites(self, _: str = None, invites: bool = None) -> None:
+    def list_invites(self, invites: bool = None) -> None:
         """List all unit users within a specific unit."""
         response, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.LIST_INVITED_USERS,

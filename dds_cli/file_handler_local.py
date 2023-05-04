@@ -154,11 +154,14 @@ class LocalFileHandler(fh.FileHandler):
                         resolved = path.resolve()
                     except RuntimeError:
                         LOG.warning(
-                            "IGNORED: Link: '%s' seems to contain infinite loop, will be ignored.", path
+                            "IGNORED: Link: '%s' seems to contain infinite loop, will be ignored.",
+                            path,
                         )
                     else:
                         LOG.warning(
-                            "IGNORED: Link: '%s' -> '%s' seems to be broken, will be ignored.", path, resolved
+                            "IGNORED: Link: '%s' -> '%s' seems to be broken, will be ignored.",
+                            path,
+                            resolved,
                         )
                 else:
                     LOG.warning(

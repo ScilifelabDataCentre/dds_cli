@@ -8,11 +8,6 @@
 import logging
 
 # Installed
-import http
-import requests
-import rich.markup
-from rich.table import Table
-import simplejson
 
 # Own modules
 import dds_cli
@@ -76,7 +71,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         LOG.info(response_message)
 
     @staticmethod
-    def list_all_active_motds(table=False):
+    def list_all_active_motds(table=False):  # pylint: disable=inconsistent-return-statements
         """Get all active MOTDs."""
         try:
             response, _ = dds_cli.utils.perform_request(
@@ -84,7 +79,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
                 method="get",
                 error_message="Failed getting MOTDs from API",
             )
-        except:
+        except:  # pylint: disable=bare-except
             pass
         else:
             # Get items from response

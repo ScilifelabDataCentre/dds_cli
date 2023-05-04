@@ -70,7 +70,6 @@ LOG = logging.getLogger("dds_cli")
 # Configuration for rich-click output
 click.rich_click.MAX_WIDTH = 100
 
-
 ## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #                                                                                                  #
 #                          MMMM   MMMM      AAAA      II   NNNN    NN                              #
@@ -1001,8 +1000,8 @@ def create(
                 email_overlap = set(owner) & set(researcher)
                 if email_overlap:
                     LOG.info(
-                        f"The email(s) {email_overlap} specified as both owner and researcher! "
-                        "Please specify a unique role for each email."
+                        "The email(s) %s specified as both owner and researcher! "
+                        "Please specify a unique role for each email.", email_overlap
                     )
                     sys.exit(1)
                 if owner:
@@ -1729,7 +1728,7 @@ def get_data(
 
                     # Schedule the first num_threads futures for upload
                     for file in itertools.islice(iterator, num_threads):
-                        LOG.debug(f"Starting: {rich.markup.escape(str(file))}")
+                        LOG.debug("Starting: %s", rich.markup.escape(str(file)))
                         # Execute download
                         download_threads[
                             texec.submit(getter.download_and_verify, file=file, progress=progress)

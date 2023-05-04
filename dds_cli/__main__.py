@@ -623,7 +623,7 @@ def list_users(click_ctx, username):
     ),
     help=(
         "Type of account. To include a space in the chosen role, use quotes "
-        '(e.g. "Unit Personnel") or escape the space (e.g. Unit \ Personnel)'
+        r'(e.g. "Unit Personnel") or escape the space (e.g. Unit\ Personnel)'
     ),
 )
 @click.option(

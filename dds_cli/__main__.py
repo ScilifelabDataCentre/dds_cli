@@ -1745,19 +1745,20 @@ def get_data(
                         for dfut in ddone:
                             downloaded_file = download_threads.pop(dfut)
                             LOG.debug(
-                                f"Future done: {rich.markup.escape(str(downloaded_file))}",
+                                "Future done: %s", rich.markup.escape(str(downloaded_file))
                             )
 
                             # Get result
                             try:
                                 file_downloaded = dfut.result()
                                 LOG.debug(
-                                    f"Download of {rich.markup.escape(str(downloaded_file))} "
-                                    f"successful: {file_downloaded}"
+                                    "Download of %s successful: %s", 
+                                    rich.markup.escape(str(downloaded_file)), file_downloaded
                                 )
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.critical(
-                                    f"Download of file {rich.markup.escape(str(downloaded_file))} failed! Error: {err}"
+                                    "Download of file %s failed! Error: %s", 
+                                    rich.markup.escape(str(downloaded_file)), err
                                 )
                                 continue
 
@@ -1871,7 +1872,7 @@ def rm_data(click_ctx, project, file, folder, rm_all):
     # Warn if trying to remove all contents
     if rm_all:
         if no_prompt:
-            LOG.warning(f"Deleting all files within project '{project}'")
+            LOG.warning("Deleting all files within project '%s'", project)
         else:
             if not rich.prompt.Confirm.ask(
                 f"Are you sure you want to delete all files within project '{project}'?"
@@ -2119,7 +2120,7 @@ def get_stats(click_ctx, stat_type):
                 title_rest: str = "projects"
                 value: int = len(projects)
 
-            LOG.info(f"[bold]{title_bold_part}[/bold] {title_rest}: {value}")
+            LOG.info("[bold]%s[/bold] %s: %s", title_bold_part, title_rest, value)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

@@ -1001,7 +1001,8 @@ def create(
                 if email_overlap:
                     LOG.info(
                         "The email(s) %s specified as both owner and researcher! "
-                        "Please specify a unique role for each email.", email_overlap
+                        "Please specify a unique role for each email.",
+                        email_overlap,
                     )
                     sys.exit(1)
                 if owner:
@@ -1744,21 +1745,21 @@ def get_data(
 
                         for dfut in ddone:
                             downloaded_file = download_threads.pop(dfut)
-                            LOG.debug(
-                                "Future done: %s", rich.markup.escape(str(downloaded_file))
-                            )
+                            LOG.debug("Future done: %s", rich.markup.escape(str(downloaded_file)))
 
                             # Get result
                             try:
                                 file_downloaded = dfut.result()
                                 LOG.debug(
-                                    "Download of %s successful: %s", 
-                                    rich.markup.escape(str(downloaded_file)), file_downloaded
+                                    "Download of %s successful: %s",
+                                    rich.markup.escape(str(downloaded_file)),
+                                    file_downloaded,
                                 )
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.critical(
-                                    "Download of file %s failed! Error: %s", 
-                                    rich.markup.escape(str(downloaded_file)), err
+                                    "Download of file %s failed! Error: %s",
+                                    rich.markup.escape(str(downloaded_file)),
+                                    err,
                                 )
                                 continue
 

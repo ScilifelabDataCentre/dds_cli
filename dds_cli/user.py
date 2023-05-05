@@ -10,14 +10,11 @@ import getpass
 import logging
 import os
 import pathlib
-import requests
-import simplejson
 import stat
 import subprocess
 
 # Installed
 from rich.prompt import Prompt
-import rich
 
 # Own modules
 import dds_cli
@@ -385,7 +382,7 @@ class TokenFile:
         LOG.info("[%s]%s  %s %s [/%s]", markup_color, sign, expiration_message, sign, markup_color)
 
     # Private methods ############################################################ Private methods #
-    def __token_dates(self, token): # pylint: disable=inconsistent-return-statements
+    def __token_dates(self, token):  # pylint: disable=inconsistent-return-statements
         """Returns the expiration time in UTC that is extracted from the token jose header."""
 
         expiration_time = get_token_expiration_time(token=token)

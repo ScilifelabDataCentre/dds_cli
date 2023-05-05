@@ -8,11 +8,6 @@
 import logging
 
 # Installed
-import http
-import requests
-import rich.markup
-from rich.table import Table
-import simplejson
 
 # Own modules
 import dds_cli

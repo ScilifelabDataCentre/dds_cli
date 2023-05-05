@@ -1,3 +1,8 @@
+[MASTER]
+ignore-paths=
+    docs,
+    tests
+
 [FORMAT]
 max-line-length=120
 
@@ -10,4 +15,5 @@ disable=
     too-many-statements,
     too-many-instance-attributes,
     missing-timeout,
-    too-few-public-methods
+    too-few-public-methods,
+    duplicate-code

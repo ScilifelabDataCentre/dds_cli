@@ -1,5 +1,7 @@
+"""Setup of DDS CLI."""
+# pylint: disable=unspecified-encoding, exec-used, consider-using-with, duplicate-code
+
 from setuptools import setup, find_packages
-import os
 
 version = {}
 with open("./dds_cli/version.py") as fp:
@@ -29,7 +31,7 @@ setup(
     url="https://github.com/ScilifelabDataCentre/dds_cli",
     author="SciLifeLab Data Centre",
     license="MIT",
-    packages=find_packages(exclude=("docs")),
+    packages=find_packages(exclude="docs"),
     include_package_data=True,
     install_requires=requirements,
     setup_requires=["twine>=1.11.0", "setuptools>=38.6"],

@@ -49,7 +49,7 @@ class HumanBytes:
         assert isinstance(num, (int, float)), "num must be an int or float"
         assert isinstance(metric, bool), "metric must be a bool"
         assert (
-            isinstance(precision, int) and precision >= 0 and precision <= 3
+            isinstance(precision, int) and 0 <= precision <= 3
         ), "precision must be an int (range 0-3)"
 
         unit_labels = HumanBytes.METRIC_LABELS if metric else HumanBytes.BINARY_LABELS

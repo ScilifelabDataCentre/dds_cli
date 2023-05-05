@@ -16,6 +16,7 @@ import stat
 import subprocess
 
 # Installed
+from rich.prompt import Prompt
 import rich
 
 # Own modules
@@ -99,7 +100,7 @@ class User:
                 )
             )
 
-        username = rich.prompt.Prompt.ask("DDS username")
+        username = Prompt.ask("DDS username")
         password = getpass.getpass(prompt="DDS password: ")
 
         if password == "":
@@ -114,7 +115,7 @@ class User:
                 auth=(username, password),
                 error_message="Failed to authenticate user",
             )
-        except UnicodeEncodeError as err:
+        except UnicodeEncodeError:
             raise dds_cli.exceptions.ApiRequestError(
                 message="The entered username or password seems to contain invalid characters. Please try again."
             )
@@ -129,7 +130,8 @@ class User:
         if totp:
             if not totp_enabled:
                 raise exceptions.AuthenticationError(
-                    "Authentication failed, you have not yet activated one-time authentication codes from authenticator app."
+                    "Authentication failed, you have not yet activated one-time "
+                    "authentication codes from authenticator app."
                 )
 
             response_json, _ = dds_cli.utils.perform_request(
@@ -141,7 +143,7 @@ class User:
             )
 
         else:
-            LOG.debug(f"2FA method: {'TOTP' if totp_enabled else 'HOTP'}")
+            LOG.debug("2FA method: %s", "TOTP" if totp_enabled else "HOTP")
             if totp_enabled:
                 LOG.info(
                     "Please enter the one-time authentication code from your authenticator app."
@@ -156,7 +158,7 @@ class User:
 
             done = False
             while not done:
-                entered_one_time_code = rich.prompt.Prompt.ask("Authentication one-time code")
+                entered_one_time_code = Prompt.ask("Authentication one-time code")
                 if entered_one_time_code == "":
                     raise exceptions.AuthenticationError(
                         message="Exited due to no one-time authentication code entered."
@@ -169,8 +171,10 @@ class User:
                     continue
                 if len(entered_one_time_code) != nr_digits:
                     LOG.info(
-                        f"Please enter a valid one-time code. It should consist of {nr_digits} digits "
-                        f"(you entered {len(entered_one_time_code)} digits)."
+                        "Please enter a valid one-time code. It should consist of %s digits "
+                        "(you entered %s digits).",
+                        nr_digits,
+                        len(entered_one_time_code),
                     )
                     continue
 
@@ -197,7 +201,7 @@ class User:
                 message="Missing token in authentication response."
             )
 
-        LOG.debug(f"User {username} granted access to the DDS")
+        LOG.debug("User %s granted access to the DDS", username)
 
         return token
 
@@ -219,7 +223,7 @@ class User:
                     )
                     # Get response
                     username = response_json["info"]["username"]
-                except:
+                except: # pylint: disable=bare-except
                     pass
         return username
 
@@ -245,7 +249,7 @@ class TokenFile:
         LOG.debug("Attempting to retrieve token from file...")
 
         if not self.file_exists():
-            LOG.debug(f"Token file {self.token_file} does not exist.")
+            LOG.debug("Token file %s does not exist.", self.token_file)
             return None
 
         self.check_token_file_permissions()
@@ -314,11 +318,15 @@ class TokenFile:
             permissions_readable = stat.filemode(st_mode)
             if permissions_octal not in ["0o600", "0o640"]:
                 raise exceptions.DDSCLIException(
-                    message=f"Token file permissions are not properly set, (got {permissions_readable} instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."
+                    message=(
+                        f"Token file permissions are not properly set, (got {permissions_readable} "
+                        f"instead of required '-rw-------'). Please remove {self.token_file} and rerun the command."
+                    )
                 )
         else:
             LOG.info(
-                f"Storing the login information locally - please ensure no one else an access the file at {self.token_file}."
+                "Storing the login information locally - "
+                f"please ensure no one else an access the file at {self.token_file}."
             )
 
     def token_expired(self, token):

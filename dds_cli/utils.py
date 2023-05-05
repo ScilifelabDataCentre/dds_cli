@@ -1,9 +1,10 @@
 """DDS CLI utils module."""
 
-import logging
 import numbers
 import pathlib
 import typing
+import http
+from typing import Dict, List, Union
 
 import requests
 import rich.console
@@ -12,9 +13,7 @@ from jwcrypto.common import InvalidJWEOperation
 from jwcrypto.jwe import InvalidJWEData
 from jwcrypto.jws import InvalidJWSObject
 from jwcrypto import jwt
-import http
 from rich.table import Table
-from typing import Dict, List, Union
 
 import dds_cli.exceptions
 from dds_cli import __version__, DDSEndpoint
@@ -272,7 +271,9 @@ def get_json_response(response):
     return json_response
 
 
-def format_api_response(response, key: str, binary: bool = False, always_show: bool = False): # pylint: disable=unused-argument
+def format_api_response(
+    response, key: str, binary: bool = False, always_show: bool = False
+):  # pylint: disable=unused-argument
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
     formatted_response = response
     if isinstance(response, bool):

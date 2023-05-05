@@ -338,8 +338,8 @@ def readable_timedelta(duration):
     ]
     if time_parts:
         return " ".join(time_parts)
-    else:
-        return "less than a minute"
+
+    return "less than a minute"
 
 
 def get_deletion_confirmation(action: str, project: str) -> bool:

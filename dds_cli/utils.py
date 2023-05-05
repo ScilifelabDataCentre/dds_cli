@@ -153,6 +153,7 @@ def perform_request(
     error_message="API Request failed.",
     timeout=DDSEndpoint.TIMEOUT,
 ):
+    """Execute request to API."""
     version_header_name: str = "X-CLI-Version"
     request_method = None
     if method == "get":
@@ -364,6 +365,7 @@ def print_or_page(item):
 
 # Adapted from <https://stackoverflow.com/a/49782093>.
 def delete_folder(folder):
+    """Delete local folder / directory."""
     folder = pathlib.Path(folder)
     for file_or_folder in folder.iterdir():
         if file_or_folder.is_dir():

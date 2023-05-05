@@ -171,9 +171,9 @@ def perform_request(
         """Make paths serializable."""
         # Transform dict and list contents
         if isinstance(json_input, typing.Dict):
-            for x, y in json_input.items():
-                if isinstance(y, pathlib.Path):
-                    json_input[x] = y.as_posix()
+            for key, val in json_input.items():
+                if isinstance(val, pathlib.Path):
+                    json_input[key] = val.as_posix()
         elif isinstance(json_input, typing.List):
             json_input = [x.as_posix() if isinstance(x, pathlib.Path) else x for x in json_input]
         return json_input
@@ -379,7 +379,7 @@ def delete_folder(folder):
 
 def __project_creation_error(response_json: Dict) -> str:
     """Parse response from project creation endpoint."""
-    message, title, description, pi, email = (
+    message, title, description, principal_investigator, email = (
         response_json.get("message"),
         response_json.get("title"),
         response_json.get("description"),
@@ -387,7 +387,7 @@ def __project_creation_error(response_json: Dict) -> str:
         response_json.get("email"),
     )
 
-    messages: List = [message, title, description, pi, email]
+    messages: List = [message, title, description, principal_investigator, email]
 
     error = next(message for message in messages if message)
 

@@ -348,8 +348,9 @@ class TokenFile:
         
         if time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
             LOG.warning(
-                f"Saved token will expire in {readable_timedelta(time_to_expire)}, "
-                f"please consider renewing the session using the 'dds auth login' command."
+                "Saved token will expire in %s, "
+                "please consider renewing the session using the 'dds auth login' command.",
+                readable_timedelta(time_to_expire)
             )
 
         return False
@@ -379,8 +380,8 @@ class TokenFile:
             message = "Token is OK!"
 
         if message:
-            LOG.info(f"[{markup_color}]{sign}  {message} {sign} [/{markup_color}]")
-        LOG.info(f"[{markup_color}]{sign}  {expiration_message} {sign} [/{markup_color}]")
+            LOG.info("[%s]%s  %s %s [/%s]", markup_color, sign, message, sign, markup_color)
+        LOG.info("[%s]%s  %s %s [/%s]", markup_color, sign, expiration_message, sign, markup_color)
 
     # Private methods ############################################################ Private methods #
     def __token_dates(self, token):

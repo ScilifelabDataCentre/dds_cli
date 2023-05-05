@@ -146,7 +146,7 @@ def get_required_in_response(keys: list, response: dict) -> tuple:
 def perform_request(
     endpoint,
     method,
-    headers={},
+    headers: typing.Dict = None,
     auth=None,
     params=None,
     json=None,
@@ -154,6 +154,8 @@ def perform_request(
     timeout=DDSEndpoint.TIMEOUT,
 ):
     """Execute request to API."""
+    if not headers:
+        headers = {}
     version_header_name: str = "X-CLI-Version"
     request_method = None
     if method == "get":

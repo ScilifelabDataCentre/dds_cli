@@ -115,10 +115,10 @@ class User:
                 auth=(username, password),
                 error_message="Failed to authenticate user",
             )
-        except UnicodeEncodeError:
+        except UnicodeEncodeError as exc:
             raise dds_cli.exceptions.ApiRequestError(
                 message="The entered username or password seems to contain invalid characters. Please try again."
-            )
+            ) from exc
 
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
@@ -297,7 +297,7 @@ class TokenFile:
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
-            except subprocess.CalledProcessError as exc:
+            except subprocess.CalledProcessError:
                 LOG.error("Failed to set token file permissions")
         LOG.debug("New token saved to file.")
 
@@ -327,7 +327,7 @@ class TokenFile:
         else:
             LOG.info(
                 "Storing the login information locally - "
-                f"please ensure no one else an access the file at {self.token_file}."
+                "please ensure no one else an access the file at '%s'.", self.token_file
             )
 
     def token_expired(self, token):
@@ -345,7 +345,8 @@ class TokenFile:
             LOG.debug("Token has expired. Now deleting it and fetching new token.")
             self.delete_token()
             return True
-        elif time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
+        
+        if time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
             LOG.warning(
                 f"Saved token will expire in {readable_timedelta(time_to_expire)}, "
                 f"please consider renewing the session using the 'dds auth login' command."

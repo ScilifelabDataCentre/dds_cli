@@ -327,7 +327,8 @@ class TokenFile:
         else:
             LOG.info(
                 "Storing the login information locally - "
-                "please ensure no one else an access the file at '%s'.", self.token_file
+                "please ensure no one else an access the file at '%s'.",
+                self.token_file,
             )
 
     def token_expired(self, token):
@@ -345,12 +346,12 @@ class TokenFile:
             LOG.debug("Token has expired. Now deleting it and fetching new token.")
             self.delete_token()
             return True
-        
+
         if time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
             LOG.warning(
                 "Saved token will expire in %s, "
                 "please consider renewing the session using the 'dds auth login' command.",
-                readable_timedelta(time_to_expire)
+                readable_timedelta(time_to_expire),
             )
 
         return False
@@ -384,7 +385,7 @@ class TokenFile:
         LOG.info("[%s]%s  %s %s [/%s]", markup_color, sign, expiration_message, sign, markup_color)
 
     # Private methods ############################################################ Private methods #
-    def __token_dates(self, token):
+    def __token_dates(self, token): # pylint: disable=inconsistent-return-statements
         """Returns the expiration time in UTC that is extracted from the token jose header."""
 
         expiration_time = get_token_expiration_time(token=token)

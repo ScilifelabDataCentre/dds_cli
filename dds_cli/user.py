@@ -223,7 +223,7 @@ class User:
                     )
                     # Get response
                     username = response_json["info"]["username"]
-                except: # pylint: disable=bare-except
+                except:  # pylint: disable=bare-except
                     pass
         return username
 
@@ -255,8 +255,9 @@ class TokenFile:
         self.check_token_file_permissions()
 
         # Read token from file
-        with self.token_file.open(mode="r") as file:
+        with self.token_file.open(mode="r") as file:  # pylint: disable=unspecified-encoding
             token = file.read()
+            LOG.debug(type(token))
             if not token:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
 
@@ -279,7 +280,7 @@ class TokenFile:
 
         self.check_token_file_permissions()
 
-        with self.token_file.open("w") as file:
+        with self.token_file.open("w") as file:  # pylint: disable=unspecified-encoding
             file.write(token)
 
         if os.name == "nt":

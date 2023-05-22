@@ -16,7 +16,6 @@ import botocore
 # Own modules
 import dds_cli.utils
 from dds_cli import DDSEndpoint
-from dds_cli import exceptions
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -57,10 +56,10 @@ class S3Connector:
 
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, exc_type, exc_value, traceb):
         """Close context manager, incl. connection."""
         if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
+            traceback.print_exception(exc_type, exc_value, traceb)
             return False  # uncomment to pass exception through
 
         return True
@@ -78,10 +77,10 @@ class S3Connector:
                 aws_secret_access_key=self.keys["secret_key"],
             )
         except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
-            LOG.warning(f"S3 connection failed: {err}")
+            LOG.warning("S3 connection failed: %s", err)
             raise
-        else:
-            LOG.debug(f"Connected to S3.")
+
+        LOG.debug("Connected to S3.")
         return resource
 
     # Static methods ############ Static methods #

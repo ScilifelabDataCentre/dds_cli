@@ -76,10 +76,10 @@ class DataRemover(base.DDSBaseClass):
         if not_exists or delete_failed:
             if self.no_prompt:
                 self.failed_files = {"Errors": []}
-                for x in not_exists:
-                    self.failed_files["Errors"].append({x: f"No such {level.lower()}"})
-                for x, y in delete_failed.items():
-                    self.failed_files["Errors"].append({x: y})
+                for non_ex_file in not_exists:
+                    self.failed_files["Errors"].append({non_ex_file: f"No such {level.lower()}"})
+                for failed_file, failure_info in delete_failed.items():
+                    self.failed_files["Errors"].append({failed_file: failure_info})
             else:
                 # Create table and add columns
                 table = rich.table.Table(
@@ -89,17 +89,17 @@ class DataRemover(base.DDSBaseClass):
                     header_style="bold",
                 )
                 columns = [level, "Error"]
-                for x in columns:
-                    table.add_column(x)
+                for col in columns:
+                    table.add_column(col)
 
                 # Add rows
-                for x in not_exists:
-                    table.add_row(rich.markup.escape(x), f"No such {level.lower()}")
+                for non_ex_file in not_exists:
+                    table.add_row(rich.markup.escape(non_ex_file), f"No such {level.lower()}")
 
-                for x, y in delete_failed.items():
+                for failed_file, failure_info in delete_failed.items():
                     table.add_row(
-                        f"[light_salmon3]{rich.markup.escape(x)}[/light_salmon3]",
-                        f"[light_salmon3]{rich.markup.escape(y)}[/light_salmon3]",
+                        f"[light_salmon3]{rich.markup.escape(failed_file)}[/light_salmon3]",
+                        f"[light_salmon3]{rich.markup.escape(failure_info)}[/light_salmon3]",
                     )
 
                 # Print out table
@@ -164,7 +164,9 @@ class DataRemover(base.DDSBaseClass):
         self.__create_failed_table(resp_json=response_json, level="Folder")
 
         if response_json.get("nr_deleted"):
-            LOG.info(f"{response_json['nr_deleted']} files were successfully deleted in {folder}.")
+            LOG.info(
+                "%s files were successfully deleted in %s.", response_json["nr_deleted"], folder
+            )
         # Print extra warning if s3 deletion succeeded, db failed
         if response_json.get("fail_type") == "db":
             LOG.error(

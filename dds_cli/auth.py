@@ -4,7 +4,7 @@ import logging
 import getpass
 
 # Installed
-import rich
+from rich.prompt import Prompt
 
 # Own modules
 import dds_cli
@@ -48,6 +48,7 @@ class Auth(base.DDSBaseClass):
         )
 
     def check(self):
+        """Check if token exists and return info."""
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token = token_file.read_token()
@@ -55,10 +56,12 @@ class Auth(base.DDSBaseClass):
                 token_file.token_report(token=token)
         else:
             LOG.info(
-                "[red]No saved token found, or token has expired. Authenticate yourself with `dds auth login` to use this functionality![/red]"
+                "[red]No saved token found, or token has expired. "
+                "Authenticate yourself with `dds auth login` to use this functionality![/red]"
             )
 
     def logout(self):
+        """Logout user by removing authenticated token."""
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token_file.delete_token()
@@ -67,6 +70,7 @@ class Auth(base.DDSBaseClass):
             LOG.info("[green]Already logged out![/green]")
 
     def twofactor(self, auth_method: str = None):
+        """Perform 2FA for user."""
         if auth_method == "totp":
             response_json, _ = dds_cli.utils.perform_request(
                 endpoint=dds_cli.DDSEndpoint.USER_ACTIVATE_TOTP,
@@ -78,7 +82,7 @@ class Auth(base.DDSBaseClass):
             LOG.info(
                 "Activating authentication via email, please (re-)enter your username and password:"
             )
-            username: str = rich.prompt.Prompt.ask("DDS username")
+            username: str = Prompt.ask("DDS username")
             password: str = getpass.getpass(prompt="DDS password: ")
 
             if password == "":
@@ -95,6 +99,7 @@ class Auth(base.DDSBaseClass):
         LOG.info(response_json.get("message"))
 
     def deactivate(self, username: str = None):
+        """Deactivate TOTP for user."""
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.TOTP_DEACTIVATE,
             headers=self.token,

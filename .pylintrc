@@ -1,0 +1,19 @@
+[MASTER]
+ignore-paths=
+    docs,
+    tests
+
+[FORMAT]
+max-line-length=120
+
+disable=
+    too-many-lines,
+    fixme,
+    too-many-arguments, 
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-instance-attributes,
+    missing-timeout,
+    too-few-public-methods,
+    duplicate-code

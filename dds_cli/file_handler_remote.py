@@ -9,7 +9,6 @@ import logging
 import pathlib
 
 # Installed
-import simplejson
 
 # Own modules
 from dds_cli import DDSEndpoint
@@ -97,7 +96,7 @@ class RemoteFileHandler(fh.FileHandler):
             if x not in files and x not in folder_contents
         }
 
-        LOG.debug(f"Not found: {self.failed}")
+        LOG.debug("Not found: %s", self.failed)
 
         # Save info on files in dict and return
         data = {
@@ -113,7 +112,7 @@ class RemoteFileHandler(fh.FileHandler):
         }
 
         # Save info on files in a specific folder and return
-        for x, y in folder_contents.items():
+        for _, folder_item in folder_contents.items():
             data.update(
                 {
                     self.local_destination
@@ -124,7 +123,7 @@ class RemoteFileHandler(fh.FileHandler):
                         / pathlib.Path(k["subpath"])
                         / pathlib.Path(k["name_in_bucket"]),
                     }
-                    for j, k in y.items()
+                    for j, k in folder_item.items()
                 }
             )
 

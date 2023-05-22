@@ -8,7 +8,6 @@
 import concurrent.futures
 import itertools
 import logging
-import os
 import sys
 import typing
 
@@ -71,7 +70,6 @@ LOG = logging.getLogger("dds_cli")
 # Configuration for rich-click output
 click.rich_click.MAX_WIDTH = 100
 
-
 ## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #                                                                                                  #
 #                          MMMM   MMMM      AAAA      II   NNNN    NN                              #
@@ -83,15 +81,15 @@ click.rich_click.MAX_WIDTH = 100
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ##
 
 
-dds_url = dds_cli.DDSEndpoint.BASE_ENDPOINT
+DDS_URL = dds_cli.DDSEndpoint.BASE_ENDPOINT
+DDS_URL_BASE = DDS_URL[: DDS_URL.index("/", 8)]
+
 # Print header to STDERR
 dds_cli.utils.stderr_console.print(
     "[green]     ︵",
     "\n[green] ︵ (  )   ︵",
     "\n[green](  ) ) (  (  )[/]   [bold]SciLifeLab Data Delivery System",
-    "\n[green] ︶  (  ) ) ([/]    [blue][link={0}]{0}/[/link]".format(
-        dds_url[: dds_url.index("/", 8)]
-    ),
+    f"\n[green] ︶  (  ) ) ([/]    [blue][link={DDS_URL_BASE}]{DDS_URL_BASE}/[/link]",
     f"\n[green]      ︶ (  )[/]    [dim]CLI Version {dds_cli.__version__}",
     "\n[green]          ︶",
     highlight=False,
@@ -100,7 +98,7 @@ dds_cli.utils.stderr_console.print(
 if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
     motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
     if motds:
-        dds_cli.utils.stderr_console.print(f"[bold]Important information:[/bold]")
+        dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
         for motd in motds:
             dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
 
@@ -380,7 +378,10 @@ def auth_group_command(_):
     is_flag=True,
     required=False,
     default=False,
-    help="[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600, allowing others to access your authenticated session token.",
+    help=(
+        "[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600, "
+        "allowing others to access your authenticated session token."
+    ),
 )
 @click.pass_obj
 def login(click_ctx, totp, allow_group):
@@ -404,7 +405,7 @@ def login(click_ctx, totp, allow_group):
             token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group
         ):
             # Authentication token renewed in the init method.
-            LOG.info(f"[green] :white_check_mark: Authentication successful![/green]")
+            LOG.info("[green] :white_check_mark: Authentication successful![/green]")
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,
@@ -562,7 +563,7 @@ def list_users(click_ctx, unit, invites):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             if invites:
-                lister.list_invites(unit=unit, invites=invites)
+                lister.list_invites(invites=invites)
             else:
                 lister.list_users(unit=unit)
 
@@ -583,7 +584,7 @@ def list_users(click_ctx, unit, invites):
     required=True, help_message="[Super Admins only] The username of the account you want to check."
 )
 @click.pass_obj
-def list_users(click_ctx, username):
+def find_users(click_ctx, username):
     """Check if a username is registered to an account in the DDS."""
     try:
         with dds_cli.account_manager.AccountManager(
@@ -621,7 +622,7 @@ def list_users(click_ctx, username):
     ),
     help=(
         "Type of account. To include a space in the chosen role, use quotes "
-        '(e.g. "Unit Personnel") or escape the space (e.g. Unit\ Personnel)'
+        r'(e.g. "Unit Personnel") or escape the space (e.g. Unit\ Personnel)'
     ),
 )
 @click.option(
@@ -999,8 +1000,9 @@ def create(
                 email_overlap = set(owner) & set(researcher)
                 if email_overlap:
                     LOG.info(
-                        f"The email(s) {email_overlap} specified as both owner and researcher! "
-                        "Please specify a unique role for each email."
+                        "The email(s) %s specified as both owner and researcher! "
+                        "Please specify a unique role for each email.",
+                        email_overlap,
                     )
                     sys.exit(1)
                 if owner:
@@ -1687,7 +1689,8 @@ def get_data(
         sys.exit(1)
     elif not get_all and not (source or source_path_file):
         LOG.error(
-            "Specify either '--source' or '--source-path-file' to download specific directories/files, or '--get-all' to download all project contents."
+            "Specify either '--source' or '--source-path-file' to download specific directories/files, "
+            "or '--get-all' to download all project contents."
         )
         sys.exit(1)
 
@@ -1726,7 +1729,7 @@ def get_data(
 
                     # Schedule the first num_threads futures for upload
                     for file in itertools.islice(iterator, num_threads):
-                        LOG.debug(f"Starting: {rich.markup.escape(str(file))}")
+                        LOG.debug("Starting: %s", rich.markup.escape(str(file)))
                         # Execute download
                         download_threads[
                             texec.submit(getter.download_and_verify, file=file, progress=progress)
@@ -1742,19 +1745,21 @@ def get_data(
 
                         for dfut in ddone:
                             downloaded_file = download_threads.pop(dfut)
-                            LOG.debug(
-                                f"Future done: {rich.markup.escape(str(downloaded_file))}",
-                            )
+                            LOG.debug("Future done: %s", rich.markup.escape(str(downloaded_file)))
 
                             # Get result
                             try:
                                 file_downloaded = dfut.result()
                                 LOG.debug(
-                                    f"Download of {rich.markup.escape(str(downloaded_file))} successful: {file_downloaded}"
+                                    "Download of %s successful: %s",
+                                    rich.markup.escape(str(downloaded_file)),
+                                    file_downloaded,
                                 )
                             except concurrent.futures.BrokenExecutor as err:
                                 LOG.critical(
-                                    f"Download of file {rich.markup.escape(str(downloaded_file))} failed! Error: {err}"
+                                    "Download of file %s failed! Error: %s",
+                                    rich.markup.escape(str(downloaded_file)),
+                                    err,
                                 )
                                 continue
 
@@ -1763,7 +1768,7 @@ def get_data(
 
                         # Schedule the next set of futures for download
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug(f"Starting: {rich.markup.escape(str(next_file))}")
+                            LOG.debug("Starting: %s", rich.markup.escape(str(next_file)))
                             # Execute download
                             download_threads[
                                 texec.submit(
@@ -1868,7 +1873,7 @@ def rm_data(click_ctx, project, file, folder, rm_all):
     # Warn if trying to remove all contents
     if rm_all:
         if no_prompt:
-            LOG.warning(f"Deleting all files within project '{project}'")
+            LOG.warning("Deleting all files within project '%s'", project)
         else:
             if not rich.prompt.Confirm.ask(
                 f"Are you sure you want to delete all files within project '{project}'?"
@@ -2103,20 +2108,20 @@ def get_stats(click_ctx, stat_type):
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as lister:
             # Get projects, only active by default
-            projects: typing.List = lister.list_projects(show_all=(stat_type == "all"))
+            projects: typing.List = lister.list_projects(show_all=stat_type == "all")
 
             if stat_type == "size":
                 # Calculate total amount of saved data in active projects
                 title_bold_part: str = "Bytes"
                 title_rest: str = "currently stored in DDS"
-                value: int = sum([x["Size"] for x in projects])
+                value: int = sum(x["Size"] for x in projects)
             else:
                 # Get number of projects
                 title_bold_part: str = "Active" if stat_type == "active" else "Total"
                 title_rest: str = "projects"
                 value: int = len(projects)
 
-            LOG.info(f"[bold]{title_bold_part}[/bold] {title_rest}: {value}")
+            LOG.info("[bold]%s[/bold] %s: %s", title_bold_part, title_rest, value)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

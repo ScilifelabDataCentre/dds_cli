@@ -5,12 +5,10 @@
 ###################################################################################################
 
 # Standard library
-from email import header
 import logging
 
 # Installed
 import rich.markup
-from rich.table import Table
 
 # Own modules
 import dds_cli
@@ -139,11 +137,16 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         info = response.get("info")
         if info:
             LOG.info(
-                f"Username:          {info['username']} \
-                \nRole:              {info['role']} \
-                \nName:              {info['name']} \
-                \nPrimary Email:     {info['email_primary']} \
-                \nAssociated Emails: {', '.join(str(x) for x in info['emails_all'])}"
+                "Username:          %s \n"
+                "Role:              %s \n"
+                "Name:              %s \n"
+                "Primary Email:     %s \n"
+                "Associated Emails: %s \n",
+                info["username"],
+                info["role"],
+                info["name"],
+                info["email_primary"],
+                ", ".join(str(x) for x in info["emails_all"]),
             )
 
     def user_activation(self, email, action):
@@ -173,7 +176,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         )
 
         if project_errors:
-            LOG.warning(f"Could not fix user '{email}' access to the following projects:")
+            LOG.warning("Could not fix user '%s' access to the following projects:", email)
             msg = project_errors
         else:
             msg = response_json.get(
@@ -197,7 +200,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         )
 
         if response.get("empty"):
-            LOG.info(f"There are no Unit Admins or Unit Personnel connected to unit '{unit}'")
+            LOG.info("There are no Unit Admins or Unit Personnel connected to unit '%s'", unit)
             return
 
         users, keys = dds_cli.utils.get_required_in_response(
@@ -226,7 +229,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         # Print out table
         dds_cli.utils.print_or_page(item=table)
 
-    def list_invites(self, unit: str = None, invites: bool = None) -> None:
+    def list_invites(self, invites: bool = None) -> None:
         """List all unit users within a specific unit."""
         response, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.LIST_INVITED_USERS,
@@ -239,7 +242,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         invites = response.get("invites")
 
         if not invites:
-            LOG.info(f"There are no current invites")
+            LOG.info("There are no current invites")
             return
 
         table = dds_cli.utils.create_table(
@@ -269,5 +272,5 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             )
 
         LOG.info(
-            f"Account exists: {'[blue][bold]Yes[/bold][/blue]' if exists else '[red][bold]No[/bold][/red]'}"
+            "Account exists: [bold]%s[/bold]", "[blue]Yes[/blue]" if exists else "[red]No[/red]"
         )

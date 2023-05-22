@@ -42,14 +42,15 @@ class DDSDirectory:
         for directory in dirs.values():
             try:
                 directory.mkdir(parents=True, exist_ok=False)
-            except OSError as e:
-                if e.errno == errno.EEXIST:
+            except OSError as err:
+                if err.errno == errno.EEXIST:
                     sys.exit(
-                        f"Directory '{rich.markup.escape(str(directory))}' already exists. Please specify a path where a new folder can be created."
+                        f"Directory '{rich.markup.escape(str(directory))}' already exists. "
+                        "Please specify a path where a new folder can be created."
                     )
                 else:
                     sys.exit(
-                        f"The temporary directory '{rich.markup.escape(str(directory))}' could not be created: {e}"
+                        f"The temporary directory '{rich.markup.escape(str(directory))}' could not be created: {err}"
                     )
 
         self.directories = dirs

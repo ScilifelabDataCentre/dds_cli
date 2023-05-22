@@ -1,12 +1,11 @@
 """Data Delivery System Project Status manager."""
+import datetime
 import logging
+import typing
 
 # Installed
-import requests
-import simplejson
 import pytz
 import tzlocal
-import datetime
 
 # Own modules
 from dds_cli import base
@@ -66,14 +65,14 @@ class ProjectStatusManager(base.DDSBaseClass):
                 date = pytz.timezone("UTC").localize(
                     datetime.datetime.strptime(current_deadline, "%a, %d %b %Y %H:%M:%S GMT")
                 )
-            except ValueError as err:
+            except ValueError as exc:
                 raise exceptions.ApiResponseError(
                     f"Time zone mismatch: Incorrect zone '{current_deadline.split()[-1]}'"
-                )
-            else:
-                current_deadline = date.astimezone(tzlocal.get_localzone()).strftime(
-                    "%a, %d %b %Y %H:%M:%S %Z"
-                )
+                ) from exc
+
+            current_deadline = date.astimezone(tzlocal.get_localzone()).strftime(
+                "%a, %d %b %Y %H:%M:%S %Z"
+            )
             deadline_out = f" with deadline {current_deadline}"
         dds_cli.utils.console.print(f"{status_out}{deadline_out}")
         if show_history:
@@ -83,14 +82,14 @@ class ProjectStatusManager(base.DDSBaseClass):
                     date = pytz.timezone("UTC").localize(
                         datetime.datetime.strptime(row[1], "%a, %d %b %Y %H:%M:%S GMT")
                     )
-                except ValueError as err:
+                except ValueError as exc:
                     raise exceptions.ApiResponseError(
                         f"Time zone mismatch: Incorrect zone '{row[1].split()[-1]}'"
-                    )
-                else:
-                    row[1] = date.astimezone(tzlocal.get_localzone()).strftime(
-                        "%a, %d %b %Y %H:%M:%S %Z"
-                    )
+                    ) from exc
+
+                row[1] = date.astimezone(tzlocal.get_localzone()).strftime(
+                    "%a, %d %b %Y %H:%M:%S %Z"
+                )
                 history += ", ".join(list(row)) + " \n"
             LOG.info(history)
 
@@ -149,11 +148,11 @@ class ProjectBusyStatusManager(base.DDSBaseClass):
 
         if num_busy:
             if not show:
-                LOG.info(f"There are {num_busy} busy projects at the moment.")
+                LOG.info("There are %s busy projects at the moment.", num_busy)
             else:
                 projects: typing.Dict = response_json.get("projects")
-                LOG.info(f"The following projects are busy:")
-                for p in projects:
-                    dds_cli.utils.console.print(f"{p}: updated on {projects[p]}")
+                LOG.info("The following projects are busy:")
+                for proj in projects:
+                    dds_cli.utils.console.print(f"{proj}: updated on {projects[proj]}")
         else:
-            LOG.info(f"There are no busy projects at the moment.")
+            LOG.info("There are no busy projects at the moment.")

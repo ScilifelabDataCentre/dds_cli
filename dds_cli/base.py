@@ -232,7 +232,7 @@ class DDSBaseClass:
             )
 
         if self.method == "get" and len(self.filehandler.data) > len(any_failed):
-            LOG.info("Any downloaded files are located: %s.", self.filehandler.local_destination)
+            LOG.info("Any downloaded files are located at: %s.", self.filehandler.local_destination)
 
     def __collect_all_failed(self, sort: bool = True) -> list:
         """Put cancelled files from status in to failed dict and sort the output."""

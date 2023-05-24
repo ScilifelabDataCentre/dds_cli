@@ -271,3 +271,7 @@ _Nothing merged in CLI during this sprint_
 # 2023-04-28 - 2023-05-12
 
 - Workflow: Added Pylint to scan code ([#630](https://github.com/ScilifelabDataCentre/dds_cli/pull/630))
+
+# 2023-05-12 - 2023-05-26
+
+- Url to testing instance updated after move to new cluster ([#631](https://github.com/ScilifelabDataCentre/dds_cli/pull/631))

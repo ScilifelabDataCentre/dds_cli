@@ -53,7 +53,7 @@ This page will give you information on:
 2. Where the DDS Test Instance is located
 ============================================
 
-* The test instance is located at https://dds-dev.dckube.scilifelab.se/
+* The test instance is located at https://dds-dev.dckube3.scilifelab.se/
 * Just like on the production site, you can find the following information on that page:
     * *Documentation*, which points to the ``Welcome page`` in the navigation field to the left.
     * *Technical overview* 
@@ -96,7 +96,7 @@ After installing the CLI, you need to complete the following steps before you ca
         # Windows PowerShell
         $env:DDS_CLI_ENV = 'test-instance'
 
-2. Verify that the output of the following command contains ``https://dds-dev.dckube.scilifelab.se/`` and **not** ``https://delivery.scilifelab.se/``
+2. Verify that the output of the following command contains ``https://dds-dev.dckube3.scilifelab.se/`` and **not** ``https://delivery.scilifelab.se/``
 
     .. code-block:: bash
         

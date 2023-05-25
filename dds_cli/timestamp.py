@@ -1,4 +1,4 @@
-""""""
+"""Timestamp module."""
 
 
 ###############################################################################
@@ -25,6 +25,8 @@ LOG = logging.getLogger(__name__)
 
 
 class TimeStamp:
+    """Timestamp object."""
+
     def __init__(self):
         self.sep_date_time = "_"
         self.sep_time = "-"
@@ -32,7 +34,7 @@ class TimeStamp:
         now = datetime.datetime.now()
         self.timestamp = ""
 
-        for t in (
+        for time_part in (
             now.year,
             self.sep_time,
             now.month,
@@ -45,7 +47,7 @@ class TimeStamp:
             self.sep_time,
             now.second,
         ):
-            if len(str(t)) == 1 and isinstance(t, int):
-                self.timestamp += f"0{t}"
+            if len(str(time_part)) == 1 and isinstance(time_part, int):
+                self.timestamp += f"0{time_part}"
             else:
-                self.timestamp += f"{t}"
+                self.timestamp += f"{time_part}"

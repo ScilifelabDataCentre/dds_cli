@@ -1,8 +1,8 @@
 """Click DDS options used multiple times in __main__.py."""
 
 # Imports
-import click
 import pathlib
+import click
 from dds_cli.utils import multiple_help_text
 
 
@@ -22,6 +22,10 @@ def email_arg(required, email="email", metavar="[EMAIL]", nargs=1):
 def destination_option(
     help_message, option_type, long="--destination", short="-d", name="destination", required=False
 ):
+    """Destination option standard definition.
+
+    Use as decorator for commands.
+    """
     return click.option(
         long,
         short,
@@ -188,7 +192,10 @@ def token_path_option(
     short="-tp",
     name="token_path",
     required=False,
-    help_message="The path where the authentication token will be stored. For a normal use-case, this should not be needed.",
+    help_message=(
+        "The path where the authentication token will be stored. "
+        "For a normal use-case, this should not be needed."
+    ),
 ):
     """
     token path option standard definition.

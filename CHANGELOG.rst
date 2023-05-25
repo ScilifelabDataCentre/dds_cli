@@ -1,6 +1,13 @@
 Changelog
 ==========
 
+.. _2.2.65:
+
+2.2.65 - 2023-05-26
+~~~~~~~~~~~~~~~~~~~~
+
+- New URL for the testing instance: https://dds-dev.dckube3.scilifelab.se/api/v1
+
 .. _2.2.64:
 
 2.2.64 - 2023-04-26

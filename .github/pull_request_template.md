@@ -47,6 +47,10 @@
 - **Black**: Python code formatter. Does not execute. Only tests.
   Run `black .` locally to execute formatting.
   - [ ] Passed
+- **Pylint**: Python code linter. Does not execute. Only tests.
+  Fix code producing warnings. Code must get 10/10.
+  - [ ] Warnings fixed
+  - [ ] Passed
 - **Prettier**: General code formatter. Our use case: MD and yaml mainly.
   Run `npx prettier --write .` locally to execute formatting.
   - [ ] Passed

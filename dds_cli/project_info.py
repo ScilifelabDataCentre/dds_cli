@@ -1,14 +1,11 @@
 """Data Delivery System Project info manager."""
+# Standard library
 import logging
+import sys
 
 # Installed
-import requests
-import simplejson
-import pytz
-import tzlocal
-import datetime
 import rich
-import sys
+
 
 # Own modules
 from dds_cli import base
@@ -48,6 +45,7 @@ class ProjectInfoManager(base.DDSBaseClass):
 
     # Public methods ###################### Public methods #
     def get_project_info(self):
+        """Collect project information from API."""
         # Get info about a project from API
         response, _ = dds_cli.utils.perform_request(
             DDSEndpoint.PROJ_INFO,
@@ -83,12 +81,13 @@ class ProjectInfoManager(base.DDSBaseClass):
         dds_cli.utils.console.print(f"[b]Project title:[/b]       {project_info['Title']}")
         dds_cli.utils.console.print(f"[b]Project description:[/b] {project_info['Description']}")
 
-    def update_info(self, title=None, description=None, pi=None):
+    def update_info(self, title=None, description=None, pi=None):  # pylint: disable=invalid-name
         """Update project info"""
 
         if all(item is None for item in [title, description, pi]):
             raise exceptions.NoDataError(
-                "Please specify which information you would like to change: '--title', '--description' or/and '--principal-investigator'."
+                "Please specify which information you would like to change: '--title', "
+                "'--description' or/and '--principal-investigator'."
             )
 
         # Get project info from API
@@ -100,7 +99,10 @@ class ProjectInfoManager(base.DDSBaseClass):
             info_items["title"] = title
             # Ask the user for confirmation
             if not rich.prompt.Confirm.ask(
-                f"You are about to change the [i]title[/i] for project '[b]{self.project}[/b]' \n[b][blue]from[/blue][/b]\t{project_info['Title']}\n[b][green]to[/green][/b]\t{info_items['title']} \nAre you sure?"
+                f"You are about to change the [i]title[/i] for project '[b]{self.project}[/b]'\n"
+                f"[b][blue]from[/blue][/b]\t{project_info['Title']}\n"
+                f"[b][green]to[/green][/b]\t{info_items['title']}\n"
+                "Are you sure?"
             ):
                 LOG.info("Probably for the best. Exiting.")
                 sys.exit(0)
@@ -108,7 +110,10 @@ class ProjectInfoManager(base.DDSBaseClass):
             info_items["description"] = description
             # Ask the user for confirmation
             if not rich.prompt.Confirm.ask(
-                f"You are about to change the [i]description[/i] for project '[b]{self.project}[/b]' \n[b][blue]from[/blue][/b]\t{project_info['Description']}\n[b][green]to[/green][/b]\t{info_items['description']} \nAre you sure?"
+                f"You are about to change the [i]description[/i] for project '[b]{self.project}[/b]' \n"
+                f"[b][blue]from[/blue][/b]\t{project_info['Description']}\n"
+                f"[b][green]to[/green][/b]\t{info_items['description']} \n"
+                "Are you sure?"
             ):
                 LOG.info("Probably for the best. Exiting.")
                 sys.exit(0)
@@ -116,7 +121,10 @@ class ProjectInfoManager(base.DDSBaseClass):
             info_items["pi"] = pi
             # Ask the user for confirmation
             if not rich.prompt.Confirm.ask(
-                f"You are about to change the [i]PI[/i] for project '[b]{self.project}[/b]' \n[b][blue]from[/blue][/b]\t{project_info['PI']}\n[b][green]to[/green][/b]\t{info_items['pi']} \nAre you sure?"
+                f"You are about to change the [i]PI[/i] for project '[b]{self.project}[/b]' \n"
+                f"[b][blue]from[/blue][/b]\t{project_info['PI']}\n"
+                f"[b][green]to[/green][/b]\t{info_items['pi']} \n"
+                "Are you sure?"
             ):
                 LOG.info("Probably for the best. Exiting.")
                 sys.exit(0)

@@ -7,7 +7,6 @@
 # Standard library
 import json
 import logging
-import os
 import pathlib
 import threading
 
@@ -92,11 +91,11 @@ class FileHandler:
             return ok_to_remove
 
         # Iterate through any existing subdirectories - recursive
-        LOG.debug(f"Any in directory? {any(directory.iterdir())}")
+        LOG.debug("Any in directory? %s", any(directory.iterdir()))
         if any(directory.iterdir()):
-            for p in directory.iterdir():
-                if p.is_dir():
-                    ok_to_remove = FileHandler.delete_tempdir(directory=p)
+            for item in directory.iterdir():
+                if item.is_dir():
+                    ok_to_remove = FileHandler.delete_tempdir(directory=item)
                     if ok_to_remove:
                         directory.rmdir()
         else:

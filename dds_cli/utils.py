@@ -1,9 +1,10 @@
 """DDS CLI utils module."""
 
-import logging
 import numbers
 import pathlib
 import typing
+import http
+from typing import Dict, List, Union
 
 import requests
 import rich.console
@@ -12,9 +13,7 @@ from jwcrypto.common import InvalidJWEOperation
 from jwcrypto.jwe import InvalidJWEData
 from jwcrypto.jws import InvalidJWSObject
 from jwcrypto import jwt
-import http
 from rich.table import Table
-from typing import Dict, List, Union
 
 import dds_cli.exceptions
 from dds_cli import __version__, DDSEndpoint
@@ -49,7 +48,7 @@ class HumanBytes:
         assert isinstance(num, (int, float)), "num must be an int or float"
         assert isinstance(metric, bool), "metric must be a bool"
         assert (
-            isinstance(precision, int) and precision >= 0 and precision <= 3
+            isinstance(precision, int) and 0 <= precision <= 3
         ), "precision must be an int (range 0-3)"
 
         unit_labels = HumanBytes.METRIC_LABELS if metric else HumanBytes.BINARY_LABELS
@@ -146,13 +145,16 @@ def get_required_in_response(keys: list, response: dict) -> tuple:
 def perform_request(
     endpoint,
     method,
-    headers={},
+    headers: typing.Dict = None,
     auth=None,
     params=None,
     json=None,
     error_message="API Request failed.",
     timeout=DDSEndpoint.TIMEOUT,
 ):
+    """Execute request to API."""
+    if not headers:
+        headers = {}
     version_header_name: str = "X-CLI-Version"
     request_method = None
     if method == "get":
@@ -168,9 +170,9 @@ def perform_request(
         """Make paths serializable."""
         # Transform dict and list contents
         if isinstance(json_input, typing.Dict):
-            for x, y in json_input.items():
-                if isinstance(y, pathlib.Path):
-                    json_input[x] = y.as_posix()
+            for key, val in json_input.items():
+                if isinstance(val, pathlib.Path):
+                    json_input[key] = val.as_posix()
         elif isinstance(json_input, typing.List):
             json_input = [x.as_posix() if isinstance(x, pathlib.Path) else x for x in json_input]
         return json_input
@@ -269,7 +271,9 @@ def get_json_response(response):
     return json_response
 
 
-def format_api_response(response, key: str, binary: bool = False, always_show: bool = False):
+def format_api_response(
+    response, key: str, binary: bool = False, always_show: bool = False
+):  # pylint: disable=unused-argument
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
     formatted_response = response
     if isinstance(response, bool):
@@ -334,8 +338,8 @@ def readable_timedelta(duration):
     ]
     if time_parts:
         return " ".join(time_parts)
-    else:
-        return "less than a minute"
+
+    return "less than a minute"
 
 
 def get_deletion_confirmation(action: str, project: str) -> bool:
@@ -364,6 +368,7 @@ def print_or_page(item):
 
 # Adapted from <https://stackoverflow.com/a/49782093>.
 def delete_folder(folder):
+    """Delete local folder / directory."""
     folder = pathlib.Path(folder)
     for file_or_folder in folder.iterdir():
         if file_or_folder.is_dir():
@@ -375,7 +380,7 @@ def delete_folder(folder):
 
 def __project_creation_error(response_json: Dict) -> str:
     """Parse response from project creation endpoint."""
-    message, title, description, pi, email = (
+    message, title, description, principal_investigator, email = (
         response_json.get("message"),
         response_json.get("title"),
         response_json.get("description"),
@@ -383,7 +388,7 @@ def __project_creation_error(response_json: Dict) -> str:
         response_json.get("email"),
     )
 
-    messages: List = [message, title, description, pi, email]
+    messages: List = [message, title, description, principal_investigator, email]
 
     error = next(message for message in messages if message)
 

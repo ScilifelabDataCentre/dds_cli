@@ -10,7 +10,6 @@ import pathlib
 
 # Installed
 import requests
-import simplejson
 from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn
 
@@ -101,7 +100,7 @@ class DataGetter(base.DDSBaseClass):
 
             if not self.filehandler.data:
                 if self.temporary_directory and self.temporary_directory.is_dir():
-                    LOG.debug(f"Deleting temporary folder {self.temporary_directory}.")
+                    LOG.debug("Deleting temporary folder '%s'.", self.temporary_directory)
                     dds_cli.utils.delete_folder(self.temporary_directory)
                 raise dds_cli.exceptions.DownloadError("No files to download.")
 
@@ -134,13 +133,13 @@ class DataGetter(base.DDSBaseClass):
             total=file_info["size_original"],
         )
 
-        LOG.debug(f"File {escape(str(file))} downloaded: {file_downloaded}")
+        LOG.debug("File '%s' downloaded: %s", escape(str(file)), file_downloaded)
 
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
-            LOG.debug(f"Database updated: {db_updated}")
+            LOG.debug("Database updated: %s", db_updated)
 
-            LOG.debug(f"Beginning decryption of file {escape(str(file))}...")
+            LOG.debug("Beginning decryption of file '%s'...", escape(str(file)))
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
@@ -160,7 +159,7 @@ class DataGetter(base.DDSBaseClass):
                     outfile=file,
                 )
 
-            LOG.debug(f"file saved? {file_saved}")
+            LOG.debug("File saved? %s", file_saved)
             if file_saved:
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
@@ -184,6 +183,7 @@ class DataGetter(base.DDSBaseClass):
         file_remote = self.filehandler.data[file]["url"]
 
         try:
+            # TODO: Set timeout? (pylint)
             with requests.get(file_remote, stream=True) as req:
                 req.raise_for_status()
                 with file_local.open(mode="wb") as new_file:
@@ -214,7 +214,6 @@ class DataGetter(base.DDSBaseClass):
     def update_db(self, file):
         """Update file info in db."""
         updated_in_db = False
-        error = ""
 
         # Get file info
         fileinfo = self.filehandler.data[file]

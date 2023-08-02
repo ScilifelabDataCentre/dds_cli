@@ -276,3 +276,7 @@ _Nothing merged in CLI during this sprint_
 
 - Url to testing instance updated after move to new cluster ([#631](https://github.com/ScilifelabDataCentre/dds_cli/pull/631))
 - Dependency: Bump `cryptography` due to CVE-2023-0286 and dependabot ([#635](https://github.com/ScilifelabDataCentre/dds_cli/pull/635))
+
+# 2023-06-26 - 2023-08-04
+
+- Print understandable message when request times out and / or doesn't contain json ([#638](https://github.com/ScilifelabDataCentre/dds_cli/pull/638))

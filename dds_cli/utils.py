@@ -190,7 +190,9 @@ def perform_request(
             timeout=timeout,
         )
         response_json = response.json()
-    except simplejson.JSONDecodeError as err:
+    except simplejson.JSONDecodeError:
+        if response.status_code == 504:
+            dds_cli.exceptions.ApiResponseError(message="The request to the API timed out.")
         raise dds_cli.exceptions.ApiResponseError(
             message=f"Response code: {response.status_code}. The request did not return a response message."
         )

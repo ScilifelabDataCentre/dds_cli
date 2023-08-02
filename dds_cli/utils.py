@@ -187,7 +187,7 @@ def perform_request(
             auth=auth,
             params=params,
             json=json,
-            timeout=1,
+            timeout=timeout,
         )
         response_json = response.json()
     except simplejson.JSONDecodeError as err:

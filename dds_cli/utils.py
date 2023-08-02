@@ -192,7 +192,10 @@ def perform_request(
         response_json = response.json()
     except simplejson.JSONDecodeError as err:
         raise dds_cli.exceptions.ApiResponseError(
-            message=f"Response code: {response.status_code}. The request did not return a response message. Details: {err}"
+            message=(
+                f"Response code: {response.status_code}. "
+                f"The request did not return a response message. Details: {err}"
+            )
         )
     except requests.exceptions.RequestException as err:
         if isinstance(err, requests.exceptions.ConnectionError):

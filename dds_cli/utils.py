@@ -191,7 +191,7 @@ def perform_request(
         )
         response_json = response.json()
     except simplejson.JSONDecodeError as err:
-        raise dds_cli.exceptions.ApiResponseError(message=str(err))
+        raise dds_cli.exceptions.ApiResponseError(message=f"Response code: {response.status_code}. The request did not return a response message.")
     except requests.exceptions.RequestException as err:
         if isinstance(err, requests.exceptions.ConnectionError):
             error_message += ": The database seems to be down."

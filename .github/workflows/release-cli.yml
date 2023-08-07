@@ -6,7 +6,6 @@
 ---
 name: New Release
 on:
-  push:
   release:
     types: [published]
     branches:

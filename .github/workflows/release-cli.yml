@@ -6,6 +6,7 @@
 ---
 name: New Release
 on:
+  push:
   release:
     types: [published]
     branches:
@@ -19,7 +20,7 @@ jobs:
         name: Check out source-code repository
 
       - name: Set up Python 3.9
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: 3.9
 
@@ -31,23 +32,23 @@ jobs:
       - name: Build the distribution
         run: python setup.py sdist bdist_wheel
 
-      - name: Publish dist to TestPyPI
-        if: github.repository == 'ScilifelabDataCentre/dds_cli'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          print_hash: true
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
-          skip_existing: true
+      # - name: Publish dist to TestPyPI
+      #   if: github.repository == 'ScilifelabDataCentre/dds_cli'
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     print_hash: true
+      #     password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      #     repository_url: https://test.pypi.org/legacy/
+      #     skip_existing: true
 
-      - name: Publish dist to PyPI
-        if: github.repository == 'ScilifelabDataCentre/dds_cli'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          print_hash: true
-          user: __token__
-          password: ${{ secrets.pypi_password }}
-          skip_existing: true
+      # - name: Publish dist to PyPI
+      #   if: github.repository == 'ScilifelabDataCentre/dds_cli'
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     print_hash: true
+      #     user: __token__
+      #     password: ${{ secrets.pypi_password }}
+      #     skip_existing: true
 
   ddsclibinaries:
     name: Build binary packages for the DDS CLI

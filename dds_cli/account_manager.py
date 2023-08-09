@@ -278,6 +278,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
     def save_emails(self, unit: str = None) -> None:
         """Get user emails and save them to a text file."""
+        # Get emails from API
         response, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.USER_EMAILS,
             method="get",
@@ -286,7 +287,13 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             error_message="Failed getting user emails from the API.",
         )
 
-        if response.get("empty"):
+        # Verify that one of the required pieces of info were returned
+        empty = response.get("empty")
+        emails = response.get("emails")
+        if not empty and not emails:
+            raise dds_cli.exceptions.ApiResponseError("No information returned from the API. Could not get user emails.")
+
+        if empty:
             LOG.info("There are no user emails to list.")
             return
 

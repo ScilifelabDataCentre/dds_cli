@@ -277,4 +277,3 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
     def save_emails(self, unit: str = None) -> None:
         """Get user emails and save them to a text file."""
-        

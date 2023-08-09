@@ -544,7 +544,11 @@ def user_group_command(_):
     "--invites", required=False, is_flag=True, default=False, help="List all current invitations."
 )
 @click.option(
-    "--save-emails", required=False, is_flag=True, default=False, help="[Super Admins only] Save user emails."
+    "--save-emails",
+    required=False,
+    is_flag=True,
+    default=False,
+    help="[Super Admins only] Save user emails.",
 )
 @click.pass_obj
 def list_users(click_ctx, unit, invites, save_emails):

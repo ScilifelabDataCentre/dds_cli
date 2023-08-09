@@ -280,3 +280,7 @@ _Nothing merged in CLI during this sprint_
 # 2023-06-26 - 2023-08-04
 
 - Dependency: Bump `cryptography` to 41.0.3 due to security vulnerability alerts(s) ([#639](https://github.com/ScilifelabDataCentre/dds_cli/pull/639))
+
+# 2023-08-07 - 2023-08-18
+
+- New option in `dds user ls`: `--save-emails` for Super Admins to save emails to file ([#641](https://github.com/ScilifelabDataCentre/dds_cli/pull/641))

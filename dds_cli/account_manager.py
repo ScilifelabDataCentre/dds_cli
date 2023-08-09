@@ -296,14 +296,16 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             )
 
         if empty:
-            LOG.info("There are no user emails to list.")
+            LOG.info("There are no user emails to save.")
             return
 
         # Get list of emails
         emails = response.get("emails")
+        LOG.debug("Saving emails to file...")
 
         # Save emails to file
-        with pathlib.Path("unit_user_emails.txt").open(mode="w+") as file:
+        email_file: pathlib.Path = pathlib.Path("unit_user_emails.txt")
+        with email_file.open(mode="w+") as file:
             file.write("; ".join(emails))
 
-        LOG.info("Saved emails to file.")
+        LOG.info(f"Saved emails to file: {email_file}")

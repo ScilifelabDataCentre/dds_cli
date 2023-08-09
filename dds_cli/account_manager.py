@@ -274,3 +274,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         LOG.info(
             "Account exists: [bold]%s[/bold]", "[blue]Yes[/blue]" if exists else "[red]No[/red]"
         )
+
+    def save_emails(self, unit: str = None) -> None:
+        """Get user emails and save them to a text file."""
+        

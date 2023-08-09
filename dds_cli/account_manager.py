@@ -305,7 +305,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Save emails to file
         email_file: pathlib.Path = pathlib.Path("unit_user_emails.txt")
-        with email_file.open(mode="wt+") as file:
+        with email_file.open(mode="w+", encoding="t") as file:
             file.write("; ".join(emails))
 
         LOG.info(f"Saved emails to file: {email_file}")

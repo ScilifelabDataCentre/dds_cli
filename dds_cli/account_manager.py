@@ -291,7 +291,9 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         empty = response.get("empty")
         emails = response.get("emails")
         if not empty and not emails:
-            raise dds_cli.exceptions.ApiResponseError("No information returned from the API. Could not get user emails.")
+            raise dds_cli.exceptions.ApiResponseError(
+                "No information returned from the API. Could not get user emails."
+            )
 
         if empty:
             LOG.info("There are no user emails to list.")

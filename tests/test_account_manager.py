@@ -50,6 +50,7 @@ def test_list_users_no_unit_empty_response(fs: FakeFilesystem):
             exc_info.value
         )
 
+
 def test_save_emails_empty_response(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """No file should be created if no emails are returned."""
     # Verify that file doesn't exist

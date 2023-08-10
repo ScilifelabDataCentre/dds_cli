@@ -80,3 +80,10 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         )
         LOG.debug(response_json)
 
+        # Get items from response
+        stats = response_json.get("stats")
+        if not stats:
+            raise dds_cli.exceptions.ApiResponseError(message="No stats were returned from API.")
+        
+        # 
+        

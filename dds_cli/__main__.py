@@ -27,7 +27,7 @@ import dds_cli
 import dds_cli.account_manager
 import dds_cli.unit_manager
 import dds_cli.motd_manager
-import dds_cli.maintenance_manager
+import dds_cli.superadmin_helper
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -2073,7 +2073,7 @@ def send_motd(click_ctx, motd_id):
 def set_maintenance_mode(click_ctx, setting):
     """[Super Admins only] Activate / Deactivate Maintenance mode."""
     try:
-        with dds_cli.maintenance_manager.SuperAdminHelper(
+        with dds_cli.superadmin_helper.SuperAdminHelper(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as setter:
@@ -2101,7 +2101,7 @@ def get_stats(click_ctx, stat_type):
     """Get statistics in the DDS."""
     try:
         # Num projects
-        with dds_cli.data_lister.DataLister(
+        with dds_cli.superadmin_helper.SuperAdminHelper(
             show_usage=True,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             json=True,

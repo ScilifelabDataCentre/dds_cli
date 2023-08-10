@@ -78,5 +78,5 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
             method="get",
             error_message="Failed getting statistics from API."
         )
+        LOG.debug(response_json)
 
-        

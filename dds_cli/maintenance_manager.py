@@ -32,8 +32,8 @@ LOG = logging.getLogger(__name__)
 ####################################################################################################
 
 
-class MaintenanceManager(dds_cli.base.DDSBaseClass):
-    """Admin class for managing system maintenance mode."""
+class SuperAdminHelper(dds_cli.base.DDSBaseClass):
+    """Admin class."""
 
     def __init__(
         self,
@@ -69,3 +69,14 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
             "message", "No response. Cannot confirm setting maintenance mode."
         )
         LOG.info(response_message)
+
+    def get_stats(self) -> None: 
+        """Get rows from statistics."""
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.STATS,
+            headers=self.token,
+            method="get",
+            error_message="Failed getting statistics from API."
+        )
+
+        

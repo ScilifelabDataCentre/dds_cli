@@ -13,7 +13,7 @@ def test_init_maintenance_manager_incorrect_method():
     """Init with incorrect method."""
     method = "rm"
     with pytest.raises(InvalidMethodError) as err:
-        _: maintenance_manager.MaintenanceManager = maintenance_manager.MaintenanceManager(
+        _: maintenance_manager.SuperAdminHelper = maintenance_manager.SuperAdminHelper(
             method=method, authenticate=False, no_prompt=True
         )
 
@@ -22,10 +22,10 @@ def test_init_maintenance_manager_incorrect_method():
 
 def test_init_maintenance_manager():
     """Create manager."""
-    maint_mngr: maintenance_manager.MaintenanceManager = maintenance_manager.MaintenanceManager(
+    maint_mngr: maintenance_manager.SuperAdminHelper = maintenance_manager.SuperAdminHelper(
         authenticate=False, no_prompt=True
     )
-    assert isinstance(maint_mngr, maintenance_manager.MaintenanceManager)
+    assert isinstance(maint_mngr, maintenance_manager.SuperAdminHelper)
 
 
 # change_maintenance_mode
@@ -40,7 +40,7 @@ def test_change_maintenance_mode_no_response(caplog: LogCaptureFixture):
             # Create mocked request - real request not executed
             mock.put(DDSEndpoint.MAINTENANCE, status_code=200, json=returned_response)
 
-            with maintenance_manager.MaintenanceManager(
+            with maintenance_manager.SuperAdminHelper(
                 authenticate=False, no_prompt=True
             ) as maint_mngr:
                 maint_mngr.token = {}  # required, otherwise none
@@ -62,7 +62,7 @@ def test_activate_maintenance_ok(caplog: LogCaptureFixture):
             # Create mocked request - real request not executed
             mock.put(DDSEndpoint.MAINTENANCE, status_code=200, json=returned_response)
 
-            with maintenance_manager.MaintenanceManager(
+            with maintenance_manager.SuperAdminHelper(
                 authenticate=False, no_prompt=True
             ) as maint_mngr:
                 maint_mngr.token = {}  # required, otherwise none
@@ -84,7 +84,7 @@ def test_deactivate_maintenance_ok(caplog: LogCaptureFixture):
             # Create mocked request - real request not executed
             mock.put(DDSEndpoint.MAINTENANCE, status_code=200, json=returned_response)
 
-            with maintenance_manager.MaintenanceManager(
+            with maintenance_manager.SuperAdminHelper(
                 authenticate=False, no_prompt=True
             ) as maint_mngr:
                 maint_mngr.token = {}  # required, otherwise none

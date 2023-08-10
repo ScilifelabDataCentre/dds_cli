@@ -2073,7 +2073,7 @@ def send_motd(click_ctx, motd_id):
 def set_maintenance_mode(click_ctx, setting):
     """[Super Admins only] Activate / Deactivate Maintenance mode."""
     try:
-        with dds_cli.maintenance_manager.MaintenanceManager(
+        with dds_cli.maintenance_manager.SuperAdminHelper(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as setter:

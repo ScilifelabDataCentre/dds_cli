@@ -144,5 +144,5 @@ def test_save_emails_emails_returned(fs: FakeFilesystem, caplog: LogCaptureFixtu
     assert fs.exists(file_path=file_to_save)
 
     # Read file and verify contents
-    with file_to_save.open(mode="r", encoding="t") as f:
+    with file_to_save.open(mode="r", encoding="utf-8") as f:
         assert f.read() == "emailone; emailtwo; emailthree; emailfour"

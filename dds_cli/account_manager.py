@@ -308,4 +308,4 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         with email_file.open(mode="w+", encoding="utf-8") as file:
             file.write("; ".join(emails))
 
-        LOG.info(f"Saved emails to file: {email_file}")
+        LOG.info("Saved emails to file: %s", email_file)

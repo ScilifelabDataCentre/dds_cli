@@ -283,7 +283,6 @@ class AccountManager(dds_cli.base.DDSBaseClass):
             endpoint=dds_cli.DDSEndpoint.USER_EMAILS,
             method="get",
             headers=self.token,
-            json={"unit": unit, "all": unit is None},
             error_message="Failed getting user emails from the API.",
         )
 

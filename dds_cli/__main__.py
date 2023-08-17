@@ -573,7 +573,7 @@ def list_users(click_ctx, unit, invites, save_emails):
             if invites:
                 lister.list_invites(invites=invites)
             elif save_emails:
-                lister.save_emails(unit=unit)
+                lister.save_emails()
             else:
                 lister.list_users(unit=unit)
 

@@ -194,7 +194,7 @@ def perform_request(
         raise dds_cli.exceptions.ApiResponseError(
             message=(
                 f"Response code: {response.status_code}. "
-                f"The request did not return a response message. Details: {err}"
+                f"The request did not return a valid JSON response. Details: {err}"
             )
         )
     except requests.exceptions.RequestException as err:

@@ -85,5 +85,26 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         if not stats:
             raise dds_cli.exceptions.ApiResponseError(message="No stats were returned from API.")
         
-        # 
-        
+        # Format table consisting of user stats
+        table_users = dds_cli.utils.create_table(
+            title="Units and accounts",
+            columns=["Date", "Researchers", "Project Owners", "Unit Personnel", "Unit Admins", "Super Admins", "Total Users"],
+            rows=stats,
+            caption=("Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n"
+                "[underline]Researchers[/underline]: Number of accounts with the role 'Researcher'. "
+                "[underline]Project Owners[/underline]: Number of (unique) 'Researcher' accounts with admin permissions in at least one project. "
+                "[underline]Unit Personnel[/underline]: Number of accounts with the role 'Unit Personnel'. "
+                "[underline]Unit Admins[/underline]: Number of accounts with the role 'Unit Admin'. "
+                "[underline]Super Admins[/underline]: Number of employees at the SciLifeLab Data Centre with the DDS account role 'Super Admin'. "
+                "[underline]Total Users[/underline]: Total number of accounts. Project Owners are a subrole of 'Researchers' and are therefore not included in the summary.")
+        )
+        dds_cli.utils.console.print(table_users, "\n")
+
+        # Format table consisting of project and data stats
+        table_data = dds_cli.utils.create_table(
+            title="Amount of data delivered via the DDS",
+            columns=["Date", "Active Projects", "Inactive Projects", "Total Projects", "Data Now (TB)", "Data Uploaded (TB)", "TBHours Last Month", "TBHours Total"],
+            rows=stats,
+            caption="Number of delivery projects and amount of data that is being - and has been - delivered via the DDS.",
+        )
+        dds_cli.utils.console.print(table_data, "\n")

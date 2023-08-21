@@ -109,7 +109,7 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
                 "[underline]Total Users[/underline]: Total number of accounts. Project Owners are a subrole of 'Researchers' and are therefore not included in the summary."
             ),
         )
-        dds_cli.utils.console.print(table_users, "\n")
+        dds_cli.utils.console.print(table_users, "\n") # TODO: Possibly change to print_or_page later on, or give option to save stats
 
         # Format table consisting of project and data stats
         table_data = dds_cli.utils.create_table(
@@ -137,4 +137,4 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
                 "[underline]TBHours Total[/underline]: Total number of terrabyte hours that have been recorded in the DDS since going into production."
             ),
         )
-        dds_cli.utils.console.print(table_data, "\n")
+        dds_cli.utils.console.print(table_data, "\n") # TODO: Possibly change to print_or_page later on, or give option to save stats

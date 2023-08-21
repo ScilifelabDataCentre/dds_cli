@@ -70,13 +70,13 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         )
         LOG.info(response_message)
 
-    def get_stats(self) -> None: 
+    def get_stats(self) -> None:
         """Get rows from statistics."""
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.STATS,
             headers=self.token,
             method="get",
-            error_message="Failed getting statistics from API."
+            error_message="Failed getting statistics from API.",
         )
         LOG.debug(response_json)
 
@@ -84,11 +84,19 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         stats = response_json.get("stats")
         if not stats:
             raise dds_cli.exceptions.ApiResponseError(message="No stats were returned from API.")
-        
+
         # Format table consisting of user stats
         table_users = dds_cli.utils.create_table(
             title="Units and accounts",
-            columns=["Date", "Researchers", "Project Owners", "Unit Personnel", "Unit Admins", "Super Admins", "Total Users"],
+            columns=[
+                "Date",
+                "Researchers",
+                "Project Owners",
+                "Unit Personnel",
+                "Unit Admins",
+                "Super Admins",
+                "Total Users",
+            ],
             rows=stats,
             caption=(
                 "Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n"
@@ -99,14 +107,23 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
                 "[underline]Unit Admins[/underline]: Number of accounts with the role 'Unit Admin'. "
                 "[underline]Super Admins[/underline]: Number of employees at the SciLifeLab Data Centre with the DDS account role 'Super Admin'. "
                 "[underline]Total Users[/underline]: Total number of accounts. Project Owners are a subrole of 'Researchers' and are therefore not included in the summary."
-            )
+            ),
         )
         dds_cli.utils.console.print(table_users, "\n")
 
         # Format table consisting of project and data stats
         table_data = dds_cli.utils.create_table(
             title="Amount of data delivered via the DDS",
-            columns=["Date", "Active Projects", "Inactive Projects", "Total Projects", "Data Now (TB)", "Data Uploaded (TB)", "TBHours Last Month", "TBHours Total"],
+            columns=[
+                "Date",
+                "Active Projects",
+                "Inactive Projects",
+                "Total Projects",
+                "Data Now (TB)",
+                "Data Uploaded (TB)",
+                "TBHours Last Month",
+                "TBHours Total",
+            ],
             rows=stats,
             caption=(
                 "Number of delivery projects and amount of data that is being - and has been - delivered via the DDS.\n"

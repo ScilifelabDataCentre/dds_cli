@@ -102,11 +102,14 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
                 "Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n"
                 "[underline]Date[/underline]: Date on which the stats were recorded in the database. "
                 "[underline]Researchers[/underline]: Number of accounts with the role 'Researcher'. "
-                "[underline]Project Owners[/underline]: Number of (unique) 'Researcher' accounts with admin permissions in at least one project. "
+                "[underline]Project Owners[/underline]: Number of (unique) 'Researcher' accounts with admin "
+                "permissions in at least one project. "
                 "[underline]Unit Personnel[/underline]: Number of accounts with the role 'Unit Personnel'. "
                 "[underline]Unit Admins[/underline]: Number of accounts with the role 'Unit Admin'. "
-                "[underline]Super Admins[/underline]: Number of employees at the SciLifeLab Data Centre with the DDS account role 'Super Admin'. "
-                "[underline]Total Users[/underline]: Total number of accounts. Project Owners are a subrole of 'Researchers' and are therefore not included in the summary."
+                "[underline]Super Admins[/underline]: Number of employees at the SciLifeLab Data Centre with the "
+                "DDS account role 'Super Admin'. "
+                "[underline]Total Users[/underline]: Total number of accounts. Project Owners are a subrole of "
+                "'Researchers' and are therefore not included in the summary."
             ),
         )
         dds_cli.utils.console.print(
@@ -128,15 +131,21 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
             ],
             rows=stats,
             caption=(
-                "Number of delivery projects and amount of data that is being - and has been - delivered via the DDS.\n"
+                "Number of delivery projects and amount of data that is being (and has been) delivered via the DDS.\n"
                 "[underline]Date[/underline]: Date on which the stats were recorded in the database. "
-                "[underline]Active Projects[/underline]: Delivery projects currently used to deliver data. Statuses included are 'In Progress', 'Available' and 'Expired'. "
-                "[underline]Inactive Projects[/underline]: Delivery projects that have previously been created and/or used for data deliveries. Statuses included are 'Deleted', 'Archived' (incl. aborted). "
+                "[underline]Active Projects[/underline]: Delivery projects currently used to deliver data. Statuses "
+                "included are 'In Progress', 'Available' and 'Expired'. "
+                "[underline]Inactive Projects[/underline]: Delivery projects that have previously been created and/or "
+                "used for data deliveries. Statuses included are 'Deleted', 'Archived' (incl. aborted). "
                 "[underline]Total Projects[/underline]: Sum of active- and inactive projects. "
-                "[underline]Data Now (TB)[/underline]: Number of terrabytes of data that are currently being delivered with the DDS. "
-                "[underline]Data Uploaded (TB)[/underline]: Total number of terrabytes of data that have been uploaded to the DDS temporary storage location since the DDS went into production. "
-                "[underline]TBHours Last Month[/underline]: Number of terrabyte hours that were recorded in the DDS the previous month. "
-                "[underline]TBHours Total[/underline]: Total number of terrabyte hours that have been recorded in the DDS since going into production."
+                "[underline]Data Now (TB)[/underline]: Number of terrabytes of data that are currently being delivered "
+                "with the DDS. "
+                "[underline]Data Uploaded (TB)[/underline]: Total number of terrabytes of data that have been uploaded "
+                "to the DDS temporary storage location since the DDS went into production. "
+                "[underline]TBHours Last Month[/underline]: Number of terrabyte hours that were recorded in the DDS the "
+                "previous month. "
+                "[underline]TBHours Total[/underline]: Total number of terrabyte hours that have been recorded in the "
+                "DDS since going into production."
             ),
         )
         dds_cli.utils.console.print(

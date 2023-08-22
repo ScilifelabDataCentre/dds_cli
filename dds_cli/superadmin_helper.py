@@ -142,8 +142,8 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
                 "with the DDS. "
                 "[underline]Data Uploaded (TB)[/underline]: Total number of terrabytes of data that have been uploaded "
                 "to the DDS temporary storage location since the DDS went into production. "
-                "[underline]TBHours Last Month[/underline]: Number of terrabyte hours that were recorded in the DDS the "
-                "previous month. "
+                "[underline]TBHours Last Month[/underline]: Number of terrabyte hours that were recorded in the DDS "
+                "the previous month. "
                 "[underline]TBHours Total[/underline]: Total number of terrabyte hours that have been recorded in the "
                 "DDS since going into production."
             ),

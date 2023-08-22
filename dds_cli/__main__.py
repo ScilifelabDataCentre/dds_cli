@@ -9,7 +9,6 @@ import concurrent.futures
 import itertools
 import logging
 import sys
-import typing
 
 # Installed
 import pathlib

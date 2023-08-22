@@ -96,3 +96,25 @@ def test_deactivate_maintenance_ok(caplog: LogCaptureFixture):
                 logging.INFO,
                 "Message from API about mode change.",
             ) in caplog.record_tuples
+
+
+def test_get_stats(caplog: LogCaptureFixture): 
+    """"""
+    returned_response: typing.Dict = {"message": "Message from API about mode change."}
+    with caplog.at_level(logging.INFO):
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.put(DDSEndpoint.STATS, status_code=200, json=returned_response)
+
+            with superadmin_helper.SuperAdminHelper(
+                authenticate=False, no_prompt=True
+            ) as maint_mngr:
+                maint_mngr.token = {}  # required, otherwise none
+                maint_mngr.change_maintenance_mode(setting="on")  # Run deactivation
+
+            assert (
+                "dds_cli.superadmin_helper",
+                logging.INFO,
+                "Message from API about mode change.",
+            ) in caplog.record_tuples

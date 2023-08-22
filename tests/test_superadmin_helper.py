@@ -98,7 +98,7 @@ def test_deactivate_maintenance_ok(caplog: LogCaptureFixture):
             ) in caplog.record_tuples
 
 
-def test_get_stats(caplog: LogCaptureFixture): 
+def test_get_stats(caplog: LogCaptureFixture):
     """"""
     returned_response: typing.Dict = {"message": "Message from API about mode change."}
     with caplog.at_level(logging.INFO):

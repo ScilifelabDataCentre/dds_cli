@@ -2077,7 +2077,10 @@ def send_motd(click_ctx, motd_id):
 
 @dds_main.command(name="maintenance", no_args_is_help=True)
 @click.argument(
-    "setting", metavar="[ON/OFF/STATUS]", nargs=1, type=click.Choice(["on", "off", "status"], case_sensitive=False)
+    "setting",
+    metavar="[ON/OFF/STATUS]",
+    nargs=1,
+    type=click.Choice(["on", "off", "status"], case_sensitive=False),
 )
 @click.pass_obj
 def set_maintenance_mode(click_ctx, setting):
@@ -2088,7 +2091,7 @@ def set_maintenance_mode(click_ctx, setting):
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as getter:
-                getter.display_maintenance_mode()
+                getter.display_maintenance_mode_status()
         else:
             with dds_cli.maintenance_manager.MaintenanceManager(
                 no_prompt=click_ctx.get("NO_PROMPT", False),

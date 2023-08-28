@@ -284,5 +284,10 @@ _Nothing merged in CLI during this sprint_
 # 2023-08-07 - 2023-08-18
 
 - Dependency: Bump `PyYAML` to 6.0.1 due to docker issues ([#642](https://github.com/ScilifelabDataCentre/dds_cli/pull/642))
+
+# 2023-08-21 - 2023-09-01
+
 - Print understandable message when request response doesn't contain json ([#638](https://github.com/ScilifelabDataCentre/dds_cli/pull/638))
+- New option in `dds user ls`: `--save-emails` for Super Admins to save emails to file ([#641](https://github.com/ScilifelabDataCentre/dds_cli/pull/641))
+- New version: 2.5.0 ([#646](https://github.com/ScilifelabDataCentre/dds_cli/pull/646))
 - Updated command: `dds stats` prints tables with stats collected from API ([#643](https://github.com/ScilifelabDataCentre/dds_cli/pull/643))

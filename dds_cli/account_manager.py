@@ -6,6 +6,7 @@
 
 # Standard library
 import logging
+import pathlib
 
 # Installed
 import rich.markup
@@ -274,3 +275,36 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         LOG.info(
             "Account exists: [bold]%s[/bold]", "[blue]Yes[/blue]" if exists else "[red]No[/red]"
         )
+
+    def save_emails(self) -> None:
+        """Get user emails and save them to a text file."""
+        # Get emails from API
+        response, _ = dds_cli.utils.perform_request(
+            endpoint=dds_cli.DDSEndpoint.USER_EMAILS,
+            method="get",
+            headers=self.token,
+            error_message="Failed getting user emails from the API.",
+        )
+
+        # Verify that one of the required pieces of info were returned
+        empty = response.get("empty")
+        emails = response.get("emails")
+        if not empty and not emails:
+            raise dds_cli.exceptions.ApiResponseError(
+                "No information returned from the API. Could not get user emails."
+            )
+
+        if empty:
+            LOG.info("There are no user emails to save.")
+            return
+
+        # Get list of emails
+        emails = response.get("emails")
+        LOG.debug("Saving emails to file...")
+
+        # Save emails to file
+        email_file: pathlib.Path = pathlib.Path("unit_user_emails.txt")
+        with email_file.open(mode="w+", encoding="utf-8") as file:
+            file.write("; ".join(emails))
+
+        LOG.info("Saved emails to file: %s", email_file)

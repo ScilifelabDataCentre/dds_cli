@@ -542,14 +542,22 @@ def user_group_command(_):
 @click.option(
     "--invites", required=False, is_flag=True, default=False, help="List all current invitations."
 )
+@click.option(
+    "--save-emails",
+    required=False,
+    is_flag=True,
+    default=False,
+    help="[Super Admins only] Save user emails.",
+)
 @click.pass_obj
-def list_users(click_ctx, unit, invites):
+def list_users(click_ctx, unit, invites, save_emails):
     """List Unit Admins and Personnel connected to a specific unit.
 
     \b
     Super Admins:
         - Required to specify a public unit ID.
         - Can list users within all units.
+        - Can save list of user emails.
 
     \b
     Unit Admins / Personnel:
@@ -563,6 +571,8 @@ def list_users(click_ctx, unit, invites):
         ) as lister:
             if invites:
                 lister.list_invites(invites=invites)
+            elif save_emails:
+                lister.save_emails()
             else:
                 lister.list_users(unit=unit)
 

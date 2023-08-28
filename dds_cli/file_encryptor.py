@@ -54,7 +54,7 @@ class ECDHKeyHandler:
         # loaded_peer_public = x25519.X25519PublicKey.from_public_bytes(peer_public_bytes)
 
         # Generate shared key and derive encryption key with salt
-        shared_key = (my_private).exchange(peer_public_key=peer_public)
+        shared_key = (my_private).exchange(peer_public)
         derived_shared_key = hkdf.HKDF(
             algorithm=hashes.SHA256(),
             length=32,

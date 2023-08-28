@@ -3,4 +3,4 @@ requests-mock==1.9.3
 pytest==7.1.2
 pytest-cov==3.0.0
 pyfakefs==4.5.5
-Werkzeug==2.1.2
+Werkzeug==2.2.3

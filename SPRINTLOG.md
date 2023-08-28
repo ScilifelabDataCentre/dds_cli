@@ -289,3 +289,4 @@ _Nothing merged in CLI during this sprint_
 
 - Print understandable message when request response doesn't contain json ([#638](https://github.com/ScilifelabDataCentre/dds_cli/pull/638))
 - New option in `dds user ls`: `--save-emails` for Super Admins to save emails to file ([#641](https://github.com/ScilifelabDataCentre/dds_cli/pull/641))
+- New version: 2.5.0 ([#646](https://github.com/ScilifelabDataCentre/dds_cli/pull/646))

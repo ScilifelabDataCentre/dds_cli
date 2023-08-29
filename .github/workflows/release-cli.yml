@@ -57,28 +57,28 @@ jobs:
           pre-build-command: "pip install ."
           build-command: "make html"
           docs-folder: "docs/"
-      - name: Build the pdf with Sphinx
-        uses: matthiaszepper/sphinx-action-v4@pdflatex
-        with:
-          container: pdflatex
-          build-command: "make latexpdf"
-          docs-folder: "docs/"
+      # - name: Build the pdf with Sphinx
+      #   uses: matthiaszepper/sphinx-action-v4@pdflatex
+      #   with:
+      #     container: pdflatex
+      #     build-command: "make latexpdf"
+      #     docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML
         uses: actions/upload-artifact@v3
         with:
           name: DocumentationHTML
           path: docs/_build/html/
-      - name: Create an artifact of the previously built pdf
-        uses: actions/upload-artifact@v3
-        with:
-          name: Documentation
-          path: docs/_build/latex/datadeliverysystem.pdf
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: docs/_build/latex/datadeliverysystem.pdf
-          asset_name: dds_cli_user_manual.pdf
-          asset_content_type: application/pdf
+      # - name: Create an artifact of the previously built pdf
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: Documentation
+      #     path: docs/_build/latex/datadeliverysystem.pdf
+      # - name: Upload Release Asset
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ github.event.release.upload_url }}
+      #     asset_path: docs/_build/latex/datadeliverysystem.pdf
+      #     asset_name: dds_cli_user_manual.pdf
+      #     asset_content_type: application/pdf

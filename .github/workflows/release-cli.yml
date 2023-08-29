@@ -125,6 +125,8 @@ jobs:
     needs: build-n-publish
     runs-on: ubuntu-latest
     steps:
+      - run: RUN apt-get update
+      - run: RUN apt-get -y install gcc
       - uses: actions/checkout@v3
       - name: Make dependencies available to Docker container
         run: |

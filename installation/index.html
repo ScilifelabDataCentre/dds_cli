@@ -77,12 +77,12 @@ Note that the sections describing installation from PyPI are focused on the <cod
 </div>
 </li>
 <li><p>The DDS CLI is available on <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPI</a>. To install the DDS CLI, run this command in the terminal:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install --upgrade dds-cli
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>dds-cli
 </pre></div>
 </div>
 </li>
 <li><p>Once the installation has finished, test that the CLI has been installed correctly by verifying the version:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds --version
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>dds<span class="w"> </span>--version
 </pre></div>
 </div>
 <p>The output should be the following:</p>
@@ -106,14 +106,14 @@ Note that the sections describing installation from PyPI are focused on the <cod
 <ul>
 <li><p>On Linux:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ chmod +x dds-cli_ubuntu_x86_64
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>dds-cli_ubuntu_x86_64
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p>On MacOS:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ chmod +x dds-cli_macos_x86_64
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>chmod<span class="w"> </span>+x<span class="w"> </span>dds-cli_macos_x86_64
 </pre></div>
 </div>
 </div></blockquote>
@@ -121,7 +121,7 @@ Note that the sections describing installation from PyPI are focused on the <cod
 </ul>
 </li>
 <li><p>Test that the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> command works by running the following:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./&lt;name-of-executable-file&gt;
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./&lt;name-of-executable-file&gt;
 </pre></div>
 </div>
 <p><strong>Example:</strong></p>
@@ -131,9 +131,9 @@ Note that the sections describing installation from PyPI are focused on the <cod
 </div>
 </li>
 <li><p>When reading through the rest of the documentation and running the commands, replace <code class="docutils literal notranslate"><span class="pre">dds</span></code> with the path to the executable. For example:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ./dds_cli_macos_x86_64 auth login
-$ ./dds_cli_macos_x86_64 user info
-$ ./dds_cli_macos_x86_64 ls
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>auth<span class="w"> </span>login
+$<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>user<span class="w"> </span>info
+$<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 ...
 </pre></div>
 </div>
@@ -224,7 +224,7 @@ $ ./dds_cli_macos_x86_64 ls
 </div>
 <ol class="arabic">
 <li><p>SSH into transit</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ ssh -A &lt;username&gt;@transit.uppmax.uu.se
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ssh<span class="w"> </span>-A<span class="w"> </span>&lt;username&gt;@transit.uppmax.uu.se
 </pre></div>
 </div>
 <p>You will get into the home directory.</p>
@@ -236,7 +236,7 @@ $ ./dds_cli_macos_x86_64 ls
 <li><p>Mount your specific <strong>SENS project</strong> directory on transit</p></li>
 </ol>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;username&gt;@transit:~$ mount_wharf &lt;SENS-project&gt;
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;username&gt;@transit:~$<span class="w"> </span>mount_wharf<span class="w"> </span>&lt;SENS-project&gt;
 </pre></div>
 </div>
 </div></blockquote>
@@ -253,14 +253,14 @@ $ ./dds_cli_macos_x86_64 ls
 <ul>
 <li><p>Download everything in DDS project:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds data get --project &lt;DDS-project&gt; --get-all --destination &lt;SENS-project&gt;/&lt;directory&gt;/
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>dds<span class="w"> </span>data<span class="w"> </span>get<span class="w"> </span>--project<span class="w"> </span>&lt;DDS-project&gt;<span class="w"> </span>--get-all<span class="w"> </span>--destination<span class="w"> </span>&lt;SENS-project&gt;/&lt;directory&gt;/
 </pre></div>
 </div>
 </div></blockquote>
 </li>
 <li><p>Download one or more files or directories:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds data get --project &lt;DDS-project&gt; --source &lt;file or directory <span class="k">in</span> DDS project&gt; --destination &lt;SENS-project&gt;/&lt;directory&gt;/
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>dds<span class="w"> </span>data<span class="w"> </span>get<span class="w"> </span>--project<span class="w"> </span>&lt;DDS-project&gt;<span class="w"> </span>--source<span class="w"> </span>&lt;file<span class="w"> </span>or<span class="w"> </span>directory<span class="w"> </span><span class="k">in</span><span class="w"> </span>DDS<span class="w"> </span>project&gt;<span class="w"> </span>--destination<span class="w"> </span>&lt;SENS-project&gt;/&lt;directory&gt;/
 </pre></div>
 </div>
 </div></blockquote>
@@ -288,13 +288,13 @@ $ ./dds_cli_macos_x86_64 ls
 <li><p>Open the terminal</p></li>
 <li><p>Download the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package by running</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># &quot;--dest dds-downloaded&quot; tells pip to put the downloaded files in the directory &quot;dds-downloaded&quot;</span>
-pip download dds-cli --dest dds-downloaded
+pip<span class="w"> </span>download<span class="w"> </span>dds-cli<span class="w"> </span>--dest<span class="w"> </span>dds-downloaded
 </pre></div>
 </div>
 </li>
 <li><p>Generate hash for the dds-cli file by running</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># &lt;VERSION&gt; should be replaced by the version you have downloaded from PyPI. When in doubt, simply type dds-downloaded/dds_cli and press tab; The path to the file will be filled in automatically.</span>
-pip <span class="nb">hash</span> dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none-any.whl
+pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none-any.whl
 <span class="c1"># Example output:</span>
 <span class="c1"># dds_cli-&lt;VERSION&gt;-py3-none-any.whl:</span>
 <span class="c1"># --hash=sha256:8ba6495b73d759e96c35652273cf4e4158acba02f1cf64f012cc67cf2e346cae</span>
@@ -308,18 +308,18 @@ pip <span class="nb">hash</span> dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none
 </ol>
 </li>
 <li><p>In the terminal, verify that the copied hash (step 4) matches the generated hash (step 3) by running</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;&lt;correct hash from step 4&gt;&quot;</span> <span class="o">=</span> <span class="s2">&quot;&lt;generated hash from step 3&gt;&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span> <span class="nb">echo</span> <span class="s2">&quot;Package integrity verified&quot;</span><span class="p">;</span> <span class="k">else</span> <span class="nb">echo</span> <span class="s2">&quot;Package compromised!&quot;</span><span class="p">;</span> <span class="k">fi</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;&lt;correct hash from step 4&gt;&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&lt;generated hash from step 3&gt;&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Package integrity verified&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Package compromised!&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">fi</span>
 </pre></div>
 </div>
 <p>If this prints out “Package integrity verified”, continue to step 6. If it does not, the downloaded <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package is compromised and you should not perform step 6. Delete the downloaded directory <code class="docutils literal notranslate"><span class="pre">dds-downloaded</span></code> and start from step 1 again.</p>
 </li>
 <li><p>Install the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> tool by running</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none-any.whl
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none-any.whl
 </pre></div>
 </div>
 </li>
 <li><p>Once the installation has finished, test that the CLI has been installed correctly by verifying the version:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ dds --version
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>dds<span class="w"> </span>--version
 </pre></div>
 </div>
 <p>The output should be the following:</p>
@@ -344,7 +344,7 @@ pip <span class="nb">hash</span> dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none
 
 
 
-<p class="blurb">Version: 2.2.65</p>
+<p class="blurb">Version: 2.5.0</p>
 
 
 
@@ -411,7 +411,7 @@ pip <span class="nb">hash</span> dds-downloaded/dds_cli-&lt;VERSION&gt;-py3-none
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../_sources/installation.rst.txt"

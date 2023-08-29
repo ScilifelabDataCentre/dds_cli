@@ -40,7 +40,7 @@
   <section id="dds-user">
 <span id="dds-user"></span><h1>dds user<a class="headerlink" href="#dds-user" title="Permalink to this headline">¶</a></h1>
 <p>Group command for managing user accounts, including your own.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds user <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </pre></div>
 </div>
 <section id="dds-user-activate">
@@ -51,7 +51,7 @@
 <div class="line">Super Admins: All users</div>
 <div class="line">Unit Admins: Unit Admins / Personnel</div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds user activate <span class="o">[</span>OPTIONS<span class="o">]</span> <span class="o">[</span>EMAIL<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>activate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Arguments</p>
@@ -84,7 +84,7 @@
 <div class="line">to that person.</div>
 </div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds user add <span class="o">[</span>OPTIONS<span class="o">]</span> <span class="o">[</span>EMAIL<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -133,7 +133,7 @@
 <div class="line">Super Admins: All users</div>
 <div class="line">Unit Admins: Unit Admins / Personnel</div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds user deactivate <span class="o">[</span>OPTIONS<span class="o">]</span> <span class="o">[</span>EMAIL<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>deactivate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Arguments</p>
@@ -158,7 +158,7 @@ Specify the e-mail address as argument to the main command to initiate the remov
 <div class="line">Unit Admins: Unit Admins / Personnel. Not Researchers since they can be involved in projects</div>
 <div class="line">connected to other units.</div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds user delete <span class="o">[</span>OPTIONS<span class="o">]</span> <span class="o">[</span>EMAIL<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -185,7 +185,7 @@ Specify the e-mail address as argument to the main command to initiate the remov
 <section id="dds-user-find">
 <h2>find<a class="headerlink" href="#dds-user-find" title="Permalink to this headline">¶</a></h2>
 <p>Check if a username is registered to an account in the DDS.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds user find <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>find<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -208,7 +208,7 @@ Specify the e-mail address as argument to the main command to initiate the remov
 <div class="line">- Primary email</div>
 <div class="line">- Associated emails (not useful yet)</div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds user info <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 </section>
@@ -220,6 +220,7 @@ Specify the e-mail address as argument to the main command to initiate the remov
 <div class="line-block">
 <div class="line">- Required to specify a public unit ID.</div>
 <div class="line">- Can list users within all units.</div>
+<div class="line">- Can save list of user emails.</div>
 </div>
 </div>
 <div class="line-block">
@@ -229,7 +230,7 @@ Specify the e-mail address as argument to the main command to initiate the remov
 <div class="line">- You can only list users connected to your specific unit.</div>
 </div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds user ls <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>ls<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -243,6 +244,12 @@ Specify the e-mail address as argument to the main command to initiate the remov
 <dt class="sig sig-object std" id="cmdoption-dds-user-ls-invites">
 <span class="sig-name descname"><span class="pre">--invites</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-ls-invites" title="Permalink to this definition">¶</a></dt>
 <dd><p>List all current invitations.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-ls-save-emails">
+<span class="sig-name descname"><span class="pre">--save-emails</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-ls-save-emails" title="Permalink to this definition">¶</a></dt>
+<dd><p>[Super Admins only] Save user emails.</p>
 </dd></dl>
 
 </section>
@@ -264,7 +271,7 @@ Specify the e-mail address as argument to the main command to initiate the remov
 
 
 
-<p class="blurb">Version: 2.2.65</p>
+<p class="blurb">Version: 2.5.0</p>
 
 
 
@@ -331,7 +338,7 @@ Specify the e-mail address as argument to the main command to initiate the remov
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../_sources/user.rst.txt"

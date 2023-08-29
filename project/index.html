@@ -40,13 +40,13 @@
   <section id="dds-project">
 <span id="dds-project"></span><h1>dds project<a class="headerlink" href="#dds-project" title="Permalink to this headline">¶</a></h1>
 <p>Group command for creating and managing projects within the DDS.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </pre></div>
 </div>
 <section id="dds-project-access">
 <h2>access<a class="headerlink" href="#dds-project-access" title="Permalink to this headline">¶</a></h2>
 <p>Manage specific users access to a project.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project access <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>access<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </pre></div>
 </div>
 <section id="dds-project-access-fix">
@@ -56,7 +56,7 @@
 the access to the active projects need to be updated.</p>
 <p>Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
 in question.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project access fix <span class="o">[</span>OPTIONS<span class="o">]</span> <span class="o">[</span>EMAIL<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>access<span class="w"> </span>fix<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -82,7 +82,7 @@ users with the role ‘Researcher’. To set the Researcher as a Project Owner i
 specific project, use the <cite>–owner</cite> flag.</p>
 <p>Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
 in question.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project access grant <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>access<span class="w"> </span>grant<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -118,7 +118,7 @@ in question.</p>
 as a Project Owner in this specific project, use the <cite>–owner</cite> flag.</p>
 <p>Limited to Unit Admins, Unit Personnel and Researchers set as Project Owners for the project
 in question.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project access revoke <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>access<span class="w"> </span>revoke<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -144,7 +144,7 @@ in question.</p>
 <cite>–researcher</cite> or <cite>–owner</cite>. Both of these will give the user the role Researcher, but <cite>–owner</cite>
 will mark the user as a Project Owner for this specific project, which will give that person
 some additional administrative rights within the project such as adding users etc.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project create <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>create<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -191,7 +191,7 @@ some additional administrative rights within the project such as adding users et
 <p>Display or change the information of a project.</p>
 <p>Displaying the project information is available for all user roles. Changing the project information
 is limited to Unit Admins and Personnel.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project info <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </pre></div>
 </div>
 <section id="dds-project-info-change">
@@ -203,7 +203,7 @@ is limited to Unit Admins and Personnel.</p>
 <div class="line">Use the <cite>–description</cite> option to change the Description of a project.</div>
 <div class="line">Use the <cite>–principal-investigator</cite> option to change the PI of a project.</div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project info change <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>info<span class="w"> </span>change<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -246,7 +246,7 @@ is limited to Unit Admins and Personnel.</p>
 <div class="line">- Title</div>
 <div class="line">- Description</div>
 </div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project info display <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>info<span class="w"> </span>display<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -262,7 +262,7 @@ is limited to Unit Admins and Personnel.</p>
 <h2>ls<a class="headerlink" href="#dds-project-ls" title="Permalink to this headline">¶</a></h2>
 <p>List all active projects you have access to in the DDS.</p>
 <p>Calls the <cite>dds ls</cite> function.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project ls <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>ls<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -312,7 +312,7 @@ is limited to Unit Admins and Personnel.</p>
 <p>Display or change the status of a project.</p>
 <p>Displaying the project status is available for all user roles. Changing the project status
 is limited to Unit Admins and Personnel.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status <span class="o">[</span>OPTIONS<span class="o">]</span> COMMAND <span class="o">[</span>ARGS<span class="o">]</span>...
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>status<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </pre></div>
 </div>
 <section id="dds-project-status-archive">
@@ -321,7 +321,7 @@ is limited to Unit Admins and Personnel.</p>
 <p>Certain meta data is kept and it will still be listed in your projects. All data within the
 project is deleted. You cannot revert this change.</p>
 <p>Use the <cite>–abort</cite> flag to indicate that something has gone wrong in the project.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status archive <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>status<span class="w"> </span>archive<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -342,7 +342,7 @@ project is deleted. You cannot revert this change.</p>
 <h3>busy<a class="headerlink" href="#dds-project-status-busy" title="Permalink to this headline">¶</a></h3>
 <p>[Super Admins only] Returns the number of busy projects.</p>
 <p>Use <cite>–show</cite> to see a list of all busy projects.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status busy <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>status<span class="w"> </span>busy<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -363,7 +363,7 @@ project is deleted. You cannot revert this change.</p>
 <p>Delete an unreleased project (change project status to ‘Deleted’).</p>
 <p>Certain meta data is kept (nothing sensitive) and it will still be listed in your projects. All
 data within the project is deleted. You cannot revert this change.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status delete <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>status<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -379,7 +379,7 @@ data within the project is deleted. You cannot revert this change.</p>
 <p>Display the status of a specific project.</p>
 <p>Use <cite>–show-history</cite> to see all previous statuses of the project.</p>
 <p>Usable by all user roles.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status display <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>status<span class="w"> </span>display<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -404,7 +404,7 @@ be uploaded. The count-down for when the data access expires starts.</p>
 <p>The <cite>–deadline</cite> option can be used when changing the project status from ‘In Progress’ to
 ‘Available’ for the first time. In all other cases the deadline option will be ignored.</p>
 <p>Only usable by: Unit Admins / Personnel.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status release <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>status<span class="w"> </span>release<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -434,7 +434,7 @@ be uploaded. The count-down for when the data access expires starts.</p>
 the status from ‘Available’ to ‘In Progress’ again.</p>
 <p>Make project data unavailable to Researchers, and allow Unit Admins / Personnel to upload
 additional data to the project. Data cannot be deleted. Data cannot be overwritten.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds project status retract <span class="o">[</span>OPTIONS<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>status<span class="w"> </span>retract<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 <p class="rubric">Options</p>
@@ -464,7 +464,7 @@ additional data to the project. Data cannot be deleted. Data cannot be overwritt
 
 
 
-<p class="blurb">Version: 2.2.65</p>
+<p class="blurb">Version: 2.5.0</p>
 
 
 
@@ -531,7 +531,7 @@ additional data to the project. Data cannot be deleted. Data cannot be overwritt
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
       <a href="../_sources/project.rst.txt"

@@ -6,8 +6,9 @@
 ---
 name: New Release
 on:
+  push:
   release:
-    types: [published, pushed]
+    types: [published]
     branches:
       - "master"
 jobs:

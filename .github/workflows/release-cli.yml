@@ -133,7 +133,7 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
           container: latest
-          pre-build-command: "sudo apt-get -y install gcc | pip install ."
+          pre-build-command: "sudo apt-get -y install gcc && pip install ."
           build-command: "make html"
           docs-folder: "docs/"
       - name: Build the pdf with Sphinx

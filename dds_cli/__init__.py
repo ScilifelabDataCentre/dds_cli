@@ -35,7 +35,7 @@ __all__ = [
 ###############################################################################
 
 # Keep track of all allowed methods
-DDS_METHODS = ["put", "get", "ls", "rm", "create", "add", "delete", "on", "off", "status"]
+DDS_METHODS = ["put", "get", "ls", "rm", "create", "add", "delete", "on", "off"]
 
 # Methods to which a directory created by DDS
 DDS_DIR_REQUIRED_METHODS = ["put", "get"]

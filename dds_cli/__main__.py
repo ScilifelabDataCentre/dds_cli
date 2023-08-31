@@ -2083,23 +2083,17 @@ def send_motd(click_ctx, motd_id):
     type=click.Choice(["on", "off", "status"], case_sensitive=False),
 )
 @click.pass_obj
-def set_maintenance_mode(click_ctx, setting):
+def manage_maintenance_mode(click_ctx, setting):
     """[Super Admins only] Activate / Deactivate / Display status for Maintenance mode."""
     try:
-        if setting == "status":
-            with dds_cli.maintenance_manager.MaintenanceManager(
-                method=setting,
-                no_prompt=click_ctx.get("NO_PROMPT", False),
-                token_path=click_ctx.get("TOKEN_PATH"),
-            ) as getter:
-                getter.display_maintenance_mode_status(setting=setting)
-        else:
-            with dds_cli.maintenance_manager.MaintenanceManager(
-                method=setting,
-                no_prompt=click_ctx.get("NO_PROMPT", False),
-                token_path=click_ctx.get("TOKEN_PATH"),
-            ) as setter:
-                setter.change_maintenance_mode(setting=setting)
+        with dds_cli.maintenance_manager.MaintenanceManager(
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as manager:
+            if setting == "status":
+                manager.display_maintenance_mode_status()
+            else:
+                manager.change_maintenance_mode(setting=setting)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

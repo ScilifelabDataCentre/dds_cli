@@ -9,17 +9,6 @@ from dds_cli.exceptions import InvalidMethodError
 # init
 
 
-def test_init_maintenance_manager_incorrect_method():
-    """Init with incorrect method."""
-    method = "rm"
-    with pytest.raises(InvalidMethodError) as err:
-        _: maintenance_manager.MaintenanceManager = maintenance_manager.MaintenanceManager(
-            method=method, authenticate=False, no_prompt=True
-        )
-
-    assert f"Unauthorized method: '{method}'" in str(err.value)
-
-
 def test_init_maintenance_manager():
     """Create manager."""
     maint_mngr: maintenance_manager.MaintenanceManager = maintenance_manager.MaintenanceManager(
@@ -66,7 +55,7 @@ def test_get_maintenance_mode_status_no_response(caplog: LogCaptureFixture):
                 authenticate=False, no_prompt=True
             ) as maint_mngr:
                 maint_mngr.token = {}  # required, otherwise none
-                maint_mngr.display_maintenance_mode_status(setting="status")
+                maint_mngr.display_maintenance_mode_status()
 
             assert (
                 "dds_cli.maintenance_manager",
@@ -132,7 +121,7 @@ def test_get_maintenance_mode_status_ok(caplog: LogCaptureFixture):
                 authenticate=False, no_prompt=True
             ) as maint_mngr:
                 maint_mngr.token = {}  # required, otherwise none
-                maint_mngr.display_maintenance_mode_status(setting="status")  # Run deactivation
+                maint_mngr.display_maintenance_mode_status()  # Run deactivation
 
             assert (
                 "dds_cli.maintenance_manager",

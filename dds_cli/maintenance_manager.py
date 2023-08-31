@@ -38,7 +38,6 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
     def __init__(
         self,
         authenticate: bool = True,
-        method: str = "off",
         no_prompt: bool = False,
         token_path: str = None,
     ):
@@ -46,14 +45,10 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             authenticate=authenticate,
-            method=method,
+            method_check=False,
             no_prompt=no_prompt,
             token_path=token_path,
         )
-
-        # Only methods "on" and "off" can use the Maintenance class
-        if self.method not in ["on", "off", "status"]:
-            raise dds_cli.exceptions.InvalidMethodError(f"Unauthorized method: '{self.method}'")
 
     def change_maintenance_mode(self, setting) -> None:
         """Change Maintenance mode."""
@@ -70,13 +65,12 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
         )
         LOG.info(response_message)
 
-    def display_maintenance_mode_status(self, setting) -> None:
+    def display_maintenance_mode_status(self) -> None:
         """Display Maintenance mode status."""
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.MAINTENANCE,
             headers=self.token,
             method="get",
-            json={"state": setting},
             error_message="Failed getting maintenance mode status",
         )
 

@@ -1,6 +1,19 @@
 Changelog
 ==========
 
+.. _2.5.0:
+
+2.5.0 - 2023-08-29
+~~~~~~~~~~~~~~~~~~
+
+- Dependencies:
+    - `cryptography` from `38.0.3` to `41.0.3`
+        - Removed use of `peer_public_key` keyword argument in `exchange` (generation of shared key)
+    - `PyYAML` from `6.0` to `6.0.1`
+    - `Werkzeug` (tests) from `2.1.2` to `2.2.3`
+- New message when invalid response from API
+- **BACKWARDS INCOMPATIBLE (will return 404):** New option in command `dds user ls`:  `--save-emails`. Only available to Super Admins to allow them to easily email users with account roles 'Unit Admin' and 'Unit Personnel'.
+
 .. _2.2.65:
 
 2.2.65 - 2023-05-26

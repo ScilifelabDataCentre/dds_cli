@@ -2088,12 +2088,14 @@ def set_maintenance_mode(click_ctx, setting):
     try:
         if setting == "status":
             with dds_cli.maintenance_manager.MaintenanceManager(
+                method=setting,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as getter:
-                getter.display_maintenance_mode_status()
+                getter.display_maintenance_mode_status(setting=setting)
         else:
             with dds_cli.maintenance_manager.MaintenanceManager(
+                method=setting,
                 no_prompt=click_ctx.get("NO_PROMPT", False),
                 token_path=click_ctx.get("TOKEN_PATH"),
             ) as setter:

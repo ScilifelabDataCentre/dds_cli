@@ -52,7 +52,7 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
         )
 
         # Only methods "on" and "off" can use the Maintenance class
-        if self.method not in ["on", "off"]:
+        if self.method not in ["on", "off", "status"]:
             raise dds_cli.exceptions.InvalidMethodError(f"Unauthorized method: '{self.method}'")
 
     def change_maintenance_mode(self, setting) -> None:
@@ -70,7 +70,7 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
         )
         LOG.info(response_message)
 
-    def display_maintenance_mode_status(self) -> None:
+    def display_maintenance_mode_status(self, setting) -> None:
         """Display Maintenance mode status."""
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.MAINTENANCE,

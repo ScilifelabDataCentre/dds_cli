@@ -76,6 +76,7 @@ class MaintenanceManager(dds_cli.base.DDSBaseClass):
             endpoint=DDSEndpoint.MAINTENANCE,
             headers=self.token,
             method="get",
+            json={"state": setting},
             error_message="Failed getting maintenance mode status",
         )
 

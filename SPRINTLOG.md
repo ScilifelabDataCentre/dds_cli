@@ -291,3 +291,4 @@ _Nothing merged in CLI during this sprint_
 - New option in `dds user ls`: `--save-emails` for Super Admins to save emails to file ([#641](https://github.com/ScilifelabDataCentre/dds_cli/pull/641))
 - New version: 2.5.0 ([#646](https://github.com/ScilifelabDataCentre/dds_cli/pull/646))
 - New command `dds maintenance status` for Super Admins to check current Maintenance mode status ([#644](https://github.com/ScilifelabDataCentre/dds_cli/pull/644))
+- Workflow: Github Pages action fixed by bumping versions ([#648](https://github.com/ScilifelabDataCentre/dds_cli/pull/648))

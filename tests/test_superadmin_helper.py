@@ -10,6 +10,7 @@ import typing
 
 # init
 
+
 def test_init_maintenance_manager():
     """Create manager."""
     maint_mngr: superadmin_helper.SuperAdminHelper = superadmin_helper.SuperAdminHelper(
@@ -52,7 +53,7 @@ def test_get_maintenance_mode_status_no_response(caplog: LogCaptureFixture):
             # Create mocked request - real request not executed
             mock.get(DDSEndpoint.MAINTENANCE, status_code=200, json=returned_response)
 
-            with superadmin_helper.MaintenanceManager(
+            with superadmin_helper.SuperAdminHelper(
                 authenticate=False, no_prompt=True
             ) as maint_mngr:
                 maint_mngr.token = {}  # required, otherwise none
@@ -139,10 +140,14 @@ def test_get_stats(caplog: LogCaptureFixture):
         with Mocker() as mock:
             # Create mocked request - real request not executed
             mock.get(DDSEndpoint.STATS, status_code=200, json=returned_response)
-            
+
             with pytest.raises(ApiResponseError) as err:
-                with superadmin_helper.SuperAdminHelper(authenticate=False, no_prompt=True) as helper:
+                with superadmin_helper.SuperAdminHelper(
+                    authenticate=False, no_prompt=True
+                ) as helper:
                     helper.token = {}  # required, otherwise none
                     helper.get_stats()  # Get stats
 
-            assert "The following information was not returned: ['stats', 'columns']" in str(err.value)
+            assert "The following information was not returned: ['stats', 'columns']" in str(
+                err.value
+            )

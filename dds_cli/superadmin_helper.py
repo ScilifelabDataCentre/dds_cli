@@ -81,13 +81,13 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
 
     def get_stats(self) -> None:
         """Get rows from statistics."""
+        # Get stats from API
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.STATS,
             headers=self.token,
             method="get",
             error_message="Failed getting statistics from API.",
         )
-        LOG.debug(response_json)
 
         # Get items from response
         stats, columns = dds_cli.utils.get_required_in_response(

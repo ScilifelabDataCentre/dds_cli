@@ -149,7 +149,7 @@ def test_get_stats(caplog: LogCaptureFixture):
         # Create mocker
         with Mocker() as mock:
             # Create mocked request - real request not executed
-            mock.put(DDSEndpoint.STATS, status_code=200, json=returned_response)
+            mock.get(DDSEndpoint.STATS, status_code=200, json=returned_response)
 
             with superadmin_helper.SuperAdminHelper(authenticate=False, no_prompt=True) as helper:
                 helper.token = {}  # required, otherwise none

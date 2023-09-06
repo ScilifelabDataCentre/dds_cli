@@ -132,8 +132,8 @@ def test_get_maintenance_mode_status_ok(caplog: LogCaptureFixture):
             ) in caplog.record_tuples
 
 
-def test_get_stats(caplog: LogCaptureFixture):
-    """Print stats."""
+def test_get_stats_no_response(caplog: LogCaptureFixture):
+    """No response returned should warn."""
     returned_response: typing.Dict = {}
     with caplog.at_level(logging.INFO):
         # Create mocker
@@ -151,3 +151,41 @@ def test_get_stats(caplog: LogCaptureFixture):
             assert "The following information was not returned: ['stats', 'columns']" in str(
                 err.value
             )
+
+
+def test_get_stats_no_stats(caplog: LogCaptureFixture):
+    """No stats returned should warn."""
+    returned_response: typing.Dict = {"columns": {"empty": "dict"}}
+    with caplog.at_level(logging.INFO):
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.get(DDSEndpoint.STATS, status_code=200, json=returned_response)
+
+            with pytest.raises(ApiResponseError) as err:
+                with superadmin_helper.SuperAdminHelper(
+                    authenticate=False, no_prompt=True
+                ) as helper:
+                    helper.token = {}  # required, otherwise none
+                    helper.get_stats()  # Get stats
+
+            assert "The following information was not returned: ['stats']" in str(err.value)
+
+
+def test_get_stats_no_columns(caplog: LogCaptureFixture):
+    """No columns returned should warn."""
+    returned_response: typing.Dict = {"stats": ["empty"]}
+    with caplog.at_level(logging.INFO):
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.get(DDSEndpoint.STATS, status_code=200, json=returned_response)
+
+            with pytest.raises(ApiResponseError) as err:
+                with superadmin_helper.SuperAdminHelper(
+                    authenticate=False, no_prompt=True
+                ) as helper:
+                    helper.token = {}  # required, otherwise none
+                    helper.get_stats()  # Get stats
+
+            assert "The following information was not returned: ['columns']" in str(err.value)

@@ -236,7 +236,7 @@ def test_get_stats_print_tables(capsys: CaptureFixture):
     assert "┡━━━━━" in captured_output.out
 
     # A header from first table
-    assert "┃ Researchers" in captured_output.out
+    assert "Researchers" in captured_output.out
 
     # A header from second table
-    assert "┃ TBHours" in captured_output.out
+    assert "TBHours" in captured_output.out

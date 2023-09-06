@@ -45,7 +45,7 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             authenticate=authenticate,
-            method=False,
+            method_check=False,
             no_prompt=no_prompt,
             token_path=token_path,
         )
@@ -90,32 +90,30 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         LOG.debug(response_json)
 
         # Get items from response
-        stats = response_json.get("stats")
-        if not stats:
-            raise dds_cli.exceptions.ApiResponseError(message="No stats were returned from API.")
+        stats, columns = dds_cli.utils.get_required_in_response(
+            keys=["stats", "columns"], response=response_json
+        )
 
         # Format table consisting of user stats
+        user_stat_columns = [
+            "Date",
+            "Units",
+            "Researchers",
+            "Project Owners",
+            "Unit Personnel",
+            "Unit Admins",
+            "Super Admins",
+            "Total Users",
+        ]
+        column_descriptions = " ".join(
+            f"[underline]{col}[/underline]: {columns[col]}" for col in user_stat_columns
+        )
         table_users = dds_cli.utils.create_table(
             title="Units and accounts",
-            columns=[
-                "Date",
-                "Units",
-                "Researchers",
-                "Project Owners",
-                "Unit Personnel",
-                "Unit Admins",
-                "Super Admins",
-                "Total Users",
-            ],
+            columns=user_stat_columns,
             rows=stats,
             caption=(
-                "Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n"
-                # "[underline]Researchers[/underline]:  "
-                # "[underline]Project Owners[/underline]:
-                # "[underline]Unit Personnel[/underline]:  "
-                # "[underline]Unit Admins[/underline]:  "
-                # "[underline]Super Admins[/underline]:
-                # "[underline]Total Users[/underline]:
+                f"Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n {column_descriptions}"
             ),
         )
         dds_cli.utils.console.print(
@@ -123,29 +121,25 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         )  # TODO: Possibly change to print_or_page later on, or give option to save stats
 
         # Format table consisting of project and data stats
+        project_stat_columns = [
+            "Date",
+            "Active Projects",
+            "Inactive Projects",
+            "Total Projects",
+            "Data Now (TB)",
+            "Data Uploaded (TB)",
+            "TBHours Last Month",
+            "TBHours Total",
+        ]
+        column_descriptions = " ".join(
+            f"[underline]{col}[/underline]: {columns[col]}" for col in project_stat_columns
+        )
         table_data = dds_cli.utils.create_table(
             title="Amount of data delivered via the DDS",
-            columns=[
-                "Date",
-                "Active Projects",
-                "Inactive Projects",
-                "Total Projects",
-                "Data Now (TB)",
-                "Data Uploaded (TB)",
-                "TBHours Last Month",
-                "TBHours Total",
-            ],
+            columns=project_stat_columns,
             rows=stats,
             caption=(
-                "Number of delivery projects and amount of data that is being (and has been) delivered via the DDS.\n"
-                # "[underline]Date[/underline]: "
-                # "[underline]Active Projects[/underline]: "
-                # "[underline]Inactive Projects[/underline]: "
-                # "[underline]Total Projects[/underline]:  "
-                # "[underline]Data Now (TB)[/underline]: "
-                # "[underline]Data Uploaded (TB)[/underline]: "
-                # "[underline]TBHours Last Month[/underline]: "
-                # "[underline]TBHours Total[/underline]: "
+                f"Number of delivery projects and amount of data that is being (and has been) delivered via the DDS.\n {column_descriptions}"
             ),
         )
         dds_cli.utils.console.print(

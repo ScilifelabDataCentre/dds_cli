@@ -144,14 +144,14 @@ def test_get_stats(caplog: LogCaptureFixture):
 
 def test_get_maintenance_mode_status_ok(caplog: LogCaptureFixture):
     """Check current maintenance mode status."""
-    returned_response: Dict = {"message": "Message from API about mode status."}
+    returned_response: typing.Dict = {"message": "Message from API about mode status."}
     with caplog.at_level(logging.INFO):
         # Create mocker
         with Mocker() as mock:
             # Create mocked request - real request not executed
             mock.get(DDSEndpoint.MAINTENANCE, status_code=200, json=returned_response)
 
-            with maintenance_manager.MaintenanceManager(
+            with superadmin_helper.MaintenanceManager(
                 authenticate=False, no_prompt=True
             ) as maint_mngr:
                 maint_mngr.token = {}  # required, otherwise none

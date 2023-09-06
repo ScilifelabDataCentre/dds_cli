@@ -232,7 +232,7 @@ def test_get_stats_print_tables(capsys: CaptureFixture):
 
     captured_output = capsys.readouterr()
     assert (
-        "Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n"
-        "Date: D description. Researchers: R description. Project Owners: PO description. Unit Personnel: UP description."
+        "Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n "
+        "Date: D description. Researchers: R description. Project Owners: PO description. Unit Personnel: UP description. "
         "Unit Admins: UA description. Super Admins: SA description. Total Users: TU description."
     ) in captured_output.out

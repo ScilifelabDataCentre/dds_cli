@@ -4,7 +4,8 @@ from dds_cli import DDSEndpoint
 from dds_cli import superadmin_helper
 from _pytest.logging import LogCaptureFixture
 import logging
-from dds_cli.exceptions import InvalidMethodError
+from dds_cli.exceptions import ApiResponseError
+
 import typing
 
 # init
@@ -138,13 +139,10 @@ def test_get_stats(caplog: LogCaptureFixture):
         with Mocker() as mock:
             # Create mocked request - real request not executed
             mock.get(DDSEndpoint.STATS, status_code=200, json=returned_response)
+            
+            with pytest.raises(ApiResponseError) as err:
+                with superadmin_helper.SuperAdminHelper(authenticate=False, no_prompt=True) as helper:
+                    helper.token = {}  # required, otherwise none
+                    helper.get_stats()  # Get stats
 
-            with superadmin_helper.SuperAdminHelper(authenticate=False, no_prompt=True) as helper:
-                helper.token = {}  # required, otherwise none
-                helper.get_stats()  # Get stats
-
-            assert (
-                "dds_cli.superadmin_helper",
-                logging.ERROR,
-                "The following information was not returned: ['stats', 'columns']",
-            ) in caplog.record_tuples
+            assert "The following information was not returned: ['stats', 'columns']" in str(err.value)

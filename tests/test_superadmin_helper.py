@@ -187,13 +187,13 @@ def test_get_stats_print_tables(capsys: CaptureFixture):
         "stats": [
             {
                 "Date": "2023-09-06",
-                "Units": 3,
-                "Researchers": 4,
-                "Project Owners": 5,
-                "Unit Personnel": 6,
-                "Unit Admins": 7,
-                "Super Admins": 8,
-                "Total Users": 9,
+                "Units": 1,
+                "Researchers": 2,
+                "Project Owners": 1,
+                "Unit Personnel": 2,
+                "Unit Admins": 3,
+                "Super Admins": 1,
+                "Total Users": 8,
                 "Active Projects": 10,
                 "Inactive Projects": 11,
                 "Total Projects": 12,
@@ -234,11 +234,11 @@ def test_get_stats_print_tables(capsys: CaptureFixture):
     assert (
         "\n".join(
             [
-                "┏━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓",
-                "┃ Date       ┃ Units ┃ Researchers ┃ Project Owners ┃ Unit Personnel ┃ Unit Admins ┃ Super Admins ┃ Total Users ┃",
-                "┡━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩",
-                "│ 2023-09-06 │ 3     │ 4           │ 5              │ 6              │ 7           │ 8            │ 9           │",
-                "└────────────┴───────┴─────────────┴────────────────┴────────────────┴─────────────┴──────────────┴─────────────┘",
+                "┏━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓"
+                "┃ Date       ┃ Units ┃ Researchers ┃ Project Owners ┃ Unit Personnel ┃ Unit Admins ┃ Super Admins ┃ Total Users ┃"
+                "┡━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩"
+                "│ 2023-09-06 │ 1     │ 2           │ 1              │ 2              │ 3           │ 1            │ 8           │"
+                "└────────────┴───────┴─────────────┴────────────────┴────────────────┴─────────────┴──────────────┴─────────────┘"
             ]
         )
         in captured_output.out

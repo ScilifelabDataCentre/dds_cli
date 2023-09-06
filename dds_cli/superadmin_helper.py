@@ -113,7 +113,8 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
             columns=user_stat_columns,
             rows=stats,
             caption=(
-                f"Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n {column_descriptions}"
+                "Number of Units using the DDS for data deliveries, "
+                f"and number of accounts with different roles.\n {column_descriptions}"
             ),
         )
         dds_cli.utils.console.print(
@@ -139,7 +140,8 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
             columns=project_stat_columns,
             rows=stats,
             caption=(
-                f"Number of delivery projects and amount of data that is being (and has been) delivered via the DDS.\n {column_descriptions}"
+                "Number of delivery projects and amount of data that is being "
+                f"(and has been) delivered via the DDS.\n {column_descriptions}"
             ),
         )
         dds_cli.utils.console.print(

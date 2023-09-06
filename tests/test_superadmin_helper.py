@@ -237,9 +237,20 @@ def test_get_stats_print_tables(capsys: CaptureFixture):
                 "┏━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓",
                 "┃ Date       ┃ Units ┃ Researchers ┃ Project Owners ┃ Unit Personnel ┃ Unit Admins ┃ Super Admins ┃ Total Users ┃",
                 "┡━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩",
-                "│ 2023-09-06 │ 1     │ 2           │ 1              │ 2              │ 3           │ 1            │ 8           │",
+                "│ 2023-09-06 │ 3     │ 4           │ 5              │ 6              │ 7           │ 8            │ 9           │",
                 "└────────────┴───────┴─────────────┴────────────────┴────────────────┴─────────────┴──────────────┴─────────────┘",
             ]
         )
         in captured_output.out
     )
+
+    assert (
+        "Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n"
+        "Date: Date on which the stats were recorded in the database. Units: Number of SciLifeLab units that are using"
+        "the DDS for data deliveries. Researchers: Number of accounts with the role 'Researcher'. Project Owners: Number"
+        "of (unique) 'Researcher' accounts with admin permissions in at least one project. Unit Personnel: Number of"
+        "accounts with the role 'Unit Personnel'. Unit Admins: Number of accounts with the role 'Unit Admin'. Super"
+        "Admins: Number of employees at the SciLifeLab Data Centre with the DDS account role 'Super Admin'. Total Users:"
+        "Total number of accounts. Project Owners are a subrole of 'Researchers' and are therefore not included in the"
+        "summary."
+    ) in captured_output.out

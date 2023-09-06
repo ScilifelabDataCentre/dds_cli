@@ -186,7 +186,7 @@ def test_get_stats_print_tables(capsys: CaptureFixture):
     returned_response: typing.Dict = {
         "stats": [
             {
-                "Date": "2023-09-06",
+                "Date": "some date",
                 "Units": 1,
                 "Researchers": 2,
                 "Project Owners": 3,
@@ -234,5 +234,5 @@ def test_get_stats_print_tables(capsys: CaptureFixture):
     assert "┏━━━━━" in captured_output.out
     assert "┃ Date" in captured_output.out
     assert "┡━━━━━" in captured_output.out
-    assert "2023-09-06" in captured_output.out
+    assert "some date" in captured_output.out
     assert "└─────" in captured_output.out

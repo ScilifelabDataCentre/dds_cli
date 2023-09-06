@@ -78,7 +78,7 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
             "message", "No response. Cannot display maintenance mode status."
         )
         LOG.info(response_message)
-        
+
     def get_stats(self) -> None:
         """Get rows from statistics."""
         response_json, _ = dds_cli.utils.perform_request(
@@ -111,11 +111,11 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
             caption=(
                 "Number of Units using the DDS for data deliveries, and number of accounts with different roles.\n"
                 # "[underline]Researchers[/underline]:  "
-                # "[underline]Project Owners[/underline]: 
+                # "[underline]Project Owners[/underline]:
                 # "[underline]Unit Personnel[/underline]:  "
                 # "[underline]Unit Admins[/underline]:  "
-                # "[underline]Super Admins[/underline]: 
-                # "[underline]Total Users[/underline]: 
+                # "[underline]Super Admins[/underline]:
+                # "[underline]Total Users[/underline]:
             ),
         )
         dds_cli.utils.console.print(

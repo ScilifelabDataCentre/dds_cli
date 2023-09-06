@@ -38,7 +38,6 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
     def __init__(
         self,
         authenticate: bool = True,
-        method: str = "off",
         no_prompt: bool = False,
         token_path: str = None,
     ):
@@ -46,14 +45,10 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             authenticate=authenticate,
-            method=method,
+            method=False,
             no_prompt=no_prompt,
             token_path=token_path,
         )
-
-        # Only methods "on" and "off" can use the Maintenance class
-        if self.method not in ["on", "off"]:
-            raise dds_cli.exceptions.InvalidMethodError(f"Unauthorized method: '{self.method}'")
 
     def change_maintenance_mode(self, setting) -> None:
         """Change Maintenance mode."""
@@ -70,6 +65,20 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         )
         LOG.info(response_message)
 
+    def display_maintenance_mode_status(self) -> None:
+        """Display Maintenance mode status."""
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.MAINTENANCE,
+            headers=self.token,
+            method="get",
+            error_message="Failed getting maintenance mode status",
+        )
+
+        response_message = response_json.get(
+            "message", "No response. Cannot display maintenance mode status."
+        )
+        LOG.info(response_message)
+        
     def get_stats(self) -> None:
         """Get rows from statistics."""
         response_json, _ = dds_cli.utils.perform_request(

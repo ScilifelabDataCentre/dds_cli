@@ -2076,17 +2076,23 @@ def send_motd(click_ctx, motd_id):
 
 @dds_main.command(name="maintenance", no_args_is_help=True)
 @click.argument(
-    "setting", metavar="[ON/OFF]", nargs=1, type=click.Choice(["on", "off"], case_sensitive=False)
+    "setting",
+    metavar="[ON/OFF/STATUS]",
+    nargs=1,
+    type=click.Choice(["on", "off", "status"], case_sensitive=False),
 )
 @click.pass_obj
-def set_maintenance_mode(click_ctx, setting):
-    """[Super Admins only] Activate / Deactivate Maintenance mode."""
+def manage_maintenance_mode(click_ctx, setting):
+    """[Super Admins only] Activate / Deactivate / Display status for Maintenance mode."""
     try:
         with dds_cli.superadmin_helper.SuperAdminHelper(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
-        ) as setter:
-            setter.change_maintenance_mode(setting=setting)
+        ) as manager:
+            if setting == "status":
+                manager.display_maintenance_mode_status()
+            else:
+                manager.change_maintenance_mode(setting=setting)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

@@ -12,7 +12,7 @@ jobs:
     name: Build the DDS CLI Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Make dependencies available to Docker container
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
@@ -24,7 +24,7 @@ jobs:
           build-command: "make dirhtml"
           docs-folder: "docs/"
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        uses: JamesIves/github-pages-deploy-action@v4.4.3
         with:
           branch: gh-pages
           folder: docs/_build/dirhtml/

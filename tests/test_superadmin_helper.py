@@ -3,6 +3,7 @@ from requests_mock.mocker import Mocker
 from dds_cli import DDSEndpoint
 from dds_cli import superadmin_helper
 from _pytest.logging import LogCaptureFixture
+from _pytest.capture import CaptureFixture
 import logging
 from dds_cli.exceptions import ApiResponseError
 
@@ -178,3 +179,67 @@ def test_get_stats_no_columns():
                 helper.get_stats()  # Get stats
 
         assert "The following information was not returned: ['columns']" in str(err.value)
+
+
+def test_get_stats_print_tables(capsys: CaptureFixture):
+    """Tables should be printed if all have been returned."""
+    returned_response: typing.Dict = {
+        "stats": [
+            {
+                "Date": "2023-09-06",
+                "Units": 3,
+                "Researchers": 4,
+                "Project Owners": 5,
+                "Unit Personnel": 6,
+                "Unit Admins": 7,
+                "Super Admins": 8,
+                "Total Users": 9,
+                "Active Projects": 10,
+                "Inactive Projects": 11,
+                "Total Projects": 12,
+                "Data Now (TB)": 13,
+                "Data Uploaded (TB)": 14,
+                "TBHours Last Month": 15,
+                "TBHours Total": 16,
+            }
+        ],
+        "columns": {
+            "Date": "Date description",
+            "Units": "U description",
+            "Researchers": "R description",
+            "Project Owners": "PO description",
+            "Unit Personnel": "UP description",
+            "Unit Admins": "UA description",
+            "Super Admins": "SA description",
+            "Total Users": "TU description",
+            "Active Projects": "AP description",
+            "Inactive Projects": "IP description",
+            "Total Projects": "TP description",
+            "Data Now (TB)": "DN description",
+            "Data Uploaded (TB)": "DU description",
+            "TBHours Last Month": "TBM description",
+            "TBHours Total": "TBT description",
+        },
+    }
+    # Create mocker
+    with Mocker() as mock:
+        # Create mocked request - real request not executed
+        mock.get(DDSEndpoint.STATS, status_code=200, json=returned_response)
+
+        with superadmin_helper.SuperAdminHelper(authenticate=False, no_prompt=True) as helper:
+            helper.token = {}  # required, otherwise none
+            helper.get_stats()  # Get stats
+
+    captured_output = capsys.readouterr()
+    assert (
+        "\n".join(
+            [
+                "┏━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓",
+                "┃ Date       ┃ Units ┃ Researchers ┃ Project Owners ┃ Unit Personnel ┃ Unit Admins ┃ Super Admins ┃ Total Users ┃",
+                "┡━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩",
+                "│ 2023-09-06 │ 1     │ 2           │ 1              │ 2              │ 3           │ 1            │ 8           │",
+                "└────────────┴───────┴─────────────┴────────────────┴────────────────┴─────────────┴──────────────┴─────────────┘",
+            ]
+        )
+        in captured_output.out
+    )

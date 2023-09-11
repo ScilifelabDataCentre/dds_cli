@@ -295,4 +295,4 @@ _Nothing merged in CLI during this sprint_
 
 # 2023-09-04 - 2023-09-15
 
-- Dependency: Bump `requests` to 2.31.0 ([]())
+- Dependency: Bump `requests` to 2.31.0 ([#649](https://github.com/ScilifelabDataCentre/dds_cli/pull/649))

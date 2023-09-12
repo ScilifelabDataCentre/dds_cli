@@ -141,6 +141,9 @@ class DDSEndpoint:
     # Activate / deactivate Maintenance mode
     MAINTENANCE = BASE_ENDPOINT + "/maintenance"
 
+    # Get statistics
+    STATS = BASE_ENDPOINT + "/stats"
+
     TIMEOUT = 120
 
 

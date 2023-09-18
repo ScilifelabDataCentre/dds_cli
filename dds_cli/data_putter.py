@@ -228,12 +228,13 @@ class DataPutter(base.DDSBaseClass):
                 temporary_destination=self.dds_directory.directories["FILES"],
                 remote_destination=destination,
             )
-
-            # Verify that the Safespring S3 bucket exists
-            # self.verify_bucket_exist()
-
+            
             # Check which, if any, files exist in the db
-            files_in_db = self.filehandler.check_previous_upload(token=self.token)
+            files_in_db = self.save_to_db(token=self.token)
+
+            LOG.debug("Files in database: %s", files_in_db)
+            import sys
+            sys.exit(1)
 
             # Quit if error and flag
             if files_in_db and self.break_on_fail and not self.overwrite:
@@ -427,3 +428,33 @@ class DataPutter(base.DDSBaseClass):
             LOG.warning(message)
 
         return added_to_db, message
+
+
+    def save_to_db(self, token):
+        """Attempt to save files to database."""
+        LOG.debug("Files: %s", self.filehandler.data)
+        file_info = {
+            file: 
+            {
+                "name_in_bucket": info["path_remote"],
+                "subpath": info["subpath"],
+                "size": info["size_raw"],
+                "size_processed": info["size_processed"],
+                "compressed": not info["compressed"],
+                "salt": "blablabla",
+                "public_key": "blablabla",
+                "checksum": "blablabla",
+            }
+            for file, info in self.filehandler.data.items()
+        }
+        LOG.debug("Files to send: %s", file_info)
+
+        response_json, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.FILE_NEW,
+            method="put",
+            params={"project": self.project},
+            json=file_info,
+            headers=self.token,
+            error_message=f"Failed to add files to the database.",
+        )
+        LOG.debug(f"Response: {response_json}")

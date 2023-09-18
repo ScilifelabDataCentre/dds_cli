@@ -105,8 +105,8 @@ class DDSBaseClass:
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in DDS_KEYS_REQUIRED_METHODS:
-            if self.method == "put":
-                self.s3connector = self.__get_safespring_keys()
+            # if self.method == "put":
+            #     self.s3connector = self.__get_safespring_keys()
 
             self.keys = self.__get_project_keys()
 

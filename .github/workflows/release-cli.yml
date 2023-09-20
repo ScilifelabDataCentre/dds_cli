@@ -65,6 +65,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc
+          apt-get install librsvg2-bin
+          pip install sphinxcontrib-svg2pdfconverter
       - name: Build the HTML documentation
         uses: matthiaszepper/sphinx-action-v4@latest
         with:

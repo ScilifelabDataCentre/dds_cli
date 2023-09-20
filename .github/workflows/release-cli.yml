@@ -76,7 +76,7 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@pdflatex
         with:
           container: pdflatex
-          pre-build-command: "strace convert ../img/dds-auth-login.svg tmp.png"
+          pre-build-command: "rsvg-convert img/dds-auth-login.svg -o tmp.png"
           build-command: "make latexpdf"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML

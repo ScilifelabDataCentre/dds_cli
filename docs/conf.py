@@ -35,7 +35,7 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.autosummary",
     "sphinx_copybutton",
-    "sphinx.ext.imgconverter",
+    "sphinxcontrib.rsvgconverter",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

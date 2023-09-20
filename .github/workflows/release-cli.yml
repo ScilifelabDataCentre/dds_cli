@@ -71,7 +71,7 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
           container: latest
-          pre-build-command: "pip install ."
+          pre-build-command: "pip install . && pip install sphinxcontrib-svg2pdfconverter"
           build-command: "make html"
           docs-folder: "docs/"
       - name: Build the pdf with Sphinx

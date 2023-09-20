@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.autosummary",
     "sphinx_copybutton",
+    "sphinx.ext.imgconverter",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -68,3 +69,21 @@ html_theme_options = {
 html_static_path = ["_static"]
 
 html_css_files = ["custom.css"]
+
+# -- Options for LaTeX output ---------------------------------------------
+
+latex_elements = {
+    # The paper size ('letterpaper' or 'a4paper').
+    #
+    # 'papersize': 'letterpaper',
+    # The font size ('10pt', '11pt' or '12pt').
+    #
+    # 'pointsize': '10pt',
+    # Additional stuff for the LaTeX preamble.
+    #
+    "preamble": "\\usepackage{tikz}",
+    "preamble": "\\usepackage{svg}",
+    # Latex figure (float) alignment
+    #
+    # 'figure_align': 'htbp',
+}

@@ -6,11 +6,11 @@
 ---
 name: New Release
 on:
-  workflow_dispatch: 
   release:
     types: [published]
     branches:
       - "master"
+      - "dds-1473-fix-client-documentation-github-actions"
 jobs:
   build-n-publish:
     runs-on: ubuntu-latest

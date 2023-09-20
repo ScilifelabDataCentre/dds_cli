@@ -6,9 +6,6 @@
 ---
 name: New Release
 on:
-  push:
-    branches:
-      - "dds-1473-fix-client-documentation-github-actions"
   release:
     types: [published]
     branches:

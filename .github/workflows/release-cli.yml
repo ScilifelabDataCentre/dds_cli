@@ -77,7 +77,7 @@ jobs:
         with:
           container: pdflatex
           pre-build-command: apt-get update -y && apt-get install imagemagick
-          build-command: "make latexpdf"
+          build-command: "make latexpdf -d"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML
         uses: actions/upload-artifact@v3

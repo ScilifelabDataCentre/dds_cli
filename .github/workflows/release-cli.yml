@@ -76,7 +76,7 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@pdflatex
         with:
           container: pdflatex
-          pre-build-command: " apt-get update && apt-get install libssl1.0.0 && pip install sphinxcontrib-svg2pdfconverter"
+          pre-build-command: " apt-get update && apt-get install librsvg2-bin && pip install sphinxcontrib-svg2pdfconverter"
           build-command: "make latexpdf"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML

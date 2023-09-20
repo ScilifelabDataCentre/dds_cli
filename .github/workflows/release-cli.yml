@@ -76,8 +76,8 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@pdflatex
         with:
           container: pdflatex
-          pre-build-command: apt-get update -y && apt-get install imagemagick
-          build-command: "make latexpdf -d"
+          pre-build-command: "strace convert ../img/dds-auth-login.svg tmp.png"
+          build-command: "make latexpdf"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML
         uses: actions/upload-artifact@v3

@@ -177,35 +177,39 @@ class LocalFileHandler(fh.FileHandler):
         LOG.debug("Creating the status dictionary.")
 
         status_dict = {}
-        for item in list(self.data):
-            in_db = bool(item in existing_files)
+        
+        # Iterate through all files
+        for file in self.data.copy().keys():
+            # Check if file has been previously uploaded
+            in_db = file in existing_files
             if in_db and not overwrite:
-                self.failed[item] = {
-                    **self.data.pop(item),
+                # If file already uploaded and overwrite option not used:
+                # cancel upload by removing file from data dict
+                # and adding it to failed dict
+                self.failed[file] = {
+                    **self.data.pop(file),
                     **{"message": "File already uploaded"},
                 }
             else:
-                if in_db:
-                    if overwrite:
-                        self.data[item].update(
-                            {
-                                "overwrite": True,
-                                "path_remote": existing_files[item],
-                            }
-                        )
+                if in_db and overwrite:
+                    # If file already uploaded and overwrite option used:
+                    # update file info in data dict
+                    self.data[file].update(
+                        {
+                            "overwrite": True,
+                            "path_remote": existing_files[file],
+                        }
+                    )
 
-                # filestream_funcname = (
-                #     "read_file" if self.data[x]["compressed"] else "compress_file"
-                # )
-                status_dict[item] = {
+                # If file not uploaded or overwrite option used:
+                # add file to status dict
+                status_dict[file] = {
                     "cancel": False,
                     "started": False,
                     "message": "",
                     "failed_op": None,
-                    # filestream_funcname: {"started": False, "done": False},
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
-                    # "task": None,
                 }
 
         LOG.debug("Initial statuses created.")

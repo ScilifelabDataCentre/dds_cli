@@ -1,6 +1,19 @@
 Changelog
 ==========
 
+.. _2.5.1:
+
+2.5.1 - 2023-09-25
+~~~~~~~~~~~~~~~~~~~
+
+- Super Admins only:
+    - New command: `dds maintenance status` to check if maintenance mode is on or off
+    - Updated command: `dds stats` now prints two separate tables with the stats collected from the API
+- Dependencies: 
+    - `requests` from `2.28.1` to `2.31.0`
+- Documentation:
+    - Generation of PDF format fixed
+
 .. _2.5.0:
 
 2.5.0 - 2023-08-29

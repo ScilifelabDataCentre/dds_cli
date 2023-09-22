@@ -178,7 +178,7 @@ class LocalFileHandler(fh.FileHandler):
 
         status_dict = {}
         
-        # Iterate through all files
+        # Iterate through all files - copy since the size changes
         for file in self.data.copy().keys():
             # Check if file has been previously uploaded
             in_db = file in existing_files
@@ -200,6 +200,7 @@ class LocalFileHandler(fh.FileHandler):
                             "path_remote": existing_files[file],
                         }
                     )
+                    LOG.debug("updated: %s", self.data[file])
 
                 # If file not uploaded or overwrite option used:
                 # add file to status dict
@@ -214,6 +215,8 @@ class LocalFileHandler(fh.FileHandler):
 
         LOG.debug("Initial statuses created.")
 
+        import sys
+        sys.exit(1)
         return status_dict
 
     def check_previous_upload(self, token):

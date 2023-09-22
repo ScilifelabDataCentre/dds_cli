@@ -298,6 +298,6 @@ _Nothing merged in CLI during this sprint_
 - Updated command: `dds stats` prints tables with stats collected from API ([#643](https://github.com/ScilifelabDataCentre/dds_cli/pull/643))
 - Dependency: Bump `requests` to 2.31.0 ([#649](https://github.com/ScilifelabDataCentre/dds_cli/pull/649))
 
-# 2023-09-04 - 2023-09-15
+# 2023-09-18 - 2023-09-29
 
 - GitHub Actions to generate the documentation fixed ([#1473])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1473)

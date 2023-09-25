@@ -290,3 +290,14 @@ _Nothing merged in CLI during this sprint_
 - Print understandable message when request response doesn't contain json ([#638](https://github.com/ScilifelabDataCentre/dds_cli/pull/638))
 - New option in `dds user ls`: `--save-emails` for Super Admins to save emails to file ([#641](https://github.com/ScilifelabDataCentre/dds_cli/pull/641))
 - New version: 2.5.0 ([#646](https://github.com/ScilifelabDataCentre/dds_cli/pull/646))
+- New command `dds maintenance status` for Super Admins to check current Maintenance mode status ([#644](https://github.com/ScilifelabDataCentre/dds_cli/pull/644))
+- Workflow: Github Pages action fixed by bumping versions ([#648](https://github.com/ScilifelabDataCentre/dds_cli/pull/648))
+
+# 2023-09-04 - 2023-09-15
+
+- Updated command: `dds stats` prints tables with stats collected from API ([#643](https://github.com/ScilifelabDataCentre/dds_cli/pull/643))
+- Dependency: Bump `requests` to 2.31.0 ([#649](https://github.com/ScilifelabDataCentre/dds_cli/pull/649))
+
+# 2023-09-18 - 2023-09-29
+
+- GitHub Actions to generate the documentation fixed ([#1473])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1473)

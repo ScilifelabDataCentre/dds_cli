@@ -35,19 +35,19 @@ jobs:
         if: github.repository == 'ScilifelabDataCentre/dds_cli'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          print_hash: true
+          print-hash: true
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
-          skip_existing: true
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
 
       - name: Publish dist to PyPI
         if: github.repository == 'ScilifelabDataCentre/dds_cli'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          print_hash: true
+          print-hash: true
           user: __token__
           password: ${{ secrets.pypi_password }}
-          skip_existing: true
+          skip-existing: true
 
   ddsclibinaries:
     name: Build binary packages for the DDS CLI
@@ -132,13 +132,14 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
           container: latest
-          pre-build-command: "pip install ."
+          pre-build-command: "apt-get update && apt-get install -y gcc && pip install ."
           build-command: "make html"
           docs-folder: "docs/"
       - name: Build the pdf with Sphinx
         uses: matthiaszepper/sphinx-action-v4@pdflatex
         with:
           container: pdflatex
+          pre-build-command: "apt-get update && apt-get install -y librsvg2-bin"
           build-command: "make latexpdf"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML

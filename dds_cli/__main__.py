@@ -9,7 +9,6 @@ import concurrent.futures
 import itertools
 import logging
 import sys
-import typing
 
 # Installed
 import pathlib
@@ -27,7 +26,7 @@ import dds_cli
 import dds_cli.account_manager
 import dds_cli.unit_manager
 import dds_cli.motd_manager
-import dds_cli.maintenance_manager
+import dds_cli.superadmin_helper
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
@@ -2077,17 +2076,23 @@ def send_motd(click_ctx, motd_id):
 
 @dds_main.command(name="maintenance", no_args_is_help=True)
 @click.argument(
-    "setting", metavar="[ON/OFF]", nargs=1, type=click.Choice(["on", "off"], case_sensitive=False)
+    "setting",
+    metavar="[ON/OFF/STATUS]",
+    nargs=1,
+    type=click.Choice(["on", "off", "status"], case_sensitive=False),
 )
 @click.pass_obj
-def set_maintenance_mode(click_ctx, setting):
-    """[Super Admins only] Activate / Deactivate Maintenance mode."""
+def manage_maintenance_mode(click_ctx, setting):
+    """[Super Admins only] Activate / Deactivate / Display status for Maintenance mode."""
     try:
-        with dds_cli.maintenance_manager.MaintenanceManager(
+        with dds_cli.superadmin_helper.SuperAdminHelper(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
-        ) as setter:
-            setter.change_maintenance_mode(setting=setting)
+        ) as manager:
+            if setting == "status":
+                manager.display_maintenance_mode_status()
+            else:
+                manager.change_maintenance_mode(setting=setting)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
@@ -2103,35 +2108,16 @@ def set_maintenance_mode(click_ctx, setting):
 
 
 @dds_main.command(name="stats", no_args_is_help=False)
-@click.argument(
-    "stat_type", nargs=1, type=click.Choice(["active", "all", "size"], case_sensitive=True)
-)
 @click.pass_obj
-def get_stats(click_ctx, stat_type):
+def get_stats(click_ctx):
     """Get statistics in the DDS."""
     try:
         # Num projects
-        with dds_cli.data_lister.DataLister(
-            show_usage=True,
+        with dds_cli.superadmin_helper.SuperAdminHelper(
             no_prompt=click_ctx.get("NO_PROMPT", False),
-            json=True,
             token_path=click_ctx.get("TOKEN_PATH"),
-        ) as lister:
-            # Get projects, only active by default
-            projects: typing.List = lister.list_projects(show_all=stat_type == "all")
-
-            if stat_type == "size":
-                # Calculate total amount of saved data in active projects
-                title_bold_part: str = "Bytes"
-                title_rest: str = "currently stored in DDS"
-                value: int = sum(x["Size"] for x in projects)
-            else:
-                # Get number of projects
-                title_bold_part: str = "Active" if stat_type == "active" else "Total"
-                title_rest: str = "projects"
-                value: int = len(projects)
-
-            LOG.info("[bold]%s[/bold] %s: %s", title_bold_part, title_rest, value)
+        ) as helper:
+            helper.get_stats()
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

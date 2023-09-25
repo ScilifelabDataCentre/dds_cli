@@ -12,9 +12,10 @@
 #
 import os
 import sys
-from dds_cli.version import __version__
 
 sys.path.insert(0, os.path.abspath(".."))
+
+from dds_cli.version import __version__
 
 
 # -- Project information -----------------------------------------------------
@@ -34,6 +35,7 @@ extensions = [
     "sphinx.ext.duration",
     "sphinx.ext.autosummary",
     "sphinx_copybutton",
+    "sphinxcontrib.rsvgconverter",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

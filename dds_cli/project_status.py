@@ -63,7 +63,7 @@ class ProjectStatusManager(base.DDSBaseClass):
             raise dds_cli.exceptions.ApiResponseError(message="No project information to display.")
 
         return project_info
-    
+
     def get_status(self, show_history):
         """Get current status and status history of the project."""
         resp_json, _ = dds_cli.utils.perform_request(
@@ -121,16 +121,18 @@ class ProjectStatusManager(base.DDSBaseClass):
             extra_params["deadline"] = deadline
         if is_aborted:
             extra_params["is_aborted"] = is_aborted
-        
-        # If the status is going to be archived or deleted. Ask for confirmation
-        if new_status in ["Archived","Deleted"]:
 
-            #get project info
+        # If the status is going to be archived or deleted. Ask for confirmation
+        if new_status in ["Archived", "Deleted"]:
+
+            # get project info
             project_info = self.get_project_info()
 
             # Create confirmation prompt with project info
-            question = f"Are you sure you want to modify the status of {self.project}? All its contents "
-            if new_status == 'Deleted':
+            question = (
+                f"Are you sure you want to modify the status of {self.project}? All its contents "
+            )
+            if new_status == "Deleted":
                 question = question + "and metainfo "
             question += (
                 "will be deleted!\n"

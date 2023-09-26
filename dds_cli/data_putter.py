@@ -10,7 +10,6 @@ import itertools
 import logging
 import pathlib
 import json
-import os
 
 # Installed
 import boto3

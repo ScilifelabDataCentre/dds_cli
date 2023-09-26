@@ -124,7 +124,6 @@ class ProjectStatusManager(base.DDSBaseClass):
 
         # If the status is going to be archived or deleted. Ask for confirmation
         if new_status in ["Archived", "Deleted"]:
-
             # get project info
             project_info = self.get_project_info()
 

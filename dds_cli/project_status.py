@@ -33,12 +33,14 @@ class ProjectStatusManager(base.DDSBaseClass):
     def __init__(
         self,
         project: str,
+        authenticate: bool = True,
         no_prompt: bool = False,
         token_path: str = None,
     ):
         """Handle actions regarding project status in the cli."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
+            authenticate=authenticate,
             no_prompt=no_prompt,
             method_check=False,
             token_path=token_path,
@@ -128,12 +130,12 @@ class ProjectStatusManager(base.DDSBaseClass):
             project_info = self.get_project_info()
 
             # Create confirmation prompt with project info
-            question = (
+            print_info = (
                 f"Are you sure you want to modify the status of {self.project}? All its contents "
             )
             if new_status == "Deleted":
-                question = question + "and metainfo "
-            question += (
+                print_info += "and metainfo "
+            print_info += (
                 "will be deleted!\n"
                 f"The project '[b]{self.project}[/b]' is about to be [b][blue]{new_status}[/blue][/b].\n"
                 f"Title: \t{project_info['Title']}\n"
@@ -141,7 +143,9 @@ class ProjectStatusManager(base.DDSBaseClass):
                 f"PI: \t{project_info['PI']}\n"
             )
 
-            if not rich.prompt.Confirm.ask(question):
+            dds_cli.utils.console.print(print_info)
+
+            if not rich.prompt.Confirm.ask("-"):
                 LOG.info("Probably for the best. Exiting.")
                 sys.exit(0)
 

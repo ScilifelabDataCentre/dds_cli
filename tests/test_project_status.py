@@ -110,6 +110,7 @@ def test_archive_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: 
         assert (
             f"Are you sure you want to modify the status of {project_name}?" in captured_output[0]
         )
+        assert "The project 'Test' is about to be Archived." in captured_output[1]
         assert f"Title:  {returned_response_get_info['Title']}" in captured_output[2]
         assert f"Description:    {returned_response_get_info['Description']}" in captured_output[3]
         assert f"PI:     {returned_response_get_info['PI']}" in captured_output[4]

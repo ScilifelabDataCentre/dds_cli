@@ -104,7 +104,7 @@ def test_archive_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: 
                 status_mngr.token = {}  # required, otherwise none
                 status_mngr.update_status(new_status="Archived")
 
-        captured_output = capsys.readouterr().out
+        captured_output = capsys.readouterr()
 
         assert (
             f"Are you sure you want to modify the status of {project_name}?" in captured_output.out

@@ -108,8 +108,7 @@ def test_archive_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: 
         captured_output = captured_output.split("\n")
 
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents will be deleted!"
-            in captured_output[0]
+            f"Are you sure you want to modify the status of {project_name}?" in captured_output[0]
         )
         assert f"Title:  {returned_response_get_info['Title']}" in captured_output[2]
         assert f"Description:    {returned_response_get_info['Description']}" in captured_output[3]

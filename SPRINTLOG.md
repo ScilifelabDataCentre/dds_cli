@@ -301,3 +301,4 @@ _Nothing merged in CLI during this sprint_
 # 2023-09-18 - 2023-09-29
 
 - GitHub Actions to generate the documentation fixed ([#1473])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1473)
+- Print project information when asking for confirmation of deletion ([#1401])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1401)

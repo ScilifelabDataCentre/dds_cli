@@ -89,6 +89,7 @@ class DDSEndpoint:
     S3KEYS = BASE_ENDPOINT + "/s3/proj"
 
     # File related urls
+    FILE_TEMP = BASE_ENDPOINT + "/file/temp"
     FILE_NEW = BASE_ENDPOINT + "/file/new"
     FILE_MATCH = BASE_ENDPOINT + "/file/match"
     FILE_INFO = BASE_ENDPOINT + "/file/info"

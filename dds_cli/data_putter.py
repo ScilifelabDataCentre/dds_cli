@@ -69,7 +69,7 @@ def put(
         destination=destination,
     ) as putter:
         # Add call to API here - add files to db temporarily and get presigned urls  
-        pass
+        putter.filehandler
 
         # Progress object to keep track of progress tasks
         with Progress(
@@ -384,6 +384,17 @@ class DataPutter(base.DDSBaseClass):
             uploaded = True
 
         return uploaded, error
+
+    def mark_upload_started(self):
+        """Mark upload of files as started."""
+        response_json, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.FILE_TEMP,
+            method="post",
+            params={"project": self.project},
+            headers=self.token,
+            error_message=f"Failed getting "
+        )
+
 
     @update_status
     def add_file_db(self, file):

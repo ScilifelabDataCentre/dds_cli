@@ -173,16 +173,18 @@ def put(
         # LOG.warning(f"test 1: {putter.filehandler.failed}")
         if pathlib.Path(putter.failed_delivery_log).is_file():
             LOG.warning(
-                f"Some uploaded files could not be added to the database {str(putter.failed_delivery_log)}"
+                f"Some uploaded files could not be added to the database {str(putter.failed_delivery_log)}.\nAttempting to add them to the database."
             )
-            LOG.warning(f"project: {putter.project}")
+
             path_to_file = str(putter.failed_delivery_log)
             with open(path_to_file, "r") as f:
                 failed = json.load(f)
-                # LOG.warning(f"old dict {failed}")
+
+            # remove from log any files that  failed for other reasons
             for file, values in failed.items():
                 if values.get("status", {}).get("failed_op") != "add_file_db":
                     failed.pop(file)
+
             # send failed to API endpoint
             params = {"project": putter.project}
             try:
@@ -194,8 +196,6 @@ def put(
                     json=failed,
                     error_message="Failed to add missing files",
                 )
-                # added_to_db, message = (True, response_json)
-                LOG.debug(f"bla?!: {response}")
             except (
                 dds_cli.exceptions.ApiRequestError,
                 dds_cli.exceptions.ApiResponseError,
@@ -209,18 +209,24 @@ def put(
                 raise dds_cli.exceptions.ApiResponseError(
                     message="No project information to display."
                 )
-
-            # if successful response
-            message = True
-            if message:
-                # check upload and set new status
+            else:
+                # LOG.warning(f"status: {putter.status}")
+                # check if files are uploaded
                 files_in_db = putter.filehandler.check_previous_upload(token=putter.token)
-                LOG.warning(f"files in db: {files_in_db}")
+
+                # set new status
                 putter.status = putter.filehandler.create_upload_status_dict(
                     existing_files=files_in_db
                 )
-                LOG.warning(f"status: {putter.status}")
-            # LOG.warning(f"test: {putter.filehandler.create_upload_status_dict()}")
+
+                # remove the files from the 'failed' dictionary
+                for key in files_in_db.keys():
+                    if key in putter.filehandler.failed:
+                        del putter.filehandler.failed[key]
+
+                dds_cli.utils.console.print(
+                    "\nAll the uploaded files successfuly added to the database."
+                )
 
 
 ###############################################################################
@@ -303,7 +309,6 @@ class DataPutter(base.DDSBaseClass):
 
             # Remove spinner
             progress.remove_task(wait_task)
-        LOG.debug(f"status: {self.status}")
         if not self.filehandler.data:
             if self.temporary_directory and self.temporary_directory.is_dir():
                 LOG.debug("Deleting temporary folder %s.", self.temporary_directory)

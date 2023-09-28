@@ -26,7 +26,7 @@ returned_response_archived_ok: typing.Dict = {
 #########
 
 
-def perform_archive_delete_operation(new_status, confimed):
+def perform_archive_delete_operation(new_status, confimed, mock):
 
     returned_response: typing.Dict = {
         "message": f"{project_name} updated to status {new_status}. An e-mail notification has been sent."
@@ -139,7 +139,7 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
 
         # set confirmation object to false
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        perform_archive_delete_operation(new_status="Deleted", confimed=confirmed)
+        perform_archive_delete_operation(new_status="Deleted", confimed=confirmed, mock=mock)
         captured_output = capsys.readouterr()
 
         # for some reason the captured log includees line break here. But in the client it displays normal ->
@@ -213,7 +213,7 @@ def test_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
 
         # set confirmation object to true
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        perform_archive_delete_operation(new_status="Deleted", confimed=confirmed)
+        perform_archive_delete_operation(new_status="Deleted", confimed=confirmed, mock=mock)
         assert returned_response_deleted_ok["message"] in capsys.readouterr().out
 
 

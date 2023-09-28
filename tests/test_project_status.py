@@ -15,6 +15,11 @@ import typing
 
 project_name = "Test"
 returned_response_get_info: typing.Dict = {
+    "Project ID": "Test001",
+    "Created by": "Mr Bean",
+    "Status": "In progress",
+    "Last updated": "None",
+    "Size": "0.0 B",
     "Title": "Test",
     "Description": "a description",
     "PI": "pi@a.se",
@@ -62,11 +67,17 @@ def perform_archive_delete_operation(new_status, confirmed, mock):
 
 
 def check_output_project_info(new_status, captured_output, caplog_tuples=None):
-    assert f"The project '{project_name}' is about to be {new_status}." in captured_output.out
-    assert f"Title:  {returned_response_get_info['Title']}" in captured_output.out
-    assert f"Description:    {returned_response_get_info['Description']}" in captured_output.out
-    assert f"PI:     {returned_response_get_info['PI']}" in captured_output.out
 
+    assert f"The project {project_name} is about to be {new_status}." in captured_output.out
+
+    assert "┏━━━━━" in captured_output.out  # A table has generated
+    assert f"{returned_response_get_info['Project ID']}" in captured_output.out
+    assert f"{returned_response_get_info['Created by']}" in captured_output.out
+    assert f"{returned_response_get_info['Status']}" in captured_output.out
+    assert f"{returned_response_get_info['Last updated']}" in captured_output.out
+    assert f"{returned_response_get_info['Size']}" in captured_output.out
+
+    # if not confirmed operation
     if caplog_tuples:
         assert (
             "dds_cli.project_status",
@@ -158,10 +169,8 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
         perform_archive_delete_operation(new_status="Deleted", confirmed=confirmed, mock=mock)
         captured_output = capsys.readouterr()
 
-        # for some reason the captured log includees line break here. But in the client it displays normal ->
-        # could be because of the if-else to build this log
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents and \nmetainfo will be deleted!"
+            f"Are you sure you want to modify the status of {project_name}? All its contents and metainfo will be deleted!"
             in captured_output.out
         )
 
@@ -185,10 +194,8 @@ def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
         perform_archive_delete_operation(new_status="Archived", confirmed=confirmed, mock=mock)
         captured_output = capsys.readouterr()
 
-        # for some reason the captured log includees line break here. But in the client it displays normal ->
-        # could be because of the if-else to build this log
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents will be \ndeleted!"
+            f"Are you sure you want to modify the status of {project_name}? All its contents will be deleted!"
             in captured_output.out
         )
 

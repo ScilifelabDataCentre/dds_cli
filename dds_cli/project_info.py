@@ -44,37 +44,13 @@ class ProjectInfoManager(base.DDSBaseClass):
         self.project = project
 
     # Public methods ###################### Public methods #
-    def get_project_info(self):
-        """Collect project information from API."""
-        # Get info about a project from API
-        response, _ = dds_cli.utils.perform_request(
-            DDSEndpoint.PROJ_INFO,
-            method="get",
-            headers=self.token,
-            params={"project": self.project},
-            error_message="Failed to get project information",
-        )
-
-        project_info = response.get("project_info")
-        if not project_info:
-            raise dds_cli.exceptions.ApiResponseError(message="No project information to display.")
-
-        return project_info
 
     def show_project_info(self):
         """Display info about a project."""
-        # Get project info from API
-        project_info = self.get_project_info()
 
-        # Print project info table
-        table = dds_cli.utils.create_table(
-            title="Project information.",
-            columns=["Project ID", "Created by", "Status", "Last updated", "Size"],
-            rows=[
-                project_info,
-            ],
-            caption=f"Information about project {project_info['Project ID']}",
-        )
+        # Get project info from api
+        project_info = self.get_project_info()
+        table = self.generate_project_table(project_info=project_info)
         dds_cli.utils.console.print(table)
 
         # Print Title and Description below the table

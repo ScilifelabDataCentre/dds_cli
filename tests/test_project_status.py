@@ -61,6 +61,20 @@ def perform_archive_delete_operation(new_status, confirmed, mock):
             status_mngr.update_status(new_status=new_status)
 
 
+def check_output_project_info(new_status, captured_output, caplog_tuples=None):
+    assert f"The project '{project_name}' is about to be {new_status}." in captured_output.out
+    assert f"Title:  {returned_response_get_info['Title']}" in captured_output.out
+    assert f"Description:    {returned_response_get_info['Description']}" in captured_output.out
+    assert f"PI:     {returned_response_get_info['PI']}" in captured_output.out
+
+    if caplog_tuples:
+        assert (
+            "dds_cli.project_status",
+            logging.INFO,
+            "Probably for the best. Exiting.",
+        ) in caplog_tuples
+
+
 # tests
 
 
@@ -130,20 +144,6 @@ def test_release_project(capsys: CaptureFixture):
             status_mngr.update_status(new_status="Available")
 
         assert returned_response_available_ok["message"] in capsys.readouterr().out
-
-
-def check_output_project_info(new_status, captured_output, caplog_tuples=None):
-    assert f"The project '{project_name}' is about to be {new_status}." in captured_output.out
-    assert f"Title:  {returned_response_get_info['Title']}" in captured_output.out
-    assert f"Description:    {returned_response_get_info['Description']}" in captured_output.out
-    assert f"PI:     {returned_response_get_info['PI']}" in captured_output.out
-
-    if caplog_tuples:
-        assert (
-            "dds_cli.project_status",
-            logging.INFO,
-            "Probably for the best. Exiting.",
-        ) in caplog_tuples
 
 
 def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):

@@ -22,6 +22,9 @@ returned_response_get_info: typing.Dict = {
 returned_response_archived_ok: typing.Dict = {
     "message": f"{project_name} updated to status Archived. An e-mail notification has been sent."
 }
+returned_response_deleted_ok: typing.Dict = {
+    "message": f"{project_name} updated to status Deleted. An e-mail notification has been sent."
+}
 
 #########
 
@@ -163,27 +166,13 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
 def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
     """Test that tries to archive a project, but the user selects no to perfrom the operation"""
 
+    confirmed = False
     caplog.set_level(logging.INFO)
     # Create mocker
     with Mocker() as mock:
-        # Create mocked request - real request not executed
-        mock.get(
-            DDSEndpoint.PROJ_INFO,
-            status_code=200,
-            json={"project_info": returned_response_get_info},
-        )
-        mock.post(DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json={})
         # set confirmation object to false
-        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: False)
-
-        # capture system exit on not accepting operation
-        with pytest.raises(SystemExit):
-            with project_status.ProjectStatusManager(
-                project=project_name, no_prompt=True, authenticate=False
-            ) as status_mngr:
-                status_mngr.token = {}  # required, otherwise none
-                status_mngr.update_status(new_status="Archived")
-
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
+        perform_archive_delete_operation(new_status="Deleted", confirmed=confirmed, mock=mock)
         captured_output = capsys.readouterr()
 
         # for some reason the captured log includees line break here. But in the client it displays normal ->
@@ -219,27 +208,12 @@ def test_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
 def test_archive_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
     """Test that tries to archive a project, the user accepts the operation"""
 
+    confirmed = True
     # Create mocker
     with Mocker() as mock:
-        # Create mocked request - real request not executed
-        mock.get(
-            DDSEndpoint.PROJ_INFO,
-            status_code=200,
-            json={"project_info": returned_response_get_info},
-        )
-        mock.post(
-            DDSEndpoint.UPDATE_PROJ_STATUS,
-            status_code=200,
-            json=returned_response_archived_ok,
-        )
-        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
-
-        with project_status.ProjectStatusManager(
-            project=project_name, no_prompt=True, authenticate=False
-        ) as status_mngr:
-            status_mngr.token = {}  # required, otherwise none
-            status_mngr.update_status(new_status="Archived")
-
+        # set confirmation object to true
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
+        perform_archive_delete_operation(new_status="Archived", confirmed=confirmed, mock=mock)
         assert returned_response_archived_ok["message"] in capsys.readouterr().out
 
 

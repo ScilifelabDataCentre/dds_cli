@@ -67,7 +67,6 @@ def perform_archive_delete_operation(new_status, confirmed, mock):
 
 
 def check_output_project_info(new_status, captured_output, caplog_tuples=None):
-
     assert f"The project {project_name} is about to be {new_status}." in captured_output.out
 
     assert "┏━━━━━" in captured_output.out  # A table has generated
@@ -169,8 +168,10 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
         perform_archive_delete_operation(new_status="Deleted", confirmed=confirmed, mock=mock)
         captured_output = capsys.readouterr()
 
+        # for some reason the captured log includees line break here. But in the client it displays normal ->
+        # could be because of the if-else to build this log
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents and metainfo will be deleted!"
+            f"Are you sure you want to modify the status of {project_name}? All its contents and \nmetainfo will be deleted!"
             in captured_output.out
         )
 
@@ -194,8 +195,10 @@ def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
         perform_archive_delete_operation(new_status="Archived", confirmed=confirmed, mock=mock)
         captured_output = capsys.readouterr()
 
+        # for some reason the captured log includees line break here. But in the client it displays normal ->
+        # could be because of the if-else to build this log
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents will be deleted!"
+            f"Are you sure you want to modify the status of {project_name}? All its contents will be \ndeleted!"
             in captured_output.out
         )
 

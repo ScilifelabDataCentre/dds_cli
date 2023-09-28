@@ -19,17 +19,42 @@ returned_response_get_info: typing.Dict = {
     "Description": "a description",
     "PI": "pi@a.se",
 }
-returned_response_available_ok: typing.Dict = {
-    "message": f"{project_name} updated to status Available. An e-mail notification has been sent."
-}
 returned_response_archived_ok: typing.Dict = {
     "message": f"{project_name} updated to status Archived. An e-mail notification has been sent."
 }
-returned_response_deleted_ok: typing.Dict = {
-    "message": f"{project_name} updated to status Deleted. An e-mail notification has been sent."
-}
 
 #########
+
+
+def perform_archive_delete_operation(new_status, confimed):
+
+    returned_response: typing.Dict = {
+        "message": f"{project_name} updated to status {new_status}. An e-mail notification has been sent."
+    }
+
+    # Create mocked request - real request not executed
+    mock.get(
+        DDSEndpoint.PROJ_INFO,
+        status_code=200,
+        json={"project_info": returned_response_get_info},
+    )
+    mock.post(DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response)
+
+    if not confirmed:
+        # capture system exit on not accepting operation
+        with pytest.raises(SystemExit):
+            with project_status.ProjectStatusManager(
+                project=project_name, no_prompt=True, authenticate=False
+            ) as status_mngr:
+                status_mngr.token = {}  # required, otherwise none
+                status_mngr.update_status(new_status="Deleted")
+    else:
+        with project_status.ProjectStatusManager(
+            project=project_name, no_prompt=True, authenticate=False
+        ) as status_mngr:
+            status_mngr.token = {}  # required, otherwise none
+            status_mngr.update_status(new_status="Deleted")
+
 
 # tests
 
@@ -83,6 +108,10 @@ def test_fail_display_project_info(capsys: CaptureFixture):
 def test_release_project(capsys: CaptureFixture):
     """Test that tries to release a project and seeting up as available"""
 
+    returned_response_available_ok: typing.Dict = {
+        "message": f"{project_name} updated to status Available. An e-mail notification has been sent."
+    }
+
     # Create mocker
     with Mocker() as mock:
         # Create mocked request - real request not executed
@@ -103,27 +132,14 @@ def test_release_project(capsys: CaptureFixture):
 def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
     """Test that tries to delete a project, but the user selects no to perfrom the operation"""
 
+    confirmed = False
     caplog.set_level(logging.INFO)
     # Create mocker
     with Mocker() as mock:
-        # Create mocked request - real request not executed
-        mock.get(
-            DDSEndpoint.PROJ_INFO,
-            status_code=200,
-            json={"project_info": returned_response_get_info},
-        )
-        mock.post(DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json={})
+
         # set confirmation object to false
-        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: False)
-
-        # capture system exit on not accepting operation
-        with pytest.raises(SystemExit):
-            with project_status.ProjectStatusManager(
-                project=project_name, no_prompt=True, authenticate=False
-            ) as status_mngr:
-                status_mngr.token = {}  # required, otherwise none
-                status_mngr.update_status(new_status="Deleted")
-
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
+        perform_archive_delete_operation(new_status="Deleted", confimed=confirmed)
         captured_output = capsys.readouterr()
 
         # for some reason the captured log includees line break here. But in the client it displays normal ->

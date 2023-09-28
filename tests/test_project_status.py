@@ -81,8 +81,8 @@ def test_release_project(capsys: CaptureFixture):
         assert returned_response_available_ok["message"] in capsys.readouterr().out
 
 
-def test_archive_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
-    """Test that tries to archive/delete a project, but the user selects no to perfrom the operation"""
+def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
+    """Test that tries to delete a project, but the user selects no to perfrom the operation"""
 
     caplog.set_level(logging.INFO)
     # Create mocker
@@ -94,6 +94,7 @@ def test_archive_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: 
             json={"project_info": returned_response_get_info},
         )
         mock.post(DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json={})
+        # set confirmation object to false
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: False)
 
         # capture system exit on not accepting operation
@@ -107,7 +108,50 @@ def test_archive_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: 
         captured_output = capsys.readouterr()
 
         assert (
-            f"Are you sure you want to modify the status of {project_name}?" in captured_output.out
+            f"Are you sure you want to modify the status of {project_name}? All its contents and metainfo will be deleted!"
+            in captured_output.out
+        )
+        assert "The project 'Test' is about to be Deleted." in captured_output.out
+        assert f"Title:  {returned_response_get_info['Title']}" in captured_output.out
+        assert f"Description:    {returned_response_get_info['Description']}" in captured_output.out
+        assert f"PI:     {returned_response_get_info['PI']}" in captured_output.out
+
+        assert (
+            "dds_cli.project_status",
+            logging.INFO,
+            "Probably for the best. Exiting.",
+        ) in caplog.record_tuples
+
+
+def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
+    """Test that tries to archive a project, but the user selects no to perfrom the operation"""
+
+    caplog.set_level(logging.INFO)
+    # Create mocker
+    with Mocker() as mock:
+        # Create mocked request - real request not executed
+        mock.get(
+            DDSEndpoint.PROJ_INFO,
+            status_code=200,
+            json={"project_info": returned_response_get_info},
+        )
+        mock.post(DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json={})
+        # set confirmation object to false
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: False)
+
+        # capture system exit on not accepting operation
+        with pytest.raises(SystemExit):
+            with project_status.ProjectStatusManager(
+                project=project_name, no_prompt=True, authenticate=False
+            ) as status_mngr:
+                status_mngr.token = {}  # required, otherwise none
+                status_mngr.update_status(new_status="Archived")
+
+        captured_output = capsys.readouterr()
+
+        assert (
+            f"Are you sure you want to modify the status of {project_name}? All its contents will be deleted!"
+            in captured_output.out
         )
         assert "The project 'Test' is about to be Archived." in captured_output.out
         assert f"Title:  {returned_response_get_info['Title']}" in captured_output.out
@@ -121,8 +165,8 @@ def test_archive_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: 
         ) in caplog.record_tuples
 
 
-def test_archive_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
-    """Test that tries to archive/delete a project, the user accepts the operation"""
+def test_archive_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
+    """Test that tries to archive a project, the user accepts the operation"""
 
     # Create mocker
     with Mocker() as mock:
@@ -142,5 +186,51 @@ def test_archive_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog:
         ) as status_mngr:
             status_mngr.token = {}  # required, otherwise none
             status_mngr.update_status(new_status="Archived")
+
+        assert returned_response_archived_ok["message"] in capsys.readouterr().out
+
+
+def test_archive_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
+    """Test that tries to archive a project, the user accepts the operation"""
+
+    # Create mocker
+    with Mocker() as mock:
+        # Create mocked request - real request not executed
+        mock.get(
+            DDSEndpoint.PROJ_INFO,
+            status_code=200,
+            json={"project_info": returned_response_get_info},
+        )
+        mock.post(
+            DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response_deleted_ok
+        )
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
+
+        with project_status.ProjectStatusManager(
+            project=project_name, no_prompt=True, authenticate=False
+        ) as status_mngr:
+            status_mngr.token = {}  # required, otherwise none
+            status_mngr.update_status(new_status="Archived")
+
+        assert returned_response_deleted_ok["message"] in capsys.readouterr().out
+
+
+def test_update_extra_params(capsys: CaptureFixture):
+    """Test that update the project status providing extra params"""
+
+    # Create mocker
+    with Mocker() as mock:
+        # Create mocked request - real request not executed
+        mock.get(DDSEndpoint.PROJ_INFO, status_code=200, json={})
+        mock.post(
+            DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response_archived_ok
+        )
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
+
+        with project_status.ProjectStatusManager(
+            project=project_name, no_prompt=True, authenticate=False
+        ) as status_mngr:
+            status_mngr.token = {}  # required, otherwise none
+            status_mngr.update_status(new_status="Archived", is_aborted=True, deadline=10)
 
         assert returned_response_archived_ok["message"] in capsys.readouterr().out

@@ -49,13 +49,13 @@ def perform_archive_delete_operation(new_status, confirmed, mock):
                 project=project_name, no_prompt=True, authenticate=False
             ) as status_mngr:
                 status_mngr.token = {}  # required, otherwise none
-                status_mngr.update_status(new_status="Deleted")
+                status_mngr.update_status(new_status=new_status)
     else:
         with project_status.ProjectStatusManager(
             project=project_name, no_prompt=True, authenticate=False
         ) as status_mngr:
             status_mngr.token = {}  # required, otherwise none
-            status_mngr.update_status(new_status="Deleted")
+            status_mngr.update_status(new_status=new_status)
 
 
 # tests

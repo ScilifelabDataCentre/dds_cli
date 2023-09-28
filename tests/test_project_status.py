@@ -207,25 +207,13 @@ def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
 def test_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
     """Test that tries to delete a project, the user accepts the operation"""
 
+    confirmed = True
     # Create mocker
     with Mocker() as mock:
-        # Create mocked request - real request not executed
-        mock.get(
-            DDSEndpoint.PROJ_INFO,
-            status_code=200,
-            json={"project_info": returned_response_get_info},
-        )
-        mock.post(
-            DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response_deleted_ok
-        )
-        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
 
-        with project_status.ProjectStatusManager(
-            project=project_name, no_prompt=True, authenticate=False
-        ) as status_mngr:
-            status_mngr.token = {}  # required, otherwise none
-            status_mngr.update_status(new_status="Deleted")
-
+        # set confirmation object to true
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
+        perform_archive_delete_operation(new_status="Deleted", confimed=confirmed)
         assert returned_response_deleted_ok["message"] in capsys.readouterr().out
 
 

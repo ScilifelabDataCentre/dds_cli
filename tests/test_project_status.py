@@ -172,7 +172,7 @@ def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
     with Mocker() as mock:
         # set confirmation object to false
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        perform_archive_delete_operation(new_status="Deleted", confirmed=confirmed, mock=mock)
+        perform_archive_delete_operation(new_status="Archived", confirmed=confirmed, mock=mock)
         captured_output = capsys.readouterr()
 
         # for some reason the captured log includees line break here. But in the client it displays normal ->

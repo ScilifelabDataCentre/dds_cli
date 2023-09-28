@@ -215,8 +215,6 @@ class LocalFileHandler(fh.FileHandler):
 
         LOG.debug("Initial statuses created.")
 
-        import sys
-        sys.exit(1)
         return status_dict
 
     def check_previous_upload(self, token):

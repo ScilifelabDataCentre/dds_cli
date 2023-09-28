@@ -394,6 +394,7 @@ class DataPutter(base.DDSBaseClass):
             headers=self.token,
             error_message=f"Failed getting "
         )
+        LOG.debug("Temp file response: %s", response_json)
 
 
     @update_status

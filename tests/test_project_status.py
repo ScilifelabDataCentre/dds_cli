@@ -215,7 +215,7 @@ def test_archive_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog:
         assert returned_response_deleted_ok["message"] in capsys.readouterr().out
 
 
-def test_update_extra_params(capsys: CaptureFixture):
+def test_update_extra_params(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
     """Test that update the project status providing extra params"""
 
     # Create mocker

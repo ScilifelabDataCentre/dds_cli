@@ -54,7 +54,7 @@ _Check the boxes when the specified checks have passed._
 - [ ] **Pylint**
 <!--
   What: Python code linter.
-  How to fix: Manually fix the code producing warnings. Code must get 10/10. 
+  How to fix: Manually fix the code producing warnings. Code must get 10/10.
 -->
 - [ ] **Prettier**
 <!--

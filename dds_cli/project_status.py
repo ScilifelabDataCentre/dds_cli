@@ -49,21 +49,6 @@ class ProjectStatusManager(base.DDSBaseClass):
 
     # Public methods ###################### Public methods #
 
-    def get_project_info(self):
-        """Collect project information from API."""
-        # Get info about a project from API
-
-        response, _ = dds_cli.utils.perform_request(
-            DDSEndpoint.PROJ_INFO,
-            method="get",
-            headers=self.token,
-            params={"project": self.project},
-            error_message="Failed to get project information",
-        )
-
-        project_info = response.get("project_info")
-        return project_info
-
     def get_status(self, show_history):
         """Get current status and status history of the project."""
         resp_json, _ = dds_cli.utils.perform_request(
@@ -126,19 +111,17 @@ class ProjectStatusManager(base.DDSBaseClass):
         if new_status in ["Archived", "Deleted"]:
             # get project info
             project_info = self.get_project_info()
+            table = self.generate_project_table(project_info=project_info)
+            dds_cli.utils.console.print(table)
 
-            # Create confirmation prompt with project info
+            # Create confirmation prompt
             print_info = (
                 f"Are you sure you want to modify the status of {self.project}? All its contents "
             )
             if new_status == "Deleted":
                 print_info += "and metainfo "
             print_info += (
-                "will be deleted!\n"
-                f"The project '[b]{self.project}[/b]' is about to be [b][blue]{new_status}[/blue][/b].\n"
-                f"Title: \t{project_info['Title']}\n"
-                f"Description: \t{project_info['Description']}\n"
-                f"PI: \t{project_info['PI']}\n"
+                "will be deleted!\n" f"The project {self.project} is about to be {new_status}.\n"
             )
 
             dds_cli.utils.console.print(print_info)

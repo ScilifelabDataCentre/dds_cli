@@ -129,7 +129,7 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
         # for some reason the captured log includees line break here. But in the client it displays normal ->
         # could be because of the if-else to build this log
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents and \nmetainfo will be \ndeleted!"
+            f"Are you sure you want to modify the status of {project_name}? All its contents and \nmetainfo will be deleted!"
             in captured_output.out
         )
         assert "The project 'Test' is about to be Deleted." in captured_output.out

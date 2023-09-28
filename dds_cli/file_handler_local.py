@@ -202,6 +202,9 @@ class LocalFileHandler(fh.FileHandler):
                     )
                     LOG.debug("updated: %s", self.data[file])
 
+                self.data[file].update(
+                    {}
+                )
                 # If file not uploaded or overwrite option used:
                 # add file to status dict
                 status_dict[file] = {

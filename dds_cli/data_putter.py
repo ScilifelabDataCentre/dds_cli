@@ -69,7 +69,10 @@ def put(
         destination=destination,
     ) as putter:
         # Add call to API here - add files to db temporarily and get presigned urls  
-        putter.filehandler
+        putter.mark_upload_started()
+
+        import sys
+        sys.exit(1)
 
         # Progress object to keep track of progress tasks
         with Progress(

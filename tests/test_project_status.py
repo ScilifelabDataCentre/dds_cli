@@ -70,16 +70,14 @@ def test_fail_display_project_info(capsys: CaptureFixture):
         mock.get(DDSEndpoint.PROJ_INFO, status_code=403, json={})
         mock.post(DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json={})
 
-        with pytest.raises(DDSCLIException) as err_1:
-            with pytest.raises(ApiResponseError) as err_2:
-                with project_status.ProjectStatusManager(
-                    project=project_name, no_prompt=True, authenticate=False
-                ) as status_mngr:
-                    status_mngr.token = {}  # required, otherwise none
-                    status_mngr.update_status(new_status="Archived")
+        with pytest.raises(DDSCLIException) as err:
+            with project_status.ProjectStatusManager(
+                project=project_name, no_prompt=True, authenticate=False
+            ) as status_mngr:
+                status_mngr.token = {}  # required, otherwise none
+                status_mngr.update_status(new_status="Archived")
 
-            assert "No project information to display" in str(err_2.value)
-        assert "Failed to get project information" in str(err_1.value)
+        assert "Failed to get project information:" in str(err.value)
 
 
 def test_release_project(capsys: CaptureFixture):

@@ -52,6 +52,7 @@ class ProjectStatusManager(base.DDSBaseClass):
     def get_project_info(self):
         """Collect project information from API."""
         # Get info about a project from API
+
         response, _ = dds_cli.utils.perform_request(
             DDSEndpoint.PROJ_INFO,
             method="get",
@@ -61,9 +62,6 @@ class ProjectStatusManager(base.DDSBaseClass):
         )
 
         project_info = response.get("project_info")
-        if not project_info:
-            raise dds_cli.exceptions.ApiResponseError(message="No project information to display.")
-
         return project_info
 
     def get_status(self, show_history):

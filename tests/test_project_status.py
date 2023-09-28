@@ -133,7 +133,6 @@ def test_release_project(capsys: CaptureFixture):
 
 
 def check_output_project_info(new_status, captured_output, caplog_tuples=None):
-
     assert f"The project '{project_name}' is about to be {new_status}." in captured_output.out
     assert f"Title:  {returned_response_get_info['Title']}" in captured_output.out
     assert f"Description:    {returned_response_get_info['Description']}" in captured_output.out
@@ -210,7 +209,9 @@ def test_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
         # set confirmation object to true
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
         perform_archive_delete_operation(new_status="Deleted", confirmed=confirmed, mock=mock)
-        assert returned_response_deleted_ok["message"] in capsys.readouterr().out
+        captured_output = capsys.readouterr()
+
+        assert returned_response_deleted_ok["message"] in captured_output.out
         # check the rest of the project info is displayed correctly
         check_output_project_info(
             new_status="Deleted", captured_output=captured_output, caplog_tuples=None
@@ -226,7 +227,9 @@ def test_archive_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCap
         # set confirmation object to true
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
         perform_archive_delete_operation(new_status="Archived", confirmed=confirmed, mock=mock)
-        assert returned_response_archived_ok["message"] in capsys.readouterr().out
+        captured_output = capsys.readouterr()
+
+        assert returned_response_archived_ok["message"] in captured_output.out
         check_output_project_info(
             new_status="Archived", captured_output=captured_output, caplog_tuples=None
         )

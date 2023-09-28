@@ -128,8 +128,9 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
 
         captured_output = capsys.readouterr()
 
+        # for some reason the log includees a line break here
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents and metainfo will be"
+            f"Are you sure you want to modify the status of {project_name}? All its contents and \nmetainfo will be"
             in captured_output.out
         )
         assert "The project 'Test' is about to be Deleted." in captured_output.out

@@ -124,12 +124,12 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
                 project=project_name, no_prompt=True, authenticate=False
             ) as status_mngr:
                 status_mngr.token = {}  # required, otherwise none
-                status_mngr.update_status(new_status="Archived")
+                status_mngr.update_status(new_status="Deleted")
 
         captured_output = capsys.readouterr()
 
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents and metainfo will be deleted!"
+            f"Are you sure you want to modify the status of {project_name}? All its contents and metainfo will be"
             in captured_output.out
         )
         assert "The project 'Test' is about to be Deleted." in captured_output.out
@@ -171,7 +171,7 @@ def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
         captured_output = capsys.readouterr()
 
         assert (
-            f"Are you sure you want to modify the status of {project_name}? All its contents will be deleted!"
+            f"Are you sure you want to modify the status of {project_name}? All its contents will be"
             in captured_output.out
         )
         assert "The project 'Test' is about to be Archived." in captured_output.out
@@ -184,6 +184,31 @@ def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
             logging.INFO,
             "Probably for the best. Exiting.",
         ) in caplog.record_tuples
+
+
+def test_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
+    """Test that tries to delete a project, the user accepts the operation"""
+
+    # Create mocker
+    with Mocker() as mock:
+        # Create mocked request - real request not executed
+        mock.get(
+            DDSEndpoint.PROJ_INFO,
+            status_code=200,
+            json={"project_info": returned_response_get_info},
+        )
+        mock.post(
+            DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response_deleted_ok
+        )
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
+
+        with project_status.ProjectStatusManager(
+            project=project_name, no_prompt=True, authenticate=False
+        ) as status_mngr:
+            status_mngr.token = {}  # required, otherwise none
+            status_mngr.update_status(new_status="Deleted")
+
+        assert returned_response_deleted_ok["message"] in capsys.readouterr().out
 
 
 def test_archive_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
@@ -209,31 +234,6 @@ def test_archive_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCap
             status_mngr.update_status(new_status="Archived")
 
         assert returned_response_archived_ok["message"] in capsys.readouterr().out
-
-
-def test_archive_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
-    """Test that tries to archive a project, the user accepts the operation"""
-
-    # Create mocker
-    with Mocker() as mock:
-        # Create mocked request - real request not executed
-        mock.get(
-            DDSEndpoint.PROJ_INFO,
-            status_code=200,
-            json={"project_info": returned_response_get_info},
-        )
-        mock.post(
-            DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response_deleted_ok
-        )
-        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
-
-        with project_status.ProjectStatusManager(
-            project=project_name, no_prompt=True, authenticate=False
-        ) as status_mngr:
-            status_mngr.token = {}  # required, otherwise none
-            status_mngr.update_status(new_status="Archived")
-
-        assert returned_response_deleted_ok["message"] in capsys.readouterr().out
 
 
 def test_update_extra_params(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):

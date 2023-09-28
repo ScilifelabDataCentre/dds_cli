@@ -26,8 +26,7 @@ returned_response_archived_ok: typing.Dict = {
 #########
 
 
-def perform_archive_delete_operation(new_status, confimed, mock):
-
+def perform_archive_delete_operation(new_status, confirmed, mock):
     returned_response: typing.Dict = {
         "message": f"{project_name} updated to status {new_status}. An e-mail notification has been sent."
     }
@@ -117,7 +116,9 @@ def test_release_project(capsys: CaptureFixture):
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.PROJ_INFO, status_code=200, json={})
         mock.post(
-            DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response_available_ok
+            DDSEndpoint.UPDATE_PROJ_STATUS,
+            status_code=200,
+            json=returned_response_available_ok,
         )
 
         with project_status.ProjectStatusManager(
@@ -136,10 +137,9 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
     caplog.set_level(logging.INFO)
     # Create mocker
     with Mocker() as mock:
-
         # set confirmation object to false
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        perform_archive_delete_operation(new_status="Deleted", confimed=confirmed, mock=mock)
+        perform_archive_delete_operation(new_status="Deleted", confirmed=confirmed, mock=mock)
         captured_output = capsys.readouterr()
 
         # for some reason the captured log includees line break here. But in the client it displays normal ->
@@ -210,10 +210,9 @@ def test_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
     confirmed = True
     # Create mocker
     with Mocker() as mock:
-
         # set confirmation object to true
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        perform_archive_delete_operation(new_status="Deleted", confimed=confirmed, mock=mock)
+        perform_archive_delete_operation(new_status="Deleted", confirmed=confirmed, mock=mock)
         assert returned_response_deleted_ok["message"] in capsys.readouterr().out
 
 
@@ -229,7 +228,9 @@ def test_archive_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCap
             json={"project_info": returned_response_get_info},
         )
         mock.post(
-            DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response_archived_ok
+            DDSEndpoint.UPDATE_PROJ_STATUS,
+            status_code=200,
+            json=returned_response_archived_ok,
         )
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
 
@@ -254,7 +255,9 @@ def test_update_extra_params(capsys: CaptureFixture, monkeypatch, caplog: LogCap
             json={"project_info": returned_response_get_info},
         )
         mock.post(
-            DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response_archived_ok
+            DDSEndpoint.UPDATE_PROJ_STATUS,
+            status_code=200,
+            json=returned_response_archived_ok,
         )
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
 

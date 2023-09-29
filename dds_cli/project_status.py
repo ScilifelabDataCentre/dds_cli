@@ -114,7 +114,7 @@ class ProjectStatusManager(base.DDSBaseClass):
                 project_info = self.get_project_info()
             except exceptions.ApiResponseError:
                 dds_cli.utils.console.print(
-                    f"No project information could be displayed at this moment!"
+                    "No project information could be displayed at this moment!"
                 )
             else:
                 table = self.generate_project_table(project_info=project_info)

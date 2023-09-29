@@ -70,7 +70,6 @@ def perform_archive_delete_operation(new_status, confirmed, mock, json_project_i
 
 
 def check_output_project_info(new_status, captured_output, caplog_tuples=None):
-
     # Becuase of the bold and coloring formating, it is better to test for this keyworkd. Insetad of trying to find
     # the whole string The project 'project_1' is about to be Deleted.
     assert f"{project_name}" in captured_output.out
@@ -258,7 +257,6 @@ def test_no_project_info(capsys: CaptureFixture, monkeypatch):
     confirmed = True
     # Create mocker
     with Mocker() as mock:
-
         # set confirmation object to True
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
 

@@ -37,16 +37,19 @@ returned_response_available_ok: typing.Dict = {
 #########
 
 
-def perform_archive_delete_operation(new_status, confirmed, mock):
+def perform_archive_delete_operation(new_status, confirmed, mock, json_project_info=None):
     returned_response: typing.Dict = {
         "message": f"{project_name} updated to status {new_status}. An e-mail notification has been sent."
     }
+
+    if not json_project_info:
+        json_project_info = {"project_info": returned_response_get_info}
 
     # Create mocked request - real request not executed
     mock.get(
         DDSEndpoint.PROJ_INFO,
         status_code=200,
-        json={"project_info": returned_response_get_info},
+        json=json_project_info,
     )
     mock.post(DDSEndpoint.UPDATE_PROJ_STATUS, status_code=200, json=returned_response)
 
@@ -67,7 +70,11 @@ def perform_archive_delete_operation(new_status, confirmed, mock):
 
 
 def check_output_project_info(new_status, captured_output, caplog_tuples=None):
-    assert f"The project {project_name} is about to be {new_status}." in captured_output.out
+
+    # Becuase of the bold and coloring formating, it is better to test for this keyworkd. Insetad of trying to find
+    # the whole string The project 'project_1' is about to be Deleted.
+    assert f"{project_name}" in captured_output.out
+    assert f"{new_status}"
 
     assert "┏━━━━━" in captured_output.out  # A table has generated
     assert f"{returned_response_get_info['Project ID']}" in captured_output.out
@@ -242,6 +249,28 @@ def test_archive_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCap
         assert returned_response_archived_ok["message"] in captured_output.out
         check_output_project_info(
             new_status="Archived", captured_output=captured_output, caplog_tuples=None
+        )
+
+
+def test_no_project_info(capsys: CaptureFixture, monkeypatch):
+    """Test that check when it returns no project info during request"""
+
+    confirmed = True
+    # Create mocker
+    with Mocker() as mock:
+
+        # set confirmation object to True
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: True)
+
+        perform_archive_delete_operation(
+            new_status="Archived",
+            confirmed=confirmed,
+            mock=mock,
+            json_project_info={"project_info": {}},
+        )
+        assert (
+            "No project information could be displayed at this moment!. You can continue with the operation if you want"
+            in capsys.readouterr().out
         )
 
 

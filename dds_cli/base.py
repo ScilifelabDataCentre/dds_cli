@@ -148,6 +148,11 @@ class DDSBaseClass:
         )
 
         project_info = response.get("project_info")
+
+        # If not project info was retrieved from the request, throw an exception
+        if not project_info:
+            raise dds_cli.exceptions.ApiResponseError(message="No project information to display.")
+
         return project_info
 
     def generate_project_table(self, project_info):

@@ -110,9 +110,15 @@ class ProjectStatusManager(base.DDSBaseClass):
         # If the status is going to be archived or deleted. Ask for confirmation
         if new_status in ["Archived", "Deleted"]:
             # get project info
-            project_info = self.get_project_info()
-            table = self.generate_project_table(project_info=project_info)
-            dds_cli.utils.console.print(table)
+            try:
+                project_info = self.get_project_info()
+            except exceptions.ApiResponseError:
+                dds_cli.utils.console.print(
+                    f"No project information could be displayed at this moment!. You can continue with the operation if you want"
+                )
+            else:
+                table = self.generate_project_table(project_info=project_info)
+                dds_cli.utils.console.print(table)
 
             # Create confirmation prompt
             print_info = (
@@ -121,7 +127,8 @@ class ProjectStatusManager(base.DDSBaseClass):
             if new_status == "Deleted":
                 print_info += "and metainfo "
             print_info += (
-                "will be deleted!\n" f"The project {self.project} is about to be {new_status}.\n"
+                "will be deleted!\n"
+                f"The project '{self.project}' is about to be [b][blue]{new_status}[/blue][/b].\n"
             )
 
             dds_cli.utils.console.print(print_info)

@@ -267,7 +267,7 @@ def test_no_project_info(capsys: CaptureFixture, monkeypatch):
             json_project_info={"project_info": {}},
         )
         assert (
-            "No project information could be displayed at this moment!. You can continue with the operation if you want"
+            "No project information could be displayed at this moment!"
             in capsys.readouterr().out
         )
 

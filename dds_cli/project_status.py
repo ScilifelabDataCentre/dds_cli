@@ -2,10 +2,12 @@
 import datetime
 import logging
 import typing
+import sys
 
 # Installed
 import pytz
 import tzlocal
+import rich
 
 # Own modules
 from dds_cli import base
@@ -31,12 +33,14 @@ class ProjectStatusManager(base.DDSBaseClass):
     def __init__(
         self,
         project: str,
+        authenticate: bool = True,
         no_prompt: bool = False,
         token_path: str = None,
     ):
         """Handle actions regarding project status in the cli."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
+            authenticate=authenticate,
             no_prompt=no_prompt,
             method_check=False,
             token_path=token_path,
@@ -44,6 +48,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         self.project = project
 
     # Public methods ###################### Public methods #
+
     def get_status(self, show_history):
         """Get current status and status history of the project."""
         resp_json, _ = dds_cli.utils.perform_request(
@@ -101,6 +106,36 @@ class ProjectStatusManager(base.DDSBaseClass):
             extra_params["deadline"] = deadline
         if is_aborted:
             extra_params["is_aborted"] = is_aborted
+
+        # If the status is going to be archived or deleted. Ask for confirmation
+        if new_status in ["Archived", "Deleted"]:
+            # get project info
+            try:
+                project_info = self.get_project_info()
+            except exceptions.ApiResponseError:
+                dds_cli.utils.console.print(
+                    "No project information could be displayed at this moment!"
+                )
+            else:
+                table = self.generate_project_table(project_info=project_info)
+                dds_cli.utils.console.print(table)
+
+            # Create confirmation prompt
+            print_info = (
+                f"Are you sure you want to modify the status of {self.project}? All its contents "
+            )
+            if new_status == "Deleted":
+                print_info += "and metainfo "
+            print_info += (
+                "will be deleted!\n"
+                f"The project '{self.project}' is about to be [b][blue]{new_status}[/blue][/b].\n"
+            )
+
+            dds_cli.utils.console.print(print_info)
+
+            if not rich.prompt.Confirm.ask("-"):
+                LOG.info("Probably for the best. Exiting.")
+                sys.exit(0)
 
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.UPDATE_PROJ_STATUS,

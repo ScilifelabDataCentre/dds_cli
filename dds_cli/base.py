@@ -133,7 +133,7 @@ class DDSBaseClass:
 
         return True
 
-    # Private methods ############################### Private methods #
+    # Public methods ############################### Public methods #
 
     def get_project_info(self):
         """Collect project information from API."""

@@ -174,7 +174,7 @@ def put(
         if pathlib.Path(putter.failed_delivery_log).is_file():
             LOG.warning(
                 "Some uploaded files could not be added to the database %s.\n",
-                str(putter.failed_delivery_log)
+                str(putter.failed_delivery_log),
             )
             LOG.warning("Attempting to add them to the database.")
 

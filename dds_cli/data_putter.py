@@ -173,12 +173,13 @@ def put(
         # LOG.warning(f"test 1: {putter.filehandler.failed}")
         if pathlib.Path(putter.failed_delivery_log).is_file():
             LOG.warning(
-                f"Some uploaded files could not be added to the database {str(putter.failed_delivery_log)}.\nAttempting to add them to the database."
+                f"Some uploaded files could not be added to the database {str(putter.failed_delivery_log)}.\n"
+                "Attempting to add them to the database."
             )
 
             path_to_file = str(putter.failed_delivery_log)
-            with open(path_to_file, "r") as f:
-                failed = json.load(f)
+            with open(path_to_file, "r") as json_f:
+                failed = json.load(json_f)
 
             # remove from log any files that  failed for other reasons
             for file, values in failed.items():
@@ -209,35 +210,34 @@ def put(
                 raise dds_cli.exceptions.ApiResponseError(
                     message="Failed to add missing files to database."
                 )
-            else:
-                # check if files are uploaded in db
-                files = list(failed.keys())
-                files_in_db, _ = dds_cli.utils.perform_request(
-                    DDSEndpoint.FILE_MATCH,
-                    method="get",
-                    params={"project": putter.project},
-                    headers=putter.token,
-                    json=files,
-                    error_message="Failed getting information about previously uploaded files",
-                )
-                # API failure
-                if "files" not in files_in_db:
-                    raise exceptions.NoDataError("Files not returned from API.")
+            # check if files are uploaded in db
+            files = list(failed.keys())
+            files_in_db, _ = dds_cli.utils.perform_request(
+                DDSEndpoint.FILE_MATCH,
+                method="get",
+                params={"project": putter.project},
+                headers=putter.token,
+                json=files,
+                error_message="Failed getting information about previously uploaded files",
+            )
+            # API failure
+            if "files" not in files_in_db:
+                raise exceptions.NoDataError("Files not returned from API.")
 
-                # change status of files that are in db
-                for f in files:
-                    putter.status[f] = {
-                        "cancel": False,
-                        "started": False,
-                        "message": "",
-                        "failed_op": None,
-                        "put": {"started": False, "done": False},
-                        "add_file_db": {"started": False, "done": False},
-                    }
+            # change status of files that are in db
+            for f in files:
+                putter.status[f] = {
+                    "cancel": False,
+                    "started": False,
+                    "message": "",
+                    "failed_op": None,
+                    "put": {"started": False, "done": False},
+                    "add_file_db": {"started": False, "done": False},
+                }
 
-                dds_cli.utils.console.print(
-                    "\nAll the uploaded files successfuly added to the database."
-                )
+            dds_cli.utils.console.print(
+                "\nAll the uploaded files successfuly added to the database."
+            )
 
 
 ###############################################################################
@@ -477,23 +477,23 @@ class DataPutter(base.DDSBaseClass):
 
         # Send file info to API - post if new file, put if overwrite
         request_method = "put" if fileinfo["overwrite"] else "post"
-        # try:
-        #     response_json, _ = dds_cli.utils.perform_request(
-        #         DDSEndpoint.FILE_NEW,
-        #         method=request_method,
-        #         params=params,
-        #         json=file_info,
-        #         headers=self.token,
-        #         error_message=f"Failed to add file '{file}' to database",
-        #     )
-        #     added_to_db, message = (True, response_json)
-        # except (
-        #     dds_cli.exceptions.ApiRequestError,
-        #     dds_cli.exceptions.ApiResponseError,
-        #     dds_cli.exceptions.DDSCLIException,
-        # ) as err:
-        #     message = str(err)
-        #     LOG.warning(message)
+        try:
+            response_json, _ = dds_cli.utils.perform_request(
+                DDSEndpoint.FILE_NEW,
+                method=request_method,
+                params=params,
+                json=file_info,
+                headers=self.token,
+                error_message=f"Failed to add file '{file}' to database",
+            )
+            added_to_db, message = (True, response_json)
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            message = str(err)
+            LOG.warning(message)
         message = "test"
 
         return added_to_db, message

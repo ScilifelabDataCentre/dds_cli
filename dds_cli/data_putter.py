@@ -173,12 +173,13 @@ def put(
         # LOG.warning(f"test 1: {putter.filehandler.failed}")
         if pathlib.Path(putter.failed_delivery_log).is_file():
             LOG.warning(
-                f"Some uploaded files could not be added to the database {str(putter.failed_delivery_log)}.\n"
-                "Attempting to add them to the database."
+                "Some uploaded files could not be added to the database {}.\n",
+                str(putter.failed_delivery_log),
             )
+            LOG.warning("Attempting to add them to the database.")
 
             path_to_file = str(putter.failed_delivery_log)
-            with open(path_to_file, "r") as json_f:
+            with open(path_to_file, "r", encoding="utf-8") as json_f:
                 failed = json.load(json_f)
 
             # remove from log any files that  failed for other reasons
@@ -225,8 +226,8 @@ def put(
                 raise exceptions.NoDataError("Files not returned from API.")
 
             # change status of files that are in db
-            for f in files:
-                putter.status[f] = {
+            for file in files:
+                putter.status[file] = {
                     "cancel": False,
                     "started": False,
                     "message": "",

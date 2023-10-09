@@ -207,22 +207,33 @@ def put(
             message = response.get("message")
             if not message:
                 raise dds_cli.exceptions.ApiResponseError(
-                    message="No project information to display."
+                    message="Failed to add missing files to database."
                 )
             else:
-                # LOG.warning(f"status: {putter.status}")
-                # check if files are uploaded
-                files_in_db = putter.filehandler.check_previous_upload(token=putter.token)
-
-                # set new status
-                putter.status = putter.filehandler.create_upload_status_dict(
-                    existing_files=files_in_db
+                # check if files are uploaded in db
+                files = list(failed.keys())
+                files_in_db, _ = dds_cli.utils.perform_request(
+                    DDSEndpoint.FILE_MATCH,
+                    method="get",
+                    params={"project": putter.project},
+                    headers=putter.token,
+                    json=files,
+                    error_message="Failed getting information about previously uploaded files",
                 )
+                # API failure
+                if "files" not in files_in_db:
+                    raise exceptions.NoDataError("Files not returned from API.")
 
-                # remove the files from the 'failed' dictionary
-                for key in files_in_db.keys():
-                    if key in putter.filehandler.failed:
-                        del putter.filehandler.failed[key]
+                # change status of files that are in db
+                for f in files:
+                    putter.status[f] = {
+                        "cancel": False,
+                        "started": False,
+                        "message": "",
+                        "failed_op": None,
+                        "put": {"started": False, "done": False},
+                        "add_file_db": {"started": False, "done": False},
+                    }
 
                 dds_cli.utils.console.print(
                     "\nAll the uploaded files successfuly added to the database."

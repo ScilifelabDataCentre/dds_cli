@@ -302,3 +302,7 @@ _Nothing merged in CLI during this sprint_
 
 - GitHub Actions to generate the documentation fixed ([#1473])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1473)
 - Print project information and ask user for confirmation when deleting or archiving projects ([#1401])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1401)
+
+# 2023-10-02 - 2023-10-13
+
+- Added functionality to 'dds data put' for updating failes that failed to be added to the database ([#656])(https://github.com/ScilifelabDataCentre/dds_cli/pull/656)

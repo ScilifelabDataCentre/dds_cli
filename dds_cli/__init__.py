@@ -94,7 +94,7 @@ class DDSEndpoint:
     FILE_INFO = BASE_ENDPOINT + "/file/info"
     FILE_INFO_ALL = BASE_ENDPOINT + "/file/all/info"
     FILE_UPDATE = BASE_ENDPOINT + "/file/update"
-    UPDATE_FAILED_FILES = BASE_ENDPOINT + "/file/failed/update"
+    FILE_UPDATE_FAILED = BASE_ENDPOINT + "/file/failed/update"
 
     # Project specific urls
     PROJ_ACCESS = BASE_ENDPOINT + "/proj/access"

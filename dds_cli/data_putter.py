@@ -191,7 +191,7 @@ def put(
             params = {"project": putter.project}
             try:
                 response, _ = dds_cli.utils.perform_request(
-                    DDSEndpoint.UPDATE_FAILED_FILES,
+                    DDSEndpoint.FILE_UPDATE_FAILED,
                     method="put",
                     headers=putter.token,
                     params=params,
@@ -495,6 +495,6 @@ class DataPutter(base.DDSBaseClass):
         ) as err:
             message = str(err)
             LOG.warning(message)
-        message = "test"
+        # message = "test"
 
         return added_to_db, message

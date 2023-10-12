@@ -179,8 +179,7 @@ def put(
             )
             LOG.warning("Attempting to add them to the database.")
 
-            path_to_file = str(putter.failed_delivery_log)
-            with open(path_to_file, "r", encoding="utf-8") as json_f:
+            with putter.failed_delivery_log.open(mode= "r", encoding="utf-8") as json_f:
                 failed = json.load(json_f)
 
             # remove from log any files that  failed for other reasons

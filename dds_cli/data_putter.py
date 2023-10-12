@@ -170,7 +170,7 @@ def put(
                         for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]
                     ]
 
-        # Make a single database update for files that have failed 
+        # Make a single database update for files that have failed
         # Json file for failed files should only be created if there has been an error
         if putter.failed_delivery_log.is_file():
             LOG.warning(
@@ -179,7 +179,7 @@ def put(
             )
             LOG.warning("Attempting to add them to the database.")
 
-            with putter.failed_delivery_log.open(mode= "r", encoding="utf-8") as json_f:
+            with putter.failed_delivery_log.open(mode="r", encoding="utf-8") as json_f:
                 failed = json.load(json_f)
 
             # remove from log any files that  failed for other reasons

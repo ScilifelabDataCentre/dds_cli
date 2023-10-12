@@ -203,8 +203,7 @@ def put(
                 dds_cli.exceptions.ApiResponseError,
                 dds_cli.exceptions.DDSCLIException,
             ) as err:
-                message = str(err)
-                LOG.warning(message)
+                LOG.warning(str(err))
 
             message = response.get("message")
             if not message:

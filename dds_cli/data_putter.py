@@ -172,7 +172,7 @@ def put(
 
         # Make a single database update for files that have failed 
         # Json file for failed files should only be created if there has been an error
-        if pathlib.Path(putter.failed_delivery_log).is_file():
+        if putter.failed_delivery_log.is_file():
             LOG.warning(
                 "Some uploaded files could not be added to the database %s.\n",
                 str(putter.failed_delivery_log),

@@ -305,4 +305,4 @@ _Nothing merged in CLI during this sprint_
 
 # 2023-10-02 - 2023-10-13
 
-- Added functionality to 'dds data put' for updating failes that failed to be added to the database ([#656])(https://github.com/ScilifelabDataCentre/dds_cli/pull/656)
+- Make a single last request to update the database in the case of failed files during upload ([#656](https://github.com/ScilifelabDataCentre/dds_cli/pull/656)

@@ -170,7 +170,8 @@ def put(
                         for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]
                     ]
 
-        # LOG.warning(f"test 1: {putter.filehandler.failed}")
+        # Make a single database update for files that have failed 
+        # Json file for failed files should only be created if there has been an error
         if pathlib.Path(putter.failed_delivery_log).is_file():
             LOG.warning(
                 "Some uploaded files could not be added to the database %s.\n",

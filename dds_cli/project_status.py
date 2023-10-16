@@ -204,7 +204,15 @@ class ProjectStatusManager(base.DDSBaseClass):
             LOG.info("Probably for the best. Exiting.")
             sys.exit(0)
 
-        # TODO second call with confirmed flag
+        extra_params = {**extra_params, "confirmed": True, "new_deadline_in": extend_deadline}
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.UPDATE_PROJ_STATUS,
+            headers=self.token,
+            method="patch",
+            params={"project": self.project},
+            json=extra_params,
+        )
+        dds_cli.utils.console.print(f"Project {response_json.get('message')}")
 
 
 class ProjectBusyStatusManager(base.DDSBaseClass):

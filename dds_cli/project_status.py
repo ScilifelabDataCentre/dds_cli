@@ -148,6 +148,64 @@ class ProjectStatusManager(base.DDSBaseClass):
 
         dds_cli.utils.console.print(f"Project {response_json.get('message')}")
 
+    def extend_deadline(self):
+        extra_params = {"send_email": False}
+
+        # make a first call to fetch the project status and default deadline
+        response_json, _ = dds_cli.utils.perform_request(
+            endpoint=DDSEndpoint.UPDATE_PROJ_STATUS,
+            headers=self.token,
+            method="patch",
+            params={"project": self.project},
+            json=extra_params,
+        )
+
+        dds_cli.utils.console.print(
+            "You are about to extend the deadline of the following project:\n\n"
+        )
+        table = self.generate_project_table(project_info=response_json.get("project_info"))
+        dds_cli.utils.console.print(table)
+
+        default_unit_days = response_json.get("default_unit_days")
+        current_deadline = response_json.get("project_status").get("current_deadline")
+        print_info = f"\n\nCurrent deadline: [b][green]{current_deadline}[/green][/b]\n"
+        print_info += (
+            f"Default deadline extension: [b][green]{default_unit_days}[/green][/b] days\n"
+        )
+        dds_cli.utils.console.print(print_info)
+
+        answered = False
+        while not answered:
+            prompt_question = f"Enter the number of days you want to extend the project, the number of days has to be equal or same as [b][green]{response_json.get('default_unit_days')}[/green][/b].\n"
+            prompt_question += f"Or leave it empty to apply the default [b][green]{response_json.get('default_unit_days')} days [/green][/b]"
+            extend_deadline = rich.prompt.Prompt.ask(prompt_question)
+            try:
+                if extend_deadline == "" or int(extend_deadline) < response_json.get(
+                    "default_unit_days"
+                ):
+                    break
+                else:
+                    dds_cli.utils.console.print(
+                        "\n[b][red]The number of days has to be lower than the default deadline extension number[/b][/red]\n"
+                    )
+            except:
+                dds_cli.utils.console.print(
+                    "\n[b][red]Remember to write the number of days using numbers (dont use letters)[/b][/red]\n"
+                )
+                continue
+        extend_deadline = int(extend_deadline or default_unit_days)
+
+        print_info = f"\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation?. "
+        print_info += (
+            f"\nThis will extend the deadline by [b][blue]{extend_deadline} days[/b][/blue]."
+        )
+        print_info += "\nYou can only extend the data availability a maximun of [b][blue]3 times[/b][/blue], this consumes one of those times."
+        if not rich.prompt.Confirm.ask(print_info):
+            LOG.info("Probably for the best. Exiting.")
+            sys.exit(0)
+
+        # TODO second call with confirmed flag
+
 
 class ProjectBusyStatusManager(base.DDSBaseClass):
     """Project Busy Status manager class."""

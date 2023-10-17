@@ -178,8 +178,10 @@ class ProjectStatusManager(base.DDSBaseClass):
 
         prompt_question = (
             f"Enter the number of days you want to extend the project, "
-            f"the number of days has to be equal or same as [b][green]{default_unit_days}[/green][/b].\n"
-            f"Or leave it empty to apply the default [b][green]{default_unit_days} days [/green][/b]"
+            f"the number of days has to be equal or same as "
+            f"[b][green]{default_unit_days}[/green][/b].\n"
+            f"Or leave it empty to apply the default "
+            f"[b][green]{default_unit_days} days [/green][/b]"
         )
 
         dds_cli.utils.console.print(prompt_question)
@@ -192,14 +194,16 @@ class ProjectStatusManager(base.DDSBaseClass):
             extend_deadline = int(extend_deadline)
             if extend_deadline > default_unit_days:
                 dds_cli.utils.console.print(
-                    "\n[b][red]The number of days has to be lower than the default deadline extension number[/b][/red]\n"
+                    "\n[b][red]The number of days has to be lower than "
+                    "the default deadline extension number[/b][/red]\n"
                 )
                 LOG.info("Exiting the function, try again")
                 sys.exit(0)
 
         except ValueError:
             dds_cli.utils.console.print(
-                "\n[b][red]Remember to write the number of days using numbers (dont use letters)[/b][/red]\n"
+                "\n[b][red]Remember to write the number of days "
+                "using numbers (dont use letters)[/b][/red]\n"
             )
             LOG.info("Exiting the function, try again")
             sys.exit(0)
@@ -207,7 +211,8 @@ class ProjectStatusManager(base.DDSBaseClass):
         prompt_question = (
             f"\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation?. "
             f"\nThis will extend the deadline by [b][blue]{extend_deadline} days[/b][/blue]."
-            "\nYou can only extend the data availability a maximum of [b][blue]3 times[/b][/blue], this consumes one of those times."
+            "\nYou can only extend the data availability a maximum of "
+            "[b][blue]3 times[/b][/blue], this consumes one of those times."
         )
 
         dds_cli.utils.console.print(prompt_question)

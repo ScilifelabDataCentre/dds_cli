@@ -478,3 +478,41 @@ def test_extend_deadline_confirmed_ok(
         assert "You can only extend the data availability a maximum of" in captured_output.out
 
         check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+
+
+def test_extend_deadline_confirmed_ok_default_days(
+    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
+):
+    """test that the operation is performed with default days to extend"""
+
+    confirmed = True
+
+    # Create mocker
+    with Mocker() as mock:
+        # set confirmation object to false
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
+        # number of days to extend deadline
+        monkeypatch.setattr("rich.prompt.Prompt.ask", lambda question: "")
+
+        # Mock a dyanic request, the second call should return a different response thatn the first one (operation is confirmed)
+        mock.patch(
+            DDSEndpoint.UPDATE_PROJ_STATUS,
+            [
+                {"status_code": 200, "json": returned_response_extend_deadline_fetch_information},
+                {"status_code": 200, "json": returned_response_extend_deadline_ok},
+            ],
+        )
+
+        with project_status.ProjectStatusManager(
+            project=project_name, no_prompt=True, authenticate=False
+        ) as status_mngr:
+            status_mngr.token = {}  # required, otherwise none
+            status_mngr.extend_deadline()
+
+        captured_output = capsys.readouterr()
+        assert returned_response_extend_deadline_ok["message"] in captured_output.out
+        assert "This will extend the deadline by" in captured_output.out
+        assert f"{default_unit_days}" in captured_output.out
+        assert "You can only extend the data availability a maximum of" in captured_output.out
+
+        check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)

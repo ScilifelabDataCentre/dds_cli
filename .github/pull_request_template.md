@@ -10,11 +10,11 @@ If there is a field which you are unsure about, enter the edit mode of this desc
 
 ## 1. Description / Summary
 
-Updates PR template to this one.
+_Add a summary of the changes in this PR and the related issue._
 
 ## 2. Jira task / GitHub issue
 
-X
+_Link to the github issue or add the Jira task ID here._
 
 ## 3. Type of change
 

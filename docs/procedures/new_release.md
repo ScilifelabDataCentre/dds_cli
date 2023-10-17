@@ -21,7 +21,7 @@
 5. Push changelog and version change to branch
 6. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose your current branch where it says "Run workflow"
    - `rich-codex` will push changes to your branch; these commits _will not be signed_
-   - In order for you to merge these changes into the `dev`/`master` branch, all commits need to be signed:
+   - In order for you to merge these changes into the `dev` branch, all commits need to be signed:
      1. Pull the changes to your local branch
      2. Run the following command:
         ```bash

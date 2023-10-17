@@ -29,7 +29,7 @@ What _type of change(s)_ does the PR contain?
 - [ ] Bug fix <!-- Should be checked when a bug is fixed in existing functionality. If the bug fix also is a breaking change (see above), add info about that beside this check box. -->
 - [ ] Security Alert fix <!-- Should be checked if the PR attempts to solve a security vulnerability, e.g. reported by the "Security" tab in the repo. -->
 - [ ] Documentation <!-- Should be checked if the PR adds or updates the CLI documentation -- anything in docs/ directory. -->
-- [x] Workflow <!-- Should be checked if the PR includes a change in e.g. the github actions files (dds_cli/.github/*) or another type of workflow change. Anything that alters our or the codes workflow. -->
+- [ ] Workflow <!-- Should be checked if the PR includes a change in e.g. the github actions files (dds_cli/.github/*) or another type of workflow change. Anything that alters our or the codes workflow. -->
 - [ ] Tests **only** <!-- Should only be checked if the PR only contains tests, none of the other types of changes listed above. -->
 
 ## 4. Additional information

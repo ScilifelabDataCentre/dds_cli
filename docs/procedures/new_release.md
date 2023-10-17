@@ -1,7 +1,10 @@
 # How to create a new release
 
-1. Fork a new branch from `dev`
-2. Update the version [changelog](../../CHANGELOG.rst)
+1. Create a PR from `dev` to `master`: "New release". Use this for step 3.
+2. Fork a new branch from `dev`: ""
+3. Update the version [changelog](../../CHANGELOG.rst)
+
+    **Tip:** Use the PR to `master` (step 1) to see all changes since last release.
 
    - The new version should be at the top of the page
    - List the changes that the users will / may notice
@@ -11,7 +14,7 @@
 
    - _Minor changes, e.g. bug fix_: Minor version upgrade, e.g. `1.0.1 --> 1.0.2`
    - _Small changes, e.g. new feature_: Mid version upgrade, e.g. `1.1.0 --> 1.2.0`
-   - _Breaking changes or large new feature(s)_: Major version upgrade, e.g. `1.0.0 --> 2.0.0`
+   - _Breaking changes or large new feature(s)_: Major version upgrade, e.g. `1.0.0 --> 2.0.0` _SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE._
 
      > Will break if Web / API version not bumped as well
 

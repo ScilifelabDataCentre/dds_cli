@@ -1,6 +1,13 @@
 Changelog
 ==========
 
+.. _2.5.2:
+
+2.5.2 - 2023-10-25
+~~~~~~~~~~~~~~~~~~~
+
+- Updated command: `dds project status delete/archive` now prints project information and asks for confirmation from user. 
+
 .. _2.5.1:
 
 2.5.1 - 2023-09-25

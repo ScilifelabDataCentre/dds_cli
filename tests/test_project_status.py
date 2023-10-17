@@ -492,7 +492,7 @@ def test_extend_deadline_confirmed_ok_default_days(
         # set confirmation object to false
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
         # number of days to extend deadline
-        monkeypatch.setattr("rich.prompt.Prompt.ask", lambda question: "")
+        monkeypatch.setattr("rich.prompt.Prompt.ask", lambda question: None)
 
         # Mock a dyanic request, the second call should return a different response thatn the first one (operation is confirmed)
         mock.patch(

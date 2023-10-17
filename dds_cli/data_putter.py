@@ -191,7 +191,7 @@ def put(
             params = {"project": putter.project}
             try:
                 response, _ = dds_cli.utils.perform_request(
-                    DDSEndpoint.FILE_UPDATE_FAILED,
+                    DDSEndpoint.FILE_ADD_FAILED,
                     method="put",
                     headers=putter.token,
                     params=params,

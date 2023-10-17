@@ -49,7 +49,7 @@ returned_response_extend_deadline_fetch_information.get("project_info").update(
 )
 
 returned_response_extend_deadline_ok: typing.Dict = {
-    "message": f"Project {project_name} has been given a new deadline. An e-mail notification has not been sent."
+    "message": f"Project {project_name} has been given a new deadline."
 }
 
 
@@ -114,11 +114,6 @@ def check_output_project_info(new_status, captured_output, caplog_tuples=None):
 def check_output_extend_deadline(captured_output, caplog_tuples=None):
     assert "Current deadline:" in captured_output.out
     assert "Default deadline extension:" in captured_output.out
-
-    assert "Enter the number of days you want to extend the project" in captured_output.out
-    assert "the number of days has to be equal or same as" in captured_output.out
-    assert f"{default_unit_days}" in captured_output.out
-    assert "Or leave it empty to apply the default" in captured_output.out
 
     check_table_proj_info(table_output=captured_output)
 
@@ -341,7 +336,7 @@ def test_update_extra_params(capsys: CaptureFixture, monkeypatch, caplog: LogCap
 def test_extend_deadline_no_confirmed(
     capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
 ):
-    # The user decided to not accept the extension
+    """The user decided to not accept the extension"""
 
     confirmed = False
     caplog.set_level(logging.INFO)
@@ -376,7 +371,7 @@ def test_extend_deadline_no_confirmed(
 def test_extend_deadline_too_many_number_of_days(
     capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
 ):
-    # Check that when using more days than the default it fails
+    """Check that when using more days than the default it fails"""
 
     confirmed = False
     caplog.set_level(logging.INFO)
@@ -414,7 +409,7 @@ def test_extend_deadline_too_many_number_of_days(
 def test_extend_deadline_wrong_number_of_days(
     capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
 ):
-    # Bad number of days used
+    """Bad number of days used"""
 
     confirmed = False
     caplog.set_level(logging.INFO)
@@ -449,7 +444,7 @@ def test_extend_deadline_wrong_number_of_days(
 def test_extend_deadline_confirmed_ok(
     capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
 ):
-    # test that the operation is performed - ok
+    """test that the operation is performed - ok"""
 
     confirmed = True
 

@@ -2,7 +2,7 @@
 
 1. Create a PR from `dev` to `master`: "New release". Use this for step 3.
 2. Fork a new branch from `dev`: "New version & changelog"
-3. Update the version [changelog](../../CHANGELOG.rst)
+3. Update the version [changelog](../../CHANGELOG.rst) located at `dds_cli/CHANGELOG.rst`
 
    **Tip:** Use the PR to `master` (step 1) to see all changes since last release.
 

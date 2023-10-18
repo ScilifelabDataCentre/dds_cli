@@ -169,7 +169,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         #   'default_unit_days': 30,
         #   'project_info': {
         #       'Created by': 'First Unit User',
-        #       'Description': 'This is a test project. You will be able to upload to but NOT download from this project. Create a new project to test the entire system. ',
+        #       'Description': 'This is a test project',
         #       'Last updated': 'Wed, 18 Oct 2023 08:40:43 GMT',
         #       'PI': 'support@example.com',
         #       'Project ID': 'project_1',

@@ -163,11 +163,31 @@ class ProjectStatusManager(base.DDSBaseClass):
             params={"project": self.project},
             json=extra_params,
         )
+
+        # Structure of the response:
+        #   {
+        #   'default_unit_days': 30,
+        #   'project_info': {
+        #       'Created by': 'First Unit User',
+        #       'Description': 'This is a test project. You will be able to upload to but NOT download from this project. Create a new project to test the entire system. ',
+        #       'Last updated': 'Wed, 18 Oct 2023 08:40:43 GMT',
+        #       'PI': 'support@example.com',
+        #       'Project ID': 'project_1',
+        #       'Size': 0,
+        #       'Status': 'Available',
+        #       'Title': 'First Project'
+        #       },
+        #   'project_status': {
+        #       'current_deadline': 'Sat, 04 Nov 2023 23:59:59 GMT',
+        #       'current_status': 'Available'},
+        #   'warning': 'Operation must be confirmed before proceding.'
+        #   }
+
         # Extract default unit days and current deadline
         default_unit_days = response_json.get("default_unit_days")
         current_deadline = response_json.get("project_status").get("current_deadline")
 
-        # information about the project status and information
+        # print information about the project status and table with the project info
         print_info = (
             f"\nCurrent deadline: [b][green]{current_deadline}[/green][/b]\n"
             f"Default deadline extension: [b][green]{default_unit_days}[/green][/b] days\n"
@@ -176,6 +196,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         dds_cli.utils.console.print(table)
         dds_cli.utils.console.print(print_info)
 
+        # First question, number of days to extend the deadline
         prompt_question = (
             f"Enter the number of days you want to extend the project, "
             f"the number of days has to be equal or same as "
@@ -208,6 +229,7 @@ class ProjectStatusManager(base.DDSBaseClass):
             LOG.info("Exiting the function, try again")
             sys.exit(0)
 
+        # Second question, confirm operation
         prompt_question = (
             f"\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation?. "
             f"\nThis will extend the deadline by [b][blue]{extend_deadline} days[/b][/blue]."
@@ -220,7 +242,7 @@ class ProjectStatusManager(base.DDSBaseClass):
             LOG.info("Probably for the best. Exiting.")
             sys.exit(0)
 
-        # Update parameters for the request
+        # Update parameters for the second request
         extra_params = {**extra_params, "confirmed": True, "new_deadline_in": extend_deadline}
 
         response_json, _ = dds_cli.utils.perform_request(

@@ -44,10 +44,6 @@ returned_response_extend_deadline_fetch_information = {
     "warning": "Operation must be confirmed before proceding.",
     "project_status": {"current_deadline": deadline, "current_status": "Available"},
 }
-returned_response_extend_deadline_fetch_information.get("project_info").update(
-    {"Status": "Available"}
-)
-
 returned_response_extend_deadline_ok: typing.Dict = {
     "message": f"Project {project_name} has been given a new deadline."
 }
@@ -483,7 +479,7 @@ def test_extend_deadline_confirmed_ok(
 def test_extend_deadline_confirmed_ok_default_days(
     capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
 ):
-    """test that the operation is performed with default days to extend"""
+    """test that the operation is performed when the default days to extend is used"""
 
     confirmed = True
 

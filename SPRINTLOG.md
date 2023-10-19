@@ -302,3 +302,7 @@ _Nothing merged in CLI during this sprint_
 
 - GitHub Actions to generate the documentation fixed ([#1473])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1473)
 - Print project information and ask user for confirmation when deleting or archiving projects ([#1401])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1401)
+
+# 2023-10-16 - 2023-10-27
+
+- Change "Checksum verification successful. File integrity verified." info log to debug ([#662])(https://github.com/ScilifelabDataCentre/dds_cli/pull/661)

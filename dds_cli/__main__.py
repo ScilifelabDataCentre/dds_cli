@@ -1248,7 +1248,7 @@ def delete_project(click_ctx, project: str):
 # Options
 @project_option(required=True)
 @click.option(
-    "--new_deadline",
+    "--new-deadline",
     required=False,
     type=int,
     help="Number of days to extend the deadline.",

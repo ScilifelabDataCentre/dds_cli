@@ -212,20 +212,13 @@ class ProjectStatusManager(base.DDSBaseClass):
             # the input was an string --> convert to integer
             extend_deadline = int(extend_deadline)
             if extend_deadline > default_unit_days:
-                dds_cli.utils.console.print(
-                    "\n[b][red]The number of days has to be lower than "
-                    "the default deadline extension number[/b][/red]\n"
+                raise DDSCLIException(                    
+                    "\n[b][red]The number of days has to be lower than or equal to your unit's default: {default_unit_days}[/b][/red]\n"
                 )
-                LOG.info("Exiting the function, try again")
-                sys.exit(0)
-
         except ValueError:
-            dds_cli.utils.console.print(
-                "\n[b][red]Remember to write the number of days "
-                "using numbers (dont use letters)[/b][/red]\n"
+            raise DDSCLIException(
+                "\n[b][red]Invalid value. Remember to enter a digit (not letters) when being asked for the number of days.[/b][/red]\n"
             )
-            LOG.info("Exiting the function, try again")
-            sys.exit(0)
 
         # Second question, confirm operation
         prompt_question = (

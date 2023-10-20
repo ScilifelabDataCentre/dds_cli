@@ -221,7 +221,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         new_deadline_date = str(parse(current_deadline) + datetime.timedelta(days=new_deadline))
         prompt_question = (
             f"\nThe new deadline for project {project_id} will be: [b][blue]{new_deadline_date}[/b][/blue]"
-            "\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation?. "
+            "\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation? "
             "\nYou can only extend the data availability a maximum of "
             "[b][blue]3 times[/b][/blue], this consumes one of those times."
         )

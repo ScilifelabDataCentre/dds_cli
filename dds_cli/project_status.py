@@ -3,6 +3,7 @@ import datetime
 import logging
 import typing
 import sys
+from dateutil.parser import parse
 
 # Installed
 import pytz
@@ -210,16 +211,16 @@ class ProjectStatusManager(base.DDSBaseClass):
             new_deadline = int(new_deadline)
             if new_deadline > default_unit_days:
                 raise exceptions.DDSCLIException(
-                    f"\n[b][red]The number of days has to be lower than or equal to your unit's default: {default_unit_days}[/b][/red]\n"
+                    f"\n[b][red]The number of days has to be lower than or equal "
+                    "to your unit's default: {default_unit_days}[/b][/red]\n"
                 )
         except ValueError:
             raise exceptions.DDSCLIException(
-                "\n[b][red]Invalid value. Remember to enter a digit (not letters) when being asked for the number of days.[/b][/red]\n"
+                "\n[b][red]Invalid value. Remember to enter a digit (not letters)"
+                "when being asked for the number of days.[/b][/red]\n"
             )
 
         # Confirm operation question
-        from dateutil.parser import parse
-
         new_deadline_date = str(parse(current_deadline) + datetime.timedelta(days=new_deadline))
         prompt_question = (
             f"\nThe new deadline for project {project_id} will be: [b][blue]{new_deadline_date}[/b][/blue]"

@@ -214,11 +214,11 @@ class ProjectStatusManager(base.DDSBaseClass):
                     "\n[b][red]The number of days has to be lower than or equal "
                     f"to your unit's default: {default_unit_days}[/b][/red]\n"
                 )
-        except ValueError as e:
+        except ValueError as error:
             raise exceptions.DDSCLIException(
                 "\n[b][red]Invalid value. Remember to enter a digit (not letters)"
                 "when being asked for the number of days.[/b][/red]\n"
-            ) from e
+            ) from error
 
         # Confirm operation question
         new_deadline_date = str(parse(current_deadline) + datetime.timedelta(days=new_deadline))

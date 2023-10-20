@@ -202,10 +202,7 @@ class ProjectStatusManager(base.DDSBaseClass):
                 "How many days would you like to extend the project deadline with? "
                 f"Leave empty in order to choose the default ([b][green]{default_unit_days}[/green][/b])."
             )
-            new_deadline = rich.prompt.Prompt.ask(prompt_question)
-            if not new_deadline:
-                # Set new_deadline to default
-                new_deadline = default_unit_days
+            new_deadline = rich.prompt.Prompt.ask(prompt_question, default=default_unit_days)
         try:
             # the input was an string --> convert to integer
             new_deadline = int(new_deadline)

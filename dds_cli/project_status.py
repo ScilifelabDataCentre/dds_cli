@@ -149,9 +149,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         dds_cli.utils.console.print(f"Project {response_json.get('message')}")
 
     def extend_deadline(self):
-        """
-        Extend the project deadline
-        """
+        """Extend the project deadline."""
         # Define initial parameters
         extra_params = {"send_email": False}
 

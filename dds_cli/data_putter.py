@@ -233,8 +233,6 @@ def put(
                 else:
                     LOG.warning("All files were added to the database.")
 
-
-
             LOG.warning("files: %s", files)
             LOG.warning("files added: %s", files_added)
 

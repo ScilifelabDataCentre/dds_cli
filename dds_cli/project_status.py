@@ -199,7 +199,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         if not new_deadline:
             # Question number of days to extend the deadline
             prompt_question = (
-                f"How many days would you like to extend the project deadline with? "
+                "How many days would you like to extend the project deadline with? "
                 f"Leave empty in order to choose the default ([b][green]{default_unit_days}[/green][/b])."
             )
             new_deadline = rich.prompt.Prompt.ask(prompt_question)
@@ -211,20 +211,20 @@ class ProjectStatusManager(base.DDSBaseClass):
             new_deadline = int(new_deadline)
             if new_deadline > default_unit_days:
                 raise exceptions.DDSCLIException(
-                    f"\n[b][red]The number of days has to be lower than or equal "
-                    "to your unit's default: {default_unit_days}[/b][/red]\n"
+                    "\n[b][red]The number of days has to be lower than or equal "
+                    f"to your unit's default: {default_unit_days}[/b][/red]\n"
                 )
-        except ValueError:
+        except ValueError as e:
             raise exceptions.DDSCLIException(
                 "\n[b][red]Invalid value. Remember to enter a digit (not letters)"
                 "when being asked for the number of days.[/b][/red]\n"
-            )
+            ) from e
 
         # Confirm operation question
         new_deadline_date = str(parse(current_deadline) + datetime.timedelta(days=new_deadline))
         prompt_question = (
             f"\nThe new deadline for project {project_id} will be: [b][blue]{new_deadline_date}[/b][/blue]"
-            f"\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation?. "
+            "\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation?. "
             "\nYou can only extend the data availability a maximum of "
             "[b][blue]3 times[/b][/blue], this consumes one of those times."
         )

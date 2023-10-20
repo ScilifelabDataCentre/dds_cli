@@ -148,7 +148,7 @@ class ProjectStatusManager(base.DDSBaseClass):
 
         dds_cli.utils.console.print(f"Project {response_json.get('message')}")
 
-    def extend_deadline(self):
+    def extend_deadline(self, new_deadline=None):
         """Extend the project deadline."""
         # Define initial parameters
         extra_params = {"send_email": False}
@@ -184,7 +184,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         # Extract default unit days and current deadline
         default_unit_days = response_json.get("default_unit_days")
         current_deadline = response_json.get("project_status").get("current_deadline")
-
+        project_id = response_json.get("project_info").get("Project ID")
         # print information about the project status and table with the project info
         print_info = (
             f"\nCurrent deadline: [b][green]{current_deadline}[/green][/b]\n"
@@ -194,47 +194,46 @@ class ProjectStatusManager(base.DDSBaseClass):
         dds_cli.utils.console.print(table)
         dds_cli.utils.console.print(print_info)
 
-        # First question, number of days to extend the deadline
-        prompt_question = (
-            f"Enter the number of days you want to extend the project, "
-            f"the number of days has to be equal or same as "
-            f"[b][green]{default_unit_days}[/green][/b].\n"
-            f"Or leave it empty to apply the default "
-            f"[b][green]{default_unit_days} days [/green][/b]"
-        )
-
-        dds_cli.utils.console.print(prompt_question)
-        extend_deadline = rich.prompt.Prompt.ask("-")
-        if not extend_deadline:
-            # Set extend_deadline to default
-            extend_deadline = default_unit_days
+        # If it wasnt provided during the command click, ask the user for the new deadline
+        if not new_deadline:
+            # Question number of days to extend the deadline
+            prompt_question = (
+                f"How many days would you like to extend the project deadline with? "
+                f"Leave empty in order to choose the default ([b][green]{default_unit_days}[/green][/b])."
+            )
+            new_deadline = rich.prompt.Prompt.ask(prompt_question)
+            if not new_deadline:
+                # Set new_deadline to default
+                new_deadline = default_unit_days
         try:
             # the input was an string --> convert to integer
-            extend_deadline = int(extend_deadline)
-            if extend_deadline > default_unit_days:
-                raise DDSCLIException(                    
-                    "\n[b][red]The number of days has to be lower than or equal to your unit's default: {default_unit_days}[/b][/red]\n"
+            new_deadline = int(new_deadline)
+            if new_deadline > default_unit_days:
+                raise exceptions.DDSCLIException(
+                    f"\n[b][red]The number of days has to be lower than or equal to your unit's default: {default_unit_days}[/b][/red]\n"
                 )
         except ValueError:
-            raise DDSCLIException(
+            raise exceptions.DDSCLIException(
                 "\n[b][red]Invalid value. Remember to enter a digit (not letters) when being asked for the number of days.[/b][/red]\n"
             )
 
-        # Second question, confirm operation
+        # Confirm operation question
+        from dateutil.parser import parse
+
+        new_deadline_date = str(parse(current_deadline) + datetime.timedelta(days=new_deadline))
         prompt_question = (
+            f"\nThe new deadline for project {project_id} will be: [b][blue]{new_deadline_date}[/b][/blue]"
             f"\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation?. "
-            f"\nThis will extend the deadline by [b][blue]{extend_deadline} days[/b][/blue]."
             "\nYou can only extend the data availability a maximum of "
             "[b][blue]3 times[/b][/blue], this consumes one of those times."
         )
 
-        dds_cli.utils.console.print(prompt_question)
-        if not rich.prompt.Confirm.ask("-"):
+        if not rich.prompt.Confirm.ask(prompt_question):
             LOG.info("Probably for the best. Exiting.")
             sys.exit(0)
 
         # Update parameters for the second request
-        extra_params = {**extra_params, "confirmed": True, "new_deadline_in": extend_deadline}
+        extra_params = {**extra_params, "confirmed": True, "new_deadline_in": new_deadline}
 
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.UPDATE_PROJ_STATUS,
@@ -245,8 +244,10 @@ class ProjectStatusManager(base.DDSBaseClass):
         )
         message = response_json.get("message")
         if not message:
-            raise DDSCLIException("No message returned from API. Cannot verify extension of project deadline.")
-            
+            raise exceptions.DDSCLIException(
+                "No message returned from API. Cannot verify extension of project deadline."
+            )
+
         LOG.info(message)
 
 

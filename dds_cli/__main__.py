@@ -1247,12 +1247,17 @@ def delete_project(click_ctx, project: str):
 @project_status.command(name="extend", no_args_is_help=True)
 # Options
 @project_option(required=True)
+@click.option(
+    "--new_deadline",
+    required=False,
+    type=int,
+    help="Number of days to extend the deadline.",
+)
 @click.pass_obj
-def extend_deadline(click_ctx, project: str):
+def extend_deadline(click_ctx, project: str, new_deadline: int):
     """Extend a project deadline by an specified number of days.
 
-    This operation has the same effect as expiring and re-releasing a project
-    Therefore it consumes one of the possible expiring times.
+    It consumes one of allowed times to renew data access.
     """
     try:
         with dds_cli.project_status.ProjectStatusManager(
@@ -1260,7 +1265,7 @@ def extend_deadline(click_ctx, project: str):
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as updater:
-            updater.extend_deadline()
+            updater.extend_deadline(new_deadline=new_deadline)
     except (
         dds_cli.exceptions.APIError,
         dds_cli.exceptions.AuthenticationError,

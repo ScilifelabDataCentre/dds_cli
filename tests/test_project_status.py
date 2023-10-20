@@ -387,7 +387,7 @@ def test_extend_deadline_too_many_number_of_days(
         )
 
         # capture system exit on not accepting operation
-        with pytest.raises(SystemExit):
+        with pytest.raises(DDSCLIException) as err:
             with project_status.ProjectStatusManager(
                 project=project_name, no_prompt=True, authenticate=False
             ) as status_mngr:
@@ -395,11 +395,8 @@ def test_extend_deadline_too_many_number_of_days(
                 status_mngr.extend_deadline()
 
         captured_output = capsys.readouterr()
-        assert (
-            "The number of days has to be lower than the default deadline extension number"
-            in captured_output.out
-        )
         check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+        assert "The number of days has to be lower" in str(err.value)
 
 
 def test_extend_deadline_wrong_number_of_days(
@@ -425,7 +422,7 @@ def test_extend_deadline_wrong_number_of_days(
         )
 
         # capture system exit on not accepting operation
-        with pytest.raises(SystemExit):
+        with pytest.raises(DDSCLIException) as err:
             with project_status.ProjectStatusManager(
                 project=project_name, no_prompt=True, authenticate=False
             ) as status_mngr:
@@ -433,8 +430,8 @@ def test_extend_deadline_wrong_number_of_days(
                 status_mngr.extend_deadline()
 
         captured_output = capsys.readouterr()
-        assert "Remember to write the number of days using numbers" in captured_output.out
         check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+        assert "Remember to enter a digit (not letters)" in str(err.value)
 
 
 def test_extend_deadline_confirmed_ok(
@@ -443,6 +440,7 @@ def test_extend_deadline_confirmed_ok(
     """test that the operation is performed - ok"""
 
     confirmed = True
+    caplog.set_level(logging.INFO)
 
     # Create mocker
     with Mocker() as mock:
@@ -468,11 +466,11 @@ def test_extend_deadline_confirmed_ok(
             status_mngr.extend_deadline()
 
         captured_output = capsys.readouterr()
-        assert returned_response_extend_deadline_ok["message"] in captured_output.out
-        assert "This will extend the deadline by" in captured_output.out
-        assert f"{days_to_extend}" in captured_output.out
-        assert "You can only extend the data availability a maximum of" in captured_output.out
-
+        assert (
+            "dds_cli.project_status",
+            logging.INFO,
+            returned_response_extend_deadline_ok["message"],
+        ) in caplog.record_tuples
         check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
 
 
@@ -482,7 +480,7 @@ def test_extend_deadline_confirmed_ok_default_days(
     """test that the operation is performed when the default days to extend is used"""
 
     confirmed = True
-
+    caplog.set_level(logging.INFO)
     # Create mocker
     with Mocker() as mock:
         # set confirmation object to true
@@ -506,9 +504,10 @@ def test_extend_deadline_confirmed_ok_default_days(
             status_mngr.extend_deadline()
 
         captured_output = capsys.readouterr()
-        assert returned_response_extend_deadline_ok["message"] in captured_output.out
-        assert "This will extend the deadline by" in captured_output.out
-        assert f"{default_unit_days}" in captured_output.out
-        assert "You can only extend the data availability a maximum of" in captured_output.out
+        assert (
+            "dds_cli.project_status",
+            logging.INFO,
+            returned_response_extend_deadline_ok["message"],
+        ) in caplog.record_tuples
 
         check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)

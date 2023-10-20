@@ -305,5 +305,5 @@ _Nothing merged in CLI during this sprint_
 
 # 2023-10-16 - 2023-10-27
 
-- Added a new command to match with the new extend deadline endpoint ([#661])(https://github.com/ScilifelabDataCentre/dds_cli/pull/661)
-- Change "Checksum verification successful. File integrity verified." logging level from INFO to DEBUG in order to not print for all files ([#662])(https://github.com/ScilifelabDataCentre/dds_cli/pull/661)
+- Change "Checksum verification successful. File integrity verified." logging level from INFO to DEBUG in order to not print for all files ([#662])(https://github.com/ScilifelabDataCentre/dds_cli/pull/662)
+- New command `dds project status extend` to allow extension of project deadline ([#661])(https://github.com/ScilifelabDataCentre/dds_cli/pull/661)

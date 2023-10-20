@@ -243,7 +243,11 @@ class ProjectStatusManager(base.DDSBaseClass):
             params={"project": self.project},
             json=extra_params,
         )
-        dds_cli.utils.console.print(f"Project {response_json.get('message')}")
+        message = response_json.get("message")
+        if not message:
+            raise DDSCLIException("No message returned from API. Cannot verify extension of project deadline.")
+            
+        LOG.info(message)
 
 
 class ProjectBusyStatusManager(base.DDSBaseClass):

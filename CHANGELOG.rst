@@ -6,7 +6,8 @@ Changelog
 2.5.2 - 2023-10-25
 ~~~~~~~~~~~~~~~~~~~
 
-- Updated command: `dds project status delete/archive` now prints project information and asks for confirmation from user. 
+- Updated command: `dds project status delete/archive` now prints project information and asks for confirmation from user.
+- "Checksum verification successful" is not printed when file integrity is verified (unless `-v` option is used); Only prints in case of error.
 
 .. _2.5.1:
 

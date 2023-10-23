@@ -45,6 +45,11 @@ returned_response_extend_deadline_fetch_information = {
     "warning": "Operation must be confirmed before proceding.",
     "project_status": {"current_deadline": deadline, "current_status": "Available"},
 }
+returned_response_extend_deadline_fetch_information_in_progress = {
+    **returned_response_extend_deadline_fetch_information,
+    "project_status": {"current_status": "In progress"},
+}
+
 returned_response_extend_deadline_ok: typing.Dict = {
     "message": f"Project {project_name} has been given a new deadline."
 }
@@ -366,33 +371,29 @@ def test_extend_deadline_no_confirmed(
             )
 
 
-def test_no_msg_returned_request(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
-    """Error - no message returned from request"""
+def test_extend_deadline_no_available(
+    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
+):
+    """If the project is not in status available the operation should fail"""
 
-    confirmed = True
+    confirmed = False
     caplog.set_level(logging.INFO)
 
     # Create mocker
     with Mocker() as mock:
-        # set confirmation object to true
+        # set confirmation object to false
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
         # Set number of days to extend deadline - Bc of the default value in the function we need to create a mock answer
         with unittest.mock.patch("rich.prompt.IntPrompt.ask") as deadline:
-            deadline.return_value = 1
+            deadline.return_value = 2
 
-            # Mock a dyanic request, the second call should return a different response thatn the first one (operation is confirmed)
+            # Create first mocked request - not confirmed
             mock.patch(
                 DDSEndpoint.UPDATE_PROJ_STATUS,
-                [
-                    {
-                        "status_code": 200,
-                        "json": returned_response_extend_deadline_fetch_information,
-                    },
-                    {"status_code": 200, "json": {}},  # empty response
-                ],
+                status_code=200,
+                json=returned_response_extend_deadline_fetch_information_in_progress,
             )
 
-            # capture system exit on not accepting operation
             with pytest.raises(DDSCLIException) as err:
                 with project_status.ProjectStatusManager(
                     project=project_name, no_prompt=True, authenticate=False
@@ -400,9 +401,10 @@ def test_no_msg_returned_request(capsys: CaptureFixture, monkeypatch, caplog: Lo
                     status_mngr.token = {}  # required, otherwise none
                     status_mngr.extend_deadline()
 
-            captured_output = capsys.readouterr()
-            check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
-            assert "No message returned from API." in str(err.value)
+            assert (
+                "You can only extend the deadline for a project that has the status 'Available'."
+                in str(err.value)
+            )
 
 
 def test_extend_deadline_confirmed_ok(
@@ -446,3 +448,43 @@ def test_extend_deadline_confirmed_ok(
                 returned_response_extend_deadline_ok["message"],
             ) in caplog.record_tuples
             check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+
+
+def test_extend_deadline_no_msg_returned_request(
+    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
+):
+    """Error - no message returned from request"""
+
+    confirmed = True
+    caplog.set_level(logging.INFO)
+
+    # Create mocker
+    with Mocker() as mock:
+        # set confirmation object to true
+        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
+        # Set number of days to extend deadline - Bc of the default value in the function we need to create a mock answer
+        with unittest.mock.patch("rich.prompt.IntPrompt.ask") as deadline:
+            deadline.return_value = 1
+
+            # Mock a dyanic request, the second call should return a different response thatn the first one (operation is confirmed)
+            mock.patch(
+                DDSEndpoint.UPDATE_PROJ_STATUS,
+                [
+                    {
+                        "status_code": 200,
+                        "json": returned_response_extend_deadline_fetch_information,
+                    },
+                    {"status_code": 200, "json": {}},  # empty response
+                ],
+            )
+
+            with pytest.raises(DDSCLIException) as err:
+                with project_status.ProjectStatusManager(
+                    project=project_name, no_prompt=True, authenticate=False
+                ) as status_mngr:
+                    status_mngr.token = {}  # required, otherwise none
+                    status_mngr.extend_deadline()
+
+            captured_output = capsys.readouterr()
+            check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+            assert "No message returned from API." in str(err.value)

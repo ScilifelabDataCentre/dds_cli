@@ -183,9 +183,24 @@ class ProjectStatusManager(base.DDSBaseClass):
 
         # Check that the returned information was ok
         keys = ["project_info", "project_status", "default_unit_days"]
-        project_info, project_status, default_unit_days, *_ = dds_cli.utils.get_required_in_response(keys=keys, response=response_json)
+        (
+            project_info,
+            project_status,
+            default_unit_days,
+            *_,
+        ) = dds_cli.utils.get_required_in_response(keys=keys, response=response_json)
 
         # Check and extract the required information for the operation
+        current_status, *_ = dds_cli.utils.get_required_in_response(
+            keys=["current_status"], response=project_status
+        )
+
+        # if the project is still in progress it won't have a current_deadline parameter
+        if not current_status == "Available":
+            raise exceptions.DDSCLIException(
+                "You can only extend the deadline for a project that has the status 'Available'."
+            )
+
         current_deadline, *_ = dds_cli.utils.get_required_in_response(
             keys=["current_deadline"], response=project_status
         )
@@ -207,12 +222,13 @@ class ProjectStatusManager(base.DDSBaseClass):
             # Question number of days to extend the deadline
             prompt_question = (
                 "How many days would you like to extend the project deadline with? "
-                f"Leave empty in order to choose the default"
+                "Leave empty in order to choose the default"
             )
             new_deadline = rich.prompt.IntPrompt.ask(prompt_question, default=default_unit_days)
 
         # Confirm operation question
         new_deadline_date = parse(current_deadline) + datetime.timedelta(days=new_deadline)
+        new_deadline_date = new_deadline_date.strftime("%d/%m/%Y, %H:%M:%S")
         prompt_question = (
             f"\nThe new deadline for project {project_id} will be: [b][blue]{new_deadline_date}[/b][/blue]"
             "\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation? "

@@ -183,18 +183,16 @@ class ProjectStatusManager(base.DDSBaseClass):
 
         # Check that the returned information was ok
         keys = ["project_info", "project_status", "default_unit_days"]
-        dds_cli.utils.get_required_in_response(keys=keys, response=response_json)
-        default_unit_days = response_json.get("default_unit_days")
+        project_info, project_status, default_unit_days, *_ = dds_cli.utils.get_required_in_response(keys=keys, response=response_json)
 
         # Check and extract the required information for the operation
-        current_deadline = dds_cli.utils.get_required_in_response(
-            keys=["current_deadline"], response=response_json.get("project_status")
+        current_deadline, *_ = dds_cli.utils.get_required_in_response(
+            keys=["current_deadline"], response=project_status
         )
-        project_id = dds_cli.utils.get_required_in_response(
-            keys=["Project ID"], response=response_json.get("project_info")
+        project_id, *_ = dds_cli.utils.get_required_in_response(
+            keys=["Project ID"], response=project_info
         )
-        current_deadline = current_deadline[0]
-        project_id = project_id[0]
+
         # print information about the project status and table with the project info
         print_info = (
             f"\nCurrent deadline: [b][green]{current_deadline}[/green][/b]\n"

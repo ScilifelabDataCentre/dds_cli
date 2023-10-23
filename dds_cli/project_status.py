@@ -179,13 +179,22 @@ class ProjectStatusManager(base.DDSBaseClass):
         #   'project_status': {
         #       'current_deadline': 'Sat, 04 Nov 2023 23:59:59 GMT',
         #       'current_status': 'Available'},
-        #   'warning': 'Operation must be confirmed before proceding.'
         #   }
 
-        # Extract default unit days and current deadline
+        # Check that the returned information was ok
+        keys = ["project_info", "project_status", "default_unit_days"]
+        dds_cli.utils.get_required_in_response(keys=keys, response=response_json)
         default_unit_days = response_json.get("default_unit_days")
-        current_deadline = response_json.get("project_status").get("current_deadline")
-        project_id = response_json.get("project_info").get("Project ID")
+
+        # Check and extract the required information for the operation
+        current_deadline = dds_cli.utils.get_required_in_response(
+            keys=["current_deadline"], response=response_json.get("project_status")
+        )
+        project_id = dds_cli.utils.get_required_in_response(
+            keys=["Project ID"], response=response_json.get("project_info")
+        )
+        current_deadline = current_deadline[0]
+        project_id = project_id[0]
         # print information about the project status and table with the project info
         print_info = (
             f"\nCurrent deadline: [b][green]{current_deadline}[/green][/b]\n"
@@ -202,20 +211,7 @@ class ProjectStatusManager(base.DDSBaseClass):
                 "How many days would you like to extend the project deadline with? "
                 f"Leave empty in order to choose the default ([b][green]{default_unit_days}[/green][/b])"
             )
-            new_deadline = rich.prompt.Prompt.ask(prompt_question, default=default_unit_days)
-        try:
-            # the input was an string --> convert to integer
-            new_deadline = int(new_deadline)
-            if new_deadline > default_unit_days:
-                raise exceptions.DDSCLIException(
-                    "\n[b][red]The number of days has to be lower than or equal "
-                    f"to your unit's default: {default_unit_days}[/b][/red]\n"
-                )
-        except ValueError as error:
-            raise exceptions.DDSCLIException(
-                "\n[b][red]Invalid value. Remember to enter a digit (not letters)"
-                "when being asked for the number of days.[/b][/red]\n"
-            ) from error
+            new_deadline = rich.prompt.IntPrompt.ask(prompt_question, default=default_unit_days)
 
         # Confirm operation question
         new_deadline_date = str(parse(current_deadline) + datetime.timedelta(days=new_deadline))

@@ -1,5 +1,6 @@
 import pytest
 from requests_mock.mocker import Mocker
+import unittest
 from dds_cli import DDSEndpoint
 from dds_cli import project_status
 from _pytest.logging import LogCaptureFixture
@@ -341,97 +342,67 @@ def test_extend_deadline_no_confirmed(
     with Mocker() as mock:
         # set confirmation object to false
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        # number of days to extend deadline
-        monkeypatch.setattr("rich.prompt.Prompt.ask", lambda question: 2)
+        # Set number of days to extend deadline - Bc of the default value in the function we need to create a mock answer
+        with unittest.mock.patch("rich.prompt.IntPrompt.ask") as deadline:
+            deadline.return_value = 2
 
-        # Create first mocked request - not confirmed
-        mock.patch(
-            DDSEndpoint.UPDATE_PROJ_STATUS,
-            status_code=200,
-            json=returned_response_extend_deadline_fetch_information,
-        )
+            # Create first mocked request - not confirmed
+            mock.patch(
+                DDSEndpoint.UPDATE_PROJ_STATUS,
+                status_code=200,
+                json=returned_response_extend_deadline_fetch_information,
+            )
 
-        # capture system exit on not accepting operation
-        with pytest.raises(SystemExit):
-            with project_status.ProjectStatusManager(
-                project=project_name, no_prompt=True, authenticate=False
-            ) as status_mngr:
-                status_mngr.token = {}  # required, otherwise none
-                status_mngr.extend_deadline()
+            # capture system exit on not accepting operation
+            with pytest.raises(SystemExit):
+                with project_status.ProjectStatusManager(
+                    project=project_name, no_prompt=True, authenticate=False
+                ) as status_mngr:
+                    status_mngr.token = {}  # required, otherwise none
+                    status_mngr.extend_deadline()
 
-        check_output_extend_deadline(
-            captured_output=capsys.readouterr(), caplog_tuples=caplog.record_tuples
-        )
+            check_output_extend_deadline(
+                captured_output=capsys.readouterr(), caplog_tuples=caplog.record_tuples
+            )
 
 
-def test_extend_deadline_too_many_number_of_days(
-    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
-):
-    """Check that when using more days than the default it fails"""
+def test_no_msg_returned_request(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
+    """Error - no message returned from request"""
 
-    confirmed = False
+    confirmed = True
     caplog.set_level(logging.INFO)
 
     # Create mocker
     with Mocker() as mock:
-        # set confirmation object to false
+        # set confirmation object to true
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        # number of days to extend deadline
-        monkeypatch.setattr("rich.prompt.Prompt.ask", lambda question: default_unit_days + 10)
+        # Set number of days to extend deadline - Bc of the default value in the function we need to create a mock answer
+        with unittest.mock.patch("rich.prompt.IntPrompt.ask") as deadline:
+            deadline.return_value = 1
 
-        # Create first mocked request - not confirmed
-        mock.patch(
-            DDSEndpoint.UPDATE_PROJ_STATUS,
-            status_code=200,
-            json=returned_response_extend_deadline_fetch_information,
-        )
+            # Mock a dyanic request, the second call should return a different response thatn the first one (operation is confirmed)
+            mock.patch(
+                DDSEndpoint.UPDATE_PROJ_STATUS,
+                [
+                    {
+                        "status_code": 200,
+                        "json": returned_response_extend_deadline_fetch_information,
+                    },
+                    {"status_code": 200, "json": {}},  # empty response
+                ],
+            )
 
-        # capture system exit on not accepting operation
-        with pytest.raises(DDSCLIException) as err:
-            with project_status.ProjectStatusManager(
-                project=project_name, no_prompt=True, authenticate=False
-            ) as status_mngr:
-                status_mngr.token = {}  # required, otherwise none
-                status_mngr.extend_deadline()
+            # capture system exit on not accepting operation
+            with pytest.raises(DDSCLIException) as err:
+                with project_status.ProjectStatusManager(
+                    project=project_name, no_prompt=True, authenticate=False
+                ) as status_mngr:
+                    status_mngr.token = {}  # required, otherwise none
+                    status_mngr.extend_deadline()
 
-        captured_output = capsys.readouterr()
-        check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
-        assert "The number of days has to be lower" in str(err.value)
-
-
-def test_extend_deadline_wrong_number_of_days(
-    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
-):
-    """Bad number of days used"""
-
-    confirmed = False
-    caplog.set_level(logging.INFO)
-
-    # Create mocker
-    with Mocker() as mock:
-        # set confirmation object to false
-        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        # number of days to extend deadline
-        monkeypatch.setattr("rich.prompt.Prompt.ask", lambda question: "5 days")
-
-        # Create first mocked request - not confirmed
-        mock.patch(
-            DDSEndpoint.UPDATE_PROJ_STATUS,
-            status_code=200,
-            json=returned_response_extend_deadline_fetch_information,
-        )
-
-        # capture system exit on not accepting operation
-        with pytest.raises(DDSCLIException) as err:
-            with project_status.ProjectStatusManager(
-                project=project_name, no_prompt=True, authenticate=False
-            ) as status_mngr:
-                status_mngr.token = {}  # required, otherwise none
-                status_mngr.extend_deadline()
-
-        captured_output = capsys.readouterr()
-        check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
-        assert "Remember to enter a digit (not letters)" in str(err.value)
+            captured_output = capsys.readouterr()
+            check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+            assert "No message returned from API." in str(err.value)
 
 
 def test_extend_deadline_confirmed_ok(
@@ -446,68 +417,32 @@ def test_extend_deadline_confirmed_ok(
     with Mocker() as mock:
         # set confirmation object to true
         monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        # number of days to extend deadline
-        days_to_extend = default_unit_days - 1
-        monkeypatch.setattr("rich.prompt.Prompt.ask", lambda question: days_to_extend)
+        # Set number of days to extend deadline - Bc of the default value in the function we need to create a mock answer
+        with unittest.mock.patch("rich.prompt.IntPrompt.ask") as deadline:
+            deadline.return_value = default_unit_days - 1
 
-        # Mock a dyanic request, the second call should return a different response thatn the first one (operation is confirmed)
-        mock.patch(
-            DDSEndpoint.UPDATE_PROJ_STATUS,
-            [
-                {"status_code": 200, "json": returned_response_extend_deadline_fetch_information},
-                {"status_code": 200, "json": returned_response_extend_deadline_ok},
-            ],
-        )
+            # Mock a dyanic request, the second call should return a different response thatn the first one (operation is confirmed)
+            mock.patch(
+                DDSEndpoint.UPDATE_PROJ_STATUS,
+                [
+                    {
+                        "status_code": 200,
+                        "json": returned_response_extend_deadline_fetch_information,
+                    },
+                    {"status_code": 200, "json": returned_response_extend_deadline_ok},
+                ],
+            )
 
-        with project_status.ProjectStatusManager(
-            project=project_name, no_prompt=True, authenticate=False
-        ) as status_mngr:
-            status_mngr.token = {}  # required, otherwise none
-            status_mngr.extend_deadline()
+            with project_status.ProjectStatusManager(
+                project=project_name, no_prompt=True, authenticate=False
+            ) as status_mngr:
+                status_mngr.token = {}  # required, otherwise none
+                status_mngr.extend_deadline()
 
-        captured_output = capsys.readouterr()
-        assert (
-            "dds_cli.project_status",
-            logging.INFO,
-            returned_response_extend_deadline_ok["message"],
-        ) in caplog.record_tuples
-        check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
-
-
-def test_extend_deadline_confirmed_ok_default_days(
-    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
-):
-    """test that the operation is performed when the default days to extend is used"""
-
-    confirmed = True
-    caplog.set_level(logging.INFO)
-    # Create mocker
-    with Mocker() as mock:
-        # set confirmation object to true
-        monkeypatch.setattr("rich.prompt.Confirm.ask", lambda question: confirmed)
-        # number of days to extend deadline is None - user didnt wrote anything
-        monkeypatch.setattr("rich.prompt.Prompt.ask", lambda question: None)
-
-        # Mock a dyanic request, the second call should return a different response thatn the first one (operation is confirmed)
-        mock.patch(
-            DDSEndpoint.UPDATE_PROJ_STATUS,
-            [
-                {"status_code": 200, "json": returned_response_extend_deadline_fetch_information},
-                {"status_code": 200, "json": returned_response_extend_deadline_ok},
-            ],
-        )
-
-        with project_status.ProjectStatusManager(
-            project=project_name, no_prompt=True, authenticate=False
-        ) as status_mngr:
-            status_mngr.token = {}  # required, otherwise none
-            status_mngr.extend_deadline()
-
-        captured_output = capsys.readouterr()
-        assert (
-            "dds_cli.project_status",
-            logging.INFO,
-            returned_response_extend_deadline_ok["message"],
-        ) in caplog.record_tuples
-
-        check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+            captured_output = capsys.readouterr()
+            assert (
+                "dds_cli.project_status",
+                logging.INFO,
+                returned_response_extend_deadline_ok["message"],
+            ) in caplog.record_tuples
+            check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)

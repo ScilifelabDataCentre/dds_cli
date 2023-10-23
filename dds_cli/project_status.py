@@ -198,7 +198,7 @@ class ProjectStatusManager(base.DDSBaseClass):
             f"\nCurrent deadline: [b][green]{current_deadline}[/green][/b]\n"
             f"Default deadline extension: [b][green]{default_unit_days}[/green][/b] days\n"
         )
-        table = self.generate_project_table(project_info=response_json.get("project_info"))
+        table = self.generate_project_table(project_info=project_info)
         dds_cli.utils.console.print(table)
         dds_cli.utils.console.print(print_info)
 

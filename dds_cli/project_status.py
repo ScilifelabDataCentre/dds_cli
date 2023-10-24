@@ -250,6 +250,7 @@ class ProjectStatusManager(base.DDSBaseClass):
             method="patch",
             params={"project": self.project},
             json=extra_params,
+            error_message="Failed to extend project deadline",
         )
         message = response_json.get("message")
         if not message:

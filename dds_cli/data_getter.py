@@ -221,15 +221,20 @@ class DataGetter(base.DDSBaseClass):
         params = {"project": self.project}
 
         # Send file info to API
-        response_json, _ = dds_cli.utils.perform_request(
-            DDSEndpoint.FILE_UPDATE,
-            method="put",
-            params=params,
-            json=filename,
-            headers=self.token,
-            error_message="Failed to update file information",
-        )
-
-        updated_in_db, message = (True, response_json["message"])
+        try:
+            response_json, _ = dds_cli.utils.perform_request(
+                DDSEndpoint.FILE_UPDATE,
+                method="put",
+                params=params,
+                json=filename,
+                headers=self.token,
+                error_message="Failed to update file information",
+            )
+        except dds_cli.exceptions.ApiRequestError as err:
+            updated_in_db = False
+            message = str(err)
+        else:
+            updated_in_db = True
+            message = response_json["message"]
 
         return updated_in_db, message

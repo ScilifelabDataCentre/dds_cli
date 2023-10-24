@@ -165,6 +165,8 @@ def perform_request(
         request_method = requests.post
     elif method == "delete":
         request_method = requests.delete
+    elif method == "patch":
+        request_method = requests.patch
 
     def transform_paths(json_input):
         """Make paths serializable."""

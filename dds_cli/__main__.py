@@ -1196,28 +1196,22 @@ def archive_project(click_ctx, project: str, abort: bool = False):
 
     Use the `--abort` flag to indicate that something has gone wrong in the project.
     """
-    proceed_deletion = (
-        True
-        if click_ctx.get("NO_PROMPT", False)
-        else dds_cli.utils.get_deletion_confirmation(action="archive", project=project)
-    )
-    if proceed_deletion:
-        try:
-            with dds_cli.project_status.ProjectStatusManager(
-                project=project,
-                no_prompt=click_ctx.get("NO_PROMPT", False),
-                token_path=click_ctx.get("TOKEN_PATH"),
-            ) as updater:
-                updater.update_status(new_status="Archived", is_aborted=abort)
-        except (
-            dds_cli.exceptions.APIError,
-            dds_cli.exceptions.AuthenticationError,
-            dds_cli.exceptions.DDSCLIException,
-            dds_cli.exceptions.ApiResponseError,
-            dds_cli.exceptions.ApiRequestError,
-        ) as err:
-            LOG.error(err)
-            sys.exit(1)
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as updater:
+            updater.update_status(new_status="Archived", is_aborted=abort)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
 
 
 # -- dds project status delete -- #
@@ -1231,28 +1225,56 @@ def delete_project(click_ctx, project: str):
     Certain meta data is kept (nothing sensitive) and it will still be listed in your projects. All
     data within the project is deleted. You cannot revert this change.
     """
-    proceed_deletion = (
-        True
-        if click_ctx.get("NO_PROMPT", False)
-        else dds_cli.utils.get_deletion_confirmation(action="delete", project=project)
-    )
-    if proceed_deletion:
-        try:
-            with dds_cli.project_status.ProjectStatusManager(
-                project=project,
-                no_prompt=click_ctx.get("NO_PROMPT", False),
-                token_path=click_ctx.get("TOKEN_PATH"),
-            ) as updater:
-                updater.update_status(new_status="Deleted")
-        except (
-            dds_cli.exceptions.APIError,
-            dds_cli.exceptions.AuthenticationError,
-            dds_cli.exceptions.DDSCLIException,
-            dds_cli.exceptions.ApiResponseError,
-            dds_cli.exceptions.ApiRequestError,
-        ) as err:
-            LOG.error(err)
-            sys.exit(1)
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as updater:
+            updater.update_status(new_status="Deleted")
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
+
+
+# -- dds project status extend -- #
+@project_status.command(name="extend", no_args_is_help=True)
+# Options
+@project_option(required=True)
+@click.option(
+    "--new-deadline",
+    required=False,
+    type=int,
+    help="Number of days to extend the deadline.",
+)
+@click.pass_obj
+def extend_deadline(click_ctx, project: str, new_deadline: int):
+    """Extend a project deadline by an specified number of days.
+
+    It consumes one of allowed times to renew data access.
+    """
+    try:
+        with dds_cli.project_status.ProjectStatusManager(
+            project=project,
+            no_prompt=click_ctx.get("NO_PROMPT", False),
+            token_path=click_ctx.get("TOKEN_PATH"),
+        ) as updater:
+            updater.extend_deadline(new_deadline=new_deadline)
+    except (
+        dds_cli.exceptions.APIError,
+        dds_cli.exceptions.AuthenticationError,
+        dds_cli.exceptions.DDSCLIException,
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        LOG.error(err)
+        sys.exit(1)
 
 
 # -- dds project status busy -- #

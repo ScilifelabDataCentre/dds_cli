@@ -133,6 +133,43 @@ class DDSBaseClass:
 
         return True
 
+    # Public methods ############################### Public methods #
+
+    def get_project_info(self):
+        """Collect project information from API."""
+
+        # Get info about a project from API
+        response, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.PROJ_INFO,
+            method="get",
+            headers=self.token,
+            params={"project": self.project},
+            error_message="Failed to get project information",
+        )
+
+        project_info = response.get("project_info")
+
+        # If not project info was retrieved from the request, throw an exception
+        if not project_info:
+            raise dds_cli.exceptions.ApiResponseError(message="No project information to display.")
+
+        return project_info
+
+    def generate_project_table(self, project_info):
+        """Generate a table from some project info provided"""
+
+        # Print project info table
+        table = dds_cli.utils.create_table(
+            title="Project information.",
+            columns=["Project ID", "Created by", "Status", "Last updated", "Size"],
+            rows=[
+                project_info,
+            ],
+            caption=f"Information about project {project_info['Project ID']}",
+        )
+
+        return table
+
     # Private methods ############################### Private methods #
     def __get_safespring_keys(self):
         """Get safespring keys."""

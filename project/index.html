@@ -396,6 +396,27 @@ data within the project is deleted. You cannot revert this change.</p>
 </dd></dl>
 
 </section>
+<section id="dds-project-status-extend">
+<h3>extend<a class="headerlink" href="#dds-project-status-extend" title="Permalink to this headline">¶</a></h3>
+<p>Extend a project deadline by an specified number of days.</p>
+<p>It consumes one of allowed times to renew data access.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>project<span class="w"> </span>status<span class="w"> </span>extend<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-extend-p">
+<span id="cmdoption-dds-project-status-extend-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-status-extend-p" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Project ID.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-project-status-extend-new-deadline">
+<span class="sig-name descname"><span class="pre">--new-deadline</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;new_deadline&gt;</span></span><a class="headerlink" href="#cmdoption-dds-project-status-extend-new-deadline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of days to extend the deadline.</p>
+</dd></dl>
+
+</section>
 <section id="dds-project-status-release">
 <h3>release<a class="headerlink" href="#dds-project-status-release" title="Permalink to this headline">¶</a></h3>
 <p>Change project status to ‘Available’.</p>
@@ -464,7 +485,7 @@ additional data to the project. Data cannot be deleted. Data cannot be overwritt
 
 
 
-<p class="blurb">Version: 2.5.1</p>
+<p class="blurb">Version: 2.5.2</p>
 
 
 

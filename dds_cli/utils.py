@@ -201,11 +201,11 @@ def perform_request(
         )
     except requests.exceptions.RequestException as err:
         if isinstance(err, requests.exceptions.ConnectionError):
-            error_message += ": The database seems to be down."
+            error_message += f": The database seems to be down -- \n{err}"
         elif isinstance(err, requests.exceptions.Timeout):
             error_message += ": The request timed out."
         else:
-            error_message += f": Unknown request error -- \n {err}"
+            error_message += f": Unknown request error -- \n{err}"
         raise dds_cli.exceptions.ApiRequestError(message=error_message)
 
     # Get and parse project specific errors

@@ -192,8 +192,6 @@ def perform_request(
             timeout=timeout,
         )
         response_json = response.json()
-        if endpoint == DDSEndpoint.FILE_UPDATE:
-            raise requests.exceptions.RequestException
     except simplejson.JSONDecodeError as err:
         raise dds_cli.exceptions.ApiResponseError(
             message=(

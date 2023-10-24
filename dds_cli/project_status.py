@@ -229,7 +229,7 @@ class ProjectStatusManager(base.DDSBaseClass):
 
         # Confirm operation question
         new_deadline_date = parse(current_deadline) + datetime.timedelta(days=new_deadline)
-        new_deadline_date = new_deadline_date.strftime("%d/%m/%Y, %H:%M:%S")
+        new_deadline_date = new_deadline_date.strftime("%a,%d %b %Y %H:%M:%S")
         prompt_question = (
             f"\nThe new deadline for project {project_id} will be: [b][blue]{new_deadline_date}[/b][/blue]"
             "\n\n[b][blue]Are you sure [/b][/blue]you want to perform this operation? "

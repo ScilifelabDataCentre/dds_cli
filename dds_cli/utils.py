@@ -5,7 +5,7 @@ import pathlib
 import typing
 import http
 from typing import Dict, List, Union
-import logging 
+import logging
 
 import requests
 import rich.console

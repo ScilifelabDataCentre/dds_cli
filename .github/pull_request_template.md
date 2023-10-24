@@ -10,11 +10,11 @@ If there is a field which you are unsure about, enter the edit mode of this desc
 
 ## 1. Description / Summary
 
-Updates PR template to this one.
+_Add a summary of the changes in this PR and the related issue._
 
 ## 2. Jira task / GitHub issue
 
-X
+_Link to the github issue or add the Jira task ID here._
 
 ## 3. Type of change
 
@@ -29,7 +29,7 @@ What _type of change(s)_ does the PR contain?
 - [ ] Bug fix <!-- Should be checked when a bug is fixed in existing functionality. If the bug fix also is a breaking change (see above), add info about that beside this check box. -->
 - [ ] Security Alert fix <!-- Should be checked if the PR attempts to solve a security vulnerability, e.g. reported by the "Security" tab in the repo. -->
 - [ ] Documentation <!-- Should be checked if the PR adds or updates the CLI documentation -- anything in docs/ directory. -->
-- [x] Workflow <!-- Should be checked if the PR includes a change in e.g. the github actions files (dds_cli/.github/*) or another type of workflow change. Anything that alters our or the codes workflow. -->
+- [ ] Workflow <!-- Should be checked if the PR includes a change in e.g. the github actions files (dds_cli/.github/*) or another type of workflow change. Anything that alters our or the codes workflow. -->
 - [ ] Tests **only** <!-- Should only be checked if the PR only contains tests, none of the other types of changes listed above. -->
 
 ## 4. Additional information
@@ -38,7 +38,7 @@ What _type of change(s)_ does the PR contain?
 - [ ] Blocking PRs <!-- Should be checked if there are blocking PRs or other tasks that need to be merged prior to this. Add link to PR or Jira card if this is the case. -->
   - [ ] Merged <!-- Should be checked if the "Blocking PRs" box was checked AND all blocking PRs have been merged / fixed. -->
 - [ ] PR to `master` branch: _If checked, read [the release instructions](https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/docs/procedures/new_release.md)_ <!-- Check this if the PR is made to the `master` branch. Only the `dev` branch should be doing this. -->
-  - [ ] I have followed steps 1-7. <!-- Should be checked if the "PR to `master` branch" box is checked AND the specified steps in the release instructions have been followed. -->
+  - [ ] I have followed steps 1-8. <!-- Should be checked if the "PR to `master` branch" box is checked AND the specified steps in the release instructions have been followed. -->
 
 ## 5. Actions / Scans
 

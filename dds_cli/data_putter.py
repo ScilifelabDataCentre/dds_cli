@@ -207,36 +207,16 @@ def put(
                 dds_cli.exceptions.DDSCLIException,
             ) as err:
                 LOG.warning(str(err))
-            # if not response:
-            #     raise dds_cli.exceptions.ApiResponseError(
-            #         message="Failed to add missing files to database."
-            #     )
             files_added = response.get("files_added")
             message = response.get("message")
-
-            # get a list of files from the log
             files = list(failed.keys())
 
             if message:
-                # adding the files failed
-                # check why
-                # if the files already exist in the database, then everything is fine and we need to clean status
-                for file, error in message.items():
-                    if error["error"] == "File already in database":
-                        print(f"Error for {file}: {error['error']}")
-                # LOG.warning("Message from API: %s", message)
-            if files_added:
-                missing_files = [file for file in files if file not in files_added]
-                if missing_files:
-                    print("The following files are missing:", missing_files)
-                    # raise exceptions.NoDataError("Some files could not be added to the database.")
-                else:
-                    LOG.warning("All files were added to the database.")
+                LOG.warning("Some files failed to be added")
+            else:
+                final_message = "\nAll the uploaded files successfuly added to the database."
 
-            LOG.warning("files: %s", files)
-            LOG.warning("files added: %s", files_added)
-
-            for file in files:
+            for file in files_added:
                 putter.status[file] = {
                     "cancel": False,
                     "started": False,
@@ -245,9 +225,8 @@ def put(
                     "put": {"started": False, "done": False},
                     "add_file_db": {"started": False, "done": False},
                 }
-            dds_cli.utils.console.print(
-                "\nAll the uploaded files successfuly added to the database."
-            )
+
+            dds_cli.utils.console.print(final_message)
 
 
 ###############################################################################
@@ -504,6 +483,6 @@ class DataPutter(base.DDSBaseClass):
         # ) as err:
         #     message = str(err)
         #     LOG.warning(message)
-        message = "test"
+        message = "bla bla bla"
 
         return added_to_db, message

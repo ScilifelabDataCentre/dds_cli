@@ -174,59 +174,21 @@ def put(
         # Json file for failed files should only be created if there has been an error
         if putter.failed_delivery_log.is_file():
             LOG.warning(
-                "Some uploaded files could not be added to the database %s.\n",
+                "Some file uploads experienced issues. The errors have been saved to the following file: %s.\n"
+                "Investigating possible automatic solutions. Do not cancel the upload.",
                 str(putter.failed_delivery_log),
             )
-            LOG.warning("Attempting to add the file to the database.")
-
             try:
-                with putter.failed_delivery_log.open(mode="r", encoding="utf-8") as json_f:
-                    failed = json.load(json_f)
-            except Exception as e:
-                LOG.error(f"Failed to load failed delivery log: {e}")
-                failed = {}
-            # remove from log any files that  failed for other reasons
-            for file, values in failed.items():
-                if values.get("status", {}).get("failed_op") != "add_file_db":
-                    failed.pop(file)
-
-            # send failed to API endpoint
-            params = {"project": putter.project}
-            try:
-                response, _ = dds_cli.utils.perform_request(
-                    DDSEndpoint.FILE_ADD_FAILED,
-                    method="put",
-                    headers=putter.token,
-                    params=params,
-                    json=failed,
-                    error_message="Failed to add missing files",
-                )
+                putter.retry_add_file_db()
             except (
                 dds_cli.exceptions.ApiRequestError,
                 dds_cli.exceptions.ApiResponseError,
                 dds_cli.exceptions.DDSCLIException,
+                Exception,
             ) as err:
-                LOG.warning(str(err))
-            files_added = response.get("files_added")
-            message = response.get("message")
-            files = list(failed.keys())
-
-            if message:
-                LOG.warning("Some files failed to be added")
+                LOG.warning(err)
             else:
-                final_message = "\nAll the uploaded files successfuly added to the database."
-
-            for file in files_added:
-                putter.status[file] = {
-                    "cancel": False,
-                    "started": False,
-                    "message": "",
-                    "failed_op": None,
-                    "put": {"started": False, "done": False},
-                    "add_file_db": {"started": False, "done": False},
-                }
-
-            dds_cli.utils.console.print(final_message)
+                LOG.debug("Database retry finished.")
 
 
 ###############################################################################
@@ -486,3 +448,59 @@ class DataPutter(base.DDSBaseClass):
         message = "bla bla bla"
 
         return added_to_db, message
+
+    def retry_add_file_db(self):
+        """Attempting to save the files to the database.
+
+        This sends info to the API on all files that have been uploaded
+        but where the 'add_file_db' failed for some reason.
+        """
+        LOG.info("Attempting to add the file to the database.")
+
+        # Load json from file
+        try:
+            with self.failed_delivery_log.open(mode="r", encoding="utf-8") as json_f:
+                failed = json.load(json_f)
+        except Exception as e:
+            raise dds_cli.exceptions.DDSCLIException(message=f"Failed to load file info: {e}")
+
+        # Only keep 'add_file_db' as failed operation
+        for file, values in failed.copy().items():
+            if values.get("status", {}).get("failed_op") != "add_file_db":
+                failed.pop(file)
+        if len(failed) == 0:
+            raise dds_cli.exceptions.DDSCLIException(
+                message="No files failed due to 'add_file_db'."
+            )
+
+        # Send failed file info to API endpoint
+        response, _ = dds_cli.utils.perform_request(
+            DDSEndpoint.FILE_ADD_FAILED,
+            method="put",
+            headers=self.token,
+            params={"project": self.project},
+            json=failed,
+            error_message="Failed to add missing files",
+        )
+
+        # Get info from response
+        message = response.get("message")
+        files_added = response.get("files_added")
+
+        # Get successfully added files
+        if len(files_added) == len(failed):
+            LOG.info("All files were successfully added to the database.")
+        elif len(message) == len(failed):
+            LOG.warning("The retry did not add any of the failed files to the database.")
+        else:
+            LOG.warning("Some files failed to be updated in the database.")
+
+        # Update status
+        for file in files_added:
+            self.status[file].update(
+                {
+                    "cancel": False,
+                    "failed_op": None,
+                    "message": "Added with 'retry_add_file_db'",
+                }
+            )

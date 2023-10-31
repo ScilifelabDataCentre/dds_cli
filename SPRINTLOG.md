@@ -300,9 +300,17 @@ _Nothing merged in CLI during this sprint_
 
 # 2023-09-18 - 2023-09-29
 
-- GitHub Actions to generate the documentation fixed ([#1473])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1473)
-- Print project information and ask user for confirmation when deleting or archiving projects ([#1401])(https://scilifelab.atlassian.net/jira/software/projects/DDS/boards/13?selectedIssue=DDS-1401)
+- GitHub Actions to generate the documentation fixed ([#650](https://github.com/ScilifelabDataCentre/dds_cli/pull/650))
+- Print project information and ask user for confirmation when deleting or archiving projects ([#655](https://github.com/ScilifelabDataCentre/dds_cli/pull/655))
 
 # 2023-10-02 - 2023-10-13
 
+_Empty sprint_
+
+# 2023-10-16 - 2023-11-03 (Longer sprint due to OKR prep and höstlov)
+
+- Change "Checksum verification successful. File integrity verified." logging level from INFO to DEBUG in order to not print for all files ([#662](https://github.com/ScilifelabDataCentre/dds_cli/pull/662))
+- New command `dds project status extend` to allow extension of project deadline ([#661](https://github.com/ScilifelabDataCentre/dds_cli/pull/661))
+- New version: 2.5.2 ([#660](https://github.com/ScilifelabDataCentre/dds_cli/pull/660))
+- Catch `ApiRequestError` in `update_db` in order to get more error information ([#663](https://github.com/ScilifelabDataCentre/dds_cli/pull/663))
 - Make a single last request to update the database in the case of failed files during upload ([#656](https://github.com/ScilifelabDataCentre/dds_cli/pull/656)

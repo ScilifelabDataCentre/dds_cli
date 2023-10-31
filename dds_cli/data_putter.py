@@ -184,7 +184,6 @@ def put(
                 dds_cli.exceptions.ApiRequestError,
                 dds_cli.exceptions.ApiResponseError,
                 dds_cli.exceptions.DDSCLIException,
-                Exception,
             ) as err:
                 LOG.warning(err)
             else:
@@ -428,24 +427,23 @@ class DataPutter(base.DDSBaseClass):
 
         # Send file info to API - post if new file, put if overwrite
         request_method = "put" if fileinfo["overwrite"] else "post"
-        # try:
-        #     response_json, _ = dds_cli.utils.perform_request(
-        #         DDSEndpoint.FILE_NEW,
-        #         method=request_method,
-        #         params=params,
-        #         json=file_info,
-        #         headers=self.token,
-        #         error_message=f"Failed to add file '{file}' to database",
-        #     )
-        #     added_to_db, message = (True, response_json)
-        # except (
-        #     dds_cli.exceptions.ApiRequestError,
-        #     dds_cli.exceptions.ApiResponseError,
-        #     dds_cli.exceptions.DDSCLIException,
-        # ) as err:
-        #     message = str(err)
-        #     LOG.warning(message)
-        message = "bla bla bla"
+        try:
+            response_json, _ = dds_cli.utils.perform_request(
+                DDSEndpoint.FILE_NEW,
+                method=request_method,
+                params=params,
+                json=file_info,
+                headers=self.token,
+                error_message=f"Failed to add file '{file}' to database",
+            )
+            added_to_db, message = (True, response_json)
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            message = str(err)
+            LOG.warning(message)
 
         return added_to_db, message
 

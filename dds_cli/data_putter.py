@@ -459,8 +459,8 @@ class DataPutter(base.DDSBaseClass):
         try:
             with self.failed_delivery_log.open(mode="r", encoding="utf-8") as json_f:
                 failed = json.load(json_f)
-        except Exception as e:
-            raise dds_cli.exceptions.DDSCLIException(message=f"Failed to load file info: {e}")
+        except Exception as err:
+            raise dds_cli.exceptions.DDSCLIException(message=f"Failed to load file info: {err}")
 
         # Only keep 'add_file_db' as failed operation
         for file, values in failed.copy().items():

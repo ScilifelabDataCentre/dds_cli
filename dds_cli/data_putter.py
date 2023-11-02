@@ -487,7 +487,9 @@ class DataPutter(base.DDSBaseClass):
 
         # Get successfully added files
         if len(files_added) == len(failed):
-            LOG.info("All files were successfully added to the database.")
+            LOG.info(
+                "All successfully uploaded files were successfully added to the database during the retry."
+            )
         elif len(message) == len(failed):
             LOG.warning("The retry did not add any of the failed files to the database.")
         else:

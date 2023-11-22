@@ -314,3 +314,7 @@ _Empty sprint_
 - New version: 2.5.2 ([#660](https://github.com/ScilifelabDataCentre/dds_cli/pull/660))
 - Catch `ApiRequestError` in `update_db` in order to get more error information ([#663](https://github.com/ScilifelabDataCentre/dds_cli/pull/663))
 - Make a single last request to update the database in the case of failed files during upload ([#656](https://github.com/ScilifelabDataCentre/dds_cli/pull/656)
+
+# 2023-11-06 - 2023-11-17
+
+- New version: 2.6.0 ([#666](https://github.com/ScilifelabDataCentre/dds_cli/pull/666))

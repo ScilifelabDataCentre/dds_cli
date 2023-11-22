@@ -1,6 +1,13 @@
 Changelog
 ==========
 
+.. _2.6.0:
+
+2.6.0 - 2023-10-25
+~~~~~~~~~~~~~~~~~~~
+
+- `dds data put` updated: If files uploaded successfully, but there are issues with saving the info to the database, the system performs a final bulk attempt.
+
 .. _2.5.2:
 
 2.5.2 - 2023-10-25

@@ -19,89 +19,88 @@
         font-weight: 700;
     }
 
-    .terminal-2215143453-matrix {
+    .terminal-346232205-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-2215143453-title {
+    .terminal-346232205-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-2215143453-r1 { fill: #c5c8c6 }
-.terminal-2215143453-r2 { fill: #868887;font-style: italic; }
-.terminal-2215143453-r3 { fill: #c5c8c6;font-weight: bold }
-.terminal-2215143453-r4 { fill: #d0b344;font-weight: bold }
-.terminal-2215143453-r5 { fill: #68a0b3;font-weight: bold }
-.terminal-2215143453-r6 { fill: #868887 }
+    .terminal-346232205-r1 { fill: #c5c8c6 }
+.terminal-346232205-r2 { fill: #868887;font-style: italic; }
+.terminal-346232205-r3 { fill: #c5c8c6;font-weight: bold }
+.terminal-346232205-r4 { fill: #868887 }
+.terminal-346232205-r5 { fill: #68a0b3;font-weight: bold }
     </style>
 
     <defs>
-    <clipPath id="terminal-2215143453-clip-terminal">
+    <clipPath id="terminal-346232205-clip-terminal">
       <rect x="0" y="0" width="1219.0" height="511.4" />
     </clipPath>
-    <clipPath id="terminal-2215143453-line-0">
+    <clipPath id="terminal-346232205-line-0">
     <rect x="0" y="1.5" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-1">
+<clipPath id="terminal-346232205-line-1">
     <rect x="0" y="25.9" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-2">
+<clipPath id="terminal-346232205-line-2">
     <rect x="0" y="50.3" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-3">
+<clipPath id="terminal-346232205-line-3">
     <rect x="0" y="74.7" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-4">
+<clipPath id="terminal-346232205-line-4">
     <rect x="0" y="99.1" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-5">
+<clipPath id="terminal-346232205-line-5">
     <rect x="0" y="123.5" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-6">
+<clipPath id="terminal-346232205-line-6">
     <rect x="0" y="147.9" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-7">
+<clipPath id="terminal-346232205-line-7">
     <rect x="0" y="172.3" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-8">
+<clipPath id="terminal-346232205-line-8">
     <rect x="0" y="196.7" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-9">
+<clipPath id="terminal-346232205-line-9">
     <rect x="0" y="221.1" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-10">
+<clipPath id="terminal-346232205-line-10">
     <rect x="0" y="245.5" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-11">
+<clipPath id="terminal-346232205-line-11">
     <rect x="0" y="269.9" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-12">
+<clipPath id="terminal-346232205-line-12">
     <rect x="0" y="294.3" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-13">
+<clipPath id="terminal-346232205-line-13">
     <rect x="0" y="318.7" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-14">
+<clipPath id="terminal-346232205-line-14">
     <rect x="0" y="343.1" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-15">
+<clipPath id="terminal-346232205-line-15">
     <rect x="0" y="367.5" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-16">
+<clipPath id="terminal-346232205-line-16">
     <rect x="0" y="391.9" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-17">
+<clipPath id="terminal-346232205-line-17">
     <rect x="0" y="416.3" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-18">
+<clipPath id="terminal-346232205-line-18">
     <rect x="0" y="440.7" width="1220" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2215143453-line-19">
+<clipPath id="terminal-346232205-line-19">
     <rect x="0" y="465.1" width="1220" height="24.65"/>
             </clipPath>
     </defs>
@@ -113,30 +112,30 @@
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-2215143453-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-346232205-clip-terminal)">
     
-    <g class="terminal-2215143453-matrix">
-    <text class="terminal-2215143453-r1" x="0" y="20" textLength="329.4" clip-path="url(#terminal-2215143453-line-0)">$&#160;dds&#160;project&#160;status&#160;--help</text><text class="terminal-2215143453-r1" x="1220" y="20" textLength="12.2" clip-path="url(#terminal-2215143453-line-0)">
-</text><text class="terminal-2215143453-r2" x="0" y="44.4" textLength="183" clip-path="url(#terminal-2215143453-line-1)">[..truncated..]</text><text class="terminal-2215143453-r1" x="1220" y="44.4" textLength="12.2" clip-path="url(#terminal-2215143453-line-1)">
-</text><text class="terminal-2215143453-r4" x="12.2" y="68.8" textLength="85.4" clip-path="url(#terminal-2215143453-line-2)">Usage:&#160;</text><text class="terminal-2215143453-r3" x="97.6" y="68.8" textLength="244" clip-path="url(#terminal-2215143453-line-2)">dds&#160;project&#160;status&#160;[</text><text class="terminal-2215143453-r5" x="341.6" y="68.8" textLength="85.4" clip-path="url(#terminal-2215143453-line-2)">OPTIONS</text><text class="terminal-2215143453-r3" x="427" y="68.8" textLength="24.4" clip-path="url(#terminal-2215143453-line-2)">]&#160;</text><text class="terminal-2215143453-r5" x="451.4" y="68.8" textLength="85.4" clip-path="url(#terminal-2215143453-line-2)">COMMAND</text><text class="terminal-2215143453-r3" x="536.8" y="68.8" textLength="24.4" clip-path="url(#terminal-2215143453-line-2)">&#160;[</text><text class="terminal-2215143453-r5" x="561.2" y="68.8" textLength="48.8" clip-path="url(#terminal-2215143453-line-2)">ARGS</text><text class="terminal-2215143453-r3" x="610" y="68.8" textLength="48.8" clip-path="url(#terminal-2215143453-line-2)">]...</text><text class="terminal-2215143453-r1" x="1220" y="68.8" textLength="12.2" clip-path="url(#terminal-2215143453-line-2)">
-</text><text class="terminal-2215143453-r1" x="1220" y="93.2" textLength="12.2" clip-path="url(#terminal-2215143453-line-3)">
-</text><text class="terminal-2215143453-r1" x="0" y="117.6" textLength="1220" clip-path="url(#terminal-2215143453-line-4)">&#160;Manage&#160;project&#160;statuses.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r1" x="1220" y="117.6" textLength="12.2" clip-path="url(#terminal-2215143453-line-4)">
-</text><text class="terminal-2215143453-r6" x="12.2" y="142" textLength="512.4" clip-path="url(#terminal-2215143453-line-5)">Display&#160;or&#160;change&#160;the&#160;status&#160;of&#160;a&#160;project.</text><text class="terminal-2215143453-r1" x="1220" y="142" textLength="12.2" clip-path="url(#terminal-2215143453-line-5)">
-</text><text class="terminal-2215143453-r6" x="12.2" y="166.4" textLength="1146.8" clip-path="url(#terminal-2215143453-line-6)">Displaying&#160;the&#160;project&#160;status&#160;is&#160;available&#160;for&#160;all&#160;user&#160;roles.&#160;Changing&#160;the&#160;project&#160;status&#160;is&#160;</text><text class="terminal-2215143453-r1" x="1220" y="166.4" textLength="12.2" clip-path="url(#terminal-2215143453-line-6)">
-</text><text class="terminal-2215143453-r6" x="12.2" y="190.8" textLength="451.4" clip-path="url(#terminal-2215143453-line-7)">limited&#160;to&#160;Unit&#160;Admins&#160;and&#160;Personnel.</text><text class="terminal-2215143453-r1" x="1220" y="190.8" textLength="12.2" clip-path="url(#terminal-2215143453-line-7)">
-</text><text class="terminal-2215143453-r1" x="1220" y="215.2" textLength="12.2" clip-path="url(#terminal-2215143453-line-8)">
-</text><text class="terminal-2215143453-r6" x="0" y="239.6" textLength="24.4" clip-path="url(#terminal-2215143453-line-9)">╭─</text><text class="terminal-2215143453-r6" x="24.4" y="239.6" textLength="1171.2" clip-path="url(#terminal-2215143453-line-9)">&#160;Options&#160;───────────────────────────────────────────────────────────────────────────────────────</text><text class="terminal-2215143453-r6" x="1195.6" y="239.6" textLength="24.4" clip-path="url(#terminal-2215143453-line-9)">─╮</text><text class="terminal-2215143453-r1" x="1220" y="239.6" textLength="12.2" clip-path="url(#terminal-2215143453-line-9)">
-</text><text class="terminal-2215143453-r6" x="0" y="264" textLength="12.2" clip-path="url(#terminal-2215143453-line-10)">│</text><text class="terminal-2215143453-r5" x="24.4" y="264" textLength="12.2" clip-path="url(#terminal-2215143453-line-10)">-</text><text class="terminal-2215143453-r5" x="36.6" y="264" textLength="61" clip-path="url(#terminal-2215143453-line-10)">-help</text><text class="terminal-2215143453-r1" x="97.6" y="264" textLength="1110.2" clip-path="url(#terminal-2215143453-line-10)">&#160;&#160;&#160;&#160;&#160;&#160;Show&#160;this&#160;message&#160;and&#160;exit.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r6" x="1207.8" y="264" textLength="12.2" clip-path="url(#terminal-2215143453-line-10)">│</text><text class="terminal-2215143453-r1" x="1220" y="264" textLength="12.2" clip-path="url(#terminal-2215143453-line-10)">
-</text><text class="terminal-2215143453-r6" x="0" y="288.4" textLength="1220" clip-path="url(#terminal-2215143453-line-11)">╰──────────────────────────────────────────────────────────────────────────────────────────────────╯</text><text class="terminal-2215143453-r1" x="1220" y="288.4" textLength="12.2" clip-path="url(#terminal-2215143453-line-11)">
-</text><text class="terminal-2215143453-r6" x="0" y="312.8" textLength="24.4" clip-path="url(#terminal-2215143453-line-12)">╭─</text><text class="terminal-2215143453-r6" x="24.4" y="312.8" textLength="1171.2" clip-path="url(#terminal-2215143453-line-12)">&#160;Commands&#160;──────────────────────────────────────────────────────────────────────────────────────</text><text class="terminal-2215143453-r6" x="1195.6" y="312.8" textLength="24.4" clip-path="url(#terminal-2215143453-line-12)">─╮</text><text class="terminal-2215143453-r1" x="1220" y="312.8" textLength="12.2" clip-path="url(#terminal-2215143453-line-12)">
-</text><text class="terminal-2215143453-r6" x="0" y="337.2" textLength="12.2" clip-path="url(#terminal-2215143453-line-13)">│</text><text class="terminal-2215143453-r5" x="24.4" y="337.2" textLength="122" clip-path="url(#terminal-2215143453-line-13)">archive&#160;&#160;&#160;</text><text class="terminal-2215143453-r1" x="158.6" y="337.2" textLength="1049.2" clip-path="url(#terminal-2215143453-line-13)">&#160;Change&#160;the&#160;project&#160;status&#160;to&#160;&#x27;Archived&#x27;.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r6" x="1207.8" y="337.2" textLength="12.2" clip-path="url(#terminal-2215143453-line-13)">│</text><text class="terminal-2215143453-r1" x="1220" y="337.2" textLength="12.2" clip-path="url(#terminal-2215143453-line-13)">
-</text><text class="terminal-2215143453-r6" x="0" y="361.6" textLength="12.2" clip-path="url(#terminal-2215143453-line-14)">│</text><text class="terminal-2215143453-r5" x="24.4" y="361.6" textLength="122" clip-path="url(#terminal-2215143453-line-14)">busy&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r1" x="158.6" y="361.6" textLength="1049.2" clip-path="url(#terminal-2215143453-line-14)">&#160;[Super&#160;Admins&#160;only]&#160;Returns&#160;the&#160;number&#160;of&#160;busy&#160;projects.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r6" x="1207.8" y="361.6" textLength="12.2" clip-path="url(#terminal-2215143453-line-14)">│</text><text class="terminal-2215143453-r1" x="1220" y="361.6" textLength="12.2" clip-path="url(#terminal-2215143453-line-14)">
-</text><text class="terminal-2215143453-r6" x="0" y="386" textLength="12.2" clip-path="url(#terminal-2215143453-line-15)">│</text><text class="terminal-2215143453-r5" x="24.4" y="386" textLength="122" clip-path="url(#terminal-2215143453-line-15)">delete&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r1" x="158.6" y="386" textLength="1049.2" clip-path="url(#terminal-2215143453-line-15)">&#160;Delete&#160;an&#160;unreleased&#160;project&#160;(change&#160;project&#160;status&#160;to&#160;&#x27;Deleted&#x27;).&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r6" x="1207.8" y="386" textLength="12.2" clip-path="url(#terminal-2215143453-line-15)">│</text><text class="terminal-2215143453-r1" x="1220" y="386" textLength="12.2" clip-path="url(#terminal-2215143453-line-15)">
-</text><text class="terminal-2215143453-r6" x="0" y="410.4" textLength="12.2" clip-path="url(#terminal-2215143453-line-16)">│</text><text class="terminal-2215143453-r5" x="24.4" y="410.4" textLength="122" clip-path="url(#terminal-2215143453-line-16)">display&#160;&#160;&#160;</text><text class="terminal-2215143453-r1" x="158.6" y="410.4" textLength="1049.2" clip-path="url(#terminal-2215143453-line-16)">&#160;Display&#160;the&#160;status&#160;of&#160;a&#160;specific&#160;project.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r6" x="1207.8" y="410.4" textLength="12.2" clip-path="url(#terminal-2215143453-line-16)">│</text><text class="terminal-2215143453-r1" x="1220" y="410.4" textLength="12.2" clip-path="url(#terminal-2215143453-line-16)">
-</text><text class="terminal-2215143453-r6" x="0" y="434.8" textLength="12.2" clip-path="url(#terminal-2215143453-line-17)">│</text><text class="terminal-2215143453-r5" x="24.4" y="434.8" textLength="122" clip-path="url(#terminal-2215143453-line-17)">release&#160;&#160;&#160;</text><text class="terminal-2215143453-r1" x="158.6" y="434.8" textLength="1049.2" clip-path="url(#terminal-2215143453-line-17)">&#160;Change&#160;project&#160;status&#160;to&#160;&#x27;Available&#x27;.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r6" x="1207.8" y="434.8" textLength="12.2" clip-path="url(#terminal-2215143453-line-17)">│</text><text class="terminal-2215143453-r1" x="1220" y="434.8" textLength="12.2" clip-path="url(#terminal-2215143453-line-17)">
-</text><text class="terminal-2215143453-r6" x="0" y="459.2" textLength="12.2" clip-path="url(#terminal-2215143453-line-18)">│</text><text class="terminal-2215143453-r5" x="24.4" y="459.2" textLength="122" clip-path="url(#terminal-2215143453-line-18)">retract&#160;&#160;&#160;</text><text class="terminal-2215143453-r1" x="158.6" y="459.2" textLength="1049.2" clip-path="url(#terminal-2215143453-line-18)">&#160;Change&#160;the&#160;project&#160;status&#160;to&#160;&#x27;In&#160;Progress&#x27;.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-2215143453-r6" x="1207.8" y="459.2" textLength="12.2" clip-path="url(#terminal-2215143453-line-18)">│</text><text class="terminal-2215143453-r1" x="1220" y="459.2" textLength="12.2" clip-path="url(#terminal-2215143453-line-18)">
-</text><text class="terminal-2215143453-r6" x="0" y="483.6" textLength="1220" clip-path="url(#terminal-2215143453-line-19)">╰──────────────────────────────────────────────────────────────────────────────────────────────────╯</text><text class="terminal-2215143453-r1" x="1220" y="483.6" textLength="12.2" clip-path="url(#terminal-2215143453-line-19)">
-</text><text class="terminal-2215143453-r1" x="1220" y="508" textLength="12.2" clip-path="url(#terminal-2215143453-line-20)">
+    <g class="terminal-346232205-matrix">
+    <text class="terminal-346232205-r1" x="0" y="20" textLength="329.4" clip-path="url(#terminal-346232205-line-0)">$&#160;dds&#160;project&#160;status&#160;--help</text><text class="terminal-346232205-r1" x="1220" y="20" textLength="12.2" clip-path="url(#terminal-346232205-line-0)">
+</text><text class="terminal-346232205-r2" x="0" y="44.4" textLength="183" clip-path="url(#terminal-346232205-line-1)">[..truncated..]</text><text class="terminal-346232205-r1" x="1220" y="44.4" textLength="12.2" clip-path="url(#terminal-346232205-line-1)">
+</text><text class="terminal-346232205-r1" x="1220" y="68.8" textLength="12.2" clip-path="url(#terminal-346232205-line-2)">
+</text><text class="terminal-346232205-r1" x="0" y="93.2" textLength="1220" clip-path="url(#terminal-346232205-line-3)">&#160;Manage&#160;project&#160;statuses.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r1" x="1220" y="93.2" textLength="12.2" clip-path="url(#terminal-346232205-line-3)">
+</text><text class="terminal-346232205-r4" x="12.2" y="117.6" textLength="512.4" clip-path="url(#terminal-346232205-line-4)">Display&#160;or&#160;change&#160;the&#160;status&#160;of&#160;a&#160;project.</text><text class="terminal-346232205-r1" x="1220" y="117.6" textLength="12.2" clip-path="url(#terminal-346232205-line-4)">
+</text><text class="terminal-346232205-r4" x="12.2" y="142" textLength="1146.8" clip-path="url(#terminal-346232205-line-5)">Displaying&#160;the&#160;project&#160;status&#160;is&#160;available&#160;for&#160;all&#160;user&#160;roles.&#160;Changing&#160;the&#160;project&#160;status&#160;is&#160;</text><text class="terminal-346232205-r1" x="1220" y="142" textLength="12.2" clip-path="url(#terminal-346232205-line-5)">
+</text><text class="terminal-346232205-r4" x="12.2" y="166.4" textLength="451.4" clip-path="url(#terminal-346232205-line-6)">limited&#160;to&#160;Unit&#160;Admins&#160;and&#160;Personnel.</text><text class="terminal-346232205-r1" x="1220" y="166.4" textLength="12.2" clip-path="url(#terminal-346232205-line-6)">
+</text><text class="terminal-346232205-r1" x="1220" y="190.8" textLength="12.2" clip-path="url(#terminal-346232205-line-7)">
+</text><text class="terminal-346232205-r4" x="0" y="215.2" textLength="24.4" clip-path="url(#terminal-346232205-line-8)">╭─</text><text class="terminal-346232205-r4" x="24.4" y="215.2" textLength="1171.2" clip-path="url(#terminal-346232205-line-8)">&#160;Options&#160;───────────────────────────────────────────────────────────────────────────────────────</text><text class="terminal-346232205-r4" x="1195.6" y="215.2" textLength="24.4" clip-path="url(#terminal-346232205-line-8)">─╮</text><text class="terminal-346232205-r1" x="1220" y="215.2" textLength="12.2" clip-path="url(#terminal-346232205-line-8)">
+</text><text class="terminal-346232205-r4" x="0" y="239.6" textLength="12.2" clip-path="url(#terminal-346232205-line-9)">│</text><text class="terminal-346232205-r5" x="24.4" y="239.6" textLength="12.2" clip-path="url(#terminal-346232205-line-9)">-</text><text class="terminal-346232205-r5" x="36.6" y="239.6" textLength="61" clip-path="url(#terminal-346232205-line-9)">-help</text><text class="terminal-346232205-r1" x="97.6" y="239.6" textLength="1110.2" clip-path="url(#terminal-346232205-line-9)">&#160;&#160;&#160;&#160;&#160;&#160;Show&#160;this&#160;message&#160;and&#160;exit.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r4" x="1207.8" y="239.6" textLength="12.2" clip-path="url(#terminal-346232205-line-9)">│</text><text class="terminal-346232205-r1" x="1220" y="239.6" textLength="12.2" clip-path="url(#terminal-346232205-line-9)">
+</text><text class="terminal-346232205-r4" x="0" y="264" textLength="1220" clip-path="url(#terminal-346232205-line-10)">╰──────────────────────────────────────────────────────────────────────────────────────────────────╯</text><text class="terminal-346232205-r1" x="1220" y="264" textLength="12.2" clip-path="url(#terminal-346232205-line-10)">
+</text><text class="terminal-346232205-r4" x="0" y="288.4" textLength="24.4" clip-path="url(#terminal-346232205-line-11)">╭─</text><text class="terminal-346232205-r4" x="24.4" y="288.4" textLength="1171.2" clip-path="url(#terminal-346232205-line-11)">&#160;Commands&#160;──────────────────────────────────────────────────────────────────────────────────────</text><text class="terminal-346232205-r4" x="1195.6" y="288.4" textLength="24.4" clip-path="url(#terminal-346232205-line-11)">─╮</text><text class="terminal-346232205-r1" x="1220" y="288.4" textLength="12.2" clip-path="url(#terminal-346232205-line-11)">
+</text><text class="terminal-346232205-r4" x="0" y="312.8" textLength="12.2" clip-path="url(#terminal-346232205-line-12)">│</text><text class="terminal-346232205-r5" x="24.4" y="312.8" textLength="122" clip-path="url(#terminal-346232205-line-12)">archive&#160;&#160;&#160;</text><text class="terminal-346232205-r1" x="158.6" y="312.8" textLength="1049.2" clip-path="url(#terminal-346232205-line-12)">&#160;Change&#160;the&#160;project&#160;status&#160;to&#160;&#x27;Archived&#x27;.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r4" x="1207.8" y="312.8" textLength="12.2" clip-path="url(#terminal-346232205-line-12)">│</text><text class="terminal-346232205-r1" x="1220" y="312.8" textLength="12.2" clip-path="url(#terminal-346232205-line-12)">
+</text><text class="terminal-346232205-r4" x="0" y="337.2" textLength="12.2" clip-path="url(#terminal-346232205-line-13)">│</text><text class="terminal-346232205-r5" x="24.4" y="337.2" textLength="122" clip-path="url(#terminal-346232205-line-13)">busy&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r1" x="158.6" y="337.2" textLength="1049.2" clip-path="url(#terminal-346232205-line-13)">&#160;[Super&#160;Admins&#160;only]&#160;Returns&#160;the&#160;number&#160;of&#160;busy&#160;projects.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r4" x="1207.8" y="337.2" textLength="12.2" clip-path="url(#terminal-346232205-line-13)">│</text><text class="terminal-346232205-r1" x="1220" y="337.2" textLength="12.2" clip-path="url(#terminal-346232205-line-13)">
+</text><text class="terminal-346232205-r4" x="0" y="361.6" textLength="12.2" clip-path="url(#terminal-346232205-line-14)">│</text><text class="terminal-346232205-r5" x="24.4" y="361.6" textLength="122" clip-path="url(#terminal-346232205-line-14)">delete&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r1" x="158.6" y="361.6" textLength="1049.2" clip-path="url(#terminal-346232205-line-14)">&#160;Delete&#160;an&#160;unreleased&#160;project&#160;(change&#160;project&#160;status&#160;to&#160;&#x27;Deleted&#x27;).&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r4" x="1207.8" y="361.6" textLength="12.2" clip-path="url(#terminal-346232205-line-14)">│</text><text class="terminal-346232205-r1" x="1220" y="361.6" textLength="12.2" clip-path="url(#terminal-346232205-line-14)">
+</text><text class="terminal-346232205-r4" x="0" y="386" textLength="12.2" clip-path="url(#terminal-346232205-line-15)">│</text><text class="terminal-346232205-r5" x="24.4" y="386" textLength="122" clip-path="url(#terminal-346232205-line-15)">display&#160;&#160;&#160;</text><text class="terminal-346232205-r1" x="158.6" y="386" textLength="1049.2" clip-path="url(#terminal-346232205-line-15)">&#160;Display&#160;the&#160;status&#160;of&#160;a&#160;specific&#160;project.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r4" x="1207.8" y="386" textLength="12.2" clip-path="url(#terminal-346232205-line-15)">│</text><text class="terminal-346232205-r1" x="1220" y="386" textLength="12.2" clip-path="url(#terminal-346232205-line-15)">
+</text><text class="terminal-346232205-r4" x="0" y="410.4" textLength="12.2" clip-path="url(#terminal-346232205-line-16)">│</text><text class="terminal-346232205-r5" x="24.4" y="410.4" textLength="122" clip-path="url(#terminal-346232205-line-16)">extend&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r1" x="158.6" y="410.4" textLength="1049.2" clip-path="url(#terminal-346232205-line-16)">&#160;Extend&#160;a&#160;project&#160;deadline&#160;by&#160;an&#160;specified&#160;number&#160;of&#160;days.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r4" x="1207.8" y="410.4" textLength="12.2" clip-path="url(#terminal-346232205-line-16)">│</text><text class="terminal-346232205-r1" x="1220" y="410.4" textLength="12.2" clip-path="url(#terminal-346232205-line-16)">
+</text><text class="terminal-346232205-r4" x="0" y="434.8" textLength="12.2" clip-path="url(#terminal-346232205-line-17)">│</text><text class="terminal-346232205-r5" x="24.4" y="434.8" textLength="122" clip-path="url(#terminal-346232205-line-17)">release&#160;&#160;&#160;</text><text class="terminal-346232205-r1" x="158.6" y="434.8" textLength="1049.2" clip-path="url(#terminal-346232205-line-17)">&#160;Change&#160;project&#160;status&#160;to&#160;&#x27;Available&#x27;.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r4" x="1207.8" y="434.8" textLength="12.2" clip-path="url(#terminal-346232205-line-17)">│</text><text class="terminal-346232205-r1" x="1220" y="434.8" textLength="12.2" clip-path="url(#terminal-346232205-line-17)">
+</text><text class="terminal-346232205-r4" x="0" y="459.2" textLength="12.2" clip-path="url(#terminal-346232205-line-18)">│</text><text class="terminal-346232205-r5" x="24.4" y="459.2" textLength="122" clip-path="url(#terminal-346232205-line-18)">retract&#160;&#160;&#160;</text><text class="terminal-346232205-r1" x="158.6" y="459.2" textLength="1049.2" clip-path="url(#terminal-346232205-line-18)">&#160;Change&#160;the&#160;project&#160;status&#160;to&#160;&#x27;In&#160;Progress&#x27;.&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;</text><text class="terminal-346232205-r4" x="1207.8" y="459.2" textLength="12.2" clip-path="url(#terminal-346232205-line-18)">│</text><text class="terminal-346232205-r1" x="1220" y="459.2" textLength="12.2" clip-path="url(#terminal-346232205-line-18)">
+</text><text class="terminal-346232205-r4" x="0" y="483.6" textLength="1220" clip-path="url(#terminal-346232205-line-19)">╰──────────────────────────────────────────────────────────────────────────────────────────────────╯</text><text class="terminal-346232205-r1" x="1220" y="483.6" textLength="12.2" clip-path="url(#terminal-346232205-line-19)">
+</text><text class="terminal-346232205-r1" x="1220" y="508" textLength="12.2" clip-path="url(#terminal-346232205-line-20)">
 </text>
     </g>
     </g>

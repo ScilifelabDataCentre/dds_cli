@@ -318,3 +318,7 @@ _Empty sprint_
 # 2023-11-06 - 2023-11-17
 
 - New version: 2.6.0 ([#666](https://github.com/ScilifelabDataCentre/dds_cli/pull/666))
+
+# 2023-12-4 - 2023-12-15
+
+- Patch update crypthography package to address cve ([#668](https://github.com/ScilifelabDataCentre/dds_cli/pull/668))

@@ -322,3 +322,4 @@ _Empty sprint_
 # 2023-12-4 - 2023-12-15
 
 - Patch update crypthography package to address cve ([#668](https://github.com/ScilifelabDataCentre/dds_cli/pull/668))
+- New version: 2.6.1 ([#669](https://github.com/ScilifelabDataCentre/dds_cli/pull/669))

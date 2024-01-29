@@ -21,8 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: psf/black@stable
         with:
           version: ${{ env.INPUT_VERSION }}
-
-      - name: Check code lints with Black
-        uses: jpetrucciani/black-check@master

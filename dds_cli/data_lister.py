@@ -521,11 +521,13 @@ class DataLister(base.DDSBaseClass):
             header_style="bold",
             show_footer=self.show_usage and "Usage" in column_formatting,
             caption=(
-                "The cost is calculated from the pricing provided by Safespring (unit kr/GB/month) "
-                "and is therefore approximate. Contact the Data Centre for more details."
-            )
-            if self.show_usage
-            else None,
+                (
+                    "The cost is calculated from the pricing provided by Safespring (unit kr/GB/month) "
+                    "and is therefore approximate. Contact the Data Centre for more details."
+                )
+                if self.show_usage
+                else None
+            ),
         )
 
         # Add columns to table

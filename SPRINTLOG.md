@@ -327,3 +327,7 @@ _Empty sprint_
 # 2023-12-15 - 2024-01-12
 
 - Minor update jwcrypto package to address cve ([#674](https://github.com/ScilifelabDataCentre/dds_cli/pull/674))
+
+# 2024-01-29 - 2024-02-09
+
+- Use of a fix version of black and linted files to 24.1.1 ([#675](https://github.com/ScilifelabDataCentre/dds_cli/pull/675))

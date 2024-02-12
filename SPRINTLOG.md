@@ -330,4 +330,4 @@ _Empty sprint_
 
 # 2024-02-12 - 2024-03-08
 
-- Criptography update to address cve ([#675](https://github.com/ScilifelabDataCentre/dds_cli/pull/675))
+- Criptography update to address cve ([#676](https://github.com/ScilifelabDataCentre/dds_cli/pull/676))

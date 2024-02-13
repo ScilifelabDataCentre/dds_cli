@@ -1,5 +1,4 @@
 """Data Delivery System Project Creator."""
-
 import logging
 
 # Installed

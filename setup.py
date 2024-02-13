@@ -1,5 +1,4 @@
 """Setup of DDS CLI."""
-
 # pylint: disable=unspecified-encoding, exec-used, consider-using-with, duplicate-code
 
 from setuptools import setup, find_packages

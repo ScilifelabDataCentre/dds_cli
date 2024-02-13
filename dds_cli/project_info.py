@@ -1,5 +1,4 @@
 """Data Delivery System Project info manager."""
-
 # Standard library
 import logging
 import sys

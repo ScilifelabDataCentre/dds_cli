@@ -1,5 +1,4 @@
 """Data Delivery System authentication manager."""
-
 # Standard library
 import logging
 import getpass

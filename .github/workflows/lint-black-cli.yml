@@ -13,14 +13,11 @@ on:
     paths:
       - "**.py"
 
-env:
-  INPUT_VERSION: 24.1.1
-
 jobs:
   PythonLint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: psf/black@stable
-        with:
-          version: ${{ env.INPUT_VERSION }}
+
+      - name: Check code lints with Black
+        uses: jpetrucciani/black-check@master

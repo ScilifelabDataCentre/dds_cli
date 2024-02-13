@@ -1,4 +1,5 @@
 """Data Delivery System Project Status manager."""
+
 import datetime
 import logging
 import typing

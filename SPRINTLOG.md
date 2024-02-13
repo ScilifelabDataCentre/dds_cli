@@ -323,3 +323,15 @@ _Empty sprint_
 
 - Patch update crypthography package to address cve ([#668](https://github.com/ScilifelabDataCentre/dds_cli/pull/668))
 - New version: 2.6.1 ([#669](https://github.com/ScilifelabDataCentre/dds_cli/pull/669))
+
+# 2023-12-15 - 2024-01-12
+
+- Minor update jwcrypto package to address cve ([#674](https://github.com/ScilifelabDataCentre/dds_cli/pull/674))
+
+# 2024-01-29 - 2024-02-09
+
+- Use of a fix version of black and linted files to 24.1.1 ([#675](https://github.com/ScilifelabDataCentre/dds_cli/pull/675))
+
+# 2024-02-12 - 2024-03-08
+
+- New version: 2.6.2 ([#670](https://github.com/ScilifelabDataCentre/dds_cli/pull/670))

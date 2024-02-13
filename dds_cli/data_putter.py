@@ -383,12 +383,14 @@ class DataPutter(base.DDSBaseClass):
                         "ACL": "private",  # Access control list
                         "CacheControl": "no-store",  # Don't store cache
                     },
-                    Callback=status.ProgressPercentage(
-                        progress=progress,
-                        task=task,
-                    )
-                    if task is not None
-                    else None,
+                    Callback=(
+                        status.ProgressPercentage(
+                            progress=progress,
+                            task=task,
+                        )
+                        if task is not None
+                        else None
+                    ),
                 )
         except (
             botocore.client.ClientError,

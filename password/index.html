@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
@@ -14,6 +14,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
@@ -38,11 +39,11 @@
           <div class="body" role="main">
             
   <section id="securing-your-password">
-<span id="password"></span><h1>Securing your password<a class="headerlink" href="#securing-your-password" title="Permalink to this headline">¶</a></h1>
+<span id="password"></span><h1>Securing your password<a class="headerlink" href="#securing-your-password" title="Permalink to this heading">¶</a></h1>
 <p>Your Data Delivery System (DDS) password will be used to protect your data from any unauthorized parties. Choosing a secure password is therefore essential since the password’s complexity will determine how easy it is to guess the password and thereby gain access to your data. Remembering a number of different passwords for different services can be difficult, and many people resort to using the same or similar password for all, or saving them in insecure ways where they are easily lost or/and read by others.</p>
 <p>Due to this, we highly recommend that you use a password manager to store your passwords. An example of this is <a class="reference external" href="https://bitwarden.com/">Bitwarden</a> which is also used by the SciLifeLab Data Centre team.</p>
 <section id="how-to-use-password-managers-e-g-bitwarden">
-<h2>How to use password managers, e.g. Bitwarden<a class="headerlink" href="#how-to-use-password-managers-e-g-bitwarden" title="Permalink to this headline">¶</a></h2>
+<h2>How to use password managers, e.g. Bitwarden<a class="headerlink" href="#how-to-use-password-managers-e-g-bitwarden" title="Permalink to this heading">¶</a></h2>
 <p>Using a password manager such as Bitwarden means that you need to keep track of a single password: The password you set for the password manager. The rest are stored within the password manager, allowing you to have different complex ones for each service you use. Many of these tools have mobile apps and plugins for different browsers, which simplifies password management significantly.</p>
 <p>The following is an example of how to start using Bitwarden.</p>
 <ol class="arabic">
@@ -94,7 +95,7 @@
 </ol>
 </section>
 <section id="what-happens-if-i-forget-my-dds-password">
-<h2>What happens if I forget my DDS password?<a class="headerlink" href="#what-happens-if-i-forget-my-dds-password" title="Permalink to this headline">¶</a></h2>
+<h2>What happens if I forget my DDS password?<a class="headerlink" href="#what-happens-if-i-forget-my-dds-password" title="Permalink to this heading">¶</a></h2>
 <p>The DDS <strong>does not</strong> store the passwords in plain text; We <strong>cannot see</strong> what your password is or change it for you.</p>
 <p>If you have forgotten your password, you will need to reset it. Resetting the password will remove your access from all delivery projects within the system. If you’re interested in the details behind this, please read the information box in section <code class="docutils literal notranslate"><span class="pre">2.6.</span> <span class="pre">Creating</span> <span class="pre">a</span> <span class="pre">Project</span></code> in the <a class="reference external" href="https://delivery.scilifelab.se/technical">Technical Overview</a></p>
 <p>The data <strong>is not</strong> deleted when you loose access to the data. The data is encrypted with a combination of encryption keys, and you will have lost access to use those keys. However, your access can be renewed:</p>
@@ -140,7 +141,7 @@
 
 
 
-<p class="blurb">Version: 2.6.1</p>
+<p class="blurb">Version: 2.6.2</p>
 
 
 
@@ -189,7 +190,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -206,7 +207,7 @@
       &copy;2021-2022, SciLifeLab Data Centre.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
@@ -14,6 +14,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
@@ -38,13 +39,13 @@
           <div class="body" role="main">
             
   <section id="dds-motd">
-<span id="dds-motd"></span><h1>dds motd<a class="headerlink" href="#dds-motd" title="Permalink to this headline">¶</a></h1>
+<span id="dds-motd"></span><h1>dds motd<a class="headerlink" href="#dds-motd" title="Permalink to this heading">¶</a></h1>
 <p>[Super Admins only] Group command for managing Message of the Day within DDS.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>motd<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </pre></div>
 </div>
 <section id="dds-motd-add">
-<h2>add<a class="headerlink" href="#dds-motd-add" title="Permalink to this headline">¶</a></h2>
+<h2>add<a class="headerlink" href="#dds-motd-add" title="Permalink to this heading">¶</a></h2>
 <p>Add a new Message Of The Day.</p>
 <p>[MESSAGE] is the MOTD that you wish do display to the DDS users.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>motd<span class="w"> </span>add<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>MESSAGE<span class="o">]</span>
@@ -59,7 +60,7 @@
 
 </section>
 <section id="dds-motd-deactivate">
-<h2>deactivate<a class="headerlink" href="#dds-motd-deactivate" title="Permalink to this headline">¶</a></h2>
+<h2>deactivate<a class="headerlink" href="#dds-motd-deactivate" title="Permalink to this heading">¶</a></h2>
 <p>[Super Admins only] Deactivate Message Of The Day.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>motd<span class="w"> </span>deactivate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>MOTD_ID<span class="o">]</span>
 </pre></div>
@@ -73,14 +74,14 @@
 
 </section>
 <section id="dds-motd-ls">
-<h2>ls<a class="headerlink" href="#dds-motd-ls" title="Permalink to this headline">¶</a></h2>
+<h2>ls<a class="headerlink" href="#dds-motd-ls" title="Permalink to this heading">¶</a></h2>
 <p>List all active MOTDs.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>motd<span class="w"> </span>ls<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 </section>
 <section id="dds-motd-send">
-<h2>send<a class="headerlink" href="#dds-motd-send" title="Permalink to this headline">¶</a></h2>
+<h2>send<a class="headerlink" href="#dds-motd-send" title="Permalink to this heading">¶</a></h2>
 <p>Send motd as email to all users.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>motd<span class="w"> </span>send<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>MOTD_ID<span class="o">]</span>
 </pre></div>
@@ -111,7 +112,7 @@
 
 
 
-<p class="blurb">Version: 2.6.1</p>
+<p class="blurb">Version: 2.6.2</p>
 
 
 
@@ -160,7 +161,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -177,7 +178,7 @@
       &copy;2021-2022, SciLifeLab Data Centre.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

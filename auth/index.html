@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
@@ -14,6 +14,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
@@ -38,7 +39,7 @@
           <div class="body" role="main">
             
   <section id="dds-auth">
-<span id="dds-auth"></span><h1>dds auth<a class="headerlink" href="#dds-auth" title="Permalink to this headline">¶</a></h1>
+<span id="dds-auth"></span><h1>dds auth<a class="headerlink" href="#dds-auth" title="Permalink to this heading">¶</a></h1>
 <p>Group command for creating and managing authenticated sessions (valid for 7 days).</p>
 <p>Authenticate yourself once and run multiple commands within a certain amount of time
 without specifying your user credentials.
@@ -49,7 +50,7 @@ DDS username when running the other commands.</p>
 </pre></div>
 </div>
 <section id="dds-auth-info">
-<h2>info<a class="headerlink" href="#dds-auth-info" title="Permalink to this headline">¶</a></h2>
+<h2>info<a class="headerlink" href="#dds-auth-info" title="Permalink to this heading">¶</a></h2>
 <p>Display information about ongoing authenticated session.</p>
 <div class="line-block">
 <div class="line">Information displayed:</div>
@@ -61,7 +62,7 @@ DDS username when running the other commands.</p>
 </div>
 </section>
 <section id="dds-auth-login">
-<h2>login<a class="headerlink" href="#dds-auth-login" title="Permalink to this headline">¶</a></h2>
+<h2>login<a class="headerlink" href="#dds-auth-login" title="Permalink to this heading">¶</a></h2>
 <p>Start or renew an authenticated session.</p>
 <p>Creates or renews the authentication token stored in the ‘.dds_cli_token’ file.</p>
 <p>Run this command before running the cli in a non-interactive fashion as this enables the longest
@@ -88,7 +89,7 @@ Then use the –allow-group option and start a new session. This also applies to
 
 </section>
 <section id="dds-auth-logout">
-<h2>logout<a class="headerlink" href="#dds-auth-logout" title="Permalink to this headline">¶</a></h2>
+<h2>logout<a class="headerlink" href="#dds-auth-logout" title="Permalink to this heading">¶</a></h2>
 <p>End authenticated session.</p>
 <p>Removes the saved authentication token by deleting the ‘.dds_cli_token’ file.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span><span class="nb">logout</span><span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
@@ -96,20 +97,20 @@ Then use the –allow-group option and start a new session. This also applies to
 </div>
 </section>
 <section id="dds-auth-twofactor">
-<h2>twofactor<a class="headerlink" href="#dds-auth-twofactor" title="Permalink to this headline">¶</a></h2>
+<h2>twofactor<a class="headerlink" href="#dds-auth-twofactor" title="Permalink to this heading">¶</a></h2>
 <p>Group command for configuring and deactivating methods of two factor authentication.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span>twofactor<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </pre></div>
 </div>
 <section id="dds-auth-twofactor-configure">
-<h3>configure<a class="headerlink" href="#dds-auth-twofactor-configure" title="Permalink to this headline">¶</a></h3>
+<h3>configure<a class="headerlink" href="#dds-auth-twofactor-configure" title="Permalink to this heading">¶</a></h3>
 <p>Configure your preferred method of two-factor authentication.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span>twofactor<span class="w"> </span>configure<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
 </div>
 </section>
 <section id="dds-auth-twofactor-deactivate">
-<h3>deactivate<a class="headerlink" href="#dds-auth-twofactor-deactivate" title="Permalink to this headline">¶</a></h3>
+<h3>deactivate<a class="headerlink" href="#dds-auth-twofactor-deactivate" title="Permalink to this heading">¶</a></h3>
 <p>[Super Admins only] Deactivate another users TOTP.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span>twofactor<span class="w"> </span>deactivate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
 </pre></div>
@@ -141,7 +142,7 @@ Then use the –allow-group option and start a new session. This also applies to
 
 
 
-<p class="blurb">Version: 2.6.1</p>
+<p class="blurb">Version: 2.6.2</p>
 
 
 
@@ -190,7 +191,7 @@ Then use the –allow-group option and start a new session. This also applies to
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -207,7 +208,7 @@ Then use the –allow-group option and start a new session. This also applies to
       &copy;2021-2022, SciLifeLab Data Centre.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

@@ -1,7 +1,7 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
@@ -14,6 +14,7 @@
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
@@ -38,7 +39,7 @@
           <div class="body" role="main">
             
   <section id="installation-guide">
-<h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this headline">¶</a></h1>
+<h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this heading">¶</a></h1>
 <p>You can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> in two different ways:</p>
 <ul class="simple">
 <li><p>From <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPI</a>. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax.</p></li>
@@ -52,10 +53,10 @@
 <p>The following sections describe the installation process on <a class="reference internal" href="#mac-linux"><span class="std std-ref">MacOS / Linux</span></a> and <a class="reference internal" href="#windows"><span class="std std-ref">Windows</span></a>, and how to load <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> on <a class="reference internal" href="#uppmax"><span class="std std-ref">Uppmax</span></a>.
 Note that the sections describing installation from PyPI are focused on the <code class="docutils literal notranslate"><span class="pre">install</span></code> command, and do not provide a guide on how to verify the package integrity with checksums. Instructions on how to do this can be found at the <a class="reference internal" href="#verify-integrity"><span class="std std-ref">bottom of this page</span></a>.</p>
 <section id="macos-linux">
-<span id="mac-linux"></span><h2>MacOS / Linux<a class="headerlink" href="#macos-linux" title="Permalink to this headline">¶</a></h2>
+<span id="mac-linux"></span><h2>MacOS / Linux<a class="headerlink" href="#macos-linux" title="Permalink to this heading">¶</a></h2>
 <p>As mentioned above, you can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> from PyPI or via an executable.</p>
 <section id="install-from-pypi">
-<span id="pypi-unix"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#install-from-pypi" title="Permalink to this headline">¶</a></h3>
+<span id="pypi-unix"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#install-from-pypi" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic">
 <li><p>To perform these steps you need to have Python version 3.7 or higher installed.</p>
 <ul>
@@ -90,7 +91,7 @@ Note that the sections describing installation from PyPI are focused on the <cod
 </ol>
 </section>
 <section id="install-via-the-executable">
-<span id="exec-unix"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#install-via-the-executable" title="Permalink to this headline">¶</a></h3>
+<span id="exec-unix"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#install-via-the-executable" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic">
 <li><p>Download the executable from the GitHub release page:</p>
 <ul>
@@ -142,13 +143,13 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </section>
 </section>
 <section id="windows">
-<span id="id2"></span><h2>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2>Windows<a class="headerlink" href="#windows" title="Permalink to this heading">¶</a></h2>
 <section id="pypi-windows">
-<span id="id3"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#pypi-windows" title="Permalink to this headline">¶</a></h3>
+<span id="id3"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#pypi-windows" title="Permalink to this heading">¶</a></h3>
 <p>Detailed instructions on how install the DDS CLI on Windows <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md">here</a>.</p>
 </section>
 <section id="exec-windows">
-<span id="id4"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#exec-windows" title="Permalink to this headline">¶</a></h3>
+<span id="id4"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#exec-windows" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic simple">
 <li><p>Download the executable from the GitHub release page: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe">Download</a></p></li>
 <li><p>Open the Powershell</p></li>
@@ -173,14 +174,14 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </section>
 </section>
 <section id="uppmax">
-<span id="id5"></span><h2>Uppmax<a class="headerlink" href="#uppmax" title="Permalink to this headline">¶</a></h2>
+<span id="id5"></span><h2>Uppmax<a class="headerlink" href="#uppmax" title="Permalink to this heading">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package is a global module on Uppmax; No installation required. However, there are a few steps you need to perform prior to using it. These steps differ between Rackham and Bianca.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When there is a new version of <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code>, Uppmax upgrades the version automatically the following day.</p>
 </div>
 <section id="rackham">
-<span id="id6"></span><h3>Rackham<a class="headerlink" href="#rackham" title="Permalink to this headline">¶</a></h3>
+<span id="id6"></span><h3>Rackham<a class="headerlink" href="#rackham" title="Permalink to this heading">¶</a></h3>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Do not deliver sensitive data to Rackham.</p>
@@ -205,7 +206,7 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </div>
 </section>
 <section id="bianca">
-<span id="id7"></span><h3>Bianca<a class="headerlink" href="#bianca" title="Permalink to this headline">¶</a></h3>
+<span id="id7"></span><h3>Bianca<a class="headerlink" href="#bianca" title="Permalink to this heading">¶</a></h3>
 <div class="admonition-terminology-in-this-section admonition">
 <p class="admonition-title">Terminology in this section</p>
 <ul class="simple">
@@ -282,7 +283,7 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </section>
 </section>
 <section id="verify-the-package-integrity-prior-to-installing-it">
-<span id="verify-integrity"></span><h2>Verify the package integrity prior to installing it<a class="headerlink" href="#verify-the-package-integrity-prior-to-installing-it" title="Permalink to this headline">¶</a></h2>
+<span id="verify-integrity"></span><h2>Verify the package integrity prior to installing it<a class="headerlink" href="#verify-the-package-integrity-prior-to-installing-it" title="Permalink to this heading">¶</a></h2>
 <p>This installation guide is for those that want to verify that the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package published on PyPI is identical to the one you install locally, thereby catching potential (albeit unlikely) corruptions in the package prior to running the installation. Note that the hashes used to verify this are generated by PyPI itself, not by the Data Centre.</p>
 <ol class="arabic">
 <li><p>Open the terminal</p></li>
@@ -344,7 +345,7 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
 
 
 
-<p class="blurb">Version: 2.6.1</p>
+<p class="blurb">Version: 2.6.2</p>
 
 
 
@@ -393,7 +394,7 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -410,7 +411,7 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
       &copy;2021-2022, SciLifeLab Data Centre.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.5.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |

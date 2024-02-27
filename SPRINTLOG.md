@@ -336,3 +336,7 @@ _Empty sprint_
 
 - Update sphinx package to be able to make a new release ([#680](https://github.com/ScilifelabDataCentre/dds_cli/pull/680))
 - New version: 2.6.2 ([#670](https://github.com/ScilifelabDataCentre/dds_cli/pull/670))
+
+# 2024-02-26 - 2024-03-08
+
+- New extra release, outside maintenance window, version 2.6.3 ([#671](https://github.com/ScilifelabDataCentre/dds_cli/pull/671))

@@ -339,4 +339,4 @@ _Empty sprint_
 
 # 2024-02-26 - 2024-03-08
 
-- New extra release, outside maintenance window, version 2.6.3 ([#671](https://github.com/ScilifelabDataCentre/dds_cli/pull/671))
+- New extra release, outside maintenance window, version 2.6.3 ([#682](https://github.com/ScilifelabDataCentre/dds_cli/pull/682))

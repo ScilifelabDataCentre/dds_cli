@@ -6,7 +6,8 @@ Changelog
 2.6.2 - 2023-02-13
 ~~~~~~~~~~~~~~~~~~~
 
-- No changes in client
+- Dependencies: 
+    - `Criptography` from `41.0.6` to `42.0.4`
 
 .. _2.6.2:
 

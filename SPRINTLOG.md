@@ -328,11 +328,16 @@ _Empty sprint_
 
 - Minor update jwcrypto package to address cve ([#674](https://github.com/ScilifelabDataCentre/dds_cli/pull/674))
 
-# 2024-01-29 - 2024-02-09
+# 2024-02-12 - 2024-03-08
 
+- Criptography update to address cve ([#676](https://github.com/ScilifelabDataCentre/dds_cli/pull/676))
 - Use of a fix version of black and linted files to 24.1.1 ([#675](https://github.com/ScilifelabDataCentre/dds_cli/pull/675))
 
 # 2024-02-12 - 2024-03-08
 
 - Update sphinx package to be able to make a new release ([#680](https://github.com/ScilifelabDataCentre/dds_cli/pull/680))
 - New version: 2.6.2 ([#670](https://github.com/ScilifelabDataCentre/dds_cli/pull/670))
+
+# 2024-02-26 - 2024-03-08
+
+- New extra release, outside maintenance window, version 2.6.3 ([#682](https://github.com/ScilifelabDataCentre/dds_cli/pull/682))

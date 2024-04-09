@@ -345,4 +345,7 @@ _Empty sprint_
 # 2024-03-25 - 2024-04-5
 
 - Update jwcrypto package to address cve ([#1523](https://github.com/ScilifelabDataCentre/dds_web/pull/1523))
-- New version: 2.6.4 ([#670](https://github.com/ScilifelabDataCentre/dds_cli/pull/670))
+
+# 2024-04-8 - 2024-04-19
+
+- New version: 2.6.4 ([#687](https://github.com/ScilifelabDataCentre/dds_cli/pull/687))

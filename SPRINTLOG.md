@@ -349,3 +349,7 @@ _Empty sprint_
 # 2024-04-8 - 2024-04-19
 
 - New version: 2.6.4 ([#687](https://github.com/ScilifelabDataCentre/dds_cli/pull/687))
+
+# 2024-05-20 - 2024-05-31
+
+- Update requests to solve CVE ([#690](https://github.com/ScilifelabDataCentre/dds_cli/pull/690))

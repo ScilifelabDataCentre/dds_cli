@@ -30,7 +30,7 @@ This page will give you information on:
 * In order to create projects, which is required in order to test the upload / download functionality: 
     * You must have the account role "Unit Admin" or "Unit Personnel"
     * Your unit must have at least two "Unit Admins" 
-* When listing your projects you will see your projects, and yours only. However, in order to not create a large number of separate storage locations for testing purposes, the actual storage location is shared by all units in the test setup. Since the data is always encrypted and another unit would need to hack the DDS and also crack the encryption, there should be no risk of anyone else accessing your data. In the production instance, there's always a separate storage location per SciLifeLab unit.
+* When listing your projects you will see your projects, and yours only. However, in order to not create a large number of separate storage locations for testing purposes, the actual storage location is shared by all units in the test setup. In the production instance, there's always a separate storage location per SciLifeLab unit.
 * The storage quota (maximum data volume that can be uploaded in total by all units) for the testing instance is currently set to 5 TB. However, if you receive an error message indicating that the quota is met, contact delivery@scilifelab.se and we will solve this for you. 
 * Within the test instance of the DDS, all units have the following settings:
     * ``days_in_available``: 7 days. 

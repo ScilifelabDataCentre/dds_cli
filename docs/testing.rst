@@ -15,7 +15,7 @@ This page will give you information on:
 
 .. admonition:: Target audience 
 
-    This page targets any users invited to the development / testing instance of the Data Delivery System. If you have an account on the production instead (https://delivery.scilifelab.se), please read the documentation here :ref:`here<start>`.
+    This page targets any users invited to the testing instance of the Data Delivery System. If you have an account on the production instead (https://delivery.scilifelab.se), please read the documentation here :ref:`here<start>`.
 
 .. _test-important:
 
@@ -32,7 +32,7 @@ This page will give you information on:
     * Your unit must have at least two "Unit Admins" 
 * When listing your projects you will see your projects, and yours only. However, in order to not create a large number of separate storage locations for testing purposes, the actual storage location is shared by all units in the test setup. In the production instance, there's always a separate storage location per SciLifeLab unit.
 * The storage quota (maximum data volume that can be uploaded in total by all units) for the testing instance is currently set to 5 TB. However, if you receive an error message indicating that the quota is met, contact delivery@scilifelab.se and we will solve this for you. 
-* Within the test instance of the DDS, all units have the following settings:
+* Within the testing instance of the DDS, all units have the following settings:
     * ``days_in_available``: 7 days. 
     
         **Explanation:** When data has been uploaded to a project, and the data has been released (the project status has been set to "Available"), the data will be available for download for 7 days. After this, the project will automatically transition to the status "Expired".
@@ -43,17 +43,17 @@ This page will give you information on:
 
     .. note:: 
 
-        * These statuses are described in the technical overview, located on the DDS test web page mentioned above.
+        * These statuses are described in the technical overview, located on the DDS testing web page mentioned above.
         * The short number of days is only for the test instance, making it easier for you (and us) to test that the statuses work as they should.
 
-* Keep in mind that the test instance is where we try out new features etc. There may be some unexpected redeployments and there may be bugs in new features.
+* Keep in mind that the testing instance is where we try out new features etc. There may be some unexpected redeployments and there may be bugs in new features.
 
 .. _test-where:
 
 2. Where the DDS Test Instance is located
 ============================================
 
-* The test instance is located at https://dds-dev.dckube3.scilifelab.se/
+* The testing instance is located at https://testing.delivery.scilifelab.se/
 * Just like on the production site, you can find the following information on that page:
     * *Documentation*, which points to the ``Welcome page`` in the navigation field to the left.
     * *Technical overview* 
@@ -96,7 +96,7 @@ After installing the CLI, you need to complete the following steps before you ca
         # Windows PowerShell
         $env:DDS_CLI_ENV = 'test-instance'
 
-2. Verify that the output of the following command contains ``https://dds-dev.dckube3.scilifelab.se/`` and **not** ``https://delivery.scilifelab.se/``
+2. Verify that the output of the following command contains ``https://testing.delivery.scilifelab.se/`` and **not** ``https://delivery.scilifelab.se/``
 
     .. code-block:: bash
         

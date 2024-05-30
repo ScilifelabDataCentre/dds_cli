@@ -19,31 +19,31 @@
         font-weight: 700;
     }
 
-    .terminal-1543649173-matrix {
+    .terminal-1540634514-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-1543649173-title {
+    .terminal-1540634514-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-1543649173-r1 { fill: #c5c8c6 }
-.terminal-1543649173-r2 { fill: #868887;font-style: italic; }
+    .terminal-1540634514-r1 { fill: #c5c8c6 }
+.terminal-1540634514-r2 { fill: #868887;font-style: italic; }
     </style>
 
     <defs>
-    <clipPath id="terminal-1543649173-clip-terminal">
+    <clipPath id="terminal-1540634514-clip-terminal">
       <rect x="0" y="0" width="975.0" height="72.19999999999999" />
     </clipPath>
-    <clipPath id="terminal-1543649173-line-0">
+    <clipPath id="terminal-1540634514-line-0">
     <rect x="0" y="1.5" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-1543649173-line-1">
+<clipPath id="terminal-1540634514-line-1">
     <rect x="0" y="25.9" width="976" height="24.65"/>
             </clipPath>
     </defs>
@@ -55,12 +55,12 @@
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-1543649173-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#terminal-1540634514-clip-terminal)">
     
-    <g class="terminal-1543649173-matrix">
-    <text class="terminal-1543649173-r1" x="0" y="20" textLength="183" clip-path="url(#terminal-1543649173-line-0)">$&#160;dds&#160;--version</text><text class="terminal-1543649173-r1" x="976" y="20" textLength="12.2" clip-path="url(#terminal-1543649173-line-0)">
-</text><text class="terminal-1543649173-r2" x="0" y="44.4" textLength="183" clip-path="url(#terminal-1543649173-line-1)">[..truncated..]</text><text class="terminal-1543649173-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-1543649173-line-1)">
-</text><text class="terminal-1543649173-r1" x="0" y="68.8" textLength="427" clip-path="url(#terminal-1543649173-line-2)">Data&#160;Delivery&#160;System,&#160;version&#160;2.6.4</text><text class="terminal-1543649173-r1" x="976" y="68.8" textLength="12.2" clip-path="url(#terminal-1543649173-line-2)">
+    <g class="terminal-1540634514-matrix">
+    <text class="terminal-1540634514-r1" x="0" y="20" textLength="183" clip-path="url(#terminal-1540634514-line-0)">$&#160;dds&#160;--version</text><text class="terminal-1540634514-r1" x="976" y="20" textLength="12.2" clip-path="url(#terminal-1540634514-line-0)">
+</text><text class="terminal-1540634514-r2" x="0" y="44.4" textLength="183" clip-path="url(#terminal-1540634514-line-1)">[..truncated..]</text><text class="terminal-1540634514-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-1540634514-line-1)">
+</text><text class="terminal-1540634514-r1" x="0" y="68.8" textLength="427" clip-path="url(#terminal-1540634514-line-2)">Data&#160;Delivery&#160;System,&#160;version&#160;2.7.0</text><text class="terminal-1540634514-r1" x="976" y="68.8" textLength="12.2" clip-path="url(#terminal-1540634514-line-2)">
 </text>
     </g>
     </g>

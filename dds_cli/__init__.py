@@ -60,7 +60,7 @@ class DDSEndpoint:
     BASE_ENDPOINT_LOCAL = "http://127.0.0.1:5000/api/v1"
     BASE_ENDPOINT_DOCKER = "http://dds_backend:5000/api/v1"
     BASE_ENDPOINT_REMOTE = "https://delivery.scilifelab.se/api/v1"
-    BASE_ENDPOINT_REMOTE_TEST = "https://dds-dev.dckube3.scilifelab.se/api/v1"
+    BASE_ENDPOINT_REMOTE_TEST = "https://testing.delivery.scilifelab.se/api/v1"
     if os.getenv("DDS_CLI_ENV") == "development":
         BASE_ENDPOINT = BASE_ENDPOINT_LOCAL
     elif os.getenv("DDS_CLI_ENV") == "docker-dev":

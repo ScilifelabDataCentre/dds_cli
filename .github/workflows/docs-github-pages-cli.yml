@@ -7,7 +7,7 @@ on:
   #  branches:
   #    - master
   #    - ghp-test
-  
+
 jobs:
   ddsclidocumentation:
     name: Build the DDS CLI Documentation
@@ -18,7 +18,7 @@ jobs:
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
       - name: Build the HTML documentation
-        uses: matthiaszepper/sphinx-action-v4@latest
+        uses: matthiaszepper/sphinx-action-v4@master
         with:
           container: latest
           pre-build-command: "pip install ."

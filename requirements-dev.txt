@@ -2,7 +2,7 @@ black==24.1.1
 Sphinx==5.0.2
 sphinx-rtd-theme==1.0.0
 sphinx-click==4.0.0
-pyinstaller==6.7.0
+pyinstaller==4.1
 pylint==2.17.3
 sphinx-copybutton==0.5.1
 sphinxcontrib-svg2pdfconverter==1.2.2

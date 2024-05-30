@@ -21,7 +21,7 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
           container: latest
-          pre-build-command: "apt-get update & apt-get install build-essential & pip install ."
+          pre-build-command: "apt-get update && apt-get -y install build-essential && pip install ."
           build-command: "make dirhtml"
           docs-folder: "docs/"
       - name: Deploy

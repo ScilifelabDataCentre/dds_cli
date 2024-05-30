@@ -20,8 +20,8 @@ jobs:
       - name: Build the HTML documentation
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
-          #container: latest
-          pre-build-command: "pip install ."
+          container: latest
+          pre-build-command: "apt-get update & apt-get install build-essential & pip install ."
           build-command: "make dirhtml"
           docs-folder: "docs/"
       - name: Deploy

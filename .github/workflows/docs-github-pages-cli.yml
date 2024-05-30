@@ -4,10 +4,10 @@
 name: GitHub Pages
 on:
   push:
-    branches:
-      - master
-      - ghp-test
-  workflow_dispatch:
+  #  branches:
+  #    - master
+  #    - ghp-test
+  
 jobs:
   ddsclidocumentation:
     name: Build the DDS CLI Documentation

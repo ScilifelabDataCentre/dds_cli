@@ -18,9 +18,9 @@ jobs:
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
       - name: Build the HTML documentation
-        uses: matthiaszepper/sphinx-action-v4@master
+        uses: matthiaszepper/sphinx-action-v4@main
         with:
-          container: latest
+          #container: latest
           pre-build-command: "pip install ."
           build-command: "make dirhtml"
           docs-folder: "docs/"

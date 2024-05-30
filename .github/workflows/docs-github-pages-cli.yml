@@ -4,9 +4,9 @@
 name: GitHub Pages
 on:
   push:
-  #  branches:
-  #    - master
-  #    - ghp-test
+    branches:
+      - master
+      - ghp-test
 
 jobs:
   ddsclidocumentation:

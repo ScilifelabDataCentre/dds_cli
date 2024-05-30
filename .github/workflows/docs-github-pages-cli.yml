@@ -7,7 +7,6 @@ on:
   #  branches:
   #    - master
   #    - ghp-test
-  
 jobs:
   ddsclidocumentation:
     name: Build the DDS CLI Documentation

@@ -354,3 +354,4 @@ _Empty sprint_
 
 - Update requests to solve CVE ([#690](https://github.com/ScilifelabDataCentre/dds_cli/pull/690))
 - Update docs for Testing instance migration, including removing use of 'dev' ([#691](https://github.com/ScilifelabDataCentre/dds_cli/pull/691))
+- Fixing of GitHub Pages action, that broke due to update in the actions image ([#695](https://github.com/ScilifelabDataCentre/dds_cli/pull/695))

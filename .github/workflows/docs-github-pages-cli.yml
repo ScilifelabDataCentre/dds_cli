@@ -7,6 +7,7 @@ on:
     branches:
       - master
       - ghp-test
+
 jobs:
   ddsclidocumentation:
     name: Build the DDS CLI Documentation
@@ -20,7 +21,7 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
           container: latest
-          pre-build-command: "pip install ."
+          pre-build-command: "apt-get update && apt-get -y install build-essential && pip install ."
           build-command: "make dirhtml"
           docs-folder: "docs/"
       - name: Deploy

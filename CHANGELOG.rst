@@ -1,15 +1,6 @@
 Changelog
 ==========
 
-.. _2.7.0:
-
-2.7.0 - 2024-05-29
-~~~~~~~~~~~~~~~~~~~
-- New features:
-    - The URL for the testing instance has been updated to https://testing.delivery.scilifelab.se/
-- Dependencies: 
-    - `requests` from `2.31.0` to `2.32.0`
-
 .. _2.6.4:
 
 2.6.4 - 2024-04-09

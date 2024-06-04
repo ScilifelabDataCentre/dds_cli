@@ -6,11 +6,10 @@
 ---
 name: New Release
 on:
-  push:
-#  release:
-#    types: [published]
-#    branches:
-#      - "master"
+  release:
+    types: [published]
+    branches:
+      - "master"
 jobs:
   build-n-publish:
     runs-on: ubuntu-latest
@@ -32,23 +31,23 @@ jobs:
       - name: Build the distribution
         run: python setup.py sdist bdist_wheel
 
-      #- name: Publish dist to TestPyPI
-      #  if: github.repository == 'ScilifelabDataCentre/dds_cli'
-      #  uses: pypa/gh-action-pypi-publish@release/v1
-      #  with:
-      #    print-hash: true
-      #    password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-      #    repository-url: https://test.pypi.org/legacy/
-      #    skip-existing: true
+      - name: Publish dist to TestPyPI
+        if: github.repository == 'ScilifelabDataCentre/dds_cli'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print-hash: true
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
 
-      #- name: Publish dist to PyPI
-      #  if: github.repository == 'ScilifelabDataCentre/dds_cli'
-      #  uses: pypa/gh-action-pypi-publish@release/v1
-      #  with:
-      #    print-hash: true
-      #    user: __token__
-      #    password: ${{ secrets.pypi_password }}
-      #    skip-existing: true
+      - name: Publish dist to PyPI
+        if: github.repository == 'ScilifelabDataCentre/dds_cli'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print-hash: true
+          user: __token__
+          password: ${{ secrets.pypi_password }}
+          skip-existing: true
 
   ddsclibinaries:
     name: Build binary packages for the DDS CLI
@@ -109,16 +108,16 @@ jobs:
       - name: Test the executable
         run: |
           ./dist/${{ matrix.OUT_FILE_NAME}} --version
-      #- name: Upload Release Asset
-      #  id: upload-release-asset
-      #  uses: actions/upload-release-asset@v1
-      #  env:
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #  with:
-      #    upload_url: ${{ github.event.release.upload_url }}
-      #    asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
-      #    asset_name: ${{ matrix.OUT_FILE_NAME}}
-      #    asset_content_type: ${{ matrix.ASSET_MIME}}
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
+          asset_name: ${{ matrix.OUT_FILE_NAME}}
+          asset_content_type: ${{ matrix.ASSET_MIME}}
 
   ddsclidocumentation:
     name: Build the DDS CLI Documentation
@@ -153,12 +152,12 @@ jobs:
         with:
           name: Documentation
           path: docs/_build/latex/datadeliverysystem.pdf
-  #    - name: Upload Release Asset
-  #      uses: actions/upload-release-asset@v1
-  #      env:
-  #        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #      with:
-  #        upload_url: ${{ github.event.release.upload_url }}
-  #        asset_path: docs/_build/latex/datadeliverysystem.pdf
-  #        asset_name: dds_cli_user_manual.pdf
-  #        asset_content_type: application/pdf
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: docs/_build/latex/datadeliverysystem.pdf
+          asset_name: dds_cli_user_manual.pdf
+          asset_content_type: application/pdf

@@ -56,7 +56,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-13
             TARGET: MacOs_x86_64
             CMD_BUILD: >
               pyinstaller -F -c -n  dds_cli_macos_x86_64 -i resources/scilifelab.icns
@@ -139,7 +139,7 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@pdflatex
         with:
           container: pdflatex
-          pre-build-command: "apt-get update && apt-get install -y librsvg2-bin"
+          pre-build-command: "apt-get update && apt-get install -y librsvg2-bin && apt-get -y install build-essential"
           build-command: "make latexpdf"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML

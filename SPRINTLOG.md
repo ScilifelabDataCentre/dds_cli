@@ -356,3 +356,7 @@ _Empty sprint_
 - Update docs for Testing instance migration, including removing use of 'dev' ([#691](https://github.com/ScilifelabDataCentre/dds_cli/pull/691))
 - Fix GitHub Pages action, that broke due to update in the action's image ([#695](https://github.com/ScilifelabDataCentre/dds_cli/pull/695))
 - Fix Action that builds the executable files due to update in MacOs default architecture ([#700](https://github.com/ScilifelabDataCentre/dds_cli/pull/700)
+
+# 2024-06-17 - 2024-06-28
+
+- Update documentation to have correct executable name ([#702](https://github.com/ScilifelabDataCentre/dds_cli/pull/702))

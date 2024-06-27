@@ -85,13 +85,13 @@ Install via the **executable**
 
       .. code-block:: bash
 
-         $ chmod +x dds-cli_ubuntu_x86_64   
+         $ chmod +x dds_cli_ubuntu_x86_64   
 
    * On MacOS: 
 
       .. code-block:: bash
 
-         $ chmod +x dds-cli_macos_x86_64   
+         $ chmod +x dds_cli_macos_x86_64   
 
 3. Test that the ``dds-cli`` command works by running the following:
    

@@ -1,6 +1,14 @@
 Changelog
 ==========
 
+.. _2.7.1:
+
+2.7.1 - 2024-06-27
+~~~~~~~~~~~~~~~~~~~
+- Fixes:
+    - Mismatch in the executable name in the documentation fixed.
+
+
 .. _2.7.0:
 
 2.7.0 - 2024-05-29

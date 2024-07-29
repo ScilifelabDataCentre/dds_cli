@@ -200,6 +200,7 @@ Command documentation and guide
    unit
    motd
    changelog
+   testing
 
 Indices and tables
 ==================

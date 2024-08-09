@@ -360,3 +360,7 @@ _Empty sprint_
 # 2024-06-17 - 2024-06-28
 
 - Update documentation to have correct executable name ([#702](https://github.com/ScilifelabDataCentre/dds_cli/pull/702))
+
+# 2024-07-29 - 2024-08-09
+
+- Improve docs related to the testing instance ([#705](https://github.com/ScilifelabDataCentre/dds_cli/pull/705))

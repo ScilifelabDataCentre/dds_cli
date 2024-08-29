@@ -365,6 +365,11 @@ _Empty sprint_
 
 - Improve docs related to the testing instance ([#705](https://github.com/ScilifelabDataCentre/dds_cli/pull/705))
 
+# 2024-08-12 - 2024-08-23
+
+_Empty sprint_
+
 # 2024-08-26 - 2024-09-06
 
 - Remove pinned version in requirements-dev.txt to resolve CVE ([#706](https://github.com/ScilifelabDataCentre/dds_cli/pull/706))
+- Add CODEOWNERS file in order to define Team Hermes as owners of all files in repository ([#707](https://github.com/ScilifelabDataCentre/dds_cli/pull/707))

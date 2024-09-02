@@ -1,6 +1,6 @@
 # How to install the DDS CLI on Windows
 
-## 1. Download and install Python > 3.7
+## 1. Download and install Python > 3.8
 
 ### 1.1. Go to https://www.python.org/downloads/windows/
 
@@ -42,7 +42,7 @@
 
 ![Powershell 1](docs/_static/windows/powershell_top-1.png)
 
-> **Note:** Upon entering `python --version` the version of the previously installed Python distribution should be shown. If a version number < 3.7 is shown or Python is not found, please consult the :ref:`Troubleshooting<troubleshooting>` section below.
+> **Note:** Upon entering `python --version` the version of the previously installed Python distribution should be shown. If a version number < 3.8 is shown or Python is not found, please consult the :ref:`Troubleshooting<troubleshooting>` section below.
 
 ### 2.3. Python ships with a helper program called **pip** to install additional packages. In the next step, this software should be upgraded to its current version.
 

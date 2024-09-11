@@ -1185,7 +1185,7 @@ def retract_project(click_ctx, project):
     required=False,
     is_flag=True,
     default=False,
-    help="Something has one wrong in the project.",
+    help="Something has gone wrong in the project.",
 )
 @click.pass_obj
 def archive_project(click_ctx, project: str, abort: bool = False):

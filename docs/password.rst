@@ -6,9 +6,16 @@
 Securing your password
 =================================
 
-Your Data Delivery System (DDS) password will be used to protect your data from any unauthorized parties. Choosing a secure password is therefore essential since the password's complexity will determine how easy it is to guess the password and thereby gain access to your data. Remembering a number of different passwords for different services can be difficult, and many people resort to using the same or similar password for all, or saving them in insecure ways where they are easily lost or/and read by others.
+Your Data Delivery System (DDS) password will be used to protect your data from any
+unauthorized parties. Choosing a secure password is therefore essential since the
+password's complexity will determine how easy it is to guess the password and thereby
+gain access to your data. Remembering a number of different passwords for different
+services can be difficult, and many people resort to using the same or similar
+password for all, or saving them in insecure ways where they are easily lost or/and
+read by others.
 
-Due to this, we highly recommend that you use a password manager to store your passwords. Some common password management services are `Bitwarden <https://bitwarden.com/>`, `LastPass <https://www.lastpass.com/>`, `1Password <https://1password.com/>`_.
+Due to this, we highly recommend that you use a password manager to store your passwords.
+Some common password management services are `Bitwarden <https://bitwarden.com/>`_, `LastPass <https://www.lastpass.com/>`_, `1Password <https://1password.com/>`_.
 
 How to use password managers, e.g. Bitwarden
 =============================================

@@ -29,7 +29,7 @@ As mentioned above, you can install ``dds-cli`` from PyPI or via an executable.
 Install from **PyPI**
 -----------------------
 
-1. To perform these steps you need to have Python version 3.7 or higher installed.
+1. To perform these steps you need to have Python version 3.8 or higher installed.
 
    * First check which Python version you have
 
@@ -39,7 +39,7 @@ Install from **PyPI**
 
       .. image:: ../img/python3-version.svg
 
-      If this does not return ``Python 3.7.x`` or higher, you will need to `install Python <https://www.python.org/downloads/>`_.
+      If this does not return ``Python 3.8.x`` or higher, you will need to `install Python <https://www.python.org/downloads/>`_.
    
    .. warning:: 
    

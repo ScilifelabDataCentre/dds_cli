@@ -373,6 +373,7 @@ _Empty sprint_
 
 - Remove pinned version in requirements-dev.txt to resolve CVE ([#706](https://github.com/ScilifelabDataCentre/dds_cli/pull/706))
 - Add CODEOWNERS file in order to define Team Hermes as owners of all files in repository ([#707](https://github.com/ScilifelabDataCentre/dds_cli/pull/707))
+- Update documentation and related libraries for pyton 3.12, dropped support for python 3.7 ([#709](https://github.com/ScilifelabDataCentre/dds_cli/pull/709))
 
 # 2024-09-09 - 2024-09-20
 

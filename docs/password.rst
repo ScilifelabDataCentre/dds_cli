@@ -15,19 +15,22 @@ password for all, or saving them in insecure ways where they are easily lost or/
 read by others.
 
 Due to this, we highly recommend that you use a password manager to store your passwords.
-Some common password management services are `Bitwarden <https://bitwarden.com/>`_, `LastPass <https://www.lastpass.com/>`_, `1Password <https://1password.com/>`_.
+Some common password management services are `Bitwarden <https://bitwarden.com/>`_,
+`LastPass <https://www.lastpass.com/>`_, `1Password <https://1password.com/>`_.
 
 How to use password managers, e.g. Bitwarden
 =============================================
 
 Using a password manager means that you need to keep track of a single password:
-The password you set for the password manager.
-The rest are stored within the password manager,
+the password you set for the password manager.
+All your other passwords are stored within the password manager,
 allowing you to have different complex ones for each service you use.
-Many of these tools have mobile apps and plugins for different browsers,
+Many of the password management services have mobile apps and plugins for different browsers,
 which simplifies password management significantly.
 
-The following is an example of how to start using Bitwarden. 
+Data Centre does not provide a password manager service and we do not specifically recommend
+any of the mentioned ones. For illustrative purposes only, we provide
+detailed instructions on how to begin using Bitwarden to demonstrate the concept:
 
 1. Go to https://bitwarden.com/ 
 2. Create an account. At the time of writing, this is done by clicking ``Get Started`` in the top right corner. Fill in your information and click Create account at the bottom. Remember to choose a complex password, that you can remember. Do not share this password with anyone.

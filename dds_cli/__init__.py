@@ -68,7 +68,7 @@ class DDSEndpoint:
         BASE_ENDPOINT = BASE_ENDPOINT_DOCKER
     elif os.getenv("DDS_CLI_ENV") == "test-instance":
         BASE_ENDPOINT = BASE_ENDPOINT_REMOTE_TEST
-    elif os.getenv("DDS_CLI_ENV") == "development-instance":
+    elif os.getenv("DDS_CLI_ENV") == "dev-instance":
         BASE_ENDPOINT = BASE_ENDPOINT_REMOTE_DEV
     else:
         BASE_ENDPOINT = BASE_ENDPOINT_REMOTE

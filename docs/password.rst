@@ -28,8 +28,8 @@ allowing you to have different complex ones for each service you use.
 Many of the password management services have mobile apps and plugins for different browsers,
 which simplifies password management significantly.
 
-Data Centre does not provide a password manager service and we do not specifically recommend
-any of the mentioned ones. For illustrative purposes only, we provide
+Data Centre does not provide a password management service and we do not specifically recommend
+any of the ones mentioned above. For illustrative purposes only, we provide
 detailed instructions on how to begin using Bitwarden to demonstrate the concept:
 
 1. Go to https://bitwarden.com/ 

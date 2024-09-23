@@ -378,3 +378,4 @@ _Empty sprint_
 # 2024-09-09 - 2024-09-20
 
 - Added new dev instance url to cli config ([#712](https://github.com/ScilifelabDataCentre/dds_cli/pull/712))
+- Clarify documentation about password managers ([#711](https://github.com/ScilifelabDataCentre/dds_cli/pull/711))

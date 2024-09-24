@@ -360,3 +360,26 @@ _Empty sprint_
 # 2024-06-17 - 2024-06-28
 
 - Update documentation to have correct executable name ([#702](https://github.com/ScilifelabDataCentre/dds_cli/pull/702))
+
+# 2024-07-29 - 2024-08-09
+
+- Improve docs related to the testing instance ([#705](https://github.com/ScilifelabDataCentre/dds_cli/pull/705))
+
+# 2024-08-12 - 2024-08-23
+
+_Empty sprint_
+
+# 2024-08-26 - 2024-09-06
+
+- Remove pinned version in requirements-dev.txt to resolve CVE ([#706](https://github.com/ScilifelabDataCentre/dds_cli/pull/706))
+- Add CODEOWNERS file in order to define Team Hermes as owners of all files in repository ([#707](https://github.com/ScilifelabDataCentre/dds_cli/pull/707))
+- Update documentation and related libraries for pyton 3.12, dropped support for python 3.7 ([#709](https://github.com/ScilifelabDataCentre/dds_cli/pull/709))
+
+# 2024-09-09 - 2024-09-20
+
+- Added new dev instance url to cli config ([#712](https://github.com/ScilifelabDataCentre/dds_cli/pull/712))
+- Clarify documentation about password managers ([#711](https://github.com/ScilifelabDataCentre/dds_cli/pull/711))
+
+# 2024-09-24 - 2024-10-04
+
+- New version and changelog([#714](https://github.com/ScilifelabDataCentre/dds_cli/pull/714))

@@ -1,6 +1,30 @@
 Changelog
 ==========
 
+.. _2.8.0:
+
+2.8.0 - 2024-09-24
+~~~~~~~~~~~~~~~~~~~
+- New features:
+    - Add CODEOWNERS file to the repository.
+    - Drop support for python 3.7
+    - Added new dev instance url to cli config
+- Dependencies: 
+    - `prettytable` from `3.4.1` to `3.7.0`
+    - `prompt-toolkit` from `3.0.31` to `3.0.40`
+    - `pyYAML` from `6.0.1` to `6.0.2`
+    - `requests` from `2.32.0` to `2.32.2`
+    - `rich` from `12.5.1` to `13.6.0`
+    - `zstandard` from `0.19.0` to `0.22.0`
+- Dependencies (tests): 
+    - `flask` from `2.0.2` to `2.2.5`
+    - `pyfakefs` from `4.5.5` to `5.3.0`
+- Fixes:
+    - Improve documentation related to the testing instance.
+    - Remove pinned version of pynstaller in requeriments-dev to solve cve.
+    - Clarify documentation about password management.
+    - Update documentation for python 3.12
+
 .. _2.7.1:
 
 2.7.1 - 2024-06-27

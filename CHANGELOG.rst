@@ -16,6 +16,7 @@ Changelog
     - `requests` from `2.32.0` to `2.32.2`
     - `rich` from `12.5.1` to `13.6.0`
     - `zstandard` from `0.19.0` to `0.22.0`
+    - `pyinstaller` version unpinned
 - Dependencies (tests): 
     - `flask` from `2.0.2` to `2.2.5`
     - `pyfakefs` from `4.5.5` to `5.3.0`
@@ -23,8 +24,6 @@ Changelog
     - Improve documentation related to the testing instance.
     - Clarify documentation about password management.
     - Update documentation for python 3.12
-- Fixes:
-    - Remove pinned version of pynstaller in requeriments-dev to solve cve.
 
 .. _2.7.1:
 

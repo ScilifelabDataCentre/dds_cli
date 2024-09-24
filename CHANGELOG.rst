@@ -5,10 +5,12 @@ Changelog
 
 2.8.0 - 2024-09-24
 ~~~~~~~~~~~~~~~~~~~
-- New features:
-    - Add CODEOWNERS file to the repository.
+- Deprecations:
     - Drop support for python 3.7
+- New features:
     - Added new dev instance url to cli config
+- Workflow:
+    - Add CODEOWNERS file to the repository.
 - Dependencies: 
     - `prettytable` from `3.4.1` to `3.7.0`
     - `prompt-toolkit` from `3.0.31` to `3.0.40`
@@ -19,11 +21,12 @@ Changelog
 - Dependencies (tests): 
     - `flask` from `2.0.2` to `2.2.5`
     - `pyfakefs` from `4.5.5` to `5.3.0`
-- Fixes:
+- Documentation:
     - Improve documentation related to the testing instance.
-    - Remove pinned version of pynstaller in requeriments-dev to solve cve.
     - Clarify documentation about password management.
     - Update documentation for python 3.12
+- Fixes:
+    - Remove pinned version of pynstaller in requeriments-dev to solve cve.
 
 .. _2.7.1:
 

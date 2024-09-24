@@ -9,8 +9,6 @@ Changelog
     - Drop support for python 3.7
 - New features:
     - Added new dev instance url to cli config
-- Workflow:
-    - Add CODEOWNERS file to the repository.
 - Dependencies: 
     - `prettytable` from `3.4.1` to `3.7.0`
     - `prompt-toolkit` from `3.0.31` to `3.0.40`

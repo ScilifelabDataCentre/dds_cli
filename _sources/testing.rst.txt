@@ -26,8 +26,8 @@ This page will give you information on:
 
     If your testing account has the role "Researcher", you can skip this section. 
 
-* First and foremost, **no sensitive data** is allowed to be delivered within this test instance. 
-* In order to create projects, which is required in order to test the upload / download functionality: 
+* First and foremost, this is not a production instance and will get releases without warning. **No sensitive data** is allowed to be delivered within this instance.
+* In order to create projects, which is required in order to test the upload / download functionality:
     * You must have the account role "Unit Admin" or "Unit Personnel"
     * Your unit must have at least two "Unit Admins" 
 * When listing your projects you will see your projects, and yours only. However, in order to not create a large number of separate storage locations for testing purposes, the actual storage location is shared by all units in the test setup. In the production instance, there's always a separate storage location per SciLifeLab unit.
@@ -61,20 +61,17 @@ This page will give you information on:
 
 .. _test-install:
 
-3. How to install the test version of the CLI
+3. How to install the CLI
 ================================================
 
-You need to install the test version of the CLI from TestPyPi. Run this command in the terminal.
-
-.. code-block:: bash
-
-    pip install -i https://test.pypi.org/simple/ dds-cli
+Install the CLI as described in the :ref:`installation guide<installation>`.
 
 .. note::
-    
-    This is **not** the same command as shown in the installation guide.
-    
-    You can install the released version of the CLI by following the installation guide, however you will not have the latest version or any of the features that are currently being implemented. There may also be unexpected errors since the released CLI and the DDS test instance may not be completely compatible.
+    Rarely, backwards incompatible releases will break the integration between the CLI and the API. As we
+    release the web application to test during the development process, there can be small windows of time
+    where the production CLI is not compatible with the DDS instance deployed to test.
+
+    These windows of time will be kept as small as possible and we will notify test users.
 
 .. _test-config:
 

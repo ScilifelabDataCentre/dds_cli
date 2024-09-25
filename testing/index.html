@@ -20,6 +20,7 @@
     <script src="../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
+    <link rel="prev" title="Changelog" href="../changelog/" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -45,7 +46,7 @@
 <ul class="simple">
 <li><p><a class="reference internal" href="#important-information-for-scilifelab-units" id="id1">1. Important information for SciLifeLab Units</a></p></li>
 <li><p><a class="reference internal" href="#where-the-dds-test-instance-is-located" id="id2">2. Where the DDS Test Instance is located</a></p></li>
-<li><p><a class="reference internal" href="#how-to-install-the-test-version-of-the-cli" id="id3">3. How to install the test version of the CLI</a></p></li>
+<li><p><a class="reference internal" href="#how-to-install-the-cli" id="id3">3. How to install the CLI</a></p></li>
 <li><p><a class="reference internal" href="#how-to-configure-the-test-version-of-the-cli" id="id4">4. How to configure the test version of the CLI</a></p></li>
 <li><p><a class="reference internal" href="#experiencing-issues-contact-us" id="id5">Experiencing issues? Contact us!</a></p></li>
 </ul>
@@ -61,7 +62,7 @@
 <p>If your testing account has the role “Researcher”, you can skip this section.</p>
 </div>
 <ul>
-<li><p>First and foremost, <strong>no sensitive data</strong> is allowed to be delivered within this test instance.</p></li>
+<li><p>First and foremost, this is not a production instance and will get releases without warning. <strong>No sensitive data</strong> is allowed to be delivered within this instance.</p></li>
 <li><dl class="simple">
 <dt>In order to create projects, which is required in order to test the upload / download functionality:</dt><dd><ul class="simple">
 <li><p>You must have the account role “Unit Admin” or “Unit Personnel”</p></li>
@@ -113,16 +114,15 @@
 </li>
 </ul>
 </section>
-<section id="how-to-install-the-test-version-of-the-cli">
-<span id="test-install"></span><h2><a class="toc-backref" href="#id3">3. How to install the test version of the CLI</a><a class="headerlink" href="#how-to-install-the-test-version-of-the-cli" title="Permalink to this heading">¶</a></h2>
-<p>You need to install the test version of the CLI from TestPyPi. Run this command in the terminal.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-i<span class="w"> </span>https://test.pypi.org/simple/<span class="w"> </span>dds-cli
-</pre></div>
-</div>
+<section id="how-to-install-the-cli">
+<span id="test-install"></span><h2><a class="toc-backref" href="#id3">3. How to install the CLI</a><a class="headerlink" href="#how-to-install-the-cli" title="Permalink to this heading">¶</a></h2>
+<p>Install the CLI as described in the <a class="reference internal" href="../installation/#installation"><span class="std std-ref">installation guide</span></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This is <strong>not</strong> the same command as shown in the installation guide.</p>
-<p>You can install the released version of the CLI by following the installation guide, however you will not have the latest version or any of the features that are currently being implemented. There may also be unexpected errors since the released CLI and the DDS test instance may not be completely compatible.</p>
+<p>Rarely, backwards incompatible releases will break the integration between the CLI and the API. As we
+release the web application to test during the development process, there can be small windows of time
+where the production CLI is not compatible with the DDS instance deployed to test.</p>
+<p>These windows of time will be kept as small as possible and we will notify test users.</p>
 </div>
 </section>
 <section id="how-to-configure-the-test-version-of-the-cli">
@@ -174,7 +174,7 @@
 
 
 
-<p class="blurb">Version: 2.7.1</p>
+<p class="blurb">Version: 2.8.0</p>
 
 
 
@@ -189,7 +189,7 @@
 
 
 <h3>Navigation</h3>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../password/">Securing your password</a></li>
@@ -203,12 +203,14 @@
 <li class="toctree-l1"><a class="reference internal" href="../unit/">dds unit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../motd/">dds motd</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changelog/">Changelog</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The DDS Test instance</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../">Documentation overview</a><ul>
+      <li>Previous: <a href="../changelog/" title="previous chapter">Changelog</a></li>
   </ul></li>
 </ul>
 </div>

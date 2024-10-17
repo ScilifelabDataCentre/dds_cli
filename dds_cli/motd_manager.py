@@ -126,13 +126,13 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         )
         LOG.info(response_message)
 
-    def send_motd(self, motd_id: int, unit_personnel_only=False) -> None:
+    def send_motd(self, motd_id: int, unit_only=False) -> None:
         """Send specific MOTD to users."""
         response_json, _ = dds_cli.utils.perform_request(
             endpoint=DDSEndpoint.MOTD_SEND,
             headers=self.token,
             method="post",
-            json={"motd_id": motd_id, "unit_personnel_only": unit_personnel_only},
+            json={"motd_id": motd_id, "unit_only": unit_only},
             error_message="Failed sending the MOTD to users",
         )
 

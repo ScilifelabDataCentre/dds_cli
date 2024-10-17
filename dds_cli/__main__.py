@@ -2071,11 +2071,11 @@ def deactivate_motd(click_ctx, motd_id):
 @motd_group_command.command(name="send")
 @click.argument("motd_id", metavar="[MOTD_ID]", nargs=1, type=int, required=True)
 @click.option(
-    "--unit-personnel-only",
+    "--unit-only",
     is_flag=True,
     required=False,
     default=False,
-    help="Send MOTD to unit personnel only.",
+    help="Send MOTD to unit personnel and unit admins only.",
 )
 @click.pass_obj
 def send_motd(click_ctx, motd_id, unit_personnel_only):

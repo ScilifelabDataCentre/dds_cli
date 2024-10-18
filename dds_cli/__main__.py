@@ -2075,7 +2075,7 @@ def deactivate_motd(click_ctx, motd_id):
     is_flag=True,
     required=False,
     default=False,
-    help="Send MOTD to unit personnel and unit admins only.",
+    help="Only send MOTD to Unit Admins and Unit Personnel.",
 )
 @click.pass_obj
 def send_motd(click_ctx, motd_id, unit_only):

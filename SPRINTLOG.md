@@ -384,3 +384,7 @@ _Empty sprint_
 
 - New version and changelog([#714](https://github.com/ScilifelabDataCentre/dds_cli/pull/714))
 - Added a new option to the motd send command to allow sending to unit personnel only ([#717](https://github.com/ScilifelabDataCentre/dds_cli/pull/717))
+
+# 2024-10-07 - 2024-10-18
+
+- Update MOTD command according to post merge review ([#720](https://github.com/ScilifelabDataCentre/dds_cli/pull/720))

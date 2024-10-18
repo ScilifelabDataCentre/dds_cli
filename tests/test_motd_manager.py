@@ -242,7 +242,7 @@ def test_send_motd_all(caplog: LogCaptureFixture):
 
             with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
                 mtdm.token = {}  # required, otherwise none
-                mtdm.send_motd(motd_id=motd_id, unit_personnel_only=False)  # Send motd
+                mtdm.send_motd(motd_id=motd_id, unit_only=False)  # Send motd
 
             assert (
                 "dds_cli.motd_manager",

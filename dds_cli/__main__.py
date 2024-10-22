@@ -2070,15 +2070,22 @@ def deactivate_motd(click_ctx, motd_id):
 # -- dds motd send -- #
 @motd_group_command.command(name="send")
 @click.argument("motd_id", metavar="[MOTD_ID]", nargs=1, type=int, required=True)
+@click.option(
+    "--unit-only",
+    is_flag=True,
+    required=False,
+    default=False,
+    help="Only send MOTD to Unit Admins and Unit Personnel.",
+)
 @click.pass_obj
-def send_motd(click_ctx, motd_id):
+def send_motd(click_ctx, motd_id, unit_only):
     """Send motd as email to all users."""
     try:
         with dds_cli.motd_manager.MotdManager(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
         ) as sender:
-            sender.send_motd(motd_id=motd_id)
+            sender.send_motd(motd_id=motd_id, unit_only=unit_only)
     except (
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,

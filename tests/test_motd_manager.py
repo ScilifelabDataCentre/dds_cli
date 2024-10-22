@@ -222,3 +222,30 @@ def test_add_new_motd_ok(caplog: LogCaptureFixture):
                 logging.INFO,
                 "Response from API about adding a MOTD.",
             ) in caplog.record_tuples
+
+
+# send_motd
+
+
+def test_send_motd_all(caplog: LogCaptureFixture):
+    """Send a MOTD to all users."""
+
+    motd_id = 1
+    response_message = "Response from API about sending a MOTD."
+    returned_response: Dict = {"message": response_message}
+
+    with caplog.at_level(logging.INFO):
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.post(DDSEndpoint.MOTD_SEND, status_code=200, json=returned_response)
+
+            with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+                mtdm.token = {}  # required, otherwise none
+                mtdm.send_motd(motd_id=motd_id, unit_only=False)  # Send motd
+
+            assert (
+                "dds_cli.motd_manager",
+                logging.INFO,
+                response_message,
+            ) in caplog.record_tuples

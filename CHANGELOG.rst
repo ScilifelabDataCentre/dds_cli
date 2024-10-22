@@ -1,6 +1,13 @@
 Changelog
 ==========
 
+.. _2.8.1:
+
+2.8.1 - 2024-10-22
+~~~~~~~~~~~~~~~~~~~
+- New features:
+    - Added a new option to the motd send command to allow sending to unit personnel only
+
 .. _2.8.0:
 
 2.8.0 - 2024-09-24

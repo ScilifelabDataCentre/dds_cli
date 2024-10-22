@@ -388,3 +388,4 @@ _Empty sprint_
 # 2024-10-07 - 2024-10-18
 
 - Update MOTD command according to post merge review ([#720](https://github.com/ScilifelabDataCentre/dds_cli/pull/720))
+- New version: 2.8.1([#719](https://github.com/ScilifelabDataCentre/dds_cli/pull/719))

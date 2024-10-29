@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Check out source-code repository
 
       - name: Set up Python 3.12
@@ -92,7 +92,7 @@ jobs:
             OUT_FILE_NAME: dds_cli_ubuntu-latest_x86_64
             ASSET_MIME: application/x-elf
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Python 3.9 setup
         uses: actions/setup-python@v4
         with:

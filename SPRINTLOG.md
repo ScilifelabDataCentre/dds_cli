@@ -389,3 +389,7 @@ _Empty sprint_
 
 - Update MOTD command according to post merge review ([#720](https://github.com/ScilifelabDataCentre/dds_cli/pull/720))
 - New version: 2.8.1([#719](https://github.com/ScilifelabDataCentre/dds_cli/pull/719))
+
+# 2024-10-21 - 2024-11-01
+
+- Workflow: Yamllint checkout action bumped to v4 ([#724](https://github.com/ScilifelabDataCentre/dds_cli/pull/724))

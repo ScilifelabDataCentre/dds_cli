@@ -32,6 +32,6 @@ jobs:
           COVERAGE_FILE=./coverage/.coverage
           pytest --color=yes --cov=./dds_cli --cov-report=xml:coverage/report.xml
 
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           files: ./coverage/report.xml

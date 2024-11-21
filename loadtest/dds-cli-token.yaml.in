@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    sealedsecrets.bitnami.com/cluster-wide: "true"
+  name: dds-cli-token
+data:
+  dds_cli_token: [Base64-encoded token]

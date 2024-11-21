@@ -1,0 +1,31 @@
+This is a simple framework for running load tests of the DDS on Kubernetes.
+
+# What is it?
+
+It sets up a Kubernetes _job_ that runs n instances of a small container uploading each 32 small files to the DDS in parallel.  By default, n = 16, as defined in the file `job.yaml`.
+
+# Prerequisites
+
+You must have access to a project on some DDS instance, and to a Kubernetes cluster where you can run `kubectl` commands.
+
+You also need the [yq](https://github.com/mikefarah/yq) utility (but it’s only to create one file from a template, so you could do the same step manually).
+
+# Intended usage
+
+1. Run `./set-up-kubernetes-load-testing.sh`.  This will encrypt your personal DDS CLI token as a “secret” on the Kubernetes project so that the pods can use it to run the DDS CLI (not ideal, I know, but it works and should be pretty safe since projects are firewalled quite strictly).
+2. Edit `job.yaml` by changing the value of `DDS_CLI_PROJECT`.  The rest shouldn’t need changing to run smoothly, but you may want to experiment with the values of `parallelism` and `completions` in the job spec.  Put the same value in those two fields (see https://kubernetes.io/docs/concepts/workloads/controllers/job/#success-policy for details).
+3. Create the job with
+
+    ```kubectl --context <cluster> -n <namespace> apply -f job.yaml```
+
+and see the pods running.  You can in particular monitor the job status with
+
+    ```kubectl --context <cluster> -n <namespace> get jobs```
+
+At the moment, the pods start throwing errors with n = 16 (i.e. 512 concurrent uploads) so that Kubernetes declares the job as failed even though the files seem to reach the DDS eventually.  With n = 32 I have observed data loss.
+
+# Note for later
+
+Kubernetes secrets are very powerful, but there is a flaw that affects us in this case: when “mounted” in pods, they always have the root user as the owner (see https://github.com/kubernetes/kubernetes/issues/81089).  This means we can’t use them as is because the DDS CLI token needs to be in `600` mode, so that non-root users couldn’t see the token if it was mounted with the correct permissions -- and we can’t run the process as root either because of a cluster policy (I tried for you so you don’t have to.).  The easiest way to work around that issue is simply to mount the secret in the normal `644` mode and copy it, as non-root user, into a token in `600` mode; and that’s what I did in `job.yaml`.  Stack Overflow and other sites are awash with more complex solutions, but they’re no safer (the token is exposed to whoever has access to the Kubernetes project anyway), so I went for something simpler.
+
+Arthur, Uppsala, 25 November 2024.

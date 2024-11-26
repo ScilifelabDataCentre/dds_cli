@@ -1,46 +1,51 @@
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: 16pods
+  name: 2pods
 spec:
-  parallelism: 16
-  completions: 16
+  parallelism: 2
+  completions: 2
   template:
     spec:
       restartPolicy: OnFailure
       containers:
-      - name: single-upload
-        image: ghcr.io/scilifelabdatacentre/dds-load-testing
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: 1
-          limits:
-            memory: "1Gi"
-            cpu: 1
-        env:
-          - name: DDS_CLI_ENV
-            value: "test-instance"
-          - name: DDS_CLI_PROJECT
-            value: "datacentre00042"
-        command:
-          - "sh"
-          - "-c"
-          - "cp .dds_cli_token_root .dds_cli_token && chmod 600 .dds_cli_token && ./upload.sh"
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-              - ALL
-          runAsNonRoot: true
-          seccompProfile:
-            type: RuntimeDefault
-          runAsUser: 1000
-          runAsGroup: 1000
-        volumeMounts:
-          - name: token
-            mountPath: /home/load-tester/.dds_cli_token_root
-            subPath: dds_cli_token
+        - name: single-upload
+          image: ghcr.io/scilifelabdatacentre/dds-load-testing:v1
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: 1
+            limits:
+              memory: "512Mi"
+              cpu: 1
+          env:
+            - name: DDS_CLI_ENV
+              value: "test-instance"
+            - name: DDS_CLI_PROJECT
+              value: "datacentre00042"
+          command:
+            - "sh"
+            - "-c"
+            - |-
+              cp .dds_cli_token_root .dds_cli_token && \
+                chmod 600 .dds_cli_token && \
+                ./upload.sh && \
+                sleep 3600
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            runAsUser: 1000
+            runAsGroup: 1000
+          volumeMounts:
+            - name: token
+              mountPath: /home/load-tester/.dds_cli_token_root
+              subPath: dds_cli_token
       volumes:
         - name: token
           secret:

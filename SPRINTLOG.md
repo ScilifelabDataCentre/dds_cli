@@ -389,3 +389,7 @@ _Empty sprint_
 
 - Update MOTD command according to post merge review ([#720](https://github.com/ScilifelabDataCentre/dds_cli/pull/720))
 - New version: 2.8.1([#719](https://github.com/ScilifelabDataCentre/dds_cli/pull/719))
+
+# 2024-11-18 – 2024-11-29
+
+- Added simple load testing framework for Kubernetes in the directory `loadtest` ([#725](https://github.com/ScilifelabDataCentre/dds_cli/pull/725)).

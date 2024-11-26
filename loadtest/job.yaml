@@ -30,8 +30,7 @@ spec:
             - |-
               cp .dds_cli_token_root .dds_cli_token && \
                 chmod 600 .dds_cli_token && \
-                ./upload.sh && \
-                sleep 3600
+                ./upload.sh
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

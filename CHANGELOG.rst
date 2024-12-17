@@ -1,6 +1,13 @@
 Changelog
 ==========
 
+.. _2.9.0:
+
+2.9.0 - 2024-12-18
+~~~~~~~~~~~~~~~~~~~
+- New features: 
+    - Added 'Upload' or 'Download' to end of staging directory depending on command
+
 .. _2.8.1:
 
 2.8.1 - 2024-10-22

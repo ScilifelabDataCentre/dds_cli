@@ -388,4 +388,12 @@ _Empty sprint_
 # 2024-10-07 - 2024-10-18
 
 - Update MOTD command according to post merge review ([#720](https://github.com/ScilifelabDataCentre/dds_cli/pull/720))
-- New version: 2.8.1([#719](https://github.com/ScilifelabDataCentre/dds_cli/pull/719))
+- New version: 2.8.1 ([#719](https://github.com/ScilifelabDataCentre/dds_cli/pull/719))
+
+# 2024-12-02 - 2024-12-13
+
+- 'Upload' or 'Download' added to end of delivery directory name depending on command ([#726](https://github.com/ScilifelabDataCentre/dds_cli/pull/726))
+
+# 2024-12-16 - 2024-12-20
+
+- New version: 2.9.0 ([#728](https://github.com/ScilifelabDataCentre/dds_cli/pull/728))

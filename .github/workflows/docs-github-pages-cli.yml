@@ -31,7 +31,7 @@ jobs:
             . venv/bin/activate 
             pip install --upgrade pip setuptools wheel
             pip install .
-          build-command: ". ven/bin/activate && make dirhtml"
+          build-command: ". venv/bin/activate && make dirhtml"
           docs-folder: "docs/"
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.4.3

@@ -24,7 +24,7 @@ jobs:
       - name: Build the HTML documentation
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
-          container: latest
+          container: python:3.12-slim
           pre-build-command: |
             apt-get update && \
             apt-get install -y build-essential libffi-dev python3-dev && \

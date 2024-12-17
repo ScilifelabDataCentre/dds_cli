@@ -28,9 +28,7 @@ jobs:
             apt-get update && apt-get install -y build-essential libffi-dev
             apt-get install -y python3.11 python3.11-venv
             python3.11 -m venv venv
-            . venv/bin/activate 
-            pip install --upgrade pip setuptools wheel
-            pip install .
+            . venv/bin/activate && pip install --upgrade pip setuptools wheel && pip install .
           build-command: ". venv/bin/activate && make dirhtml"
           docs-folder: "docs/"
       - name: Deploy

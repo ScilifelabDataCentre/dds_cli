@@ -21,16 +21,21 @@ jobs:
       - name: Make dependencies available to Docker container
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
       - name: Build the HTML documentation
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
+          container: python:3.12-slim
           pre-build-command: |
-            apt-get update && apt-get -y install libffi-dev build-essential
-            apt-get install python3.11 python3.11-venv -y && python3.11 -m venv venv
-            . venv/bin/activate
-            pip install --upgrade pip setuptools wheel
-            pip install . && pip install -r docs/requirements.txt  
-          build-command: "source venv/bin/activate && make dirhtml"
+            apt-get update && \
+            apt-get install -y build-essential libffi-dev python3-dev && \
+            pip install --upgrade pip setuptools wheel && \
+            pip install --only-binary :all: --prefer-binary zstandard cffi && \
+            pip install .
+          build-command: "make dirhtml"
           docs-folder: "docs/"
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.4.3

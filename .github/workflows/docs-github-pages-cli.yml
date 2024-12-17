@@ -11,18 +11,26 @@ on:
 jobs:
   ddsclidocumentation:
     name: Build the DDS CLI Documentation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
       - name: Make dependencies available to Docker container
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
       - name: Build the HTML documentation
         uses: matthiaszepper/sphinx-action-v4@latest
         with:
-          container: latest
-          pre-build-command: "apt-get update && apt-get -y install build-essential && pip install --upgrade pip setuptools wheel  && pip install ."
-          build-command: "make dirhtml"
+          pre-build-command: |
+            apt-get update && apt-get -y install libffi-dev build-essential
+            apt-get install python3.11 python3.11-venv -y && python3.11 -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip setuptools wheel
+            pip install . && pip install -r docs/requirements.txt  
+          build-command: "source venv/bin/activate && make dirhtml"
           docs-folder: "docs/"
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4.4.3

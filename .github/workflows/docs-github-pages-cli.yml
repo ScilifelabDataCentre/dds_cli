@@ -6,12 +6,13 @@ on:
   push:
     branches:
       - master
+      - dev
       - ghp-test
 
 jobs:
   ddsclidocumentation:
     name: Build the DDS CLI Documentation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Make dependencies available to Docker container

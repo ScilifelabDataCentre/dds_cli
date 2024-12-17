@@ -29,6 +29,7 @@ jobs:
             apt-get update && \
             apt-get install -y build-essential libffi-dev python3-dev && \
             pip install --upgrade pip setuptools wheel && \
+            pip install --only-binary :all: --prefer-binary zstandard cffi && \
             pip install -r docs/requirements.txt
           build-command: "make dirhtml"
           docs-folder: "docs/"

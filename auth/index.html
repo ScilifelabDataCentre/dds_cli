@@ -1,27 +1,25 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>dds auth &#8212; Data Delivery System  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+    <title>&lt;no title&gt; &#8212; Data Delivery System  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=c058f7c8" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=19a2ea7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4ae27d24" />
+    <script src="../_static/documentation_options.js?v=187304be"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=5eb1bb1e"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
-    <link rel="next" title="dds user" href="../user/" />
-    <link rel="prev" title="dds" href="../main/" />
+    <link rel="next" title="&lt;no title&gt;" href="../user/" />
+    <link rel="prev" title="&lt;no title&gt;" href="../main/" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -39,100 +37,13 @@
 
           <div class="body" role="main">
             
-  <section id="dds-auth">
-<span id="dds-auth"></span><h1>dds auth<a class="headerlink" href="#dds-auth" title="Permalink to this heading">¶</a></h1>
-<p>Group command for creating and managing authenticated sessions (valid for 7 days).</p>
-<p>Authenticate yourself once and run multiple commands within a certain amount of time
-without specifying your user credentials.
-If you do not authenticate yourself and start a new session, you will need to provide your
-DDS username when running the other commands.</p>
-<p>All subcommands are usable by all user roles.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
-</pre></div>
-</div>
-<section id="dds-auth-info">
-<h2>info<a class="headerlink" href="#dds-auth-info" title="Permalink to this heading">¶</a></h2>
-<p>Display information about ongoing authenticated session.</p>
-<div class="line-block">
-<div class="line">Information displayed:</div>
-<div class="line">- If the token is about to expire</div>
-<div class="line">- Time of token expiration</div>
-</div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</pre></div>
-</div>
-</section>
-<section id="dds-auth-login">
-<h2>login<a class="headerlink" href="#dds-auth-login" title="Permalink to this heading">¶</a></h2>
-<p>Start or renew an authenticated session.</p>
-<p>Creates or renews the authentication token stored in the ‘.dds_cli_token’ file.</p>
-<p>Run this command before running the cli in a non-interactive fashion as this enables the longest
-possible session time before a password needs to be entered again.</p>
-<p>The permissions of tokens cannot be changed after the tokens are established.
-If you began an authenticated session without the use of the –allow-group option,
-but want to use it in a new session, use ‘dds auth logout’ to end the current session.
-Then use the –allow-group option and start a new session. This also applies to the reverse.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span>login<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</pre></div>
-</div>
-<p class="rubric">Options</p>
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-dds-auth-login-totp">
-<span class="sig-name descname"><span class="pre">--totp</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;one-time</span> <span class="pre">code&gt;</span></span><a class="headerlink" href="#cmdoption-dds-auth-login-totp" title="Permalink to this definition">¶</a></dt>
-<dd><p>One-time code from Authenticator app. Can only be used if the two factor authentication method has been configured to ‘Authenticator App’. Keep in mind that authentication must take less than 30 seconds for this option to work.</p>
-</dd></dl>
-
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-dds-auth-login-allow-group">
-<span class="sig-name descname"><span class="pre">--allow-group</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-auth-login-allow-group" title="Permalink to this definition">¶</a></dt>
-<dd><p>[Not recommended, use with care] Allow read permissions to group. Sets 640 permission instead of 600, allowing others to access your authenticated session token.</p>
-</dd></dl>
-
-</section>
-<section id="dds-auth-logout">
-<h2>logout<a class="headerlink" href="#dds-auth-logout" title="Permalink to this heading">¶</a></h2>
-<p>End authenticated session.</p>
-<p>Removes the saved authentication token by deleting the ‘.dds_cli_token’ file.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span><span class="nb">logout</span><span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</pre></div>
-</div>
-</section>
-<section id="dds-auth-twofactor">
-<h2>twofactor<a class="headerlink" href="#dds-auth-twofactor" title="Permalink to this heading">¶</a></h2>
-<p>Group command for configuring and deactivating methods of two factor authentication.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span>twofactor<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
-</pre></div>
-</div>
-<section id="dds-auth-twofactor-configure">
-<h3>configure<a class="headerlink" href="#dds-auth-twofactor-configure" title="Permalink to this heading">¶</a></h3>
-<p>Configure your preferred method of two-factor authentication.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span>twofactor<span class="w"> </span>configure<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</pre></div>
-</div>
-</section>
-<section id="dds-auth-twofactor-deactivate">
-<h3>deactivate<a class="headerlink" href="#dds-auth-twofactor-deactivate" title="Permalink to this heading">¶</a></h3>
-<p>[Super Admins only] Deactivate another users TOTP.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>auth<span class="w"> </span>twofactor<span class="w"> </span>deactivate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</pre></div>
-</div>
-<p class="rubric">Options</p>
-<dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-dds-auth-twofactor-deactivate-u">
-<span id="cmdoption-dds-auth-twofactor-deactivate-username"></span><span class="sig-name descname"><span class="pre">-u</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--username</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;username&gt;</span></span><a class="headerlink" href="#cmdoption-dds-auth-twofactor-deactivate-u" title="Permalink to this definition">¶</a></dt>
-<dd><p><strong>Required</strong> The user you wish to deactivate TOTP for.</p>
-</dd></dl>
-
-</section>
-</section>
-</section>
-
+  <span class="target" id="dds-auth"></span>
 
           </div>
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <p class="logo">
   <a href="../">
@@ -143,7 +54,7 @@ Then use the –allow-group option and start a new session. This also applies to
 
 
 
-<p class="blurb">Version: 2.8.1</p>
+<p class="blurb">Version: 2.9.0</p>
 
 
 
@@ -157,20 +68,21 @@ Then use the –allow-group option and start a new session. This also applies to
 
 
 
-<h3>Navigation</h3>
-<ul class="current">
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search/" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../password/">Securing your password</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../main/">dds (Main command)</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">dds auth</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../user/">dds user</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../project/">dds project</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data/">dds data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../ls/">dds ls</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../unit/">dds unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../motd/">dds motd</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changelog/">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../testing/">The DDS Test instance</a></li>
 </ul>
@@ -179,21 +91,11 @@ Then use the –allow-group option and start a new session. This also applies to
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../">Documentation overview</a><ul>
-      <li>Previous: <a href="../main/" title="previous chapter">dds</a></li>
-      <li>Next: <a href="../user/" title="next chapter">dds user</a></li>
+      <li>Previous: <a href="../main/" title="previous chapter">&lt;no title&gt;</a></li>
+      <li>Next: <a href="../user/" title="next chapter">&lt;no title&gt;</a></li>
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../search/" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -210,8 +112,8 @@ Then use the –allow-group option and start a new session. This also applies to
       &#169;2021-2022, SciLifeLab Data Centre.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 5.0.2</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.0.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
       <a href="../_sources/auth.rst.txt"

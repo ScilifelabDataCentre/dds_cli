@@ -16,7 +16,7 @@ jobs:
     name: Build the DDS CLI Documentation
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4  
+      - uses: actions/checkout@v1
 
       - name: Make dependencies available to Docker container
         run: |

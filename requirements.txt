@@ -16,4 +16,4 @@ rich==13.6.0
 rich-click==1.5.2
 simplejson==3.17.6
 tzlocal==4.2
-zstandard==0.23.0
+zstandard==0.22.0

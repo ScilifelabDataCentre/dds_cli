@@ -1,21 +1,21 @@
+
 <!DOCTYPE html>
 
-<html lang="en" data-content_root="../">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
     <title>Installation guide &#8212; Data Delivery System  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
-    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=c058f7c8" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=19a2ea7e" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4ae27d24" />
-    <script src="../_static/documentation_options.js?v=187304be"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
     <link rel="next" title="Securing your password" href="../password/" />
@@ -38,7 +38,7 @@
           <div class="body" role="main">
             
   <section id="installation-guide">
-<span id="installation"></span><h1>Installation guide<a class="headerlink" href="#installation-guide" title="Link to this heading">¶</a></h1>
+<span id="installation"></span><h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this heading">¶</a></h1>
 <p>You can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> in two different ways:</p>
 <ul class="simple">
 <li><p>From <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPI</a>. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax.</p></li>
@@ -52,19 +52,17 @@
 <p>The following sections describe the installation process on <a class="reference internal" href="#mac-linux"><span class="std std-ref">MacOS / Linux</span></a> and <a class="reference internal" href="#windows"><span class="std std-ref">Windows</span></a>, and how to load <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> on <a class="reference internal" href="#uppmax"><span class="std std-ref">Uppmax</span></a>.
 Note that the sections describing installation from PyPI are focused on the <code class="docutils literal notranslate"><span class="pre">install</span></code> command, and do not provide a guide on how to verify the package integrity with checksums. Instructions on how to do this can be found at the <a class="reference internal" href="#verify-integrity"><span class="std std-ref">bottom of this page</span></a>.</p>
 <section id="macos-linux">
-<span id="mac-linux"></span><h2>MacOS / Linux<a class="headerlink" href="#macos-linux" title="Link to this heading">¶</a></h2>
+<span id="mac-linux"></span><h2>MacOS / Linux<a class="headerlink" href="#macos-linux" title="Permalink to this heading">¶</a></h2>
 <p>As mentioned above, you can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> from PyPI or via an executable.</p>
 <section id="install-from-pypi">
-<span id="pypi-unix"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#install-from-pypi" title="Link to this heading">¶</a></h3>
+<span id="pypi-unix"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#install-from-pypi" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic">
 <li><p>To perform these steps you need to have Python version 3.8 or higher installed.</p>
 <ul>
 <li><p>First check which Python version you have</p>
 <blockquote>
-<div><img alt="../_images/python-version.svg" src="../_images/python-version.svg" />
-<p>If this displays <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">2.7</span></code>, run <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">--version</span></code> instead.</p>
-<img alt="../_images/python3-version.svg" src="../_images/python3-version.svg" />
-<p>If this does not return <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3.8.x</span></code> or higher, you will need to <a class="reference external" href="https://www.python.org/downloads/">install Python</a>.</p>
+<div><img alt="../_images/python-version.svg" src="../_images/python-version.svg" /><p>If this displays <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">2.7</span></code>, run <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">--version</span></code> instead.</p>
+<img alt="../_images/python3-version.svg" src="../_images/python3-version.svg" /><p>If this does not return <code class="docutils literal notranslate"><span class="pre">Python</span> <span class="pre">3.8.x</span></code> or higher, you will need to <a class="reference external" href="https://www.python.org/downloads/">install Python</a>.</p>
 </div></blockquote>
 </li>
 </ul>
@@ -75,8 +73,7 @@ Note that the sections describing installation from PyPI are focused on the <cod
 <div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">pip</span>
 </pre></div>
 </div>
-<img alt="../_images/pip-upgrade.svg" src="../_images/pip-upgrade.svg" />
-</div></blockquote>
+<img alt="../_images/pip-upgrade.svg" src="../_images/pip-upgrade.svg" /></div></blockquote>
 </div>
 </li>
 <li><p>The DDS CLI is available on <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPI</a>. To install the DDS CLI, run this command in the terminal:</p>
@@ -89,12 +86,11 @@ Note that the sections describing installation from PyPI are focused on the <cod
 </pre></div>
 </div>
 <p>The output should be the following:</p>
-<img alt="../_images/dds-version.svg" src="../_images/dds-version.svg" />
-</li>
+<img alt="../_images/dds-version.svg" src="../_images/dds-version.svg" /></li>
 </ol>
 </section>
 <section id="install-via-the-executable">
-<span id="exec-unix"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#install-via-the-executable" title="Link to this heading">¶</a></h3>
+<span id="exec-unix"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#install-via-the-executable" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic">
 <li><p>Download the executable from the GitHub release page:</p>
 <ul>
@@ -129,8 +125,7 @@ Note that the sections describing installation from PyPI are focused on the <cod
 </pre></div>
 </div>
 <p><strong>Example:</strong></p>
-<img alt="../_images/mac-executable-help.svg" src="../_images/mac-executable-help.svg" />
-<div class="admonition-information-to-macos-users admonition">
+<img alt="../_images/mac-executable-help.svg" src="../_images/mac-executable-help.svg" /><div class="admonition-information-to-macos-users admonition">
 <p class="admonition-title">Information to MacOS users</p>
 <p>On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: <a class="reference external" href="https://support.apple.com/en-us/HT202491">https://support.apple.com/en-us/HT202491</a> and <a class="reference external" href="https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac">https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac</a></p>
 </div>
@@ -147,13 +142,13 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </section>
 </section>
 <section id="windows">
-<span id="id2"></span><h2>Windows<a class="headerlink" href="#windows" title="Link to this heading">¶</a></h2>
+<span id="id2"></span><h2>Windows<a class="headerlink" href="#windows" title="Permalink to this heading">¶</a></h2>
 <section id="pypi-windows">
-<span id="id3"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#pypi-windows" title="Link to this heading">¶</a></h3>
+<span id="id3"></span><h3>Install from <strong>PyPI</strong><a class="headerlink" href="#pypi-windows" title="Permalink to this heading">¶</a></h3>
 <p>Detailed instructions on how install the DDS CLI on Windows <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md">here</a>.</p>
 </section>
 <section id="exec-windows">
-<span id="id4"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#exec-windows" title="Link to this heading">¶</a></h3>
+<span id="id4"></span><h3>Install via the <strong>executable</strong><a class="headerlink" href="#exec-windows" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic simple">
 <li><p>Download the executable from the GitHub release page: <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe">Download</a></p></li>
 <li><p>Open the Powershell</p></li>
@@ -178,14 +173,14 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </section>
 </section>
 <section id="uppmax">
-<span id="id5"></span><h2>Uppmax<a class="headerlink" href="#uppmax" title="Link to this heading">¶</a></h2>
+<span id="id5"></span><h2>Uppmax<a class="headerlink" href="#uppmax" title="Permalink to this heading">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package is a global module on Uppmax; No installation required. However, there are a few steps you need to perform prior to using it. These steps differ between Rackham and Bianca.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>When there is a new version of <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code>, Uppmax upgrades the version automatically the following day.</p>
 </div>
 <section id="rackham">
-<span id="id6"></span><h3>Rackham<a class="headerlink" href="#rackham" title="Link to this heading">¶</a></h3>
+<span id="id6"></span><h3>Rackham<a class="headerlink" href="#rackham" title="Permalink to this heading">¶</a></h3>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Do not deliver sensitive data to Rackham.</p>
@@ -202,8 +197,7 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </div>
 </li>
 <li><p>Run <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">--help</span></code>. The output should look like this:</p>
-<img alt="../_images/dds-help-2.svg" src="../_images/dds-help-2.svg" />
-</li>
+<img alt="../_images/dds-help-2.svg" src="../_images/dds-help-2.svg" /></li>
 </ol>
 <div class="admonition-rackham-user-guide admonition">
 <p class="admonition-title">Rackham user guide</p>
@@ -211,7 +205,7 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </div>
 </section>
 <section id="bianca">
-<span id="id7"></span><h3>Bianca<a class="headerlink" href="#bianca" title="Link to this heading">¶</a></h3>
+<span id="id7"></span><h3>Bianca<a class="headerlink" href="#bianca" title="Permalink to this heading">¶</a></h3>
 <div class="admonition-terminology-in-this-section admonition">
 <p class="admonition-title">Terminology in this section</p>
 <ul class="simple">
@@ -288,7 +282,7 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </section>
 </section>
 <section id="verify-the-package-integrity-prior-to-installing-it">
-<span id="verify-integrity"></span><h2>Verify the package integrity prior to installing it<a class="headerlink" href="#verify-the-package-integrity-prior-to-installing-it" title="Link to this heading">¶</a></h2>
+<span id="verify-integrity"></span><h2>Verify the package integrity prior to installing it<a class="headerlink" href="#verify-the-package-integrity-prior-to-installing-it" title="Permalink to this heading">¶</a></h2>
 <p>This installation guide is for those that want to verify that the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package published on PyPI is identical to the one you install locally, thereby catching potential (albeit unlikely) corruptions in the package prior to running the installation. Note that the hashes used to verify this are generated by PyPI itself, not by the Data Centre.</p>
 <ol class="arabic">
 <li><p>Open the terminal</p></li>
@@ -329,8 +323,7 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
 </pre></div>
 </div>
 <p>The output should be the following:</p>
-<img alt="../_images/dds-version.svg" src="../_images/dds-version.svg" />
-</li>
+<img alt="../_images/dds-version.svg" src="../_images/dds-version.svg" /></li>
 </ol>
 </section>
 </section>
@@ -340,7 +333,7 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <p class="logo">
   <a href="../">
@@ -365,16 +358,7 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
 
 
 
-
-<search id="searchbox" style="display: none" role="search">
-    <div class="searchformwrapper">
-    <form class="search" action="../search/" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</search>
-<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation guide</a></li>
@@ -393,6 +377,16 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
   </ul></li>
 </ul>
 </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search/" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -409,8 +403,8 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
       &#169;2021-2022, SciLifeLab Data Centre.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.0.0</a>
-      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 6.2.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
       <a href="../_sources/installation.rst.txt"

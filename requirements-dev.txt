@@ -1,5 +1,5 @@
 black==24.1.1
-Sphinx==5.0.2
+Sphinx==5.1.0
 sphinx-rtd-theme==1.0.0
 sphinx-click==4.0.0
 pyinstaller  # version not pinned due to latest used by release procedure

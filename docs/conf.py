@@ -31,7 +31,7 @@ author = "SciLifeLab Data Centre"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx_click",
+    "sphinx_click.ext",
     "sphinx.ext.duration",
     "sphinx.ext.autosummary",
     "sphinx_copybutton",

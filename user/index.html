@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>&lt;no title&gt; &#8212; Data Delivery System  documentation</title>
+    <title>dds user &#8212; Data Delivery System  documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
@@ -20,8 +20,8 @@
     <script src="../_static/copybutton.js"></script>
     <link rel="index" title="Index" href="../genindex/" />
     <link rel="search" title="Search" href="../search/" />
-    <link rel="next" title="&lt;no title&gt;" href="../project/" />
-    <link rel="prev" title="&lt;no title&gt;" href="../auth/" />
+    <link rel="next" title="dds project" href="../project/" />
+    <link rel="prev" title="dds auth" href="../auth/" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -39,7 +39,224 @@
 
           <div class="body" role="main">
             
-  
+  <section id="dds-user">
+<span id="dds-user"></span><h1>dds user<a class="headerlink" href="#dds-user" title="Permalink to this heading">¶</a></h1>
+<p>Group command for managing user accounts, including your own.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="dds-user-activate">
+<h2>activate<a class="headerlink" href="#dds-user-activate" title="Permalink to this heading">¶</a></h2>
+<p>Activate/Reactivate user accounts.</p>
+<div class="line-block">
+<div class="line">[Super Admins and Unit Admins only]</div>
+<div class="line">Super Admins: All users</div>
+<div class="line">Unit Admins: Unit Admins / Personnel</div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>activate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-activate-arg-EMAIL">
+<span id="cmdoption-dds-user-activate-arg-email"></span><span class="sig-name descname"><span class="pre">[EMAIL]</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-activate-arg-EMAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="dds-user-add">
+<h2>add<a class="headerlink" href="#dds-user-add" title="Permalink to this heading">¶</a></h2>
+<p>Invite a new user to the DDS or add an existing one to a hosted project.</p>
+<p>Not available for Researchers, unless they are marked as Project Owner for a specific project.</p>
+<div class="line-block">
+<div class="line">Invite new user:</div>
+<div class="line-block">
+<div class="line">- Email</div>
+<div class="line">- Role</div>
+</div>
+</div>
+<div class="line-block">
+<div class="line">Add user to project:</div>
+<div class="line-block">
+<div class="line">- Email</div>
+<div class="line">- Project ID (<cite>dds ls</cite>)</div>
+<div class="line">- Role: Researcher / Project Owner only in this case.</div>
+<div class="line">Unit Admins / Personnel are automatically added to all projects within that specific unit.</div>
+<div class="line">If the user doesn’t exist in the system yet, an invitation email will be sent automatically</div>
+<div class="line">to that person.</div>
+</div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>add<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-add-p">
+<span id="cmdoption-dds-user-add-project"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--project</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;project&gt;</span></span><a class="headerlink" href="#cmdoption-dds-user-add-p" title="Permalink to this definition">¶</a></dt>
+<dd><p>Existing Project you want the user to be associated to.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-add-r">
+<span id="cmdoption-dds-user-add-role"></span><span class="sig-name descname"><span class="pre">-r</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--role</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;role&gt;</span></span><a class="headerlink" href="#cmdoption-dds-user-add-r" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> Type of account. To include a space in the chosen role, use quotes (e.g. “Unit Personnel”) or escape the space (e.g. UnitPersonnel)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options</dt>
+<dd class="field-odd"><p>Super Admin | Unit Admin | Unit Personnel | Project Owner | Researcher</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-add-unit">
+<span class="sig-name descname"><span class="pre">--unit</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;unit&gt;</span></span><a class="headerlink" href="#cmdoption-dds-user-add-unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>[Super Admins only]  To specify which unit the user should belong to.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-add-no-mail">
+<span class="sig-name descname"><span class="pre">--no-mail</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-add-no-mail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do not send e-mail notifications regarding project updates.</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-add-arg-EMAIL">
+<span id="cmdoption-dds-user-add-arg-email"></span><span class="sig-name descname"><span class="pre">[EMAIL]</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-add-arg-EMAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="dds-user-deactivate">
+<h2>deactivate<a class="headerlink" href="#dds-user-deactivate" title="Permalink to this heading">¶</a></h2>
+<p>Deactivate user accounts in the Data Delivery System.</p>
+<div class="line-block">
+<div class="line">[Super Admins and Unit Admins only]</div>
+<div class="line">Super Admins: All users</div>
+<div class="line">Unit Admins: Unit Admins / Personnel</div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>deactivate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-deactivate-arg-EMAIL">
+<span id="cmdoption-dds-user-deactivate-arg-email"></span><span class="sig-name descname"><span class="pre">[EMAIL]</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-deactivate-arg-EMAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="dds-user-delete">
+<h2>delete<a class="headerlink" href="#dds-user-delete" title="Permalink to this heading">¶</a></h2>
+<p>Delete user accounts from the Data Delivery System.</p>
+<p>Use this command with caution. Deletion of accounts cannot be undone.</p>
+<p>To request the removal of your own account, use the <cite>–self</cite> flag without any arguments.
+An e-mail will be sent to you asking to confirm the deletion.</p>
+<p>If you have sufficient admin privileges, you may also delete the accounts of some other users.
+Specify the e-mail address as argument to the main command to initiate the removal process.</p>
+<p>Deleting a user will not delete any data.</p>
+<div class="line-block">
+<div class="line">Super Admins: All users.</div>
+<div class="line">Unit Admins: Unit Admins / Personnel. Not Researchers since they can be involved in projects</div>
+<div class="line">connected to other units.</div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>delete<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>EMAIL<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-delete-self">
+<span class="sig-name descname"><span class="pre">--self</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-delete-self" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request deletion of own account.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-delete-is-invite">
+<span class="sig-name descname"><span class="pre">--is-invite</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-delete-is-invite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete an ongoing and unanswered invite.</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-delete-arg-EMAIL">
+<span id="cmdoption-dds-user-delete-arg-email"></span><span class="sig-name descname"><span class="pre">[EMAIL]</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-delete-arg-EMAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+<section id="dds-user-find">
+<h2>find<a class="headerlink" href="#dds-user-find" title="Permalink to this heading">¶</a></h2>
+<p>Check if a username is registered to an account in the DDS.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>find<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-find-u">
+<span id="cmdoption-dds-user-find-username"></span><span class="sig-name descname"><span class="pre">-u</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--username</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;username&gt;</span></span><a class="headerlink" href="#cmdoption-dds-user-find-u" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Required</strong> [Super Admins only] The username of the account you want to check.</p>
+</dd></dl>
+
+</section>
+<section id="dds-user-info">
+<h2>info<a class="headerlink" href="#dds-user-info" title="Permalink to this heading">¶</a></h2>
+<p>Display information connected to your own DDS account.</p>
+<p>Usable by all user roles.</p>
+<div class="line-block">
+<div class="line">The following information should be displayed:</div>
+<div class="line">- Username</div>
+<div class="line">- Role</div>
+<div class="line">- Name</div>
+<div class="line">- Primary email</div>
+<div class="line">- Associated emails (not useful yet)</div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>info<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</section>
+<section id="dds-user-ls">
+<h2>ls<a class="headerlink" href="#dds-user-ls" title="Permalink to this heading">¶</a></h2>
+<p>List Unit Admins and Personnel connected to a specific unit.</p>
+<div class="line-block">
+<div class="line">Super Admins:</div>
+<div class="line-block">
+<div class="line">- Required to specify a public unit ID.</div>
+<div class="line">- Can list users within all units.</div>
+<div class="line">- Can save list of user emails.</div>
+</div>
+</div>
+<div class="line-block">
+<div class="line">Unit Admins / Personnel:</div>
+<div class="line-block">
+<div class="line">- Any unit specified with <cite>–unit</cite> will be ignored.</div>
+<div class="line">- You can only list users connected to your specific unit.</div>
+</div>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dds<span class="w"> </span>user<span class="w"> </span>ls<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-ls-u">
+<span id="cmdoption-dds-user-ls-unit"></span><span class="sig-name descname"><span class="pre">-u</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--unit</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;unit&gt;</span></span><a class="headerlink" href="#cmdoption-dds-user-ls-u" title="Permalink to this definition">¶</a></dt>
+<dd><p>[Super Admins only] The unit which you wish to list the users in.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-ls-invites">
+<span class="sig-name descname"><span class="pre">--invites</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-ls-invites" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all current invitations.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-dds-user-ls-save-emails">
+<span class="sig-name descname"><span class="pre">--save-emails</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-dds-user-ls-save-emails" title="Permalink to this definition">¶</a></dt>
+<dd><p>[Super Admins only] Save user emails.</p>
+</dd></dl>
+
+</section>
+</section>
+
 
           </div>
           
@@ -71,11 +288,19 @@
 
 
 <h3>Navigation</h3>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../">Welcome page</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../password/">Securing your password</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../main/">dds (Main command)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auth/">dds auth</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">dds user</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project/">dds project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data/">dds data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ls/">dds ls</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit/">dds unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../motd/">dds motd</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changelog/">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../testing/">The DDS Test instance</a></li>
 </ul>
@@ -84,8 +309,8 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../">Documentation overview</a><ul>
-      <li>Previous: <a href="../auth/" title="previous chapter">&lt;no title&gt;</a></li>
-      <li>Next: <a href="../project/" title="next chapter">&lt;no title&gt;</a></li>
+      <li>Previous: <a href="../auth/" title="previous chapter">dds auth</a></li>
+      <li>Next: <a href="../project/" title="next chapter">dds project</a></li>
   </ul></li>
 </ul>
 </div>

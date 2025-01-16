@@ -30,9 +30,9 @@ jobs:
         run: |
           pip install -r tests/requirements-test.txt
           COVERAGE_FILE=./coverage/.coverage
-          pytest --color=yes --cov=./dds_cli --cov-report=xml:coverage/report.xml
+          pytest --cov-branch --color=yes --cov=./dds_cli --cov-report=xml:coverage/report.xml
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/report.xml

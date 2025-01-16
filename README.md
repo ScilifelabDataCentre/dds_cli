@@ -27,8 +27,11 @@
 </a>
 <img alt="CodeQL" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-cli.yml/badge.svg">
 <a href="https://codecov.io/github/ScilifelabDataCentre/dds_cli" > 
+ <img src="https://codecov.io/github/ScilifelabDataCentre/dds_cli/branch/codecov/graph/badge.svg?token=zsrDpNqs6v"/> 
+ </a>
+<!-- <a href="https://codecov.io/github/ScilifelabDataCentre/dds_cli" > 
  <img src="https://codecov.io/github/ScilifelabDataCentre/dds_cli/graph/badge.svg?token=zsrDpNqs6v"/> 
-</a>
+</a> -->
 <img alt="Tests" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/pytest-cli.yml/badge.svg">
 </p>
 

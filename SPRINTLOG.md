@@ -398,4 +398,4 @@ _Empty sprint_
 
 - New version: 2.9.0 ([#728](https://github.com/ScilifelabDataCentre/dds_cli/pull/728))
 - Include legacy packages (removed in Python 3.13) in development requirements to fix documentation on GitHub Pages ([#730](https://github.com/ScilifelabDataCentre/dds_cli/pull/730))
-- Make release template ([1587](https://github.com/ScilifelabDataCentre/dds_web/pull/1587))
+- Make release template ([#732](https://github.com/ScilifelabDataCentre/dds_cli/pull/732))

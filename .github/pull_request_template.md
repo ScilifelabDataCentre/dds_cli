@@ -6,15 +6,17 @@
 4. When all boxes are checked, information is filled in, and the branch is updated: mark as Ready For Review and tag reviewers (top right)
 5. Once there is a submitted review, implement the suggestions (if reasonable, otherwise discuss) and request an new review.
 
-If there is a field which you are unsure about, enter the edit mode of this description or go to the [PR template](https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/.github/pull_request_template.md); There are invisible comments providing descriptions which may be of help.
+If there is a field which you are unsure about, enter the edit mode of this description or go to the [PR template](../.github/pull_request_template.md); There are invisible comments providing descriptions which may be of help.
 
 ## 1. Description / Summary
 
-_Add a summary of the changes in this PR and the related issue._
+**Add a summary here**: What does this PR add/change and why?
 
 ## 2. Jira task / GitHub issue
 
-_Link to the github issue or add the Jira task ID here._
+**Is this a GitHub issue?** --> Add the link to the github issue
+
+**Is this from a Jira task?** --> If your branch does not contain info regarding the Jira task ID, put it here.
 
 ## 3. Type of change
 
@@ -35,61 +37,59 @@ What _type of change(s)_ does the PR contain?
 
 ## 4. Additional information
 
-- [ ] [Sprintlog](https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/SPRINTLOG.md) <!-- Add a row at the bottom of the SPRINTLOG.md file (not needed if PR contains only tests). Follow the format of previous rows. If the PR is the first in a new sprint, add a new sprint header row (follow the format of previous sprints). -->
-- [ ] Blocking PRs <!-- Should be checked if there are blocking PRs or other tasks that need to be merged prior to this. Add link to PR or Jira card if this is the case. -->
-  - [ ] Merged <!-- Should be checked if the "Blocking PRs" box was checked AND all blocking PRs have been merged / fixed. -->
-- [ ] PR to `master` branch: _If checked, read [the release instructions](https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/docs/procedures/new_release.md)_ <!-- Check this if the PR is made to the `master` branch. Only the `dev` branch should be doing this. -->
+- [ ] I have added an entry to the [Sprintlog](../SPRINTLOG.md) <!-- Add a row at the bottom of the SPRINTLOG.md file (not needed if PR contains only tests). Follow the format of previous rows. If the PR is the first in a new sprint, add a new sprint header row (follow the format of previous sprints). -->
+- [ ] This is a PR to the `master` branch: _If checked, read [the release instructions](../doc/procedures/new_release.md)_ <!-- Check this if the PR is made to the `master` branch. Only the `dev` branch should be doing this. -->
   - [ ] I have followed steps 1-8. <!-- Should be checked if the "PR to `master` branch" box is checked AND the specified steps in the release instructions have been followed. -->
 
 ## 5. Actions / Scans
 
-_Check the boxes when the specified checks have passed._
+**Make sure that the following checks/actions have passed.**
 
-**For information on what the different checks do and how to fix it if they're failing, enter edit mode of this description or go to the [PR template](https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/.github/pull_request_template.md).**
-
-- [ ] **Black**
+- **Black**
 <!--
   What: Python code formatter.
   How to fix: Run `black .` locally to execute formatting.
 -->
-- [ ] **Pylint**
-<!--
-  What: Python code linter.
-  How to fix: Manually fix the code producing warnings. Code must get 10/10.
--->
-- [ ] **Prettier**
+- **Prettier**
 <!--
   What: General code formatter. Our use case: MD and yaml mainly.
   How to fix: Run npx prettier --write . locally to execute formatting.
 -->
-- [ ] **Yamllint**
+- **Pylint**
+<!--
+  What: Python code linter.
+  How to fix: Manually fix the code producing warnings. Code must get 10/10.
+-->
+- **Yamllint**
 <!--
   What: Linting of yaml files.
   How to fix: Manually fix any errors locally.
 -->
-- [ ] **Tests**
+- **Tests**
 <!--
   What: Pytest to verify that functionality works as expected.
   How to fix: Manually fix any errors locally. Follow the instructions in the "Run tests" section of the README.md to run the tests locally.
   Additional info: The PR should ALWAYS include new tests or fixed tests when there are code changes. When pytest action has finished, it will post a codecov report; Look at this report and verify the files you have changed are listed. "90% <100.00%> (+0.8%)" means "Tests cover 90% of the changed file, <100 % of this PR's code changes are tested>, and (the code changes and added tests increased the overall test coverage with 0.8%)
 -->
-- [ ] **TestPyPI**
-<!--
-  What: Builds the CLI and publishes to TestPyPI in order to verify before release.
-  How to fix: Check the action logs and fix potential issues manually.
--->
-- [ ] **CodeQL**
+- **CodeQL**
 <!--
   What: Scan for security vulnerabilities, bugs, errors.
   How to fix: Go through the alerts and either manually fix, dismiss or ignore. Add info on ignored or dismissed alerts.
 -->
-- [ ] **Trivy**
+- **Trivy**
 <!--
   What: Security scanner.
   How to fix: Go through the alerts and either manually fix, dismiss or ignore. Add info on ignored or dismissed alerts.
 -->
-- [ ] **Snyk**
+- **Snyk**
 <!--
   What: Security scanner.
   How to fix: Go through the alerts and either manually fix, dismiss or ignore. Add info on ignored or dismissed alerts.
 -->
+- **TestPyPI**
+<!--
+  What: Builds the CLI and publishes to TestPyPI in order to verify before release.
+  How to fix: Check the action logs and fix potential issues manually.
+-->
+
+If an action does not pass and you need help with how to solve it, enter edit mode of this PR template or go to the [PR template](../.github/pull_request_template.md).

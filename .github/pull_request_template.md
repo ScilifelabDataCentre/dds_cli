@@ -18,22 +18,24 @@ If there is a field which you are unsure about, enter the edit mode of this desc
 
 **Is this from a Jira task?** --> If your branch does not contain info regarding the Jira task ID, put it here.
 
-## 3. Type of change
+## 3. Type of change - Add label
 
-What _type of change(s)_ does the PR contain?
+**What _type of change(s)_ does the PR contain? For an explanation of the different options below, enter edit mode of this PR description template.**
 
-**Check the relevant boxes below. For an explanation of the different sections, enter edit mode of this PR description template.**
+_If you do not want this change to be included in release notes, add the label `skip-changelog`._
 
-- [ ] New feature
-  - [ ] Breaking: _Why / How? Add info here._ <!-- Should be checked if the changes in this PR will cause existing functionality to not work as expected. E.g. with the master branch of the `dds_cli` -->
-  - [ ] Non-breaking <!-- Should be checked if the changes will not cause existing functionality to fail. "Non-breaking" is just an addition of a new feature. -->
-- [ ] Bug fix <!-- Should be checked when a bug is fixed in existing functionality. If the bug fix also is a breaking change (see above), add info about that beside this check box. -->
-- [ ] Security Alert fix <!-- Should be checked if the PR attempts to solve a security vulnerability, e.g. reported by the "Security" tab in the repo. -->
-  - [ ] Package update <!-- Should be checked if the Security alert fix consists of updating a package / dependency version -->
-    - [ ] Major version update <!-- Should be checked if the package / dependency version update is a major upgrade, e.g. 1.0.0 to 2.0.0 -->
-- [ ] Documentation <!-- Should be checked if the PR adds or updates the CLI documentation -- anything in docs/ directory. -->
-- [ ] Workflow <!-- Should be checked if the PR includes a change in e.g. the github actions files (dds_cli/.github/*) or another type of workflow change. Anything that alters our or the codes workflow. -->
-- [ ] Tests **only** <!-- Should only be checked if the PR only contains tests, none of the other types of changes listed above. -->
+- New feature
+  - Breaking --> label: `breaking` <!-- If the changes in this PR will cause existing functionality to not work as expected. E.g. with the master branch of the `dds_cli`. Add info here on how the change is breaking. -->
+  - Non-breaking --> label: `feature` <!-- If the changes will not cause existing functionality to fail. "Non-breaking" is just an addition of a new feature. -->
+- Database change --> label: `feature` or none at all.
+  _Remember the to include a new migration version, **or** explain here why it's not needed._ <!-- If you've changed something in `models.py`. For a guide on how to add the a new migration version, look at the "Database changes" section in the README.md. -->
+- Bug fix --> label: `bug` <!-- If a bug is fixed in existing functionality. If the bug fix also is a breaking change (see above), add info about that beside this check box. -->
+- Security Alert fix <!-- If the PR attempts to solve a security vulnerability, e.g. reported by the "Security" tab in the repo. -->
+  - Package update --> label: `dependency` <!-- If the Security alert fix consists of updating a package / dependency version -->
+    - Major version update <!-- If the package / dependency version update is a major upgrade, e.g. 1.0.0 to 2.0.0 -->
+- Documentation --> label can be skipped, will be included in "other changes" <!-- If the PR adds or updates the cli docs. -->
+- Workflow --> label: `skip-changelog` <!-- If the PR includes a change in e.g. the github actions files (dds_web/.github/*) or another type of workflow change. Anything that alters our or the codes workflow. -->
+- Tests **only** --> label: `skip-changelog` <!-- If the PR only contains tests, none of the other types of changes listed above. -->
 
 ## 4. Additional information
 

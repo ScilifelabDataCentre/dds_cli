@@ -1,6 +1,6 @@
 # How to create a new release
 
-> **Important:** Users should be informed of an upcoming new release  _at least_ a week prior to a new release. Inform users by adding a "Message of the Day": `dds motd add`
+> **Important:** Users should be informed of an upcoming new release _at least_ a week prior to a new release. Inform users by adding a "Message of the Day": `dds motd add`
 >
 > - If users do not upgrade the CLI when there is a new version, they may experience issues and errors.
 > - If there is a major version mismatch between the API and CLI (e.g. API version 1.0.0 and CLI version 2.0.0 or vice versa), the DDS will inform the users that they are blocked from using the DDS until they have upgraded.
@@ -10,7 +10,7 @@
 2. Fork a new branch from `dev`: "New version & changelog"
 3. Update the version [changelog](../../CHANGELOG.rst) located at `dds_cli/CHANGELOG.rst`
 
-    **Tip:** Create a [release **draft**](https://github.com/ScilifelabDataCentre/dds_cli/releases/new) with `Target: dev`, click `Generate release notes` and copy paste the release notes into the Changelog. **DO NOT PUBLISH THE RELEASE**
+   **Tip:** Create a [release **draft**](https://github.com/ScilifelabDataCentre/dds_cli/releases/new) with `Target: dev`, click `Generate release notes` and copy paste the release notes into the Changelog. **DO NOT PUBLISH THE RELEASE**
 
    - The new version should be at the top of the page
    - List the changes that the users will / may notice

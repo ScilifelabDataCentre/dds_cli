@@ -399,6 +399,6 @@ _Empty sprint_
 - New version: 2.9.0 ([#728](https://github.com/ScilifelabDataCentre/dds_cli/pull/728))
 - Include legacy packages (removed in Python 3.13) in development requirements to fix documentation on GitHub Pages ([#730](https://github.com/ScilifelabDataCentre/dds_cli/pull/730))
 
-# 2024-12-20 - 2025-01-17
+# 2025-01-20 - 2025-01-31
 
 - Fix codecov action ([#731](https://github.com/ScilifelabDataCentre/dds_cli/pull/731))

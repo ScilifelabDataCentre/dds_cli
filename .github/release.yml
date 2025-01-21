@@ -1,0 +1,23 @@
+# file location/name: .github/release.yml
+changelog:
+  exclude:
+    labels: # A list of labels that exclude a pull request from appearing in release notes.
+      - skip-changelog
+    authors: # A list of user or bot login handles whose pull requests are to be excluded from release notes.
+      - dependabot[bot]
+  categories:
+    - title: 🚀 Features
+      labels:
+        - feature
+    - title: 🐛 Bug Fixes
+      labels:
+        - bug
+    - title: ⛓️‍💥 Breaking Changes
+      labels:
+        - breaking
+    - title: 🛡️ Dependencies
+      labels:
+        - dependency
+    - title: Other Changes
+      labels:
+        - "*" # Catch-all for pull requests that didn't match any of the previous categories

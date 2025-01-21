@@ -401,4 +401,5 @@ _Empty sprint_
 
 # 2025-01-20 - 2025-01-31
 
+- Make release template ([#732](https://github.com/ScilifelabDataCentre/dds_cli/pull/732))
 - Fix codecov action ([#731](https://github.com/ScilifelabDataCentre/dds_cli/pull/731))

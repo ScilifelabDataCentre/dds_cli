@@ -6,8 +6,7 @@ name: Pytest
 
 on:
   push:
-    branches: [dev, master]
-    branches: HMS-2305-run-pytest-on-windows
+    branches: [dev, master, HMS-2305-run-pytest-on-windows]
   pull_request:
     branches: [dev, master]
 

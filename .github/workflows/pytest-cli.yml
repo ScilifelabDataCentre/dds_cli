@@ -52,7 +52,7 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pip install -r tests/requirements-tests.txt
+          pip install -r tests/requirements-test.txt
           COVERAGE_FILE=./coverage/.coverage
           pytest --color=yes --cov=./dds_cli --cov-report=xml:coverage/report-windows.xml
 

@@ -2,6 +2,7 @@ from _pytest.logging import LogCaptureFixture
 from pyfakefs.fake_filesystem import FakeFilesystem
 import pathlib
 import logging
+import os 
 
 from dds_cli import data_remover
 
@@ -12,13 +13,18 @@ def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFix
     non_existent_file: pathlib.Path = pathlib.Path("nonexistentfile.txt")
     assert not fs.exists(file_path=non_existent_file)
 
+    # Make Windows compatible
+    slash_type: str = "/"
+    if os.name != "nt": 
+        slash_type = "\\"
+
     # Attempt to delete
     with caplog.at_level(logging.WARNING):
         data_remover.DataRemover.delete_tempfile(file=non_existent_file)
         assert (
             "dds_cli.data_remover",
             logging.ERROR,
-            f"[Errno 2] No such file or directory in the fake filesystem: '/nonexistentfile.txt'",
+            f"[Errno 2] No such file or directory in the fake filesystem: '{slash_type}nonexistentfile.txt'",
         ) in caplog.record_tuples
         assert (
             "dds_cli.data_remover",

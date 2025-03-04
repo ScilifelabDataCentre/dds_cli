@@ -39,6 +39,7 @@ import dds_cli.project_info
 import dds_cli.user
 import dds_cli.utils
 from dds_cli.options import (
+    NotRequiredIf,
     destination_option,
     email_arg,
     email_option,
@@ -107,7 +108,8 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
 @click.option(
     "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
 )
-@click.option("-l", "--log-file", help="Save a log to a file.", metavar="<filename>")
+@click.option("--force-no-log", help="[NOT RECOMMENDED] Do not save logs to a file.", is_flag=True)
+@click.option("-l", "--log-file", help="Save a log to a file.", metavar="<filename>", required=not bool("--force-no-log" in sys.argv))
 @click.option(
     "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
 )
@@ -121,7 +123,7 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
     help="List the options of any DDS subcommand and its default settings.",
 )
 @click.pass_context
-def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
+def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
     """SciLifeLab Data Delivery System (DDS) command line interface.
 
     Access token is saved in a .dds_cli_token file in the home directory.
@@ -165,6 +167,7 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
             )
             LOG.addHandler(log_fh)
 
+        sys.exit()
         # Create context object
         click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path}
 

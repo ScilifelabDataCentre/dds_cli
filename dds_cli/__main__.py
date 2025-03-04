@@ -39,7 +39,6 @@ import dds_cli.project_info
 import dds_cli.user
 import dds_cli.utils
 from dds_cli.options import (
-    NotRequiredIf,
     destination_option,
     email_arg,
     email_option,
@@ -109,7 +108,7 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
     "-v", "--verbose", is_flag=True, default=False, help="Print verbose output to the console."
 )
 @click.option("--force-no-log", help="[NOT RECOMMENDED] Do not save logs to a file.", is_flag=True)
-@click.option("-l", "--log-file", help="Save a log to a file.", metavar="<filename>", required=not bool("--force-no-log" in sys.argv))
+@click.option("-l", "--log-file", help="Save logs to file. In the case of opening a support ticket regarding the DDS, attach this file. We recommend naming it according to this format: <date>_<time>_<command>.log.", metavar="<filename>", required=not bool("--force-no-log" in sys.argv))
 @click.option(
     "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
 )

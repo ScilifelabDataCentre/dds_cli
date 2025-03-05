@@ -113,7 +113,7 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
 @click.option(
     "-l",
     "--log-file",
-    help="Save logs to file. In the case of opening a support ticket regarding the DDS, attach this file. We recommend naming it according to this format: <date>_<time>_<command>.log.",
+    help="Save logs to file. In the case of opening a support ticket regarding the DDS, attach this file. We recommend naming it according to this format: <command>_<date>_<time>.log.",
     metavar="<filename>",
     required=False,
 )
@@ -165,7 +165,7 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
         # Only one can be used
         if force_no_log and log_file:
             LOG.warning(
-                "You can only use '--log-file' or '--force-no-log', not both. Please try again."
+                "You have used both the '--log-file' and '--force-no-log' option, you can only use one."
             )
             sys.exit(1)
 

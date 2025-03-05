@@ -104,6 +104,8 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
             dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
 
 
+from cloup.constraints import constraint, mutually_exclusive 
+
 # -- dds -- #
 @click.group()
 @click.option(
@@ -117,6 +119,7 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
     metavar="<filename>",
     required=False,
 )
+@constraint(mutually_exclusive, ['force_no_log', 'log_file'])
 @click.option(
     "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
 )
@@ -162,6 +165,11 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             )
         )
 
+        # Only one can be used 
+        if force_no_log and log_file: 
+            LOG.warning("You can only use '--log-file' or '--force-no-log', not both. Please try again.")
+            sys.exit(1)
+
         # Don't log to file if this flag is used
         if not force_no_log:
 
@@ -189,6 +197,8 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
                     )
                 )
                 LOG.addHandler(log_fh)
+
+        sys.exit()
 
         # Create context object
         click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path, "LOG_FILE": log_file}

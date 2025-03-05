@@ -164,21 +164,21 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
 
         # Don't log to file if this flag is used
         if not force_no_log:
-            
+
             # Get command and strip from leading - / --
             subcommands: typing.List = [i.lstrip("-") for i in sys.argv[1::]]
 
-            # Check if put or get in subcommand 
+            # Check if put or get in subcommand
             put_or_get: typing.List = [i for i in subcommands if i in ["put", "get"]]
 
             # Always log to file if uploading or downloading
             if put_or_get and not log_file:
-                # Create command part of log file name 
+                # Create command part of log file name
                 command_as_string: str = "dds_" + "_".join(subcommands)
 
                 # Get timestamp
                 timestamp_string: str = datetime.now().strftime("%Y%m%d-%H%M%S")
-                
+
                 # Full log file path
                 log_file = command_as_string + "_" + timestamp_string + ".log"
 

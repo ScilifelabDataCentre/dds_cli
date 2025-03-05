@@ -104,9 +104,6 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
             dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
 
 
-from cloup.constraints import constraint, mutually_exclusive
-
-
 # -- dds -- #
 @click.group()
 @click.option(
@@ -120,7 +117,6 @@ from cloup.constraints import constraint, mutually_exclusive
     metavar="<filename>",
     required=False,
 )
-@constraint(mutually_exclusive, ["force_no_log", "log_file"])
 @click.option(
     "--no-prompt", is_flag=True, default=False, help="Run without any interactive features."
 )

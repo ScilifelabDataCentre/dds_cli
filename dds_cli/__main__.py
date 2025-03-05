@@ -173,13 +173,9 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
 
             # Always log to file if uploading or downloading
             if put_or_get and not log_file:
-                # Create command part of log file name
+                # Format log file path name to contain command and timestamp
                 command_as_string: str = "dds_" + "_".join(subcommands)
-
-                # Get timestamp
                 timestamp_string: str = datetime.now().strftime("%Y%m%d-%H%M%S")
-
-                # Full log file path
                 log_file = command_as_string + "_" + timestamp_string + ".log"
 
             # Set up logs to a file (if chosen, or by default above)

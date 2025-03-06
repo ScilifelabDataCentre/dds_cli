@@ -212,8 +212,6 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
                 )
                 LOG.addHandler(log_fh)
 
-        sys.exit()
-
         # Create context object
         click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path, "LOG_FILE": log_file}
 

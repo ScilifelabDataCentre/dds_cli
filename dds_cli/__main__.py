@@ -189,8 +189,8 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
                     dds_log_dir.mkdir(exist_ok=True)
                 except (OSError, RuntimeError) as err:
                     LOG.warning(
-                        f"Could not create log directory '{dds_log_dir}'. "
-                        f"Logs will not be saved to file. \nDetails: {err}"
+                        "Could not create log directory '%s'. "
+                        "Logs will not be saved to file. \nDetails: %s", dds_log_dir, err
                     )
 
                 # Format log file path name to contain command and timestamp

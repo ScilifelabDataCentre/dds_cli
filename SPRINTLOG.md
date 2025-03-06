@@ -407,3 +407,7 @@ _Empty sprint_
 # 2025-02-17 – 2025-02-28
 
 - Remove executable for Ubuntu 20.04 and add one for Ubuntu 22.04 ([#733](https://github.com/ScilifelabDataCentre/dds_cli/pull/733)).
+
+# 2025-03-03 - 2025-03-14 
+
+- Generate log file by default ([#737](https://github.com/ScilifelabDataCentre/dds_cli/pull/737))

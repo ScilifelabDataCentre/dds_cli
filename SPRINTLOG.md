@@ -403,3 +403,7 @@ _Empty sprint_
 
 - Make release template ([#732](https://github.com/ScilifelabDataCentre/dds_cli/pull/732))
 - Fix codecov action ([#731](https://github.com/ScilifelabDataCentre/dds_cli/pull/731))
+
+# 2025-02-17 – 2025-02-28
+
+- Remove executable for Ubuntu 20.04 and add one for Ubuntu 22.04 ([#733](https://github.com/ScilifelabDataCentre/dds_cli/pull/733)).

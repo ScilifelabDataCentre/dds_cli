@@ -196,7 +196,9 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
                     )
 
                 # Format log file path name to contain command and timestamp
-                command_as_string: str = "dds_" + "_".join(subcommands).replace("/", "_").replace("\\", "_")
+                command_as_string: str = "dds_" + "_".join(subcommands).replace("/", "_").replace(
+                    "\\", "_"
+                )
                 timestamp_string: str = datetime.now().strftime("%Y%m%d-%H%M%S")
                 log_file = str(
                     dds_log_dir / pathlib.Path(command_as_string + "_" + timestamp_string + ".log")

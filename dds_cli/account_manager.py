@@ -121,7 +121,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         message = response_json.get("message", "User access successfully revoked.")
         LOG.info(message)
 
-    def get_user_info(self):
+    def get_user_info(self) -> dict: ## Add return type
         """Get a users info."""
         response, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.DISPLAY_USER_INFO,
@@ -149,6 +149,8 @@ class AccountManager(dds_cli.base.DDSBaseClass):
                 info["email_primary"],
                 ", ".join(str(x) for x in info["emails_all"]),
             )
+
+        return info ## RETURNS THE RESPONSE FOR THE GUI 
 
     def user_activation(self, email, action):
         """Deactivate/Reactivate users"""
@@ -190,7 +192,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         dds_cli.utils.console.print(msg)
 
-    def list_users(self, unit: str = None) -> None:
+    def list_users(self, unit: str = None) -> tuple: ## Add return type
         """List all unit users within a specific unit."""
         response, _ = dds_cli.utils.perform_request(
             endpoint=dds_cli.DDSEndpoint.LIST_USERS,
@@ -229,6 +231,8 @@ class AccountManager(dds_cli.base.DDSBaseClass):
 
         # Print out table
         dds_cli.utils.print_or_page(item=table)
+
+        return users, keys ## RETURNS THE RESPONSE FOR THE GUI 
 
     def list_invites(self, invites: bool = None) -> None:
         """List all unit users within a specific unit."""

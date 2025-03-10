@@ -60,6 +60,9 @@ from dds_cli.options import (
     users_flag,
 )
 
+## GUI IMPORTS ##
+from .gui.app import GUI
+
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
 ####################################################################################################
@@ -168,6 +171,11 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
         # Create context object
         click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path}
 
+@dds_main.command(name="gui")
+def gui():
+    """Start the DDS GUI."""
+    gui = GUI()
+    gui.exec()
 
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #
@@ -529,7 +537,7 @@ def user_group_command(_):
 # ************************************************************************************************ #
 
 
-# -- dds user ls -- #
+# -- dds user ls -- # 
 # TODO: Move this to dds unit?
 @user_group_command.command(name="ls")
 @click.option(

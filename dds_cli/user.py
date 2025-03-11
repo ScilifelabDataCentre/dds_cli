@@ -46,11 +46,17 @@ class User:
         token_path: str = None,
         totp: str = None,
         allow_group: bool = False,
+        authenticate_gui: bool = False,
+        username_gui: str = None,
+        password_gui: str = None,
     ):
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt
         self.token = None
         self.token_path = token_path
+        self.authenticate_gui = authenticate_gui
+        self.username_gui = username_gui
+        self.password_gui = password_gui
 
         # Fetch encrypted JWT token or authenticate against API
         self.__retrieve_token(totp=totp, allow_group=allow_group)
@@ -76,14 +82,39 @@ class User:
 
         # Authenticate user and save token
         if not self.token:
-            if not self.force_renew_token:
-                LOG.info(
+            if self.authenticate_gui:
+                self.token = self.__authenticate_user_gui()
+            else:   
+                if not self.force_renew_token:
+                    LOG.info(
                     "No saved token found, or token has expired, proceeding with authentication"
-                )
-            else:
-                LOG.info("Attempting to create the session token")
-            self.token = self.__authenticate_user(totp=totp)
+                    )
+                else:
+                    LOG.info("Attempting to create the session token")
+                self.token = self.__authenticate_user(totp=totp)
             token_file.save_token(self.token)
+
+    def __authenticate_user_gui(self) -> tuple:
+
+        response_json, _ = dds_cli.utils.perform_request(
+            dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
+            method="get",
+            auth=(self.username_gui, self.password_gui),
+            error_message="Failed to authenticate user",
+        )
+        print(response_json.get("token"))
+
+        return response_json.get("token") #, response_json.get("secondfactor_method")
+
+    def twofactor_gui(self, partial_auth_token: str, one_time_code: str):
+        response_json, _ = dds_cli.utils.perform_request(
+            dds_cli.DDSEndpoint.SECOND_FACTOR,
+            method="get",
+            headers={"Authorization": f"Bearer {partial_auth_token}"},
+            json={"TOTP": one_time_code},
+            error_message="Failed to authenticate with one-time authentication code",
+        )
+        return response_json
 
     def __authenticate_user(self, totp: str = None):
         """Authenticates the username and password via a call to the API."""
@@ -96,7 +127,7 @@ class User:
                     "Please run the `dds auth login` command and authenticate interactively."
                 )
             )
-
+        
         username = Prompt.ask("DDS username")
         password = getpass.getpass(prompt="DDS password: ")
 
@@ -120,6 +151,7 @@ class User:
         # Token received from API needs to be completed with a mfa timestamp
         partial_auth_token = response_json.get("token")
         secondfactor_method = response_json.get("secondfactor_method")
+
 
         totp_enabled = secondfactor_method == "TOTP"
 
@@ -353,7 +385,7 @@ class TokenFile:
 
         return False
 
-    def token_report(self, token):
+    def token_report(self, token) -> str:
         """Produce report of token status.
 
         :param token: The DDS token that is obtained after successful basic and two-factor authentication.
@@ -381,6 +413,8 @@ class TokenFile:
             LOG.info("[%s]%s  %s %s [/%s]", markup_color, sign, message, sign, markup_color)
         LOG.info("[%s]%s  %s %s [/%s]", markup_color, sign, expiration_message, sign, markup_color)
 
+        return expiration_message ## RETURNS THE EXPIRATION MESSAGE FOR THE GUI
+    
     # Private methods ############################################################ Private methods #
     def __token_dates(self, token):  # pylint: disable=inconsistent-return-statements
         """Returns the expiration time in UTC that is extracted from the token jose header."""

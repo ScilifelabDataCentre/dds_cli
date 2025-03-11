@@ -5,6 +5,7 @@
 ###############################################################################
 
 # Standard library
+from curses.panel import top_panel
 import logging
 import pathlib
 import typing
@@ -55,6 +56,9 @@ class DDSBaseClass:
         no_prompt: bool = False,
         token_path: str = None,
         allow_group: bool = False,
+        authenticate_gui: bool = False,
+        username_gui: str = None,
+        password_gui: str = None,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.project = project
@@ -62,6 +66,9 @@ class DDSBaseClass:
         self.method = method
         self.no_prompt = no_prompt
         self.token_path = token_path
+        self.authenticate_gui = authenticate_gui
+        self.username_gui = username_gui
+        self.password_gui = password_gui
 
         if self.method_check:
             # Get attempted operation e.g. put/ls/rm/get
@@ -102,6 +109,21 @@ class DDSBaseClass:
                 allow_group=allow_group,
             )
             self.token = dds_user.token_dict
+
+        ## AUTHNETCATION FOR THE GUI
+        if authenticate_gui:
+            dds_user = user.User(
+                force_renew_token=force_renew_token,
+                no_prompt=no_prompt,
+                authenticate_gui=authenticate_gui,
+                username_gui=username_gui,
+                password_gui=password_gui,
+                token_path=token_path,
+                totp=totp,
+            )
+            self.token = dds_user.token
+            print("Token in base class:")
+            print(self.token)
 
         # Project access only required if trying to upload, download or list
         # files within project

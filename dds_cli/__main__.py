@@ -61,7 +61,7 @@ from dds_cli.options import (
 )
 
 ## GUI IMPORTS ##
-from .gui.app import GUI
+from .gui_poc.app import GUI
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -171,10 +171,13 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
         # Create context object
         click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path}
 
+### GUI COMMAND ###
+
 @dds_main.command(name="gui")
-def gui():
+@click.pass_obj
+def gui(click_ctx):
     """Start the DDS GUI."""
-    gui = GUI()
+    gui = GUI(click_ctx.get("TOKEN_PATH"))
     gui.exec()
 
 # ************************************************************************************************ #

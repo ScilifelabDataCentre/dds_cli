@@ -80,8 +80,9 @@ class Auth(base.DDSBaseClass):
                     json=json_request,
                     error_message="Failed to authenticate with second factor",
                 )
-        self.token = response_json.get("token")
-        return response_json
+        token = response_json.get("token")
+        self.token = {"Authorization": f"Bearer {token}"}
+        return self.token
 
     def logout(self):
         """Logout user by removing authenticated token."""

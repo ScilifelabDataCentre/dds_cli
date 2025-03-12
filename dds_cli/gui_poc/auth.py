@@ -110,10 +110,10 @@ class AuthLogin(QWidget):
         print("Authenticating...")
         print(self.partial_token)
         print(type(self.twofactor_code.text()))
-        #response = self.auth.authenticate_gui2f(partial_auth_token=self.partial_token, 
-        #                          one_time_code=self.twofactor_code.text())
+        response = self.auth.authenticate_gui2f(partial_auth_token=self.partial_token, 
+                                  one_time_code=self.twofactor_code.text())
         
-        #print(response)
+        print(response)
         
 
 

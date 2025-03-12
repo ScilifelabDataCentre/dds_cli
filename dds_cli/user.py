@@ -106,15 +106,6 @@ class User:
 
         return response_json.get("token") #, response_json.get("secondfactor_method")
 
-    def twofactor_gui(self, partial_auth_token: str, one_time_code: str):
-        response_json, _ = dds_cli.utils.perform_request(
-            dds_cli.DDSEndpoint.SECOND_FACTOR,
-            method="get",
-            headers={"Authorization": f"Bearer {partial_auth_token}"},
-            json={"TOTP": one_time_code},
-            error_message="Failed to authenticate with one-time authentication code",
-        )
-        return response_json
 
     def __authenticate_user(self, totp: str = None):
         """Authenticates the username and password via a call to the API."""

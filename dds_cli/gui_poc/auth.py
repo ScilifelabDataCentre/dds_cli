@@ -94,27 +94,22 @@ class AuthLogin(QWidget):
         self.setLayout(self.layout)
 
     def login(self):
-        print(self.username.text())
-        print(self.password.text())
+        print("Logging in...")
         
         self.auth = Auth(authenticate=False, 
                             authenticate_gui=True, 
                             token_path=self.token_path,
                             username_gui=self.username.text(), 
                             password_gui=self.password.text())
-        self.partial_token = self.auth.token
-        
-        print(self.partial_token)
+       #self.partial_token = self.auth.token
+    
+        print("Successfully logged in")
 
     def authenticate_2factor(self):
         print("Authenticating...")
-        print(self.partial_token)
-        print(type(self.twofactor_code.text()))
-        response = self.auth.authenticate_gui2f(partial_auth_token=self.partial_token, 
-                                  one_time_code=self.twofactor_code.text())
-        
-        print(response)
-        
+        self.auth.do_2factor(self.twofactor_code.text())
+        print("Successfully authenticated")
+                
 
 
 class AuthGUI(QWidget):

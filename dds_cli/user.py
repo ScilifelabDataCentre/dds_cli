@@ -47,16 +47,17 @@ class User:
         totp: str = None,
         allow_group: bool = False,
         authenticate_gui: bool = False,
-        username_gui: str = None,
-        password_gui: str = None,
+        #username_gui: str = None,
+        #password_gui: str = None,
     ):
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt
         self.token = None
         self.token_path = token_path
+        self.allow_group = allow_group
         self.authenticate_gui = authenticate_gui
-        self.username_gui = username_gui
-        self.password_gui = password_gui
+        #self.username_gui = username_gui
+        #self.password_gui = password_gui
 
         # Fetch encrypted JWT token or authenticate against API
         self.__retrieve_token(totp=totp, allow_group=allow_group)
@@ -66,7 +67,21 @@ class User:
         """Get token as authorization dict for requests."""
         return {"Authorization": f"Bearer {self.token}"}
 
+    def sign_in(self, username: str, password: str) -> tuple:
+        """Sign in to the DDS API."""
+        return self.__sign_in(username, password)
+
+    def twofactor(self, partial_auth_token: str, secondfactor_method: str, totp: str, username: str, twofactor_code: str) -> None:
+        """Completes the authentication with the second factor."""
+        self.token = self.__twofactor(partial_auth_token, secondfactor_method, totp, username, twofactor_code)
+        #self.__retrieve_token(totp=totp, allow_group=self.allow_group)
+        token_file = TokenFile(token_path=self.token_path, allow_group=self.allow_group)
+        token_file.save_token(self.token)
+
+
     # Private methods ######################### Private methods #
+
+        
     def __retrieve_token(self, totp: str = None, allow_group: bool = False):
         """Fetch saved token from file otherwise authenticate user and saves the new token."""
         token_file = TokenFile(token_path=self.token_path, allow_group=allow_group)
@@ -80,35 +95,27 @@ class User:
             except dds_cli.exceptions.TokenNotFoundError:
                 self.token = None
 
+        if self.authenticate_gui and not self.token:
+            return 
         # Authenticate user and save token
         if not self.token:
-            if self.authenticate_gui:
-                self.token = self.__authenticate_user_gui()
-            else:   
-                if not self.force_renew_token:
+            if not self.force_renew_token :
                     LOG.info(
                     "No saved token found, or token has expired, proceeding with authentication"
                     )
-                else:
+            else:
                     LOG.info("Attempting to create the session token")
-                self.token = self.__authenticate_user(totp=totp)
-            token_file.save_token(self.token)
+            self.token = self.__authenticate_user(totp=totp)
+        token_file.save_token(self.token)
 
-    def __authenticate_user_gui(self) -> tuple:
-
-        response_json, _ = dds_cli.utils.perform_request(
-            dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
-            method="get",
-            auth=(self.username_gui, self.password_gui),
-            error_message="Failed to authenticate user",
-        )
-        print(response_json.get("token"))
-
-        return response_json.get("token") #, response_json.get("secondfactor_method")
 
 
     def __authenticate_user(self, totp: str = None):
-        """Authenticates the username and password via a call to the API."""
+        """Authenticates the username and password via a call to the API.
+        
+        UPDATE: Refactored to be used in the GUI
+        
+        """
         LOG.debug("Starting authentication on the API...")
 
         if self.no_prompt:
@@ -127,42 +134,13 @@ class User:
                 message="Non-empty password needed to be able to authenticate."
             )
 
-        try:
-            response_json, _ = dds_cli.utils.perform_request(
-                dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
-                method="get",
-                auth=(username, password),
-                error_message="Failed to authenticate user",
-            )
-        except UnicodeEncodeError as exc:
-            raise dds_cli.exceptions.ApiRequestError(
-                message="The entered username or password seems to contain invalid characters. Please try again."
-            ) from exc
-
-        # Token received from API needs to be completed with a mfa timestamp
-        partial_auth_token = response_json.get("token")
-        secondfactor_method = response_json.get("secondfactor_method")
-
+        partial_auth_token, secondfactor_method = self.__sign_in(username, password) # NEW SIGN IN METHOD
 
         totp_enabled = secondfactor_method == "TOTP"
 
         # Verify Second Factor
-        if totp:
-            if not totp_enabled:
-                raise exceptions.AuthenticationError(
-                    "Authentication failed, you have not yet activated one-time "
-                    "authentication codes from authenticator app."
-                )
-
-            response_json, _ = dds_cli.utils.perform_request(
-                dds_cli.DDSEndpoint.SECOND_FACTOR,
-                method="get",
-                headers={"Authorization": f"Bearer {partial_auth_token}"},
-                json={"TOTP": totp},
-                error_message="Failed to authenticate with one-time authentication code",
-            )
-
-        else:
+        
+        if not totp:
             LOG.debug("2FA method: %s", "TOTP" if totp_enabled else "HOTP")
             if totp_enabled:
                 LOG.info(
@@ -198,22 +176,83 @@ class User:
                     )
                     continue
 
-                if totp_enabled:
-                    json_request = {"TOTP": entered_one_time_code}
-                else:
-                    json_request = {"HOTP": entered_one_time_code}
+                token = self.__twofactor(partial_auth_token, secondfactor_method, totp, username, entered_one_time_code)
 
-                response_json, _ = dds_cli.utils.perform_request(
+                # Step out of the while-loop
+                done = True
+
+        
+        
+        return token
+        
+
+    def __sign_in(self, username: str, password: str) -> tuple:
+        """
+        Sign in to the DDS API. 
+        Returns the partial auth token and the secondfactor method
+        to be used by the 2fa method.
+        """
+        try:
+            response_json, _ = dds_cli.utils.perform_request(
+                dds_cli.DDSEndpoint.ENCRYPTED_TOKEN,
+                method="get",
+                auth=(username, password),
+                error_message="Failed to authenticate user",
+            )
+        except UnicodeEncodeError as exc:
+            raise dds_cli.exceptions.ApiRequestError(
+                message="The entered username or password seems to contain invalid characters. Please try again."
+            ) from exc
+
+        # Token received from API needs to be completed with a mfa timestamp
+        partial_auth_token = response_json.get("token")
+        secondfactor_method = response_json.get("secondfactor_method")    
+
+        return partial_auth_token, secondfactor_method
+
+    def __totp(self, totp_enabled: bool, partial_auth_token: str, totp: str):
+        if not totp_enabled:
+                raise exceptions.AuthenticationError(
+                    "Authentication failed, you have not yet activated one-time "
+                    "authentication codes from authenticator app."
+                )
+
+        response_json, _ = dds_cli.utils.perform_request(
+                dds_cli.DDSEndpoint.SECOND_FACTOR,
+                method="get",
+                headers={"Authorization": f"Bearer {partial_auth_token}"},
+                json={"TOTP": totp},
+                error_message="Failed to authenticate with one-time authentication code",
+            )
+        return response_json    
+
+
+    def __twofactor(self, partial_auth_token: str, secondfactor_method: str, totp: str, username: str, one_time_code: str) -> str:
+        """
+        Completes the authentication with the second factor.
+        Returns the full token.
+        """
+        totp_enabled = secondfactor_method == "TOTP"
+
+        if totp:
+            response_json = self._totp(totp_enabled, partial_auth_token, totp) # NEW TOTP METHOD
+
+        else:
+
+        # Verify Second Factor
+            if totp_enabled:
+                json_request = {"TOTP": one_time_code}
+            else:
+                json_request = {"HOTP": one_time_code}
+
+            response_json, _ = dds_cli.utils.perform_request(
                     dds_cli.DDSEndpoint.SECOND_FACTOR,
                     method="get",
                     headers={"Authorization": f"Bearer {partial_auth_token}"},
                     json=json_request,
                     error_message="Failed to authenticate with second factor",
-                )
-
-                # Step out of the while-loop
-                done = True
-
+                    )
+        
         # Get token from response
         token = response_json.get("token")
         if not token:

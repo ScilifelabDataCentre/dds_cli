@@ -68,22 +68,6 @@ class Auth(base.DDSBaseClass):
                 "Authenticate yourself with `dds auth login` to use this functionality![/red]"
             )
 
-
-    # def authenticate_gui2f(self, partial_auth_token: str, one_time_code: str):
-    #     """Authenticate user."""
-    #     json_request = {"HOTP": one_time_code}
-    #     print("Authenticating with second factor...")
-    #     response_json, _ = dds_cli.utils.perform_request(
-    #                 dds_cli.DDSEndpoint.SECOND_FACTOR,
-    #                 method="get",
-    #                 headers={"Authorization": f"Bearer {partial_auth_token}"},
-    #                 json=json_request,
-    #                 error_message="Failed to authenticate with second factor",
-    #             )
-    #     token = response_json.get("token")
-    #     self.token = {"Authorization": f"Bearer {token}"}
-    #     return self.token
-
     def logout(self):
         """Logout user by removing authenticated token."""
         token_file = user.TokenFile(token_path=self.token_path)

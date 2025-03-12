@@ -117,8 +117,6 @@ class DDSBaseClass:
                 force_renew_token=False,
                 no_prompt=no_prompt,
                 authenticate_gui=authenticate_gui,
-                #username_gui=username_gui,
-                #password_gui=password_gui,
                 token_path=token_path,
                 totp=totp,
                 allow_group=allow_group,
@@ -126,14 +124,6 @@ class DDSBaseClass:
 
             self.partial_auth_token, self.secondfactor_method = self.dds_user.sign_in(username=self.username_gui, password=self.password_gui)           
             
-            
-            
-            
-            
-            # self.token = dds_user.token
-            # print("Token in base class:")
-            # print(self.token)
-
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in DDS_KEYS_REQUIRED_METHODS:
@@ -146,6 +136,9 @@ class DDSBaseClass:
             self.filehandler = None
 
     def do_2factor(self, twofactor_code: str):
+        """
+        Perform 2fa for the gui
+        """
         self.dds_user.twofactor(self.partial_auth_token, self.secondfactor_method, self.totp, self.username_gui, twofactor_code)
         self.token = self.dds_user.token_dict
 

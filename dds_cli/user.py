@@ -97,6 +97,7 @@ class User:
 
         if self.authenticate_gui and not self.token:
             return 
+        
         # Authenticate user and save token
         if not self.token:
             if not self.force_renew_token :
@@ -235,7 +236,7 @@ class User:
         totp_enabled = secondfactor_method == "TOTP"
 
         if totp:
-            response_json = self._totp(totp_enabled, partial_auth_token, totp) # NEW TOTP METHOD
+            response_json = self.__totp(totp_enabled, partial_auth_token, totp) # NEW TOTP METHOD
 
         else:
 

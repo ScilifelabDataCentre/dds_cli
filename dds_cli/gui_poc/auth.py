@@ -62,8 +62,6 @@ class AuthLogin(QWidget):
         self.token_path = token_path
 
         self.partial_token = None;
-        #self.partial_token = None
-        #self.secondfactor_method = None
 
         self.layout = QVBoxLayout() 
         self.layout.addWidget(QLabel("Login"))
@@ -101,7 +99,6 @@ class AuthLogin(QWidget):
                             token_path=self.token_path,
                             username_gui=self.username.text(), 
                             password_gui=self.password.text())
-       #self.partial_token = self.auth.token
     
         print("Successfully logged in")
 

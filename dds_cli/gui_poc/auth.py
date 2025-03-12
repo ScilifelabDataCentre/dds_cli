@@ -107,13 +107,3 @@ class AuthLogin(QWidget):
         self.auth.do_2factor(self.twofactor_code.text())
         print("Successfully authenticated")
                 
-
-
-class AuthGUI(QWidget):
-    def __init__(self, token_path: str):
-        super().__init__()
-        self.auth = Auth(authenticate=False, token_path=token_path)
-        self.layout = QVBoxLayout()
-        
-        self.layout.addWidget(AuthLogin(self.auth, token_path))
-        self.setLayout(self.layout)

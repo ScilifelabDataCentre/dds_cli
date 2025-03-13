@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow, QTabWidget
 from PyQt6.QtWidgets import QApplication
 import sys
-from dds_cli.gui_poc.auth import AuthGUI, AuthStatus, AuthLogout
+from dds_cli.gui_poc.auth import AuthStatus, AuthLogout
 from dds_cli.gui_poc.user import AccountManagerGUI
 from dds_cli.gui_poc.files import FileManagerGUI
 
@@ -16,7 +16,6 @@ class MainWindow(QMainWindow):
         tabs.setDocumentMode(True)
 
         tabs.addTab(AuthStatus(token_path), "Auth Status")
-        tabs.addTab(AuthGUI(token_path), "Auth GUI")
         tabs.addTab(AuthLogout(token_path), "Auth Logout")
         tabs.addTab(FileManagerGUI(), "File Manager")
 

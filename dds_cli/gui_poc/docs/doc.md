@@ -5,7 +5,7 @@
 ### Current setup
 Currently no return of the API respone from the middle layer is implemented. Want to make the response availible for the GUI. 
 
-![Image](./DDS_current_implementation.png)
+![Image](./DDS_current_implementation.jpeg)
 
 Want to either:
 - Move the logging to the click application and make the cli functions return the API response, or
@@ -86,3 +86,8 @@ def get_user_info(self):
 - The authentication would need to be either reformated or adding a parallel authentication for the gui --> could be a better solution to rewrite the authenticatin flow all together 
 - **Problem**: In the current auth flow the sign in and 2fa are done in the same method. and the input of text in the cli are happening inside the method. The GUI solution need the login and 2fa to be seperate methods.
 - **Possible Solution**: Try to split up the methods in auth class to smaller methods so the gui can call them.
+
+
+## Issues with the PyQt implementation 
+
+The idea was to use PyQt6 as a framework for building the GUI for the DDS but Pyqt dont work on alpine and hence would not install in the container enviroment. In addition to this, there is benfifits using a TUI (Terminal UI) as some users are **only** able to run dds in the terminal. There is no loss in functionallity switching from pyqt to textualize. Textualize is confirmed to work with the current docker setup. 

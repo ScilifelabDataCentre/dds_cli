@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import QMainWindow, QTabWidget
 from PyQt6.QtWidgets import QApplication
 import sys
-from dds_cli.gui_poc.auth import AuthStatus, AuthLogout
-from dds_cli.gui_poc.user import AccountManagerGUI
-from dds_cli.gui_poc.files import FileManagerGUI
+from dds_cli.gui_poc.pyqt6.auth import AuthStatus, AuthLogout
+from dds_cli.gui_poc.pyqt6.user import AccountManagerGUI
+from dds_cli.gui_poc.pyqt6.files import FileManagerGUI
 
 class MainWindow(QMainWindow):
     def __init__(self, token_path: str):

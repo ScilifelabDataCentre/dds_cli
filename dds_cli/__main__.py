@@ -61,7 +61,7 @@ from dds_cli.options import (
 )
 
 ## GUI IMPORTS ##
-from .gui_poc.app import GUI
+from .gui_poc.pyqt6.app import GUI
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #

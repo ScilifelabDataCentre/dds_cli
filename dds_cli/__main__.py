@@ -61,7 +61,7 @@ from dds_cli.options import (
 )
 
 ## GUI IMPORTS ##
-from .gui_poc.pyqt6.app import GUI
+from .gui_poc.app import App
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -177,8 +177,10 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 @click.pass_obj
 def gui(click_ctx):
     """Start the DDS GUI."""
-    gui = GUI(click_ctx.get("TOKEN_PATH"))
-    gui.exec()
+    gui = App(token_path=click_ctx.get("TOKEN_PATH"))
+    gui.title = "SciLifeLab Data Delivery System"
+    gui.sub_title = "CLI Version: " + dds_cli.__version__
+    gui.run()
 
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #

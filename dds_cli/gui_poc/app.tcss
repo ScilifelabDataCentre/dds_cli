@@ -1,0 +1,55 @@
+Header {
+    
+}
+
+Footer {
+
+}
+
+AuthModal {
+    align: center middle;
+}
+
+#auth-modal{
+    width: 50%;
+    height: 60%;
+
+    background: $surface;
+}
+
+#auth-widget{
+    layout: grid;
+    grid-size: 1 2;
+    align: center middle;
+}
+
+
+#auth-status{
+    align: center middle;
+}
+
+#auth-logout{
+    align: center middle;
+}
+
+#auth-logout > * {
+    margin: 2;
+}
+
+#home-screen{
+    align: center middle;
+}
+
+#title{
+    text-style: bold;
+}
+
+Button{
+    border: none;
+    height: 3;
+}
+
+Button:hover{
+    border: none
+}
+

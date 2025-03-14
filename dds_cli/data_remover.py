@@ -115,7 +115,7 @@ class DataRemover(base.DDSBaseClass):
             LOG.warning("File deletion may have failed. Usage of space may increase.")
 
     # Public methods ###################### Public methods #
-    @removal_spinner
+    # @removal_spinner
     def remove_all(self, *_, **__):
         """Remove all files in project."""
         # Perform request to API to perform deletion
@@ -133,6 +133,8 @@ class DataRemover(base.DDSBaseClass):
                 "Malformatted response detected when attempting "
                 f"to remove all files from {self.project}."
             )
+
+        dds_cli.utils.console.print("\n" + response_json["message"])
 
     @removal_spinner
     def remove_file(self, files):

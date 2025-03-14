@@ -56,20 +56,26 @@ def test_delete_tempfile_ok(fs: FakeFilesystem, caplog: LogCaptureFixture):
             "File deletion may have failed. Usage of space may increase.",
         ) not in caplog.record_tuples
 
+
 def test_delete_all_ok(fs: FakeFilesystem, capfd: LogCaptureFixture):
     """Delete all files. - ok"""
 
     # Create mocker
     with Mocker() as mock:
         # Create mocked request - real request not executed
-        mock.delete(DDSEndpoint.REMOVE_PROJ_CONT, status_code=200, json={"message": "All files removed.", "removed": True})
+        mock.delete(
+            DDSEndpoint.REMOVE_PROJ_CONT,
+            status_code=200,
+            json={"message": "All files removed.", "removed": True},
+        )
 
         with data_remover.DataRemover(authenticate=False, project="project_1") as dr:
-            dr.token = {"Authorization": f"Bearer {"FAKE_TOKEN"}"} # required
+            dr.token = {"Authorization": "Bearer FAKE_TOKEN"}  # required
             dr.remove_all()
 
             out, _ = capfd.readouterr()
             assert "All files removed." in out
+
 
 def test_delete_all_malformated_response(fs: FakeFilesystem, capfd: LogCaptureFixture):
     """Malformated response"""
@@ -80,8 +86,10 @@ def test_delete_all_malformated_response(fs: FakeFilesystem, capfd: LogCaptureFi
         mock.delete(DDSEndpoint.REMOVE_PROJ_CONT, status_code=200, json={})
 
         with data_remover.DataRemover(authenticate=False, project="project_1") as dr:
-            dr.token = {"Authorization": f"Bearer {"FAKE_TOKEN"}"} # required
+            dr.token = {"Authorization": "Bearer FAKE_TOKEN"}  # required
 
             with pytest.raises(APIError) as err:
                 dr.remove_all()
-                assert "Malformatted response detected when attempting to remove all files" in str(err.value)
+                assert "Malformatted response detected when attempting to remove all files" in str(
+                    err.value
+                )

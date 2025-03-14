@@ -41,6 +41,7 @@ class DataRemover(base.DDSBaseClass):
         method: str = "rm",
         no_prompt: bool = False,
         token_path: str = None,
+        **kwargs,
     ):
         """Handle actions regarding data deletion in the cli."""
         # Initiate DDSBaseClass to authenticate user
@@ -49,6 +50,7 @@ class DataRemover(base.DDSBaseClass):
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,
+            **kwargs,
         )
 
         self.failed_table = None
@@ -115,7 +117,7 @@ class DataRemover(base.DDSBaseClass):
             LOG.warning("File deletion may have failed. Usage of space may increase.")
 
     # Public methods ###################### Public methods #
-    # @removal_spinner
+    #@removal_spinner
     def remove_all(self, *_, **__):
         """Remove all files in project."""
         # Perform request to API to perform deletion
@@ -128,7 +130,7 @@ class DataRemover(base.DDSBaseClass):
         )
 
         # Print out response - deleted or not?
-        if "removed" not in response_json:
+        if "removed" not in response_json and "message" not in response_json:
             raise dds_cli.exceptions.APIError(
                 "Malformatted response detected when attempting "
                 f"to remove all files from {self.project}."

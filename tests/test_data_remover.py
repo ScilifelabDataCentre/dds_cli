@@ -57,7 +57,7 @@ def test_delete_tempfile_ok(fs: FakeFilesystem, caplog: LogCaptureFixture):
         ) not in caplog.record_tuples
 
 
-def test_delete_all_ok(fs: FakeFilesystem, capfd: LogCaptureFixture):
+def test_delete_all_ok(capfd: LogCaptureFixture):
     """Delete all files. - ok"""
 
     # Create mocker
@@ -77,7 +77,7 @@ def test_delete_all_ok(fs: FakeFilesystem, capfd: LogCaptureFixture):
             assert "All files removed." in out
 
 
-def test_delete_all_malformated_response(fs: FakeFilesystem, capfd: LogCaptureFixture):
+def test_delete_all_malformated_response():
     """Malformated response"""
 
     # Create mocker

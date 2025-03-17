@@ -1,18 +1,13 @@
-from rich.segment import Segment
-from rich.style import Style
-from rich_pixels import Pixels
-from textual import events
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Grid, Vertical, VerticalScroll
-from textual.screen import ModalScreen, Screen
-from textual.widget import Widget
-from textual.widgets import Button, Footer, Header, Input, Label, Static
+
+from textual.widgets import Footer, Header
 from textual.theme import Theme
 
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.home import HomeScreen
-from dds_cli.gui_poc.auth import AuthModal
+from dds_cli.gui_poc.auth import AuthLogin, AuthLogout, AuthStatus
+from dds_cli.gui_poc.utils import DDSModal
 
 
 theme = Theme(
@@ -22,11 +17,12 @@ theme = Theme(
     foreground="#FFFFFF",
     panel="#045C64",
     boost="#FFFFFF",
-    warning="#FF0000",
+    warning="#FF6600",
     dark=True,
     variables={
         "block-hover-background": "#43858B",
         "primary-darken-2": "#323232",
+        #"button-focus-text-style": "underline",
     },
 )   
 
@@ -42,17 +38,26 @@ class App(App):
     ENABLE_COMMAND_PALETTE = False
 
     BINDINGS = [
-        Binding("q", "quit", "Quit"), ("a", "authenticate", "Authenticate")
+        Binding("q", "quit", "Quit"), 
+        ("a", "authenticate", "Session Status"), 
+        ("l", "login", "Login"),
+        ("o", "logout", "Logout"),
     ]
     
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=True, time_format="%H:%M:%S")
+        yield Header(show_clock=True, time_format="%H:%M:%S", icon="")
         yield HomeScreen()
         yield Footer()
 
     def action_authenticate(self) -> None:
-        self.push_screen(AuthModal(self.auth, self.token_path))
+        self.push_screen(DDSModal(AuthStatus(self.auth)))
+    
+    def action_login(self) -> None:
+        self.push_screen(DDSModal(AuthLogin(self.token_path)))
 
+    def action_logout(self) -> None:
+        self.push_screen(DDSModal(AuthLogout(self.auth)))
+    
     def on_mount(self) -> None:
         self.register_theme(theme)
         self.theme = "custom"

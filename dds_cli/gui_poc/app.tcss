@@ -1,40 +1,99 @@
-Header {
-    
-}
+/* Modal */
 
-Footer {
-
-}
-
-AuthModal {
+DDSModal {
     align: center middle;
 }
 
-#auth-modal{
+#dds-modal{
     width: 50%;
     height: 60%;
-
     background: $surface;
 }
 
-#auth-widget{
-    layout: grid;
-    grid-size: 1 2;
+DDSModalFooter {
+    align: center middle;
+    height: auto;
+    padding: 1;
+}
+
+DDSModalHeader {
+    height: auto;
+    align: center middle;
+    background: $panel;
+}
+
+/* Auth */
+
+AuthStatus {
+    align: center middle;
+    height: 80%;
+    padding: 1;
+}
+
+AuthLogin {
     align: center middle;
 }
 
+AuthLogin > * {
+    margin: 1;
+}
 
-#auth-status{
+#auth-login {
     align: center middle;
 }
 
-#auth-logout{
+#login-step {
+    align: center middle;
+    height: auto;
+
+}
+
+#two-factor-step {
+    align: center middle;
+    height: auto;
+
+}
+
+#auth-status {
     align: center middle;
 }
+
+AuthLogout {
+    align: center middle;
+}
+
+#auth-logout {
+    align: center middle;
+    padding: 1;
+}
+
 
 #auth-logout > * {
-    margin: 2;
+    margin: 1;
+} 
+
+#auth-logout-message {
+    align: center middle;
+    height: auto;
 }
+
+#auth-logout-buttons {
+    align: center middle;
+    height: auto;
+}
+
+#auth-login {
+    align: center middle;
+    padding: 1;
+    width: 100%;
+}
+
+#auth-login > * {
+    margin: 1;
+    height: auto;
+}
+
+/* Home Screen */
 
 #home-screen{
     align: center middle;
@@ -44,12 +103,26 @@ AuthModal {
     text-style: bold;
 }
 
+/* Button */
+
 Button{
     border: none;
     height: 3;
+    padding: 0 2 0 2; /* Set padding for centered content without default border*/
 }
 
 Button:hover{
-    border: none
-}
+    border: none;
+} 
 
+Button:focus{
+    border: none;
+} 
+
+/* Input */
+
+Input {
+    border: solid $primary;
+}  
+
+ 

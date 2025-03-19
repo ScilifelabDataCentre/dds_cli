@@ -73,8 +73,9 @@ def test_delete_all_ok(capfd: LogCaptureFixture):
             dr.token = {"Authorization": "Bearer FAKE_TOKEN"}  # required
             dr.remove_all()
 
-            out, _ = capfd.readouterr()
+            out, err = capfd.readouterr()
             assert "All files removed." in out
+            assert not err
 
 
 def test_delete_all_malformated_response():

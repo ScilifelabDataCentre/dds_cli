@@ -7,16 +7,18 @@ from textual.widgets import Button, Footer, Header, Label, Placeholder, Static
 from textual.screen import ModalScreen
 
 class DDSModalHeader(Widget):
-    def __init__(self):
+    def __init__(self, title: str):
         super().__init__()
+        self.title = title
 
     def compose(self) -> ComposeResult:
-        yield Label("DDS Modal", id="dds-modal-header")
+        yield Label(self.title, id="dds-modal-header")
 
 class DDSModal(ModalScreen):
-    def __init__(self, child: Widget):
+    def __init__(self, child: Widget, title: str = "DDS Modal"):
         super().__init__()
         self.child = child  
+        self.title = title
 
     BINDINGS = [
         Binding("c", "close", "Close")
@@ -24,7 +26,7 @@ class DDSModal(ModalScreen):
 
     def compose(self) -> ComposeResult:
         yield Vertical(
-            DDSModalHeader(),
+            DDSModalHeader(self.title),
             VerticalScroll(
                 self.child,
                 id="dds-modal-content"
@@ -39,4 +41,3 @@ class DDSModal(ModalScreen):
     def on_button_pressed(self, event: events.Click) -> None:
         if event.button.id == "close-button":
             self.dismiss()
-

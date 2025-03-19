@@ -6,7 +6,8 @@ from textual.containers import Container, Grid, Horizontal, Vertical, VerticalSc
 from textual.screen import ModalScreen
 from textual.widgets import Button, Footer, Label, Input
 from textual import events  
-from textual.widget import Widget   
+from textual.widget import Widget
+
 
 class AuthStatus(Widget):
     def __init__(self, auth: Auth):
@@ -15,8 +16,10 @@ class AuthStatus(Widget):
 
     def compose(self) -> ComposeResult:
         with Container(id="auth-status"):
-            yield Label(self.auth.check())
+            yield Label(self.get_status())
 
+    def get_status(self) -> str:
+        return self.auth.check() or "Not authenticated"
 
 class LoginStep(Widget):
     def __init__(self, auth: Auth, token_path: str):
@@ -38,7 +41,7 @@ class TwoFactorStep(Widget):
     def compose(self) -> ComposeResult:
         with Container(id="two-factor-step"):   
                 yield Input(placeholder="2FA Code", id="code")
-                yield Button("Complete Login", id="complete-login")
+                yield Button("Complete Login", id="complete-login", variant="primary")
 
 class AuthLogin(Widget):
     def __init__(self, token_path: str):
@@ -48,6 +51,7 @@ class AuthLogin(Widget):
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(id="auth-login"):
+            yield Label("Authenticate yourself towards SciLifeLab Data Delivery System.", id="auth-login-message")
             yield LoginStep(self.auth, self.token_path)
     
     def on_button_pressed(self, event: events.Click) -> None:
@@ -55,18 +59,22 @@ class AuthLogin(Widget):
             username = self.query_one("#username").value
             password = self.query_one("#password").value
 
-            self.auth = "Login" #Auth(authenticate=False, 
-                         #   authenticate_gui=True, 
-                         #   token_path=self.token_path,
-                         #   username_gui=username, 
-                         #   password_gui=password)
+            self.auth = Auth(authenticate=False, 
+                         authenticate_gui=True, 
+                         token_path=self.token_path,
+                         username_gui=username, 
+                         password_gui=password)
 
             if self.auth: 
+                self.query_one("#login-step").remove()
                 self.query_one("#auth-login").mount(TwoFactorStep(self.auth))
+                self.notify("Two factor code sent to email.")
                          
         if event.button.id == "complete-login":
             code = self.query_one("#code").value
             self.auth.do_2factor(code)
+            self.query_one("#complete-login").remove()
+            self.notify("Successfully logged in.")
 
 
 class AuthLogout(Widget):
@@ -78,6 +86,15 @@ class AuthLogout(Widget):
         with Vertical(id="auth-logout"):
             yield Container(Label("Are you sure you want to logout? If not, press close."), id="auth-logout-message")
             with Container(id="auth-logout-buttons"):
-                yield Button("Logout", variant="warning")
+                yield Button("Logout", variant="warning", id="logout")
+
+    def on_button_pressed(self, event: events.Click) -> None:
+        if event.button.id == "logout":
+            logout = self.auth.logout()
+            self.query_one("#auth-logout-buttons").disabled = True
+            if logout:
+                self.notify("Successfully logged out.")
+            else:
+                self.notify("Already logged out.")
 
 

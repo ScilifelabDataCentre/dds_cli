@@ -74,8 +74,10 @@ class Auth(base.DDSBaseClass):
         if token_file.file_exists():
             token_file.delete_token()
             LOG.info("[green] :white_check_mark: Successfully logged out![/green]")
+            return True
         else:
             LOG.info("[green]Already logged out![/green]")
+            return False
 
     def twofactor(self, auth_method: str = None):
         """Perform 2FA for user."""

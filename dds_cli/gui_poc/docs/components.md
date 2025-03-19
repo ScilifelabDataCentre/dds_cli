@@ -23,6 +23,58 @@ There will also be layout components, such might be: grids, collapsibles, conten
 
 For the full documentation, visit [Textual Widget Gallery](https://textual.textualize.io/widget_gallery/).
 
+## Custom components 
+
+There is a possibillity to make custom components or extending widgets. 
+
+
+## Limitations 
+
+### Images 
+
+There is currently no support for images in textual, bit it is included in the [roadmap](https://textual.textualize.io/roadmap/). There is currently no need for images in the DDS application for functionality. They currently support [rich pixels](https://github.com/darrenburns/rich-pixels) for graphical components. 
+
+
+# Themes and Styling
+
+Textual supports both application wide themes and styling of default widgets. Styling is done with *tcss* (textal css), and is limited in comparison to regualar css. The supported CSS types can be found [here](https://textual.textualize.io/css_types/) and the textual style implementations [here](https://textual.textualize.io/styles/).
+
+
+## Theme 
+
+The theme is defined as: 
+
+```` python
+primary: str
+secondary: str | None = None
+warning: str | None = None
+error: str | None = None
+success: str | None = None
+accent: str | None = None
+foreground: str | None = None
+background: str | None = None
+surface: str | None = None
+panel: str | None = None
+boost: str | None = None
+dark: bool = True
+luminosity_spread: float = 0.15
+text_alpha: float = 0.95
+variables: dict[str, str] = field(default_factory=dict)
+````
+[Source](https://github.com/Textualize/textual/blob/main/src/textual/theme.py). The theme us applied application wide. In the variables you can overwrite component specific styling.
+
+## Limitations 
+
+The textual styling is as said limited in comparison to the full flexibility of CSS styles applications. However, the limited custumization options ensures uniform styling accross the application, both in basic and custom widgets. 
+
+### Text
+
+There is no support for different fontsizes in textual. 
+
+## Issues
+
+Sometimes the colors in textual interact unexpected with eachother, such as layering two colors (for example an alert or modal) can create new strange colors. This can be solved by changing the overlay colors opacity in most cases. 
+
 
 
 

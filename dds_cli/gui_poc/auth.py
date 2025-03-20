@@ -1,10 +1,7 @@
-from prompt_toolkit.layout import VerticalAlign
-from textual.binding import Binding
 from dds_cli.auth import Auth
 from textual.app import ComposeResult
-from textual.containers import Container, Grid, Horizontal, Vertical, VerticalScroll
-from textual.screen import ModalScreen
-from textual.widgets import Button, Footer, Label, Input
+from textual.containers import Container, Vertical, VerticalScroll
+from textual.widgets import Button, Label, Input
 from textual import events  
 from textual.widget import Widget
 

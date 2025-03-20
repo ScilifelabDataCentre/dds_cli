@@ -1,9 +1,9 @@
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.containers import Container, Vertical, VerticalScroll
 from textual.widget import Widget
-from textual.widgets import Button, Footer, Header, Label, Placeholder, Static
+from textual.widgets import Button, Footer, Label, Markdown
 from textual.screen import ModalScreen
 
 class DDSModalHeader(Widget):
@@ -28,7 +28,7 @@ class DDSModal(ModalScreen):
         yield Vertical(
             DDSModalHeader(self.title),
             VerticalScroll(
-                self.child,
+                self.child, 
                 id="dds-modal-content"
             ),
             Footer(),
@@ -41,3 +41,25 @@ class DDSModal(ModalScreen):
     def on_button_pressed(self, event: events.Click) -> None:
         if event.button.id == "close-button":
             self.dismiss()
+
+
+class DDSSidebar(Widget):
+    def __init__(self, items: list[str], help_text: str = "Help"):
+        super().__init__()
+        self.items = items
+        self.help_text = help_text
+    def compose(self) -> ComposeResult:
+       with Container(id="dds-sidebar"):
+           with Vertical(id="dds-sidebar-items"):   
+               for item in self.items:
+                   yield Button(item.capitalize(), id=item, variant="primary")
+           with Vertical(id="dds-sidebar-help"):
+                yield Button("Help", id="help", variant="primary")       
+
+    
+    def on_mount(self) -> None:
+        self.query_one(Container).border_title = "DDS Sidebar"
+
+    def on_button_pressed(self, event: events.Click) -> None:
+        if event.button.id == "help":
+            self.app.push_screen(DDSModal(Markdown(self.help_text), title="Help"))

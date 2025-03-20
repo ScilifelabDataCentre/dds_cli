@@ -1,20 +1,21 @@
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 
-from textual.widgets import Footer, Header
+from textual.containers import Container
+from textual.widgets import ContentSwitcher, Footer, Header
 from textual.theme import Theme
 
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.home import HomeScreen
 from dds_cli.gui_poc.auth import AuthLogin, AuthLogout, AuthStatus
-from dds_cli.gui_poc.user import UserInfo
+from dds_cli.gui_poc.user import User
 from dds_cli.gui_poc.utils import DDSModal
 
 
 theme = Theme(
     name="custom",
     primary="#3F3F3F",
-    secondary="#4C979F",
+    secondary="#A6A6A6",
     accent = "#A7C947",
     foreground="#FFFFFF",
     panel="#045C64",
@@ -22,9 +23,6 @@ theme = Theme(
     warning="#F57C00",
     error="#D32F2F",
     success="#388E3C",
-    #background="#000000",
-    #background="#121212",
-    #surface="#1E1E1E",
     dark=True,
     variables={
         "block-hover-background": "#43858B",
@@ -45,6 +43,7 @@ class App(App):
 
     BINDINGS = [
         Binding("q", "quit", "Quit"), 
+        Binding("h", "home", "Home", tooltip="Show home screen."),
         Binding("t", "token", "Token", tooltip="Show current token status"), 
         Binding("l", "login", "Login", tooltip="Login to DDS."),
         Binding("o", "logout", "Logout", tooltip="Logout from DDS."),
@@ -53,7 +52,11 @@ class App(App):
     
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True, time_format="%H:%M:%S", icon="")
-        yield HomeScreen()
+        with ContentSwitcher(initial="home"):
+            with Container(id="home"):
+                yield HomeScreen()
+            with Container(id="user"):
+                yield User()
         yield Footer()
 
     def action_token(self) -> None:
@@ -66,8 +69,11 @@ class App(App):
         self.push_screen(DDSModal(AuthLogout(self.auth), title="Logout"))
 
     def action_user(self) -> None:
-        self.push_screen(DDSModal(UserInfo(), title="User Info"))
-    
+        self.query_one(ContentSwitcher).current = "user"
+
+    def action_home(self) -> None:
+        self.query_one(ContentSwitcher).current = "home"
+
     def on_mount(self) -> None:
         self.register_theme(theme)
         self.theme = "custom"

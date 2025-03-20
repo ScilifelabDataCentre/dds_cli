@@ -1,12 +1,13 @@
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widget import Widget
-from textual.widgets import Label, Static
+from textual.widgets import Label
 
 import dds_cli
 
 DDS_URL = dds_cli.DDSEndpoint.BASE_ENDPOINT
 DDS_URL_BASE = DDS_URL[: DDS_URL.index("/", 8)]
+
 
 class HomeScreen(Widget):
     

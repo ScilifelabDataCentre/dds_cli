@@ -140,3 +140,44 @@ Input {
 Toast {
     background: $primary;
 }
+
+/* User */ 
+
+#user {
+    align: center middle;
+    width: 100%; 
+}
+
+#user-info {
+    align: center middle;
+    margin: 1;
+}
+
+/* Sidebar */
+
+DDSSidebar {
+    dock: left;
+    width: 20%;    
+    height: 100%; 
+    align: center middle;
+}
+
+#dds-sidebar {
+    align: center middle;
+    border: solid $primary;
+}
+
+#dds-sidebar-items {
+    align: center top;
+
+    height: 80%;
+}
+
+#dds-sidebar-items > * {
+    margin: 1;
+}
+
+#dds-sidebar-help {
+    align: center bottom;
+    height: 20%;
+}

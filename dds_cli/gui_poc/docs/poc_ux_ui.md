@@ -1,4 +1,4 @@
-# DDS CLI COMPONENTS
+# DDS POC UX/UI
 
 ## Component Overview 
 
@@ -75,7 +75,18 @@ There is no support for different fontsizes in textual.
 
 Sometimes the colors in textual interact unexpected with eachother, such as layering two colors (for example an alert or modal) can create new strange colors. This can be solved by changing the overlay colors opacity in most cases. 
 
+# Application layout
 
+Textualise utilizes keyboard binding displayed in the footer. In the header you can add a title and subitle, as well as a clock and "menu" in the lift corner (not currently in use, mostly used for swithcing themes).
 
+![Image](home.jpeg)
 
+Token, login and logout are placed inside modals. The modals can also have footers with bindings, in this case a close binding. 
+
+![image](modal.jpeg)
+
+Group commands (in this case user) is availible through the footer bindings and have a layout using a sidebar corresponding to commands. The sidebar can have a title (now "DDS Sidebar") and a help button displaying a modal with markdown. This type of layput could be applied to all command groups. 
+
+![image](group_page.jpeg)
+![iamge](help.jpeg)
 

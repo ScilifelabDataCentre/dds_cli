@@ -1,11 +1,12 @@
 from textual.app import App, ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 
 from textual.containers import Container
 from textual.widgets import ContentSwitcher, Footer, Header
 from textual.theme import Theme
 
 from dds_cli.auth import Auth
+from dds_cli.gui_poc.data import Data
 from dds_cli.gui_poc.home import HomeScreen
 from dds_cli.gui_poc.auth import AuthLogin, AuthLogout, AuthStatus
 from dds_cli.gui_poc.user import User
@@ -48,6 +49,7 @@ class App(App):
         Binding("l", "login", "Login", tooltip="Login to DDS."),
         Binding("o", "logout", "Logout", tooltip="Logout from DDS."),
         Binding("u", "user", "User", tooltip="Show user info."),
+        Binding("d", "data", "Data", tooltip="Show data info."),
     ]
     
     def compose(self) -> ComposeResult:
@@ -57,6 +59,8 @@ class App(App):
                 yield HomeScreen()
             with Container(id="user"):
                 yield User()
+            with Container(id="data"):
+                yield Data()
         yield Footer()
 
     def action_token(self) -> None:
@@ -73,6 +77,9 @@ class App(App):
 
     def action_home(self) -> None:
         self.query_one(ContentSwitcher).current = "home"
+
+    def action_data(self) -> None:
+        self.query_one(ContentSwitcher).current = "data"
 
     def on_mount(self) -> None:
         self.register_theme(theme)

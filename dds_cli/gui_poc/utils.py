@@ -44,10 +44,12 @@ class DDSModal(ModalScreen):
 
 
 class DDSSidebar(Widget):
-    def __init__(self, items: list[str], help_text: str = "Help"):
+    def __init__(self, items: list[str], help_text: str = "Help", title: str = "DDS Sidebar"):
         super().__init__()
         self.items = items
         self.help_text = help_text
+        self.title = title
+
     def compose(self) -> ComposeResult:
        with Container(id="dds-sidebar"):
            with Vertical(id="dds-sidebar-items"):   
@@ -58,7 +60,7 @@ class DDSSidebar(Widget):
 
     
     def on_mount(self) -> None:
-        self.query_one(Container).border_title = "DDS Sidebar"
+        self.query_one(Container).border_title = self.title
 
     def on_button_pressed(self, event: events.Click) -> None:
         if event.button.id == "help":

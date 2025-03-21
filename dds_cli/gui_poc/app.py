@@ -2,9 +2,12 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
 
 from textual.containers import Container
+from textual.reactive import reactive
+from textual.widget import Widget
 from textual.widgets import ContentSwitcher, Footer, Header
 from textual.theme import Theme
 
+from dds_cli.account_manager import AccountManager
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.data import Data
 from dds_cli.gui_poc.home import HomeScreen
@@ -30,7 +33,6 @@ theme = Theme(
         "primary-darken-2": "#323232",
     },
 )   
-
 
 class App(App):
     def __init__(self, token_path: str):
@@ -73,6 +75,7 @@ class App(App):
         self.push_screen(DDSModal(AuthLogout(self.auth), title="Logout"))
 
     def action_user(self) -> None:
+        self.query_one(User).user = AccountManager() if self.auth.check() else AccountManager(authenticate=False) # TODO: possibly not a great solution, works for now
         self.query_one(ContentSwitcher).current = "user"
 
     def action_home(self) -> None:

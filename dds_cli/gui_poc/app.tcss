@@ -115,19 +115,23 @@ AuthLogout {
 
 /* Button */
 
-Button{
-    border: none;
-    height: 3;
-    padding: 0 2 0 2; /* Set padding for centered content without default border*/
+Button {
+    padding: 0 2 0 2;
 }
 
-Button:hover{
-    border: none;
-} 
+# Button{
+#     border: none;
+#     height: 3;
+#     padding: 0 2 0 2; /* Set padding for centered content without default border*/
+# }
 
-Button:focus{
-    border: none;
-} 
+# Button:hover{
+#     border: none;
+# } 
+
+# Button:focus{
+#     border: none;
+# } 
 
 /* Input */
 

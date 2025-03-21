@@ -65,7 +65,13 @@ variables: dict[str, str] = field(default_factory=dict)
 
 ## Limitations 
 
-The textual styling is as said limited in comparison to the full flexibility of CSS styles applications. However, the limited custumization options ensures uniform styling accross the application, both in basic and custom widgets. 
+The textual styling is as said limited in comparison to the full flexibility of CSS styles applications. However, the limited custumization options ensures uniform styling accross the application, both in basic and custom widgets.
+
+There is graphical issues with the default macos terminal. Strange looking colors and borders, see the comparison between iTerm2 (left) and macos default terminal (right). The issues does not effect the functionallity.  
+
+![Image](comparison.jpeg)
+
+**Question**: Ask people to use a different terminal and let it be ugly on macos terminal, or design in such a way that it looks good in macos terminal?
 
 ### Text
 

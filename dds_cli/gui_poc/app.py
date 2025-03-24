@@ -52,7 +52,7 @@ class App(App):
         Binding("l", "login", "Login", tooltip="Login to DDS."),
         Binding("o", "logout", "Logout", tooltip="Logout from DDS."),
         Binding("u", "user", "User", tooltip="Show user info."),
-        Binding("p", "project", "Project", tooltip="Show project info."),
+        #Binding("p", "project", "Project", tooltip="Show project info."),
         Binding("d", "data", "Data", tooltip="Show data info."),
     ]
     
@@ -65,8 +65,8 @@ class App(App):
                 yield User()
             with Container(id="data"):
                 yield Data()
-            with Container(id="project"):
-                yield Project(token_path=self.token_path)
+            #with Container(id="project"):
+                #yield Project(token_path=self.token_path)
         yield Footer()
 
     def action_token(self) -> None:
@@ -88,8 +88,8 @@ class App(App):
     def action_data(self) -> None:
         self.query_one(ContentSwitcher).current = "data"
 
-    def action_project(self) -> None:
-        self.query_one(ContentSwitcher).current = "project"
+    #def action_project(self) -> None:
+    #    self.query_one(ContentSwitcher).current = "project"
 
     def on_mount(self) -> None:
         self.register_theme(theme)

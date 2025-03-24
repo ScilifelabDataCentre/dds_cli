@@ -28,7 +28,7 @@ class LoginStep(Widget):
     def compose(self) -> ComposeResult:
         with Container(id="login-step"):
             yield Input(placeholder="Username", id="username")
-            yield Input(placeholder="Password", id="password")
+            yield Input(placeholder="Password", id="password", password=True)
             yield Button("Login", id="login", variant="primary")
         
 class TwoFactorStep(Widget):    

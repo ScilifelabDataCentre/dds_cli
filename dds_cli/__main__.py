@@ -153,6 +153,9 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             f"[green]Current user:[/] [red]{username}", highlight=False
         )
 
+    # Create context object
+    click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path}
+
     if "--help" not in sys.argv:
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
@@ -168,47 +171,17 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             )
         )
 
-        # Only one can be used
-        if force_no_log and log_file:
-            LOG.warning(
-                "You have used both the '--log-file' and '--force-no-log' option, you can only use one."
-            )
-            sys.exit(1)
+        if log_file:
+            # Do not setup log at default location if log_file is specified
+            click_ctx.obj.update({"DEFAULT_LOG": False})
 
-        # # Don't log to file if this flag is used
-        # if not force_no_log:
-
-        #     # Get command and strip from leading - / --
-        #     subcommands: typing.List = [i.lstrip("-") for i in sys.argv[1::]]
-
-        #     # Check if put or get in subcommand
-        #     put_or_get: typing.List = [i for i in subcommands if i in ["put", "get"]]
-
-        #     # Always log to file if uploading or downloading
-        #     if put_or_get and not log_file:
-        #         try:
-        #             # Save logs to specific folder in home directory
-        #             dds_log_dir: str = pathlib.Path("~/dds-cli_logs/").expanduser()
-        #             dds_log_dir.mkdir(exist_ok=True)
-        #         except (OSError, RuntimeError) as err:
-        #             LOG.warning(
-        #                 "Could not create log directory '%s'. "
-        #                 "Logs will not be saved to file. \nDetails: %s",
-        #                 dds_log_dir,
-        #                 err,
-        #             )
-
-        #         # Format log file path name to contain command and timestamp
-        #         command_as_string: str = "dds_" + "_".join(subcommands).replace("/", "_").replace(
-        #             "\\", "_"
-        #         )
-        #         timestamp_string: str = datetime.now().strftime("%Y%m%d-%H%M%S")
-        #         log_file = str(
-        #             dds_log_dir / pathlib.Path(command_as_string + "_" + timestamp_string + ".log")
-        #         )
-
-            # Set up logs to a file (if chosen, or by default above)
-            if log_file:
+            if force_no_log:
+                LOG.warning(
+                    "You have used both the '--log-file' and '--force-no-log' option, you can only use one."
+                )
+                sys.exit(1)
+            else:
+                # Set up logging to chosen file
                 log_fh = logging.FileHandler(log_file, encoding="utf-8")
                 log_fh.setLevel(logging.DEBUG)
                 log_fh.setFormatter(
@@ -218,9 +191,8 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
                     )
                 )
                 LOG.addHandler(log_fh)
-
-        # Create context object
-        click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path, "DEFAULT_LOG": log_file != ""}
+        else: 
+            click_ctx.obj.update({"DEFAULT_LOG": True})
 
 
 # ************************************************************************************************ #
@@ -1693,7 +1665,7 @@ def put_data(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
             destination=destination,
-            # default_log=click_ctx.get("DEFAULT_LOG"),
+            default_log=click_ctx.get("DEFAULT_LOG"),
         )
     except (
         dds_cli.exceptions.AuthenticationError,

@@ -212,6 +212,7 @@ class DataPutter(base.DDSBaseClass):
         no_prompt: bool = False,
         token_path: str = None,
         destination: str = None,
+        default_log: str = None,
     ):
         """Handle actions regarding upload of data."""
         # Define staging directory path

@@ -229,7 +229,6 @@ class DataPutter(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
-            # staging_dir=staging_dir,
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,

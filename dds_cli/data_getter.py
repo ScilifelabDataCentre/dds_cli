@@ -68,7 +68,6 @@ class DataGetter(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
-            # dds_directory=destination,
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,

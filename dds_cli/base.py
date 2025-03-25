@@ -47,7 +47,6 @@ class DDSBaseClass:
         project=None,
         method: str = None,
         authenticate: bool = True,
-        method_check: bool = True,
         force_renew_token: bool = False,
         totp: str = None,
         no_prompt: bool = False,
@@ -56,16 +55,9 @@ class DDSBaseClass:
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.project = project
-        self.method_check = method_check
         self.method = method
         self.no_prompt = no_prompt
         self.token_path = token_path
-
-        if self.method_check:
-            # Get attempted operation e.g. put/ls/rm/get
-            if self.method not in DDS_METHODS:
-                raise exceptions.InvalidMethodError(attempted_method=self.method)
-            LOG.debug("Attempted operation: %s", self.method)
 
         # Keyboardinterrupt
         self.stop_doing = False

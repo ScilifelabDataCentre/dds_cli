@@ -44,7 +44,6 @@ class ProjectStatusManager(base.DDSBaseClass):
         super().__init__(
             authenticate=authenticate,
             no_prompt=no_prompt,
-            method_check=False,
             token_path=token_path,
         )
         self.project = project
@@ -274,7 +273,6 @@ class ProjectBusyStatusManager(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             no_prompt=no_prompt,
-            method_check=False,
             token_path=token_path,
         )
 

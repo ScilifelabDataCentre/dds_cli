@@ -41,7 +41,6 @@ class Auth(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             authenticate=authenticate,
-            method_check=False,
             force_renew_token=force_renew_token,
             token_path=token_path,
             totp=totp,

@@ -69,26 +69,6 @@ class DDSBaseClass:
                 raise exceptions.InvalidMethodError(attempted_method=self.method)
             LOG.debug("Attempted operation: %s", self.method)
 
-            # # Use user defined destination if any specified
-            # if self.method == "get":
-            #     default_dir = pathlib.Path(
-            #         f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{self.project}_"
-            #         f"{'upload' if self.method == 'put' else 'download'}"
-            #     )
-            #     if staging_dir:
-            #         new_directory = staging_dir / default_dir
-            #     elif dds_directory:
-            #         new_directory = dds_directory
-            #     else:
-            #         new_directory = pathlib.Path.cwd() / default_dir
-
-            #     self.temporary_directory = new_directory
-
-            #     self.dds_directory = dds_cli.directory.DDSDirectory(path=new_directory)
-            #     self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
-            #         "dds_failed_delivery.json"
-            #     )
-
         # Keyboardinterrupt
         self.stop_doing = False
 

@@ -45,8 +45,6 @@ class DDSBaseClass:
     def __init__(
         self,
         project=None,
-        dds_directory: pathlib.Path = None,
-        staging_dir: pathlib.Path = None,
         method: str = None,
         authenticate: bool = True,
         method_check: bool = True,

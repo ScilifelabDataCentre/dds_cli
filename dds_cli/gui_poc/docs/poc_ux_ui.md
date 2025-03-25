@@ -2,7 +2,7 @@
 
 ## Component Overview 
 
-Components (possibly) neeeded for the current DDS CLI commands.
+Components (possibly) needed for the current DDS CLI commands.
 
 | Component Name | Description | Possible Variants |
 |---------------|-------------|----------|
@@ -61,13 +61,13 @@ luminosity_spread: float = 0.15
 text_alpha: float = 0.95
 variables: dict[str, str] = field(default_factory=dict)
 ````
-[Source](https://github.com/Textualize/textual/blob/main/src/textual/theme.py). The theme us applied application wide. In the variables you can overwrite component specific styling.
+[Source](https://github.com/Textualize/textual/blob/main/src/textual/theme.py). The theme is applied application wide. In the variables you can overwrite component specific styling.
 
 ## Limitations 
 
 The textual styling is as said limited in comparison to the full flexibility of CSS styles applications. However, the limited custumization options ensures uniform styling accross the application, both in basic and custom widgets.
 
-There is graphical issues with the default macos terminal. Strange looking colors and borders, see the comparison between iTerm2 (left) and macos default terminal (right). The issues does not effect the functionallity.  
+There is graphical issues with the default macos terminal. Strange looking colors and borders, see the comparison between iTerm2 (left) and macos default terminal (right). The issues does not effect the functionality.  
 
 ![Image](comparison.jpeg)
 

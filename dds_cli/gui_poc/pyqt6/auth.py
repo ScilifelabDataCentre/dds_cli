@@ -106,4 +106,5 @@ class AuthLogin(QWidget):
         print("Authenticating...")
         self.auth.do_2factor(self.twofactor_code.text())
         print("Successfully authenticated")
+
                 

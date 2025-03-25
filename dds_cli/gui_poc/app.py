@@ -1,3 +1,5 @@
+"""GUI Application for DDS CLI."""
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
 
@@ -36,6 +38,7 @@ theme = Theme(
 )   
 
 class App(App):
+    """Textual App for DDS CLI."""
     def __init__(self, token_path: str):
         super().__init__()
         self.token_path = token_path
@@ -43,8 +46,10 @@ class App(App):
 
     CSS_PATH = "app.tcss"
 
-    ENABLE_COMMAND_PALETTE = False
+    ENABLE_COMMAND_PALETTE = False # True by default
 
+    
+    # Keybindings for the app, placed in the footer.
     BINDINGS = [
         Binding("q", "quit", "Quit"), 
         Binding("h", "home", "Home", tooltip="Show home screen."),

@@ -29,6 +29,7 @@ from dds_cli import text_handler as txt
 from dds_cli.custom_decorators import verify_proceed, update_status, subpath_required
 
 import dds_cli
+import dds_cli.directory
 import dds_cli.utils
 
 ###############################################################################
@@ -43,7 +44,7 @@ LOG = logging.getLogger(__name__)
 
 
 def put(
-    staging_dir,
+    staging_location,
     project,
     source,
     source_path_file,
@@ -58,7 +59,7 @@ def put(
     """Handle upload of data."""
     # Initialize delivery - check user access etc
     with DataPutter(
-        staging_dir=staging_dir,
+        staging_location=staging_location,
         project=project,
         source=source,
         source_path_file=source_path_file,
@@ -201,7 +202,7 @@ class DataPutter(base.DDSBaseClass):
     def __init__(
         self,
         project: str = None,
-        staging_dir: pathlib.Path = None,
+        staging_location: pathlib.Path = None,
         break_on_fail: bool = False,
         overwrite: bool = False,
         source: tuple = (),
@@ -213,10 +214,22 @@ class DataPutter(base.DDSBaseClass):
         destination: str = None,
     ):
         """Handle actions regarding upload of data."""
+        # Define staging directory path
+        staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
+        if staging_location:
+            staging_dir = staging_location / staging_dir
+        else: 
+            staging_dir = pathlib.Path.cwd() / staging_dir
+
+        # Generate staging directory
+        self.temporary_directory = staging_dir
+        self.dds_directory = dds_cli.directory.DDSDirectory(path=staging_dir)
+        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
+
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
-            staging_dir=staging_dir,
+            # staging_dir=staging_dir,
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,

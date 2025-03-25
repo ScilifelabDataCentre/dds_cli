@@ -70,7 +70,7 @@ class DDSBaseClass:
             LOG.debug("Attempted operation: %s", self.method)
 
             # Use user defined destination if any specified
-            if self.method in DDS_DIR_REQUIRED_METHODS:
+            if self.method == "get":
                 default_dir = pathlib.Path(
                     f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{self.project}_"
                     f"{'upload' if self.method == 'put' else 'download'}"

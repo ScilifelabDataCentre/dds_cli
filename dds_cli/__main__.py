@@ -26,6 +26,7 @@ import questionary
 # Own modules
 import dds_cli
 import dds_cli.account_manager
+import dds_cli.timestamp
 import dds_cli.unit_manager
 import dds_cli.motd_manager
 import dds_cli.superadmin_helper
@@ -1617,12 +1618,12 @@ def data_group_command(_):
 @data_group_command.command(name="put", no_args_is_help=True)
 # Options
 @click.option(
-    "--staging-dir",
-    "-sd",
+    "--staging-location",
+    "-sl",
     required=False,
     type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
     help=(
-        "New directory where the files will be mounted before upload "
+        "New directory where the files will be staged before upload "
         "and any error log files will be saved for a specific upload."
     ),
 )
@@ -1649,7 +1650,7 @@ def data_group_command(_):
 @click.pass_obj
 def put_data(
     click_ctx,
-    staging_dir,
+    staging_location,
     project,
     source,
     source_path_file,
@@ -1678,9 +1679,10 @@ def put_data(
     delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
     reauthenticating yourself before uploading data.
     """
+    # Run upload
     try:
         dds_cli.data_putter.put(
-            staging_dir=staging_dir,
+            staging_location=staging_location,
             project=project,
             source=source,
             source_path_file=source_path_file,
@@ -1691,7 +1693,7 @@ def put_data(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
             destination=destination,
-            default_log=click_ctx.get("DEFAULT_LOG"),
+            # default_log=click_ctx.get("DEFAULT_LOG"),
         )
     except (
         dds_cli.exceptions.AuthenticationError,

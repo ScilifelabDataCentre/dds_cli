@@ -46,7 +46,7 @@ class DDSBaseClass:
         self,
         project=None,
         dds_directory: pathlib.Path = None,
-        mount_dir: pathlib.Path = None,
+        staging_dir: pathlib.Path = None,
         method: str = None,
         authenticate: bool = True,
         method_check: bool = True,
@@ -75,8 +75,8 @@ class DDSBaseClass:
                     f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{self.project}_"
                     f"{'upload' if self.method == 'put' else 'download'}"
                 )
-                if mount_dir:
-                    new_directory = mount_dir / default_dir
+                if staging_dir:
+                    new_directory = staging_dir / default_dir
                 elif dds_directory:
                     new_directory = dds_directory
                 else:

@@ -64,7 +64,6 @@ class DataGetter(base.DDSBaseClass):
         self.dds_directory = dds_cli.directory.DDSDirectory(path=staging_dir)
         self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
 
-
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,

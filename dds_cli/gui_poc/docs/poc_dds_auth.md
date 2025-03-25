@@ -92,3 +92,6 @@ def get_user_info(self):
 
 The idea was to use PyQt6 as a framework for building the GUI for the DDS but Pyqt dont work on alpine and hence would not install in the container enviroment. In addition to this, there is benfifits using a TUI (Terminal UI) as some users are **only** able to run dds in the terminal. There is no loss in functionallity switching from pyqt to textualize. Textualize is confirmed to work with the current docker setup. 
 
+## Packaging 
+
+The Textual documentation suggest using Hatch for packaging the application, [read more](https://textual.textualize.io/how-to/package-with-hatch/). Other suggestions are found [here](https://github.com/Textualize/textual/discussions/4512).

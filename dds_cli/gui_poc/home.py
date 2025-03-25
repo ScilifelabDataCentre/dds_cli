@@ -1,3 +1,5 @@
+"""Home screen widget."""
+
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widget import Widget
@@ -10,7 +12,8 @@ DDS_URL_BASE = DDS_URL[: DDS_URL.index("/", 8)]
 
 
 class HomeScreen(Widget):
-    
+    """Home screen widget."""
+
     def compose(self) -> ComposeResult:
         with Vertical(id="home-screen"):
             yield Label("SciLifeLab Data Delivery System", id="title")

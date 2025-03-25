@@ -1,11 +1,9 @@
 """GUI Application for DDS CLI."""
 
 from textual.app import App, ComposeResult
-from textual.binding import Binding, BindingType
+from textual.binding import Binding
 
 from textual.containers import Container
-from textual.reactive import reactive
-from textual.widget import Widget
 from textual.widgets import ContentSwitcher, Footer, Header
 from textual.theme import Theme
 
@@ -14,7 +12,6 @@ from dds_cli.auth import Auth
 from dds_cli.gui_poc.data import Data
 from dds_cli.gui_poc.home import HomeScreen
 from dds_cli.gui_poc.auth import AuthLogin, AuthLogout, AuthStatus
-from dds_cli.gui_poc.project import Project
 from dds_cli.gui_poc.user import User
 from dds_cli.gui_poc.utils import DDSModal
 
@@ -23,7 +20,7 @@ theme = Theme(
     name="custom",
     primary="#3F3F3F",
     secondary="#A6A6A6",
-    accent = "#A7C947",
+    accent="#A7C947",
     foreground="#FFFFFF",
     panel="#045C64",
     boost="#39ef6d",
@@ -35,10 +32,12 @@ theme = Theme(
         "block-hover-background": "#43858B",
         "primary-darken-2": "#323232",
     },
-)   
+)
 
-class App(App):
+
+class DDSApp(App):
     """Textual App for DDS CLI."""
+
     def __init__(self, token_path: str):
         super().__init__()
         self.token_path = token_path
@@ -46,21 +45,19 @@ class App(App):
 
     CSS_PATH = "app.tcss"
 
-    ENABLE_COMMAND_PALETTE = False # True by default
+    ENABLE_COMMAND_PALETTE = False  # True by default
 
-    
     # Keybindings for the app, placed in the footer.
     BINDINGS = [
-        Binding("q", "quit", "Quit"), 
+        Binding("q", "quit", "Quit"),
         Binding("h", "home", "Home", tooltip="Show home screen."),
-        Binding("t", "token", "Token", tooltip="Show current token status"), 
+        Binding("t", "token", "Token", tooltip="Show current token status"),
         Binding("l", "login", "Login", tooltip="Login to DDS."),
         Binding("o", "logout", "Logout", tooltip="Logout from DDS."),
         Binding("u", "user", "User", tooltip="Show user info."),
-        #Binding("p", "project", "Project", tooltip="Show project info."),
         Binding("d", "data", "Data", tooltip="Show data info."),
     ]
-    
+
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True, time_format="%H:%M:%S", icon="")
         with ContentSwitcher(initial="home"):
@@ -70,32 +67,36 @@ class App(App):
                 yield User()
             with Container(id="data"):
                 yield Data()
-            #with Container(id="project"):
-                #yield Project(token_path=self.token_path)
         yield Footer()
 
     def action_token(self) -> None:
+        """Action to show the token status."""
         self.push_screen(DDSModal(AuthStatus(self.auth), title="Token Status"))
-    
+
     def action_login(self) -> None:
+        """Action to login the user."""
         self.push_screen(DDSModal(AuthLogin(self.token_path), title="Login"))
 
     def action_logout(self) -> None:
+        """Action to logout the user."""
         self.push_screen(DDSModal(AuthLogout(self.auth), title="Logout"))
 
     def action_user(self) -> None:
-        self.query_one(User).user = AccountManager() if self.auth.check() else AccountManager(authenticate=False) # TODO: possibly not a great solution, works for now
+        """Action to switch to the user screen."""
+        self.query_one(User).user = (
+            AccountManager() if self.auth.check() else AccountManager(authenticate=False)
+        )  # TODO: possibly not a great solution, works for now
         self.query_one(ContentSwitcher).current = "user"
 
     def action_home(self) -> None:
+        """Action to switch to the home screen."""
         self.query_one(ContentSwitcher).current = "home"
 
     def action_data(self) -> None:
+        """Action to switch to the data screen."""
         self.query_one(ContentSwitcher).current = "data"
 
-    #def action_project(self) -> None:
-    #    self.query_one(ContentSwitcher).current = "project"
-
     def on_mount(self) -> None:
+        """On mount, register the theme and set it as the active theme."""
         self.register_theme(theme)
         self.theme = "custom"

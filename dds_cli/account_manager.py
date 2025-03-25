@@ -121,7 +121,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         message = response_json.get("message", "User access successfully revoked.")
         LOG.info(message)
 
-    def get_user_info(self) -> dict: ## Add return type
+    def get_user_info(self) -> dict:
         """Get a users info."""
         response, _ = dds_cli.utils.perform_request(
             dds_cli.DDSEndpoint.DISPLAY_USER_INFO,

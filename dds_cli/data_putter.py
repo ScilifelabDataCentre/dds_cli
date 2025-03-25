@@ -55,6 +55,8 @@ def put(
     no_prompt,
     token_path,
     destination,
+    default_log,
+    command,
 ):
     """Handle upload of data."""
     # Initialize delivery - check user access etc
@@ -69,6 +71,8 @@ def put(
         no_prompt=no_prompt,
         token_path=token_path,
         destination=destination,
+        default_log=default_log,
+        command=command,
     ) as putter:
         # Progress object to keep track of progress tasks
         with Progress(
@@ -212,7 +216,8 @@ class DataPutter(base.DDSBaseClass):
         no_prompt: bool = False,
         token_path: str = None,
         destination: str = None,
-        default_log: str = None,
+        default_log: bool = True,
+        command: list = [],
     ):
         """Handle actions regarding upload of data."""
         # Define staging directory path
@@ -224,7 +229,7 @@ class DataPutter(base.DDSBaseClass):
 
         # Generate staging directory
         self.temporary_directory = staging_dir
-        self.dds_directory = dds_cli.directory.DDSDirectory(path=staging_dir)
+        self.dds_directory = dds_cli.directory.DDSDirectory(path=staging_dir, default_log=default_log, command=command)
         self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
 
         # Initiate DDSBaseClass to authenticate user

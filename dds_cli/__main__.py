@@ -154,8 +154,7 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
         )
 
     # Create context object
-    click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path}
-
+    click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path, "COMMAND": [i.lstrip("-") for i in sys.argv[1::]]}
     if "--help" not in sys.argv:
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
@@ -1666,6 +1665,7 @@ def put_data(
             token_path=click_ctx.get("TOKEN_PATH"),
             destination=destination,
             default_log=click_ctx.get("DEFAULT_LOG"),
+            command=click_ctx.get("COMMAND"),
         )
     except (
         dds_cli.exceptions.AuthenticationError,

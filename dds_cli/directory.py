@@ -60,21 +60,32 @@ class DDSDirectory:
         self.directories = dirs
 
         if default_log:
+            # Do not include source in file name
+            # Could e.g. be a very long file name --> errors
+            command_for_file_name = command.copy()
+            source_options: typing.List = ["-s, --source", "-spf", "--source-path-file"]
+            for s in source_options:
+                index = command_for_file_name.index(s)
+                command_for_file_name[index+1] = "x"
+
             # Include command in log file name
             if not command:
                 command_as_string = "command_not_found"
             else:
                 # Format log file path name to contain command and timestamp
-                command_as_string: str = "dds_" + "_".join(command).replace("/", "_").replace(
+                command_as_string_file: str = "dds_" + "_".join(command_for_file_name).replace("/", "_").replace(
                     "\\", "_"
                 )
-            
+                command_as_string: str = "dds_" + "_".join(command).replace("/", "_").replace(
+                    "\\", "_"
+                )      
+              
             # Include time stamp in file name
             timestamp_string: str = datetime.now().strftime("%Y%m%d-%H%M%S")
 
             # Final log name
             log_file = str(
-                dirs["LOGS"] / pathlib.Path(command_as_string + "_" + timestamp_string + ".log")
+                dirs["LOGS"] / pathlib.Path(command_as_string_file + "_" + timestamp_string + ".log")
             )
 
             # Start logging to file 
@@ -87,3 +98,5 @@ class DDSDirectory:
                 )
             )
             LOG.addHandler(log_fh)
+
+            LOG.info("Command: %s", command_as_string)

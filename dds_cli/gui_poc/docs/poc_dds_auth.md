@@ -92,6 +92,11 @@ def get_user_info(self):
 
 The idea was to use PyQt6 as a framework for building the GUI for the DDS but Pyqt dont work on alpine and hence would not install in the container enviroment. In addition to this, there is benfifits using a TUI (Terminal UI) as some users are **only** able to run dds in the terminal. There is no loss in functionallity switching from pyqt to textualize. Textualize is confirmed to work with the current docker setup. 
 
-## Packaging 
+## Executable 
 
-The Textual documentation suggest using Hatch for packaging the application, [read more](https://textual.textualize.io/how-to/package-with-hatch/). Other suggestions are found [here](https://github.com/Textualize/textual/discussions/4512).
+An executable for the gui is made using pyinstaller. There is some "workarounds" needed to make it work:
+
+- The styling (tcss) need to be inline in the correstponding components. This is not a big problem, as the idea would be to write custom widgets, i.e Button --> DDSButton. Additionally, there is not much styling done, a couple of lines for each component at most.
+- Pyinstaller sometimes have trouble finding widgets imports, in this instance TabPane. This can be solved by adding the import to "hidden-imports" when making the executable and it will be found.
+
+There are other suggestions from the community, such as [Shiv](https://shiv.readthedocs.io/en/latest/#) and [Nuitka](https://nuitka.net/), for making textual executables.

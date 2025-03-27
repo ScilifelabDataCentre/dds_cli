@@ -12,6 +12,14 @@ from textual.screen import ModalScreen
 class DDSModalHeader(Widget):
     """DDS modal header widget."""
 
+    DEFAULT_CSS = """
+    DDSModalHeader {
+    height: auto;
+    align: center middle;
+    background: $panel;
+}
+    """
+
     def __init__(self, title: str):
         super().__init__()
         self.title = title
@@ -22,6 +30,23 @@ class DDSModalHeader(Widget):
 
 class DDSModal(ModalScreen):
     """DDS modal widget."""
+
+    DEFAULT_CSS = """
+
+    DDSModal {
+    align: center middle;
+    }
+
+    #dds-modal{
+    width: 50%;
+    height: 60%;
+    background: $surface;
+}
+
+ModalScreen{
+    background: $background 70%;
+}
+    """
 
     def __init__(self, child: Widget, title: str = "DDS Modal"):
         super().__init__()
@@ -52,6 +77,35 @@ class DDSModal(ModalScreen):
 class DDSSidebar(Widget):
     """DDS sidebar widget."""
 
+    DEFAULT_CSS = """
+DDSSidebar {
+    dock: left;
+    width: 20%;    
+    height: 100%; 
+    align: center middle;
+}
+
+#dds-sidebar {
+    align: center middle;
+    border: solid $primary;
+}
+
+#dds-sidebar-items {
+    align: center top;
+
+    height: 80%;
+}
+
+#dds-sidebar-items > * {
+    margin: 1;
+}
+
+#dds-sidebar-help {
+    align: center bottom;
+    height: 20%;
+}
+    """
+
     def __init__(self, items: list[str], help_text: str = "Help", title: str = "DDS Sidebar"):
         super().__init__()
         self.items = items
@@ -74,3 +128,14 @@ class DDSSidebar(Widget):
         """Handles button presses."""
         if event.button.id == "help":
             self.app.push_screen(DDSModal(Markdown(self.help_text), title="Help"))
+
+
+class DDSFooter(Footer):
+    """DDS footer widget."""
+
+    DEFAULT_CSS = """
+    DDSFooter {
+    background: $panel;
+    align: center middle;
+    }
+    """

@@ -59,6 +59,38 @@ class FileSelectorMode(Container):
 class FileSelector(Widget):
     """File selector widget. Tabbed content with two modes: file selector and classic input."""
 
+    DEFAULT_CSS = """
+    FileSelector {
+    align: center middle;
+    width: 100%;
+    height: 100%;
+    margin: 1;
+}
+
+#file-selector > * {
+    margin: 1;
+}
+
+#path-input-mode > * {
+    margin: 1;
+}
+
+#file-selector-switch-container {
+    align: center middle;
+    width: 100%;
+}
+
+InputWithButton {
+    layout: horizontal;
+    height: auto;
+}
+
+#input-with-button-input {
+   width: 80%; 
+   margin-right: 1;
+}
+    """
+
     def __init__(self):
         super().__init__()
 

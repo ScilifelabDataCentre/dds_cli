@@ -12,6 +12,16 @@ from dds_cli.auth import Auth
 class AuthStatus(Widget):
     """Authentication status widget."""
 
+    DEFAULT_CSS = """
+    AuthStatus {
+    align: center middle;
+    padding: 1;
+}
+#auth-status {
+    align: center middle;
+}
+    """
+
     def __init__(self, auth: Auth):
         super().__init__()
         self.auth = auth
@@ -28,6 +38,13 @@ class AuthStatus(Widget):
 class LoginStep(Widget):
     """Login step of the login widget."""
 
+    DEFAULT_CSS = """
+    #login-step {
+    align: center middle;
+    height: auto;
+
+}"""
+
     def __init__(self, auth: Auth, token_path: str):
         super().__init__()
         self.auth = auth
@@ -43,6 +60,13 @@ class LoginStep(Widget):
 class TwoFactorStep(Widget):
     """Two factor step of the login widget."""
 
+    DEFAULT_CSS = """
+    #two-factor-step {
+    align: center middle;
+    height: auto;
+
+}"""
+
     def __init__(self, auth: Auth):
         super().__init__()
         self.auth = auth
@@ -55,6 +79,30 @@ class TwoFactorStep(Widget):
 
 class AuthLogin(Widget):
     """Login widget."""
+
+    DEFAULT_CSS = """ 
+    AuthLogin {
+    align: center middle;
+}
+
+#auth-login {
+    align: center middle;
+    padding: 1;
+    width: 100%;
+}
+
+#auth-login > * {
+    margin: 1;
+    height: auto;
+}
+
+#auth-login-message {
+    text-align: center;
+    width: 100%;
+    text-wrap: wrap;
+}
+
+    """
 
     def __init__(self, token_path: str):
         super().__init__()
@@ -107,6 +155,33 @@ class AuthLogin(Widget):
 
 class AuthLogout(Widget):
     """Logout widget."""
+
+    DEFAULT_CSS = """
+   AuthLogout {
+    align: center middle;
+}
+
+#auth-logout {
+    align: center middle;
+    padding: 1;
+    height: auto;
+}
+
+
+#auth-logout > * {
+    margin: 1;
+} 
+
+#auth-logout-message {
+    align: center middle;
+    height: auto;
+}
+
+#auth-logout-buttons {
+    align: center middle;
+    height: auto;
+}
+    """
 
     def __init__(self, auth: Auth):
         super().__init__()

@@ -66,6 +66,13 @@ class UserInfoTable(DataTable):
 class UserInfo(Widget):
     """User info widget."""
 
+    DEFAULT_CSS = """
+    #user-info {
+    align: center middle;
+    margin: 1;
+}
+    """
+
     def __init__(self, user: AccountManager):
         super().__init__()
         self.user = user
@@ -77,6 +84,13 @@ class UserInfo(Widget):
 
 class User(Widget):
     """User widget."""
+
+    DEFAULT_CSS = """
+    #user {
+    align: center middle;
+    width: 100%; 
+}
+    """
 
     def __init__(self):
         super().__init__()

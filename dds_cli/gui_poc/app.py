@@ -13,7 +13,7 @@ from dds_cli.gui_poc.data import Data
 from dds_cli.gui_poc.home import HomeScreen
 from dds_cli.gui_poc.auth import AuthLogin, AuthLogout, AuthStatus
 from dds_cli.gui_poc.user import User
-from dds_cli.gui_poc.utils import DDSModal
+from dds_cli.gui_poc.utils import DDSFooter, DDSModal
 
 
 theme = Theme(
@@ -43,227 +43,18 @@ class DDSApp(App):
         self.token_path = token_path
         self.auth = Auth(authenticate=False, token_path=token_path)
 
-    #CSS_PATH = "app.tcss"
-
     DEFAULT_CSS = """
-ModalScreen{
-    background: $background 70%;
+    Toast {
+    background: $primary;
 }
-
-DDSModal {
-    align: center middle;
-}
-
-#dds-modal{
-    width: 50%;
-    height: 60%;
-    background: $surface;
-}
-
-DDSModalFooter {
-    align: center middle;
-    height: auto;
-    padding: 1;
-}
-
-DDSModalHeader {
-    height: auto;
-    align: center middle;
-    background: $panel;
-}
-
-/* Auth */
-
-AuthStatus {
-    align: center middle;
-    padding: 1;
-}
-
-AuthLogin {
-    align: center middle;
-}
-
-#auth-login {
-    align: center middle;
-}
-
-#auth-login > * {
-    margin: 1;
-}
-
-#auth-login-message {
-    text-align: center;
-    width: 100%;
-    text-wrap: wrap;
-}
-
-#login-step {
-    align: center middle;
-    height: auto;
-
-}
-
-#two-factor-step {
-    align: center middle;
-    height: auto;
-
-}
-
-#auth-status {
-    align: center middle;
-}
-
-AuthLogout {
-    align: center middle;
-}
-
-#auth-logout {
-    align: center middle;
-    padding: 1;
-    height: auto;
-}
-
-
-#auth-logout > * {
-    margin: 1;
-} 
-
-#auth-logout-message {
-    align: center middle;
-    height: auto;
-}
-
-#auth-logout-buttons {
-    align: center middle;
-    height: auto;
-}
-
-#auth-login {
-    align: center middle;
-    padding: 1;
-    width: 100%;
-}
-
-#auth-login > * {
-    margin: 1;
-    height: auto;
-}
-
-/* Home Screen */
-
-#home-screen{
-    align: center middle;
-}
-
-#title{
-    text-style: bold;
-}
-
-/* Button */
-
+Input {
+    border: solid $primary;
+}  
 Button {
     padding: 0 2 0 2;
 }
 
-# Button{
-#     border: none;
-#     height: 3;
-#     padding: 0 2 0 2; /* Set padding for centered content without default border*/
-# }
-
-# Button:hover{
-#     border: none;
-# } 
-
-# Button:focus{
-#     border: none;
-# } 
-
-/* Input */
-
-Input {
-    border: solid $primary;
-}  
-
-/* Toast */
-
-Toast {
-    background: $primary;
-}
-
-/* User */ 
-
-#user {
-    align: center middle;
-    width: 100%; 
-}
-
-#user-info {
-    align: center middle;
-    margin: 1;
-}
-
-/* Sidebar */
-
-DDSSidebar {
-    dock: left;
-    width: 20%;    
-    height: 100%; 
-    align: center middle;
-}
-
-#dds-sidebar {
-    align: center middle;
-    border: solid $primary;
-}
-
-#dds-sidebar-items {
-    align: center top;
-
-    height: 80%;
-}
-
-#dds-sidebar-items > * {
-    margin: 1;
-}
-
-#dds-sidebar-help {
-    align: center bottom;
-    height: 20%;
-}
-
-/* File Selector */
-
-FileSelector {
-    align: center middle;
-    width: 100%;
-    height: 100%;
-    margin: 1;
-}
-
-#file-selector > * {
-    margin: 1;
-}
-
-#path-input-mode > * {
-    margin: 1;
-}
-
-#file-selector-switch-container {
-    align: center middle;
-    width: 100%;
-}
-
-InputWithButton {
-    layout: horizontal;
-    height: auto;
-}
-
-#input-with-button-input {
-   width: 80%; 
-   margin-right: 1;
-}
-"""
+    """
 
     ENABLE_COMMAND_PALETTE = False  # True by default
 
@@ -275,7 +66,6 @@ InputWithButton {
         Binding("l", "login", "Login", tooltip="Login to DDS."),
         Binding("o", "logout", "Logout", tooltip="Logout from DDS."),
         Binding("u", "user", "User", tooltip="Show user info."),
-        Binding("d", "data", "Data", tooltip="Show data info."),
     ]
 
     def compose(self) -> ComposeResult:
@@ -287,7 +77,7 @@ InputWithButton {
                 yield User()
             with Container(id="data"):
                 yield Data()
-        yield Footer()
+        yield DDSFooter()
 
     def action_token(self) -> None:
         """Action to show the token status."""
@@ -311,10 +101,6 @@ InputWithButton {
     def action_home(self) -> None:
         """Action to switch to the home screen."""
         self.query_one(ContentSwitcher).current = "home"
-
-    def action_data(self) -> None:
-        """Action to switch to the data screen."""
-        self.query_one(ContentSwitcher).current = "data"
 
     def on_mount(self) -> None:
         """On mount, register the theme and set it as the active theme."""

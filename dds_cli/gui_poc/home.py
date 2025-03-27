@@ -14,6 +14,16 @@ DDS_URL_BASE = DDS_URL[: DDS_URL.index("/", 8)]
 class HomeScreen(Widget):
     """Home screen widget."""
 
+    DEFAULT_CSS = """
+    #home-screen{
+    align: center middle;
+}
+
+#title{
+    text-style: bold;
+}
+    """
+
     def compose(self) -> ComposeResult:
         with Vertical(id="home-screen"):
             yield Label("SciLifeLab Data Delivery System", id="title")

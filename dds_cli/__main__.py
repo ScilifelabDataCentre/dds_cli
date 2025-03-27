@@ -24,7 +24,6 @@ import questionary
 # Own modules
 import dds_cli
 import dds_cli.account_manager
-import dds_cli.directory
 import dds_cli.unit_manager
 import dds_cli.motd_manager
 import dds_cli.superadmin_helper

@@ -158,7 +158,7 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
         "COMMAND": sys.argv, 
         "DEFAULT_LOG": True
     }
-    
+
     if "--help" not in sys.argv:
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
@@ -1662,12 +1662,13 @@ def put_data(
         # Start logging to file 
         file_handler = dds_cli.utils.setup_logging_to_file(filename=default_log_name)
         LOG.addHandler(file_handler)
+    
+    # Log command
     LOG.debug("Command: %s", " ".join(click_ctx.get("COMMAND")))
 
     # Run upload
     try:
         dds_cli.data_putter.put(
-            # staging_location=staging_location,
             project=project,
             source=source,
             source_path_file=source_path_file,
@@ -1678,9 +1679,7 @@ def put_data(
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
             destination=destination,
-            default_log=click_ctx.get("DEFAULT_LOG"),
-            command=click_ctx.get("COMMAND"),
-            staging_dir=stag_dir_obj,
+            staging_dir=staging_dir,
         )
     except (
         dds_cli.exceptions.AuthenticationError,

@@ -55,14 +55,11 @@ def put(
     no_prompt,
     token_path,
     destination,
-    default_log,
-    command,
     staging_dir,
 ):
     """Handle upload of data."""
     # Initialize delivery - check user access etc
     with DataPutter(
-        # staging_location=staging_location,
         project=project,
         source=source,
         source_path_file=source_path_file,
@@ -72,8 +69,6 @@ def put(
         no_prompt=no_prompt,
         token_path=token_path,
         destination=destination,
-        default_log=default_log,
-        command=command,
         staging_dir=staging_dir
     ) as putter:
     
@@ -219,23 +214,8 @@ class DataPutter(base.DDSBaseClass):
         no_prompt: bool = False,
         token_path: str = None,
         destination: str = None,
-        default_log: bool = True,
-        command: list = [],
     ):
-        """Handle actions regarding upload of data."""
-        # Define staging directory path
-        # staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
-        # if staging_location:
-        #     staging_dir = staging_location / staging_dir
-        # else: 
-        #     staging_dir = pathlib.Path.cwd() / staging_dir
-
-        # Generate staging directory
-        self.dds_directory = staging_dir
-        self.temporary_directory = self.dds_directory.directories["ROOT"]
-        # self.dds_directory = dds_cli.directory.DDSDirectory(path=staging_dir, default_log=default_log, command=command)
-        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
-
+        """Handle actions regarding upload of data."""  
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
@@ -249,6 +229,9 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
+        self.dds_directory = staging_dir
+        self.temporary_directory = self.dds_directory.directories["ROOT"]
+        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":

@@ -75,6 +75,7 @@ class DDSBaseClass:
 
         # Project access only required if trying to upload, download or list
         # files within project
+        # TODO: Move to DataPutter / DataGetter??
         if self.method in DDS_KEYS_REQUIRED_METHODS:
             if self.method == "put":
                 self.s3connector = self.__get_safespring_keys()

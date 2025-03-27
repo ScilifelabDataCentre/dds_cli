@@ -158,6 +158,7 @@ class FileSegment:
     SEGMENT_SIZE_RAW = 65536  # Size of chunk to read from raw file
     SEGMENT_SIZE_CIPHER = SEGMENT_SIZE_RAW + 16  # Size of chunk to read from encrypted file
 
+
 # Custom styles for questionary
 dds_questionary_styles = prompt_toolkit.styles.Style(
     [

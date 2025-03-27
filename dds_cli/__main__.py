@@ -153,10 +153,10 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
 
     # Create context object and save command to context
     click_ctx.obj = {
-        "NO_PROMPT": no_prompt, 
-        "TOKEN_PATH": token_path, 
-        "COMMAND": sys.argv, 
-        "DEFAULT_LOG": True
+        "NO_PROMPT": no_prompt,
+        "TOKEN_PATH": token_path,
+        "COMMAND": sys.argv,
+        "DEFAULT_LOG": True,
     }
 
     if "--help" not in sys.argv:
@@ -186,6 +186,7 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             else:
                 file_handler = dds_cli.utils.setup_logging_to_file(filename=log_file)
                 LOG.addHandler(file_handler)
+
 
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #
@@ -1644,25 +1645,30 @@ def put_data(
     reauthenticating yourself before uploading data.
     """
     # Define staging directory path
-    staging_dir_path: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
-    
+    staging_dir_path: pathlib.Path = pathlib.Path(
+        f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload"
+    )
+
     # Staging directory should either be in specified mount dir or in current location
     if mount_dir:
         staging_dir_path = mount_dir / staging_dir_path
-    else: 
+    else:
         staging_dir_path = pathlib.Path.cwd() / staging_dir_path
 
     # Generate staging directory
     staging_dir = dds_cli.directory.DDSDirectory(path=staging_dir_path)
 
-    # Setup logging -- needs to be in this file to work 
+    # Setup logging -- needs to be in this file to work
     if click_ctx.get("DEFAULT_LOG"):
-        default_log_name = dds_cli.utils.get_default_log_name(command=click_ctx.get("COMMAND", ["commandnotfound"]), log_directory=staging_dir.directories["LOGS"])
-        
-        # Start logging to file 
+        default_log_name = dds_cli.utils.get_default_log_name(
+            command=click_ctx.get("COMMAND", ["commandnotfound"]),
+            log_directory=staging_dir.directories["LOGS"],
+        )
+
+        # Start logging to file
         file_handler = dds_cli.utils.setup_logging_to_file(filename=default_log_name)
         LOG.addHandler(file_handler)
-    
+
     # Log command
     LOG.debug("Command: %s", " ".join(click_ctx.get("COMMAND")))
 
@@ -1768,21 +1774,26 @@ def get_data(
         sys.exit(1)
 
     # Define staging directory path
-    staging_dir_path: pathlib.Path = pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_download") 
+    staging_dir_path: pathlib.Path = pathlib.Path.cwd() / pathlib.Path(
+        f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_download"
+    )
     if destination:
         staging_dir_path = destination
-        
+
     # Generate staging directory
     staging_dir = dds_cli.directory.DDSDirectory(path=staging_dir_path)
 
-    # Setup logging -- needs to be in this file to work 
+    # Setup logging -- needs to be in this file to work
     if click_ctx.get("DEFAULT_LOG"):
-        default_log_name = dds_cli.utils.get_default_log_name(command=click_ctx.get("COMMAND", ["commandnotfound"]), log_directory=staging_dir.directories["LOGS"])
-        
-        # Start logging to file 
+        default_log_name = dds_cli.utils.get_default_log_name(
+            command=click_ctx.get("COMMAND", ["commandnotfound"]),
+            log_directory=staging_dir.directories["LOGS"],
+        )
+
+        # Start logging to file
         file_handler = dds_cli.utils.setup_logging_to_file(filename=default_log_name)
         LOG.addHandler(file_handler)
-    
+
     # Log command
     LOG.debug("Command: %s", " ".join(click_ctx.get("COMMAND")))
 

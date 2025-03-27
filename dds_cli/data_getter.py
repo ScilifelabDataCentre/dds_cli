@@ -54,7 +54,7 @@ class DataGetter(base.DDSBaseClass):
         token_path: str = None,
         staging_dir: dds_cli.directory.DDSDirectory = None,
     ):
-        """Handle actions regarding downloading data.""" 
+        """Handle actions regarding downloading data."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
@@ -70,8 +70,9 @@ class DataGetter(base.DDSBaseClass):
         self.filehandler = None
         self.dds_directory = staging_dir
         self.temporary_directory = self.dds_directory.directories["ROOT"]
-        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
-
+        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
+            "dds_failed_delivery.json"
+        )
 
         # Only method "get" can use the DataGetter class
         if self.method != "get":

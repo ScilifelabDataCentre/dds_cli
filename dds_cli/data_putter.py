@@ -70,9 +70,9 @@ def put(
         no_prompt=no_prompt,
         token_path=token_path,
         destination=destination,
-        staging_dir=staging_dir
+        staging_dir=staging_dir,
     ) as putter:
-    
+
         # Progress object to keep track of progress tasks
         with Progress(
             "{task.description}",
@@ -216,7 +216,7 @@ class DataPutter(base.DDSBaseClass):
         token_path: str = None,
         destination: str = None,
     ):
-        """Handle actions regarding upload of data."""  
+        """Handle actions regarding upload of data."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
@@ -233,7 +233,9 @@ class DataPutter(base.DDSBaseClass):
         # NOTE: Might be something to refactor in the future, but needed for now
         self.dds_directory = staging_dir
         self.temporary_directory = self.dds_directory.directories["ROOT"]
-        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
+        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
+            "dds_failed_delivery.json"
+        )
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":

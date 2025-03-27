@@ -32,7 +32,13 @@ LOG = logging.getLogger(__name__)
 class DDSDirectory:
     """Data Delivery System directory class."""
 
-    def __init__(self, path=pathlib.Path, add_file_dir: bool = True, default_log: bool = True, command: list = []):
+    def __init__(
+        self,
+        path=pathlib.Path,
+        add_file_dir: bool = True,
+        default_log: bool = True,
+        command: list = [],
+    ):
         # The following subdirs should be included in staging directory
         dirs = {
             "ROOT": path,
@@ -40,7 +46,7 @@ class DDSDirectory:
             "LOGS": path / pathlib.Path("logs/"),
         }
 
-        # files subdir only relevant for some commands 
+        # files subdir only relevant for some commands
         if add_file_dir:
             dirs["FILES"] = path / pathlib.Path("files/")
 

@@ -83,6 +83,7 @@ class HumanBytes:
 
 # Functions
 
+
 def setup_logging_to_file(filename: str) -> logging.FileHandler:
     """Setup logging to specific file."""
     log_fh = logging.FileHandler(filename=filename, encoding="utf-8")
@@ -95,6 +96,7 @@ def setup_logging_to_file(filename: str) -> logging.FileHandler:
     )
     return log_fh
 
+
 def get_default_log_name(command: list, log_directory: pathlib.Path):
     """Generate default log name for current command."""
     # Include command in log file name
@@ -105,7 +107,7 @@ def get_default_log_name(command: list, log_directory: pathlib.Path):
     for s in source_options:
         indexes = [i for i, x in enumerate(command_for_file_name) if x == s]
         for i in indexes:
-            command_for_file_name[i+1] = "x"
+            command_for_file_name[i + 1] = "x"
 
     # Remove leading - from options
     command_for_file_name = [i.lstrip("-") for i in command_for_file_name[1::]]
@@ -124,7 +126,7 @@ def get_default_log_name(command: list, log_directory: pathlib.Path):
     )
 
     return log_file
-    
+
 
 def sort_items(items: list, sort_by: str) -> list:
     """Sort list of dicts according to specified key."""

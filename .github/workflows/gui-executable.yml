@@ -54,10 +54,10 @@ jobs:
           - os: windows-latest
             TARGET: Windows_x86_64
             CMD_BUILD: >
+              pip install windows-curses &&
               pyinstaller -F -c -n dds_gui_win_x86_64.exe -i resources/scilifelab.ico
               --exclude-module=tests --log-level INFO
               --hidden-import textual.widgets._tab_pane --hidden-import cgi 
-              --hidden-import windows_curses --hidden-import pkg_resources
               gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
@@ -73,7 +73,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install PyInstaller
           pip install -r requirements.txt
-          pip install windows-curses
       - name: Building with PyInstaller for ${{matrix.TARGET}}
         run: ${{matrix.CMD_BUILD}}
       - name: Test the executable

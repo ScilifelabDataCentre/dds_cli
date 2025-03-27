@@ -96,6 +96,7 @@ def setup_logging_to_file(filename: str) -> logging.FileHandler:
     return log_fh
 
 def get_default_log_name(command: list, log_directory: pathlib.Path):
+    """Generate default log name for current command."""
     # Include command in log file name
     # Do not include source in file name
     # Could e.g. be a very long file name --> errors

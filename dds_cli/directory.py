@@ -36,8 +36,6 @@ class DDSDirectory:
         self,
         path=pathlib.Path,
         add_file_dir: bool = True,
-        default_log: bool = True,
-        command: list = [],
     ):
         # The following subdirs should be included in staging directory
         dirs = {

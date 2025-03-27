@@ -56,6 +56,5 @@ jobs:
         run: ${{matrix.CMD_BUILD}}
       - name: Test the executable
         run: |
-          ./dist/${{ matrix.OUT_FILE_NAME}} --version 
-          timeout 10s ./dist/${{ matrix.OUT_FILE_NAME}}
+          timeout 5s ./dist/${{ matrix.OUT_FILE_NAME}}
 

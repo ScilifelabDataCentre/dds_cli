@@ -44,7 +44,7 @@ LOG = logging.getLogger(__name__)
 
 
 def put(
-    staging_location,
+    # staging_location,
     project,
     source,
     source_path_file,
@@ -57,11 +57,12 @@ def put(
     destination,
     default_log,
     command,
+    staging_dir,
 ):
     """Handle upload of data."""
     # Initialize delivery - check user access etc
     with DataPutter(
-        staging_location=staging_location,
+        # staging_location=staging_location,
         project=project,
         source=source,
         source_path_file=source_path_file,
@@ -73,7 +74,9 @@ def put(
         destination=destination,
         default_log=default_log,
         command=command,
+        staging_dir=staging_dir
     ) as putter:
+    
         # Progress object to keep track of progress tasks
         with Progress(
             "{task.description}",
@@ -206,7 +209,7 @@ class DataPutter(base.DDSBaseClass):
     def __init__(
         self,
         project: str = None,
-        staging_location: pathlib.Path = None,
+        staging_dir: pathlib.Path = None,
         break_on_fail: bool = False,
         overwrite: bool = False,
         source: tuple = (),
@@ -221,15 +224,16 @@ class DataPutter(base.DDSBaseClass):
     ):
         """Handle actions regarding upload of data."""
         # Define staging directory path
-        staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
-        if staging_location:
-            staging_dir = staging_location / staging_dir
-        else: 
-            staging_dir = pathlib.Path.cwd() / staging_dir
+        # staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
+        # if staging_location:
+        #     staging_dir = staging_location / staging_dir
+        # else: 
+        #     staging_dir = pathlib.Path.cwd() / staging_dir
 
         # Generate staging directory
-        self.temporary_directory = staging_dir
-        self.dds_directory = dds_cli.directory.DDSDirectory(path=staging_dir, default_log=default_log, command=command)
+        self.dds_directory = staging_dir
+        self.temporary_directory = self.dds_directory.directories["ROOT"]
+        # self.dds_directory = dds_cli.directory.DDSDirectory(path=staging_dir, default_log=default_log, command=command)
         self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
 
         # Initiate DDSBaseClass to authenticate user

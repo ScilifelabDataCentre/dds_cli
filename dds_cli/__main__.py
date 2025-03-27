@@ -1639,21 +1639,28 @@ def put_data(
     delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
     reauthenticating yourself before uploading data.
     """
-    # # Setup logging
-    # # Define staging directory path
-    # staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
-    # if staging_location:
-    #     staging_dir = staging_location / staging_dir
-    # else: 
-    #     staging_dir = pathlib.Path.cwd() / staging_dir
+    # Setup logging
+    # Define staging directory path
+    staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
+    if staging_location:
+        staging_dir = staging_location / staging_dir
+    else: 
+        staging_dir = pathlib.Path.cwd() / staging_dir
 
-    # # Generate staging directory
-    # stag_dir_obj = dds_cli.directory.DDSDirectory(path=staging_dir, default_log=click_ctx.get("DEFAULT_LOG"), command=click_ctx.get("COMMAND"))
+    # Generate staging directory
+    stag_dir_obj = dds_cli.directory.DDSDirectory(path=staging_dir)
+    if click_ctx.get("DEFAULT_LOG"):
+        default_log_name = dds_cli.utils.get_default_log_name(command=click_ctx.get("COMMAND", ["commandnotfound"]), log_directory=stag_dir_obj.directories["LOGS"])
+        
+        # Start logging to file 
+        file_handler = dds_cli.utils.setup_logging_to_file(filename=default_log_name)
+        LOG.addHandler(file_handler)
+    LOG.debug("Command: %s", " ".join(click_ctx.get("COMMAND")))
 
     # Run upload
     try:
         dds_cli.data_putter.put(
-            staging_location=staging_location,
+            # staging_location=staging_location,
             project=project,
             source=source,
             source_path_file=source_path_file,
@@ -1666,6 +1673,7 @@ def put_data(
             destination=destination,
             default_log=click_ctx.get("DEFAULT_LOG"),
             command=click_ctx.get("COMMAND"),
+            staging_dir=stag_dir_obj,
         )
     except (
         dds_cli.exceptions.AuthenticationError,

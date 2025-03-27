@@ -54,6 +54,8 @@ jobs:
           pip install -r requirements.txt
       - name: Building with PyInstaller for ${{matrix.TARGET}}
         run: ${{matrix.CMD_BUILD}}
-      # - name: Test the executable
-      #   run: |
-      #     ./dist/${{ matrix.OUT_FILE_NAME}} --version 
+      - name: Test the executable
+        run: |
+          ./dist/${{ matrix.OUT_FILE_NAME}} --version 
+          timeout 10s ./dist/${{ matrix.OUT_FILE_NAME}}
+

@@ -61,9 +61,9 @@ jobs:
             ASSET_MIME: application/vnd.microsoft.portable-executable
             TEST: >-
               powershell -Command "
-              $process = Start-Process './dist/dds_gui_win_x86_64.exe' -PassThru;
+              $proc = Start-Process -FilePath './dist/dds_gui_win_x86_64.exe' -PassThru -NoNewWindow;
               Start-Sleep -Seconds 5;
-              taskkill /PID $process.Id /F;
+              Stop-Process -Id $proc.Id -Force;
               Write-Host 'Process terminated successfully'"
     steps:
       - uses: actions/checkout@v4

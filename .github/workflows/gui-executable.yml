@@ -60,10 +60,10 @@ jobs:
             OUT_FILE_NAME: dds_gui_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
             TEST: >-
-              powershell -Command "$job = Start-Job { ./dist/dds_gui_win_x86_64.exe };
-              Wait-Job $job -Timeout 5;
-              Stop-Job $job;
-              Remove-Job $job;
+              powershell -Command "
+              $process = Start-Process './dist/dds_gui_win_x86_64.exe' -PassThru;
+              Start-Sleep -Seconds 5;
+              taskkill /PID $process.Id /F;
               Write-Host 'Process terminated successfully'"
     steps:
       - uses: actions/checkout@v4

@@ -158,7 +158,6 @@ class FileSegment:
     SEGMENT_SIZE_RAW = 65536  # Size of chunk to read from raw file
     SEGMENT_SIZE_CIPHER = SEGMENT_SIZE_RAW + 16  # Size of chunk to read from encrypted file
 
-
 # Custom styles for questionary
 dds_questionary_styles = prompt_toolkit.styles.Style(
     [
@@ -180,7 +179,6 @@ dds_questionary_styles = prompt_toolkit.styles.Style(
 
 # Determine if the user is on an old terminal without proper Unicode support
 dds_on_legacy_console = rich.console.detect_legacy_windows()
-
 
 # Required to make the standalone executables build with PyInstaller work.
 if __name__ == "__main__":

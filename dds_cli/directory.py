@@ -10,11 +10,13 @@ import logging
 import pathlib
 import sys
 from datetime import datetime
+import typing
 
 # Installed
 import rich.markup
 
 # Own modules
+import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -65,8 +67,9 @@ class DDSDirectory:
             command_for_file_name = command.copy()
             source_options: typing.List = ["-s, --source", "-spf", "--source-path-file"]
             for s in source_options:
-                index = command_for_file_name.index(s)
-                command_for_file_name[index+1] = "x"
+                if s in command_for_file_name:
+                    index = command_for_file_name.index(s)
+                    command_for_file_name[index+1] = "x"
 
             # Include command in log file name
             if not command:
@@ -89,14 +92,16 @@ class DDSDirectory:
             )
 
             # Start logging to file 
-            log_fh = logging.FileHandler(log_file, encoding="utf-8")
-            log_fh.setLevel(logging.DEBUG)
-            log_fh.setFormatter(
-                logging.Formatter(
-                    fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s",
-                    datefmt="%Y-%m-%d %H:%M:%S",
-                )
-            )
-            LOG.addHandler(log_fh)
+            file_handler = dds_cli.utils.setup_logging_to_file(logger=LOG, filename=log_file)
+            LOG.addHandler(file_handler)
+            # log_fh = logging.FileHandler(log_file, encoding="utf-8")
+            # log_fh.setLevel(logging.DEBUG)
+            # log_fh.setFormatter(
+            #     logging.Formatter(
+            #         fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s",
+            #         datefmt="%Y-%m-%d %H:%M:%S",
+            #     )
+            # )
+            # LOG.addHandler(log_fh)
 
             LOG.info("Command: %s", command_as_string)

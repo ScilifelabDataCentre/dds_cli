@@ -5,6 +5,7 @@ import pathlib
 import typing
 import http
 from typing import Dict, List, Union
+import logging
 
 import requests
 import rich.console
@@ -81,6 +82,17 @@ class HumanBytes:
 
 # Functions
 
+def setup_logging_to_file(logger: logging.Logger, filename: str) -> logging.FileHandler:
+    """Setup logging to specific file."""
+    log_fh = logging.FileHandler(filename=filename, encoding="utf-8")
+    log_fh.setLevel(logging.DEBUG)
+    log_fh.setFormatter(
+        logging.Formatter(
+            fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+    return log_fh
 
 def sort_items(items: list, sort_by: str) -> list:
     """Sort list of dicts according to specified key."""

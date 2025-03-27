@@ -150,8 +150,8 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             f"[green]Current user:[/] [red]{username}", highlight=False
         )
 
-    # Create context object and save command to context - exclude the dds or executable name
-    click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path, "COMMAND": [i.lstrip("-") for i in sys.argv[1::]]}
+    # Create context object and save command to context
+    click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path, "COMMAND": sys.argv}
     if "--help" not in sys.argv:
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
@@ -177,19 +177,10 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
                 )
                 sys.exit(1)
             else:
-                # Set up logging to chosen file
-                log_fh = logging.FileHandler(log_file, encoding="utf-8")
-                log_fh.setLevel(logging.DEBUG)
-                log_fh.setFormatter(
-                    logging.Formatter(
-                        fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S",
-                    )
-                )
-                LOG.addHandler(log_fh)
+                file_handler = dds_cli.utils.setup_logging_to_file(logger=LOG, filename=log_file)
+                LOG.addHandler(file_handler)
         else: 
             click_ctx.obj.update({"DEFAULT_LOG": True})
-
 
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #

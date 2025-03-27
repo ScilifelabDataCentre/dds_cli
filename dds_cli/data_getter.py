@@ -54,10 +54,19 @@ class DataGetter(base.DDSBaseClass):
         token_path: str = None,
     ):
         """Handle actions regarding downloading data."""
+        # Define staging directory path
+        staging_dir: pathlib.Path = pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_download") 
+        if destination:
+            staging_dir = destination
+        
+        # Generate staging directory
+        self.temporary_directory = staging_dir
+        self.dds_directory = dds_cli.directory.DDSDirectory(path=staging_dir)
+        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path("dds_failed_delivery.json")
+
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
-            dds_directory=destination,
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,

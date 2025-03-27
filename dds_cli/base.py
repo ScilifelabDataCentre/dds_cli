@@ -45,11 +45,8 @@ class DDSBaseClass:
     def __init__(
         self,
         project=None,
-        dds_directory: pathlib.Path = None,
-        mount_dir: pathlib.Path = None,
         method: str = None,
         authenticate: bool = True,
-        method_check: bool = True,
         force_renew_token: bool = False,
         totp: str = None,
         no_prompt: bool = False,
@@ -58,36 +55,9 @@ class DDSBaseClass:
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.project = project
-        self.method_check = method_check
         self.method = method
         self.no_prompt = no_prompt
         self.token_path = token_path
-
-        if self.method_check:
-            # Get attempted operation e.g. put/ls/rm/get
-            if self.method not in DDS_METHODS:
-                raise exceptions.InvalidMethodError(attempted_method=self.method)
-            LOG.debug("Attempted operation: %s", self.method)
-
-            # Use user defined destination if any specified
-            if self.method in DDS_DIR_REQUIRED_METHODS:
-                default_dir = pathlib.Path(
-                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{self.project}_"
-                    f"{'upload' if self.method == 'put' else 'download'}"
-                )
-                if mount_dir:
-                    new_directory = mount_dir / default_dir
-                elif dds_directory:
-                    new_directory = dds_directory
-                else:
-                    new_directory = pathlib.Path.cwd() / default_dir
-
-                self.temporary_directory = new_directory
-
-                self.dds_directory = dds_cli.directory.DDSDirectory(path=new_directory)
-                self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
-                    "dds_failed_delivery.json"
-                )
 
         # Keyboardinterrupt
         self.stop_doing = False

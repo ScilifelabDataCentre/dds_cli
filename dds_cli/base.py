@@ -14,13 +14,10 @@ from rich.progress import Progress, SpinnerColumn
 
 # Own modules
 import dds_cli.directory
-import dds_cli.directory
 import dds_cli.timestamp
 import dds_cli.utils
 
 from dds_cli import (
-    DDS_METHODS,
-    DDS_DIR_REQUIRED_METHODS,
     DDS_KEYS_REQUIRED_METHODS,
 )
 from dds_cli import DDSEndpoint

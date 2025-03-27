@@ -82,7 +82,7 @@ class HumanBytes:
 
 # Functions
 
-def setup_logging_to_file(logger: logging.Logger, filename: str) -> logging.FileHandler:
+def setup_logging_to_file(filename: str) -> logging.FileHandler:
     """Setup logging to specific file."""
     log_fh = logging.FileHandler(filename=filename, encoding="utf-8")
     log_fh.setLevel(logging.DEBUG)

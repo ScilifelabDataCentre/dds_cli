@@ -62,46 +62,39 @@ class DDSDirectory:
         self.directories = dirs
 
         if default_log:
+            default_log_name = self.get_default_log_name(command=command if command else ["commandnotfound"])
+            
+            # Start logging to file 
+            file_handler = dds_cli.utils.setup_logging_to_file(filename=default_log_name)
+            LOG.addHandler(file_handler)
+            LOG.debug("Command: %s", " ".join(command))
+
+    def get_default_log_name(self, command: list):
+            # Include command in log file name
             # Do not include source in file name
             # Could e.g. be a very long file name --> errors
             command_for_file_name = command.copy()
-            source_options: typing.List = ["-s, --source", "-spf", "--source-path-file"]
+            source_options: typing.List = ["-s", "--source", "-spf", "--source-path-file"]
             for s in source_options:
-                if s in command_for_file_name:
-                    index = command_for_file_name.index(s)
-                    command_for_file_name[index+1] = "x"
+                indexes = [i for i, x in enumerate(command_for_file_name) if x == s]
+                for i in indexes:
+                    command_for_file_name[i+1] = "x"
 
-            # Include command in log file name
-            if not command:
-                command_as_string = "command_not_found"
-            else:
-                # Format log file path name to contain command and timestamp
-                command_as_string_file: str = "dds_" + "_".join(command_for_file_name).replace("/", "_").replace(
-                    "\\", "_"
-                )
-                command_as_string: str = "dds_" + "_".join(command).replace("/", "_").replace(
-                    "\\", "_"
-                )      
-              
+            # Remove leading - from options
+            command_for_file_name = [i.lstrip("-") for i in command_for_file_name[1::]]
+
+            # Format log file path name to contain command
+            command_for_file_name: str = "dds_" + "_".join(command_for_file_name).replace("/", "_").replace(
+                "\\", "_"
+            )
+
             # Include time stamp in file name
             timestamp_string: str = datetime.now().strftime("%Y%m%d-%H%M%S")
 
             # Final log name
             log_file = str(
-                dirs["LOGS"] / pathlib.Path(command_as_string_file + "_" + timestamp_string + ".log")
+                self.directories["LOGS"] / pathlib.Path(command_for_file_name + "_" + timestamp_string + ".log")
             )
 
-            # Start logging to file 
-            file_handler = dds_cli.utils.setup_logging_to_file(logger=LOG, filename=log_file)
-            LOG.addHandler(file_handler)
-            # log_fh = logging.FileHandler(log_file, encoding="utf-8")
-            # log_fh.setLevel(logging.DEBUG)
-            # log_fh.setFormatter(
-            #     logging.Formatter(
-            #         fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s",
-            #         datefmt="%Y-%m-%d %H:%M:%S",
-            #     )
-            # )
-            # LOG.addHandler(log_fh)
-
-            LOG.info("Command: %s", command_as_string)
+            return log_file
+    

@@ -24,6 +24,7 @@ import questionary
 # Own modules
 import dds_cli
 import dds_cli.account_manager
+import dds_cli.directory
 import dds_cli.unit_manager
 import dds_cli.motd_manager
 import dds_cli.superadmin_helper
@@ -177,7 +178,7 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
                 )
                 sys.exit(1)
             else:
-                file_handler = dds_cli.utils.setup_logging_to_file(logger=LOG, filename=log_file)
+                file_handler = dds_cli.utils.setup_logging_to_file(filename=log_file)
                 LOG.addHandler(file_handler)
         else: 
             click_ctx.obj.update({"DEFAULT_LOG": True})
@@ -1638,6 +1639,17 @@ def put_data(
     delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
     reauthenticating yourself before uploading data.
     """
+    # # Setup logging
+    # # Define staging directory path
+    # staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
+    # if staging_location:
+    #     staging_dir = staging_location / staging_dir
+    # else: 
+    #     staging_dir = pathlib.Path.cwd() / staging_dir
+
+    # # Generate staging directory
+    # stag_dir_obj = dds_cli.directory.DDSDirectory(path=staging_dir, default_log=click_ctx.get("DEFAULT_LOG"), command=click_ctx.get("COMMAND"))
+
     # Run upload
     try:
         dds_cli.data_putter.put(

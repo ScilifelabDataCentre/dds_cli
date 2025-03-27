@@ -85,7 +85,7 @@ class DDSBaseClass:
             self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
                 "dds_failed_delivery.json"
             )
-            
+
             if self.method == "put":
                 self.s3connector = self.__get_safespring_keys()
 

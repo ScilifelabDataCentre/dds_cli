@@ -104,8 +104,8 @@ def get_default_log_name(command: list, log_directory: pathlib.Path):
     # Could e.g. be a very long file name --> errors
     command_for_file_name = command.copy()
     source_options: typing.List = ["-s", "--source", "-spf", "--source-path-file"]
-    for so in source_options:
-        indexes = [i for i, x in enumerate(command_for_file_name) if x == so]
+    for s_o in source_options:
+        indexes = [i for i, x in enumerate(command_for_file_name) if x == s_o]
         for i in indexes:
             command_for_file_name[i + 1] = "x"
 

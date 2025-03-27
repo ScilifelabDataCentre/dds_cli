@@ -41,7 +41,8 @@ jobs:
             --hidden-import textual.widgets._tab_pane --hidden-import cgi gui_build/gui_standalone.py
           OUT_FILE_NAME: dds_gui_macos_x86_64
           ASSET_MIME: application/x-elf
-          TEST: brew install coreutils && gtimeout 5s ./dist/dds_gui_macos_x86_64
+          #TEST: brew install coreutils && gtimeout 5s ./dist/dds_gui_macos_x86_64
+          TEST: ./dist/dds_gui_macos_x86_64
     steps:
       - uses: actions/checkout@v4
       - name: Python 3.9 setup

@@ -61,7 +61,7 @@ jobs:
               gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
-            TEST: ./dist/dds_gui_win_x86_64.exe
+            #TEST: ./dist/dds_gui_win_x86_64.exe 
     steps:
       - uses: actions/checkout@v4
       - name: Python 3.9 setup

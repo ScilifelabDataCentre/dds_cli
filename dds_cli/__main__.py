@@ -1588,7 +1588,7 @@ def data_group_command(_):
     required=False,
     type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
     help=(
-        "New directory where the files will be staged before upload "
+        "New directory where the files will be mounted before upload "
         "and any error log files will be saved for a specific upload."
     ),
 )

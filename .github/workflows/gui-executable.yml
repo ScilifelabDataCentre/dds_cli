@@ -31,8 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os:
-          - macos-13
+        - os: macos-13
           TARGET: MacOs_x86_64
           CMD_BUILD: >
             pyinstaller -F -c -n dds_gui_macos_x86_64 -i resources/scilifelab.icns

@@ -27,18 +27,20 @@ jobs:
         run: python setup.py sdist bdist_wheel
 
   executable:
+    name: Build the GUI executable
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        include:
         - os: macos-13
           TARGET: MacOs_x86_64
           CMD_BUILD: >
             pyinstaller -F -c -n dds_gui_macos_x86_64 -i resources/scilifelab.icns
             --exclude-module=tests --target-arch x86_64 --log-level INFO   
             --hidden-imports --hidden-import textual.widgets._tab_pane --hidden-import cgi ../gui_build/gui_standalone.py
-        OUT_FILE_NAME: dds_gui_macos_x86_64
-        ASSET_MIME: application/x-elf
+          OUT_FILE_NAME: dds_gui_macos_x86_64
+          ASSET_MIME: application/x-elf
     steps:
       - uses: actions/checkout@v4
       - name: Python 3.9 setup

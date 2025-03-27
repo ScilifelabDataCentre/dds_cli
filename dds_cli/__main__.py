@@ -152,7 +152,13 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
         )
 
     # Create context object and save command to context
-    click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path, "COMMAND": sys.argv}
+    click_ctx.obj = {
+        "NO_PROMPT": no_prompt, 
+        "TOKEN_PATH": token_path, 
+        "COMMAND": sys.argv, 
+        "DEFAULT_LOG": True
+    }
+    
     if "--help" not in sys.argv:
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
@@ -180,8 +186,6 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             else:
                 file_handler = dds_cli.utils.setup_logging_to_file(filename=log_file)
                 LOG.addHandler(file_handler)
-        else: 
-            click_ctx.obj.update({"DEFAULT_LOG": True})
 
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #
@@ -1578,8 +1582,8 @@ def data_group_command(_):
 @data_group_command.command(name="put", no_args_is_help=True)
 # Options
 @click.option(
-    "--staging-location",
-    "-sl",
+    "--mount-dir",
+    "-md",
     required=False,
     type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
     help=(
@@ -1610,7 +1614,7 @@ def data_group_command(_):
 @click.pass_obj
 def put_data(
     click_ctx,
-    staging_location,
+    mount_dir,
     project,
     source,
     source_path_file,
@@ -1639,18 +1643,21 @@ def put_data(
     delivery to finish. To avoid that a delivery fails because of an expired token, we recommend
     reauthenticating yourself before uploading data.
     """
-    # Setup logging
     # Define staging directory path
-    staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
-    if staging_location:
-        staging_dir = staging_location / staging_dir
+    staging_dir_path: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
+    
+    # Staging directory should either be in specified mount dir or in current location
+    if mount_dir:
+        staging_dir_path = mount_dir / staging_dir_path
     else: 
-        staging_dir = pathlib.Path.cwd() / staging_dir
+        staging_dir_path = pathlib.Path.cwd() / staging_dir_path
 
     # Generate staging directory
-    stag_dir_obj = dds_cli.directory.DDSDirectory(path=staging_dir)
+    staging_dir = dds_cli.directory.DDSDirectory(path=staging_dir_path)
+
+    # Setup logging -- needs to be in this file to work 
     if click_ctx.get("DEFAULT_LOG"):
-        default_log_name = dds_cli.utils.get_default_log_name(command=click_ctx.get("COMMAND", ["commandnotfound"]), log_directory=stag_dir_obj.directories["LOGS"])
+        default_log_name = dds_cli.utils.get_default_log_name(command=click_ctx.get("COMMAND", ["commandnotfound"]), log_directory=staging_dir.directories["LOGS"])
         
         # Start logging to file 
         file_handler = dds_cli.utils.setup_logging_to_file(filename=default_log_name)

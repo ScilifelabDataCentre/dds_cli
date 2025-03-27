@@ -59,12 +59,7 @@ jobs:
               --hidden-import textual.widgets._tab_pane --hidden-import cgi gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
-            TEST: >-
-              powershell -Command "
-              $proc = Start-Process -FilePath './dist/dds_gui_win_x86_64.exe' -PassThru -NoNewWindow;
-              Start-Sleep -Seconds 5;
-              Stop-Process -Id $proc.Id -Force;
-              Write-Host 'Process terminated successfully'"
+            TEST: ./dist/dds_gui_win_x86_64.exe
     steps:
       - uses: actions/checkout@v4
       - name: Python 3.9 setup

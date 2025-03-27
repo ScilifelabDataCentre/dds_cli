@@ -61,6 +61,7 @@ class DataGetter(base.DDSBaseClass):
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,
+            staging_dir=staging_dir,
         )
 
         # Initiate DataGetter specific attributes

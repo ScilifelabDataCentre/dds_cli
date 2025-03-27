@@ -30,7 +30,6 @@ from dds_cli.custom_decorators import verify_proceed, update_status, subpath_req
 
 import dds_cli
 import dds_cli.directory
-import dds_cli.directory
 import dds_cli.utils
 
 ###############################################################################

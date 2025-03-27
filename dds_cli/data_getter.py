@@ -46,7 +46,6 @@ class DataGetter(base.DDSBaseClass):
         get_all: bool = False,
         source: tuple = (),
         source_path_file: pathlib.Path = None,
-        destination: pathlib.Path = pathlib.Path(""),
         silent: bool = False,
         verify_checksum: bool = False,
         method: str = "get",

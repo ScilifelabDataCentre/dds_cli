@@ -38,7 +38,7 @@ jobs:
           CMD_BUILD: >
             pyinstaller -F -c -n dds_gui_macos_x86_64 -i resources/scilifelab.icns
             --exclude-module=tests --target-arch x86_64 --log-level INFO   
-            --hidden-imports --hidden-import textual.widgets._tab_pane --hidden-import cgi ../gui_build/gui_standalone.py
+            --hidden-import textual.widgets._tab_pane --hidden-import cgi ../gui_build/gui_standalone.py
           OUT_FILE_NAME: dds_gui_macos_x86_64
           ASSET_MIME: application/x-elf
     steps:

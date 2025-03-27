@@ -1771,6 +1771,20 @@ def get_data(
     staging_dir_path: pathlib.Path = pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_download") 
     if destination:
         staging_dir_path = destination
+        
+    # Generate staging directory
+    staging_dir = dds_cli.directory.DDSDirectory(path=staging_dir_path)
+
+    # Setup logging -- needs to be in this file to work 
+    if click_ctx.get("DEFAULT_LOG"):
+        default_log_name = dds_cli.utils.get_default_log_name(command=click_ctx.get("COMMAND", ["commandnotfound"]), log_directory=staging_dir.directories["LOGS"])
+        
+        # Start logging to file 
+        file_handler = dds_cli.utils.setup_logging_to_file(filename=default_log_name)
+        LOG.addHandler(file_handler)
+    
+    # Log command
+    LOG.debug("Command: %s", " ".join(click_ctx.get("COMMAND")))
 
     try:
         # Begin delivery
@@ -1785,6 +1799,7 @@ def get_data(
             verify_checksum=verify_checksum,
             no_prompt=click_ctx.get("NO_PROMPT", False),
             token_path=click_ctx.get("TOKEN_PATH"),
+            staging_dir=staging_dir,
         ) as getter:
             with rich.progress.Progress(
                 "{task.description}",

@@ -1804,7 +1804,6 @@ def get_data(
             source=source,
             source_path_file=source_path_file,
             break_on_fail=break_on_fail,
-            destination=destination,
             silent=silent,
             verify_checksum=verify_checksum,
             no_prompt=click_ctx.get("NO_PROMPT", False),

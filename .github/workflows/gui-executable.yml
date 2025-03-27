@@ -56,7 +56,9 @@ jobs:
             CMD_BUILD: >
               pyinstaller -F -c -n dds_gui_win_x86_64.exe -i resources/scilifelab.ico
               --exclude-module=tests --log-level INFO
-              --hidden-import textual.widgets._tab_pane --hidden-import cgi gui_build/gui_standalone.py
+              --hidden-import textual.widgets._tab_pane --hidden-import cgi 
+              --hidden-import windows_curses --hidden-import pkg_resources
+              gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
             TEST: ./dist/dds_gui_win_x86_64.exe

@@ -222,6 +222,7 @@ class DataPutter(base.DDSBaseClass):
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,
+            staging_dir=staging_dir,
         )
 
         # Initiate DataPutter specific attributes
@@ -229,12 +230,6 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
-        # NOTE: Might be something to refactor in the future, but needed for now
-        self.dds_directory = staging_dir
-        self.temporary_directory = self.dds_directory.directories["ROOT"]
-        self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
-            "dds_failed_delivery.json"
-        )
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":

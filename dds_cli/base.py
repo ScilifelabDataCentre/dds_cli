@@ -14,6 +14,7 @@ from rich.progress import Progress, SpinnerColumn
 
 # Own modules
 import dds_cli.directory
+import dds_cli.directory
 import dds_cli.timestamp
 import dds_cli.utils
 
@@ -52,6 +53,7 @@ class DDSBaseClass:
         no_prompt: bool = False,
         token_path: str = None,
         allow_group: bool = False,
+        staging_dir: dds_cli.directory.DDSDirectory = None,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.project = project
@@ -77,6 +79,13 @@ class DDSBaseClass:
         # files within project
         # TODO: Move to DataPutter / DataGetter??
         if self.method in DDS_KEYS_REQUIRED_METHODS:
+            # NOTE: Might be something to refactor in the future, but needed for now
+            self.dds_directory = staging_dir
+            self.temporary_directory = self.dds_directory.directories["ROOT"]
+            self.failed_delivery_log = self.dds_directory.directories["LOGS"] / pathlib.Path(
+                "dds_failed_delivery.json"
+            )
+            
             if self.method == "put":
                 self.s3connector = self.__get_safespring_keys()
 

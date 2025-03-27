@@ -30,6 +30,7 @@ from dds_cli.custom_decorators import verify_proceed, update_status, subpath_req
 
 import dds_cli
 import dds_cli.directory
+import dds_cli.directory
 import dds_cli.utils
 
 ###############################################################################
@@ -204,7 +205,7 @@ class DataPutter(base.DDSBaseClass):
     def __init__(
         self,
         project: str = None,
-        staging_dir: pathlib.Path = None,
+        staging_dir: dds_cli.directory.DDSDirectory = None,
         break_on_fail: bool = False,
         overwrite: bool = False,
         source: tuple = (),

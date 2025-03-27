@@ -1767,6 +1767,11 @@ def get_data(
         )
         sys.exit(1)
 
+    # Define staging directory path
+    staging_dir_path: pathlib.Path = pathlib.Path.cwd() / pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_download") 
+    if destination:
+        staging_dir_path = destination
+
     try:
         # Begin delivery
         with dds_cli.data_getter.DataGetter(

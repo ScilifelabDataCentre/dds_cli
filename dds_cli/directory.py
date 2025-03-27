@@ -9,14 +9,11 @@ import errno
 import logging
 import pathlib
 import sys
-from datetime import datetime
-import typing
 
 # Installed
 import rich.markup
 
 # Own modules
-import dds_cli.utils
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

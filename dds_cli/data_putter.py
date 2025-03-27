@@ -45,7 +45,6 @@ LOG = logging.getLogger(__name__)
 
 
 def put(
-    # staging_location,
     project,
     source,
     source_path_file,

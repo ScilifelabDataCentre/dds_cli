@@ -150,15 +150,15 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             f"[green]Current user:[/] [red]{username}", highlight=False
         )
 
-    # Create context object and save command to context
-    click_ctx.obj = {
-        "NO_PROMPT": no_prompt,
-        "TOKEN_PATH": token_path,
-        "COMMAND": sys.argv,
-        "DEFAULT_LOG": True,
-    }
-
     if "--help" not in sys.argv:
+        # Create context object and save command to context
+        click_ctx.obj = {
+            "NO_PROMPT": no_prompt,
+            "TOKEN_PATH": token_path,
+            "COMMAND": sys.argv,
+            "DEFAULT_LOG": True,
+        }
+        
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
 

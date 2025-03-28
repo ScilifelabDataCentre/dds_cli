@@ -158,7 +158,7 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             "COMMAND": sys.argv,
             "DEFAULT_LOG": True,
         }
-        
+
         # Set the base logger to output DEBUG
         LOG.setLevel(logging.DEBUG)
 

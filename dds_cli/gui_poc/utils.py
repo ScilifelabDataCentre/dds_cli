@@ -136,6 +136,28 @@ class DDSFooter(Footer):
     DEFAULT_CSS = """
     DDSFooter {
     background: $panel;
-    align: center middle;
     }
     """
+
+class DDSLayout(Container):
+    """DDS layout widget."""
+
+    def __init__(self, sidebar: Widget, content: Widget):
+        super().__init__()
+        self.sidebar = sidebar
+        self.content = content
+
+    DEFAULT_CSS = """
+
+#dds-layout-sidebar {
+    width: 20%;
+}
+
+#dds-layout-content {
+    width: 80%;
+}
+    """
+
+    def compose(self) -> ComposeResult: 
+        yield Container(self.sidebar, id="dds-layout-sidebar")
+        yield Container(self.content, id="dds-layout-content")

@@ -3,8 +3,8 @@
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 
-from textual.containers import Container
-from textual.widgets import ContentSwitcher, Footer, Header
+from textual.containers import Container, Horizontal
+from textual.widgets import ContentSwitcher, Footer, Header, Label, ListItem, ListView
 from textual.theme import Theme
 
 from dds_cli.account_manager import AccountManager
@@ -13,7 +13,7 @@ from dds_cli.gui_poc.data import Data
 from dds_cli.gui_poc.home import HomeScreen
 from dds_cli.gui_poc.auth import AuthLogin, AuthLogout, AuthStatus
 from dds_cli.gui_poc.user import User
-from dds_cli.gui_poc.utils import DDSFooter, DDSModal
+from dds_cli.gui_poc.utils import DDSFooter, DDSModal, DDSSidebar
 
 
 theme = Theme(
@@ -54,6 +54,16 @@ Button {
     padding: 0 2 0 2;
 }
 
+    #dds-app-container {
+        width: 80%;
+        border: solid $primary;
+    }
+
+    #dds-app-sidebar {
+        width: 20%;
+        border: solid $primary;
+    }
+
     """
 
     ENABLE_COMMAND_PALETTE = False  # True by default
@@ -65,18 +75,27 @@ Button {
         Binding("t", "token", "Token", tooltip="Show current token status"),
         Binding("l", "login", "Login", tooltip="Login to DDS."),
         Binding("o", "logout", "Logout", tooltip="Logout from DDS."),
-        Binding("u", "user", "User", tooltip="Show user info."),
+        #Binding("u", "user", "User", tooltip="Show user info."),
     ]
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True, time_format="%H:%M:%S", icon="")
-        with ContentSwitcher(initial="home"):
-            with Container(id="home"):
-                yield HomeScreen()
-            with Container(id="user"):
-                yield User()
-            with Container(id="data"):
-                yield Data()
+
+        with Horizontal(id="dds-app-layout"):
+            side =  Container(id="dds-app-sidebar")
+            side.border_title = "MENU"
+            with side:
+                yield ListView(ListItem(Label("Home"), id="home"), ListItem(Label("User"), id="user"), ListItem(Label("Data"), id="data"))
+            container = Container(id="dds-app-container")
+            container.border_title = "CONTENT"
+            with container:
+                with ContentSwitcher(initial="home", id="dds-app-content"):
+                    with Container(id="home"):
+                        yield HomeScreen()          
+                    with Container(id="user"):
+                        yield User()
+                    with Container(id="data"):
+                        yield Data()
         yield DDSFooter()
 
     def action_token(self) -> None:

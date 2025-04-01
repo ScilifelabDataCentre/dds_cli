@@ -62,7 +62,7 @@ jobs:
             OUT_FILE_NAME: dds_gui_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
             TEST: |
-              $process = Start-Process -FilePath ".\dist\dds_gui_win_x86_64.exe" -NoNewWindow -PassThru
+              $process = Start-Process -FilePath ".\dist\dds_gui_win_x86_64.exe" -PassThru
               Start-Sleep -Seconds 5
               if ($process.HasExited) {
                   Write-Host "Process exited with code $($process.ExitCode)"
@@ -70,7 +70,6 @@ jobs:
               } else {
               Stop-Process -Id $process.Id -Force
               Write-Host "Process terminated successfully"
-              exit 124
               }
     steps:
       - uses: actions/checkout@v4

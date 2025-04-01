@@ -61,7 +61,17 @@ jobs:
               gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
-            TEST: timeout 5s ./dist/dds_gui_win_x86_64.exe || if [ $? -eq 124 ]; then echo "Process terminated successfully"; else exit 1; fi
+            TEST: |
+              $process = Start-Process -FilePath ".\dist\dds_gui_win_x86_64.exe" -NoNewWindow -PassThru
+              Start-Sleep -Seconds 5
+              if ($process.HasExited) {
+                  Write-Host "Process exited with code $($process.ExitCode)"
+                  exit $process.ExitCode
+              } else {
+              Stop-Process -Id $process.Id -Force
+              Write-Host "Process terminated successfully"
+              exit 124
+              }
     steps:
       - uses: actions/checkout@v4
       - name: Python 3.9 setup

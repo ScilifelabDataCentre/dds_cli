@@ -42,7 +42,6 @@ class DataRemover(base.DDSBaseClass):
         authenticate: bool = True,
         no_prompt: bool = False,
         token_path: str = None,
-        **kwargs,
     ):
         """Handle actions regarding data deletion in the cli."""
         # Initiate DDSBaseClass to authenticate user
@@ -52,7 +51,6 @@ class DataRemover(base.DDSBaseClass):
             authenticate=authenticate,
             no_prompt=no_prompt,
             token_path=token_path,
-            **kwargs,
         )
 
         self.failed_table = None

@@ -410,4 +410,4 @@ _Empty sprint_
 
 # 2025-03-17 – 2025-02-28
 
-- Adapted client message when removing all contents according to Queuing POC ([#738](https://github.com/ScilifelabDataCentre/dds_cli/pull/738)).
+- Inform users that data deletion has started when `dds data rm` is run ([#738](https://github.com/ScilifelabDataCentre/dds_cli/pull/738)).

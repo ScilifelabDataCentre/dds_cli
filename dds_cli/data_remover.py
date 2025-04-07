@@ -39,6 +39,7 @@ class DataRemover(base.DDSBaseClass):
         self,
         project: str,
         method: str = "rm",
+        authenticate: bool = True,
         no_prompt: bool = False,
         token_path: str = None,
         **kwargs,
@@ -48,6 +49,7 @@ class DataRemover(base.DDSBaseClass):
         super().__init__(
             project=project,
             method=method,
+            authenticate=authenticate,
             no_prompt=no_prompt,
             token_path=token_path,
             **kwargs,

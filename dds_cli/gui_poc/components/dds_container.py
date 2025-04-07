@@ -1,7 +1,7 @@
 """DDS Container Widget"""
 
 from typing import Any
-from textual.containers import ScrollableContainer, VerticalScroll   
+from textual.containers import Container, ScrollableContainer, VerticalScroll   
 
 
 class DDSContainer(VerticalScroll):
@@ -24,3 +24,17 @@ class DDSContainer(VerticalScroll):
         border: round $accent;
     }
    """
+
+
+class DDSSpacedContainer(Container):
+    """A container widget with spacing between child widgets."""
+    
+    DEFAULT_CSS = """
+    DDSSpacedContainer {
+        align: center top;
+    }
+
+    DDSSpacedContainer > * {
+        margin-bottom: 1;
+    }
+    """

@@ -28,7 +28,7 @@ class DDSModalHeader(Widget):
         yield Label(self.title, id="dds-modal-header")
 
 
-class DDSModal(ModalScreen):
+class DDSModalOLD(ModalScreen):
     """DDS modal widget."""
 
     DEFAULT_CSS = """
@@ -74,7 +74,7 @@ ModalScreen{
             self.dismiss()
 
 
-class DDSSidebar(Widget):
+class DDSSidebarOLD(Widget):
     """DDS sidebar widget."""
 
     DEFAULT_CSS = """

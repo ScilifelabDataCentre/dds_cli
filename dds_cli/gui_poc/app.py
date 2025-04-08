@@ -3,10 +3,12 @@
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 
+from textual.reactive import reactive
 from textual.widgets import Header
 from textual.theme import Theme
 
 from dds_cli.auth import Auth
+from dds_cli.gui_poc.dds_state_manager import DDSStateManager
 from dds_cli.gui_poc.pages.dds_base_page import DDSBasePage
 from dds_cli.gui_poc.utils import DDSFooter
 
@@ -30,13 +32,14 @@ theme = Theme(
 )
 
 
-class DDSApp(App):
+class DDSApp(App, DDSStateManager):
     """Textual App for DDS CLI."""
-
     def __init__(self, token_path: str):
         super().__init__()
         self.token_path = token_path
-        self.auth = Auth(authenticate=False, token_path=token_path)
+        #self.auth = Auth(authenticate=False, token_path=token_path)
+
+    #number = reactive(0, recompose=True)
 
     DEFAULT_CSS = """
     Toast {
@@ -61,6 +64,6 @@ class DDSApp(App):
         """On mount, register the theme and set it as the active theme."""
         self.register_theme(theme)
         self.theme = "custom"
-
+    
     def action_help(self) -> None:
         """Action to show the help screen."""

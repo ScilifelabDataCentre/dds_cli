@@ -5,7 +5,7 @@ from textual import events
 from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widget import Widget
-from textual.widgets import ContentSwitcher, Label
+from textual.widgets import Button, ContentSwitcher, Label
 
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.components.dds_button import DDSButton
@@ -65,7 +65,7 @@ class DDSSidebar(Widget):
 
     def compose(self) -> ComposeResult:
         yield DDSMenu("Menu")
-        yield DDSAuthMenu("Auth", token_path=self.token_path)
+        yield DDSAuthMenu("Auth")
 
 
 class DDSMenu(DDSContainer):
@@ -82,15 +82,14 @@ class DDSMenu(DDSContainer):
             yield DDSButton("Home", classes="wide", id="home")
             yield DDSButton("Login", classes="wide", id="login")
             yield DDSButton("Re-authenticate", classes="wide", id="re-authenticate")
+    
 
 
 class DDSAuthMenu(DDSContainer):
     """An auth menu widget for the GUI."""
 
-    def __init__(self, title: str, token_path: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, title: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(title=title, *args, **kwargs)
-        self.token_path = token_path
-        self.auth_status = Auth(authenticate=False, token_path=token_path).check()
 
     DEFAULT_CSS = """
     #auth-status-ok { 
@@ -105,11 +104,22 @@ class DDSAuthMenu(DDSContainer):
     """
 
     def compose(self) -> ComposeResult:
-        with DDSSpacedContainer():
-            if self.auth_status:
-                yield Label("✅ Token is OK ✅", id="auth-status-ok")
+        with ContentSwitcher(id="auth-status-switcher"):
+            with DDSSpacedContainer(id="auth-status-ok-container"):
+                    yield Label("✅ Authenticated ✅", id="auth-status-ok")
+                    yield DDSButton("Logout", classes="wide", id="logout")
+            with DDSSpacedContainer(id="auth-status-invalid-container"):
+                yield Label("❌ Not authenticated ❌", id="auth-status-invalid")
                 yield DDSButton("Re-authenticate", classes="wide", id="re-authenticate")
-                yield DDSButton("Logout", classes="wide", id="logout")
-            else:
-                yield Label("❌ Token is invalid ❌", id="auth-status-invalid")
                 yield DDSButton("Login", classes="wide", id="login")
+
+    def on_mount(self) -> None:
+        """On mount, set initial state."""
+        self.watch_auth_status(self.app.auth_status)
+
+    def watch_auth_status(self, auth_status: bool) -> None:
+        """Watch the auth status and change content accordingly."""
+        if auth_status:
+            self.query_one("#auth-status-switcher").current = "auth-status-ok-container"
+        else:
+            self.query_one("#auth-status-switcher").current = "auth-status-invalid-container"

@@ -1,7 +1,7 @@
 """DDS Container Widget"""
 
 from typing import Any
-from textual.containers import Container, ScrollableContainer, VerticalScroll   
+from textual.containers import Container, Horizontal, ScrollableContainer, Vertical, VerticalScroll   
 
 
 class DDSContainer(VerticalScroll):
@@ -26,7 +26,7 @@ class DDSContainer(VerticalScroll):
    """
 
 
-class DDSSpacedContainer(Container):
+class DDSSpacedContainer(Vertical):
     """A container widget with spacing between child widgets."""
     
     DEFAULT_CSS = """
@@ -36,5 +36,19 @@ class DDSSpacedContainer(Container):
 
     DDSSpacedContainer > * {
         margin-bottom: 1;
+    }
+    """
+
+
+class DDSSpacedHorizontalContainer(Horizontal):
+    """A container widget with spacing between child widgets."""
+
+    DEFAULT_CSS = """
+    DDSSpacedHorizontalContainer {
+        align: center top;
+    }
+
+    DDSSpacedHorizontalContainer > * {
+        margin-right: 1;
     }
     """

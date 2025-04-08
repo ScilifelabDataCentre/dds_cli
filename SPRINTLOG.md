@@ -408,6 +408,9 @@ _Empty sprint_
 
 - Remove executable for Ubuntu 20.04 and add one for Ubuntu 22.04 ([#733](https://github.com/ScilifelabDataCentre/dds_cli/pull/733)).
 
-# 2025-03-17 – 2025-02-28
+# 2025-03-17 – 2025-03-28
 
 - Inform users that data deletion has started when `dds data rm` is run ([#738](https://github.com/ScilifelabDataCentre/dds_cli/pull/738)).
+
+# 2025-03-31 - 2025-04-11
+- New version: 2.10.0 ([#742](https://github.com/ScilifelabDataCentre/dds_cli/pull/742))

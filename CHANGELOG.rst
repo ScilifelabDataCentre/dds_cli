@@ -1,6 +1,16 @@
 Changelog
 ==========
 
+.. _2.10.0:
+
+2.10.0 - 2025-04-08 
+~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Inform users that data deletion with `dds data rm --rm-all` is queued; DDS handles deletion in background
+- Other Changes
+    - Fix CLI docs action
+
 .. _2.9.0:
 
 2.9.0 - 2024-12-18

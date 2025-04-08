@@ -5,6 +5,7 @@
 ###############################################################################
 
 # Standard library
+from curses.panel import top_panel
 import logging
 import pathlib
 import typing
@@ -55,6 +56,9 @@ class DDSBaseClass:
         no_prompt: bool = False,
         token_path: str = None,
         allow_group: bool = False,
+        authenticate_gui: bool = False,
+        username_gui: str = None,
+        password_gui: str = None,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.project = project
@@ -62,6 +66,10 @@ class DDSBaseClass:
         self.method = method
         self.no_prompt = no_prompt
         self.token_path = token_path
+        self.authenticate_gui = authenticate_gui
+        self.username_gui = username_gui
+        self.password_gui = password_gui
+        self.totp = totp
 
         if self.method_check:
             # Get attempted operation e.g. put/ls/rm/get
@@ -103,6 +111,19 @@ class DDSBaseClass:
             )
             self.token = dds_user.token_dict
 
+        ## AUTHNETCATION FOR THE GUI
+        if authenticate_gui:
+            self.dds_user = user.User(
+                force_renew_token=False,
+                no_prompt=no_prompt,
+                authenticate_gui=authenticate_gui,
+                token_path=token_path,
+                totp=totp,
+                allow_group=allow_group,
+            )
+
+            self.partial_auth_token, self.secondfactor_method = self.dds_user.sign_in(username=self.username_gui, password=self.password_gui)           
+            
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in DDS_KEYS_REQUIRED_METHODS:
@@ -113,6 +134,14 @@ class DDSBaseClass:
 
             self.status: typing.Dict = {}
             self.filehandler = None
+
+    def do_2factor(self, twofactor_code: str):
+        """
+        Perform 2fa for the gui
+        """
+        self.dds_user.twofactor(self.partial_auth_token, self.secondfactor_method, self.totp, self.username_gui, twofactor_code)
+        self.token = self.dds_user.token_dict
+
 
     def __enter__(self):
         """Return self when using context manager."""

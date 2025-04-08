@@ -60,6 +60,9 @@ from dds_cli.options import (
     users_flag,
 )
 
+## GUI IMPORTS ##
+from .gui_poc.app import DDSApp
+
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
 ####################################################################################################
@@ -167,6 +170,19 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 
         # Create context object
         click_ctx.obj = {"NO_PROMPT": no_prompt, "TOKEN_PATH": token_path}
+
+
+### GUI COMMAND ###
+
+
+@dds_main.command(name="gui")
+@click.pass_obj
+def gui(click_ctx):
+    """Start the DDS GUI."""
+    gui_app = DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
+    gui_app.title = "SciLifeLab Data Delivery System"
+    gui_app.sub_title = "CLI Version: " + dds_cli.__version__
+    gui_app.run()
 
 
 # ************************************************************************************************ #

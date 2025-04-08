@@ -3,6 +3,7 @@
 # Standard library
 import logging
 import getpass
+from re import S
 
 # Installed
 from rich.prompt import Prompt
@@ -36,6 +37,9 @@ class Auth(base.DDSBaseClass):
         token_path: str = None,
         totp: str = None,
         allow_group: bool = False,
+        authenticate_gui: bool = False,
+        username_gui: str = None,
+        password_gui: str = None,
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
@@ -46,15 +50,18 @@ class Auth(base.DDSBaseClass):
             token_path=token_path,
             totp=totp,
             allow_group=allow_group,
+            authenticate_gui=authenticate_gui,
+            username_gui=username_gui,
+            password_gui=password_gui,
         )
 
-    def check(self):
+    def check(self) -> str:
         """Check if token exists and return info."""
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token = token_file.read_token()
             if token:
-                token_file.token_report(token=token)
+                return token_file.token_report(token=token)
         else:
             LOG.info(
                 "[red]No saved token found, or token has expired. "
@@ -67,8 +74,10 @@ class Auth(base.DDSBaseClass):
         if token_file.file_exists():
             token_file.delete_token()
             LOG.info("[green] :white_check_mark: Successfully logged out![/green]")
+            return True
         else:
             LOG.info("[green]Already logged out![/green]")
+            return False
 
     def twofactor(self, auth_method: str = None):
         """Perform 2FA for user."""

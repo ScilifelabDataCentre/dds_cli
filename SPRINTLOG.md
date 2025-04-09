@@ -397,3 +397,21 @@ _Empty sprint_
 # 2024-12-16 - 2024-12-20
 
 - New version: 2.9.0 ([#728](https://github.com/ScilifelabDataCentre/dds_cli/pull/728))
+- Include legacy packages (removed in Python 3.13) in development requirements to fix documentation on GitHub Pages ([#730](https://github.com/ScilifelabDataCentre/dds_cli/pull/730))
+
+# 2025-01-20 - 2025-01-31
+
+- Make release template ([#732](https://github.com/ScilifelabDataCentre/dds_cli/pull/732))
+- Fix codecov action ([#731](https://github.com/ScilifelabDataCentre/dds_cli/pull/731))
+
+# 2025-02-17 – 2025-02-28
+
+- Remove executable for Ubuntu 20.04 and add one for Ubuntu 22.04 ([#733](https://github.com/ScilifelabDataCentre/dds_cli/pull/733)).
+
+# 2025-03-17 – 2025-03-28
+
+- Inform users that data deletion has started when `dds data rm` is run ([#738](https://github.com/ScilifelabDataCentre/dds_cli/pull/738)).
+
+# 2025-03-31 - 2025-04-11
+
+- New version: 2.10.0 ([#742](https://github.com/ScilifelabDataCentre/dds_cli/pull/742))

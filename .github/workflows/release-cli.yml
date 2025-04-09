@@ -148,7 +148,7 @@ jobs:
           name: DocumentationHTML
           path: docs/_build/html/
       - name: Create an artifact of the previously built pdf
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v
         with:
           name: Documentation
           path: docs/_build/latex/datadeliverysystem.pdf

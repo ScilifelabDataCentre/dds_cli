@@ -5,6 +5,8 @@ import pathlib
 import typing
 import http
 from typing import Dict, List, Union
+import logging
+from datetime import datetime
 
 import requests
 import rich.console
@@ -80,6 +82,50 @@ class HumanBytes:
 
 
 # Functions
+
+
+def setup_logging_to_file(filename: str) -> logging.FileHandler:
+    """Setup logging to specific file."""
+    log_fh = logging.FileHandler(filename=filename, encoding="utf-8")
+    log_fh.setLevel(logging.DEBUG)
+    log_fh.setFormatter(
+        logging.Formatter(
+            fmt="[%(asctime)s] %(name)-15s %(lineno)-5s [%(levelname)-7s]  %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+    return log_fh
+
+
+def get_default_log_name(command: list, log_directory: pathlib.Path):
+    """Generate default log name for current command."""
+    # Include command in log file name
+    # Do not include source in file name
+    # Could e.g. be a very long file name --> errors
+    command_for_file_name = command.copy()
+    source_options: typing.List = ["-s", "--source", "-spf", "--source-path-file"]
+    for s_o in source_options:
+        indexes = [i for i, x in enumerate(command_for_file_name) if x == s_o]
+        for i in indexes:
+            command_for_file_name[i + 1] = "x"
+
+    # Remove leading - from options
+    command_for_file_name = [i.lstrip("-") for i in command_for_file_name[1::]]
+
+    # Format log file path name to contain command
+    command_for_file_name: str = "dds_" + "_".join(command_for_file_name).replace("/", "_").replace(
+        "\\", "_"
+    )
+
+    # Include time stamp in file name
+    timestamp_string: str = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+    # Final log name
+    log_file = str(
+        log_directory / pathlib.Path(command_for_file_name + "_" + timestamp_string + ".log")
+    )
+
+    return log_file
 
 
 def sort_items(items: list, sort_by: str) -> list:

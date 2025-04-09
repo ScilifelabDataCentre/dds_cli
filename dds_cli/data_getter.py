@@ -46,21 +46,21 @@ class DataGetter(base.DDSBaseClass):
         get_all: bool = False,
         source: tuple = (),
         source_path_file: pathlib.Path = None,
-        destination: pathlib.Path = pathlib.Path(""),
         silent: bool = False,
         verify_checksum: bool = False,
         method: str = "get",
         no_prompt: bool = False,
         token_path: str = None,
+        staging_dir: dds_cli.directory.DDSDirectory = None,
     ):
         """Handle actions regarding downloading data."""
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
-            dds_directory=destination,
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,
+            staging_dir=staging_dir,
         )
 
         # Initiate DataGetter specific attributes

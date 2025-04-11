@@ -150,12 +150,12 @@ jobs:
           build-command: "make latexpdf"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: DocumentationHTML
           path: docs/_build/html/
       - name: Create an artifact of the previously built pdf
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Documentation
           path: docs/_build/latex/datadeliverysystem.pdf

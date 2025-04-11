@@ -416,3 +416,4 @@ _Empty sprint_
 
 - New version: 2.10.0 ([#742](https://github.com/ScilifelabDataCentre/dds_cli/pull/742))
 - Re-introduce executable for ubuntu-20.04 ([#744](https://github.com/ScilifelabDataCentre/dds_cli/pull/744))
+- New version: 2.10.1 ([#746](https://github.com/ScilifelabDataCentre/dds_cli/pull/746))

@@ -48,3 +48,8 @@ timings
 .DS_Store
 *test-venv*
 test-directory*
+gui_build/dist
+gui_build/build
+gui_build/dds_gui_standalone.spec
+gui_build/dds_gui_standalone.spec.py
+gui_build/dds_gui_standalone.spec.pyc

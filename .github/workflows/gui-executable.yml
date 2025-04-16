@@ -1,0 +1,87 @@
+# Build the GUI executable
+---
+name: Build the GUI executable
+on:
+  push:
+    branches:
+      - "poc-gui"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        name: Check out source-code repository
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install .
+
+      - name: Build the distribution
+        run: python setup.py sdist bdist_wheel
+
+  executable:
+    name: Build the GUI executable
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-13
+            TARGET: MacOs_x86_64
+            CMD_BUILD: >
+              pyinstaller -F -c -n dds_gui_macos_x86_64 -i resources/scilifelab.icns
+              --exclude-module=tests --target-arch x86_64 --log-level INFO   
+              --hidden-import textual.widgets._tab_pane --hidden-import cgi gui_build/gui_standalone.py
+            OUT_FILE_NAME: dds_gui_macos_x86_64
+          - os: ubuntu-latest
+            TARGET: Linux_x86_64
+            CMD_BUILD: >
+              pyinstaller -F -c -n dds_gui_ubuntu-latest_x86_64 -i resources/scilifelab.icns
+              --exclude-module=tests --target-arch x86_64 --log-level INFO   
+              --hidden-import textual.widgets._tab_pane --hidden-import cgi gui_build/gui_standalone.py
+            OUT_FILE_NAME: dds_gui_ubuntu-latest_x86_64
+          - os: suse-latest
+            TARGET: SuseLinux_x86_64
+            CMD_BUILD: >
+              pyinstaller -F -c -n dds_gui_suse_x86_64 -i resources/scilifelab.icns
+              --exclude-module=tests --target-arch x86_64 --log-level INFO   
+              --hidden-import textual.widgets._tab_pane --hidden-import cgi 
+              gui_build/gui_standalone.py
+            OUT_FILE_NAME: dds_gui_suse_x86_64
+          - os: windows-latest
+            TARGET: Windows_x86_64
+            CMD_BUILD: >
+              pip install windows-curses &&
+              pyinstaller -F -c -n dds_gui_win_x86_64.exe -i resources/scilifelab.ico
+              --exclude-module=tests --log-level INFO
+              --hidden-import textual.widgets._tab_pane --hidden-import cgi 
+              gui_build/gui_standalone.py
+            OUT_FILE_NAME: dds_gui_win_x86_64.exe
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python 3.9 setup
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyInstaller
+          pip install -r requirements.txt
+      - name: Building with PyInstaller for ${{matrix.TARGET}}
+        run: ${{matrix.CMD_BUILD}}
+      - name: Test the executable
+        run: |
+          ${{ matrix.TEST }}
+      - name: Upload executable as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.OUT_FILE_NAME }}
+          path: ./dist/${{ matrix.OUT_FILE_NAME }}

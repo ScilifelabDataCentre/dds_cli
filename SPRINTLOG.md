@@ -415,4 +415,10 @@ _Empty sprint_
 # 2025-03-31 - 2025-04-11
 
 - New version: 2.10.0 ([#742](https://github.com/ScilifelabDataCentre/dds_cli/pull/742))
+- Re-introduce executable for ubuntu-20.04 ([#744](https://github.com/ScilifelabDataCentre/dds_cli/pull/744))
+- Update upload-artifact action to v4 ([#743](https://github.com/ScilifelabDataCentre/dds_cli/pull/743))
+- New version: 2.10.1 ([#746](https://github.com/ScilifelabDataCentre/dds_cli/pull/746))
+
+# 2025-04-14 - 2025-04-25
+
 - Generate log file by default for put and get ([#737](https://github.com/ScilifelabDataCentre/dds_cli/pull/737))

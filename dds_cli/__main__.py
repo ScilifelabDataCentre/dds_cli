@@ -185,13 +185,12 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             else:
                 file_handler = dds_cli.utils.setup_logging_to_file(filename=log_file)
                 LOG.addHandler(file_handler)
-        else: 
+        else:
             if force_no_log:
                 LOG.warning(
                     "You have chosen to turn off the recommended default logging with the '--force-no-log' option."
                 )
                 click_ctx.obj.update({"DEFAULT_LOG": False})
-
 
 
 # ************************************************************************************************ #

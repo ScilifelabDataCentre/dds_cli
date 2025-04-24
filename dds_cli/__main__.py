@@ -180,8 +180,14 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             else:
                 file_handler = dds_cli.utils.setup_logging_to_file(filename=log_file)
                 LOG.addHandler(file_handler)
-        else: 
+        else:
             click_ctx.obj.update({"DEFAULT_LOG": True})
+            if force_no_log:
+                LOG.warning(
+                    "You have chosen the '--force-no-log' option; No log will be generated for this run."
+                )
+                click_ctx.obj.update({"DEFAULT_LOG": False})
+
 
 # ************************************************************************************************ #
 # MAIN DDS COMMANDS ************************************************************ MAIN DDS COMMANDS #
@@ -1641,10 +1647,10 @@ def put_data(
     """
     # # Setup logging
     # # Define staging directory path
-    # staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload") 
+    # staging_dir: pathlib.Path = pathlib.Path(f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{project}_upload")
     # if staging_location:
     #     staging_dir = staging_location / staging_dir
-    # else: 
+    # else:
     #     staging_dir = pathlib.Path.cwd() / staging_dir
 
     # # Generate staging directory

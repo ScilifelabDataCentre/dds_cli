@@ -218,8 +218,11 @@ class DDSBaseClass:
                     "If you wish to retry the upload, re-run the 'dds data put' command again, "
                     "specifying the same options as you did now. To also overwrite the files "
                     "that were uploaded, also add the '--overwrite' flag at the end of the command.\n\n"
-                    f"Please verify that the following error log has been generated: {self.failed_delivery_log}\n"
-                    "[red][bold]Do not[/bold][/red] delete this file; The Data Centre may need it during DDS support."
+                    "When contacting DDS support, please attach the log file(s) located in "
+                    f"{self.dds_directory.directories['LOGS']} to the ticket. "
+                    "If you used the '--log-file' option when running your command, "
+                    "please also attach that file.\n"
+                    "[red][bold]Do not[/bold][/red] delete these files."
                 )
 
             # TODO: --destination should be able to >at least< overwrite the files in the

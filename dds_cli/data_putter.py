@@ -29,6 +29,7 @@ from dds_cli import text_handler as txt
 from dds_cli.custom_decorators import verify_proceed, update_status, subpath_required
 
 import dds_cli
+import dds_cli.directory
 import dds_cli.utils
 
 ###############################################################################
@@ -43,7 +44,6 @@ LOG = logging.getLogger(__name__)
 
 
 def put(
-    mount_dir,
     project,
     source,
     source_path_file,
@@ -54,11 +54,11 @@ def put(
     no_prompt,
     token_path,
     destination,
+    staging_dir,
 ):
     """Handle upload of data."""
     # Initialize delivery - check user access etc
     with DataPutter(
-        mount_dir=mount_dir,
         project=project,
         source=source,
         source_path_file=source_path_file,
@@ -68,7 +68,9 @@ def put(
         no_prompt=no_prompt,
         token_path=token_path,
         destination=destination,
+        staging_dir=staging_dir,
     ) as putter:
+
         # Progress object to keep track of progress tasks
         with Progress(
             "{task.description}",
@@ -201,7 +203,7 @@ class DataPutter(base.DDSBaseClass):
     def __init__(
         self,
         project: str = None,
-        mount_dir: pathlib.Path = None,
+        staging_dir: dds_cli.directory.DDSDirectory = None,
         break_on_fail: bool = False,
         overwrite: bool = False,
         source: tuple = (),
@@ -216,10 +218,10 @@ class DataPutter(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
-            mount_dir=mount_dir,
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,
+            staging_dir=staging_dir,
         )
 
         # Initiate DataPutter specific attributes

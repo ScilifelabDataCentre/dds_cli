@@ -211,6 +211,13 @@ class DDSBaseClass:
         self.filehandler.failed.clear()
 
         if true_failed:
+            log_file_info: str = (
+                "When contacting DDS support, please attach the log file(s) located in "
+                f"{self.dds_directory.directories['LOGS']} to the ticket. "
+                "If you used the '--log-file' option when running your command, "
+                "please also attach that file.\n"
+                "[red][bold]Do not[/bold][/red] delete these files."
+            )
             if self.method == "put":
                 # Raise exception in order to give exit code 1
                 raise exceptions.UploadError(
@@ -218,11 +225,7 @@ class DDSBaseClass:
                     "If you wish to retry the upload, re-run the 'dds data put' command again, "
                     "specifying the same options as you did now. To also overwrite the files "
                     "that were uploaded, also add the '--overwrite' flag at the end of the command.\n\n"
-                    "When contacting DDS support, please attach the log file(s) located in "
-                    f"{self.dds_directory.directories['LOGS']} to the ticket. "
-                    "If you used the '--log-file' option when running your command, "
-                    "please also attach that file.\n"
-                    "[red][bold]Do not[/bold][/red] delete these files."
+                    f"{log_file_info}"
                 )
 
             # TODO: --destination should be able to >at least< overwrite the files in the
@@ -232,7 +235,7 @@ class DDSBaseClass:
                 "If you wish to retry the download, re-run the `dds data get` command again, "
                 "specifying the same options as you did now. A new directory will "
                 "automatically be created and all files will be downloaded again.\n\n"
-                f"See {self.failed_delivery_log} for more information."
+                f"{log_file_info}"
             )
 
         if nr_uploaded:

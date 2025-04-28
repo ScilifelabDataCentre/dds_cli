@@ -422,3 +422,7 @@ _Empty sprint_
 # 2025-04-14 - 2025-04-25
 
 - Generate log file by default for put and get ([#737](https://github.com/ScilifelabDataCentre/dds_cli/pull/737))
+
+# 2025-04-28 - 2025-05-09
+
+- Release Drafter configuration ([#749](https://github.com/ScilifelabDataCentre/dds_cli/pull/749))

@@ -426,3 +426,4 @@ _Empty sprint_
 # 2025-04-28 - 2025-05-09
 
 - Release Drafter configuration ([#749](https://github.com/ScilifelabDataCentre/dds_cli/pull/749))
+- New Github Action for automatically creating release draft: Release Drafter ([#750](https://github.com/ScilifelabDataCentre/dds_cli/pull/750))

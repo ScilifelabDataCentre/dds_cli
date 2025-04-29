@@ -1,6 +1,6 @@
 # Config file for Release Drafter
 ---
-name-template: "v$RESOLVED_VERSION 🌈"
+name-template: "v$RESOLVED_VERSION"
 tag-template: "v$RESOLVED_VERSION"
 categories:
   - title: "🚀 Features"
@@ -21,7 +21,8 @@ categories:
   - title: Other Changes
     labels:
       - "*" # Catch-all for pull requests that didn't match any of the previous categories
-
+exclude-labels:
+  - "skip-changelog"
 change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 version-resolver:

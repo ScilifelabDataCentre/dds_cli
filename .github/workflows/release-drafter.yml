@@ -4,7 +4,7 @@
 name: Release Drafter
 
 on:
-  # Run on push to dev and master 
+  # Run on push to dev and master
   push:
     # branches:
     #   - master

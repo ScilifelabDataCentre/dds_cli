@@ -23,7 +23,7 @@ categories:
       - "*" # Catch-all for pull requests that didn't match any of the previous categories
 exclude-labels:
   - "skip-changelog"
-change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
+change-template: "- $TITLE ([#$NUMBER]($URL))"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 version-resolver:
   major:
@@ -37,4 +37,9 @@ version-resolver:
       - "patch"
   default: patch
 template: |
+  ## Changes
+
   $CHANGES
+category-template: |
+  ### $TITLE
+

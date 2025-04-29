@@ -42,4 +42,3 @@ template: |
   $CHANGES
 category-template: |
   ### $TITLE
-

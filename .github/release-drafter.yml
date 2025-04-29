@@ -38,7 +38,7 @@ version-resolver:
       - "type: feature"
   patch:
     labels:
-      - 'type: bug'
-      - 'type: docs'
-      - 'type: dependency'
+      - "type: bug"
+      - "type: docs"
+      - "type: dependency"
   default: patch

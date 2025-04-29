@@ -24,8 +24,8 @@ If there is a field which you are unsure about, enter the edit mode of this desc
 
 - `type: breaking`: Changes in this PR will cause existing functionality to not work as expected. The master branch of the API will no longer work with the CLI dev branch (and vice versa).
 - `type: feature`: You've added new functionality or updated an existing one.
-- `type: bug`: The PR fixes a bug. 
-- `type: docs`: The PR _only_ updates documentation. 
+- `type: bug`: The PR fixes a bug.
+- `type: docs`: The PR _only_ updates documentation.
 - `type: dependency`: You've updated a dependency version, e.g. a python package (in requirements.txt).
 - `skip-changelog`: None of the above mentioned labels fit in. E.g. a new GitHub Action, a PR containing _only_ tests, etc.
 

@@ -1,0 +1,44 @@
+# Config file for Release Drafter
+---
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE ([#$NUMBER]($URL))"
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+category-template: |
+  ### $TITLE
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
+categories:
+  - title: ⛓️‍💥 Breaking Changes
+    label: "type: breaking"
+  - title: "🚀 Features"
+    label: "type: feature"
+  - title: "🐛 Bug Fixes"
+    label: "type: bug"
+  - title: 📄 Documentation
+    label: "type: docs"
+  - title: 🛡️ Dependencies
+    label: "type: dependency"
+    collapse-after: 5
+  - title: 📌 Other Changes
+exclude-labels:
+  - "skip-changelog"
+
+version-resolver:
+  major:
+    labels:
+      - "type: breaking"
+  minor:
+    labels:
+      - "type: feature"
+  patch:
+    labels:
+      - "type: bug"
+      - "type: docs"
+      - "type: dependency"
+  default: patch

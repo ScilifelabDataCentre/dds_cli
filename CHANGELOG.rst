@@ -1,6 +1,14 @@
 Changelog
 ==========
 
+.. _2.11.0:
+
+2.11.0 - 2025-04-29
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Log file created by default for uploads and downloads 
+
 .. _2.10.1:
 
 2.10.1 - 2025-04-11

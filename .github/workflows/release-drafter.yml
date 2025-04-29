@@ -1,0 +1,29 @@
+# Release Drafter
+# Draft a release automatically
+---
+name: Release Drafter
+
+on:
+  # Run on push to dev and master
+  push:
+    branches:
+      - master
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  update_release_draft:
+    permissions:
+      # Write required to create a github release
+      contents: write
+      # Write permission is required for autolabeler
+      # otherwise, read permission is required at least
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      # Drafts your next Release notes as Pull Requests are merged
+      - uses: release-drafter/release-drafter@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -418,3 +418,15 @@ _Empty sprint_
 - Re-introduce executable for ubuntu-20.04 ([#744](https://github.com/ScilifelabDataCentre/dds_cli/pull/744))
 - Update upload-artifact action to v4 ([#743](https://github.com/ScilifelabDataCentre/dds_cli/pull/743))
 - New version: 2.10.1 ([#746](https://github.com/ScilifelabDataCentre/dds_cli/pull/746))
+
+# 2025-04-14 - 2025-04-25
+
+- Generate log file by default for put and get ([#737](https://github.com/ScilifelabDataCentre/dds_cli/pull/737))
+
+# 2025-04-28 - 2025-05-09
+
+- Release Drafter configuration ([#749](https://github.com/ScilifelabDataCentre/dds_cli/pull/749))
+- New Github Action for automatically creating release draft: Release Drafter ([#750](https://github.com/ScilifelabDataCentre/dds_cli/pull/750))
+- Remove "Changes" title from release-drafter template ([#751](https://github.com/ScilifelabDataCentre/dds_cli/pull/751))
+- Edit structure of release template ([#752](https://github.com/ScilifelabDataCentre/dds_cli/pull/752))
+- New version: 2.10.2 ([#754](https://github.com/ScilifelabDataCentre/dds_cli/pull/754))

@@ -2,39 +2,41 @@
 ---
 name-template: "v$RESOLVED_VERSION"
 tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE ([#$NUMBER]($URL))"
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+category-template: |
+  ### $TITLE
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
 categories:
-  - title: "🚀 Features"
-    labels:
-      - "feature"
-      - "enhancement"
-  - title: "🐛 Bug Fixes"
-    labels:
-      - "fix"
-      - "bugfix"
-      - "bug"
   - title: ⛓️‍💥 Breaking Changes
-    labels:
-      - breaking
+    label: "type: breaking"
+  - title: "🚀 Features"
+    label: "type: feature"
+  - title: "🐛 Bug Fixes"
+    label: "type: bug"
+  - title: 📄 Documentation
+    label: "type: docs"
   - title: 🛡️ Dependencies
-    labels:
-      - dependency
-  - title: Other Changes
-    labels:
-      - "*" # Catch-all for pull requests that didn't match any of the previous categories
+    label: "type: dependency"
+    collapse-after: 5
+  - title: 📌 Other Changes
 exclude-labels:
   - "skip-changelog"
-change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
-change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+
 version-resolver:
   major:
     labels:
-      - "major"
+      - "breaking"
   minor:
     labels:
-      - "minor"
+      - "feature"
   patch:
     labels:
       - "patch"
   default: patch
-template: |
-  $CHANGES

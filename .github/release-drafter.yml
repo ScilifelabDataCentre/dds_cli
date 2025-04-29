@@ -32,11 +32,13 @@ exclude-labels:
 version-resolver:
   major:
     labels:
-      - "breaking"
+      - "type: breaking"
   minor:
     labels:
-      - "feature"
+      - "type: feature"
   patch:
     labels:
-      - "patch"
+      - 'type: bug'
+      - 'type: docs'
+      - 'type: dependency'
   default: patch

@@ -17,9 +17,12 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 ## Go through these steps
 
 1. Create a PR from `dev` to `master` and verify that the PRs included in the changes have the correct labels.
-2. Check the release draft: Does the suggestion version seem appropriate? If not: Check the PRs and their labels. 
 
-   See the Release Drafter [config file](../../.github/release-drafter.yml) and/or the [PR template](../../.github/pull_request_template.md) for info on which code changes warrants a specific version change. **Note** that a _major version upgrade SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE_
+   Check out the [Release Drafter config file](../../.github/release-drafter.yml) and/or the [PR template](../../.github/pull_request_template.md) for info on which code changes give which labels. 
+   
+2. Check the release draft: Does the suggestion version seem appropriate? If not: Check the PRs and their labels, again. 
+
+   **Note** that a _major version upgrade SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE_
 
 3. Fork a new branch from `dev`: `new-version_[new version]`
 4. Update the version in [`version.py`](../../dds_cli/version.py)

@@ -1,11 +1,12 @@
 # How to create a new release
 
-> ### Inform the users
+> ### Inform the users of an upcoming release
 > Always inform users of an upcoming new release _at least_ a week prior to a new release:
 > 1. Adding a "Message of the Day": `dds motd add`
 > 2. Getting the MOTD ID: `dds motd ls`
 > 3. Sending the MOTD to the users: `dds motd send [MOTD ID]`
 >
+> **Important**
 > - If users do not upgrade the CLI when there is a new version, they may experience issues and errors.
 > - If there is a major version mismatch between the API and CLI (e.g. API version 1.0.0 and CLI version 2.0.0 or vice versa), the DDS will inform the users that they are blocked from using the DDS until they have upgraded.
 > - If there is no warning from the DDS and there is an error, the first thing they are asked to do in the troubleshooting documentation is to verify that the CLI version is correct.

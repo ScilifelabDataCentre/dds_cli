@@ -67,20 +67,20 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 6. Push the changelog and version to the `new-version_[new version]` branch 
 7. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose the `new-version_[new version]` branch in the "Run workflow" drop-down button
    
-   `rich-codex` will push changes to your branch; these commits _will not be signed_. In order for you to merge these changes into the `dev` branch, all commits need to be signed:
-   
-   1. Pull the changes to your local branch
-   2. Run the following command. Git should start signing all commits in your PR.
-      
-      ```bash
-      git rebase --exec 'git commit --amend --no-edit -n -S' dev
-      ```
-    
-   3. Force push the newly signed commits
-   
-      ```bash
-      git push --force
-      ```
+   > `rich-codex` will push changes to your branch; these commits _will not be signed_. In order for you to merge these changes into the `dev` branch, all commits need to be signed:
+   > 
+   > 1. Pull the changes to your local branch
+   > 2. Run the following command. Git should start signing all commits in your PR.
+   >    
+   >    ```bash
+   >    git rebase --exec 'git commit --amend --no-edit -n -S' dev
+   >    ```
+   >  
+   > 3. Force push the newly signed commits
+   > 
+   >    ```bash
+   >    git push --force
+   >    ```
 
 7. Create a new PR from `<your-branch>` to `dev`
    1. Verify that the new code example images look ok

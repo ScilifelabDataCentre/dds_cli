@@ -22,7 +22,7 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
    
 2. Check the release draft: Does the suggestion version seem appropriate? If not: Check the PRs and their labels, again. 
 
-         **Note** that a _major version upgrade SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE_
+   > **Note** that a _major version upgrade SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE_
 
 3. Fork a new branch from `dev`: `new-version_[new version]`
 4. Update the version in [`version.py`](../../dds_cli/version.py)

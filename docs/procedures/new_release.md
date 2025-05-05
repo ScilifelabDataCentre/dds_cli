@@ -12,7 +12,7 @@
 > - If there is no warning from the DDS and there is an error, the first thing they should do is verify that the `dds-cli` version is up to date
 
 ## Automatic Release Drafts
-When changes are pushed to `dev` or `master`, a Draft Release is created/updated. The draft will be displayed here: https://github.com/ScilifelabDataCentre/dds_cli/releases. The draft release will also have a suggestion for what the next version should be, based on PR labels.
+When changes are pushed to `dev` or `master`, a Draft Release is created/updated. The draft will be displayed here: https://github.com/ScilifelabDataCentre/dds_cli/releases. The draft will also have a suggestion for what the next version should be, based on PR labels.
 
 ## Go through these steps
 

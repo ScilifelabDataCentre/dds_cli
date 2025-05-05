@@ -16,30 +16,20 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 
 ## Go through these steps
 
-1. Check the release draft: Does the suggestion version seem appropriate? If not: Check the PRs and their labels. 
-2. Fork a new branch from `dev`: "New version [new version] & Changelog"
+1. Create a PR from `dev` to `master` and verify that the PRs included in the changes have the correct labels.
+2. Check the release draft: Does the suggestion version seem appropriate? If not: Check the PRs and their labels. 
 
+   See the Release Drafter [config file](../../.github/release-drafter.yml) and/or the [PR template](../../.github/pull_request_template.md) for info on which code changes warrants a specific version change. **Note** that a _major version upgrade SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE_
 
-2. Create a PR from `dev` to `master`: "New release". Use this for step 3.
-2. Fork a new branch from `dev`: "New version & changelog"
-3. Update the version [changelog](../../CHANGELOG.rst) located at `dds_cli/CHANGELOG.rst`
-
-   **Tip:** Create a [release **draft**](https://github.com/ScilifelabDataCentre/dds_cli/releases/new) with `Target: dev`, click `Generate release notes` and copy paste the release notes into the Changelog. **DO NOT PUBLISH THE RELEASE**
-
-   - The new version should be at the top of the page
-   - List the changes that the users will / may notice
-   - Do not add information regarding workflow (e.g. GitHub Actions) etc
-
+3. Fork a new branch from `dev`: `new-version_[new version]`
 4. Update the version in [`version.py`](../../dds_cli/version.py)
+5. Update the [changelog](../../CHANGELOG.rst). 
+   
+   - Copy-paste the contents of the release draft into the top of the changelog; Follow the same structure/format as previous versions. 
 
-   - _Minor changes, e.g. bug fix_: Minor version upgrade, e.g. `1.0.1 --> 1.0.2`
-   - _Small changes, e.g. new feature_: Mid version upgrade, e.g. `1.1.0 --> 1.2.0`
-   - _Breaking changes or large new feature(s)_: Major version upgrade, e.g. `1.0.0 --> 2.0.0` _SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE._
-
-     > Will break if Web / API version not bumped as well
-
-5. Push changelog and version change to branch
-6. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose your current branch where it says "Run workflow"
+6. Push the changelog and version to the `new-version_[new version]` branch 
+7. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose the `new-version_[new version]` branch in the "Run workflow" drop-down button
+   
    - `rich-codex` will push changes to your branch; these commits _will not be signed_
    - In order for you to merge these changes into the `dev` branch, all commits need to be signed:
      1. Pull the changes to your local branch

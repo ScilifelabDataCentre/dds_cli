@@ -9,14 +9,18 @@
 > **Important**
 > - If users do not upgrade the CLI when there is a new version, they may experience issues and errors.
 > - If there is a major version mismatch between the API and CLI (e.g. API version 1.0.0 and CLI version 2.0.0 or vice versa), the DDS will inform the users that they are blocked from using the DDS until they have upgraded.
-> - If there is no warning from the DDS and there is an error, the first thing they are asked to do in the troubleshooting documentation is to verify that the CLI version is correct.
+> - If there is no warning from the DDS and there is an error, the first thing they should do is verify that the `dds-cli` version is up to date
 
-When changes are pushed to `dev` or `master`, a Draft Release is created/updated. The draft is displayed here: https://github.com/ScilifelabDataCentre/dds_cli/releases. 
+## Automatic Release Drafts
+When changes are pushed to `dev` or `master`, a Draft Release is created/updated. The draft will be displayed here: https://github.com/ScilifelabDataCentre/dds_cli/releases. The draft release will also have a suggestion for what the next version should be, based on PR labels.
+
+## Go through these steps
+
+1. Check the release draft: Does the suggestion version seem appropriate? If not: Check the PRs and their labels. 
+2. Fork a new branch from `dev`: "New version [new version] & Changelog"
 
 
-
-1. Fork a new branch from `dev`: "New version [version]"
-1. Create a PR from `dev` to `master`: "New release". Use this for step 3.
+2. Create a PR from `dev` to `master`: "New release". Use this for step 3.
 2. Fork a new branch from `dev`: "New version & changelog"
 3. Update the version [changelog](../../CHANGELOG.rst) located at `dds_cli/CHANGELOG.rst`
 

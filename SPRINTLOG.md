@@ -430,3 +430,4 @@ _Empty sprint_
 - Remove "Changes" title from release-drafter template ([#751](https://github.com/ScilifelabDataCentre/dds_cli/pull/751))
 - Edit structure of release template ([#752](https://github.com/ScilifelabDataCentre/dds_cli/pull/752))
 - New version: 2.10.2 ([#754](https://github.com/ScilifelabDataCentre/dds_cli/pull/754))
+- Update instructions regarding release procedure ([#755](https://github.com/ScilifelabDataCentre/dds_cli/pull/755))

@@ -82,68 +82,43 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
    >    git push --force
    >    ```
 
-7. Create a new PR from `<your-branch>` to `dev`
-   1. Verify that the new code example images look ok
-   2. Wait for approval and merge by Product Owner or admin
+7. Create a new PR from `new-version_[new version]` to `dev`, and verify that the new images look OK.
 8. Create a PR from `dev` to `master`
 
-   - Are you bumping the major version (e.g. 1.x.x to 2.x.x)?
-     - Yes: Add this info to the PR.
-   - Do the changes affect the API in any way?
-     - Yes:
-       - Add how the API is affected in the PR.
-       - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
-   - _Backward compatibility:_ Check whether or not the dds_cli master branch works with the code in the PR. Note if the dds_web changes work with the previous version of the dds_cli. If something might break - give detailed information about what. **The users should be informed of this, e.g. via a MOTD.**
-   - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary. Instead, the team should look through the code just to see if something looks weird.
-   - All sections and checks in the PR template should be filled in and checked. Follow the instruction in the PR description field.
-   - There should be at least one approval of the PR.
-   - _Everything looks ok and there's at least one approval?_ Merge it.
-
+   > **Do the changes affect the API in any way?** 
+   > If yes:
+   >  - Add how the API is affected in the PR.
+   >  - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
+   > 
+   > **Re: Documentation and pushes to `master`**
    > Documentation changes are automatically updated on GitHub pages when there's a push to `master`. However, in order to keep things consistent and to avoid confusion with the versions, always release a new version when changes are pushed to `master` (assuming all the changes have been verified)
+   >
+   > **Re: PR approval**
+   > - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary.Instead, the team should look through the code just to see if something looks weird. 
+   > - When there's at least one approval: Merge it. 
 
-9. [Draft a new release](https://github.com/ScilifelabDataCentre/dds_cli/releases)
+9. [Publish the Release Draft](https://github.com/ScilifelabDataCentre/dds_cli/releases)
 
-   1. `Choose a tag` &rarr; `Find or create a new tag` &rarr; Fill in the new version, e.g. if the new version is `1.0.0`, you should fill in `v1.0.0`.
-   2. `Target` should be set to `master`
-   3. `Release title` field should be set to the same as the tag, e.g. `v1.0.0`
-   4. `Write` &rarr; `Generate release notes`.
+   > A new version of the CLI will be published to [PyPi](https://pypi.org/project/dds-cli/)
 
-      You can also fill in something to describe what has been changed in this release, if you feel that the auto-generated release notes are missing something etc.
+10. Inform users (`dds-status` Slack channel) and relevant IT departments / HPC centers about new version 
 
-   5. `Publish release`.
+   > **Uppmax**
+   > Uppmax automatically upgrades the `dds-cli` version every day at midnight. 
+   > If there has been a major version change though and the CLI contains breaking changes, _Uppmax should be notified well in advance_ in order to plan for an upgrade at a specific time so that the users are blocked (automatic functionality in dds_web) for as short time as possible.
+   > 
+   > ```
+   > [Recipient]: support@uppmax.uu.se
+   > [Subject]: Upgrade dds-cli module
+   >    
+   > [Message]:
+   > Hi,
+   > 
+   > We will be releasing a new major version of the dds-cli on <Day Date Time>. The changes are breaking - would it be possible for you do a manual version upgrade at that time, so that the users don't experience issues?
+   > 
+   > Thank you in advance!
+   > ```
 
-      A new version of the CLI will be published to [PyPi](https://pypi.org/project/dds-cli/)
-
-10. Verify that the new CLI version is updated on Uppmax
-
-    Uppmax automatically upgrades the `dds-cli` version every day at midnight. Double-check that this has worked, if you have an Uppmax account.
-
-    If there has been a major version change though and the CLI contains breaking changes, _Uppmax should be notified well in advance_ in order to plan for an upgrade at a specific time so that the users are blocked (automatic functionality in dds_web) for as short time as possible.
-
-    ```
-    [Recipient]: support@uppmax.uu.se
-    [Subject]: (Pavlin Mitev) Upgrade dds-cli module
-
-    [Message]:
-    Hi,
-
-    We will be releasing a new major version of the dds-cli on <Day Date Time>. The changes are breaking - would it be possible for you do a manual version upgrade at that time, so that the users don't experience issues?
-
-    Thank you in advance!
-    ```
-
-   - `rich-codex` will push changes to your branch; these commits _will not be signed_
-   - In order for you to merge these changes into the `dev` branch, all commits need to be signed:
-     1. Pull the changes to your local branch
-     2. Run the following command:
-        ```bash
-        git rebase --exec 'git commit --amend --no-edit -n -S' dev
-        ```
-        Git should now be signing all commits in this PR.
-     3. Force push the newly signed commits
-        ```bash
-        git push --force
-        ```
 7. Create a new PR from `<your-branch>` to `dev`
    1. Verify that the new code example images look ok
    2. Wait for approval and merge by Product Owner or admin

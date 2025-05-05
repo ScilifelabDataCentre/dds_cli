@@ -1,6 +1,6 @@
 # How to create a new release
 
-> ## Inform the users
+> ### Inform the users
 > Always inform users of an upcoming new release _at least_ a week prior to a new release:
 > 1. Adding a "Message of the Day": `dds motd add`
 > 2. Getting the MOTD ID: `dds motd ls`

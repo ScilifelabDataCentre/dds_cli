@@ -47,6 +47,14 @@ jobs:
               --exclude-module=tests --target-arch x86_64 --log-level INFO   
               --hidden-import textual.widgets._tab_pane --hidden-import cgi gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_ubuntu-latest_x86_64
+          - os: suse-latest
+            TARGET: SuseLinux_x86_64
+            CMD_BUILD: >
+              pyinstaller -F -c -n dds_gui_suse_x86_64 -i resources/scilifelab.icns
+              --exclude-module=tests --target-arch x86_64 --log-level INFO   
+              --hidden-import textual.widgets._tab_pane --hidden-import cgi 
+              gui_build/gui_standalone.py
+            OUT_FILE_NAME: dds_gui_suse_x86_64
           - os: windows-latest
             TARGET: Windows_x86_64
             CMD_BUILD: >

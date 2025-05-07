@@ -33,7 +33,7 @@ If there is a field which you are unsure about, enter the edit mode of this desc
 
 - [ ] I have added an entry to the [Sprintlog](../SPRINTLOG.md) <!-- Add a row at the bottom of the SPRINTLOG.md file (not needed if PR contains only tests). Follow the format of previous rows. If the PR is the first in a new sprint, add a new sprint header row (follow the format of previous sprints). -->
 - [ ] This is a PR to the `master` branch: _If checked, read [the release instructions](../docs/procedures/new_release.md)_ <!-- Check this if the PR is made to the `master` branch. Only the `dev` branch should be doing this. -->
-  - [ ] I have followed the steps. <!-- Should be checked if the "PR to `master` branch" box is checked AND the specified steps in the release instructions have been followed. -->
+  - [ ] I have followed steps 1-9. <!-- Should be checked if the "PR to `master` branch" box is checked AND the specified steps in the release instructions have been followed. -->
 
 ## 5. Actions / Scans
 

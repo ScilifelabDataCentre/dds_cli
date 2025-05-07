@@ -8,7 +8,7 @@ from textual.widget import Widget
 from textual.widgets import Button, ContentSwitcher, Label
 
 from dds_cli.auth import Auth
-from dds_cli.gui_poc.components.dds_button import DDSButton
+from dds_cli.gui_poc.components.dds_button import DDSButton, DDSSkinnyButton
 from dds_cli.gui_poc.components.dds_container import DDSContainer, DDSSpacedContainer
 from dds_cli.gui_poc.pages.dds_auth import DDSLoginPage, DDSLogout, DDSReAuthenticatePage
 from dds_cli.gui_poc.pages.dds_home import DDSHomePage
@@ -80,8 +80,8 @@ class DDSMenu(DDSContainer):
     def compose(self) -> ComposeResult:
         with DDSSpacedContainer():
             yield DDSButton("Home", classes="wide", id="home")
-            yield DDSButton("Login", classes="wide", id="login")
-            yield DDSButton("Re-authenticate", classes="wide", id="re-authenticate")
+            #yield DDSButton("Login", classes="wide", id="login")
+            #yield DDSButton("Re-authenticate", classes="wide", id="re-authenticate")
     
 
 
@@ -107,11 +107,11 @@ class DDSAuthMenu(DDSContainer):
         with ContentSwitcher(id="auth-status-switcher"):
             with DDSSpacedContainer(id="auth-status-ok-container"):
                     yield Label("✅ Authenticated ✅", id="auth-status-ok")
-                    yield DDSButton("Logout", classes="wide", id="logout")
+                    yield DDSSkinnyButton("Logout", id="logout")
+                    yield DDSSkinnyButton("Re-authenticate", id="re-authenticate")
             with DDSSpacedContainer(id="auth-status-invalid-container"):
                 yield Label("❌ Not authenticated ❌", id="auth-status-invalid")
-                yield DDSButton("Re-authenticate", classes="wide", id="re-authenticate")
-                yield DDSButton("Login", classes="wide", id="login")
+                yield DDSSkinnyButton("Login", id="login")
 
     def on_mount(self) -> None:
         """On mount, set initial state."""

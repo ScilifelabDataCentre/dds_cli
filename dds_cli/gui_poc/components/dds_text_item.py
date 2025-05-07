@@ -12,7 +12,7 @@ class DDSTextItem(Static):
 
     DEFAULT_CSS = """
     DDSTextItem {
-        padding: 1 1;
+        padding: 0 0;
     }
     """
 

@@ -10,21 +10,34 @@ class DDSContainer(VerticalScroll):
         title: The title to be displayed in the border of the container.
     """
 
-    def __init__(self, title: str,   *args: Any, **kwargs: Any) -> None:
+    def __init__(self, title: str, *args: Any, **kwargs: Any) -> None:
         super().__init__( *args, **kwargs)
         self.border_title = title.upper()
     
     DEFAULT_CSS = """
     DDSContainer {
         border: round $primary; 
-        padding: 2;
+        padding: 1;
         scrollbar-size: 1 1;
     }
+
+    
+    
+
     DDSContainer.accent {   
         border: round $accent;
     }
    """
+    
+class DDSContentContainer(Container):
+    """A container widget with no border for wrapping widgets in the GUI. Ensures that all content is visible."""
 
+    DEFAULT_CSS = """
+    DDSContentContainer {
+        width: 100%;
+        height: auto;
+    }
+    """
 
 class DDSSpacedContainer(Vertical):
     """A container widget with spacing between child widgets."""

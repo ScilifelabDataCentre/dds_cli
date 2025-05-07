@@ -290,6 +290,7 @@ class DataPutter(base.DDSBaseClass):
         # Variables
         all_ok, saved, message = (False, False, "")  # Error catching
         file_info = self.filehandler.data[file]  # Info on current file
+        LOG.debug(file_info)
         file_public_key, salt = ("", "")  # Crypto info
 
         # Progress bar for processing

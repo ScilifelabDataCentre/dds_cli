@@ -72,6 +72,18 @@ class LocalFileHandler(fh.FileHandler):
         self.data, _ = self.__collect_file_info_local(
             all_paths=self.data_list, folder=pathlib.Path(remote_destination or "")
         )
+
+        # Log everything that will be uploaded
+        # LOG.debug(f"File info: {self.data}")
+
+        # LOG number of files --> next step: decide on a maximum number of files before we zip 
+        # LOG.debug(len(self.data)) 
+
+        # Calculate total size of data -- next step: decide on a maximum size of files before multiple archives 
+        # LOG.debug(sum(self.data[i]["size_raw"] for i in self.data))
+        
+        import sys
+        sys.exit(0)
         self.data_list = None
         LOG.debug("File info computed/collected")
 
@@ -167,7 +179,7 @@ class LocalFileHandler(fh.FileHandler):
                     LOG.warning(
                         "IGNORED: Path of unsupported/unknown type: '%s', will be ignored.", path
                     )
-
+ 
         return file_info, progress_tasks
 
     # Public methods ############## Public methods #

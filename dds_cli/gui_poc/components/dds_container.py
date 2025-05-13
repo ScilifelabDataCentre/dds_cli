@@ -19,10 +19,8 @@ class DDSContainer(VerticalScroll):
         border: round $primary; 
         padding: 1;
         scrollbar-size: 1 1;
+        scrollbar-color: $primary 70%;
     }
-
-    
-    
 
     DDSContainer.accent {   
         border: round $accent;
@@ -58,7 +56,7 @@ class DDSSpacedHorizontalContainer(Horizontal):
 
     DEFAULT_CSS = """
     DDSSpacedHorizontalContainer {
-        align: center top;
+        align: left top;
     }
 
     DDSSpacedHorizontalContainer > * {

@@ -8,6 +8,7 @@ from dds_cli.gui_poc.pages.project_view.dds_project_list import DDSProjectList
 from dds_cli.gui_poc.pages.project_view.dds_project_content import DDSProjectContent
 from dds_cli.gui_poc.pages.project_view.dds_project_information import DDSProjectInformation
 from dds_cli.gui_poc.pages.project_view.dds_project_actions import DDSProjectActions
+from dds_cli.gui_poc.pages.project_view.important_information import ImportantInformation
 
 
 class DDSProjectView(Widget):
@@ -25,10 +26,13 @@ class DDSProjectView(Widget):
         width: 75%;
     }
     #project-list {
-        height: 70%;
+        height: 40%;
+    }
+    #important-information {
+        height: 35%;
     }
     #auth-menu {
-        height: 30%;
+        height: 25%;
     }   
     #top-container {
         height: 50%;
@@ -49,6 +53,7 @@ class DDSProjectView(Widget):
         with Horizontal():
             with Vertical(id="left-container"):
                 yield DDSProjectList(title="Projects", id="project-list")
+                yield ImportantInformation(title="Important Information", id="important-information")
                 yield DDSAuthMenu(title="Authentication", id="auth-menu")
             with Vertical(id="right-container"):
                 with Horizontal(id="top-container"):

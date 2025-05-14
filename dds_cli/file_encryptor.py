@@ -10,6 +10,7 @@ import logging
 import os
 import pathlib
 import traceback
+import threading
 
 # Installed
 from cryptography.hazmat import backends
@@ -30,7 +31,7 @@ from dds_cli.file_handler_local import LocalFileHandler as fh
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
+LOCK = threading.Lock()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -154,32 +155,33 @@ class Encryptor(ECDHKeyHandler):
         aad = None
 
         try:
-            # Save encryption output to file
-            with outfile.open(mode="wb") as out:
-                # Create and save first IV/nonce
-                iv_bytes = os.urandom(12)
-                out.write(iv_bytes)
+            with LOCK:
+                # Save encryption output to file
+                with outfile.open(mode="wb") as out:
+                    # Create and save first IV/nonce
+                    iv_bytes = os.urandom(12)
+                    out.write(iv_bytes)
 
-                # Get first iv/nonce as integer
-                iv_int = int.from_bytes(iv_bytes, "little")
-                nonce = b""  # Catch last nonce
-                for chunk in chunks:
-                    # Restart at 0 if nonce number at maximum number of chunks per key
-                    nonce = (
-                        iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
-                    ).to_bytes(length=12, byteorder="little")
+                    # Get first iv/nonce as integer
+                    iv_int = int.from_bytes(iv_bytes, "little")
+                    nonce = b""  # Catch last nonce
+                    for chunk in chunks:
+                        # Restart at 0 if nonce number at maximum number of chunks per key
+                        nonce = (
+                            iv_int if iv_int < self.max_nonce else iv_int % self.max_nonce
+                        ).to_bytes(length=12, byteorder="little")
 
-                    # Encrypt chunk
-                    encrypted_chunk = crypto_aead_chacha20poly1305_ietf_encrypt(
-                        message=chunk, aad=aad, nonce=nonce, key=self.key
-                    )
-                    out.write(encrypted_chunk)
+                        # Encrypt chunk
+                        encrypted_chunk = crypto_aead_chacha20poly1305_ietf_encrypt(
+                            message=chunk, aad=aad, nonce=nonce, key=self.key
+                        )
+                        out.write(encrypted_chunk)
 
-                    progress[0].advance(progress[1], FileSegment.SEGMENT_SIZE_RAW)
-                    iv_int += 1  # Increment nonce
+                        progress[0].advance(progress[1], FileSegment.SEGMENT_SIZE_RAW)
+                        iv_int += 1  # Increment nonce
 
-                # Save last nonce
-                out.write(nonce)
+                    # Save last nonce
+                    out.write(nonce)
         except (OSError, TypeError, FileExistsError, InterruptedError) as err:
             message = str(err)
             LOG.exception(message)

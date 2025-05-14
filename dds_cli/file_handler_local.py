@@ -88,7 +88,6 @@ class LocalFileHandler(fh.FileHandler):
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):
         """Read file in chunk_size sized chunks."""
-
         try:
             with file.open(mode="rb") as infile:
                 for chunk in iter(lambda: infile.read(chunk_size), b""):

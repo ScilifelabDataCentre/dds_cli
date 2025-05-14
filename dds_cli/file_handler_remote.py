@@ -7,6 +7,7 @@
 # Standard library
 import logging
 import pathlib
+import threading
 
 # Installed
 
@@ -20,6 +21,7 @@ import dds_cli.utils
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
+LOCK = threading.Lock()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -55,9 +57,10 @@ class RemoteFileHandler(fh.FileHandler):
 
         LOG.debug("Saving file...")
         try:
-            with outfile.open(mode="wb+") as new_file:
-                for chunk in chunks:
-                    new_file.write(chunk)
+            with LOCK:
+                with outfile.open(mode="wb+") as new_file:
+                    for chunk in chunks:
+                        new_file.write(chunk)
         except OSError as err:
             message = str(err)
             LOG.exception(message)

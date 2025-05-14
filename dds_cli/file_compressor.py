@@ -9,7 +9,7 @@ import dataclasses
 import logging
 import pathlib
 import traceback
-
+import threading
 
 # Installed
 import zstandard as zstd
@@ -22,6 +22,7 @@ from dds_cli import FileSegment
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
+LOCK = threading.Lock()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -121,11 +122,12 @@ class Compressor:
         # Decompressing file and saving
         LOG.debug("Decompressing...")
         try:
-            with outfile.open(mode="wb+") as file:
-                dctx = zstd.ZstdDecompressor()
-                with dctx.stream_writer(file) as decompressor:
-                    for chunk in chunks:
-                        decompressor.write(chunk)
+            with LOCK:
+                with outfile.open(mode="wb+") as file:
+                    dctx = zstd.ZstdDecompressor()
+                    with dctx.stream_writer(file) as decompressor:
+                        for chunk in chunks:
+                            decompressor.write(chunk)
 
         except OSError as err:
             message = str(err)

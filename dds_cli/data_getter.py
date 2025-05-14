@@ -7,6 +7,7 @@
 # Standard library
 import logging
 import pathlib
+import threading
 
 # Installed
 import requests
@@ -30,6 +31,7 @@ import dds_cli.exceptions
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
+LOCK = threading.Lock()
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -183,13 +185,14 @@ class DataGetter(base.DDSBaseClass):
         file_remote = self.filehandler.data[file]["url"]
 
         try:
-            # TODO: Set timeout? (pylint)
-            with requests.get(file_remote, stream=True) as req:
-                req.raise_for_status()
-                with file_local.open(mode="wb") as new_file:
-                    for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
-                        progress.update(task, advance=len(chunk))
-                        new_file.write(chunk)
+            with LOCK:
+                # TODO: Set timeout? (pylint)
+                with requests.get(file_remote, stream=True) as req:
+                    req.raise_for_status()
+                    with file_local.open(mode="wb") as new_file:
+                        for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
+                            progress.update(task, advance=len(chunk))
+                            new_file.write(chunk)
         except (
             requests.exceptions.ConnectTimeout,
             requests.exceptions.HTTPError,

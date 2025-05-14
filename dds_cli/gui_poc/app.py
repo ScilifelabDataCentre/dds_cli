@@ -9,10 +9,8 @@ from textual.theme import Theme
 
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.dds_state_manager import DDSStateManager
-from dds_cli.gui_poc.pages.dds_base_page import DDSBasePage
-from dds_cli.gui_poc.pages.dds_project_view import DDSProjectView
 from dds_cli.gui_poc.utils import DDSFooter
-
+from dds_cli.gui_poc.pages.project_view import ProjectView
 
 theme = Theme(
     name="custom",
@@ -60,7 +58,7 @@ class DDSApp(App, DDSStateManager):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True, time_format="%H:%M:%S", icon="")
         #yield DDSBasePage(self.token_path)
-        yield DDSProjectView()
+        yield ProjectView()
         yield DDSFooter()
 
     def on_mount(self) -> None:

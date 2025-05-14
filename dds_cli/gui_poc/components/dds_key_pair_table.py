@@ -4,18 +4,21 @@ from typing import Any
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
-from textual.widgets import Static, Rule
+from textual.widgets import Static
 
 
 class DDSKeyPairTable(Widget):
-    """A widget for the key pair table."""
+    """A widget for the key pair table.
+    Args:
+        data: A list of tuples containing the key and value for each row in the table.
+    """
 
     def __init__(self, data: list[tuple[str, str]], *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.data = data
 
     DEFAULT_CSS = """
-    #key-pair-table {
+    .key-pair-table {
         width: 100%;
     }
     .key-pair-row {
@@ -28,11 +31,11 @@ class DDSKeyPairTable(Widget):
         border-bottom: none;
         padding-bottom: 0;
     }
-    .key-pair-row #key {
+    .key-pair-row-key {
         text-style: bold;
         width: 50%;
     }
-    .key-pair-row #value {
+    .key-pair-row-value {
         text-align: right;
         width: 50%;
     }
@@ -40,8 +43,8 @@ class DDSKeyPairTable(Widget):
     """
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="key-pair-table"):
+        with Vertical(classes="key-pair-table"):
             for key, value in self.data:
                 with Horizontal(classes="key-pair-row"):
-                    yield Static(key, id="key")
-                    yield Static(value, id="value")
+                    yield Static(key, classes="key-pair-row-key")
+                    yield Static(value, classes="key-pair-row-value")

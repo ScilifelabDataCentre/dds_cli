@@ -1,9 +1,15 @@
 """DDS Select Widget"""
+
 from textual.widgets import Select
 
 
 class DDSSelect(Select):
-    """A select widget with a title."""
+    """A select widget with a title.
+    Args:
+        title: The title to be displayed in the select widget.
+        data: A list of strings to be displayed in the select widget.
+    """
+
     def __init__(self, title: str, data: list[str], *args, **kwargs):
         super().__init__(options=((d, d) for d in data), *args, **kwargs)
         self.prompt = title

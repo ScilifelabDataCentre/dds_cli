@@ -1,12 +1,15 @@
-"""DDS Button Widget"""
+"""DDS Button Widgets"""
+
 from typing import Any
 from textual.widgets import Button
 
+
 class DDSButton(Button):
-    """A button widget with a border and title for the GUI.
+    """Regular button widget with uppercase title.
     Args:
         label: The label to be displayed on the button.
     """
+
     def __init__(self, label: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(label.upper(), *args, **kwargs)
 
@@ -19,8 +22,13 @@ class DDSButton(Button):
     }
     """
 
+
 class DDSFormButton(DDSButton):
-    """A button widget for the form."""
+    """Form button widget with uppercase title.
+    Args:
+        label: The label to be displayed on the button.
+    """
+
     def __init__(self, label: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(label.upper(), *args, **kwargs)
 
@@ -42,11 +50,17 @@ class DDSFormButton(DDSButton):
     }
     """
 
+
 class DDSSkinnyButton(Button):
-    """A skinny button widget."""
+    """Skinny button widget with capitalized title.
+    Args:
+        label: The label to be displayed on the button.
+    """
+
     def __init__(self, label: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(label.capitalize(), *args, **kwargs)
 
+    ## Styling to mimic the default styling of textual buttons
     DEFAULT_CSS = """
     DDSSkinnyButton {
         width: 100%;

@@ -21,8 +21,7 @@ class DownloadData(Widget):
 
     DEFAULT_CSS = """
     DownloadData {
-        border: round $secondary;
-        height: 10fr;
+        height: auto;
     }
 
     """

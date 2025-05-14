@@ -1,3 +1,5 @@
+"""DDS Tree View Widget"""
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -9,13 +11,21 @@ from textual.widgets.tree import TreeNode
 
 @dataclass
 class DDSTreeNode:
-    """A node in the tree."""
+    """A node in the tree.
+    Args:
+        name: The name of the node.
+        children: A list of children nodes.
+    """
+
     name: str
     children: list["DDSTreeNode"]
 
 
 class DDSTreeView(Widget):
-    """A tree view widget."""
+    """A tree view widget.
+    Args:
+        tree_data: The data to be displayed in the tree view.
+    """
 
     def __init__(self, tree_data: DDSTreeNode, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -30,7 +40,11 @@ class DDSTreeView(Widget):
         yield tree
 
     def add_children(self, node: DDSTreeNode, parent: TreeNode) -> None:
-        """Add children to the parent node."""
+        """Add children to the parent node.
+        Args:
+            node: The node to add.
+            parent: The parent node.
+        """
         for child in node.children:
             if child.children:
                 sub_tree = parent.add(

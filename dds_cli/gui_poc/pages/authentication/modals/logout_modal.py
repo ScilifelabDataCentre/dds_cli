@@ -3,7 +3,7 @@ from typing import Any
 
 from dds_cli.gui_poc.types.dds_severity_types import DDSSeverity
 
-class DDSLogout(DDSModalConfirmation):
+class LogoutModal(DDSModalConfirmation):
     """A widget for the logout modal."""
 
     def __init__(self, token_path: str, *args: Any, **kwargs: Any):

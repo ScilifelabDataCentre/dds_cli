@@ -22,6 +22,12 @@ class DownloadData(Widget):
     DEFAULT_CSS = """
     DownloadData {
         height: auto;
+        width: 100%;
+    }
+
+    ProgressBar {
+        width: 100%;
+        border: solid $accent;
     }
 
     """

@@ -27,7 +27,7 @@ theme = Theme(
     variables={
         "block-hover-background": "#43858B",
         "primary-darken-2": "#323232",
-        "block-cursor-background": "#12F0E1", #Tab color
+        #"block-cursor-background": "#12F0E1", #Tab color
     },
 )
 
@@ -42,7 +42,7 @@ class DDSApp(App, DDSStateManager):
     #number = reactive(0, recompose=True)
 
     DEFAULT_CSS = """
-    Toast {
+    Toast.-error {
         background: $primary;
     }
     """

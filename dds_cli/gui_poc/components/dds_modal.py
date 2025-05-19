@@ -3,15 +3,69 @@
 from typing import Any, Callable
 from textual import events
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.binding import Binding
+from textual.containers import Container, Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Label
+from textual.widget import Widget
+from textual.widgets import Footer, Label
 
 from dds_cli.gui_poc.components.dds_button import DDSButton
 from dds_cli.gui_poc.types.dds_severity_types import DDSSeverity
 
 
-class DDSModalConfirmation(ModalScreen):
+class DDSModal(ModalScreen):
+    """A modal screen for the GUI."""
+
+    def __init__(self, title: str, content: Widget, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.title = title
+        self.content = content
+
+
+    BINDINGS = [
+        Binding("escape", "dismiss", "Close")
+    ]
+
+    DEFAULT_CSS = """
+    DDSModal {
+        align: center middle;
+    }
+    #dds-modal-container {
+        align: center middle;
+        background: $surface;
+        width: 80;
+        height: 20;
+    }   
+    #dds-modal-content {
+        align: center middle;
+        padding: 1;
+        height: 100%;
+    }
+    .modal-content {
+        height: 100%;
+        border: round $panel;
+    } 
+
+    .modal-content > * {
+        height: auto;
+    }
+    #dds-modal-title {
+        width: 100%;
+        text-align: center;
+        background: $panel;
+        dock: top;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        with Container(id="dds-modal-container"):
+            yield Label(self.title, id="dds-modal-title")
+            with VerticalScroll(id="dds-modal-content"):
+                yield self.content
+            yield Footer()    
+
+
+class DDSModalConfirmation(DDSModal):
     """A modal screen for the GUI."""
 
     def __init__(
@@ -24,23 +78,12 @@ class DDSModalConfirmation(ModalScreen):
         confirm_severity: DDSSeverity = DDSSeverity.DEFAULT,
         **kwargs: Any,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(title, DDSModalConfirmationContent(title, message, confirm_button_text, confirm_severity), *args, **kwargs)
         self.title = title
         self.message = message
         self.confirm_button_text = confirm_button_text
         self.confirm_severity = confirm_severity
         self.confirm_action = confirm_action
-
-    DEFAULT_CSS = """
-    DDSModalConfirmation {
-        align: center middle;
-    }
-    """
-
-    def compose(self) -> ComposeResult:
-        yield DDSModalContent(
-            self.title, self.message, self.confirm_button_text, self.confirm_severity
-        )
 
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""
@@ -50,8 +93,7 @@ class DDSModalConfirmation(ModalScreen):
             self.confirm_action()
             self.dismiss()
 
-
-class DDSModalContent(VerticalScroll):
+class DDSModalConfirmationContent(VerticalScroll):
     """A modal content widget."""
 
     def __init__(
@@ -68,23 +110,9 @@ class DDSModalContent(VerticalScroll):
         self.message = message
         self.confirm_button_text = confirm_button_text
         self.confirm_severity = confirm_severity
+   
 
-    DEFAULT_CSS = """
-    DDSModalContent {
-        align: center middle;
-        background: $surface;
-        width: 80;
-        height: 20;
-    }   
-    #dds-modal-content {
-        align: center middle;
-    }
-    #dds-modal-title {
-        width: 100%;
-        text-align: center;
-        background: $panel;
-        dock: top;
-    }
+    DEFAULT_CSS = """ 
     #dds-modal-message {
         width: 100%;
         text-align: center;
@@ -100,7 +128,6 @@ class DDSModalContent(VerticalScroll):
     """
 
     def compose(self) -> ComposeResult:
-        yield Label(self.title, id="dds-modal-title")
         with Vertical(id="dds-modal-content"):
             yield Label(self.message, id="dds-modal-message")
             with Horizontal(id="dds-modal-button-container"):

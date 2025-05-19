@@ -9,22 +9,19 @@ from dds_cli.gui_poc.components.dds_container import (
 )
 from dds_cli.gui_poc.components.dds_key_pair_table import DDSKeyPairTable
 
-MOCK_PROJECT_INFORMATION = [
-    ("Project id", "Project id"),
-    ("Created by", "Project Status"),
-    ("Status", "Project Created"),
-    ("Last updated", "Project Updated"),
-    ("Size", "Project Size"),
-    ("Support contact", "Project Support Contact"),
-]
-
-
 class ProjectInformation(DDSContainer):
     """A widget for the project information."""
 
     def compose(self) -> ComposeResult:
-        with DDSSpacedContainer():
-            with DDSContentContainer():
-                yield Label("[b]Project Title:[/b] Test Title")
+        if self.app.selected_project_id:
+            with DDSSpacedContainer():
+                with DDSContentContainer():
+                    yield Label("[b]Project Title:[/b] Test Title", id="project-title")
                 yield Label("[b]Project Description:[/b] Test Description")
-            yield DDSKeyPairTable(MOCK_PROJECT_INFORMATION, id="project-information-table")
+            yield DDSKeyPairTable(self.app.project_information, id="project-information-table")
+        else:
+            yield Label("No project selected")
+
+    def watch_project_id(self, project_id: str) -> None:
+        """Watch the project id state and update the project information."""
+        self.query_one("project-title").update(f"[b]Project Title:[/b] {project_id}")

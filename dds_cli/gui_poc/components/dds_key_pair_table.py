@@ -13,7 +13,7 @@ class DDSKeyPairTable(Widget):
         data: A list of tuples containing the key and value for each row in the table.
     """
 
-    def __init__(self, data: list[tuple[str, str]], *args: Any, **kwargs: Any) -> None:
+    def __init__(self, data: dict, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.data = data
 
@@ -44,7 +44,7 @@ class DDSKeyPairTable(Widget):
 
     def compose(self) -> ComposeResult:
         with Vertical(classes="key-pair-table"):
-            for key, value in self.data:
+            for key, value in self.data.items():
                 with Horizontal(classes="key-pair-row"):
                     yield Static(key, classes="key-pair-row-key")
                     yield Static(value, classes="key-pair-row-value")

@@ -5,7 +5,7 @@ from textual.containers import Container
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.components.dds_form import DDSForm
 from dds_cli.gui_poc.components.dds_input import DDSInput
-from dds_cli.gui_poc.components.dds_button import DDSFormButton
+from dds_cli.gui_poc.components.dds_button import DDSButton, DDSFormButton
 
 
 class AuthenticationForm(Container):
@@ -15,6 +15,15 @@ class AuthenticationForm(Container):
         super().__init__(*args, **kwargs)
         self.auth = None
         self.token_path = token_path
+
+    DEFAULT_CSS = """
+    #dds-auth-form {
+        height: 100%;
+    }
+    #dds-2fa-form {
+        height: 100%;
+    }
+    """
 
     def compose(self) -> ComposeResult:
         with Container(id="dds-auth-form"):
@@ -69,10 +78,18 @@ class AuthenticationForm(Container):
 class LoginFormFields(DDSForm):
     """A widget for the authentication form fields."""
 
+    DEFAULT_CSS = """
+    #dds-auth-form-button {
+        width: 100%;
+        align: right middle;
+    }
+    """
+
     def compose(self) -> ComposeResult:
         yield DDSInput(placeholder="Username", id="username")
         yield DDSInput(placeholder="Password", id="password", password=True)
-        yield DDSFormButton("Send 2FA code", id="send-2fa-code")
+        with Container(id="dds-auth-form-button"):
+            yield DDSButton("Send 2FA code", id="send-2fa-code", variant="primary")
 
 
 class TwoFactorFormFields(DDSForm):
@@ -80,4 +97,4 @@ class TwoFactorFormFields(DDSForm):
 
     def compose(self) -> ComposeResult:
         yield DDSInput(placeholder="2FA code", id="code")
-        yield DDSFormButton("Login", id="login")
+        yield DDSButton("Login", id="login", variant="primary")

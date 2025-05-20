@@ -25,25 +25,26 @@ class DownloadData(Widget):
         width: 100%;
     }
 
-    ProgressBar {
-        width: 100%;
-        border: solid $accent;
+    #download-data-buttons {
+        height: auto;
     }
-
     """
         
     def compose(self) -> ComposeResult:
         with DDSSpacedContainer(id="download-data-container"):
             yield DDSTextItem("Download data from project by either downloading the whole project, or a specific file or sub-directory.")
-            with DDSSpacedHorizontalContainer():
-                yield DDSButton("Download project", id="download-project")
-                yield DDSButton("Download selected")
-            #yield ProgressBar()
+            if self.app.project_content:
+                with DDSSpacedHorizontalContainer(id="download-data-buttons"):
+                    yield DDSButton("Download project", id="download-project")
+                    yield DDSButton("Download selected")
+            else:
+                yield Label("No project selected")
+
 
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""
         if event.button.id == "download-project":
-            self.query_one("#download-data-container").mount(ProgressBar())
+            self.query_one("#download-data-container").mount(ProgressBar(show_eta=False))
             self.query_one("#download-project").disabled = True
             self.progress_timer = self.set_interval(1 / 10, self.make_progress, pause=True)
             self.query_one(ProgressBar).update(total=100)

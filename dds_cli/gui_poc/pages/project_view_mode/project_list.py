@@ -17,7 +17,7 @@ class ProjectList(DDSContainer):
             yield DDSTextItem(
                 "Select a project to view the project content, information, invite users, and upload and download data."
             )
-            yield DDSSelect(title="Select a project", data=self.app.projects_id)
+            yield DDSSelect(title="Select a project", data=self.app.projects_id, value=self.app.selected_project_id if self.app.selected_project_id else Select.BLANK)
             yield DDSButton("View Project", id="view-project")
 
     # def on_mount(self) -> None:

@@ -16,5 +16,5 @@ class LogoutModal(DDSModalConfirmation):
         self.app.auth.logout() #Do the logout action
         self.app.compute_auth_status() #Compute the auth status
         self.app.notify("Successfully logged out.")
-
+        self.close_modal()
 

@@ -1,20 +1,34 @@
+from dataclasses import dataclass
 from textual.reactive import reactive
 
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.components.dds_tree_view import DDSTreeNode
+from dds_cli.gui_poc.components.dds_status_chips import DDSStatus
+
+
+@dataclass
+class ProjectInformation:
+    """A dataclass for the project information."""
+    name: str
+    description: str
+    status: DDSStatus
+    created_by: str
+    last_updated: str
+    size: str
+    support_contact: str
 
 MOCK_DATA = {
     "project_1": {
         "project_id": "123",
-        "project_information": {
-            "name": "Project 1",
-            "description": "Project 1 description",
-            "status": "active",
-            "created_by": "John Doe",
-            "last_updated": "2021-01-01",
-            "size": "100MB",
-            "support_contact": "john.doe@example.com"   
-        },
+        "project_information": ProjectInformation(
+            name="Project 1",
+            description="Project 1 description",
+            status=DDSStatus.AVAILABLE,
+            created_by="John Doe",
+            last_updated="2021-01-01",
+            size="100MB",
+            support_contact="john.doe@example.com"   
+        ),
         "project_files": DDSTreeNode(
             name="Project Content for project 1",
             children=[
@@ -46,15 +60,15 @@ MOCK_DATA = {
     },
     "project_2": {
         "project_id": "456",
-        "project_information": {
-            "name": "Project 2",
-            "description": "Project 2 description",
-            "status": "active",
-            "created_by": "Jane Doe",
-            "last_updated": "2021-01-01",
-            "size": "200MB",
-            "support_contact": "jane.doe@example.com"
-        },
+        "project_information": ProjectInformation(
+            name="Project 2",
+            description="Project 2 description",
+            status=DDSStatus.IN_PROGRESS,
+            created_by="Jane Doe",
+            last_updated="2021-01-01",
+            size="200MB",
+            support_contact="jane.doe@example.com"
+        ),
         "project_files": DDSTreeNode(
             name="Project Content for project 2",
             children=[
@@ -145,7 +159,7 @@ class DDSStateManager:
     # Derive the project information from the selected project.
     # Initialize the project information as None when starting the application.
     # Derived through the compute_project_information method.
-    project_information: reactive[dict] = reactive(None, recompose=True)
+    project_information: reactive[ProjectInformation] = reactive(None, recompose=True)
 
     # ------------------------------------------------------------
     # COMPUTE METHODS
@@ -160,7 +174,7 @@ class DDSStateManager:
         if self.selected_project_id:
             return MOCK_DATA[self.selected_project_id]["project_files"]
 
-    def compute_project_information(self) -> dict:
+    def compute_project_information(self) -> ProjectInformation:
         """Compute the project information based on the selected project."""
         if self.selected_project_id:
             return MOCK_DATA[self.selected_project_id]["project_information"]

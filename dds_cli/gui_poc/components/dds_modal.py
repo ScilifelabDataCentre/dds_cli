@@ -10,6 +10,7 @@ from textual.widget import Widget
 from textual.widgets import Footer, Label
 
 from dds_cli.gui_poc.components.dds_button import DDSButton
+from dds_cli.gui_poc.components.dds_footer import DDSFooter
 from dds_cli.gui_poc.types.dds_severity_types import DDSSeverity
 
 
@@ -62,7 +63,11 @@ class DDSModal(ModalScreen):
             yield Label(self.title, id="dds-modal-title")
             with VerticalScroll(id="dds-modal-content"):
                 yield self.content
-            yield Footer()    
+            yield DDSFooter()    
+
+    def close_modal(self) -> None:
+        """Close the modal."""
+        self.dismiss()
 
 
 class DDSModalConfirmation(DDSModal):

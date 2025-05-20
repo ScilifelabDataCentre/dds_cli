@@ -130,14 +130,6 @@ DDSSidebar {
             self.app.push_screen(DDSModal(Markdown(self.help_text), title="Help"))
 
 
-class DDSFooter(Footer):
-    """DDS footer widget."""
-
-    DEFAULT_CSS = """
-    DDSFooter {
-    background: $panel;
-    }
-    """
 
 class DDSLayout(Container):
     """DDS layout widget."""

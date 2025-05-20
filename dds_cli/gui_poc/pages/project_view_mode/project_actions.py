@@ -15,6 +15,14 @@ class ProjectActions(DDSContainer):
     .project-actions-tab {
         padding: 1;
     }
+    Tabs {
+        Underline {
+            & > .underline--bar {
+                color: $boost; 
+            }
+        }
+    }
+
     """
 
     def compose(self) -> ComposeResult:

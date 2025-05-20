@@ -1,13 +1,20 @@
 """DDS Project Information Widget"""
 
+from typing import Any
 from textual.app import ComposeResult
-from textual.widgets import Label
+from textual.containers import Horizontal, Vertical
+from textual.widget import Widget
+from textual.widgets import Label, Static
 from dds_cli.gui_poc.components.dds_container import (
     DDSContainer,
     DDSContentContainer,
     DDSSpacedContainer,
 )
 from dds_cli.gui_poc.components.dds_key_pair_table import DDSKeyPairTable
+from dds_cli.gui_poc.components.dds_status_chips import DDSStatusChip
+
+from dds_cli.gui_poc.dds_state_manager import ProjectInformation as ProjectInformationType
+
 
 class ProjectInformation(DDSContainer):
     """A widget for the project information."""
@@ -16,12 +23,78 @@ class ProjectInformation(DDSContainer):
         if self.app.selected_project_id:
             with DDSSpacedContainer():
                 with DDSContentContainer():
-                    yield Label("[b]Project Title:[/b] Test Title", id="project-title")
-                yield Label("[b]Project Description:[/b] Test Description")
-            yield DDSKeyPairTable(self.app.project_information, id="project-information-table")
+                    yield Label(
+                        f"[b]Project Title:[/b] {self.app.project_information.name}",
+                        id="project-title",
+                    )
+                    yield Label(
+                        f"[b]Project Description:[/b] {self.app.project_information.description}",
+                        id="project-description",
+                    )
+                yield ProjectInformationTable(
+                    self.app.project_information, id="project-information-table"
+                )
         else:
             yield Label("No project selected")
 
-    def watch_project_id(self, project_id: str) -> None:
-        """Watch the project id state and update the project information."""
-        self.query_one("project-title").update(f"[b]Project Title:[/b] {project_id}")
+
+class ProjectInformationTable(Widget):
+    """A widget for the project information table."""
+
+    def __init__(self, data: ProjectInformationType, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.data = data
+
+    DEFAULT_CSS = """
+    .key-pair-table {
+        width: 100%;
+    }
+    .key-pair-row {
+        width: 100%;
+        height: auto;
+        border-bottom: solid $primary;
+    }
+
+    .key-pair-row:last-of-type {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .key-pair-row-key {
+        text-style: bold;
+        width: 50%;
+    }
+    .key-pair-row-value {
+        text-align: right;
+        align: right middle;
+        width: 50%;
+    }
+    
+    """
+
+    def compose(self) -> ComposeResult:
+        with Vertical(classes="key-pair-table"):
+            yield Horizontal(
+                Static("Status", classes="key-pair-row-key"),
+                DDSStatusChip(self.data.status, classes="key-pair-row-value"),
+                classes="key-pair-row",
+            )
+            yield Horizontal(
+                Static("Created By", classes="key-pair-row-key"),
+                Static(self.data.created_by, classes="key-pair-row-value"),
+                classes="key-pair-row",
+            )
+            yield Horizontal(
+                Static("Last Updated", classes="key-pair-row-key"),
+                Static(self.data.last_updated, classes="key-pair-row-value"),
+                classes="key-pair-row",
+            )
+            yield Horizontal(
+                Static("Size", classes="key-pair-row-key"),
+                Static(self.data.size, classes="key-pair-row-value"),
+                classes="key-pair-row",
+            )
+            yield Horizontal(
+                Static("Support Contact", classes="key-pair-row-key"),
+                Static(self.data.support_contact, classes="key-pair-row-value"),
+                classes="key-pair-row",
+            )

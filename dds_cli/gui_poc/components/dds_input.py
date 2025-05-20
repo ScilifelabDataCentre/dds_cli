@@ -7,3 +7,11 @@ class DDSInput(Input):
     """A widget for the input field."""
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
+
+    DEFAULT_CSS = """
+    DDSInput {
+        max-width: 60;
+        margin: 0 0 1 -1;
+
+    }
+    """

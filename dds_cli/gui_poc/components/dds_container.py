@@ -35,7 +35,7 @@ class DDSContainer(VerticalScroll):
         self.border_subtitle = subtitle
 
 
-class DDSContentContainer(Container):
+class DDSContentContainer(Vertical):
     """A container widget with no border for wrapping widgets in the GUI. Ensures that all content is visible."""
 
     DEFAULT_CSS = """
@@ -69,6 +69,6 @@ class DDSSpacedHorizontalContainer(Horizontal):
     }
 
     DDSSpacedHorizontalContainer > * {
-        margin-right: 1;
+        margin-right: 2;
     }
     """

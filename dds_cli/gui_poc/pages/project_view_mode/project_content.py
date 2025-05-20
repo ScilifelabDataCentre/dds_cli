@@ -1,7 +1,7 @@
 """DDS Project Content Widget"""
 
 from textual.app import ComposeResult
-from textual.widgets import Static, Tree
+from textual.widgets import Label, Static, Tree
 from dds_cli.gui_poc.components.dds_container import DDSContainer
 from dds_cli.gui_poc.components.dds_text_item import DDSTextSubtitle
 from dds_cli.gui_poc.components.dds_tree_view import DDSTreeView, DDSTreeNode
@@ -18,9 +18,9 @@ class ProjectContent(DDSContainer):
 
     def compose(self) -> ComposeResult:
         if self.app.project_content:
-            yield DDSTreeView(self.app.project_content)
+            yield DDSTreeView(self.app.project_content) #.set_loading(False)
         else:
-            yield DDSTextSubtitle("No project content found")
+            yield Label("No project selected")
 
     def watch_project_content(self, project_content: DDSTreeNode) -> None:
         """Watch the project_content state and update the tree view when the selected project changes."""

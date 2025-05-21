@@ -254,7 +254,7 @@ class TokenFile:
         # Read token from file
         with self.token_file.open(mode="r") as file:  # pylint: disable=unspecified-encoding
             token = file.read()
-            LOG.debug(type(token))
+            LOG.debug("Token type: %s", type(token))
             if not token:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
 

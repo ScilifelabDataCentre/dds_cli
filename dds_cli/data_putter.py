@@ -441,6 +441,7 @@ class DataPutter(base.DDSBaseClass):
                 error_message=f"Failed to add file '{file}' to database",
             )
             added_to_db, message = (True, response_json)
+            LOG.debug("API call for file '%s'", file)
         except (
             dds_cli.exceptions.ApiRequestError,
             dds_cli.exceptions.ApiResponseError,

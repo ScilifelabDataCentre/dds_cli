@@ -215,7 +215,7 @@ class LocalFileHandler(fh.FileHandler):
     def check_previous_upload(self, token):
         """Do API call and check for the files in the DB."""
 
-        LOG.debug("Checking if files have been previously uploaded.")
+        LOG.debug("API call: Checking if files have been previously uploaded.")
         # Get files from db
         files = list(self.data.keys())
         files_in_db, _ = dds_cli.utils.perform_request(

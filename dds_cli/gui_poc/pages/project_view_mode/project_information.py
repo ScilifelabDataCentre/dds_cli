@@ -5,14 +5,13 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
 from textual.widgets import Label, Static
+
 from dds_cli.gui_poc.components.dds_container import (
     DDSContainer,
     DDSContentContainer,
     DDSSpacedContainer,
 )
-from dds_cli.gui_poc.components.dds_key_pair_table import DDSKeyPairTable
-from dds_cli.gui_poc.components.dds_status_chips import DDSStatusChip
-
+from dds_cli.gui_poc.components.dds_status_chip import DDSStatusChip
 from dds_cli.gui_poc.dds_state_manager import ProjectInformation as ProjectInformationType
 
 

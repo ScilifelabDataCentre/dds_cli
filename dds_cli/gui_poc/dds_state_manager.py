@@ -1,14 +1,17 @@
+"""DDS State Manager"""
+
 from dataclasses import dataclass
 from textual.reactive import reactive
 
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.components.dds_tree_view import DDSTreeNode
-from dds_cli.gui_poc.components.dds_status_chips import DDSStatus
+from dds_cli.gui_poc.components.dds_status_chip import DDSStatus
 
 
 @dataclass
 class ProjectInformation:
     """A dataclass for the project information."""
+
     name: str
     description: str
     status: DDSStatus
@@ -16,6 +19,7 @@ class ProjectInformation:
     last_updated: str
     size: str
     support_contact: str
+
 
 MOCK_DATA = {
     "project_1": {
@@ -27,33 +31,33 @@ MOCK_DATA = {
             created_by="John Doe",
             last_updated="2021-01-01",
             size="100MB",
-            support_contact="john.doe@example.com"   
+            support_contact="john.doe@example.com",
         ),
         "project_files": DDSTreeNode(
             name="Project Content for project 1",
             children=[
                 DDSTreeNode(
-            name="Project Content 1",
-            children=[
-                DDSTreeNode(name="Project Content 1.1", children=[]),
-                DDSTreeNode(name="Project Content 1.2", children=[]),
-                DDSTreeNode(
-                    name="Project Content 1.3",
+                    name="Project Content 1",
                     children=[
-                        DDSTreeNode(name="Project Content 1.3.1", children=[]),
-                        DDSTreeNode(name="Project Content 1.3.2", children=[]),
-                        DDSTreeNode(name="Project Content 1.3.3", children=[]),
+                        DDSTreeNode(name="Project Content 1.1", children=[]),
+                        DDSTreeNode(name="Project Content 1.2", children=[]),
+                        DDSTreeNode(
+                            name="Project Content 1.3",
+                            children=[
+                                DDSTreeNode(name="Project Content 1.3.1", children=[]),
+                                DDSTreeNode(name="Project Content 1.3.2", children=[]),
+                                DDSTreeNode(name="Project Content 1.3.3", children=[]),
+                            ],
+                        ),
                     ],
                 ),
-            ],
-        ),
-        DDSTreeNode(
-            name="Project Content 2",
-            children=[
-                DDSTreeNode(name="Project Content 2.1", children=[]),
-                DDSTreeNode(name="Project Content 2.2", children=[]),
-                DDSTreeNode(name="Project Content 2.3", children=[]),
-            ],
+                DDSTreeNode(
+                    name="Project Content 2",
+                    children=[
+                        DDSTreeNode(name="Project Content 2.1", children=[]),
+                        DDSTreeNode(name="Project Content 2.2", children=[]),
+                        DDSTreeNode(name="Project Content 2.3", children=[]),
+                    ],
                 ),
             ],
         ),
@@ -67,39 +71,43 @@ MOCK_DATA = {
             created_by="Jane Doe",
             last_updated="2021-01-01",
             size="200MB",
-            support_contact="jane.doe@example.com"
+            support_contact="jane.doe@example.com",
         ),
         "project_files": DDSTreeNode(
             name="Project Content for project 2",
             children=[
-                DDSTreeNode(name="Project Content 4", children=[
-                    DDSTreeNode(name="Project Content 4.1", children=[]),
-                    DDSTreeNode(name="Project Content 4.2", children=[]),
-                    DDSTreeNode(name="Project Content 4.3", children=[]),
-                ]),
-                DDSTreeNode(name="Project Content 5", children=[
-                    DDSTreeNode(name="Project Content 5.1", children=[]),
-                    DDSTreeNode(name="Project Content 5.2", children=[]),
-                    DDSTreeNode(name="Project Content 5.3", children=[]),
-                ]),
+                DDSTreeNode(
+                    name="Project Content 4",
+                    children=[
+                        DDSTreeNode(name="Project Content 4.1", children=[]),
+                        DDSTreeNode(name="Project Content 4.2", children=[]),
+                        DDSTreeNode(name="Project Content 4.3", children=[]),
+                    ],
+                ),
+                DDSTreeNode(
+                    name="Project Content 5",
+                    children=[
+                        DDSTreeNode(name="Project Content 5.1", children=[]),
+                        DDSTreeNode(name="Project Content 5.2", children=[]),
+                        DDSTreeNode(name="Project Content 5.3", children=[]),
+                    ],
+                ),
             ],
-        )
-    }
+        ),
+    },
 }
-
-
 
 
 class DDSStateManager:
     """
-    
+
     A base class for state managment.
-    
+
     - BASE STATES: States that are directly derived from the cli funcitons.
     - DERIVED STATES: States that are derived from the base states.
     - COMPUTE METHODS: Functions that compute the derived states based on the base states.
 
-    Reciver pattern: 
+    Reciver pattern:
 
     --> Reciever/reader classes should use derived classes to get state content.
 
@@ -112,7 +120,7 @@ class DDSStateManager:
     * Add base state to "on_mount" method if the state is to be watched".
     * Add watcher method to update content based on the state".
 
-    Sender pattern: 
+    Sender pattern:
 
     --> Sender/writer classes should use base classes to change the state.
 
@@ -121,12 +129,12 @@ class DDSStateManager:
         self.app.derived_state.update(new_state)
 
     * Add compute method to update state based on API response.
-    
+
     """
-    
+
     # TODO: Make this get the token path correctly
     token_path = "~/.dds_cli_token"
-    
+
     # ------------------------------------------------------------
     # BASE STATES
     # ------------------------------------------------------------
@@ -134,7 +142,7 @@ class DDSStateManager:
     # AUTH STATE
     # Initialize the auth object as an reactive state when starting the application.
     auth: reactive[Auth] = reactive(Auth(authenticate=False, token_path=token_path), recompose=True)
-    
+
     # PROJECT STATE
     projects_id: reactive[list[str]] = reactive(list(MOCK_DATA.keys()), recompose=True)
     selected_project_id: reactive[str] = reactive(None, recompose=True)
@@ -153,7 +161,7 @@ class DDSStateManager:
     # Derive the project content from the selected project.
     # Initialize the project content as None when starting the application.
     # Derived through the compute_project_content method.
-    project_content: reactive[DDSTreeNode] = reactive(None, recompose=True) 
+    project_content: reactive[DDSTreeNode] = reactive(None, recompose=True)
 
     # PROJECT INFORMATION
     # Derive the project information from the selected project.

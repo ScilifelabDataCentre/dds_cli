@@ -23,34 +23,6 @@ class DDSButton(Button):
     """
 
 
-class DDSFormButton(DDSButton):
-    """Form button widget with uppercase title.
-    Args:
-        label: The label to be displayed on the button.
-    """
-
-    def __init__(self, label: str, *args: Any, **kwargs: Any) -> None:
-        super().__init__(label.upper(), *args, **kwargs)
-
-    ## Styling to mimic the default styling of textual buttons
-    DEFAULT_CSS = """
-    DDSFormButton {
-       background: $secondary;
-       border-top: tall $secondary-lighten-3;
-       border-bottom: tall $secondary-darken-3;
-    }
-    DDSFormButton:hover {
-       background: $secondary-darken-2;
-       border-top: tall $secondary 
-    }
-    DDSFormButton.-active {
-       background: $secondary;
-       border-top: tall $secondary-darken-3;
-       border-bottom: tall $secondary-lighten-3;
-    }
-    """
-
-
 class DDSSkinnyButton(Button):
     """Skinny button widget with capitalized title.
     Args:
@@ -90,5 +62,4 @@ class DDSSkinnyButton(Button):
         tint: $background 30%;
     }
     }
-    
     """

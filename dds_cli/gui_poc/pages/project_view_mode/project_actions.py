@@ -7,7 +7,6 @@ from dds_cli.gui_poc.pages.project_view_mode.project_actions_tabs.download_data 
 from dds_cli.gui_poc.pages.project_view_mode.project_actions_tabs.user_access import UserAccess
 
 
-
 class ProjectActions(DDSContainer):
     """Widget contianing tabbed content for the project actions."""
 
@@ -15,6 +14,7 @@ class ProjectActions(DDSContainer):
     .project-actions-tab {
         padding: 1;
     }
+    
     Tabs {
         Underline {
             & > .underline--bar {
@@ -22,7 +22,6 @@ class ProjectActions(DDSContainer):
             }
         }
     }
-
     """
 
     def compose(self) -> ComposeResult:

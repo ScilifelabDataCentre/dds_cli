@@ -6,6 +6,7 @@ from textual.containers import Container
 
 class DDSForm(Container):
     """A widget for the form."""
+
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
 
@@ -23,4 +24,4 @@ class DDSForm(Container):
         margin: 1 1 1 0;
 
     }
-    """ 
+    """

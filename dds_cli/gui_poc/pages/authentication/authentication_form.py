@@ -1,20 +1,22 @@
+"""DDS Authentication Form"""
+
 from typing import Any, Callable
 from textual import events
 from textual.app import ComposeResult
 from textual.containers import Container
+
 from dds_cli.auth import Auth
 from dds_cli.gui_poc.components.dds_form import DDSForm
 from dds_cli.gui_poc.components.dds_input import DDSInput
-from dds_cli.gui_poc.components.dds_button import DDSButton, DDSFormButton
+from dds_cli.gui_poc.components.dds_button import DDSButton
 
 
 class AuthenticationForm(Container):
     """A widget for the authentication form."""
 
-    def __init__(self, token_path: str, close_modal: Callable, *args: Any, **kwargs: Any):
+    def __init__(self, close_modal: Callable, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.auth = None
-        self.token_path = token_path
         self.close_modal = close_modal
 
     DEFAULT_CSS = """
@@ -39,7 +41,9 @@ class AuthenticationForm(Container):
             self.authenticate_user_credentials()
             if self.auth:
                 self.query_one("#dds-auth-form").remove()
-                self.query_one("#dds-auth-form-container").mount(TwoFactorFormFields(id="dds-2fa-form"))
+                self.query_one("#dds-auth-form-container").mount(
+                    TwoFactorFormFields(id="dds-2fa-form")
+                )
         if event.button.id == "login":
             self.confirm_2factor_code()
 
@@ -52,7 +56,7 @@ class AuthenticationForm(Container):
             self.auth = Auth(
                 authenticate=False,
                 authenticate_gui=True,
-                token_path=self.token_path,
+                token_path=self.app.token_path,
                 username_gui=username,
                 password_gui=password,
             )
@@ -70,7 +74,7 @@ class AuthenticationForm(Container):
             self.app.compute_auth_status()
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
-        self.close_modal()    
+        self.close_modal()
 
 
 class LoginFormFields(DDSForm):

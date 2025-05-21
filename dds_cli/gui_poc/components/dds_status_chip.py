@@ -1,18 +1,11 @@
-from enum import Enum
+"""DDS Status Chip"""
+
 from typing import Any
 from textual.app import ComposeResult
-from textual.visual import Visual
 from textual.widget import Widget
 from textual.widgets import Static
 
-class DDSStatus(Enum):
-    """Enum for the status of the project."""
-    AVAILABLE = "Available"
-    IN_PROGRESS = "In Progress"
-    DELETED = "Deleted"
-    EXPIRED = "Expired"
-    ARCHIVED = "Archived"
-    ABORTED = "Aborted"
+from dds_cli.gui_poc.types.dds_status_types import DDSStatus
 
 
 class DDSStatusChip(Widget):
@@ -23,7 +16,6 @@ class DDSStatusChip(Widget):
         self.status = status
 
     DEFAULT_CSS = """
-
     #status-chip {
         height: auto;
         width: auto;
@@ -61,8 +53,9 @@ class DDSStatusChip(Widget):
         background: #FFBA6B;
         color: #5F2607;
     }
-
     """
 
     def compose(self) -> ComposeResult:
-        yield Static(self.status.value, classes=self.status.value.lower().replace(" ", "-"), id="status-chip")
+        yield Static(
+            self.status.value, classes=self.status.value.lower().replace(" ", "-"), id="status-chip"
+        )

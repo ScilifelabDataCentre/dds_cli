@@ -1,7 +1,7 @@
 """DDS Container Widgets"""
 
 from typing import Any
-from textual.containers import Container, Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.reactive import Reactive
 
 
@@ -29,7 +29,7 @@ class DDSContainer(VerticalScroll):
         border: round $accent;
     }
    """
-    
+
     def watch_subtitle(self, subtitle: str) -> None:
         """Watch the subtitle reactive variable and update the border subtitle."""
         self.border_subtitle = subtitle

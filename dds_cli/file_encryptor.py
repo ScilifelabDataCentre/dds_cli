@@ -63,7 +63,7 @@ class ECDHKeyHandler:
             backend=backends.default_backend(),
         ).derive(shared_key)
 
-        LOG.debug("Salt: %s", salt)
+        # LOG.debug("Salt: %s", salt) ## is this really needed?
         return derived_shared_key, salt.hex().upper()
 
     @staticmethod
@@ -147,7 +147,7 @@ class Encryptor(ECDHKeyHandler):
         construction described in RFC8439 (obsoletes 7539).
         """
 
-        LOG.debug("Started encryption...")
+        # LOG.debug("Started encryption...")
         encrypted_and_saved, message = (False, "")
 
         # Additional data
@@ -186,7 +186,7 @@ class Encryptor(ECDHKeyHandler):
         else:
             encrypted_and_saved = True
             message = f"Encrypted file stored in location: {escape(str(outfile))}"
-            LOG.debug(message)
+            # LOG.debug(message) ## is this really needed?
 
         return encrypted_and_saved, message
 

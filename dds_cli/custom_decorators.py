@@ -52,7 +52,7 @@ def verify_proceed(func):
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.debug("File '%s' started: %s", escape(str(file)), func.__name__)
+        LOG.debug("%s: started file '%s'", func.__name__, escape(str(file)))
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
@@ -116,7 +116,7 @@ def update_status(func):
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.debug("File %s status updated to %s: done", escape(str(file)), func.__name__)
+            LOG.debug("File '%s' status updated to %s: done", escape(str(file)), func.__name__)
 
         return ok_to_continue, message
 

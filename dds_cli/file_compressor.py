@@ -89,7 +89,7 @@ class Compressor:
     ) -> bytes:
         """Compresses file by reading it chunk by chunk."""
 
-        LOG.debug("Started compression...")
+        # LOG.debug("Started compression...")
 
         try:
             with file.open(mode="rb") as infile:
@@ -110,7 +110,7 @@ class Compressor:
         except Exception as err:  # pylint: disable=broad-exception-caught
             LOG.warning(str(err))
         else:
-            LOG.debug("Compression finished.")
+            LOG.debug("Compression of '%s' finished.", file.name)
 
     @staticmethod
     def decompress_filechunks(chunks, outfile: pathlib.Path, **_):

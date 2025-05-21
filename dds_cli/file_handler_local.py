@@ -253,7 +253,7 @@ class LocalFileHandler(fh.FileHandler):
 
         file_info = self.data[file]
 
-        LOG.debug("Streaming file...")
+        LOG.debug("Streaming file '%s'", file)
         # Generate checksum
         checksum = hashlib.sha256()
         if file_info["compressed"]:
@@ -261,7 +261,7 @@ class LocalFileHandler(fh.FileHandler):
                 checksum.update(chunk)
                 yield chunk
         else:
-            LOG.debug("File not compressed -- compressing")
+            LOG.debug("File '%s' not compressed -- starting compressing", file)
             # Generate checksum first
             # total_read = 0
             for chunk in self.read_file(file=file_info["path_raw"]):

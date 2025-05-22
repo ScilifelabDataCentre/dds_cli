@@ -78,11 +78,11 @@ class LocalFileHandler(fh.FileHandler):
         )
         
         # Gruppera data
-        grouped_data = self.group(files=self.data)
-        print(grouped_data, flush=True)
+        # grouped_data = self.group(files=self.data)
+        # print(grouped_data, flush=True)
 
         # Tar data
-        self.create_archive_collection(chunks=grouped_data, name_prefix="testing_tar")
+        # self.create_archive_collection(chunks=grouped_data, name_prefix="testing_tar")
 
         # Log everything that will be uploaded
         # LOG.debug(f"File info: {self.data}")
@@ -93,9 +93,9 @@ class LocalFileHandler(fh.FileHandler):
         # Calculate total size of data -- next step: decide on a maximum size of files before multiple archives 
         # LOG.debug(sum(self.data[i]["size_raw"] for i in self.data))
         
-        import sys
-        sys.exit(0)
-        self.data_list = None
+        # import sys
+        # sys.exit(0)
+        # self.data_list = None
         LOG.debug("LocalFileHandler initialized ✅")
 
     # Static methods ############## Static methods #

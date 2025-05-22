@@ -9,6 +9,7 @@ import json
 import logging
 import pathlib
 import threading
+import typing 
 
 # Installed
 
@@ -38,9 +39,10 @@ class FileHandler:
         source, source_path_file = user_input
 
         # Instance attributes         
-        self.project = project
-        self.local_destination = local_destination
-        self.data_list = []
+        self.project: str = project
+        self.local_destination: pathlib.Path = local_destination
+        self.data_list: typing.List = []
+        self.failed: typing.Dict = {}
 
         # Get user specified data
         LOG.debug("Getting full paths to all specified files.")
@@ -55,7 +57,6 @@ class FileHandler:
                     raise dds_cli.exceptions.UploadError(
                         f"Failed to get files from source-path-file option: {err}"
                     )
-        self.failed = {}
 
         LOG.debug("FileHandler initialized ✅")
 

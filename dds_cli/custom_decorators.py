@@ -113,18 +113,12 @@ def update_status(func):
         # ok_to_continue = False
         if not ok_to_continue:
             # Save info about which operation failed
-
             self.status[file]["failed_op"] = func.__name__
             LOG.warning("%s failed: %s", func.__name__, message)
 
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.debug(
-                "File '%s' status updated to %s: done",
-                escape(str(pathlib.Path(file).name)),
-                func.__name__,
-            )
 
         return ok_to_continue, message
 

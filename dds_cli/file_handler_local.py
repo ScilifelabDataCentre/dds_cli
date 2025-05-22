@@ -49,10 +49,12 @@ class LocalFileHandler(fh.FileHandler):
         )
 
         # Remove duplicates and save all files for later use
-        all_files = set(self.data_list)
-        # Remove non existent files
+        all_files: typing.Set = set(self.data_list)
+
+        # Update parent instance attribute: Remove non existent files
         self.data_list = {x for x in self.data_list if x.exists()}
 
+        # 
         non_existent_files = all_files.difference(self.data_list)
         if len(non_existent_files) > 0:
             # Issue warning that some of the files don't exist

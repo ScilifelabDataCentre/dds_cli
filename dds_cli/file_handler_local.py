@@ -307,34 +307,41 @@ class LocalFileHandler(fh.FileHandler):
         # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()
 
-    def group_files(self, max_archive_size: int = 10): # TODO: Change max_archive_size
+    def group_files(self, max_archive_size: int = 40000): # TODO: Change max_archive_size
         """Group files into "chunks" no larger than max_archive_size."""
         
-        chunk_sizes = []
+        chunk_sizes: typing.List = []
 
         def assign_chunk(file_size):
             """Place file in first chunk with enough space.
             
             Create new chunk if needed.
-            """
-            idx = 0
+            """            
+            chunk_number = len(chunk_sizes)
+
+            # Iterate through indexed list of tuples 
+            # Increase chunks in size as more file sizes are added
             for idx, chunk_size in enumerate(chunk_sizes):
                 if chunk_size + file_size <= max_archive_size:
                     chunk_sizes[idx] += file_size
                     return idx
-            
+                        
             # File fits in no existing chunk, so create a new one
             chunk_sizes.append(file_size)
-            return idx + 1
+
+            return chunk_number
 
         chunks = defaultdict(list)
 
-        # Iterate through all files 
+        # Iterate through all files and assign each file to a group
         # TODO: Skip files that are already tarred (probably somewhere else)
         for file, info in self.data.items():
+            print(f"File '{file}' size: {info['size_raw']}")
+            print(f"Chunks before: {chunks}", flush=True)
             idx = assign_chunk(info["size_raw"])
+            print(f"Chunk number returned: {idx}", flush=True)
             chunks[idx].append(file)
-
+            print(f"Chunks after: {chunks}\n", flush=True)
         return chunks
     
     # def create_archive_collection(self, chunks, name_prefix="archive"):

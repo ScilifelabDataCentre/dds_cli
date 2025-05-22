@@ -93,9 +93,9 @@ def put(
             # Create multipart tar archives 
             LOG.debug("Grouping files (pre-tarring)...")
             print(f"Type of putter.filehandler.data: {type(putter.filehandler.data)}", flush=True)
-            sys.exit(0)
 
             grouped_data = putter.filehandler.group_files()
+            sys.exit(0)
 
             # Check which, if any, files exist in the db
             files_in_db = putter.filehandler.check_previous_upload(token=putter.token)

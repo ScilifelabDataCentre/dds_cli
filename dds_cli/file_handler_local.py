@@ -336,12 +336,8 @@ class LocalFileHandler(fh.FileHandler):
         # Iterate through all files and assign each file to a group
         # TODO: Skip files that are already tarred (probably somewhere else)
         for file, info in self.data.items():
-            print(f"File '{file}' size: {info['size_raw']}")
-            print(f"Chunks before: {chunks}", flush=True)
             idx = assign_chunk(info["size_raw"])
-            print(f"Chunk number returned: {idx}", flush=True)
             chunks[idx].append(file)
-            print(f"Chunks after: {chunks}\n", flush=True)
         return chunks
     
     # def create_archive_collection(self, chunks, name_prefix="archive"):

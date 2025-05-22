@@ -209,7 +209,6 @@ class DataPutter(base.DDSBaseClass):
         source: tuple = (),
         source_path_file: pathlib.Path = None,
         silent: bool = False,
-        method: str = "put",
         no_prompt: bool = False,
         token_path: str = None,
         destination: str = None,
@@ -218,7 +217,7 @@ class DataPutter(base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
-            method=method,
+            method="put",
             no_prompt=no_prompt,
             token_path=token_path,
             staging_dir=staging_dir,
@@ -229,10 +228,6 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
-
-        # Only method "put" can use the DataPutter class
-        if self.method != "put":
-            raise exceptions.AuthenticationError(f"Unauthorized method: '{self.method}'")
 
         # Start file prep progress
         with Progress(

@@ -261,6 +261,8 @@ class DataPutter(base.DDSBaseClass):
         destination: str = None,
     ):
         """Handle actions regarding upload of data."""
+        LOG.debug("DataPutter initializing...")
+
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
@@ -276,7 +278,7 @@ class DataPutter(base.DDSBaseClass):
         self.silent = silent
         self.filehandler = None
 
-        LOG.debug("DataPutter initialized.")
+        LOG.debug("DataPutter initialized ✅")
 
     # Public methods ###################### Public methods #
     @verify_proceed

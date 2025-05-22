@@ -37,11 +37,13 @@ class FileHandler:
 
         source, source_path_file = user_input
 
-        # Get user specified data
-        LOG.debug("Getting pull paths to all specified files.")
+        # Instance attributes         
         self.project = project
         self.local_destination = local_destination
         self.data_list = []
+
+        # Get user specified data
+        LOG.debug("Getting full paths to all specified files.")
         if source:
             self.data_list += list(source)
         if source_path_file:

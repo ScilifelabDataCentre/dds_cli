@@ -59,14 +59,14 @@ class DataLister(base.DDSBaseClass):
             raise exceptions.InvalidMethodError(
                 attempted_method=method, message="DataLister attempting unauthorized method"
             )
-        
+
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             project=project,
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,
-            authenticate = False if gui else True,
+            authenticate=False if gui else True,
         )
 
         self.show_usage = show_usage
@@ -76,9 +76,8 @@ class DataLister(base.DDSBaseClass):
 
     # Public methods ########################### Public methods #
 
-
     def gui_list_projects(self):
-
+        """Get a list of project(s) the user is involved in."""
         response, _ = dds_cli.utils.perform_request(
             DDSEndpoint.LIST_PROJ,
             headers=self.token,
@@ -89,8 +88,6 @@ class DataLister(base.DDSBaseClass):
         )
 
         return response
-
-
 
     def list_projects(self, sort_by="Updated", show_all: bool = False):
         """Get a list of project(s) the user is involved in."""
@@ -253,7 +250,7 @@ class DataLister(base.DDSBaseClass):
                 error_message="Failed to list the project's directory tree",
             )
 
-            if not "files_folders" in resp_json:
+            if "files_folders" not in resp_json:
                 raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
 
             sorted_files_folders = sorted(resp_json["files_folders"], key=lambda f: f["name"])

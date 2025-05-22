@@ -5,7 +5,6 @@
 ###############################################################################
 
 # Standard library
-from curses.panel import top_panel
 import logging
 import pathlib
 import typing
@@ -122,8 +121,10 @@ class DDSBaseClass:
                 allow_group=allow_group,
             )
 
-            self.partial_auth_token, self.secondfactor_method = self.dds_user.sign_in(username=self.username_gui, password=self.password_gui)           
-            
+            self.partial_auth_token, self.secondfactor_method = self.dds_user.sign_in(
+                username=self.username_gui, password=self.password_gui
+            )
+
         # Project access only required if trying to upload, download or list
         # files within project
         if self.method in DDS_KEYS_REQUIRED_METHODS:
@@ -139,9 +140,14 @@ class DDSBaseClass:
         """
         Perform 2fa for the gui
         """
-        self.dds_user.twofactor(self.partial_auth_token, self.secondfactor_method, self.totp, self.username_gui, twofactor_code)
+        self.dds_user.twofactor(
+            self.partial_auth_token,
+            self.secondfactor_method,
+            self.totp,
+            self.username_gui,
+            twofactor_code,
+        )
         self.token = self.dds_user.token_dict
-
 
     def __enter__(self):
         """Return self when using context manager."""

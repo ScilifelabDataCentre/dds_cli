@@ -3,7 +3,6 @@
 # Standard library
 import logging
 import getpass
-from re import S
 
 # Installed
 from rich.prompt import Prompt

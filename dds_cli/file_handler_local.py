@@ -12,7 +12,7 @@ import pathlib
 import typing
 import uuid
 import random
-# from collections import defaultdict
+from collections import defaultdict
 # import tarfile
 
 # Own modules
@@ -28,8 +28,6 @@ import dds_cli.utils
 ###############################################################################
 
 LOG = logging.getLogger(__name__)
-
-# MAX_CHUNK_SIZE = 10 # ** 9 # 1 Gb
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -309,35 +307,35 @@ class LocalFileHandler(fh.FileHandler):
         # Add checksum to file info
         self.data[file]["checksum"] = checksum.hexdigest()
 
-    # def group(self, files, max_chunk_size=MAX_CHUNK_SIZE):
-    #     """Group files into chunks no larger than max_chunk_size
+    def group_files(self, max_archive_size: int = 10): # TODO: Change max_archive_size
+        """Group files into "chunks" no larger than max_archive_size."""
         
-    #     files is a list of (size, filename) couples
-    #     """
-    #     chunk_sizes = []
+        chunk_sizes = []
 
-    #     def assign_chunk(file_size):
-    #         """ Place file in first chunk with enouhg space
+        def assign_chunk(file_size):
+            """Place file in first chunk with enough space.
             
-    #         Create new chunk if needed
-    #         """
-    #         idx = 0
-    #         for idx, chunk_size in enumerate(chunk_sizes):
-    #             if chunk_size + file_size <= max_chunk_size:
-    #                 chunk_sizes[idx] += file_size
-    #                 return idx
+            Create new chunk if needed.
+            """
+            idx = 0
+            for idx, chunk_size in enumerate(chunk_sizes):
+                if chunk_size + file_size <= max_archive_size:
+                    chunk_sizes[idx] += file_size
+                    return idx
             
-    #         # File fits in no existing chunk, so create a new one
-    #         chunk_sizes.append(file_size)
-    #         return idx + 1
+            # File fits in no existing chunk, so create a new one
+            chunk_sizes.append(file_size)
+            return idx + 1
 
-    #     chunks = defaultdict(list)
+        chunks = defaultdict(list)
 
-    #     for file, info in files.items():
-    #         idx = assign_chunk(info["size_raw"])
-    #         chunks[idx].append(file)
+        # Iterate through all files 
+        # TODO: Skip files that are already tarred (probably somewhere else)
+        for file, info in self.data.items():
+            idx = assign_chunk(info["size_raw"])
+            chunks[idx].append(file)
 
-    #     return chunks
+        return chunks
     
     # def create_archive_collection(self, chunks, name_prefix="archive"):
     #     """Create one tar file per chunk of files"""

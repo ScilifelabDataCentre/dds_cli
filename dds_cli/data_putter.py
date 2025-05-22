@@ -82,13 +82,20 @@ def put(
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")
 
             # Get file info
-            LOG.info("Collecting file info...")
+            LOG.debug("Computing file information...")
             putter.filehandler = fhl.LocalFileHandler(
                 user_input=(source, source_path_file),
                 project=putter.project,
                 temporary_destination=putter.dds_directory.directories["FILES"],
                 remote_destination=destination,
             )
+
+            # Create multipart tar archives 
+            LOG.debug("Grouping files (pre-tarring)...")
+            print(f"Type of putter.filehandler.data: {type(putter.filehandler.data)}", flush=True)
+            sys.exit(0)
+
+            grouped_data = putter.filehandler.group_files()
 
             # Check which, if any, files exist in the db
             files_in_db = putter.filehandler.check_previous_upload(token=putter.token)

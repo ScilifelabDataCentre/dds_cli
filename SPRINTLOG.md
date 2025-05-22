@@ -431,3 +431,4 @@ _Empty sprint_
 - Edit structure of release template ([#752](https://github.com/ScilifelabDataCentre/dds_cli/pull/752))
 - New version: 2.10.2 ([#754](https://github.com/ScilifelabDataCentre/dds_cli/pull/754))
 - Update instructions regarding release procedure ([#755](https://github.com/ScilifelabDataCentre/dds_cli/pull/755))
+- Update PR template and remove duplicates in release procedure ([#756](https://github.com/ScilifelabDataCentre/dds_cli/pull/756))

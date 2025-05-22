@@ -88,9 +88,6 @@ def put(
                 remote_destination=destination,
             )
 
-            # Verify that the Safespring S3 bucket exists
-            # self.verify_bucket_exist()
-
             # Check which, if any, files exist in the db
             files_in_db = putter.filehandler.check_previous_upload(token=putter.token)
 

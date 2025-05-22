@@ -54,8 +54,8 @@ class LocalFileHandler(fh.FileHandler):
         # Update parent instance attribute: Remove non existent files
         self.data_list = {x for x in self.data_list if x.exists()}
 
-        # 
-        non_existent_files = all_files.difference(self.data_list)
+        # Check which files were specified but do not exist
+        non_existent_files: typing.Set = all_files.difference(self.data_list)
         if len(non_existent_files) > 0:
             # Issue warning that some of the files don't exist
             LOG.warning(
@@ -75,6 +75,7 @@ class LocalFileHandler(fh.FileHandler):
         if not self.data_list:
             raise exceptions.NoDataError("No data specified.")
 
+        # Gather information about each file
         self.data, _ = self.__collect_file_info_local(
             all_paths=self.data_list, folder=pathlib.Path(remote_destination or "")
         )

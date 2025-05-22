@@ -92,9 +92,14 @@ def put(
 
             # Create multipart tar archives 
             LOG.debug("Grouping files (pre-tarring)...")
-            print(f"Type of putter.filehandler.data: {type(putter.filehandler.data)}", flush=True)
-
             grouped_data = putter.filehandler.group_files()
+
+            # TODO: Don't tar groups that only contain one file
+            # TODO: Check if any files are already tarred -- don't include them 
+            # TODO: Perform tarring
+            # TODO: Check if files exist in db -- tar files should just keep getting added, just change name 
+            # NOTE: how to handle files that should and should not be tarred? 
+
             sys.exit(0)
 
             # Check which, if any, files exist in the db

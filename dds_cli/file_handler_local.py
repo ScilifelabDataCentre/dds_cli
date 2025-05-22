@@ -78,11 +78,11 @@ class LocalFileHandler(fh.FileHandler):
             all_paths=self.data_list, folder=pathlib.Path(remote_destination or "")
         )
         
-        # Gruppera data
+        # Gruppera data -- check
         # grouped_data = self.group(files=self.data)
         # print(grouped_data, flush=True)
 
-        # Tar data
+        # Tar data -- we're up to here
         # self.create_archive_collection(chunks=grouped_data, name_prefix="testing_tar")
 
         # Log everything that will be uploaded
@@ -311,6 +311,7 @@ class LocalFileHandler(fh.FileHandler):
         """Group files into "chunks" no larger than max_archive_size."""
         
         chunk_sizes: typing.List = []
+        chunks = defaultdict(list)
 
         def assign_chunk(file_size):
             """Place file in first chunk with enough space.
@@ -330,8 +331,6 @@ class LocalFileHandler(fh.FileHandler):
             chunk_sizes.append(file_size)
 
             return chunk_number
-
-        chunks = defaultdict(list)
 
         # Iterate through all files and assign each file to a group
         # TODO: Skip files that are already tarred (probably somewhere else)

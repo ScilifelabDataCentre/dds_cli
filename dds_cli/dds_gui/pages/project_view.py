@@ -7,11 +7,6 @@ from textual.containers import Vertical, Horizontal
 from textual.widget import Widget
 from textual.widgets import Placeholder
 from dds_cli.dds_gui.pages.authentication.authentication import Authentication
-from dds_cli.dds_gui.pages.project_view_mode.project_list import ProjectList
-from dds_cli.dds_gui.pages.project_view_mode.project_information import ProjectInformation
-from dds_cli.dds_gui.pages.project_view_mode.project_content import ProjectContent
-from dds_cli.dds_gui.pages.project_view_mode.project_actions import ProjectActions
-from dds_cli.dds_gui.pages.project_view_mode.important_information import ImportantInformation
 
 
 class ProjectView(Widget):
@@ -55,12 +50,22 @@ class ProjectView(Widget):
     def compose(self) -> ComposeResult:
         with Horizontal():
             with Vertical(id="left-container"):
-                yield Placeholder(id="project-list") #ProjectList(title="Projects", id="project-list")
-                yield Placeholder(id="important-information") #ImportantInformation(title="Important Information", id="important-information")
+                yield Placeholder(
+                    id="project-list"
+                )  # ProjectList(title="Projects", id="project-list")
+                yield Placeholder(
+                    id="important-information"
+                )  # ImportantInformation(title="Important Information", id="important-information")
                 yield Authentication(title="Authentication", id="auth-menu")
             with Vertical(id="right-container"):
                 with Horizontal(id="top-container"):
-                    yield Placeholder(id="project-content") #ProjectContent(title="Project Content", id="project-content")
-                    yield Placeholder(id="project-information") #ProjectInformation(title="Project Information", id="project-information")
+                    yield Placeholder(
+                        id="project-content"
+                    )  # ProjectContent(title="Project Content", id="project-content")
+                    yield Placeholder(
+                        id="project-information"
+                    )  # ProjectInformation(title="Project Information", id="project-information")
                 with Horizontal(id="bottom-container"):
-                    yield Placeholder(id="project-actions") #ProjectActions(title="Project Actions", id="project-actions")
+                    yield Placeholder(
+                        id="project-actions"
+                    )  # ProjectActions(title="Project Actions", id="project-actions")

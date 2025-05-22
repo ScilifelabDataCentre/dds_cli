@@ -11,7 +11,8 @@ from textual.widgets import Label
 
 from dds_cli.dds_gui.components.dds_button import DDSButton
 from dds_cli.dds_gui.components.dds_footer import DDSFooter
-from dds_cli.dds_gui.types.dds_severity_types import DDSSeverity 
+from dds_cli.dds_gui.types.dds_severity_types import DDSSeverity
+
 
 class DDSModal(ModalScreen):
     """A modal screen for the GUI.
@@ -99,7 +100,7 @@ class DDSModalConfirmation(DDSModal):
         )
         self.confirm_action = confirm_action
 
-    DEFAULT_CSS = """ 
+    DEFAULT_CSS = """
     #dds-modal-message {
         width: 100%;
         text-align: center;

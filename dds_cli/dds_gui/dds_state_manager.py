@@ -177,15 +177,17 @@ class DDSStateManager:
         """Compute the auth status based on the auth object."""
         return bool(self.auth.check())
 
-    def compute_project_content(self) -> DDSTreeNode:
+    def compute_project_content(self) -> DDSTreeNode | None:
         """Compute the project content based on the selected project."""
         if self.selected_project_id:
             return MOCK_DATA[self.selected_project_id]["project_files"]
+        return None
 
-    def compute_project_information(self) -> ProjectInformation:
+    def compute_project_information(self) -> ProjectInformation | None:
         """Compute the project information based on the selected project."""
         if self.selected_project_id:
             return MOCK_DATA[self.selected_project_id]["project_information"]
+        return None
 
     # ------------------------------------------------------------
     # HELPER METHODS

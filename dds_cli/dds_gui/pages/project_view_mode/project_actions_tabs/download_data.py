@@ -37,7 +37,8 @@ class DownloadData(Widget):
     def compose(self) -> ComposeResult:
         with DDSSpacedContainer(id="download-data-container"):
             yield DDSTextItem(
-                "Download data from project by either downloading the whole project, or a specific file or sub-directory."
+                "Download data from project by either downloading the whole "
+                "project, or a specific file or sub-directory."
             )
             if self.app.project_content:
                 with DDSSpacedHorizontalContainer(id="download-data-buttons"):

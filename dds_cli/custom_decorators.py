@@ -101,7 +101,11 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.debug("File '%s' status updated to %s: started", escape(str(pathlib.Path(file).name)), func.__name__)
+        LOG.debug(
+            "File '%s' status updated to %s: started",
+            escape(str(pathlib.Path(file).name)),
+            func.__name__,
+        )
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
@@ -116,7 +120,11 @@ def update_status(func):
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.debug("File '%s' status updated to %s: done", escape(str(pathlib.Path(file).name)), func.__name__)
+            LOG.debug(
+                "File '%s' status updated to %s: done",
+                escape(str(pathlib.Path(file).name)),
+                func.__name__,
+            )
 
         return ok_to_continue, message
 

@@ -50,6 +50,7 @@ class FileHandler:
             self.data_list += list(source)
         if source_path_file: # TODO: Fix issues
             if source_path_file.exists():
+                # Get all rows from source-path-file
                 try:
                     with source_path_file.resolve().open(mode="r") as spf:
                         self.data_list += [pathlib.Path(x) for x in spf.read().splitlines()]

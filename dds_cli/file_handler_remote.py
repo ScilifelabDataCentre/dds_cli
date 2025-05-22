@@ -96,7 +96,7 @@ class RemoteFileHandler(fh.FileHandler):
             if x not in files and x not in folder_contents
         }
 
-        LOG.debug("Not found: %s", self.failed)
+        LOG.debug("Not found in DB: %s", self.failed)
 
         # Save info on files in dict and return
         data = {

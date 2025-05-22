@@ -220,7 +220,7 @@ class Decryptor(ECDHKeyHandler):
         return True
 
     # Public methods ###################### Public methods #
-    def decrypt_file(self, infile: pathlib.Path):
+    def decrypt_file(self, infile: pathlib.Path, outfile: pathlib.Path):
         """Decrypts the file"""
 
         try:
@@ -258,7 +258,7 @@ class Decryptor(ECDHKeyHandler):
                         ciphertext=chunk, aad=aad, nonce=nonce, key=self.key
                     )
 
-                LOG.debug("Testing nonce...")
+                LOG.debug("Testing nonce for file '%s'", pathlib.Path(outfile).name)
                 if last_nonce != nonce:
                     raise SystemExit("Nonces do not match!!")
                 LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)

@@ -119,7 +119,7 @@ class Compressor:
         saved, message = (False, "")
 
         # Decompressing file and saving
-        LOG.debug("Decompressing...")
+        LOG.debug("Decompressing file '%s'...", outfile.name)
         try:
             with outfile.open(mode="wb+") as file:
                 dctx = zstd.ZstdDecompressor()
@@ -132,7 +132,7 @@ class Compressor:
             LOG.exception(message)
         else:
             saved = True
-            LOG.debug("Decompression done.")
+            LOG.debug("Decompression of '%s' done.", outfile.name)
 
         return saved, message
 

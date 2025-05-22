@@ -137,16 +137,16 @@ class DataGetter(base.DDSBaseClass):
 
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
-            LOG.debug("Database updated: %s", db_updated)
+            # LOG.debug("Database updated: %s", db_updated)
 
-            LOG.debug("Beginning decryption of file '%s'...", escape(str(file)))
+            LOG.debug("Beginning decryption of file '%s'...", escape(str(pathlib.Path(file).name)))
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
                 peer_public=file_info["public_key"],
                 key_salt=file_info["salt"],
             ) as decryptor:
-                streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"])
+                streamed_chunks = decryptor.decrypt_file(infile=file_info["path_downloaded"],outfile=file)
 
                 stream_to_file_func = (
                     fc.Compressor.decompress_filechunks
@@ -159,7 +159,7 @@ class DataGetter(base.DDSBaseClass):
                     outfile=file,
                 )
 
-            LOG.debug("File saved? %s", file_saved)
+            LOG.debug("File '%s' saved? %s", pathlib.Path(file).name, file_saved)
             if file_saved:
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed

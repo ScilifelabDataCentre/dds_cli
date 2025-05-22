@@ -81,6 +81,7 @@ def put(
             wait_task = progress.add_task("Collecting and preparing data", step="prepare")
 
             # Get file info
+            LOG.debug("Collecting file info...")
             putter.filehandler = fhl.LocalFileHandler(
                 user_input=(source, source_path_file),
                 project=putter.project,

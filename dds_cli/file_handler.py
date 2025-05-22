@@ -33,9 +33,12 @@ class FileHandler:
 
     def __init__(self, user_input, local_destination, project=None):
         """Initiate file handler."""
+        LOG.debug("FileHandler initializing...")
+
         source, source_path_file = user_input
 
         # Get user specified data
+        LOG.debug("Getting pull paths to all specified files.")
         self.project = project
         self.local_destination = local_destination
         self.data_list = []
@@ -51,6 +54,8 @@ class FileHandler:
                         f"Failed to get files from source-path-file option: {err}"
                     )
         self.failed = {}
+
+        LOG.debug("FileHandler initialized ✅")
 
     # Static methods ############ Static methods #
     @staticmethod

@@ -41,8 +41,8 @@ class LocalFileHandler(fh.FileHandler):
 
     # Magic methods ################ Magic methods #
     def __init__(self, user_input, temporary_destination, project, remote_destination: str = None):
-        LOG.debug("Collecting file info...")
-
+        LOG.debug("LocalFileHandler initializing...")
+        
         # Initiate FileHandler from inheritance
         super().__init__(
             user_input=user_input, local_destination=temporary_destination, project=project
@@ -96,7 +96,7 @@ class LocalFileHandler(fh.FileHandler):
         import sys
         sys.exit(0)
         self.data_list = None
-        LOG.debug("File info computed/collected")
+        LOG.debug("LocalFileHandler initialized ✅")
 
     # Static methods ############## Static methods #
     @staticmethod

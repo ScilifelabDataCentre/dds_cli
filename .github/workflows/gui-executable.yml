@@ -37,22 +37,22 @@ jobs:
             TARGET: MacOs_x86_64
             CMD_BUILD: >
               pyinstaller -F -c -n dds_gui_macos_x86_64 -i resources/scilifelab.icns
-              --exclude-module=tests --target-arch x86_64 --log-level INFO   
+              --exclude-module=tests --target-arch x86_64 --log-level INFO
               --hidden-import textual.widgets._tab_pane --hidden-import cgi gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_macos_x86_64
           - os: ubuntu-latest
             TARGET: Linux_x86_64
             CMD_BUILD: >
               pyinstaller -F -c -n dds_gui_ubuntu-latest_x86_64 -i resources/scilifelab.icns
-              --exclude-module=tests --target-arch x86_64 --log-level INFO   
+              --exclude-module=tests --target-arch x86_64 --log-level INFO
               --hidden-import textual.widgets._tab_pane --hidden-import cgi gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_ubuntu-latest_x86_64
           - os: ubuntu-20.04
             TARGET: Ubuntu_20_04_x86_64
             CMD_BUILD: >
               pyinstaller -F -c -n dds_gui_ubuntu_20_04_x86_64 -i resources/scilifelab.icns
-              --exclude-module=tests --target-arch x86_64 --log-level INFO   
-              --hidden-import textual.widgets._tab_pane --hidden-import cgi 
+              --exclude-module=tests --target-arch x86_64 --log-level INFO
+              --hidden-import textual.widgets._tab_pane --hidden-import cgi
               gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_ubuntu_20_04_x86_64
           - os: windows-latest
@@ -61,7 +61,7 @@ jobs:
               pip install windows-curses &&
               pyinstaller -F -c -n dds_gui_win_x86_64.exe -i resources/scilifelab.ico
               --exclude-module=tests --log-level INFO
-              --hidden-import textual.widgets._tab_pane --hidden-import cgi 
+              --hidden-import textual.widgets._tab_pane --hidden-import cgi
               gui_build/gui_standalone.py
             OUT_FILE_NAME: dds_gui_win_x86_64.exe
     steps:

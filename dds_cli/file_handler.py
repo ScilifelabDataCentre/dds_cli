@@ -46,7 +46,7 @@ class FileHandler:
         LOG.debug("Getting full paths to all specified files.")
         if source:
             self.data_list += list(source)
-        if source_path_file:
+        if source_path_file: # TODO: Fix issues
             if source_path_file.exists():
                 try:
                     with source_path_file.resolve().open(mode="r") as spf:

@@ -6,13 +6,13 @@ from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
 from textual.widgets import Label, Static
 
-from dds_cli.gui_poc.components.dds_container import (
+from dds_cli.dds_gui.components.dds_container import (
     DDSContainer,
     DDSContentContainer,
     DDSSpacedContainer,
 )
-from dds_cli.gui_poc.components.dds_status_chip import DDSStatusChip
-from dds_cli.gui_poc.dds_state_manager import ProjectInformation as ProjectInformationType
+from dds_cli.dds_gui.components.dds_status_chip import DDSStatusChip
+from dds_cli.dds_gui.dds_state_manager import ProjectInformation as ProjectInformationType
 
 
 class ProjectInformation(DDSContainer):

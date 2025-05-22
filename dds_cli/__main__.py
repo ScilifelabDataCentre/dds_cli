@@ -61,7 +61,7 @@ from dds_cli.options import (
 )
 
 ## GUI IMPORTS ##
-from .gui_poc.app import DDSApp
+from .dds_gui.app import DDSApp
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -175,14 +175,14 @@ def dds_main(click_ctx, verbose, log_file, no_prompt, token_path):
 ### GUI COMMAND ###
 
 
-@dds_main.command(name="gui")
-@click.pass_obj
-def gui(click_ctx):
-    """Start the DDS GUI."""
-    gui_app = DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
-    gui_app.title = "SciLifeLab Data Delivery System"
-    gui_app.sub_title = "CLI Version: " + dds_cli.__version__
-    gui_app.run()
+# @dds_main.command(name="gui")
+# @click.pass_obj
+# def gui(click_ctx):
+#     """Start the DDS GUI."""
+#     gui_app = DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
+#     gui_app.title = "SciLifeLab Data Delivery System"
+#     gui_app.sub_title = "CLI Version: " + dds_cli.__version__
+#     gui_app.run()
 
 
 # ************************************************************************************************ #

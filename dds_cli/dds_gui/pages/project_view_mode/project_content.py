@@ -3,8 +3,8 @@
 from textual.app import ComposeResult
 from textual.widgets import Label, Tree
 
-from dds_cli.gui_poc.components.dds_container import DDSContainer
-from dds_cli.gui_poc.components.dds_tree_view import DDSTreeView, DDSTreeNode
+from dds_cli.dds_gui.components.dds_container import DDSContainer
+from dds_cli.dds_gui.components.dds_tree_view import DDSTreeView, DDSTreeNode
 
 
 class ProjectContent(DDSContainer):

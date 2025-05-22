@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from dds_cli.gui_poc.components.dds_modal import DDSModalConfirmation
-from dds_cli.gui_poc.types.dds_severity_types import DDSSeverity
+from dds_cli.dds_gui.components.dds_modal import DDSModalConfirmation
+from dds_cli.dds_gui.types.dds_severity_types import DDSSeverity
 
 
 class LogoutModal(DDSModalConfirmation):

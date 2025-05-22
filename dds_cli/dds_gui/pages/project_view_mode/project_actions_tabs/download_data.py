@@ -7,12 +7,12 @@ from textual.widget import Widget
 from textual.widgets import Label, ProgressBar
 from textual.timer import Timer
 
-from dds_cli.gui_poc.components.dds_container import (
+from dds_cli.dds_gui.components.dds_container import (
     DDSSpacedContainer,
     DDSSpacedHorizontalContainer,
 )
-from dds_cli.gui_poc.components.dds_button import DDSButton
-from dds_cli.gui_poc.components.dds_text_item import DDSTextItem
+from dds_cli.dds_gui.components.dds_button import DDSButton
+from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 
 
 class DownloadData(Widget):

@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from textual.reactive import reactive
 
 from dds_cli.auth import Auth
-from dds_cli.gui_poc.components.dds_tree_view import DDSTreeNode
-from dds_cli.gui_poc.components.dds_status_chip import DDSStatus
+from dds_cli.dds_gui.components.dds_tree_view import DDSTreeNode
+from dds_cli.dds_gui.components.dds_status_chip import DDSStatus
 
 
 @dataclass

@@ -2,9 +2,9 @@
 
 from textual.app import ComposeResult
 from textual.widgets import TabPane, TabbedContent
-from dds_cli.gui_poc.components.dds_container import DDSContainer
-from dds_cli.gui_poc.pages.project_view_mode.project_actions_tabs.download_data import DownloadData
-from dds_cli.gui_poc.pages.project_view_mode.project_actions_tabs.user_access import UserAccess
+from dds_cli.dds_gui.components.dds_container import DDSContainer
+from dds_cli.dds_gui.pages.project_view_mode.project_actions_tabs.download_data import DownloadData
+from dds_cli.dds_gui.pages.project_view_mode.project_actions_tabs.user_access import UserAccess
 
 
 class ProjectActions(DDSContainer):

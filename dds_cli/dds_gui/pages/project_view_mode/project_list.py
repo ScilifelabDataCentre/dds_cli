@@ -3,10 +3,11 @@
 from textual import events
 from textual.app import ComposeResult
 from textual.widgets import Select
-from dds_cli.gui_poc.components.dds_button import DDSButton
-from dds_cli.gui_poc.components.dds_container import DDSContainer, DDSSpacedContainer
-from dds_cli.gui_poc.components.dds_select import DDSSelect
-from dds_cli.gui_poc.components.dds_text_item import DDSTextItem
+
+from dds_cli.dds_gui.components.dds_button import DDSButton
+from dds_cli.dds_gui.components.dds_container import DDSContainer, DDSSpacedContainer
+from dds_cli.dds_gui.components.dds_select import DDSSelect
+from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 
 
 class ProjectList(DDSContainer):

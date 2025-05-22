@@ -9,10 +9,9 @@ from textual.screen import ModalScreen
 from textual.widget import Widget
 from textual.widgets import Label
 
-from dds_cli.gui_poc.components.dds_button import DDSButton
-from dds_cli.gui_poc.components.dds_footer import DDSFooter
-from dds_cli.gui_poc.types.dds_severity_types import DDSSeverity
-
+from dds_cli.dds_gui.components.dds_button import DDSButton
+from dds_cli.dds_gui.components.dds_footer import DDSFooter
+from dds_cli.dds_gui.types.dds_severity_types import DDSSeverity 
 
 class DDSModal(ModalScreen):
     """A modal screen for the GUI.

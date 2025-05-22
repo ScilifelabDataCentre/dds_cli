@@ -5,9 +5,9 @@ from textual.binding import Binding
 from textual.widgets import Header
 from textual.theme import Theme
 
-from dds_cli.gui_poc.components.dds_footer import DDSFooter
-from dds_cli.gui_poc.dds_state_manager import DDSStateManager
-from dds_cli.gui_poc.pages.project_view import ProjectView
+from dds_cli.dds_gui.components.dds_footer import DDSFooter
+from dds_cli.dds_gui.dds_state_manager import DDSStateManager
+from dds_cli.dds_gui.pages.project_view import ProjectView
 
 theme = Theme(
     name="custom",

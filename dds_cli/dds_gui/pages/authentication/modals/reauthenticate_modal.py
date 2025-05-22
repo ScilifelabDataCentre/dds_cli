@@ -5,8 +5,8 @@ from textual.containers import Vertical
 from textual.widget import Widget
 from textual.widgets import Label
 
-from dds_cli.gui_poc.components.dds_modal import DDSModal
-from dds_cli.gui_poc.pages.authentication.authentication_form import AuthenticationForm
+from dds_cli.dds_gui.components.dds_modal import DDSModal
+from dds_cli.dds_gui.pages.authentication.authentication_form import AuthenticationForm
 
 
 class ReAuthenticateModal(DDSModal):

@@ -5,7 +5,7 @@ from textual.app import ComposeResult
 from textual.widget import Widget
 from textual.widgets import Static
 
-from dds_cli.gui_poc.types.dds_status_types import DDSStatus
+from dds_cli.dds_gui.types.dds_status_types import DDSStatus
 
 
 class DDSStatusChip(Widget):

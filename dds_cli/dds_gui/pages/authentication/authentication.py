@@ -5,11 +5,11 @@ from textual.app import ComposeResult
 from textual.events import Click
 from textual.widgets import ContentSwitcher, Label
 
-from dds_cli.gui_poc.components.dds_container import DDSContainer, DDSSpacedContainer
-from dds_cli.gui_poc.components.dds_button import DDSSkinnyButton
-from dds_cli.gui_poc.pages.authentication.modals.login_modal import LoginModal
-from dds_cli.gui_poc.pages.authentication.modals.logout_modal import LogoutModal
-from dds_cli.gui_poc.pages.authentication.modals.reauthenticate_modal import ReAuthenticateModal
+from dds_cli.dds_gui.components.dds_container import DDSContainer, DDSSpacedContainer
+from dds_cli.dds_gui.components.dds_button import DDSSkinnyButton
+from dds_cli.dds_gui.pages.authentication.modals.login_modal import LoginModal
+from dds_cli.dds_gui.pages.authentication.modals.logout_modal import LogoutModal
+from dds_cli.dds_gui.pages.authentication.modals.reauthenticate_modal import ReAuthenticateModal
 
 
 class Authentication(DDSContainer):

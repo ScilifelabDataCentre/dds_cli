@@ -6,9 +6,9 @@ from textual.app import ComposeResult
 from textual.containers import Container
 
 from dds_cli.auth import Auth
-from dds_cli.gui_poc.components.dds_form import DDSForm
-from dds_cli.gui_poc.components.dds_input import DDSInput
-from dds_cli.gui_poc.components.dds_button import DDSButton
+from dds_cli.dds_gui.components.dds_form import DDSForm
+from dds_cli.dds_gui.components.dds_input import DDSInput
+from dds_cli.dds_gui.components.dds_button import DDSButton
 
 
 class AuthenticationForm(Container):

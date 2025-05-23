@@ -114,7 +114,7 @@ class User:
             else:
                 LOG.info("Attempting to create the session token")
             self.token = self.__authenticate_user(totp=totp)
-        token_file.save_token(self.token)
+            token_file.save_token(self.token)
 
     def __authenticate_user(self, totp: str = None):
         """Authenticates the username and password via a call to the API."""
@@ -231,7 +231,7 @@ class User:
 
         LOG.debug("User %s granted access to the DDS", username)
 
-        return token    
+        return token
 
     # def __authenticate_user(self, totp: str = None):
     #     """Authenticates the username and password via a call to the API.

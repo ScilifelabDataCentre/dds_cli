@@ -55,9 +55,9 @@ class DDSBaseClass:
         no_prompt: bool = False,
         token_path: str = None,
         allow_group: bool = False,
-        #authenticate_gui: bool = False,
-        #username_gui: str = None,
-        #password_gui: str = None,
+        # authenticate_gui: bool = False,
+        # username_gui: str = None,
+        # password_gui: str = None,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
         self.project = project
@@ -65,9 +65,9 @@ class DDSBaseClass:
         self.method = method
         self.no_prompt = no_prompt
         self.token_path = token_path
-        #self.authenticate_gui = authenticate_gui
-        #self.username_gui = username_gui
-        #self.password_gui = password_gui
+        # self.authenticate_gui = authenticate_gui
+        # self.username_gui = username_gui
+        # self.password_gui = password_gui
         self.totp = totp
 
         if self.method_check:

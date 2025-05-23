@@ -51,7 +51,6 @@ class DataLister(base.DDSBaseClass):
         json: bool = False,
         token_path: str = None,
         binary: bool = False,
-        gui: bool = False,
     ):
         """Handle actions regarding data listing in the cli."""
         # Only method "ls" can use the DataLister class
@@ -66,7 +65,6 @@ class DataLister(base.DDSBaseClass):
             method=method,
             no_prompt=no_prompt,
             token_path=token_path,
-            authenticate=False if gui else True,
         )
 
         self.show_usage = show_usage
@@ -75,19 +73,6 @@ class DataLister(base.DDSBaseClass):
         self.binary = binary
 
     # Public methods ########################### Public methods #
-
-    def gui_list_projects(self):
-        """Get a list of project(s) the user is involved in."""
-        response, _ = dds_cli.utils.perform_request(
-            DDSEndpoint.LIST_PROJ,
-            headers=self.token,
-            method="get",
-            json={"usage": self.show_usage, "show_all": False},
-            error_message="Failed to get list of projects",
-            timeout=DDSEndpoint.TIMEOUT,
-        )
-
-        return response
 
     def list_projects(self, sort_by="Updated", show_all: bool = False):
         """Get a list of project(s) the user is involved in."""

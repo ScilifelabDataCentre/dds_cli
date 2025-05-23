@@ -36,9 +36,9 @@ class Auth(base.DDSBaseClass):
         token_path: str = None,
         totp: str = None,
         allow_group: bool = False,
-        authenticate_gui: bool = False,
-        username_gui: str = None,
-        password_gui: str = None,
+        #authenticate_gui: bool = False,
+        #username_gui: str = None,
+        #password_gui: str = None,
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
@@ -49,12 +49,12 @@ class Auth(base.DDSBaseClass):
             token_path=token_path,
             totp=totp,
             allow_group=allow_group,
-            authenticate_gui=authenticate_gui,
-            username_gui=username_gui,
-            password_gui=password_gui,
+            #authenticate_gui=authenticate_gui,
+            #username_gui=username_gui,
+            #password_gui=password_gui,
         )
 
-    def check(self) -> str:
+    def check(self):
         """Check if token exists and return info."""
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():

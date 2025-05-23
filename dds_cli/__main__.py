@@ -61,7 +61,7 @@ from dds_cli.options import (
 )
 
 ## GUI IMPORTS ##
-from .dds_gui.app import DDSApp
+# from .dds_gui.app import DDSApp
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #

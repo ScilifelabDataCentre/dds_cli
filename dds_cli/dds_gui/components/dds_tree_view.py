@@ -1,7 +1,7 @@
 """DDS Tree View Widget"""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, List
 
 from textual.app import ComposeResult
 from textual.widget import Widget
@@ -18,7 +18,7 @@ class DDSTreeNode:
     """
 
     name: str
-    children: list["DDSTreeNode"]
+    children: List["DDSTreeNode"]
 
 
 class DDSTreeView(Widget):

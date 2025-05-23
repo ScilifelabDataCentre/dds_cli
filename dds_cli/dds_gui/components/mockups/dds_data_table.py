@@ -1,13 +1,13 @@
 """DDS Data Table"""
 
-from typing import Any
+from typing import Any, List
 from textual.widgets import DataTable
 
 
 class DDSDataTable(DataTable):
     """A data table widget."""
 
-    def __init__(self, header: list[str], data: list[list[Any]], *args: Any, **kwargs: Any):
+    def __init__(self, header: List[str], data: List[List[Any]], *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
 
         # self.zebra_stripes = True

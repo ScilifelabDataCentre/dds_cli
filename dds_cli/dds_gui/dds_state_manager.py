@@ -1,9 +1,7 @@
 """DDS State Manager"""
 
 from dataclasses import dataclass
-from textual.reactive import reactive
 
-from dds_cli.auth import Auth
 from dds_cli.dds_gui.components.dds_tree_view import DDSTreeNode
 from dds_cli.dds_gui.components.dds_status_chip import DDSStatus
 
@@ -141,11 +139,11 @@ class DDSStateManager:
 
     # AUTH STATE
     # Initialize the auth object as an reactive state when starting the application.
-    auth: reactive[Auth] = reactive(Auth(authenticate=False, token_path=token_path), recompose=True)
+    # auth: reactive[Auth] = reactive(Auth(authenticate=False, token_path=token_path), recompose=True)
 
     # PROJECT STATE
-    projects_id: reactive[list[str]] = reactive(list(MOCK_DATA.keys()), recompose=True)
-    selected_project_id: reactive[str] = reactive(None, recompose=True)
+    # projects_id: reactive[List[str]] = reactive(list(MOCK_DATA.keys()), recompose=True)
+    # selected_project_id: reactive[str] = reactive(None, recompose=True)
 
     # ------------------------------------------------------------
     # DERIVED STATES
@@ -155,44 +153,44 @@ class DDSStateManager:
     # Derive the auth status from the auth object.
     # Initialize the auth status as False when starting the application.
     # Derived through the compute_auth_status method.
-    auth_status: reactive[bool] = reactive(False, recompose=True)
+    # auth_status: reactive[bool] = reactive(False, recompose=True)
 
     # PROJECT CONTENT
     # Derive the project content from the selected project.
     # Initialize the project content as None when starting the application.
     # Derived through the compute_project_content method.
-    project_content: reactive[DDSTreeNode] = reactive(None, recompose=True)
+    # project_content: reactive[DDSTreeNode] = reactive(None, recompose=True)
 
     # PROJECT INFORMATION
     # Derive the project information from the selected project.
     # Initialize the project information as None when starting the application.
     # Derived through the compute_project_information method.
-    project_information: reactive[ProjectInformation] = reactive(None, recompose=True)
+    # project_information: reactive[ProjectInformation] = reactive(None, recompose=True)
 
     # ------------------------------------------------------------
     # COMPUTE METHODS
     # ------------------------------------------------------------
 
-    def compute_auth_status(self) -> bool:
-        """Compute the auth status based on the auth object."""
-        return bool(self.auth.check())
+    # def compute_auth_status(self) -> bool:
+    #     """Compute the auth status based on the auth object."""
+    #     return bool(self.auth.check())
 
-    def compute_project_content(self) -> DDSTreeNode | None:
-        """Compute the project content based on the selected project."""
-        if self.selected_project_id:
-            return MOCK_DATA[self.selected_project_id]["project_files"]
-        return None
+    # def compute_project_content(self) -> Optional[DDSTreeNode]:
+    #     """Compute the project content based on the selected project."""
+    #     if self.selected_project_id:
+    #         return MOCK_DATA[self.selected_project_id]["project_files"]
+    #     return None
 
-    def compute_project_information(self) -> ProjectInformation | None:
-        """Compute the project information based on the selected project."""
-        if self.selected_project_id:
-            return MOCK_DATA[self.selected_project_id]["project_information"]
-        return None
+    # def compute_project_information(self) -> Optional[ProjectInformation]:
+    #     """Compute the project information based on the selected project."""
+    #     if self.selected_project_id:
+    #         return MOCK_DATA[self.selected_project_id]["project_information"]
+    #     return None
 
     # ------------------------------------------------------------
     # HELPER METHODS
     # ------------------------------------------------------------
 
-    def set_selected_project_id(self, project_id: str | None) -> None:
-        """Set the selected project id."""
-        self.selected_project_id = project_id
+    # def set_selected_project_id(self, project_id: Optional[str]) -> None:
+    #     """Set the selected project id."""
+    #     self.selected_project_id = project_id

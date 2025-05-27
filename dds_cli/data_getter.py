@@ -138,7 +138,7 @@ class DataGetter(base.DDSBaseClass):
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
             LOG.debug(
-                "Database updated for file '%s': %s",
+                "API call: database updated for file '%s': %s",
                 escape(str(pathlib.Path(file).name)),
                 db_updated,
             )

@@ -1,6 +1,32 @@
 Changelog
 ==========
 
+.. _2.11.0:
+
+2.11.0 - 2025-04-29
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Log file created by default for uploads and downloads 
+
+.. _2.10.1:
+
+2.10.1 - 2025-04-11
+~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Generate executable for ubuntu 20.04 again
+
+.. _2.10.0:
+
+2.10.0 - 2025-04-08 
+~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Inform users that data deletion with `dds data rm --rm-all` is queued; DDS handles deletion in background
+- Other Changes
+    - Fix CLI docs action
+
 .. _2.9.0:
 
 2.9.0 - 2024-12-18

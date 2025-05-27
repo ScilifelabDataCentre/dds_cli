@@ -404,6 +404,35 @@ _Empty sprint_
 - Make release template ([#732](https://github.com/ScilifelabDataCentre/dds_cli/pull/732))
 - Fix codecov action ([#731](https://github.com/ScilifelabDataCentre/dds_cli/pull/731))
 
+# 2025-02-17 – 2025-02-28
+
+- Remove executable for Ubuntu 20.04 and add one for Ubuntu 22.04 ([#733](https://github.com/ScilifelabDataCentre/dds_cli/pull/733)).
+
+# 2025-03-17 – 2025-03-28
+
+- Inform users that data deletion has started when `dds data rm` is run ([#738](https://github.com/ScilifelabDataCentre/dds_cli/pull/738)).
+
+# 2025-03-31 - 2025-04-11
+
+- New version: 2.10.0 ([#742](https://github.com/ScilifelabDataCentre/dds_cli/pull/742))
+- Re-introduce executable for ubuntu-20.04 ([#744](https://github.com/ScilifelabDataCentre/dds_cli/pull/744))
+- Update upload-artifact action to v4 ([#743](https://github.com/ScilifelabDataCentre/dds_cli/pull/743))
+- New version: 2.10.1 ([#746](https://github.com/ScilifelabDataCentre/dds_cli/pull/746))
+
+# 2025-04-14 - 2025-04-25
+
+- Generate log file by default for put and get ([#737](https://github.com/ScilifelabDataCentre/dds_cli/pull/737))
+
+# 2025-04-28 - 2025-05-09
+
+- Release Drafter configuration ([#749](https://github.com/ScilifelabDataCentre/dds_cli/pull/749))
+- New Github Action for automatically creating release draft: Release Drafter ([#750](https://github.com/ScilifelabDataCentre/dds_cli/pull/750))
+- Remove "Changes" title from release-drafter template ([#751](https://github.com/ScilifelabDataCentre/dds_cli/pull/751))
+- Edit structure of release template ([#752](https://github.com/ScilifelabDataCentre/dds_cli/pull/752))
+- New version: 2.10.2 ([#754](https://github.com/ScilifelabDataCentre/dds_cli/pull/754))
+- Update instructions regarding release procedure ([#755](https://github.com/ScilifelabDataCentre/dds_cli/pull/755))
+- Update PR template and remove duplicates in release procedure ([#756](https://github.com/ScilifelabDataCentre/dds_cli/pull/756))
+
 # 2025-05-26 - 2025-06-05
 
 - Proof of concept for new GUI ([#739](https://github.com/ScilifelabDataCentre/dds_cli/pull/739))

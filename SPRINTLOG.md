@@ -403,3 +403,7 @@ _Empty sprint_
 
 - Make release template ([#732](https://github.com/ScilifelabDataCentre/dds_cli/pull/732))
 - Fix codecov action ([#731](https://github.com/ScilifelabDataCentre/dds_cli/pull/731))
+
+# 2025-05-26 - 2025-06-05
+
+- Proof of concept for new GUI ([#739](https://github.com/ScilifelabDataCentre/dds_cli/pull/739))

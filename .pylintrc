@@ -5,6 +5,7 @@ ignore-paths=
 
 [FORMAT]
 max-line-length=120
+max-parents=10
 
 disable=
     too-many-lines,

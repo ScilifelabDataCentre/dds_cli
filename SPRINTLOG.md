@@ -432,3 +432,7 @@ _Empty sprint_
 - New version: 2.10.2 ([#754](https://github.com/ScilifelabDataCentre/dds_cli/pull/754))
 - Update instructions regarding release procedure ([#755](https://github.com/ScilifelabDataCentre/dds_cli/pull/755))
 - Update PR template and remove duplicates in release procedure ([#756](https://github.com/ScilifelabDataCentre/dds_cli/pull/756))
+
+# 2025-05-26 - 2025-06-05
+
+- Proof of concept for new GUI ([#739](https://github.com/ScilifelabDataCentre/dds_cli/pull/739))

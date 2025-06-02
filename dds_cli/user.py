@@ -12,6 +12,7 @@ import os
 import pathlib
 import stat
 import subprocess
+from typing import Optional
 
 # Installed
 from rich.prompt import Prompt
@@ -549,35 +550,18 @@ class TokenFile:
 
         return False
 
-    def token_report(self, token):
+    def token_report(self, token) -> Optional[datetime.datetime]:
         """Produce report of token status.
 
         :param token: The DDS token that is obtained after successful basic and two-factor authentication.
             Token is already obtained before coming here, so not expected to be None.
+
+        Returns the expiration time of the token if it is not expired, None otherwise.
         """
 
         expiration_time = self.__token_dates(token=token)
-        time_to_expire = expiration_time - datetime.datetime.utcnow()
-        expiration_message = f"Token will expire in {readable_timedelta(time_to_expire)}!"
-
-        if expiration_time <= datetime.datetime.utcnow():
-            markup_color = "red"
-            sign = ":no_entry_sign:"
-            message = "Token has expired!"
-        elif time_to_expire < dds_cli.TOKEN_EXPIRATION_WARNING_THRESHOLD:
-            markup_color = "yellow"
-            sign = ":warning-emoji:"
-            message = ""
-        else:
-            markup_color = "green"
-            sign = ":white_check_mark:"
-            message = "Token is OK!"
-
-        if message:
-            LOG.info("[%s]%s  %s %s [/%s]", markup_color, sign, message, sign, markup_color)
-        LOG.info("[%s]%s  %s %s [/%s]", markup_color, sign, expiration_message, sign, markup_color)
-
-        # return expiration_message  ## RETURNS THE EXPIRATION MESSAGE FOR THE GUI
+        
+        return expiration_time
 
     # Private methods ############################################################ Private methods #
     def __token_dates(self, token):  # pylint: disable=inconsistent-return-statements

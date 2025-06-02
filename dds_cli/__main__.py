@@ -38,6 +38,7 @@ import dds_cli.project_status
 import dds_cli.project_info
 import dds_cli.user
 import dds_cli.utils
+import dds_cli.message_helper
 from dds_cli.options import (
     destination_option,
     email_arg,
@@ -490,7 +491,13 @@ def info(click_ctx):
         with dds_cli.auth.Auth(
             authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
-            authenticator.check()
+            expiration_time = authenticator.check()
+            if expiration_time:
+                dds_cli.message_helper.MessageHelper().token_report_message(
+                    expiration_time=expiration_time
+                )
+            else:
+                dds_cli.message_helper.MessageHelper().token_expired_message()
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
         sys.exit(1)

@@ -5,7 +5,9 @@ import logging
 import getpass
 
 # Installed
-from rich.prompt import Prompt
+from rich.prompt import Prompt  
+from datetime import datetime
+from typing import Optional
 
 # Own modules
 import dds_cli
@@ -53,19 +55,15 @@ class Auth(base.DDSBaseClass):
             # password_gui=password_gui,
         )
 
-    def check(self):
+    def check(self) -> Optional[datetime]:
         """Check if token exists and return info."""
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token = token_file.read_token()
             if token:
-                token_file.token_report(token=token)
-                # return token_file.token_report(token=token)
-        else:
-            LOG.info(
-                "[red]No saved token found, or token has expired. "
-                "Authenticate yourself with `dds auth login` to use this functionality![/red]"
-            )
+                return token_file.token_report(token=token)
+        return None
+
 
     def logout(self):
         """Logout user by removing authenticated token."""

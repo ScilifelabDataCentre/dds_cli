@@ -1,6 +1,6 @@
 """Message helper module"""
 
-from datetime import datetime, UTC
+from datetime import datetime
 import logging
 
 import dds_cli
@@ -23,12 +23,24 @@ class MessageHelper:
     def __init__(self):
         pass
 
+    # Logout messages ########################################################## Logout messages #
+
+    def logout_message(self, logout_status: bool):
+        """Log logout message."""
+        if logout_status:
+            LOG.info("[green] :white_check_mark: Successfully logged out![/green]")
+        else:
+            LOG.info("[green]Already logged out![/green]")
+
+
     # Token messages ############################################################ Token messages #
 
     def token_expired_message(self):
         """Log token expiration message."""
-        LOG.info("[red]No saved token found, or token has expired. "
-            "Authenticate yourself with `dds auth login` to use this functionality![/red]")
+        LOG.info(
+            "[red]No saved token found, or token has expired. "
+            "Authenticate yourself with `dds auth login` to use this functionality![/red]"
+        )
 
     def token_report_message(self, expiration_time: datetime):
         """Log token status report.

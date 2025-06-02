@@ -469,7 +469,8 @@ def logout(click_ctx):
         with dds_cli.auth.Auth(
             authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
-            authenticator.logout()
+            logout_status = authenticator.logout()
+            dds_cli.message_helper.MessageHelper().logout_message(logout_status)
 
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)

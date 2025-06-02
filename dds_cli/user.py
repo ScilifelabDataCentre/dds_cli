@@ -560,7 +560,7 @@ class TokenFile:
         """
 
         expiration_time = self.__token_dates(token=token)
-        
+
         return expiration_time
 
     # Private methods ############################################################ Private methods #

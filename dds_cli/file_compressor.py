@@ -110,7 +110,7 @@ class Compressor:
         except Exception as err:  # pylint: disable=broad-exception-caught
             LOG.warning(str(err))
         else:
-            LOG.debug("Compression of '%s' finished.", file.name)
+            LOG.debug("Compression of '%s' finished.", file)
 
     @staticmethod
     def decompress_filechunks(chunks, outfile: pathlib.Path, **_):

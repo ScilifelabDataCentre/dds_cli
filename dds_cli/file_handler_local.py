@@ -12,6 +12,7 @@ import pathlib
 import typing
 import uuid
 import random
+from rich.markup import escape
 
 # Own modules
 from dds_cli import DDSEndpoint
@@ -253,7 +254,8 @@ class LocalFileHandler(fh.FileHandler):
 
         file_info = self.data[file]
 
-        LOG.debug("Streaming file '%s'", file)
+        # LOG.debug("Streaming file '%s'", escape(str(pathlib.Path(file))))
+        LOG.debug("Streaming file '%s'", escape(str(file)))
         # Generate checksum
         checksum = hashlib.sha256()
         if file_info["compressed"]:

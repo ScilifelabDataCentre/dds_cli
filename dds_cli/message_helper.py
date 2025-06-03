@@ -26,12 +26,14 @@ class MessageHelper:
     # Logout messages ########################################################## Logout messages #
 
     def logout_message(self, logout_status: bool):
-        """Log logout message."""
+        """Log logout message.
+
+        :param logout_status: The status of the logout action. True if logout was successful, False is already logged out.
+        """
         if logout_status:
             LOG.info("[green] :white_check_mark: Successfully logged out![/green]")
         else:
             LOG.info("[green]Already logged out![/green]")
-
 
     # Token messages ############################################################ Token messages #
 

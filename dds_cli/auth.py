@@ -5,7 +5,7 @@ import logging
 import getpass
 
 # Installed
-from rich.prompt import Prompt  
+from rich.prompt import Prompt
 from datetime import datetime
 from typing import Optional
 
@@ -38,9 +38,6 @@ class Auth(base.DDSBaseClass):
         token_path: str = None,
         totp: str = None,
         allow_group: bool = False,
-        # authenticate_gui: bool = False,
-        # username_gui: str = None,
-        # password_gui: str = None,
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
@@ -50,13 +47,43 @@ class Auth(base.DDSBaseClass):
             token_path=token_path,
             totp=totp,
             allow_group=allow_group,
-            # authenticate_gui=authenticate_gui,
-            # username_gui=username_gui,
-            # password_gui=password_gui,
         )
 
+        self.user = user.User()
+
+    def login(
+        self, username: Optional[str] = None, password: Optional[str] = None
+    ) -> tuple[str, str]:
+        """Login user to DDS.
+
+        :param username: The username to login with.
+        :param password: The password to login with.
+
+        :return: Partial auth token and second factor method
+        """
+        return self.user.login(username, password)
+
+    def confirm_twofactor(
+        self,
+        partial_auth_token: str,
+        secondfactor_method: str,
+        totp: str = None,
+        twofactor_code: Optional[str] = None,
+    ):
+        """Confirm 2FA for user.
+
+        :param partial_auth_token: The partial auth token.
+        :param twofactor_code: The 2FA code to confirm.
+
+        """
+        self.user.confirm_twofactor(partial_auth_token, secondfactor_method, totp, twofactor_code)
+        self.token = self.user.token_dict
+
     def check(self) -> Optional[datetime]:
-        """Check if token exists and return info."""
+        """Check if token exists and return info.
+
+        :return: Token info if token exists, None otherwise.
+        """
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token = token_file.read_token()
@@ -64,9 +91,11 @@ class Auth(base.DDSBaseClass):
                 return token_file.token_report(token=token)
         return None
 
-
     def logout(self) -> bool:
-        """Logout user by removing authenticated token."""
+        """Logout user by removing authenticated token.
+
+        :return: True if logout was successful, False if already logged out.
+        """
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token_file.delete_token()

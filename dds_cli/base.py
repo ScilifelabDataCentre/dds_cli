@@ -69,7 +69,6 @@ class DDSBaseClass:
                 force_renew_token=force_renew_token,
                 no_prompt=no_prompt,
                 token_path=token_path,
-                totp=totp,
                 allow_group=allow_group,
             )
             partial_auth_token, secondfactor_method = dds_user.login()

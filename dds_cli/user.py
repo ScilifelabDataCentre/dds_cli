@@ -61,9 +61,7 @@ class User:
         """Get token as authorization dict for requests."""
         return {"Authorization": f"Bearer {self.token}"}
 
-    def login(
-        self, username: Optional[str] = None, password: Optional[str] = None
-    ) -> tuple[str, str]:
+    def login(self, username: Optional[str] = None, password: Optional[str] = None) -> tuple:
         """Login user to DDS.
 
          :param username: The username to login with.

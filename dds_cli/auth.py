@@ -57,13 +57,10 @@ class Auth(base.DDSBaseClass):
         self.user = user.User(
             force_renew_token=force_renew_token,
             token_path=token_path,
-            totp=totp,
             allow_group=allow_group,
         )
 
-    def login(
-        self, username: Optional[str] = None, password: Optional[str] = None
-    ) -> tuple[str, str]:
+    def login(self, username: Optional[str] = None, password: Optional[str] = None) -> tuple:
         """Login user to DDS. Used to manually authenticate users with username and password.
         If not provided, will prompt for them.
 

@@ -90,8 +90,6 @@ class Compressor:
     ) -> bytes:
         """Compresses file by reading it chunk by chunk."""
 
-        # LOG.debug("Started compression...")
-
         try:
             with file.open(mode="rb") as infile:
                 # Initiate a Zstandard compressor
@@ -140,10 +138,13 @@ class Compressor:
             LOG.exception(message)
         else:
             saved = True
-            LOG.debug(
-                "Decompression of '%s' done.",
-                escape(str(pathlib.Path(outfile).relative_to(files_directory))),
-            )
+            if files_directory:
+                LOG.debug(
+                    "Decompression of '%s' done.",
+                    escape(str(pathlib.Path(outfile).relative_to(files_directory))),
+                )
+            else:
+                LOG.debug("Decompression of '%s' done.", escape(str(outfile)))
 
         return saved, message
 

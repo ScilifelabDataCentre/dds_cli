@@ -441,15 +441,11 @@ def login(click_ctx, totp, allow_group):
     if no_prompt:
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
-        # Add authenticate=False to not authenticate the user in the base class but throught the login method
         with dds_cli.auth.Auth(
-            authenticate=False,
             token_path=click_ctx.get("TOKEN_PATH"),
             totp=totp,
             allow_group=allow_group,
-        ) as authenticator:
-            partial_auth_token, secondfactor_method = authenticator.login()
-            authenticator.confirm_twofactor(partial_auth_token, secondfactor_method, totp)
+        ):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication successful![/green]")
     except (

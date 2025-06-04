@@ -57,8 +57,6 @@ class User:
         # Fetch encrypted JWT token
         self.__retrieve_token(allow_group=allow_group)
 
-        # Retrive token used to also authenticate, now after refactor the parent class must call the login and 2fa methods
-
     @property
     def token_dict(self):
         """Get token as authorization dict for requests."""
@@ -219,11 +217,7 @@ class User:
                 message="Missing token in authentication response."
             )
 
-        # LOG.debug("User %s granted access to the DDS", username)
-
-        # return token
-
-        # Save token to file, used to be in the __retrieve_token method
+        # Save token to file
         token_file = TokenFile(token_path=self.token_path, allow_group=self.allow_group)
         token_file.save_token(token)
 
@@ -245,16 +239,6 @@ class User:
         if not self.token:
             if not self.force_renew_token:
                 LOG.info("No saved token found, or token has expired")
-        # Authenticate user and save token
-        # if not self.token:
-        #     if not self.force_renew_token:
-        #         LOG.info(
-        #             "No saved token found, or token has expired, proceeding with authentication"
-        #         )
-        #     else:
-        #         LOG.info("Attempting to create the session token")
-        #     self.token = self.__authenticate_user(totp=totp)
-        #     token_file.save_token(self.token)
 
     @staticmethod
     def get_user_name_if_logged_in(token_path=None):

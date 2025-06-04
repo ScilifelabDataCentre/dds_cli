@@ -72,7 +72,6 @@ class DDSBaseClass:
                 totp=totp,
                 allow_group=allow_group,
             )
-            # Login user after refactor
             partial_auth_token, secondfactor_method = dds_user.login()
             dds_user.confirm_twofactor(partial_auth_token, secondfactor_method, totp)
             self.token = dds_user.token_dict

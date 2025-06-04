@@ -41,6 +41,8 @@ class Auth(base.DDSBaseClass):
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
+        # Will authenticate user automatically if authenticate is True, else need to call login and confirm_twofactor methods to authenticate user
+        # This is to be able to use the auth class in the GUI code, where the user is not prompted for username and password
         super().__init__(
             authenticate=authenticate,
             force_renew_token=force_renew_token,
@@ -49,12 +51,18 @@ class Auth(base.DDSBaseClass):
             allow_group=allow_group,
         )
 
-        self.user = user.User()
+        # Initialize user class for calling login and confirm_twofactor methods to authenticate user
+        self.user = user.User(
+            force_renew_token=force_renew_token,
+            token_path=token_path,
+            totp=totp,
+            allow_group=allow_group,
+        )
 
     def login(
         self, username: Optional[str] = None, password: Optional[str] = None
     ) -> tuple[str, str]:
-        """Login user to DDS.
+        """Login user to DDS. Used to manually authenticate users with username and password. If not provided, will prompt for them.
 
         :param username: The username to login with.
         :param password: The password to login with.
@@ -70,7 +78,7 @@ class Auth(base.DDSBaseClass):
         totp: str = None,
         twofactor_code: Optional[str] = None,
     ):
-        """Confirm 2FA for user.
+        """Confirm 2FA for user. Used to manually confirm the 2FA code. If not provided, will prompt for it.
 
         :param partial_auth_token: The partial auth token.
         :param twofactor_code: The 2FA code to confirm.
@@ -80,7 +88,7 @@ class Auth(base.DDSBaseClass):
         self.token = self.user.token_dict
 
     def check(self) -> Optional[datetime]:
-        """Check if token exists and return info.
+        """Check if token exists and returns the token expiration time.
 
         :return: Token info if token exists, None otherwise.
         """

@@ -45,7 +45,6 @@ class User:
         force_renew_token: bool = False,
         no_prompt: bool = False,
         token_path: str = None,
-        totp: str = None,
         allow_group: bool = False,
     ):
         self.force_renew_token = force_renew_token

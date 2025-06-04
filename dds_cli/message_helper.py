@@ -28,7 +28,8 @@ class MessageHelper:
     def logout_message(self, logout_status: bool):
         """Log logout message.
 
-        :param logout_status: The status of the logout action. True if logout was successful, False is already logged out.
+        :param logout_status: The status of the logout action.
+        True if logout was successful, False if already logged out.
         """
         if logout_status:
             LOG.info("[green] :white_check_mark: Successfully logged out![/green]")

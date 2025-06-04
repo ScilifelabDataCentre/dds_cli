@@ -121,7 +121,10 @@ class Compressor:
 
         # Decompressing file and saving
         if files_directory:
-            LOG.debug("Decompressing file '%s'...", escape(str(pathlib.Path(outfile).relative_to(files_directory))))
+            LOG.debug(
+                "Decompressing file '%s'...",
+                escape(str(pathlib.Path(outfile).relative_to(files_directory))),
+            )
         else:
             LOG.debug("Decompressing file '%s'...", escape(str(outfile)))
 
@@ -137,7 +140,10 @@ class Compressor:
             LOG.exception(message)
         else:
             saved = True
-            LOG.debug("Decompression of '%s' done.", escape(str(pathlib.Path(outfile).relative_to(files_directory))))
+            LOG.debug(
+                "Decompression of '%s' done.",
+                escape(str(pathlib.Path(outfile).relative_to(files_directory))),
+            )
 
         return saved, message
 

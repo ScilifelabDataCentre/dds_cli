@@ -263,7 +263,10 @@ class LocalFileHandler(fh.FileHandler):
                 checksum.update(chunk)
                 yield chunk
         else:
-            LOG.debug("File '%s' not compressed -- starting compressing", escape(str(file_info["path_raw"])))
+            LOG.debug(
+                "File '%s' not compressed -- starting compressing",
+                escape(str(file_info["path_raw"])),
+            )
             # Generate checksum first
             # total_read = 0
             for chunk in self.read_file(file=file_info["path_raw"]):

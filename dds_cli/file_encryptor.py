@@ -135,11 +135,13 @@ class Encryptor(ECDHKeyHandler):
                 LOG.debug("test: %s", file)
                 if files_directory:
                     LOG.debug(
-                        "Checksum verification successful. File integrity verified for file '%s'.", escape(str(pathlib.Path(file).relative_to(files_directory)))
+                        "Checksum verification successful. File integrity verified for file '%s'.",
+                        escape(str(pathlib.Path(file).relative_to(files_directory))),
                     )
                 else:
                     LOG.debug(
-                        "Checksum verification successful. File integrity verified for file '%s'.", escape(str(file))
+                        "Checksum verification successful. File integrity verified for file '%s'.",
+                        escape(str(file)),
                     )
             else:
                 error = f"Checksum verification failed. File '{file}' compromised."
@@ -269,7 +271,10 @@ class Decryptor(ECDHKeyHandler):
                     )
 
                 if self.files_directory:
-                    LOG.debug("Testing nonce for file '%s'", escape(str(pathlib.Path(outfile).relative_to(self.files_directory))))
+                    LOG.debug(
+                        "Testing nonce for file '%s'",
+                        escape(str(pathlib.Path(outfile).relative_to(self.files_directory))),
+                    )
                 else:
                     LOG.debug("Testing nonce for file '%s'", escape(str(outfile)))
                 if last_nonce != nonce:

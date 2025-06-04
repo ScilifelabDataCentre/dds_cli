@@ -322,7 +322,11 @@ class DataPutter(base.DDSBaseClass):
         self.filehandler.data[file]["salt"] = salt
         self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
-        LOG.debug("File '%s' processed size: %s", escape(str(file_info["path_raw"])), file_info["path_processed"].stat().st_size)
+        LOG.debug(
+            "File '%s' processed size: %s",
+            escape(str(file_info["path_raw"])),
+            file_info["path_processed"].stat().st_size,
+        )
 
         if saved:
             LOG.debug(
@@ -347,7 +351,8 @@ class DataPutter(base.DDSBaseClass):
                 if db_updated:
                     all_ok = True
                     LOG.debug(
-                        "File successfully uploaded and added to the database: '%s'", escape(str(file_info["path_raw"]))
+                        "File successfully uploaded and added to the database: '%s'",
+                        escape(str(file_info["path_raw"])),
                     )
 
         if not saved or all_ok:
@@ -374,7 +379,9 @@ class DataPutter(base.DDSBaseClass):
         # File info
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
-        LOG.debug("Step '%s': started file '%s'", self.method, self.filehandler.data[file]["path_raw"])
+        LOG.debug(
+            "Step '%s': started file '%s'", self.method, self.filehandler.data[file]["path_raw"]
+        )
 
         try:
             with self.s3connector as conn:

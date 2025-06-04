@@ -108,7 +108,7 @@ def test_compress_file_img(caplog: LogCaptureFixture):
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression of 'test-image_1a.jpg' finished.",
+            f"Compression of '{image_file}' finished.",
         ) in caplog.record_tuples
 
 

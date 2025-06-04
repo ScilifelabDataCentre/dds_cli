@@ -116,6 +116,9 @@ class DataGetter(base.DDSBaseClass):
         all_ok, message = (False, "")
         file_info = self.filehandler.data[file]
 
+        LOG.debug(
+            "Step 'download_and_verify': started file '%s'", escape(str(file_info["name_in_db"]))
+        )
         # File task for downloading
         task = progress.add_task(
             description=txt.TextHandler.task_name(file=escape(str(file)), step="get"),
@@ -133,22 +136,23 @@ class DataGetter(base.DDSBaseClass):
             total=file_info["size_original"],
         )
 
-        LOG.debug("File '%s' downloaded: %s", escape(str(file)), file_downloaded)
+        LOG.debug("File '%s' downloaded: %s", escape(str(file_info["name_in_db"])), file_downloaded)
 
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
             LOG.debug(
                 "API call: database updated for file '%s': %s",
-                escape(str(pathlib.Path(file).name)),
+                escape(str(file_info["name_in_db"])),
                 db_updated,
             )
 
-            LOG.debug("Beginning decryption of file '%s'...", escape(str(pathlib.Path(file).name)))
+            LOG.debug("Beginning decryption of file '%s'...", escape(str(file_info["name_in_db"])))
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
                 peer_public=file_info["public_key"],
                 key_salt=file_info["salt"],
+                files_directory=self.dds_directory.directories["FILES"],
             ) as decryptor:
                 streamed_chunks = decryptor.decrypt_file(
                     infile=file_info["path_downloaded"], outfile=file
@@ -163,14 +167,19 @@ class DataGetter(base.DDSBaseClass):
                 file_saved, message = stream_to_file_func(
                     chunks=streamed_chunks,
                     outfile=file,
+                    files_directory=self.dds_directory.directories["FILES"],
                 )
 
-            LOG.debug("File '%s' saved? %s", pathlib.Path(file).name, file_saved)
+            LOG.debug("File '%s' saved? %s", escape(str(file_info["name_in_db"])), file_saved)
             if file_saved:
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
                 all_ok, message = (
-                    fe.Encryptor.verify_checksum(file=file, correct_checksum=file_info["checksum"])
+                    fe.Encryptor.verify_checksum(
+                        file=file,
+                        correct_checksum=file_info["checksum"],
+                        files_directory=self.dds_directory.directories["FILES"],
+                    )
                     if self.verify_checksum
                     else (True, "")
                 )

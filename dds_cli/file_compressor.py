@@ -13,6 +13,7 @@ import traceback
 
 # Installed
 import zstandard as zstd
+from rich.markup import escape
 
 # Own modules
 from dds_cli import FileSegment
@@ -113,13 +114,17 @@ class Compressor:
             LOG.debug("Compression of '%s' finished.", file)
 
     @staticmethod
-    def decompress_filechunks(chunks, outfile: pathlib.Path, **_):
+    def decompress_filechunks(chunks, outfile: pathlib.Path, files_directory=None, **_):
         """Decompress file chunks"""
 
         saved, message = (False, "")
 
         # Decompressing file and saving
-        LOG.debug("Decompressing file '%s'...", outfile.name)
+        if files_directory:
+            LOG.debug("Decompressing file '%s'...", escape(str(pathlib.Path(outfile).relative_to(files_directory))))
+        else:
+            LOG.debug("Decompressing file '%s'...", escape(str(outfile)))
+
         try:
             with outfile.open(mode="wb+") as file:
                 dctx = zstd.ZstdDecompressor()
@@ -132,7 +137,7 @@ class Compressor:
             LOG.exception(message)
         else:
             saved = True
-            LOG.debug("Decompression of '%s' done.", outfile.name)
+            LOG.debug("Decompression of '%s' done.", escape(str(pathlib.Path(outfile).relative_to(files_directory))))
 
         return saved, message
 

@@ -291,6 +291,7 @@ class DataPutter(base.DDSBaseClass):
         all_ok, saved, message = (False, False, "")  # Error catching
         file_info = self.filehandler.data[file]  # Info on current file
         file_public_key, salt = ("", "")  # Crypto info
+        LOG.debug("Step '%s': started file '%s'", self.method, escape(str(file_info["path_raw"])))
 
         # Progress bar for processing
         task = progress.add_task(
@@ -305,7 +306,7 @@ class DataPutter(base.DDSBaseClass):
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:
             # Encrypt and save chunks
-            LOG.debug("Encrypting file '%s'", file)
+            LOG.debug("Encrypting file '%s'", escape(str(file_info["path_raw"])))
             saved, message = encryptor.encrypt_filechunks(
                 chunks=streamed_chunks,
                 outfile=file_info["path_processed"],
@@ -321,12 +322,12 @@ class DataPutter(base.DDSBaseClass):
         self.filehandler.data[file]["salt"] = salt
         self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
-        LOG.debug("File '%s' processed size: %s", file, file_info["path_processed"].stat().st_size)
+        LOG.debug("File '%s' processed size: %s", escape(str(file_info["path_raw"])), file_info["path_processed"].stat().st_size)
 
         if saved:
             LOG.debug(
                 "File successfully encrypted: '%s'",
-                escape(file),
+                escape(str(file_info["path_raw"])),
             )
             # Update progress bar for upload
             progress.reset(
@@ -346,7 +347,7 @@ class DataPutter(base.DDSBaseClass):
                 if db_updated:
                     all_ok = True
                     LOG.debug(
-                        "File successfully uploaded and added to the database: '%s'", escape(file)
+                        "File successfully uploaded and added to the database: '%s'", escape(str(file_info["path_raw"]))
                     )
 
         if not saved or all_ok:
@@ -373,6 +374,7 @@ class DataPutter(base.DDSBaseClass):
         # File info
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
+        LOG.debug("Step '%s': started file '%s'", self.method, self.filehandler.data[file]["path_raw"])
 
         try:
             with self.s3connector as conn:
@@ -441,7 +443,7 @@ class DataPutter(base.DDSBaseClass):
                 error_message=f"Failed to add file '{file}' to database",
             )
             added_to_db, message = (True, response_json)
-            LOG.debug("API call for file '%s'", file)
+            LOG.debug("API call for file '%s'", fileinfo["path_raw"])
         except (
             dds_cli.exceptions.ApiRequestError,
             dds_cli.exceptions.ApiResponseError,

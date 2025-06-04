@@ -117,7 +117,7 @@ class Encryptor(ECDHKeyHandler):
 
     # Static methods ###################### Static methods #
     @staticmethod
-    def verify_checksum(file: pathlib.Path, correct_checksum):
+    def verify_checksum(file: pathlib.Path, correct_checksum, files_directory=None):
         """Generate file checksum and verify the integrity"""
 
         verified, error = (False, "")
@@ -132,9 +132,15 @@ class Encryptor(ECDHKeyHandler):
         else:
             if checksum.hexdigest() == correct_checksum:
                 verified, error = (True, "File integrity verified.")
-                LOG.debug(
-                    "Checksum verification successful. File integrity verified for file '%s'.", file
-                )
+                LOG.debug("test: %s", file)
+                if files_directory:
+                    LOG.debug(
+                        "Checksum verification successful. File integrity verified for file '%s'.", escape(str(pathlib.Path(file).relative_to(files_directory)))
+                    )
+                else:
+                    LOG.debug(
+                        "Checksum verification successful. File integrity verified for file '%s'.", escape(str(file))
+                    )
             else:
                 error = f"Checksum verification failed. File '{file}' compromised."
                 LOG.warning(error)
@@ -196,7 +202,7 @@ class Encryptor(ECDHKeyHandler):
 class Decryptor(ECDHKeyHandler):
     """Handles the decryption of the files."""
 
-    def __init__(self, project_keys: tuple, peer_public: str, key_salt: str):
+    def __init__(self, project_keys: tuple, peer_public: str, key_salt: str, files_directory=None):
         self.max_nonce = 2 ** (12 * 8)
 
         # Only private needed, public generated from it.
@@ -210,6 +216,8 @@ class Decryptor(ECDHKeyHandler):
             peer_public=self.peer_public,
             salt=bytes.fromhex(key_salt),
         )
+
+        self.files_directory = files_directory
 
     def __enter__(self):
         return self
@@ -260,7 +268,10 @@ class Decryptor(ECDHKeyHandler):
                         ciphertext=chunk, aad=aad, nonce=nonce, key=self.key
                     )
 
-                LOG.debug("Testing nonce for file '%s'", pathlib.Path(outfile).name)
+                if self.files_directory:
+                    LOG.debug("Testing nonce for file '%s'", escape(str(pathlib.Path(outfile).relative_to(self.files_directory))))
+                else:
+                    LOG.debug("Testing nonce for file '%s'", escape(str(outfile)))
                 if last_nonce != nonce:
                     raise SystemExit("Nonces do not match!!")
                 LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)

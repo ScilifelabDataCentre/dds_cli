@@ -53,18 +53,6 @@ def verify_proceed(func):
         # Mark as started
         self.status[file]["started"] = True
 
-        # Only show relative path for put/get operations
-        if self.method in ["get"]:
-            LOG.debug(
-                "Step '%s': started file '%s'",
-                func.__name__,
-                escape(
-                    str(pathlib.Path(file).relative_to(self.dds_directory.directories["FILES"]))
-                ),
-            )
-        else:
-            LOG.debug("Step '%s': started file '%s'", func.__name__, escape(str(file)))
-
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
         # Cancel file(s) if something failed
@@ -112,11 +100,6 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.debug(
-            "Step '%s': status for file '%s' updated to 'started'",
-            func.__name__,
-            escape(str(pathlib.Path(file))),
-        )
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)

@@ -13,7 +13,6 @@ class DDSInput(Input):
 
     DEFAULT_CSS = """
     DDSInput {
-        max-width: 60;
         margin: 0 0 1 -1;
 
     }

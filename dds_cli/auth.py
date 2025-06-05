@@ -85,7 +85,9 @@ class Auth(base.DDSBaseClass):
         :param twofactor_code: The 2FA code to confirm.
 
         """
-        self.user.confirm_twofactor(partial_auth_token, secondfactor_method, totp, twofactor_code)
+        self.user.confirm_twofactor(
+            partial_auth_token, secondfactor_method, totp=totp, twofactor_code=twofactor_code
+        )
         self.token = self.user.token_dict
 
     def check(self) -> Optional[datetime]:

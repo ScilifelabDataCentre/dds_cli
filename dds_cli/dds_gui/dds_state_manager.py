@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass
 
+from textual.reactive import reactive
+
+from dds_cli.auth import Auth
 from dds_cli.dds_gui.components.dds_tree_view import DDSTreeNode
 from dds_cli.dds_gui.components.dds_status_chip import DDSStatus
 
@@ -139,7 +142,7 @@ class DDSStateManager:
 
     # AUTH STATE
     # Initialize the auth object as an reactive state when starting the application.
-    # auth: reactive[Auth] = reactive(Auth(authenticate=False, token_path=token_path), recompose=True)
+    auth: reactive[Auth] = reactive(Auth(authenticate=False, token_path=token_path), recompose=True)
 
     # PROJECT STATE
     # projects_id: reactive[List[str]] = reactive(list(MOCK_DATA.keys()), recompose=True)
@@ -153,7 +156,7 @@ class DDSStateManager:
     # Derive the auth status from the auth object.
     # Initialize the auth status as False when starting the application.
     # Derived through the compute_auth_status method.
-    # auth_status: reactive[bool] = reactive(False, recompose=True)
+    auth_status: reactive[bool] = reactive(False, recompose=True)
 
     # PROJECT CONTENT
     # Derive the project content from the selected project.
@@ -194,3 +197,7 @@ class DDSStateManager:
     # def set_selected_project_id(self, project_id: Optional[str]) -> None:
     #     """Set the selected project id."""
     #     self.selected_project_id = project_id
+
+    def set_auth_status(self, new_auth_status: bool) -> None:
+        """Set the auth status."""
+        self.auth_status = new_auth_status

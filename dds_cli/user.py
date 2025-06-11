@@ -84,6 +84,11 @@ class User:
             username = Prompt.ask("DDS username")
             password = getpass.getpass(prompt="DDS password: ")
 
+        if username == "":
+            raise exceptions.AuthenticationError(
+                message="Non-empty username needed to be able to authenticate."
+            )
+
         if password == "":
             raise exceptions.AuthenticationError(
                 message="Non-empty password needed to be able to authenticate."

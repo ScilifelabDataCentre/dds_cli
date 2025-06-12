@@ -68,8 +68,8 @@ class AuthenticationForm(Container):
         except (
             dds_cli.exceptions.AuthenticationError,
             dds_cli.exceptions.ApiRequestError,
-        ) as e:
-            self.notify(f"Error: {e}", severity="error")
+        ) as error:
+            self.notify(f"Error: {error}", severity="error")
             self.auth = None
 
     def confirm_2factor_code(self) -> None:

@@ -84,8 +84,8 @@ class AuthenticationForm(Container):
             )
             self.notify("Successfully logged in.")
             self.app.set_auth_status(True)
-        except dds_cli.exceptions.AuthenticationError as e:
-            self.notify(f"Error: {e}", severity="error", timeout=10)
+        except dds_cli.exceptions.AuthenticationError as error:
+            self.notify(f"Error: {error}", severity="error", timeout=10)
         self.close_modal()
 
 

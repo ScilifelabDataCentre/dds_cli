@@ -131,6 +131,7 @@ def test_login_error_propagation() -> None:
 
 ###### Test confirm_twofactor ######
 
+
 def test_confirm_twofactor_successful_totp() -> None:
     """Test successful 2FA confirmation with TOTP."""
     with patch("dds_cli.auth.user.User") as mock_user_class:
@@ -284,6 +285,7 @@ def test_logout_no_token_file() -> None:
 
 ###### Test twofactor ######
 
+
 @pytest.mark.skip()
 def test_twofactor_activate_totp() -> None:
     """Test activating TOTP 2FA."""
@@ -306,6 +308,7 @@ def test_twofactor_activate_totp() -> None:
 
             # Verify message was logged
             mock_log.info.assert_called_once_with("TOTP activated successfully")
+
 
 @pytest.mark.skip()
 def test_twofactor_activate_hotp() -> None:
@@ -334,6 +337,7 @@ def test_twofactor_activate_hotp() -> None:
 
             # Verify message was logged
             mock_log.info.assert_any_call("HOTP activated successfully")
+
 
 @pytest.mark.skip()
 def test_twofactor_activate_hotp_empty_password() -> None:
@@ -370,6 +374,7 @@ def test_twofactor_api_error() -> None:
 
 ###### Test deactivate ######
 
+
 @pytest.mark.skip()
 def test_deactivate_totp_successful() -> None:
     """Test successful TOTP deactivation."""
@@ -394,6 +399,7 @@ def test_deactivate_totp_successful() -> None:
             # Verify message was logged
             mock_log.info.assert_called_once_with("TOTP deactivated successfully")
 
+
 @pytest.mark.skip()
 def test_deactivate_totp_no_username() -> None:
     """Test TOTP deactivation without username."""
@@ -416,6 +422,7 @@ def test_deactivate_totp_no_username() -> None:
             # Verify message was logged
             mock_log.info.assert_called_once_with("TOTP deactivated for current user")
 
+
 @pytest.mark.skip()
 def test_deactivate_totp_api_error() -> None:
     """Test TOTP deactivation with API error."""
@@ -429,6 +436,7 @@ def test_deactivate_totp_api_error() -> None:
 
         with pytest.raises(DDSCLIException):
             auth.deactivate(username="testuser")
+
 
 @pytest.mark.skip()
 def test_deactivate_totp_server_error() -> None:

@@ -26,4 +26,4 @@ jobs:
       - name: Test with pytest
         run: |
           pip install -r tests/requirements-test.txt
-          pytest --color=yes --cov=./dds_cli --cov-report=xml:coverage/report.xml´
+          pytest --color=yes -v

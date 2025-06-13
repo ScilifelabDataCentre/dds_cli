@@ -117,9 +117,7 @@ class DataGetter(base.DDSBaseClass):
         file_info = self.filehandler.data[file]
         file_name_in_db = escape(str(file_info["name_in_db"]))
 
-        LOG.debug(
-            "Step 'download_and_verify': started file '%s'", file_name_in_db
-        )
+        LOG.debug("Step 'download_and_verify': started file '%s'", file_name_in_db)
         # File task for downloading
         task = progress.add_task(
             description=txt.TextHandler.task_name(file=escape(str(file)), step="get"),

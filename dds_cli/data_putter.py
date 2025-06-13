@@ -380,9 +380,7 @@ class DataPutter(base.DDSBaseClass):
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
         file_path_raw = self.filehandler.data[file]["path_raw"]
-        LOG.debug(
-            "Step '%s': started file '%s'", self.method, file_path_raw
-        )
+        LOG.debug("Step '%s': started file '%s'", self.method, file_path_raw)
 
         try:
             with self.s3connector as conn:

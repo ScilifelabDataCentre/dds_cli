@@ -1,1 +1,1 @@
-"""DDS GUI project view mode package.""" 
+"""DDS GUI project view mode package."""

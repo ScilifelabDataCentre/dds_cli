@@ -22,4 +22,4 @@ jobs:
       - name: Test with pytest
         run: |
           pip install -r dds_cli/dds_gui/tests/requirements-test-gui.txt
-          pytest --color=yes dds_cli/dds_gui/tests
+          pytest --color=yes dds_cli/dds_gui/tests -v

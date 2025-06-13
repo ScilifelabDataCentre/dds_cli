@@ -1,0 +1,25 @@
+name: GUI Tests
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      - name: Install dds_cli
+        run: |
+          pip install .
+
+      - name: Test with pytest
+        run: |
+          pip install -r dds_cli/dds_gui/tests/requirements-test-gui.txt
+          pytest --color=yes dds_cli/dds_gui/tests

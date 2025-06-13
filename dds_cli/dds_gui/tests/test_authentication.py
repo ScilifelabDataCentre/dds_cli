@@ -39,9 +39,11 @@ async def test_auth_status_ui_switching() -> None:
         assert len(app.query("#logout")) > 0, "Logout button should be available"
         assert len(app.query("#re-authenticate")) > 0, "Re-auth button should be available"
 
+
 # =================================================================================
 # Modal UI Interaction Tests
 # =================================================================================
+
 
 @pytest.mark.asyncio
 async def test_login_modal_ui_workflow() -> None:
@@ -61,7 +63,9 @@ async def test_login_modal_ui_workflow() -> None:
 
             # Push login modal
             login_modal = LoginModal()
-            app.push_screen(login_modal) # Need to manually push the screen, probelm with Textual test runner
+            app.push_screen(
+                login_modal
+            )  # Need to manually push the screen, probelm with Textual test runner
             await pilot.pause()
 
             # Verify modal displayed
@@ -80,13 +84,13 @@ async def test_login_modal_ui_workflow() -> None:
 
             # UI Workflow Test: Click "Send 2FA code" triggers form switch
             send_2fa_buttons = app.query("Button#send-2fa-code")
-                
+
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # UI Verification: 2FA form should now be displayed
             code_inputs = app.query("Input#code")
-                
+
             # Test 2FA field interaction
             code_inputs.first().value = "123456"
             await pilot.pause()
@@ -129,11 +133,11 @@ async def test_logout_modal_interactions() -> None:
 
                 # Test cancel functionality
                 cancel_button = app.query("Button#cancel")
-                
+
                 await pilot.click(cancel_button.first())
                 await pilot.pause()
                 assert mock_close.call_count >= 1, "Modal should close on cancel"
-                app.pop_screen() # Need to manually pop the screen
+                app.pop_screen()  # Need to manually pop the screen
                 assert app.auth_status, "Authentication status should be True still"
 
                 app.push_screen(logout_modal)
@@ -142,7 +146,7 @@ async def test_logout_modal_interactions() -> None:
 
                 # Test logout functionality
                 logout_button = app.query("Button#confirm")
-                
+
                 await pilot.click(logout_button.first())
                 await pilot.pause()
                 assert mock_close.call_count >= 1, "Modal should close on logout"
@@ -187,13 +191,13 @@ async def test_reauthentication_modal_form_interactions() -> None:
 
             # UI Workflow Test: Click "Send 2FA code" triggers form switch
             send_2fa_buttons = app.query("Button#send-2fa-code")
-                
+
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # UI Verification: 2FA form should now be displayed
             code_inputs = app.query("Input#code")
-                
+
             # Test 2FA field interaction
             code_inputs.first().value = "123456"
             await pilot.pause()

@@ -95,7 +95,6 @@ def put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    # LOG.debug("Starting: '%s'", escape(file)) ##
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -291,7 +290,8 @@ class DataPutter(base.DDSBaseClass):
         all_ok, saved, message = (False, False, "")  # Error catching
         file_info = self.filehandler.data[file]  # Info on current file
         file_public_key, salt = ("", "")  # Crypto info
-        LOG.debug("Step '%s': started file '%s'", self.method, escape(str(file_info["path_raw"])))
+        file_path_raw = escape(str(file_info["path_raw"]))
+        LOG.debug("Step '%s': started file '%s'", self.method, file_path_raw)
 
         # Progress bar for processing
         task = progress.add_task(
@@ -306,7 +306,7 @@ class DataPutter(base.DDSBaseClass):
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:
             # Encrypt and save chunks
-            LOG.debug("Encrypting file '%s'", escape(str(file_info["path_raw"])))
+            LOG.debug("Encrypting file '%s'", file_path_raw)
             saved, message = encryptor.encrypt_filechunks(
                 chunks=streamed_chunks,
                 outfile=file_info["path_processed"],
@@ -324,14 +324,14 @@ class DataPutter(base.DDSBaseClass):
 
         LOG.debug(
             "File '%s' processed size: %s",
-            escape(str(file_info["path_raw"])),
+            file_path_raw,
             file_info["path_processed"].stat().st_size,
         )
 
         if saved:
             LOG.debug(
                 "File successfully encrypted: '%s'",
-                escape(str(file_info["path_raw"])),
+                file_path_raw,
             )
             # Update progress bar for upload
             progress.reset(
@@ -352,7 +352,7 @@ class DataPutter(base.DDSBaseClass):
                     all_ok = True
                     LOG.debug(
                         "File successfully uploaded and added to the database: '%s'",
-                        escape(str(file_info["path_raw"])),
+                        file_path_raw,
                     )
 
         if not saved or all_ok:
@@ -379,8 +379,9 @@ class DataPutter(base.DDSBaseClass):
         # File info
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
+        file_path_raw = self.filehandler.data[file]["path_raw"]
         LOG.debug(
-            "Step '%s': started file '%s'", self.method, self.filehandler.data[file]["path_raw"]
+            "Step '%s': started file '%s'", self.method, file_path_raw
         )
 
         try:

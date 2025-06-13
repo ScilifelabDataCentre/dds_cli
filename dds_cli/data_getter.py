@@ -115,9 +115,10 @@ class DataGetter(base.DDSBaseClass):
         """Download the file, reveals the original data and verifies the integrity."""
         all_ok, message = (False, "")
         file_info = self.filehandler.data[file]
+        file_name_in_db = escape(str(file_info["name_in_db"]))
 
         LOG.debug(
-            "Step 'download_and_verify': started file '%s'", escape(str(file_info["name_in_db"]))
+            "Step 'download_and_verify': started file '%s'", file_name_in_db
         )
         # File task for downloading
         task = progress.add_task(
@@ -136,17 +137,17 @@ class DataGetter(base.DDSBaseClass):
             total=file_info["size_original"],
         )
 
-        LOG.debug("File '%s' downloaded: %s", escape(str(file_info["name_in_db"])), file_downloaded)
+        LOG.debug("File '%s' downloaded: %s", file_name_in_db, file_downloaded)
 
         if file_downloaded:
             db_updated, message = self.update_db(file=file)
             LOG.debug(
                 "API call: database updated for file '%s': %s",
-                escape(str(file_info["name_in_db"])),
+                file_name_in_db,
                 db_updated,
             )
 
-            LOG.debug("Beginning decryption of file '%s'...", escape(str(file_info["name_in_db"])))
+            LOG.debug("Beginning decryption of file '%s'...", file_name_in_db)
             file_saved = False
             with fe.Decryptor(
                 project_keys=self.keys,
@@ -170,7 +171,7 @@ class DataGetter(base.DDSBaseClass):
                     files_directory=self.dds_directory.directories["FILES"],
                 )
 
-            LOG.debug("File '%s' saved? %s", escape(str(file_info["name_in_db"])), file_saved)
+            LOG.debug("File '%s' saved? %s", file_name_in_db, file_saved)
             if file_saved:
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed

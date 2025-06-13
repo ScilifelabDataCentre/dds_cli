@@ -116,15 +116,10 @@ class Compressor:
         """Decompress file chunks"""
 
         saved, message = (False, "")
+        outfile_path = escape(str(pathlib.Path(outfile).relative_to(files_directory)))
 
         # Decompressing file and saving
-        if files_directory:
-            LOG.debug(
-                "Decompressing file '%s'...",
-                escape(str(pathlib.Path(outfile).relative_to(files_directory))),
-            )
-        else:
-            LOG.debug("Decompressing file '%s'...", escape(str(outfile)))
+        LOG.debug("Decompressing file '%s'...", outfile_path)
 
         try:
             with outfile.open(mode="wb+") as file:
@@ -138,13 +133,7 @@ class Compressor:
             LOG.exception(message)
         else:
             saved = True
-            if files_directory:
-                LOG.debug(
-                    "Decompression of '%s' done.",
-                    escape(str(pathlib.Path(outfile).relative_to(files_directory))),
-                )
-            else:
-                LOG.debug("Decompression of '%s' done.", escape(str(outfile)))
+            LOG.debug("Decompression of '%s' done.", outfile_path)
 
         return saved, message
 

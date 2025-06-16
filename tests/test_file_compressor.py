@@ -78,7 +78,7 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression of 'newfile.txt' finished.",
+            "Compression of 'test_dir_txt/newfile.txt' finished.",
         ) in caplog.record_tuples
 
         # Decompress file
@@ -160,7 +160,7 @@ def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCapture
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression of 'newfile.csv' finished.",
+            "Compression of 'test_dir_csv/newfile.csv' finished.",
         ) in caplog.record_tuples
 
         # Decompress file

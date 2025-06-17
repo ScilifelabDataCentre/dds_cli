@@ -62,23 +62,17 @@ def test_init_base_class_with_authentication_default_params(mock_user_class):
     # Setup mock user
     mock_user_instance = MagicMock()
     mock_user_class.return_value = mock_user_instance
-    mock_user_instance.login.return_value = (MOCK_PARTIAL_AUTH_TOKEN, "TOTP")
     mock_user_instance.token_dict = MOCK_TOKEN_DICT
 
     base = DDSBaseClass(authenticate=True)
 
-    # Verify User was created with default parameters
+    # Verify User was created with default parameters including totp=None
     mock_user_class.assert_called_once_with(
         force_renew_token=False,
         no_prompt=False,
         token_path=None,
         allow_group=False,
-    )
-
-    # Verify authentication flow was executed
-    mock_user_instance.login.assert_called_once()
-    mock_user_instance.confirm_twofactor.assert_called_once_with(
-        MOCK_PARTIAL_AUTH_TOKEN, "TOTP", totp=None
+        totp=None,
     )
 
     # Verify token was set
@@ -91,7 +85,6 @@ def test_init_base_class_with_authentication_custom_params(mock_user_class):
     # Setup mock user
     mock_user_instance = MagicMock()
     mock_user_class.return_value = mock_user_instance
-    mock_user_instance.login.return_value = (MOCK_PARTIAL_AUTH_TOKEN, "HOTP")
     mock_user_instance.token_dict = MOCK_TOKEN_DICT
 
     base = DDSBaseClass(
@@ -103,18 +96,13 @@ def test_init_base_class_with_authentication_custom_params(mock_user_class):
         totp=MOCK_2FA_CODE,
     )
 
-    # Verify User was created with custom parameters
+    # Verify User was created with custom parameters including totp
     mock_user_class.assert_called_once_with(
         force_renew_token=True,
         no_prompt=True,
         token_path="/custom/path",
         allow_group=True,
-    )
-
-    # Verify authentication flow was executed with TOTP
-    mock_user_instance.login.assert_called_once()
-    mock_user_instance.confirm_twofactor.assert_called_once_with(
-        MOCK_PARTIAL_AUTH_TOKEN, "HOTP", totp=MOCK_2FA_CODE
+        totp=MOCK_2FA_CODE,
     )
 
     # Verify token was set
@@ -127,14 +115,17 @@ def test_init_base_class_authentication_totp_method(mock_user_class):
     # Setup mock user
     mock_user_instance = MagicMock()
     mock_user_class.return_value = mock_user_instance
-    mock_user_instance.login.return_value = (MOCK_PARTIAL_AUTH_TOKEN, "TOTP")
     mock_user_instance.token_dict = MOCK_TOKEN_DICT
 
     base = DDSBaseClass(authenticate=True, totp=MOCK_2FA_CODE)
 
-    # Verify TOTP was passed to confirm_twofactor
-    mock_user_instance.confirm_twofactor.assert_called_once_with(
-        MOCK_PARTIAL_AUTH_TOKEN, "TOTP", totp=MOCK_2FA_CODE
+    # Verify User was created with TOTP parameter
+    mock_user_class.assert_called_once_with(
+        force_renew_token=False,
+        no_prompt=False,
+        token_path=None,
+        allow_group=False,
+        totp=MOCK_2FA_CODE,
     )
 
     assert base.token == MOCK_TOKEN_DICT
@@ -146,14 +137,17 @@ def test_init_base_class_authentication_hotp_method(mock_user_class):
     # Setup mock user
     mock_user_instance = MagicMock()
     mock_user_class.return_value = mock_user_instance
-    mock_user_instance.login.return_value = (MOCK_PARTIAL_AUTH_TOKEN, "HOTP")
     mock_user_instance.token_dict = MOCK_TOKEN_DICT
 
     base = DDSBaseClass(authenticate=True)
 
-    # Verify HOTP method was handled correctly (no TOTP code)
-    mock_user_instance.confirm_twofactor.assert_called_once_with(
-        MOCK_PARTIAL_AUTH_TOKEN, "HOTP", totp=None
+    # Verify User was created with default parameters (totp=None for HOTP)
+    mock_user_class.assert_called_once_with(
+        force_renew_token=False,
+        no_prompt=False,
+        token_path=None,
+        allow_group=False,
+        totp=None,
     )
 
     assert base.token == MOCK_TOKEN_DICT
@@ -165,40 +159,31 @@ def test_init_base_class_authentication_hotp_method(mock_user_class):
 @patch("dds_cli.base.user.User")
 def test_init_base_class_login_failure(mock_user_class):
     """Test DDSBaseClass initialization when login fails."""
-    # Setup mock user to raise authentication error
-    mock_user_instance = MagicMock()
-    mock_user_class.return_value = mock_user_instance
-    mock_user_instance.login.side_effect = AuthenticationError("Invalid credentials")
+    # Setup mock user to raise authentication error during initialization
+    mock_user_class.side_effect = AuthenticationError("Invalid credentials")
 
     with pytest.raises(AuthenticationError) as exc_info:
         DDSBaseClass(authenticate=True)
 
     assert "Invalid credentials" in str(exc_info.value)
 
-    # Verify login was called but confirm_twofactor was not
-    mock_user_instance.login.assert_called_once()
-    mock_user_instance.confirm_twofactor.assert_not_called()
+    # Verify User constructor was called
+    mock_user_class.assert_called_once()
 
 
 @patch("dds_cli.base.user.User")
 def test_init_base_class_twofactor_failure(mock_user_class):
     """Test DDSBaseClass initialization when two-factor authentication fails."""
-    # Setup mock user
-    mock_user_instance = MagicMock()
-    mock_user_class.return_value = mock_user_instance
-    mock_user_instance.login.return_value = (MOCK_PARTIAL_AUTH_TOKEN, "TOTP")
-    mock_user_instance.confirm_twofactor.side_effect = AuthenticationError("Invalid 2FA code")
+    # Setup mock user to raise authentication error during initialization
+    mock_user_class.side_effect = AuthenticationError("Invalid 2FA code")
 
     with pytest.raises(AuthenticationError) as exc_info:
         DDSBaseClass(authenticate=True, totp="wrong_code")
 
     assert "Invalid 2FA code" in str(exc_info.value)
 
-    # Verify both login and confirm_twofactor were called
-    mock_user_instance.login.assert_called_once()
-    mock_user_instance.confirm_twofactor.assert_called_once_with(
-        MOCK_PARTIAL_AUTH_TOKEN, "TOTP", totp="wrong_code"
-    )
+    # Verify User constructor was called
+    mock_user_class.assert_called_once()
 
 
 ###### Integration tests ######
@@ -210,7 +195,6 @@ def test_complete_authentication_flow_integration(mock_user_class):
     # Setup mock user with realistic behavior
     mock_user_instance = MagicMock()
     mock_user_class.return_value = mock_user_instance
-    mock_user_instance.login.return_value = (MOCK_PARTIAL_AUTH_TOKEN, "TOTP")
     mock_user_instance.token_dict = MOCK_TOKEN_DICT
 
     # Test complete flow
@@ -225,18 +209,13 @@ def test_complete_authentication_flow_integration(mock_user_class):
         totp=MOCK_2FA_CODE,
     )
 
-    # Verify all parameters were passed correctly
+    # Verify all parameters were passed correctly including totp
     mock_user_class.assert_called_once_with(
         force_renew_token=True,
         no_prompt=True,
         token_path="/custom/path",
         allow_group=True,
-    )
-
-    # Verify authentication flow completed
-    mock_user_instance.login.assert_called_once()
-    mock_user_instance.confirm_twofactor.assert_called_once_with(
-        MOCK_PARTIAL_AUTH_TOKEN, "TOTP", totp=MOCK_2FA_CODE
+        totp=MOCK_2FA_CODE,
     )
 
     # Verify final state

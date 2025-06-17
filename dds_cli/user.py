@@ -46,6 +46,8 @@ class User:
         no_prompt: bool = False,
         token_path: str = None,
         allow_group: bool = False,
+        totp: str = None,
+        retrieve_token: bool = True,
     ):
         self.force_renew_token = force_renew_token
         self.no_prompt = no_prompt
@@ -53,8 +55,10 @@ class User:
         self.token_path = token_path
         self.allow_group = allow_group
 
-        # Fetch encrypted JWT token
-        self.__retrieve_token(allow_group=allow_group)
+        # Fetch encrypted JWT token if retrieve_token is True,
+        # else await token to be set in auth class call to login and confirm 2FA
+        if retrieve_token:
+            self.__retrieve_token(allow_group=allow_group, totp=totp)
 
     @property
     def token_dict(self):
@@ -118,7 +122,7 @@ class User:
         secondfactor_method: str,
         totp: str = None,
         twofactor_code: Optional[str] = None,
-    ) -> any:
+    ) -> None:
         """Confirm 2FA for user.
 
         :param partial_auth_token: The partial auth token.
@@ -126,8 +130,9 @@ class User:
         :param totp: The TOTP code to login with.
         :param twofactor_code: The two factor code to login with.
 
-        :return: Token
         """
+        LOG.debug("Confirming 2FA for user.")
+
         totp_enabled = secondfactor_method == "TOTP"
 
         if totp:
@@ -223,11 +228,15 @@ class User:
         token_file = TokenFile(token_path=self.token_path, allow_group=self.allow_group)
         token_file.save_token(token)
 
+        # Save token to user instance
+        self.token = token
+
     # Private methods ######################### Private methods #
 
-    def __retrieve_token(self, allow_group: bool = False):
+    def __retrieve_token(self, allow_group: bool = False, totp: str = None):
         """Fetch saved token from file otherwise authenticate user and saves the new token."""
         token_file = TokenFile(token_path=self.token_path, allow_group=allow_group)
+
         if not self.force_renew_token:
             LOG.debug("Retrieving token...")
 
@@ -240,7 +249,13 @@ class User:
 
         if not self.token:
             if not self.force_renew_token:
-                LOG.info("No saved token found, or token has expired")
+                LOG.info(
+                    "No saved token found, or token has expired, proceeding with authentication"
+                )
+            else:
+                LOG.info("Attempting to create the session token")
+            partial_auth_token, secondfactor_method = self.login()
+            self.confirm_twofactor(partial_auth_token, secondfactor_method, totp=totp)
 
     @staticmethod
     def get_user_name_if_logged_in(token_path=None):

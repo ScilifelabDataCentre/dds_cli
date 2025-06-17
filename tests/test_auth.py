@@ -25,25 +25,15 @@ MOCK_AUTH_TOKEN = "final_auth_token_12345"
 def test_init_auth_no_authentication() -> None:
     """Test Auth initialization without automatic authentication."""
     with patch("dds_cli.auth.user.User") as mock_user_class:
-        mock_user_instance = MagicMock()
-        mock_user_class.return_value = mock_user_instance
-
         auth = Auth(authenticate=False)
-
         assert isinstance(auth, Auth)
-        assert auth.user == mock_user_instance
-        # Verify User was created with correct parameters
-        mock_user_class.assert_called_once_with(
-            force_renew_token=True, token_path=None, allow_group=False
-        )
+        # User should NOT be instantiated when authenticate=False
+        mock_user_class.assert_not_called()
 
 
 def test_init_auth_with_custom_parameters() -> None:
     """Test Auth initialization with custom parameters."""
     with patch("dds_cli.auth.user.User") as mock_user_class:
-        mock_user_instance = MagicMock()
-        mock_user_class.return_value = mock_user_instance
-
         auth = Auth(
             authenticate=False,
             force_renew_token=False,
@@ -51,12 +41,74 @@ def test_init_auth_with_custom_parameters() -> None:
             totp="123456",
             allow_group=True,
         )
+        assert isinstance(auth, Auth)
+        # User should NOT be instantiated when authenticate=False
+        mock_user_class.assert_not_called()
+
+
+def test_init_auth_with_authentication() -> None:
+    """Test Auth initialization with automatic authentication enabled."""
+    with patch("dds_cli.auth.user.User") as mock_user_class:
+        mock_user_instance = MagicMock()
+        mock_user_class.return_value = mock_user_instance
+        mock_user_instance.token_dict = {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
+
+        auth = Auth(authenticate=True)
 
         assert isinstance(auth, Auth)
-        # Verify User was created with custom parameters
+        # User should be instantiated when authenticate=True
         mock_user_class.assert_called_once_with(
-            force_renew_token=False, token_path="/custom/path", allow_group=True
+            force_renew_token=True,
+            no_prompt=False,
+            token_path=None,
+            allow_group=False,
+            totp=None,
         )
+        # Token should be set from user instance
+        assert auth.token == {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
+
+
+def test_init_auth_with_authentication_custom_params() -> None:
+    """Test Auth initialization with authentication and custom parameters."""
+    with patch("dds_cli.auth.user.User") as mock_user_class:
+        mock_user_instance = MagicMock()
+        mock_user_class.return_value = mock_user_instance
+        mock_user_instance.token_dict = {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
+
+        auth = Auth(
+            authenticate=True,
+            force_renew_token=False,
+            token_path="/custom/path",
+            totp=MOCK_2FA_CODE,
+            allow_group=True,
+        )
+
+        assert isinstance(auth, Auth)
+        # User should be instantiated with custom parameters
+        mock_user_class.assert_called_once_with(
+            force_renew_token=False,
+            no_prompt=False,
+            token_path="/custom/path",
+            allow_group=True,
+            totp=MOCK_2FA_CODE,
+        )
+        # Token should be set from user instance
+        assert auth.token == {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
+        # Custom attributes should be set
+        assert auth.allow_group is True
+
+
+def test_init_auth_with_authentication_failure() -> None:
+    """Test Auth initialization when authentication fails."""
+    with patch("dds_cli.auth.user.User") as mock_user_class:
+        mock_user_class.side_effect = AuthenticationError("Authentication failed")
+
+        with pytest.raises(AuthenticationError) as exc_info:
+            Auth(authenticate=True)
+
+        assert "Authentication failed" in str(exc_info.value)
+        # User constructor should have been called
+        mock_user_class.assert_called_once()
 
 
 ###### Test login ######
@@ -74,6 +126,14 @@ def test_login_successful() -> None:
 
         assert partial_token == MOCK_PARTIAL_AUTH_TOKEN
         assert second_factor_method == "HOTP"
+        # Verify User was created with correct parameters for login
+        mock_user_class.assert_called_once_with(
+            force_renew_token=False,
+            no_prompt=False,
+            token_path=None,
+            allow_group=False,
+            retrieve_token=False,
+        )
         mock_user_instance.login.assert_called_once_with(MOCK_USERNAME, MOCK_PASSWORD)
 
 
@@ -127,6 +187,9 @@ def test_login_error_propagation() -> None:
             auth.login(MOCK_USERNAME, "wrong_password")
 
         assert "Invalid credentials" in str(exc_info.value)
+        # Verify User was created and login was called
+        mock_user_class.assert_called_once()
+        mock_user_instance.login.assert_called_once_with(MOCK_USERNAME, "wrong_password")
 
 
 ###### Test confirm_twofactor ######
@@ -146,9 +209,12 @@ def test_confirm_twofactor_successful_totp() -> None:
             totp=MOCK_2FA_CODE,
         )
 
-        # Verify user.confirm_twofactor was called correctly
+        # Verify user.confirm_twofactor was called correctly with keyword arguments
         mock_user_instance.confirm_twofactor.assert_called_once_with(
-            MOCK_PARTIAL_AUTH_TOKEN, "TOTP", totp=MOCK_2FA_CODE, twofactor_code=None
+            partial_auth_token=MOCK_PARTIAL_AUTH_TOKEN,
+            secondfactor_method="TOTP",
+            totp=MOCK_2FA_CODE,
+            twofactor_code=None,
         )
         # Verify token was set
         assert auth.token == {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
@@ -168,9 +234,12 @@ def test_confirm_twofactor_successful_hotp() -> None:
             twofactor_code=MOCK_2FA_CODE,
         )
 
-        # Verify user.confirm_twofactor was called correctly
+        # Verify user.confirm_twofactor was called correctly with keyword arguments
         mock_user_instance.confirm_twofactor.assert_called_once_with(
-            MOCK_PARTIAL_AUTH_TOKEN, "HOTP", totp=None, twofactor_code=MOCK_2FA_CODE
+            partial_auth_token=MOCK_PARTIAL_AUTH_TOKEN,
+            secondfactor_method="HOTP",
+            totp=None,
+            twofactor_code=MOCK_2FA_CODE,
         )
         # Verify token was set
         assert auth.token == {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
@@ -481,10 +550,14 @@ def test_complete_authentication_flow() -> None:
         )
         assert auth.token == {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
 
-        # Verify calls were made correctly
+        # Verify calls were made correctly - note there are two User instances created
+        assert mock_user_class.call_count == 2  # One for login, one for confirm_twofactor
         mock_user_instance.login.assert_called_once_with(MOCK_USERNAME, MOCK_PASSWORD)
         mock_user_instance.confirm_twofactor.assert_called_once_with(
-            MOCK_PARTIAL_AUTH_TOKEN, "TOTP", totp=MOCK_2FA_CODE, twofactor_code=None
+            partial_auth_token=MOCK_PARTIAL_AUTH_TOKEN,
+            secondfactor_method="TOTP",
+            totp=MOCK_2FA_CODE,
+            twofactor_code=None,
         )
 
 

@@ -135,7 +135,6 @@ class DDSStateManager:
 
     # TODO: Make this get the token path correctly
     token_path = "~/.dds_cli_token"
-
     # ------------------------------------------------------------
     # BASE STATES
     # ------------------------------------------------------------
@@ -175,8 +174,8 @@ class DDSStateManager:
     # ------------------------------------------------------------
 
     # def compute_auth_status(self) -> bool:
-    #     """Compute the auth status based on the auth object."""
-    #     return bool(self.auth.check())
+    #    """Compute the auth status based on the auth object."""
+    #    return bool(self.auth.check())
 
     # def compute_project_content(self) -> Optional[DDSTreeNode]:
     #     """Compute the project content based on the selected project."""

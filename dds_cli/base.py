@@ -70,9 +70,8 @@ class DDSBaseClass:
                 no_prompt=no_prompt,
                 token_path=token_path,
                 allow_group=allow_group,
+                totp=totp,
             )
-            partial_auth_token, secondfactor_method = dds_user.login()
-            dds_user.confirm_twofactor(partial_auth_token, secondfactor_method, totp=totp)
             self.token = dds_user.token_dict
 
         # Project access only required if trying to upload, download or list
@@ -115,6 +114,10 @@ class DDSBaseClass:
         return True
 
     # Public methods ############################### Public methods #
+
+    def set_token(self, token_dict: dict) -> None:
+        """Sets the token for the base class. Called from auth class to set the token when authenticating in the gui withour running the base class with autheticate set to true."""
+        self.token = token_dict
 
     def get_project_info(self):
         """Collect project information from API."""

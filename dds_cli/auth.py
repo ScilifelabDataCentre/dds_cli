@@ -53,12 +53,7 @@ class Auth(base.DDSBaseClass):
             allow_group=allow_group,
         )
 
-        # Initialize user class for calling login and confirm_twofactor methods to authenticate user
-        self.user = user.User(
-            force_renew_token=force_renew_token,
-            token_path=token_path,
-            allow_group=allow_group,
-        )
+        self.allow_group = allow_group
 
     def login(self, username: Optional[str] = None, password: Optional[str] = None) -> tuple:
         """Login user to DDS. Used to manually authenticate users with username and password.
@@ -69,7 +64,15 @@ class Auth(base.DDSBaseClass):
 
         :return: Partial auth token and second factor method
         """
-        return self.user.login(username, password)
+        # Create a User instance to call the login method
+        user_instance = user.User(
+            force_renew_token=False,
+            no_prompt=False,
+            token_path=self.token_path,
+            allow_group=self.allow_group,
+            retrieve_token=False,
+        )
+        return user_instance.login(username, password)
 
     def confirm_twofactor(
         self,
@@ -81,14 +84,29 @@ class Auth(base.DDSBaseClass):
         """Confirm 2FA for user. Used to manually confirm the 2FA code.
         If not provided, will prompt for it.
 
+        Sets the token for the base class after confirming 2FA.
+
         :param partial_auth_token: The partial auth token.
         :param twofactor_code: The 2FA code to confirm.
 
         """
-        self.user.confirm_twofactor(
-            partial_auth_token, secondfactor_method, totp=totp, twofactor_code=twofactor_code
+
+        user_instance = user.User(
+            force_renew_token=False,
+            token_path=self.token_path,
+            allow_group=self.allow_group,
+            totp=totp,
+            retrieve_token=False,
         )
-        self.token = self.user.token_dict
+
+        user_instance.confirm_twofactor(
+            partial_auth_token=partial_auth_token,
+            secondfactor_method=secondfactor_method,
+            totp=totp,
+            twofactor_code=twofactor_code,
+        )
+
+        self.set_token(user_instance.token_dict)
 
     def check(self) -> Optional[datetime]:
         """Check if token exists and returns the token expiration time.

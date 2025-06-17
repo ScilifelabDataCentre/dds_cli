@@ -29,13 +29,13 @@ MOCK_AUTH_TOKEN = "auth_token_12345"
 
 def test_init_user() -> None:
     """Test the initialization of the user module."""
-    user = User(force_renew_token=False, no_prompt=True)
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
     assert isinstance(user, User)
 
 
 def test_user_token_dict() -> None:
     """Test the token dictionary of the user."""
-    user = User(force_renew_token=False, no_prompt=True)
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
     assert user.token_dict == {"Authorization": f"Bearer {user.token}"}
 
 
@@ -49,7 +49,7 @@ def test_login_successful_hotp() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         partial_token, second_factor_method = user.login(MOCK_USERNAME, MOCK_PASSWORD)
 
@@ -64,7 +64,7 @@ def test_login_successful_totp() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
         partial_token, second_factor_method = user.login(MOCK_USERNAME, MOCK_PASSWORD)
 
         assert partial_token == MOCK_PARTIAL_AUTH_TOKEN
@@ -78,8 +78,8 @@ def test_login_successful_with_prompts() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=200, json=mock_response)
 
-        # Create user that allows prompting (no_prompt=False)
-        user = User(force_renew_token=False, no_prompt=False)
+        # Create user that allows prompting (no_prompt=False) but doesn't auto-retrieve token
+        user = User(force_renew_token=False, no_prompt=False, retrieve_token=False)
 
         # Mock both username and password prompts
         with pytest.MonkeyPatch().context() as mp:
@@ -108,7 +108,7 @@ def test_login_prompts_called_correctly() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=False)
+        user = User(force_renew_token=False, no_prompt=False, retrieve_token=False)
 
         # Use MagicMock to track the calls
         with pytest.MonkeyPatch().context() as mp:
@@ -132,7 +132,7 @@ def test_login_invalid_credentials() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=401, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.raises(DDSCLIException) as exc_info:
             user.login("wrong_user", "wrong_password")
@@ -142,7 +142,7 @@ def test_login_invalid_credentials() -> None:
 
 def test_login_empty_username() -> None:
     """Test that login raises error with empty username."""
-    user = User(force_renew_token=False, no_prompt=True)
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
     with pytest.raises(AuthenticationError) as exc_info:
         user.login("", MOCK_PASSWORD)
@@ -152,7 +152,7 @@ def test_login_empty_username() -> None:
 
 def test_login_empty_password() -> None:
     """Test that login raises error with empty password."""
-    user = User(force_renew_token=False, no_prompt=True)
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
     with pytest.raises(AuthenticationError) as exc_info:
         user.login(MOCK_USERNAME, "")
@@ -162,7 +162,7 @@ def test_login_empty_password() -> None:
 
 def test_login_unicode_error() -> None:
     """Test handling of unicode characters in credentials."""
-    user = User(force_renew_token=False, no_prompt=True)
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
     with Mocker() as mock:
         # Mock the request to raise UnicodeEncodeError
@@ -186,7 +186,7 @@ def test_login_server_error() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=500, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.raises(ApiResponseError) as exc_info:
             user.login(MOCK_USERNAME, MOCK_PASSWORD)
@@ -204,7 +204,7 @@ def test_login_missing_token_in_response() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
         partial_token, second_factor_method = user.login(MOCK_USERNAME, MOCK_PASSWORD)
 
         assert partial_token is None
@@ -220,7 +220,7 @@ def test_login_missing_secondfactor_in_response() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
         partial_token, second_factor_method = user.login(MOCK_USERNAME, MOCK_PASSWORD)
 
         assert partial_token == MOCK_PARTIAL_AUTH_TOKEN
@@ -234,7 +234,7 @@ def test_login_network_error() -> None:
         # Mock network error
         mock.get(DDSEndpoint.ENCRYPTED_TOKEN, exc=ConnectionError("Network unreachable"))
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         # The mocked ConnectionError will be raised directly
         with pytest.raises(ConnectionError) as exc_info:
@@ -245,7 +245,7 @@ def test_login_network_error() -> None:
 
 def test_login_no_prompt_without_credentials() -> None:
     """Test that login raises error when no_prompt=True and no credentials provided."""
-    user = User(force_renew_token=False, no_prompt=True)
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
     with pytest.raises(AuthenticationError) as exc_info:
         user.login()  # No username/password provided
@@ -263,7 +263,7 @@ def test_confirm_twofactor_successful_totp_with_totp_param() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         # Mock token file operations to avoid file system interactions
         with pytest.MonkeyPatch().context() as mp:
@@ -287,7 +287,7 @@ def test_confirm_twofactor_successful_hotp_with_twofactor_code() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.MonkeyPatch().context() as mp:
             mock_token_file = MagicMock()
@@ -315,7 +315,7 @@ def test_confirm_twofactor_successful_totp_with_twofactor_code() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.MonkeyPatch().context() as mp:
             mock_token_file = MagicMock()
@@ -333,7 +333,7 @@ def test_confirm_twofactor_successful_totp_with_twofactor_code() -> None:
 
 def test_confirm_twofactor_totp_not_enabled_error() -> None:
     """Test that TOTP code raises error when TOTP is not enabled."""
-    user = User(force_renew_token=False, no_prompt=True)
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
     with pytest.raises(AuthenticationError) as exc_info:
         user.confirm_twofactor(
@@ -354,7 +354,7 @@ def test_confirm_twofactor_invalid_code() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, status_code=401, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.raises(DDSCLIException) as exc_info:
             user.confirm_twofactor(
@@ -373,7 +373,7 @@ def test_confirm_twofactor_missing_token_in_response() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.raises(AuthenticationError) as exc_info:
             user.confirm_twofactor(
@@ -392,7 +392,7 @@ def test_confirm_twofactor_server_error() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, status_code=500, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.raises(ApiResponseError) as exc_info:
             user.confirm_twofactor(
@@ -410,7 +410,7 @@ def test_confirm_twofactor_network_error() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, exc=ConnectionError("Network unreachable"))
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.raises(ConnectionError) as exc_info:
             user.confirm_twofactor(
@@ -429,7 +429,7 @@ def test_confirm_twofactor_expired_partial_token() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, status_code=401, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.raises(DDSCLIException) as exc_info:
             user.confirm_twofactor(
@@ -449,7 +449,7 @@ def test_confirm_twofactor_partial_token_authorization_header() -> None:
     with Mocker() as mock:
         mock.get(DDSEndpoint.SECOND_FACTOR, status_code=200, json=mock_response)
 
-        user = User(force_renew_token=False, no_prompt=True)
+        user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
 
         with pytest.MonkeyPatch().context() as mp:
             mock_token_file = MagicMock()

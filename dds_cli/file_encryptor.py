@@ -132,7 +132,6 @@ class Encryptor(ECDHKeyHandler):
         else:
             if checksum.hexdigest() == correct_checksum:
                 verified, error = (True, "File integrity verified.")
-                LOG.debug("test: %s", file)
                 if files_directory:
                     LOG.debug(
                         "Checksum verification successful. File integrity verified for file '%s'.",
@@ -270,15 +269,13 @@ class Decryptor(ECDHKeyHandler):
                         ciphertext=chunk, aad=aad, nonce=nonce, key=self.key
                     )
 
-                if self.files_directory:
-                    LOG.debug(
-                        "Testing nonce for file '%s'",
-                        escape(str(pathlib.Path(outfile).relative_to(self.files_directory))),
-                    )
-                else:
-                    LOG.debug("Testing nonce for file '%s'", escape(str(outfile)))
+                LOG.debug(
+                    "Testing nonce for file '%s'\nExpected: %s, Found: %s",
+                    escape(str(pathlib.Path(outfile).relative_to(self.files_directory))),
+                    last_nonce,
+                    nonce,
+                )
                 if last_nonce != nonce:
                     raise SystemExit("Nonces do not match!!")
-                LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)
         except Exception as err:  # pylint: disable=broad-exception-caught
             LOG.warning(str(err))

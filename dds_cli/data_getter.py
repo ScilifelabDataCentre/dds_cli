@@ -135,7 +135,20 @@ class DataGetter(base.DDSBaseClass):
 
         LOG.debug("File '%s' downloaded: %s", escape(str(file)), file_downloaded)
 
+        file_size_check = False
+
         if file_downloaded:
+            ## File size verification
+            expected_size = file_info["size_stored"]
+            actual_size = file_info["path_downloaded"].stat().st_size
+
+            if actual_size == expected_size:
+                file_size_check = True
+                message = f"Downloaded file size matches expected size: {expected_size} bytes."
+            else:
+                message = f"Downloaded file size mismatch: expected {expected_size} bytes, got {actual_size} bytes"
+
+        if file_size_check:
             db_updated, message = self.update_db(file=file)
             LOG.debug("Database updated: %s", db_updated)
 

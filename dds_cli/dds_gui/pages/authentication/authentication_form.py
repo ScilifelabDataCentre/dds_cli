@@ -82,7 +82,7 @@ class AuthenticationForm(Container):
                 secondfactor_method=self.secondfactor_method,
                 twofactor_code=code,
             )
-            self.notify("Successfully logged in.")
+            self.notify("Successfully authenticated.")
             self.app.set_auth_status(True)
         except dds_cli.exceptions.AuthenticationError as error:
             self.notify(f"Error: {error}", severity="error", timeout=10)
@@ -103,7 +103,7 @@ class LoginFormFields(DDSForm):
         yield DDSInput(placeholder="Username", id="username")
         yield DDSInput(placeholder="Password", id="password", password=True)
         with Container(id="dds-auth-form-button"):
-            yield DDSButton("Send 2FA code", id="send-2fa-code", variant="primary")
+            yield DDSButton("Login", id="send-2fa-code", variant="primary")
 
 
 class TwoFactorFormFields(DDSForm):
@@ -119,4 +119,4 @@ class TwoFactorFormFields(DDSForm):
     def compose(self) -> ComposeResult:
         yield DDSInput(placeholder="2FA code", id="code")
         with Container(id="dds-2fa-form-button"):
-            yield DDSButton("Login", id="login", variant="primary")
+            yield DDSButton("Authenticate", id="login", variant="primary")

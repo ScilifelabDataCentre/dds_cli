@@ -27,7 +27,7 @@ class LoginModal(DDSModal):
         """Create the content of the modal."""
         return Vertical(
             Label(
-                "Login to your DDS account. Enter your email and password to get the two-factor authentication code.",
+                "Enter your email and password to log in to your DDS account",
                 id="login-label",
             ),
             AuthenticationForm(self.close_modal),

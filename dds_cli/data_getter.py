@@ -144,10 +144,12 @@ class DataGetter(base.DDSBaseClass):
 
             if actual_size == expected_size:
                 file_size_check = True
-                LOG.debug(f"Downloaded file size matches expected size: {expected_size} bytes.")
+                LOG.debug("Downloaded file size matches expected size: %s bytes.", expected_size)
             else:
                 LOG.debug(
-                    f"Downloaded file size mismatch: expected {expected_size} bytes, got {actual_size} bytes"
+                    "Downloaded file size mismatch: expected %s bytes, got %s bytes",
+                    expected_size,
+                    actual_size
                 )
 
         if file_size_check:
@@ -180,10 +182,12 @@ class DataGetter(base.DDSBaseClass):
                 expected_size = file_info["size_original"]
                 actual_size = pathlib.Path(file).stat().st_size
                 if actual_size == expected_size:
-                    LOG.debug(f"Downloaded file size matches expected size: {expected_size} bytes.")
+                    LOG.debug("Downloaded file size matches expected size: %s bytes.", expected_size)
                 else:
                     LOG.debug(
-                        f"Downloaded file size mismatch: expected {expected_size} bytes, got {actual_size} bytes"
+                        "Downloaded file size mismatch: expected %s bytes, got %s bytes",
+                        expected_size,
+                        actual_size
                     )
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed

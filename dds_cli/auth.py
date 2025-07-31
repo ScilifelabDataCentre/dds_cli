@@ -57,7 +57,7 @@ class Auth(base.DDSBaseClass):
 
     def login(self, username: Optional[str] = None, password: Optional[str] = None) -> tuple:
         """Login user to DDS. Used to manually authenticate users with username and password.
-        If not provided, will prompt for them.
+        If not provided, will prompt for them. Currently only used in the GUI.
 
         :param username: The username to login with.
         :param password: The password to login with.

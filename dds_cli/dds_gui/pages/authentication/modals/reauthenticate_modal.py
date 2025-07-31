@@ -27,7 +27,7 @@ class ReAuthenticateModal(DDSModal):
         """Create the content of the modal."""
         return Vertical(
             Label(
-                "Re-authenticate to your DDS account. Enter your two-factor authentication code.",
+                "Re-authenticate yourself to the DDS. This will restore your session.",
                 id="reauthenticate-label",
             ),
             AuthenticationForm(self.close_modal),

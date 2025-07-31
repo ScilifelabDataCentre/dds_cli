@@ -17,7 +17,7 @@ LOG = logging.getLogger(__name__)
 ###############################################################################
 
 
-class MessageHelper:
+class CLIMessageHelper:
     """Helper class for generating messages for the CLI."""
 
     def __init__(self):

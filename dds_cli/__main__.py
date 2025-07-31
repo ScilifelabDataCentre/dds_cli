@@ -475,7 +475,7 @@ def logout(click_ctx):
             authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
             logout_ok = authenticator.logout()
-            dds_cli.message_helper.MessageHelper().logout_message(logout_ok=logout_ok)
+            dds_cli.message_helper.CLIMessageHelper().logout_message(logout_ok=logout_ok)
 
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
@@ -499,11 +499,11 @@ def info(click_ctx):
         ) as authenticator:
             expiration_time = authenticator.check()
             if expiration_time:
-                dds_cli.message_helper.MessageHelper().token_report_message(
+                dds_cli.message_helper.CLIMessageHelper().token_report_message(
                     expiration_time=expiration_time
                 )
             else:
-                dds_cli.message_helper.MessageHelper().token_expired_message()
+                dds_cli.message_helper.CLIMessageHelper().token_expired_message()
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
         sys.exit(1)

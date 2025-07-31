@@ -82,7 +82,7 @@ class Auth(base.DDSBaseClass):
         twofactor_code: Optional[str] = None,
     ):
         """Confirm 2FA for user. Used to manually confirm the 2FA code.
-        If not provided, will prompt for it.
+        If not provided, will prompt for it. Currently only used in the GUI.
 
         Sets the token for the base class after confirming 2FA.
 

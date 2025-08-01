@@ -135,7 +135,24 @@ class DataGetter(base.DDSBaseClass):
 
         LOG.debug("File '%s' downloaded: %s", escape(str(file)), file_downloaded)
 
+        file_size_check = False
+
         if file_downloaded:
+            ## File size verification
+            expected_size = file_info["size_stored"]
+            actual_size = file_info["path_downloaded"].stat().st_size
+
+            if actual_size == expected_size:
+                file_size_check = True
+                LOG.debug("Downloaded file size matches expected size: %s bytes.", expected_size)
+            else:
+                LOG.debug(
+                    "Downloaded file size mismatch: expected %s bytes, got %s bytes",
+                    expected_size,
+                    actual_size,
+                )
+
+        if file_size_check:
             db_updated, message = self.update_db(file=file)
             LOG.debug("Database updated: %s", db_updated)
 
@@ -161,6 +178,19 @@ class DataGetter(base.DDSBaseClass):
 
             LOG.debug("File saved? %s", file_saved)
             if file_saved:
+                # Check file size post-decryption and post-decompression
+                expected_size = file_info["size_original"]
+                actual_size = pathlib.Path(file).stat().st_size
+                if actual_size == expected_size:
+                    LOG.debug(
+                        "Downloaded file size matches expected size: %s bytes.", expected_size
+                    )
+                else:
+                    LOG.debug(
+                        "Downloaded file size mismatch: expected %s bytes, got %s bytes",
+                        expected_size,
+                        actual_size,
+                    )
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
                 all_ok, message = (

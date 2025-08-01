@@ -1862,7 +1862,6 @@ def get_data(
 
                     # Schedule the first num_threads futures for upload
                     for file in itertools.islice(iterator, num_threads):
-                        LOG.debug("Starting: %s", rich.markup.escape(str(file)))
                         # Execute download
                         download_threads[
                             texec.submit(getter.download_and_verify, file=file, progress=progress)
@@ -1901,7 +1900,6 @@ def get_data(
 
                         # Schedule the next set of futures for download
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug("Starting: %s", rich.markup.escape(str(next_file)))
                             # Execute download
                             download_threads[
                                 texec.submit(

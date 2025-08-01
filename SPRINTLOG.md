@@ -437,3 +437,7 @@ _Empty sprint_
 
 - Proof of concept for new GUI ([#739](https://github.com/ScilifelabDataCentre/dds_cli/pull/739))
 - Improve client logging ([#758](https://github.com/ScilifelabDataCentre/dds_cli/pull/758))
+
+# Summer 2025
+
+- Refactoring the authentication code to work for both the cli and the gui ([#762](https://github.com/ScilifelabDataCentre/dds_cli/pull/762))

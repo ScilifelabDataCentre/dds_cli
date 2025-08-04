@@ -1,4 +1,4 @@
-# 3. Omit Specific Component Tests
+# 3. Implement Specific Component Tests
 
 Date: 2025-08-04
 
@@ -39,12 +39,12 @@ class DDSButton(Button):
     """
 ```
 
-For the more complex components, such as `DDSTreeView`, where the goal is to display the project contents in a "tree view" (thus something specifically implemented by us), it might make more sense to add component tests. It is however only planned to be used in one place at the moment, so its not an actual "reusable component", it is only treated as such for code readability and consistency. Adding "strict" component tests and integration tests would in this case produce partly duplicate test code.
+For the more complex components, such as `DDSTreeView`, where the goal is to display the project contents in a "tree view" (thus something specifically implemented by us either by additional logic or combinations of textual components), it might make more sense to add component tests. It is however only planned to be used in one place at the moment, so its not an actual "reusable component", it is only treated as such for code readability and consistency. Adding "strict" component tests and integration tests would in this case produce partly duplicate test code.
 
 ## Decision
 
-The component specific test will be omitted.
+The component specific test will be omitted for the components only extending the Textual components with design element, but component specific tests will be added for components containing additional logic or complex implementation of Textual components.
 
 ## Consequences
 
-As the complex components are not reused between pages at the moment, duplicate testing schemas would not increase the readability of the test coverage of the component. If the complex components are used in more than one page, we should bring this point up for discussion and reevaluate our decision.
+As the complex components are not reused between pages at the moment, duplicate testing schemas would arise but not neccesariliy increase the test coverage of the component.

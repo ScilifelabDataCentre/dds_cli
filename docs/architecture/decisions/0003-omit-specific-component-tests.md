@@ -13,7 +13,7 @@ Mostly, the UI components only feature styling (for example buttons and containe
 
 There are two options for the testing of these components:
 
-1. Test the UI components more thurughly through integration test corresponding to the different userflows, or
+1. Test the UI components more thoroughly through integration test corresponding to the different userflows, or
 2. Test the UI components in the integration tests **AND** with designated component tests.
 
 Currenly, the complex components are not resued between pages. The test converage would be the same in both alternatives.

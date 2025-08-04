@@ -38,6 +38,7 @@ import dds_cli.project_status
 import dds_cli.project_info
 import dds_cli.user
 import dds_cli.utils
+import dds_cli.message_helper
 from dds_cli.options import (
     destination_option,
     email_arg,
@@ -59,9 +60,6 @@ from dds_cli.options import (
     usage_flag,
     users_flag,
 )
-
-## GUI IMPORTS ##
-# from .dds_gui.app import DDSApp
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -197,6 +195,8 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
 
 
 ### GUI COMMAND ###
+
+# TODO: Should totp be passed to the gui?
 
 
 # @dds_main.command(name="gui")
@@ -441,7 +441,9 @@ def login(click_ctx, totp, allow_group):
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
         with dds_cli.auth.Auth(
-            token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group
+            token_path=click_ctx.get("TOKEN_PATH"),
+            totp=totp,
+            allow_group=allow_group,
         ):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication successful![/green]")
@@ -468,7 +470,8 @@ def logout(click_ctx):
         with dds_cli.auth.Auth(
             authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
-            authenticator.logout()
+            logout_ok = authenticator.logout()
+            dds_cli.message_helper.CLIMessageHelper().logout_message(logout_ok=logout_ok)
 
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
@@ -490,7 +493,13 @@ def info(click_ctx):
         with dds_cli.auth.Auth(
             authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
-            authenticator.check()
+            expiration_time = authenticator.check()
+            if expiration_time:
+                dds_cli.message_helper.CLIMessageHelper().token_report_message(
+                    expiration_time=expiration_time
+                )
+            else:
+                dds_cli.message_helper.CLIMessageHelper().token_expired_message()
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1853,7 +1862,6 @@ def get_data(
 
                     # Schedule the first num_threads futures for upload
                     for file in itertools.islice(iterator, num_threads):
-                        LOG.debug("Starting: %s", rich.markup.escape(str(file)))
                         # Execute download
                         download_threads[
                             texec.submit(getter.download_and_verify, file=file, progress=progress)
@@ -1892,7 +1900,6 @@ def get_data(
 
                         # Schedule the next set of futures for download
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug("Starting: %s", rich.markup.escape(str(next_file)))
                             # Execute download
                             download_threads[
                                 texec.submit(

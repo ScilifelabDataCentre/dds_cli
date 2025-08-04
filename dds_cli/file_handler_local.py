@@ -12,6 +12,7 @@ import pathlib
 import typing
 import uuid
 import random
+from rich.markup import escape
 
 # Own modules
 from dds_cli import DDSEndpoint
@@ -215,7 +216,7 @@ class LocalFileHandler(fh.FileHandler):
     def check_previous_upload(self, token):
         """Do API call and check for the files in the DB."""
 
-        LOG.debug("Checking if files have been previously uploaded.")
+        LOG.debug("API call: Checking if files have been previously uploaded.")
         # Get files from db
         files = list(self.data.keys())
         files_in_db, _ = dds_cli.utils.perform_request(
@@ -253,7 +254,8 @@ class LocalFileHandler(fh.FileHandler):
 
         file_info = self.data[file]
 
-        LOG.debug("Streaming file...")
+        # LOG.debug("Streaming file '%s'", escape(str(pathlib.Path(file))))
+        LOG.debug("Streaming file '%s'", escape(str(file_info["path_raw"])))
         # Generate checksum
         checksum = hashlib.sha256()
         if file_info["compressed"]:
@@ -261,7 +263,10 @@ class LocalFileHandler(fh.FileHandler):
                 checksum.update(chunk)
                 yield chunk
         else:
-            LOG.debug("File not compressed -- compressing")
+            LOG.debug(
+                "File '%s' not compressed -- starting compressing",
+                escape(str(file_info["path_raw"])),
+            )
             # Generate checksum first
             # total_read = 0
             for chunk in self.read_file(file=file_info["path_raw"]):

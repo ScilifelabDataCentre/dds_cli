@@ -39,6 +39,7 @@ class DDSApp(App, DDSStateManager):
     def __init__(self, token_path: str):
         super().__init__()
         self.token_path = token_path
+        self.set_auth_status(self.auth.check())
 
     # TODO: add scrollbar styling here?
     DEFAULT_CSS = """

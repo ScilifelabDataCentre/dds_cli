@@ -1,5 +1,7 @@
 Flask==2.2.5
 requests-mock==1.9.3
-pytest==7.1.2
+pytest==8.4.0
 pytest-cov==3.0.0
-pyfakefs==5.3.0
+pyfakefs==5.8.0
+textual==2.1.2
+pytest-asyncio==1.0.0

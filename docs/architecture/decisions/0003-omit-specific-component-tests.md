@@ -9,7 +9,7 @@ Accepted
 ## Context
 
 The pattern for UI components in the DDS GUI is to implement the Textual component class. This is to ensure uniformity over the application with consistent component styling and functionality.
-Mostly, the UI components only feature styling (for example buttons and containers), but some feature more complex funtionallity (for example modals and tree views). For the simpler UI componetns, no additionalal tests are needed as they are covered by the frameworks testsing. For the more complex components with added logic, these need additional testing.
+Mostly, the UI components only feature styling (for example buttons and containers), but some feature more complex functionality (for example modals and tree views). For the simpler UI components, no additional tests are needed as they are covered by the frameworks testing. For the more complex components with added logic, these need additional testing.
 
 There are two options for the testing of these components:
 

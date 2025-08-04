@@ -21,4 +21,4 @@ We will use a project centered layoud for the DDS GUI.
 
 ## Consequences
 
-The GUI will be easier to navigate for end users and focus on the core features for these types of users. For administrative use, the project centered layout is not the most intuitive, so initially the CLI will be used for these operations. However, it would be possible to add new modules (project mode, admin mode) fot including administrative users in the GUI. 
+The GUI will be easier to navigate for end users and focus on the core features for these types of users. For administrative use, the project centered layout is not the most intuitive, so initially the CLI will be used for these operations. However, it would be possible to add new modules (project mode, admin mode) fot including administrative users in the GUI.

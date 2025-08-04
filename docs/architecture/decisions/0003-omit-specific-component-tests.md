@@ -24,4 +24,4 @@ The component specific test will be omitted.
 
 ## Consequences
 
-As the complex components are not resued between pages at the moment, duplicate testing schemas would not increase the readability of the test coverage of the componet. If the complex components are used in more than one page, we should bring this point up for discussion and reevaluate oour decision.
+As the complex components are not reused between pages at the moment, duplicate testing schemas would not increase the readability of the test coverage of the component. If the complex components are used in more than one page, we should bring this point up for discussion and reevaluate our decision.

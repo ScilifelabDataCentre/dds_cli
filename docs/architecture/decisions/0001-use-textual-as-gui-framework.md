@@ -23,4 +23,4 @@ We will use Textual as the GUI Framework.
 
 ## Consequences
 
-Textual runs in the termainal and has good tab completion, so users only using terminals will be able to use the GUI. Using Textual will result in UI compromises following the terminal restrictions, as well as differences in appearances depending on which terminal is used. Textual is still beeing activly developed with many features on the roadmap, but the current state of the framework is enough for the DDS application.
+Textual runs in the terminal and has good tab completion, so users only using terminals will be able to use the GUI. Using Textual will result in UI compromises following the terminal restrictions, as well as differences in appearances depending on which terminal is used. Textual is still being actively developed with many features on the roadmap, but the current state of the framework is enough for the DDS application.

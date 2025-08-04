@@ -14,7 +14,9 @@ In order to allow users to take advantage of the DDS functionality without requi
 | --------- | ------------------------------------------------------------------------- | -------------------------------------------- |
 | Textual   | Low requirements, well documented, runs in the terminal, can run on alpine | Less UI flexibility                          |
 | PyQt6     | Feature rich, more flexible UI                                            | Steep learning curve, does not run on alpine |
-
+*Additional notes:*
+- The fact that Textual runs in the terminal also allows the use of the GUI when using the DDS in different HPC centres. 
+- As mentioned in the table, Textual runs on Alpine while PyQt6 does not. Since the `dds_web` is built from an alpine image and the `dds_cli` is also installed in a container when starting up the `dds_web` (for development purposes), we either needed to choose Textual as the GUI framework or change the parent image for building the CLI.
 ## Decision
 
 We will use Textual as the GUI Framework.

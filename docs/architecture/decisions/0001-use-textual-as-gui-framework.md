@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-We needed a GUI Framework for the DDS. After research and comparisons between different python based GUI frameworks, mock-ups was made for Textual and PyQt6. A short summary of the findings can be seen below.
+In order to allow users to take advantage of the DDS functionality without requiring the use of a terminal / command line, a graphical user interface is currently being implemented for the DDS. The first step of this was to decide on an appropriate framework for that GUI. After research and comparisons between different python based GUI frameworks, mock-ups was made for Textual and PyQt6. A short summary of the findings can be seen below.
 
 | Framework | Pros                                                                      | Cons                                         |
 | --------- | ------------------------------------------------------------------------- | -------------------------------------------- |

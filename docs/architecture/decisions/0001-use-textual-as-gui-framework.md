@@ -12,7 +12,7 @@ In order to allow users to take advantage of the DDS functionality without requi
 
 | Framework | Pros                                                                      | Cons                                         |
 | --------- | ------------------------------------------------------------------------- | -------------------------------------------- |
-| Textual   | Low requirments, well documented, runs in the terminal, can run on alpine | Less UI flexibility                          |
+| Textual   | Low requirements, well documented, runs in the terminal, can run on alpine | Less UI flexibility                          |
 | PyQt6     | Feature rich, more flexible UI                                            | Steep learning curve, does not run on alpine |
 
 ## Decision

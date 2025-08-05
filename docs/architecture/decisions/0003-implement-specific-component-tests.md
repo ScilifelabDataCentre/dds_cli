@@ -16,7 +16,7 @@ There are two options for the testing of these components:
 1. Test the UI components more thoroughly through integration test corresponding to the different userflows, or
 2. Test the UI components in the integration tests **AND** with designated component tests.
 
-Currenly, the complex components are not resued between pages. The test converage would be the same in both alternatives.
+Currenly, the complex components are not reused between pages. The test converage would be the same in both alternatives.
 The following is an example of one of the "simpler" components. In this case the component only changes some of the styling of the parent class `Button` (from Textual) and therefore implementing a custom test for the functionality of the `DDSButton` would not give us anything.
 
 ```python

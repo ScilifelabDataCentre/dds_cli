@@ -191,7 +191,7 @@ Rackham
 
 .. admonition:: Rackham user guide
 
-   A detailed user guide for Rackham can be found here: https://www.uppmax.uu.se/support/user-guides/rackham-user-guide/
+   A detailed user guide for Rackham can be found here: https://docs.uppmax.uu.se/cluster_guides/rackham/
 
 .. _bianca: 
 
@@ -259,8 +259,8 @@ Bianca
 
 .. admonition:: Bianca- and Transit user guides
 
-   * Bianca user guide: https://www.uppmax.uu.se/support/user-guides/bianca-user-guide/
-   * Transit user guide: https://www.uppmax.uu.se/support/user-guides/transit-user-guide/
+   * Bianca user guide: https://docs.uppmax.uu.se/cluster_guides/bianca/
+   * Transit user guide: https://docs.uppmax.uu.se/cluster_guides/transfer_transit/
 
 
 .. _verify-integrity: 

@@ -442,6 +442,6 @@ _Empty sprint_
 
 - Refactoring the authentication code to work for both the cli and the gui ([#762](https://github.com/ScilifelabDataCentre/dds_cli/pull/762))
 
-# 2025-08-4 - 2025-08-15
+# 2025-08-04 - 2025-08-15
 
 - Add ARD's for GUI

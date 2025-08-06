@@ -11,13 +11,13 @@ Accepted
 After meeting with end users it was found that:
 
 - The UI should be simple and intuitive
-- Core features such as uploading, downloading, and project managment should be focused on when designing the UI
+- Core features such as uploading, downloading, and project management should be focused on when designing the UI
 
-Initial mockups featured a menu based layout, with menu items corresponding to the differend CLI group commands, but was decided against as all core features included project selection, hence a project centered one page layout was suggested.
+Initial mockups featured a menu based layout, with menu items corresponding to the different CLI group commands, but was decided against as all core features included project selection, hence a project centered one page layout was suggested.
 
 ## Decision
 
-We will use a project centered layoud for the DDS GUI.
+We will use a project centered layout for the DDS GUI.
 
 ## Consequences
 

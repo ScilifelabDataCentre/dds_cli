@@ -96,12 +96,16 @@ dds_cli.utils.stderr_console.print(
 )
 
 if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
-    motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
-    if motds:
-        dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
+    try:
+        motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
+        if motds:
+            dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
         for motd in motds:
             dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
-
+    except dds_cli.exceptions.NoMOTDsError as err:
+        #TODO:  Not logging atm, check why this is not working
+        LOG.info(err)
+    
 
 # -- dds -- #
 @click.group()
@@ -2143,7 +2147,8 @@ def list_active_motds(click_ctx):
     ) as err:
         LOG.error(err)
         sys.exit(1)
-
+    except dds_cli.exceptions.NoMOTDsError as err:
+        LOG.info(err)
 
 # -- dds motd deactivate -- #
 @motd_group_command.command(name="deactivate")

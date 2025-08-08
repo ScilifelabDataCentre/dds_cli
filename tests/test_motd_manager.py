@@ -1,12 +1,15 @@
-import pytest
-from requests_mock.mocker import Mocker
-from dds_cli import DDSEndpoint
+"""Test the motd_manager module."""
+
+import logging
 from typing import Dict, List
-from dds_cli import motd_manager
+
+import pytest
 from _pytest.capture import CaptureFixture
 from _pytest.logging import LogCaptureFixture
-import logging
-from dds_cli.exceptions import ApiResponseError, InvalidMethodError
+from requests_mock.mocker import Mocker
+
+from dds_cli import DDSEndpoint, motd_manager
+from dds_cli.exceptions import ApiResponseError, InvalidMethodError, NoMOTDsError
 
 # init
 
@@ -31,25 +34,23 @@ def test_init_motdmanager():
 
 
 # list_all_active_motds
-def test_list_all_active_motds_no_motds(caplog: LogCaptureFixture):
-    """No motds returned."""
+def test_list_all_active_motds_no_motds():
+    """No motds returned should raise NoMOTDsError."""
     test_dicts: List[Dict] = [{}, {"message": "Test message when no motds."}, {"motds": {}}]
-    with caplog.at_level(logging.INFO):
-        # Iterate through possible alternative responses
-        for retd in test_dicts:
-            # Create mocker
-            with Mocker() as mock:
-                # Create mocked request - real request not executed
-                mock.get(DDSEndpoint.MOTD, status_code=200, json=retd)
+    # Iterate through possible alternative responses
+    for retd in test_dicts:
+        # Create mocker
+        with Mocker() as mock:
+            # Create mocked request - real request not executed
+            mock.get(DDSEndpoint.MOTD, status_code=200, json=retd)
 
+            with pytest.raises(NoMOTDsError) as err:
                 with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
                     mtdm.list_all_active_motds(table=True)  # Run active motds listing
 
-                assert (
-                    "dds_cli.motd_manager",
-                    logging.INFO,
-                    retd.get("message", "No motds or info message returned from API."),
-                ) in caplog.record_tuples
+            assert retd.get("message", "No motds or info message returned from API.") in str(
+                err.value
+            )
 
 
 def test_list_all_active_motds_no_keys():
@@ -125,17 +126,67 @@ def test_list_all_active_motds_nottable(capsys: CaptureFixture):
     assert all(x in motds for x in returned_dict["motds"])
 
 
-def test_list_all_active_motds_exceptionraised(capsys: CaptureFixture):
-    """List motds when exception raised."""
+def test_list_all_active_motds_exceptionraised():
+    """List motds when API returns non-200 should raise ApiResponseError."""
     returned_dict: Dict = {}
     # Create mocker
     with Mocker() as mock:
         # Create mocked request - real request not executed
         mock.get(DDSEndpoint.MOTD, status_code=500, json=returned_dict)
 
+        with pytest.raises(ApiResponseError):
+            with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+                _ = mtdm.list_all_active_motds(table=False)  # Run active motds listing
+
+
+def test_list_all_active_motds_no_motds_empty_list():
+    """Empty motds list should raise NoMOTDsError."""
+    returned_dict: Dict = {"motds": [], "message": "No active MOTDs."}
+    with Mocker() as mock:
+        mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
+
+        with pytest.raises(NoMOTDsError) as err:
+            with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+                mtdm.list_all_active_motds(table=False)
+
+        assert "No active MOTDs." in str(err.value)
+
+
+def test_list_all_active_motds_returns_none_when_table_true():
+    """When table=True, function should return None after printing table."""
+    returned_dict: Dict = {
+        "motds": [
+            {"MOTD ID": 2, "Message": "B", "Created": "2022-08-05 08:54"},
+            {"MOTD ID": 1, "Message": "A", "Created": "2022-08-05 08:31"},
+        ],
+        "keys": ["MOTD ID", "Message", "Created"],
+    }
+    with Mocker() as mock:
+        mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
+
         with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
-            motds = mtdm.list_all_active_motds(table=False)  # Run active motds listing
-            assert not motds  # If exception raised, nothing happens because of pass
+            ret = mtdm.list_all_active_motds(table=True)
+
+        assert ret is None
+
+
+def test_list_all_active_motds_sorted_return():
+    """Returned MOTDs should be sorted ascending by Created."""
+    returned_dict: Dict = {
+        "motds": [
+            {"MOTD ID": 2, "Message": "B", "Created": "2022-08-05 08:54"},
+            {"MOTD ID": 1, "Message": "A", "Created": "2022-08-05 08:31"},
+        ],
+        "keys": ["MOTD ID", "Message", "Created"],
+    }
+    with Mocker() as mock:
+        mock.get(DDSEndpoint.MOTD, status_code=200, json=returned_dict)
+
+        with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
+            motds = mtdm.list_all_active_motds(table=False)
+
+    created_times = [m["Created"] for m in motds]
+    assert created_times == sorted(created_times)
 
 
 # deactivate_motd

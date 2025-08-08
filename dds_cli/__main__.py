@@ -103,9 +103,18 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
         for motd in motds:
             dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
     except dds_cli.exceptions.NoMOTDsError as err:
-        #TODO:  Not logging atm, check why this is not working
+        # TODO:  Not logging atm, check why this is not working
         LOG.info(err)
-    
+    except (
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as err:
+        # Avoid breaking CLI startup on MOTD fetch issues
+        LOG.debug("Skipping MOTD display due to API error: %s", err)
+    except dds_cli.exceptions.DDSCLIException as err:
+        # Covers 400/403 and other handled DDS CLI errors from perform_request
+        LOG.debug("Skipping MOTD display due to DDS error: %s", err)
+
 
 # -- dds -- #
 @click.group()
@@ -2149,6 +2158,7 @@ def list_active_motds(click_ctx):
         sys.exit(1)
     except dds_cli.exceptions.NoMOTDsError as err:
         LOG.info(err)
+
 
 # -- dds motd deactivate -- #
 @motd_group_command.command(name="deactivate")

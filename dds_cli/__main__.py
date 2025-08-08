@@ -102,17 +102,17 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
             dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
             for motd in motds:
                 dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
-    except dds_cli.exceptions.NoMOTDsError as err:
-        LOG.info(err)
+    except dds_cli.exceptions.NoMOTDsError as no_motds_err:
+        LOG.info(no_motds_err)
     except (
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
-    ) as err:
+    ) as api_err:
         # Avoid breaking CLI startup on MOTD fetch issues
-        LOG.debug("Skipping MOTD display due to API error: %s", err)
-    except dds_cli.exceptions.DDSCLIException as err:
+        LOG.debug("Skipping MOTD display due to API error: %s", api_err)
+    except dds_cli.exceptions.DDSCLIException as dds_cli_err:
         # Covers 400/403 and other handled DDS CLI errors from perform_request
-        LOG.debug("Skipping MOTD display due to DDS error: %s", err)
+        LOG.debug("Skipping MOTD display due to DDS error: %s", dds_cli_err)
 
 
 # -- dds -- #

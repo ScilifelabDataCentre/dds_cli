@@ -100,10 +100,9 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
         motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
         if motds:
             dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
-        for motd in motds:
-            dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
+            for motd in motds:
+                dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
     except dds_cli.exceptions.NoMOTDsError as err:
-        # TODO:  Not logging atm, check why this is not working
         LOG.info(err)
     except (
         dds_cli.exceptions.ApiResponseError,

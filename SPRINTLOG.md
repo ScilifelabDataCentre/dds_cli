@@ -445,5 +445,4 @@ _Empty sprint_
 # 2025-08-04 - 2025-08-15
 
 - Refactor MOTD to work for both the CLI and the GUI
-
 - Add ARD's for GUI

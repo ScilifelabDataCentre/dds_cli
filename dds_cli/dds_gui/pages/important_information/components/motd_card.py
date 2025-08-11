@@ -21,11 +21,24 @@ class MOTDCard(Widget):
         height: auto;
         padding: 0 1;
     }
+
     .title {
         text-style: bold;
+    }
+
+    MOTDCard.-hover {
+        background: #776500;
     }
     """
 
     def compose(self) -> ComposeResult:
         yield Static(self.title, classes="title")
         yield Static(self.message)
+
+    def on_enter(self) -> None:
+        """Handle mouse enter event for hover effect."""
+        self.add_class("-hover")
+
+    def on_leave(self) -> None:
+        """Handle mouse leave event for hover effect."""
+        self.remove_class("-hover")

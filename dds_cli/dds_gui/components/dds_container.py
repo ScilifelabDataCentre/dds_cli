@@ -46,17 +46,21 @@ class DDSContentContainer(Vertical):
     """
 
 
-class DDSSpacedContainer(Vertical):
+class DDSSpacedContainer(VerticalScroll):
     """A container widget with vertical spacing between child widgets."""
 
     DEFAULT_CSS = """
     DDSSpacedContainer {
         align: center top;
+        scrollbar-size: 1 1;
+        scrollbar-color: $primary 70%;
     }
 
     DDSSpacedContainer > * {
         margin-bottom: 1;
     }
+
+    
     """
 
 

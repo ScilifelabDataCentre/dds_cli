@@ -53,7 +53,9 @@ class DDSSpacedContainer(VerticalScroll):
     DDSSpacedContainer {
         align: center top;
         scrollbar-size: 1 1;
-        scrollbar-color: $primary 70%;
+        scrollbar-color: $primary 80%;
+        scrollbar-color-active: $primary;
+        scrollbar-color-hover: $primary;
     }
 
     DDSSpacedContainer > * {

@@ -446,4 +446,3 @@ _Empty sprint_
 
 - Add ARD's for GUI
 - Refactor MOTD to work for both the CLI and the GUI
-

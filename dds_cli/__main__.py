@@ -103,6 +103,7 @@ if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
             for motd in motds:
                 dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
     except dds_cli.exceptions.NoMOTDsError as no_motds_err:
+        # Print message about no MOTD
         LOG.info(no_motds_err)
     except (
         dds_cli.exceptions.ApiResponseError,

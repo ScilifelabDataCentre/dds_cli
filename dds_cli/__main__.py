@@ -97,11 +97,24 @@ dds_cli.utils.stderr_console.print(
 )
 
 if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
-    motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
-    if motds:
-        dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
-        for motd in motds:
-            dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
+    try:
+        motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
+        if motds:
+            dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
+            for motd in motds:
+                dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
+    except dds_cli.exceptions.NoMOTDsError as no_motds_err:
+        # Print message about no MOTD
+        LOG.info(no_motds_err)
+    except (
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as api_err:
+        # Avoid breaking CLI startup on MOTD fetch issues
+        LOG.debug("Skipping MOTD display due to API error: %s", api_err)
+    except dds_cli.exceptions.DDSCLIException as dds_cli_err:
+        # Covers 400/403 and other handled DDS CLI errors from perform_request
+        LOG.debug("Skipping MOTD display due to DDS error: %s", dds_cli_err)
 
 
 # -- dds -- #
@@ -2144,6 +2157,8 @@ def list_active_motds(click_ctx):
     ) as err:
         LOG.error(err)
         sys.exit(1)
+    except dds_cli.exceptions.NoMOTDsError as err:
+        LOG.info(err)
 
 
 # -- dds motd deactivate -- #

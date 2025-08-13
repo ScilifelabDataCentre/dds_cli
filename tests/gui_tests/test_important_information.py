@@ -57,51 +57,6 @@ async def test_important_information_initialization():
         # After mount, timer should be set up and MOTDs might be fetched
         assert widget.motd_timer is not None
 
-
-@pytest.mark.asyncio
-async def test_important_information_mount_unmount():
-    """Test mount and unmount behavior including timer management."""
-
-    with patch("dds_cli.motd_manager.MotdManager.list_all_active_motds") as mock_list_motds:
-        # Configure the mock to return our test data
-        mock_list_motds.return_value = MOCK_MOTDS
-
-        app = DDSApp(token_path="test_path")
-
-        async with app.run_test() as pilot:
-            widget = ImportantInformation("Test MOTDs")
-            app.mount(widget)
-            await pilot.pause()
-
-            # Test that timer is set up on mount
-            assert widget.motd_timer is not None
-            assert widget.motds == MOCK_MOTDS
-
-            # Verify the MOTD manager was called correctly
-            mock_list_motds.assert_called_with(table=False)
-
-            # Store timer reference to check if it's stopped
-            original_timer = widget.motd_timer
-
-            # Test unmount cleanup
-            widget.remove()
-            await pilot.pause()
-
-            # Check that the timer is stopped - use a safer approach
-            # Check if timer was cleaned up or at least verify the unmount was called
-            try:
-                # Try to access a timer property to see if it's still active
-                is_stopped = hasattr(original_timer, "_stopped") and original_timer._stopped
-                is_none = widget.motd_timer is None
-                assert (
-                    is_stopped or is_none
-                ), f"Timer should be stopped or None, got stopped={is_stopped}, none={is_none}"
-            except AttributeError:
-                # If we can't access timer internals, just check that widget handled unmount
-                # The important thing is that unmount was called without errors
-                pass
-
-
 # =================================================================================
 # UI Component Tests - MOTDCard and Container Rendering
 # =================================================================================

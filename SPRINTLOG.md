@@ -445,4 +445,4 @@ _Empty sprint_
 # 2025-08-04 - 2025-08-15
 
 - Add ARD's for GUI
-- Refactor MOTD to work for both the CLI and the GUI
+- Refactor MOTD to work for both the CLI and the GUI ([#771](https://github.com/ScilifelabDataCentre/dds_cli/pull/771))

@@ -57,6 +57,7 @@ async def test_important_information_initialization():
         # After mount, timer should be set up and MOTDs might be fetched
         assert widget.motd_timer is not None
 
+
 # =================================================================================
 # UI Component Tests - MOTDCard and Container Rendering
 # =================================================================================

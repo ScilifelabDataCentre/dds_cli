@@ -54,8 +54,8 @@ class ProjectView(Widget):
                 yield Placeholder(
                     id="project-list"
                 )  # ProjectList(title="Projects", id="project-list")
-                yield ImportantInformation(title="Important Information",
-                    id="important-information"
+                yield ImportantInformation(
+                    title="Important Information", id="important-information"
                 )  # ImportantInformation(title="Important Information", id="important-information")
                 yield Authentication(title="Authentication", id="auth-menu")
             with Vertical(id="right-container"):

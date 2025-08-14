@@ -20,18 +20,24 @@ class ProjectList(DDSContainer):
             )
             yield DDSSelect(
                 title="Select a project",
-                data=self.app.projects_id,
+                data=self.app.project_ids if self.app.project_ids else [],
                 value=(
                     self.app.selected_project_id if self.app.selected_project_id else Select.BLANK
                 ),
+                disabled=not self.app.auth_status,
             )
-            yield DDSButton("View Project", id="view-project")
+            yield DDSButton(
+                "View Project",
+                id="view-project",
+                disabled=not self.app.auth_status,
+            )
 
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""
         if event.button.id == "view-project":
-            selected_project_id = self.query_one(DDSSelect).value
-            if selected_project_id is Select.BLANK:
+            value = self.query_one(DDSSelect).value
+            if value is Select.BLANK:
                 self.app.set_selected_project_id(None)
+                self.notify("Please select a project to view project content.", severity="warning")
             else:
-                self.app.set_selected_project_id(selected_project_id)
+                self.app.set_selected_project_id(value)

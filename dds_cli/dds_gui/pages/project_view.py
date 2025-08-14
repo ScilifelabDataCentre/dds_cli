@@ -7,6 +7,7 @@ from textual.containers import Vertical, Horizontal
 from textual.widget import Widget
 from textual.widgets import Placeholder
 from dds_cli.dds_gui.pages.authentication.authentication import Authentication
+from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 
 
 class ProjectView(Widget):
@@ -50,9 +51,7 @@ class ProjectView(Widget):
     def compose(self) -> ComposeResult:
         with Horizontal():
             with Vertical(id="left-container"):
-                yield Placeholder(
-                    id="project-list"
-                )  # ProjectList(title="Projects", id="project-list")
+                yield ProjectList(title="Projects", id="project-list")
                 yield Placeholder(
                     id="important-information"
                 )  # ImportantInformation(title="Important Information", id="important-information")

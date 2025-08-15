@@ -8,6 +8,8 @@ from textual.widget import Widget
 from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
 
+from dds_cli.dds_gui.models.project import ProjectContentData
+
 
 @dataclass
 class DDSTreeNode:
@@ -21,13 +23,13 @@ class DDSTreeNode:
     children: List["DDSTreeNode"]
 
 
-class DDSTreeView(Widget):
+class TreeView(Widget):
     """A tree view widget.
     Args:
         tree_data: The data to be displayed in the tree view.
     """
 
-    def __init__(self, tree_data: DDSTreeNode, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, tree_data: ProjectContentData, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.tree_data = tree_data
 
@@ -39,7 +41,7 @@ class DDSTreeView(Widget):
 
         yield tree
 
-    def add_children(self, node: DDSTreeNode, parent: TreeNode) -> None:
+    def add_children(self, node: ProjectContentData, parent: TreeNode) -> None:
         """Add children to the parent node.
         Args:
             node: The node to add.

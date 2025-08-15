@@ -4,6 +4,7 @@ from textual.reactive import reactive
 
 from dds_cli.auth import Auth
 from dds_cli.data_lister import DataLister
+from dds_cli.dds_gui.models.project import ProjectContentData
 
 
 class DDSStateManager:
@@ -11,14 +12,14 @@ class DDSStateManager:
     State manager for the DDS CLI. Consists of reactive states available app wide.
 
     Reactive attributes are used to update the UI, fetch data, set new states, etc.
-    Reactive attributes are recomposed when the state changes, 
+    Reactive attributes are recomposed when the state changes,
     triggering re-renders and re-computations of the derived states.
 
     Derived states are attributes computed based on the reactive attributes.
     When the reactive attributes are updated, the derived states are automatically updated.
-    
-    Setters are used to avoid pylint warnings about attribute-defined-outside-init. 
-    Functionally, the reactive attributes can be set in the child classes, 
+
+    Setters are used to avoid pylint warnings about attribute-defined-outside-init.
+    Functionally, the reactive attributes can be set in the child classes,
     but are set here for consistence over the app, instead of ignoring the pylint warnings.
     """
 
@@ -53,6 +54,23 @@ class DDSStateManager:
     def set_selected_project_id(self, project_id: str) -> None:
         """Set the selected project id."""
         self.selected_project_id = project_id
+
+    #### PROJECT CONTENT #####################################################
+
+    project_content: reactive[ProjectContentData] = reactive(None, recompose=True)
+
+    def compute_project_content(self) -> ProjectContentData | None:
+        """Compute the project content."""
+
+        if self.selected_project_id:
+            project_content = DataLister(
+                json=True, tree=True, project=self.selected_project_id
+            ).list_recursive()
+            return ProjectContentData.from_dict(
+                project_content, project_name=self.selected_project_id
+            )
+        else:
+            return None
 
     #### WATCHERS ###########################################################
 

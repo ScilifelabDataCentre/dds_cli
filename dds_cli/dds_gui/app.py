@@ -8,7 +8,6 @@ from textual.theme import Theme
 from dds_cli.dds_gui.components.dds_footer import DDSFooter
 from dds_cli.dds_gui.dds_state_manager import DDSStateManager
 from dds_cli.dds_gui.pages.project_view import ProjectView
-from dds_cli.dds_gui.services.project_listing_service import ProjectListingService
 
 theme = Theme(
     name="custom",

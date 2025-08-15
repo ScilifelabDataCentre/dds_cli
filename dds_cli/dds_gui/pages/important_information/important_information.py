@@ -4,7 +4,7 @@ from typing import Any, List, Dict
 from textual.app import ComposeResult
 from textual.reactive import reactive
 from textual.timer import Timer
-from textual.widgets import Label
+from textual.widgets import Static
 
 from dds_cli.dds_gui.components.dds_container import DDSContainer, DDSSpacedContainer
 from dds_cli.dds_gui.pages.important_information.components.motd_card import MOTDCard
@@ -29,7 +29,7 @@ class ImportantInformation(DDSContainer):
                 for motd in reversed(self.motds):
                     yield MOTDCard(motd["Created"], motd["Message"])
             else:
-                yield Label("No important information to display.")
+                yield Static("No important information to display.")
 
     def on_mount(self) -> None:
         """Initialize the hourly timer for fetching MOTDs when the widget is mounted."""
@@ -52,9 +52,9 @@ class ImportantInformation(DDSContainer):
             # Reactive assignment - will only trigger recomposition if data actually changes
             self.motds = MotdManager.list_all_active_motds(table=False)
         except (ApiResponseError, ApiRequestError, DDSCLIException) as api_err:
-            self.notify(f"Failed to fetch MOTDs: {api_err}", severity="error")
-        except NoMOTDsError as no_motds_err:
-            self.notify(f"No MOTDs available: {no_motds_err}", severity="information")
+            self.notify(f"Failed to fetch MOTDs: {api_err}", severity="error", timeout=10)
+        except NoMOTDsError:
+            pass
 
     def update_motds(self, new_motds: List[Dict[str, str]]) -> None:
         """

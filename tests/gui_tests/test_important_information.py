@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from textual.widgets import Label
+from textual.widgets import Static
 
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.important_information.important_information import ImportantInformation
@@ -120,12 +120,12 @@ async def test_empty_state_handling():
             # Verify the MOTD manager was called correctly
             mock_list_motds.assert_called_with(table=False)
 
-            # Empty state label should be present
-            labels = widget.query(Label)
-            empty_labels = [
-                label for label in labels if "No important information" in label.renderable
+            # Empty state static widget should be present
+            statics = widget.query(Static)
+            empty_statics = [
+                static for static in statics if "No important information" in static.renderable
             ]
-            assert len(empty_labels) == 1
+            assert len(empty_statics) == 1
 
             # Test with None motds (manually set after creation)
             widget.remove()
@@ -140,12 +140,12 @@ async def test_empty_state_handling():
             motd_cards = widget.query(MOTDCard)
             assert len(motd_cards) == 0
 
-            # Check that empty state label is shown
-            labels = widget.query(Label)
-            empty_labels = [
-                label for label in labels if "No important information" in label.renderable
+            # Check that empty state static widget is shown
+            statics = widget.query(Static)
+            empty_statics = [
+                static for static in statics if "No important information" in static.renderable
             ]
-            assert len(empty_labels) == 1
+            assert len(empty_statics) == 1
 
 
 # =================================================================================
@@ -365,15 +365,12 @@ async def test_fetch_motds_error_handling():
 
             notifications_received.clear()
 
-            # Test NoMOTDsError
+            # Test NoMOTDsError - should be handled silently without notification
             mock_list_motds.side_effect = NoMOTDsError(message="No MOTDs found")
             widget.fetch_motds()
             assert widget.motds == initial_motds
-            # Verify information notification was sent (different severity for NoMOTDsError)
-            assert len(notifications_received) > 0
-            latest_notification = notifications_received[-1]
-            assert "No MOTDs found" in latest_notification["message"]
-            assert latest_notification["severity"] == "information"
+            # Verify no notification was sent for NoMOTDsError (handled silently)
+            assert len(notifications_received) == 0
 
             # Verify that all our error scenarios called the mock appropriately
             assert mock_list_motds.call_count >= 4

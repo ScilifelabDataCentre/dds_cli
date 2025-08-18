@@ -368,7 +368,7 @@ async def test_fetch_motds_error_handling():
             # Test NoMOTDsError - should be handled silently without notification
             mock_list_motds.side_effect = NoMOTDsError(message="No MOTDs found")
             widget.fetch_motds()
-            assert widget.motds == initial_motds
+            assert widget.motds is None
             # Verify no notification was sent for NoMOTDsError (handled silently)
             assert len(notifications_received) == 0
 

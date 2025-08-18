@@ -54,7 +54,7 @@ class ImportantInformation(DDSContainer):
         except (ApiResponseError, ApiRequestError, DDSCLIException) as api_err:
             self.notify(f"Failed to fetch MOTDs: {api_err}", severity="error", timeout=10)
         except NoMOTDsError:
-            pass
+            self.motds = None
 
     def update_motds(self, new_motds: List[Dict[str, str]]) -> None:
         """

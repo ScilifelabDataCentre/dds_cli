@@ -1,12 +1,14 @@
 """DDS State Manager"""
 
 from textual.app import App
+from textual import work
 from textual.reactive import reactive
 
 from dds_cli.auth import Auth
 from dds_cli.data_lister import DataLister
 from dds_cli.dds_gui.models.project import ProjectContentData
-from dds_cli.exceptions import ApiRequestError, ApiResponseError
+from dds_cli.exceptions import ApiRequestError, ApiResponseError, DDSCLIException, NoDataError
+
 
 class DDSStateManager(App):
     """
@@ -60,18 +62,49 @@ class DDSStateManager(App):
 
     project_content: reactive[ProjectContentData] = reactive(None, recompose=True)
 
-    def compute_project_content(self) -> ProjectContentData | None:
-        """Compute the project content."""
+    def watch_selected_project_id(self, selected_project_id: str) -> None:
+        """Start loading project content when the selected project changes."""
+        # Clear current content when switching projects
+        self.project_content = None
 
-        if self.selected_project_id:
-            project_content = DataLister(
-                json=True, tree=True, project=self.selected_project_id
-            ).list_recursive()
-            return ProjectContentData.from_dict(
-                project_content, project_name=self.selected_project_id
+        if not selected_project_id:
+            return
+
+        self.load_project_content(selected_project_id)
+
+    @work(exclusive=True, thread=True)
+    def load_project_content(self, project_id: str) -> None:
+        """Background worker to fetch project content for a project id.
+        This solution was proposed to avoid unnecessary re-renders of the project 
+        content widget while still keeping the label reactive.
+        Reference: https://textual.textualize.io/guide/workers/
+        """
+        try:
+            project_content = DataLister(json=True, tree=True, project=project_id).list_recursive()
+        except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
+            self.call_from_thread(self._on_project_content_error, project_id, str(err), "error")
+            return
+        except NoDataError as data_err:
+            self.call_from_thread(
+                self._on_project_content_error, project_id, str(data_err), "warning"
             )
+            return
+
+        content = ProjectContentData.from_dict(project_content, project_name=project_id)
+        self.call_from_thread(self._on_project_content_loaded, project_id, content)
+
+    def _on_project_content_loaded(self, content: ProjectContentData) -> None:
+        """Handle successful content load on the main thread."""
+        self.project_content = content
+
+    def _on_project_content_error(self, project_id: str, message: str, severity: str) -> None:
+        """Handle content load error on the main thread."""
+        if severity == "warning":
+            self.notify(f"No data found for project {project_id}: {message}", severity="warning")
         else:
-            return None
+            self.notify(f"Failed to fetch project content: {message}", severity="error")
+        if self.selected_project_id == project_id:
+            self.project_content = None
 
     #### WATCHERS ###########################################################
 
@@ -83,7 +116,7 @@ class DDSStateManager(App):
             # If called without auth status, recursion error occurs and/or the base class will try to authenticate in the CLI.
             try:
                 self.fetch_projects()
-            except (ApiRequestError, ApiResponseError) as err:
+            except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
                 self.notify(f"Failed to fetch projects: {err}", severity="error")
                 self.projects = None
         else:

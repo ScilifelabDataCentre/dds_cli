@@ -1,13 +1,14 @@
 """DDS State Manager"""
 
+from textual.app import App
 from textual.reactive import reactive
 
 from dds_cli.auth import Auth
 from dds_cli.data_lister import DataLister
 from dds_cli.dds_gui.models.project import ProjectContentData
+from dds_cli.exceptions import ApiRequestError, ApiResponseError
 
-
-class DDSStateManager:
+class DDSStateManager(App):
     """
     State manager for the DDS CLI. Consists of reactive states available app wide.
 
@@ -79,8 +80,12 @@ class DDSStateManager:
         if auth_status:
             # Fetch the projects when the auth status is True.
             # This is to ensure that the projects are fetched when the user is authenticated only.
-            # If called on app initialization, recursion error occurs.
-            self.fetch_projects()
+            # If called without auth status, recursion error occurs and/or the base class will try to authenticate in the CLI.
+            try:
+                self.fetch_projects()
+            except (ApiRequestError, ApiResponseError) as err:
+                self.notify(f"Failed to fetch projects: {err}", severity="error")
+                self.projects = None
         else:
             self.projects = None
             self.selected_project_id = None

@@ -41,3 +41,4 @@ class ProjectList(DDSContainer):
                 self.notify("Please select a project to view project content.", severity="warning")
             else:
                 self.app.set_selected_project_id(value)
+                

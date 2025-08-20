@@ -61,6 +61,7 @@ class DDSStateManager(App):
     #### PROJECT CONTENT #####################################################
 
     project_content: reactive[ProjectContentData] = reactive(None, recompose=True)
+    is_loading: reactive[bool] = reactive(False, recompose=True)
 
     def watch_selected_project_id(self, selected_project_id: str) -> None:
         """Start loading project content when the selected project changes."""
@@ -68,14 +69,17 @@ class DDSStateManager(App):
         self.project_content = None
 
         if not selected_project_id:
+            self.is_loading = False
             return
 
+        # Start loading
+        self.is_loading = True
         self.load_project_content(selected_project_id)
 
     @work(exclusive=True, thread=True)
     def load_project_content(self, project_id: str) -> None:
         """Background worker to fetch project content for a project id.
-        This solution was proposed to avoid unnecessary re-renders of the project 
+        This solution was proposed to avoid unnecessary re-renders of the project
         content widget while still keeping the label reactive.
         Reference: https://textual.textualize.io/guide/workers/
         """
@@ -91,14 +95,16 @@ class DDSStateManager(App):
             return
 
         content = ProjectContentData.from_dict(project_content, project_name=project_id)
-        self.call_from_thread(self._on_project_content_loaded, project_id, content)
+        self.call_from_thread(self._on_project_content_loaded, content)
 
     def _on_project_content_loaded(self, content: ProjectContentData) -> None:
         """Handle successful content load on the main thread."""
+        self.is_loading = False
         self.project_content = content
 
     def _on_project_content_error(self, project_id: str, message: str, severity: str) -> None:
         """Handle content load error on the main thread."""
+        self.is_loading = False
         if severity == "warning":
             self.notify(f"No data found for project {project_id}: {message}", severity="warning")
         else:

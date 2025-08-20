@@ -218,7 +218,7 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
 # @click.pass_obj
 # def gui(click_ctx):
 #     """Start the DDS GUI."""
-#     gui_app = DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
+#     gui_app = dds_cli.dds_gui.app.DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
 #     gui_app.title = "SciLifeLab Data Delivery System"
 #     gui_app.sub_title = "CLI Version: " + dds_cli.__version__
 #     gui_app.run()

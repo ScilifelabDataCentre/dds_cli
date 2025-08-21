@@ -9,6 +9,7 @@ from textual.widgets import Placeholder
 from dds_cli.dds_gui.pages.authentication.authentication import Authentication
 from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
+from dds_cli.dds_gui.pages.important_information.important_information import ImportantInformation
 
 
 class ProjectView(Widget):
@@ -55,6 +56,11 @@ class ProjectView(Widget):
                 yield ProjectList(title="Projects", id="project-list")
                 yield Placeholder(
                     id="important-information"
+                yield Placeholder(
+                    id="project-list"
+                )  # ProjectList(title="Projects", id="project-list")
+                yield ImportantInformation(
+                    title="Important Information", id="important-information"
                 )  # ImportantInformation(title="Important Information", id="important-information")
                 yield Authentication(title="Authentication", id="auth-menu")
             with Vertical(id="right-container"):

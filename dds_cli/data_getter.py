@@ -146,10 +146,11 @@ class DataGetter(base.DDSBaseClass):
 
             if actual_size == expected_size:
                 file_size_verified = True
-                LOG.debug("Downloaded file size matches expected size: %s bytes.", expected_size)
+                LOG.debug("Downloaded file '%s' size matches expected size: %s bytes.", file_name_in_db, expected_size)
             else:
                 LOG.debug(
-                    "Downloaded file size mismatch: expected %s bytes, got %s bytes",
+                    "Downloaded file '%s' size mismatch: expected %s bytes, got %s bytes. Not decrypting.", 
+                    file_name_in_db,
                     expected_size,
                     actual_size,
                 )
@@ -193,11 +194,14 @@ class DataGetter(base.DDSBaseClass):
                 actual_size = pathlib.Path(file).stat().st_size
                 if actual_size == expected_size:
                     LOG.debug(
-                        "Downloaded file size matches expected size: %s bytes.", expected_size
+                        "Downloaded file '%s' size matches expected size: %s bytes.", 
+                        file_name_in_db, 
+                        expected_size
                     )
                 else:
                     LOG.debug(
-                        "Downloaded file size mismatch: expected %s bytes, got %s bytes",
+                        "Downloaded file '%s' size mismatch: expected %s bytes, got %s bytes",
+                        file_name_in_db,
                         expected_size,
                         actual_size,
                     )

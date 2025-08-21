@@ -1,6 +1,6 @@
 """GUI Application for DDS CLI."""
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widgets import Header
 from textual.theme import Theme

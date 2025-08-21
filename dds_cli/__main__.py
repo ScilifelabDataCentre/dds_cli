@@ -24,7 +24,6 @@ import questionary
 # Own modules
 import dds_cli
 import dds_cli.account_manager
-from dds_cli.dds_gui.app import DDSApp
 import dds_cli.unit_manager
 import dds_cli.motd_manager
 import dds_cli.superadmin_helper
@@ -62,7 +61,7 @@ from dds_cli.options import (
     users_flag,
 )
 
-import dds_cli.dds_gui.app
+# import dds_cli.dds_gui.app
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #

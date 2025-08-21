@@ -5,7 +5,7 @@ from typing import Any, List
 
 from textual.app import ComposeResult
 from textual.widget import Widget
-from textual.widgets import Tree, Label
+from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
 
 from dds_cli.dds_gui.models.project import ProjectContentData

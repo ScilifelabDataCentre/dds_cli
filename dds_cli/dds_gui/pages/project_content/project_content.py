@@ -1,5 +1,6 @@
 """DDS Project Content Widget"""
 
+from typing import Optional
 from textual.app import ComposeResult
 from textual.widgets import Label, LoadingIndicator, Tree
 from textual.reactive import reactive
@@ -20,8 +21,8 @@ class ProjectContent(DDSContainer):
 
     # Local reactive attributes that mirror app state and trigger recomposition
     # We should not need to use these reactive attributes, but it's not working without them.
-    project_content: reactive[ProjectContentData | None] = reactive(None, recompose=True)
-    selected_project_id: reactive[str | None] = reactive(None, recompose=True)
+    project_content: reactive[Optional[ProjectContentData]] = reactive(None, recompose=True)
+    selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
     is_loading: reactive[bool] = reactive(False, recompose=True)
 
     def compose(self) -> ComposeResult:
@@ -55,11 +56,11 @@ class ProjectContent(DDSContainer):
         """Watch the app's is_loading state and sync to local reactive attribute."""
         self.is_loading = is_loading
 
-    def watch_project_content(self, project_content: ProjectContentData | None) -> None:
+    def watch_project_content(self, project_content: Optional[ProjectContentData]) -> None:
         """Watch the app's project_content state and sync to local reactive attribute."""
         self.project_content = project_content
 
-    def watch_selected_project_id(self, selected_project_id: str | None) -> None:
+    def watch_selected_project_id(self, selected_project_id: Optional[str]) -> None:
         """Watch the app's selected_project_id state and sync to local reactive attribute."""
         self.selected_project_id = selected_project_id
 

@@ -60,8 +60,7 @@ class ProjectContentData:
                         child_nodes.append(_parse_node(child_dict))
 
                 return cls(name=name, children=child_nodes)
-            else:
-                return cls(name="", children=[])
+            return cls(name="", children=[])
 
         # Create the project root node
         content_children: List[ProjectContentData] = []

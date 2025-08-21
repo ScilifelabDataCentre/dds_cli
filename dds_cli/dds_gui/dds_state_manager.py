@@ -1,5 +1,6 @@
 """DDS State Manager"""
 
+from typing import List
 from textual.app import App
 from textual import work
 from textual.reactive import reactive
@@ -42,16 +43,16 @@ class DDSStateManager(App):
 
     #### PROJECT LISTING ####################################################
 
-    projects: reactive[list[str]] = reactive(None, recompose=True)
-    project_ids: reactive[list[str]] = reactive(None, recompose=True)
+    projects: reactive[List[str]] = reactive(None, recompose=True)
+    project_ids: reactive[List[str]] = reactive(None, recompose=True)
     selected_project_id: reactive[str] = reactive(None, recompose=True)
 
-    def fetch_projects(self) -> list[str]:
+    def fetch_projects(self) -> List[str]:
         """Fetch the projects and automatically compute project_ids via reactive watcher."""
         self.projects = DataLister(json=True).list_projects()
         # project_ids will be computed automatically by watch_projects()
 
-    def _extract_project_ids(self) -> list[str]:
+    def _extract_project_ids(self) -> List[str]:
         """Extract project IDs with validation.
 
         Note: Named with underscore to avoid Textual's computed property behavior.
@@ -129,7 +130,7 @@ class DDSStateManager(App):
 
     #### WATCHERS ###########################################################
 
-    def watch_projects(self, projects: list[dict]) -> None:
+    def watch_projects(self, projects: List[dict]) -> None:
         """Automatically compute project_ids when projects change.
 
         This is the key to the reactive pattern - when projects data changes,

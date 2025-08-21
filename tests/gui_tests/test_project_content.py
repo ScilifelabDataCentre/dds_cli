@@ -59,7 +59,12 @@ def get_content_widget(widget):
 async def test_no_project_selected_state():
     """Test widget display when no project is selected."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
         app = DDSApp(token_path="test_path")
 
         async with app.run_test() as pilot:
@@ -81,169 +86,182 @@ async def test_no_project_selected_state():
 async def test_content_loading_and_display():
     """Test content loading and TreeView display."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch(
-            "dds_cli.data_lister.DataLister.list_recursive", return_value=MOCK_PROJECT_CONTENT
-        ):
-            app = DDSApp(token_path="test_path")
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app = DDSApp(token_path="test_path")
 
-                # Select a valid project from the project list
-                app.set_selected_project_id("test-project")
-                await pilot.pause(1.0)  # Wait for background content loading
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                # Content should be loaded via reactive system
-                assert app.project_content is not None
-                assert not app.is_loading
+            # Select a valid project from the project list
+            app.set_selected_project_id("test-project")
+            await pilot.pause(1.0)  # Wait for background content loading
 
-                widget = ProjectContent(title="Project Content")
-                app.mount(widget)
-                await pilot.pause()
+            # Content should be loaded via reactive system
+            assert app.project_content is not None
+            assert not app.is_loading
 
-                # Should show TreeView with content
-                content_widget = get_content_widget(widget)
-                assert isinstance(content_widget, TreeView)
+            widget = ProjectContent(title="Project Content")
+            app.mount(widget)
+            await pilot.pause()
 
-                # Verify tree structure
-                tree_widgets = widget.query(Tree)
-                assert len(tree_widgets) == 1
-                tree_widget = tree_widgets[0]
-                assert "test-project" in str(tree_widget.root.label)
+            # Should show TreeView with content
+            content_widget = get_content_widget(widget)
+            assert isinstance(content_widget, TreeView)
+
+            # Verify tree structure
+            tree_widgets = widget.query(Tree)
+            assert len(tree_widgets) == 1
+            tree_widget = tree_widgets[0]
+            assert "test-project" in str(tree_widget.root.label)
 
 
 @pytest.mark.asyncio
 async def test_empty_project_content():
     """Test handling of empty project content."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch(
-            "dds_cli.data_lister.DataLister.list_recursive", return_value=EMPTY_PROJECT_CONTENT
-        ):
-            app = DDSApp(token_path="test_path")
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.return_value = EMPTY_PROJECT_CONTENT
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app = DDSApp(token_path="test_path")
 
-                app.set_selected_project_id("empty-project")
-                await pilot.pause(1.0)
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                widget = ProjectContent(title="Project Content")
-                app.mount(widget)
-                await pilot.pause()
+            app.set_selected_project_id("empty-project")
+            await pilot.pause(1.0)
 
-                # Should show TreeView even for empty content
-                content_widget = get_content_widget(widget)
-                assert isinstance(content_widget, TreeView)
+            widget = ProjectContent(title="Project Content")
+            app.mount(widget)
+            await pilot.pause()
+
+            # Should show TreeView even for empty content
+            content_widget = get_content_widget(widget)
+            assert isinstance(content_widget, TreeView)
 
 
 @pytest.mark.asyncio
 async def test_no_data_error_handling():
     """Test handling when project has no data (NoDataError)."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch(
-            "dds_cli.data_lister.DataLister.list_recursive",
-            side_effect=NoDataError("No files found"),
-        ):
-            app = DDSApp(token_path="test_path")
-            notifications = []
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.side_effect = NoDataError("No files found")
 
-            def capture_notify(message, **kwargs):
-                notifications.append({"message": message, "severity": kwargs.get("severity")})
+        app = DDSApp(token_path="test_path")
+        notifications = []
 
-            app.notify = capture_notify
+        def capture_notify(message, **kwargs):
+            notifications.append({"message": message, "severity": kwargs.get("severity")})
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app.notify = capture_notify
 
-                app.set_selected_project_id("test-project")
-                await pilot.pause(1.0)  # Wait for background worker error
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                # Should handle NoDataError gracefully
-                assert app.project_content is None
-                assert not app.is_loading
-                assert len(notifications) > 0
-                assert "No data found for project" in notifications[-1]["message"]
-                assert notifications[-1]["severity"] == "warning"
+            app.set_selected_project_id("test-project")
+            await pilot.pause(1.0)  # Wait for background worker error
 
-                widget = ProjectContent(title="Project Content")
-                app.mount(widget)
-                await pilot.pause()
+            # Should handle NoDataError gracefully
+            assert app.project_content is None
+            assert not app.is_loading
+            assert len(notifications) > 0
+            assert "No data found for project" in notifications[-1]["message"]
+            assert notifications[-1]["severity"] == "warning"
 
-                # Should show "No data found" message
-                content_widget = get_content_widget(widget)
-                assert isinstance(content_widget, Label)
-                assert "No data found for project test-project" in str(content_widget.renderable)
+            widget = ProjectContent(title="Project Content")
+            app.mount(widget)
+            await pilot.pause()
+
+            # Should show "No data found" message
+            content_widget = get_content_widget(widget)
+            assert isinstance(content_widget, Label)
+            assert "No data found for project test-project" in str(content_widget.renderable)
 
 
 @pytest.mark.asyncio
 async def test_api_error_during_content_fetch():
     """Test API errors during project content fetching."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch(
-            "dds_cli.data_lister.DataLister.list_recursive",
-            side_effect=ApiRequestError("Connection failed"),
-        ):
-            app = DDSApp(token_path="test_path")
-            notifications = []
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.side_effect = ApiRequestError("Connection failed")
 
-            def capture_notify(message, **kwargs):
-                notifications.append({"message": message, "severity": kwargs.get("severity")})
+        app = DDSApp(token_path="test_path")
+        notifications = []
 
-            app.notify = capture_notify
+        def capture_notify(message, **kwargs):
+            notifications.append({"message": message, "severity": kwargs.get("severity")})
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app.notify = capture_notify
 
-                app.set_selected_project_id("test-project")
-                await pilot.pause(1.0)  # Wait for background worker error
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                # Error should be handled gracefully
-                assert app.project_content is None
-                assert not app.is_loading
-                assert len(notifications) > 0
-                assert "Failed to fetch project content" in notifications[-1]["message"]
-                assert notifications[-1]["severity"] == "error"
+            app.set_selected_project_id("test-project")
+            await pilot.pause(1.0)  # Wait for background worker error
+
+            # Error should be handled gracefully
+            assert app.project_content is None
+            assert not app.is_loading
+            assert len(notifications) > 0
+            assert "Failed to fetch project content" in notifications[-1]["message"]
+            assert notifications[-1]["severity"] == "error"
 
 
 @pytest.mark.asyncio
 async def test_project_selection_change():
     """Test widget updates when project selection changes."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch(
-            "dds_cli.data_lister.DataLister.list_recursive", return_value=MOCK_PROJECT_CONTENT
-        ):
-            app = DDSApp(token_path="test_path")
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app = DDSApp(token_path="test_path")
 
-                widget = ProjectContent(title="Project Content")
-                app.mount(widget)
-                await pilot.pause()
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                # Initially no project selected
-                content_widget = get_content_widget(widget)
-                assert isinstance(content_widget, Label)
-                assert "No project selected" in str(content_widget.renderable)
+            widget = ProjectContent(title="Project Content")
+            app.mount(widget)
+            await pilot.pause()
 
-                # Select a project
-                app.set_selected_project_id("test-project")
-                await pilot.pause(1.0)  # Wait for content loading
+            # Initially no project selected
+            content_widget = get_content_widget(widget)
+            assert isinstance(content_widget, Label)
+            assert "No project selected" in str(content_widget.renderable)
 
-                # Widget should update reactively due to its watchers
-                # Note: ProjectContent uses dual reactive state pattern for recomposition
-                assert app.project_content is not None
-                assert not app.is_loading
+            # Select a project
+            app.set_selected_project_id("test-project")
+            await pilot.pause(1.0)  # Wait for content loading
+
+            # Widget should update reactively due to its watchers
+            # Note: ProjectContent uses dual reactive state pattern for recomposition
+            assert app.project_content is not None
+            assert not app.is_loading
 
 
 @pytest.mark.asyncio
@@ -275,36 +293,39 @@ async def test_tree_view_component():
 async def test_tree_node_selection_event():
     """Test tree node selection and subtitle updates."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch(
-            "dds_cli.data_lister.DataLister.list_recursive", return_value=MOCK_PROJECT_CONTENT
-        ):
-            app = DDSApp(token_path="test_path")
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app = DDSApp(token_path="test_path")
 
-                app.set_selected_project_id("test-project")
-                await pilot.pause(1.0)
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                widget = ProjectContent(title="Project Content")
-                app.mount(widget)
-                await pilot.pause()
+            app.set_selected_project_id("test-project")
+            await pilot.pause(1.0)
 
-                # Create mock tree node selection event
-                mock_node = MagicMock()
-                mock_node.label = "folder1"
+            widget = ProjectContent(title="Project Content")
+            app.mount(widget)
+            await pilot.pause()
 
-                mock_event = MagicMock()
-                mock_event.node = mock_node
+            # Create mock tree node selection event
+            mock_node = MagicMock()
+            mock_node.label = "folder1"
 
-                # Trigger node selection
-                widget.on_tree_node_selected(mock_event)
-                await pilot.pause()
+            mock_event = MagicMock()
+            mock_event.node = mock_node
 
-                # Subtitle should be updated
-                assert widget.subtitle == "folder1"
+            # Trigger node selection
+            widget.on_tree_node_selected(mock_event)
+            await pilot.pause()
+
+            # Subtitle should be updated
+            assert widget.subtitle == "folder1"
 
 
 @pytest.mark.asyncio
@@ -351,29 +372,34 @@ async def test_multiple_error_types():
     ]
 
     for exception in error_cases:
-        with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-            with patch("dds_cli.data_lister.DataLister.list_recursive", side_effect=exception):
-                app = DDSApp(token_path="test_path")
-                notifications = []
+        with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+            # Mock DataLister to prevent authentication attempts
+            mock_data_lister_instance = MagicMock()
+            mock_data_lister_class.return_value = mock_data_lister_instance
+            mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+            mock_data_lister_instance.list_recursive.side_effect = exception
 
-                def capture_notify(message, **kwargs):
-                    notifications.append({"message": message, "severity": kwargs.get("severity")})
+            app = DDSApp(token_path="test_path")
+            notifications = []
 
-                app.notify = capture_notify
+            def capture_notify(message, **kwargs):
+                notifications.append({"message": message, "severity": kwargs.get("severity")})
 
-                async with app.run_test() as pilot:
-                    app.set_auth_status(True)
-                    await pilot.pause()
+            app.notify = capture_notify
 
-                    app.set_selected_project_id("test-project")
-                    await pilot.pause(1.0)
+            async with app.run_test() as pilot:
+                app.set_auth_status(True)
+                await pilot.pause()
 
-                    # Error should be handled
-                    assert app.project_content is None
-                    assert not app.is_loading
-                    assert len(notifications) > 0
-                    assert "Failed to fetch project content" in notifications[-1]["message"]
-                    assert notifications[-1]["severity"] == "error"
+                app.set_selected_project_id("test-project")
+                await pilot.pause(1.0)
+
+                # Error should be handled
+                assert app.project_content is None
+                assert not app.is_loading
+                assert len(notifications) > 0
+                assert "Failed to fetch project content" in notifications[-1]["message"]
+                assert notifications[-1]["severity"] == "error"
 
 
 @pytest.mark.asyncio
@@ -395,99 +421,110 @@ async def test_large_project_structure():
         },
     }
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch("dds_cli.data_lister.DataLister.list_recursive", return_value=large_content):
-            app = DDSApp(token_path="test_path")
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.return_value = large_content
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app = DDSApp(token_path="test_path")
 
-                app.set_selected_project_id("test-project")
-                await pilot.pause(1.0)
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                # Verify large content is handled
-                assert app.project_content is not None
+            app.set_selected_project_id("test-project")
+            await pilot.pause(1.0)
 
-                widget = ProjectContent(title="Project Content")
-                app.mount(widget)
-                await pilot.pause()
+            # Verify large content is handled
+            assert app.project_content is not None
 
-                # Should render TreeView without issues
-                content_widget = get_content_widget(widget)
-                assert isinstance(content_widget, TreeView)
+            widget = ProjectContent(title="Project Content")
+            app.mount(widget)
+            await pilot.pause()
+
+            # Should render TreeView without issues
+            content_widget = get_content_widget(widget)
+            assert isinstance(content_widget, TreeView)
 
 
 @pytest.mark.asyncio
 async def test_widget_state_synchronization():
     """Test that widget syncs with app state via watchers."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch(
-            "dds_cli.data_lister.DataLister.list_recursive", return_value=MOCK_PROJECT_CONTENT
-        ):
-            app = DDSApp(token_path="test_path")
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app = DDSApp(token_path="test_path")
 
-                widget = ProjectContent(title="Project Content")
-                app.mount(widget)
-                await pilot.pause()
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                # Verify initial state sync
-                assert widget.selected_project_id == app.selected_project_id
-                assert widget.project_content == app.project_content
-                assert widget.is_loading == app.is_loading
+            widget = ProjectContent(title="Project Content")
+            app.mount(widget)
+            await pilot.pause()
 
-                # Change app state
-                app.set_selected_project_id("test-project")
-                await pilot.pause(1.0)  # Wait for background worker
+            # Verify initial state sync
+            assert widget.selected_project_id == app.selected_project_id
+            assert widget.project_content == app.project_content
+            assert widget.is_loading == app.is_loading
 
-                # Verify app state updated first
-                assert app.selected_project_id == "test-project"
-                assert app.project_content is not None
-                assert not app.is_loading
+            # Change app state
+            app.set_selected_project_id("test-project")
+            await pilot.pause(1.0)  # Wait for background worker
 
-                # Widget should sync via watchers
-                assert widget.selected_project_id == "test-project"
-                # Note: Widget's project_content should sync but might have timing issues
-                # The key test is that the app state is correct
+            # Verify app state updated first
+            assert app.selected_project_id == "test-project"
+            assert app.project_content is not None
+            assert not app.is_loading
+
+            # Widget should sync via watchers
+            assert widget.selected_project_id == "test-project"
+            # Note: Widget's project_content should sync but might have timing issues
+            # The key test is that the app state is correct
 
 
 @pytest.mark.asyncio
 async def test_project_deselection():
     """Test clearing content when project is deselected."""
 
-    with patch("dds_cli.data_lister.DataLister.list_projects", return_value=MOCK_PROJECTS):
-        with patch(
-            "dds_cli.data_lister.DataLister.list_recursive", return_value=MOCK_PROJECT_CONTENT
-        ):
-            app = DDSApp(token_path="test_path")
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+        mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-            async with app.run_test() as pilot:
-                app.set_auth_status(True)
-                await pilot.pause()
+        app = DDSApp(token_path="test_path")
 
-                # Load content first
-                app.set_selected_project_id("test-project")
-                await pilot.pause(1.0)
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            await pilot.pause()
 
-                widget = ProjectContent(title="Project Content")
-                app.mount(widget)
-                await pilot.pause()
+            # Load content first
+            app.set_selected_project_id("test-project")
+            await pilot.pause(1.0)
 
-                # Verify content is shown
-                assert app.project_content is not None
+            widget = ProjectContent(title="Project Content")
+            app.mount(widget)
+            await pilot.pause()
 
-                # Deselect project
-                app.set_selected_project_id(None)
-                await pilot.pause()
+            # Verify content is shown
+            assert app.project_content is not None
 
-                # Content should be cleared
-                assert app.project_content is None
-                assert not app.is_loading
+            # Deselect project
+            app.set_selected_project_id(None)
+            await pilot.pause()
+
+            # Content should be cleared
+            assert app.project_content is None
+            assert not app.is_loading
 
 
 # =================================================================================

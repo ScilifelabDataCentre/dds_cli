@@ -62,7 +62,7 @@ from dds_cli.options import (
     users_flag,
 )
 
-# import dds_cli.dds_gui.app
+import dds_cli.dds_gui.app
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #

@@ -436,3 +436,4 @@ _Empty sprint_
 # 2025-05-26 - 2025-06-05
 
 - Proof of concept for new GUI ([#739](https://github.com/ScilifelabDataCentre/dds_cli/pull/739))
+- Verify file size after download and decryption ([#775](https://github.com/ScilifelabDataCentre/dds_cli/pull/775))

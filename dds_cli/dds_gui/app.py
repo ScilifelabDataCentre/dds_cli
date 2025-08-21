@@ -33,7 +33,7 @@ theme = Theme(
 )
 
 
-class DDSApp(DDSStateManager): ### Moved app to state manager?
+class DDSApp(DDSStateManager):  ### Moved app to state manager?
     """Textual App for DDS CLI."""
 
     def __init__(self, token_path: str):

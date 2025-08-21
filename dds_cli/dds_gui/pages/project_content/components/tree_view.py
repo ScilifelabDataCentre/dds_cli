@@ -33,6 +33,13 @@ class TreeView(Widget):
         super().__init__(*args, **kwargs)
         self.tree_data = tree_data
 
+    DEFAULT_CSS = """
+    ScrollView {
+        scrollbar-size: 1 1;
+        scrollbar-color: $primary 70%;
+    }
+    """
+
     def compose(self) -> ComposeResult:
         tree: Tree[str] = Tree(self.tree_data.name)  # Create tree with root node
         tree.root.expand()  # Expand the root node to show all children

@@ -47,12 +47,27 @@ class DDSStateManager(App):
     selected_project_id: reactive[str] = reactive(None, recompose=True)
 
     def fetch_projects(self) -> list[str]:
-        """Fetch the projects."""
+        """Fetch the projects and automatically compute project_ids via reactive watcher."""
         self.projects = DataLister(json=True).list_projects()
+        # project_ids will be computed automatically by watch_projects()
 
-    def compute_project_ids(self) -> list[str]:
-        """Compute the project ids."""
-        return [project["Project ID"] for project in self.projects] if self.projects else []
+    def _extract_project_ids(self) -> list[str]:
+        """Extract project IDs with validation.
+
+        Note: Named with underscore to avoid Textual's computed property behavior.
+        If named compute_project_ids, it would make project_ids read-only.
+        """
+        if not self.projects:
+            return []
+
+        # Extract project IDs with validation for malformed data
+        project_ids = []
+        for project in self.projects:
+            project_id = project.get("Project ID")
+            if project_id and isinstance(project_id, str) and project_id.strip():
+                project_ids.append(project_id)
+
+        return project_ids
 
     def set_selected_project_id(self, project_id: str) -> None:
         """Set the selected project id."""
@@ -114,6 +129,19 @@ class DDSStateManager(App):
 
     #### WATCHERS ###########################################################
 
+    def watch_projects(self, projects: list[dict]) -> None:
+        """Automatically compute project_ids when projects change.
+
+        This is the key to the reactive pattern - when projects data changes,
+        project_ids is automatically recomputed and UI updates follow.
+        """
+        if projects is not None:
+            # Projects was fetched (could be empty list or list with data)
+            self.project_ids = self._extract_project_ids()
+        else:
+            # Projects is None (not fetched or cleared)
+            self.project_ids = None
+
     def watch_auth_status(self, auth_status: bool) -> None:
         """Watch the auth status."""
         if auth_status:
@@ -124,7 +152,7 @@ class DDSStateManager(App):
                 self.fetch_projects()
             except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
                 self.notify(f"Failed to fetch projects: {err}", severity="error")
-                self.projects = None
+                self.projects = None  # This triggers watch_projects to clear project_ids
         else:
-            self.projects = None
+            self.projects = None  # This triggers watch_projects to clear project_ids
             self.selected_project_id = None

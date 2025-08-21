@@ -54,11 +54,6 @@ class ProjectView(Widget):
         with Horizontal():
             with Vertical(id="left-container"):
                 yield ProjectList(title="Projects", id="project-list")
-                yield Placeholder(
-                    id="important-information"
-                yield Placeholder(
-                    id="project-list"
-                )  # ProjectList(title="Projects", id="project-list")
                 yield ImportantInformation(
                     title="Important Information", id="important-information"
                 )  # ImportantInformation(title="Important Information", id="important-information")

@@ -148,7 +148,8 @@ class DDSStateManager(App):
         if auth_status:
             # Fetch the projects when the auth status is True.
             # This is to ensure that the projects are fetched when the user is authenticated only.
-            # If called without auth status, recursion error occurs and/or the base class will try to authenticate in the CLI.
+            # If called without auth status, recursion error occurs and/or the base class
+            #  will try to authenticate in the CLI.
             try:
                 self.fetch_projects()
             except (ApiRequestError, ApiResponseError, DDSCLIException) as err:

@@ -40,7 +40,7 @@ def verify_proceed(func):
         # Check if keyboardinterrupt in dds
         if self.stop_doing:
             # TODO (ina): Add save to status here
-            message = "KeyBoardInterrupt - cancelling file {escape(file)}"
+            message = f"KeyboardInterrupt - cancelling file {escape(file)}"
             LOG.warning(message)
             return False  # Do not proceed
 

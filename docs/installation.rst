@@ -273,7 +273,7 @@ Dardel
 
 The ``dds-cli`` package is a global module on Dardel; No installation required. However, there are a few steps you need to perform prior to using it. 
 
-1. First, SSH into Dardel. Their guide on how to do this can be found `here <https://support.pdc.kth.se/doc/basics/quickstart/>`
+1. First, SSH into Dardel. Their guide on how to do this can be found at https://support.pdc.kth.se/doc/basics/quickstart/.
 2. Load the ``dds-cli`` module by running
 
    .. code-block:: bash
@@ -288,7 +288,7 @@ The ``dds-cli`` package is a global module on Dardel; No installation required. 
    The output should be the following:
 
    .. image:: ../img/dds-version.svg
-4. Before downloading data, you need to log into the dedicated file transfer node: dardel-ftn01.pdc.kth.se. Do NOT submit data-transfer jobs to the queueing system, run them directly on that node.
+4. Before downloading data, you need to log into the dedicated file transfer node: ``dardel-ftn01.pdc.kth.se``. Do **NOT** submit data-transfer jobs to the queueing system, run them directly on that node.
 
 
 .. _verify-integrity: 

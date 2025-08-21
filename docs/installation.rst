@@ -266,7 +266,7 @@ Bianca
    * Bianca user guide: https://docs.uppmax.uu.se/cluster_guides/bianca/
    * Transit user guide: https://docs.uppmax.uu.se/cluster_guides/transfer_transit/
 
-.. _ dardel:
+.. _dardel:
 
 Dardel
 =======

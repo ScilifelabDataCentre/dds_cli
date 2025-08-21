@@ -95,7 +95,6 @@ def put(
 
                 # Schedule the first num_threads futures for upload
                 for file in itertools.islice(iterator, num_threads):
-                    LOG.debug("Starting: '%s'", escape(file))
                     upload_threads[
                         texec.submit(
                             putter.protect_and_upload,
@@ -119,7 +118,7 @@ def put(
                         # Get result from future and schedule database update
                         for fut in done:
                             uploaded_file = upload_threads.pop(fut)
-                            LOG.debug("Future done for file: %s", escape(uploaded_file))
+                            LOG.debug("Future done for file: '%s'", escape(uploaded_file))
 
                             # Get result
                             try:
@@ -291,6 +290,8 @@ class DataPutter(base.DDSBaseClass):
         all_ok, saved, message = (False, False, "")  # Error catching
         file_info = self.filehandler.data[file]  # Info on current file
         file_public_key, salt = ("", "")  # Crypto info
+        file_path_raw = escape(str(file_info["path_raw"]))
+        LOG.debug("Step '%s': started file '%s'", self.method, file_path_raw)
 
         # Progress bar for processing
         task = progress.add_task(
@@ -305,6 +306,7 @@ class DataPutter(base.DDSBaseClass):
         # Stream the chunks into the encryptor to save the encrypted chunks
         with fe.Encryptor(project_keys=self.keys) as encryptor:
             # Encrypt and save chunks
+            LOG.debug("Encrypting file '%s'", file_path_raw)
             saved, message = encryptor.encrypt_filechunks(
                 chunks=streamed_chunks,
                 outfile=file_info["path_processed"],
@@ -315,18 +317,21 @@ class DataPutter(base.DDSBaseClass):
             file_public_key = encryptor.get_public_component_hex(private_key=encryptor.my_private)
             salt = encryptor.salt
 
-        LOG.debug("Updating file processed size: %s", file_info["path_processed"])
-
         # Update file info incl size, public key, salt
         self.filehandler.data[file]["public_key"] = file_public_key
         self.filehandler.data[file]["salt"] = salt
         self.filehandler.data[file]["size_processed"] = file_info["path_processed"].stat().st_size
 
+        LOG.debug(
+            "File '%s' processed size: %s",
+            file_path_raw,
+            file_info["path_processed"].stat().st_size,
+        )
+
         if saved:
             LOG.debug(
-                "File successfully encrypted: '%s'. New location: '%s'",
-                escape(file),
-                escape(str(file_info["path_processed"])),
+                "File successfully encrypted: '%s'",
+                file_path_raw,
             )
             # Update progress bar for upload
             progress.reset(
@@ -346,7 +351,8 @@ class DataPutter(base.DDSBaseClass):
                 if db_updated:
                     all_ok = True
                     LOG.debug(
-                        "File successfully uploaded and added to the database: '%s'", escape(file)
+                        "File successfully uploaded and added to the database: '%s'",
+                        file_path_raw,
                     )
 
         if not saved or all_ok:
@@ -373,6 +379,8 @@ class DataPutter(base.DDSBaseClass):
         # File info
         file_local = str(self.filehandler.data[file]["path_processed"])
         file_remote = self.filehandler.data[file]["path_remote"]
+        file_path_raw = self.filehandler.data[file]["path_raw"]
+        LOG.debug("Step '%s': started file '%s'", self.method, file_path_raw)
 
         try:
             with self.s3connector as conn:
@@ -441,6 +449,7 @@ class DataPutter(base.DDSBaseClass):
                 error_message=f"Failed to add file '{file}' to database",
             )
             added_to_db, message = (True, response_json)
+            LOG.debug("API call for file '%s: Adding to database'", fileinfo["path_raw"])
         except (
             dds_cli.exceptions.ApiRequestError,
             dds_cli.exceptions.ApiResponseError,

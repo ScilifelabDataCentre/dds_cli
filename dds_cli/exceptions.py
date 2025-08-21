@@ -115,3 +115,11 @@ class APIError(Exception):
 
 class NoKeyError(Exception):
     """Error when there's a missing key."""
+
+
+class NoMOTDsError(Exception):
+    """Error when there's no MOTDs to display."""
+
+    def __init__(self, message):
+        """Log and raise."""
+        super().__init__(message)

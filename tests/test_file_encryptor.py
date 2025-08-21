@@ -191,7 +191,8 @@ def verify_files_txt(fs: FakeFilesystem, magnitude: str):
     )
     assert (
         not fake_1_altered_verified
-        and message1altered == "Checksum verification failed. File compromised."
+        and message1altered
+        == "Checksum verification failed. File 'small_text_file_1.txt' compromised."
     )
 
 
@@ -260,7 +261,8 @@ def test_verify_checksum_images():
     )
     assert (
         not fake_1_altered_verified
-        and message1altered == "Checksum verification failed. File compromised."
+        and message1altered
+        == "Checksum verification failed. File '/home/runner/work/dds_cli/dds_cli/tests/images/test-image_1a.jpg' compromised."
     )
 
 
@@ -341,7 +343,8 @@ def verify_files_csv(fs: FakeFilesystem, magnitude: str):
     )
     assert (
         not fake_1_altered_verified
-        and message1altered == "Checksum verification failed. File compromised."
+        and message1altered
+        == "Checksum verification failed. File 'small_text_file_1.csv' compromised."
     )
 
 

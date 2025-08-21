@@ -11,7 +11,7 @@ from dds_cli.dds_gui.pages.project_view import ProjectView
 
 theme = Theme(
     name="custom",
-    primary="#3F3F3F",
+    primary="#666666",  # "#3F3F3F",
     secondary="#4C979F",
     # secondary="#12F0E1",
     accent="#A7C947",
@@ -39,6 +39,7 @@ class DDSApp(App, DDSStateManager):
     def __init__(self, token_path: str):
         super().__init__()
         self.token_path = token_path
+        self.set_auth_status(self.auth.check())
 
     # TODO: add scrollbar styling here?
     DEFAULT_CSS = """

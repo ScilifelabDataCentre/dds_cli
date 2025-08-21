@@ -1,7 +1,8 @@
 [MASTER]
 ignore-paths=
     docs,
-    tests
+    tests,
+    dds_cli/dds_gui/tests
 
 [FORMAT]
 max-line-length=120

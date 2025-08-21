@@ -6,6 +6,7 @@
 
 # Standard library
 import logging
+from typing import Optional
 
 # Installed
 
@@ -71,45 +72,47 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         LOG.info(response_message)
 
     @staticmethod
-    def list_all_active_motds(table=False):  # pylint: disable=inconsistent-return-statements
-        """Get all active MOTDs."""
-        try:
-            response, _ = dds_cli.utils.perform_request(
-                endpoint=dds_cli.DDSEndpoint.MOTD,
-                method="get",
-                error_message="Failed getting MOTDs from API",
+    def list_all_active_motds(table: bool = False) -> Optional[list]:
+        """Get all active MOTDs.
+        When called from "dds modt ls" with table=True, the function will print a table of the MOTDs,
+        else it will return a list of MOTDs. The function runs on every dds call.
+
+        :param table: Whether to print a table of the MOTDs.
+        :return: A list of MOTDs if table is False, otherwise None.
+        """
+
+        response, _ = dds_cli.utils.perform_request(
+            endpoint=dds_cli.DDSEndpoint.MOTD,
+            method="get",
+            error_message="Failed getting MOTDs from API",
+        )
+
+        motd = response.get("motds")
+
+        if not motd:
+            raise dds_cli.exceptions.NoMOTDsError(
+                message=response.get("message", "No motds or info message returned from API.")
             )
-        except:  # pylint: disable=bare-except
-            pass
-        else:
-            # Get items from response
-            motd = response.get("motds")
-            if not motd:
-                message = response.get("message", "No motds or info message returned from API.")
-                LOG.info(message)
-            else:
-                motds, keys = dds_cli.utils.get_required_in_response(
-                    keys=["motds", "keys"], response=response
-                )
-                # Sort the active MOTDs according to date created
-                motds = dds_cli.utils.sort_items(items=motds, sort_by="Created")
 
-                # when called from "dds modt ls" with table=True
-                if table:
-                    # Create table
-                    table = dds_cli.utils.create_table(
-                        title="Active MOTDs.",
-                        columns=keys,
-                        rows=motds,
-                        ints_as_string=True,
-                        caption="Active MOTDs.",
-                    )
+        motds, keys = dds_cli.utils.get_required_in_response(
+            keys=["motds", "keys"], response=response
+        )
 
-                    # Print out table
-                    dds_cli.utils.print_or_page(item=table)
-                else:
-                    # on every dds call
-                    return motds
+        motds = dds_cli.utils.sort_items(items=motds, sort_by="Created")
+
+        if table:
+            table = dds_cli.utils.create_table(
+                title="Active MOTDs.",
+                columns=keys,
+                rows=motds,
+                ints_as_string=True,
+                caption="Active MOTDs.",
+            )
+
+            dds_cli.utils.print_or_page(item=table)
+            return None
+
+        return motds
 
     def deactivate_motd(self, motd_id) -> None:
         """Deactivate specific MOTD."""

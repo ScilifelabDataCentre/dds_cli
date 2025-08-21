@@ -50,9 +50,6 @@ class DDSBaseClass:
         no_prompt: bool = False,
         token_path: str = None,
         allow_group: bool = False,
-        # authenticate_gui: bool = False,
-        # username_gui: str = None,
-        # password_gui: str = None,
         staging_dir: dds_cli.directory.DDSDirectory = None,
     ):
         """Initialize Base class for authenticating the user and preparing for DDS action."""
@@ -60,9 +57,7 @@ class DDSBaseClass:
         self.method = method
         self.no_prompt = no_prompt
         self.token_path = token_path
-        # self.authenticate_gui = authenticate_gui
-        # self.username_gui = username_gui
-        # self.password_gui = password_gui
+
         self.totp = totp
 
         # Keyboardinterrupt
@@ -74,25 +69,10 @@ class DDSBaseClass:
                 force_renew_token=force_renew_token,
                 no_prompt=no_prompt,
                 token_path=token_path,
-                totp=totp,
                 allow_group=allow_group,
+                totp=totp,
             )
             self.token = dds_user.token_dict
-
-        ## AUTHNETCATION FOR THE GUI
-        # if authenticate_gui:
-        #     self.dds_user = user.User(
-        #         force_renew_token=False,
-        #         no_prompt=no_prompt,
-        #         authenticate_gui=authenticate_gui,
-        #         token_path=token_path,
-        #         totp=totp,
-        #         allow_group=allow_group,
-        #     )
-
-        #     self.partial_auth_token, self.secondfactor_method = self.dds_user.sign_in(
-        #         username=self.username_gui, password=self.password_gui
-        #     )
 
         # Project access only required if trying to upload, download or list
         # files within project
@@ -112,19 +92,6 @@ class DDSBaseClass:
 
             self.status: typing.Dict = {}
             self.filehandler = None
-
-    # def do_2factor(self, twofactor_code: str):
-    #     """
-    #     Perform 2fa for the gui
-    #     """
-    #     self.dds_user.twofactor_GUI(
-    #         self.partial_auth_token,
-    #         self.secondfactor_method,
-    #         self.totp,
-    #         self.username_gui,
-    #         twofactor_code,
-    #     )
-    #     self.token = self.dds_user.token_dict
 
     def __enter__(self):
         """Return self when using context manager."""
@@ -147,6 +114,13 @@ class DDSBaseClass:
         return True
 
     # Public methods ############################### Public methods #
+
+    def set_token(self, token_dict: dict) -> None:
+        """Sets the token for the base class.
+        Called from auth class to set the token when authenticating
+        in the gui without running the base class with autheticate set to true.
+        """
+        self.token = token_dict
 
     def get_project_info(self):
         """Collect project information from API."""

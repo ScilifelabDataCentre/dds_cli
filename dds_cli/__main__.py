@@ -38,6 +38,7 @@ import dds_cli.project_status
 import dds_cli.project_info
 import dds_cli.user
 import dds_cli.utils
+import dds_cli.message_helper
 from dds_cli.options import (
     destination_option,
     email_arg,
@@ -60,8 +61,7 @@ from dds_cli.options import (
     users_flag,
 )
 
-## GUI IMPORTS ##
-# from .dds_gui.app import DDSApp
+# import dds_cli.dds_gui.app
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -98,11 +98,24 @@ dds_cli.utils.stderr_console.print(
 )
 
 if len(sys.argv) == 1 or (len(sys.argv) > 1 and sys.argv[1] != "motd"):
-    motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
-    if motds:
-        dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
-        for motd in motds:
-            dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
+    try:
+        motds = dds_cli.motd_manager.MotdManager.list_all_active_motds(table=False)
+        if motds:
+            dds_cli.utils.stderr_console.print("[bold]Important information:[/bold]")
+            for motd in motds:
+                dds_cli.utils.stderr_console.print(f"{motd['Created']} - {motd['Message']} \n")
+    except dds_cli.exceptions.NoMOTDsError as no_motds_err:
+        # Print message about no MOTD
+        LOG.info(no_motds_err)
+    except (
+        dds_cli.exceptions.ApiResponseError,
+        dds_cli.exceptions.ApiRequestError,
+    ) as api_err:
+        # Avoid breaking CLI startup on MOTD fetch issues
+        LOG.debug("Skipping MOTD display due to API error: %s", api_err)
+    except dds_cli.exceptions.DDSCLIException as dds_cli_err:
+        # Covers 400/403 and other handled DDS CLI errors from perform_request
+        LOG.debug("Skipping MOTD display due to DDS error: %s", dds_cli_err)
 
 
 # -- dds -- #
@@ -198,12 +211,14 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
 
 ### GUI COMMAND ###
 
+# TODO: Should totp be passed to the gui?
+
 
 # @dds_main.command(name="gui")
 # @click.pass_obj
 # def gui(click_ctx):
 #     """Start the DDS GUI."""
-#     gui_app = DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
+#     gui_app = dds_cli.dds_gui.app.DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
 #     gui_app.title = "SciLifeLab Data Delivery System"
 #     gui_app.sub_title = "CLI Version: " + dds_cli.__version__
 #     gui_app.run()
@@ -441,7 +456,9 @@ def login(click_ctx, totp, allow_group):
         LOG.warning("The --no-prompt flag is ignored for `dds auth login`")
     try:
         with dds_cli.auth.Auth(
-            token_path=click_ctx.get("TOKEN_PATH"), totp=totp, allow_group=allow_group
+            token_path=click_ctx.get("TOKEN_PATH"),
+            totp=totp,
+            allow_group=allow_group,
         ):
             # Authentication token renewed in the init method.
             LOG.info("[green] :white_check_mark: Authentication successful![/green]")
@@ -468,7 +485,8 @@ def logout(click_ctx):
         with dds_cli.auth.Auth(
             authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
-            authenticator.logout()
+            logout_ok = authenticator.logout()
+            dds_cli.message_helper.CLIMessageHelper().logout_message(logout_ok=logout_ok)
 
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
@@ -490,7 +508,13 @@ def info(click_ctx):
         with dds_cli.auth.Auth(
             authenticate=False, token_path=click_ctx.get("TOKEN_PATH")
         ) as authenticator:
-            authenticator.check()
+            expiration_time = authenticator.check()
+            if expiration_time:
+                dds_cli.message_helper.CLIMessageHelper().token_report_message(
+                    expiration_time=expiration_time
+                )
+            else:
+                dds_cli.message_helper.CLIMessageHelper().token_expired_message()
     except (dds_cli.exceptions.DDSCLIException, dds_cli.exceptions.ApiRequestError) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1853,7 +1877,6 @@ def get_data(
 
                     # Schedule the first num_threads futures for upload
                     for file in itertools.islice(iterator, num_threads):
-                        LOG.debug("Starting: %s", rich.markup.escape(str(file)))
                         # Execute download
                         download_threads[
                             texec.submit(getter.download_and_verify, file=file, progress=progress)
@@ -1892,7 +1915,6 @@ def get_data(
 
                         # Schedule the next set of futures for download
                         for next_file in itertools.islice(iterator, new_tasks):
-                            LOG.debug("Starting: %s", rich.markup.escape(str(next_file)))
                             # Execute download
                             download_threads[
                                 texec.submit(
@@ -2136,6 +2158,8 @@ def list_active_motds(click_ctx):
     ) as err:
         LOG.error(err)
         sys.exit(1)
+    except dds_cli.exceptions.NoMOTDsError as err:
+        LOG.info(err)
 
 
 # -- dds motd deactivate -- #

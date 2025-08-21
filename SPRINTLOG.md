@@ -446,4 +446,8 @@ _Empty sprint_
 
 - Add ARD's for GUI
 - Refactor MOTD to work for both the CLI and the GUI ([#771](https://github.com/ScilifelabDataCentre/dds_cli/pull/771))
+
+# 2025-08-18 - 2025-08-29
+
 - Implement MOTD for GUI ([#772](https://github.com/ScilifelabDataCentre/dds_cli/pull/772))
+- Add Dardel-related information to the documentation ([#774](https://github.com/ScilifelabDataCentre/dds_cli/pull/774))

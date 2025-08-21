@@ -76,6 +76,7 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 11. Inform users (`dds-status` Slack channel) and relevant IT departments / HPC centers about new version
 
 > **Uppmax**
+>
 > Uppmax automatically upgrades the `dds-cli` version every day at midnight.
 > If there has been a major version change though and the CLI contains breaking changes, _Uppmax should be notified well in advance_ in order to plan for an upgrade at a specific time so that the users are blocked (automatic functionality in dds_web) for as short time as possible.
 >
@@ -92,6 +93,7 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 > ```
 
 > **Dardel**
+>
 > There is no automatic upgrade of the `dds-cli` on Dardel and we need to inform them via email whenever there is a new version. If there are breaking changes, Dardel should also (in addition to Uppmax) be informed in advance. See the Uppmax email above as a template, but change it accordingly.
 >
 > ```

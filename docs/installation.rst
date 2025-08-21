@@ -288,6 +288,7 @@ The ``dds-cli`` package is a global module on Dardel; No installation required. 
    The output should be the following:
 
    .. image:: ../img/dds-version.svg
+4. Before downloading data, you need to log into the dedicated file transfer node: dardel-ftn01.pdc.kth.se. Do NOT submit data-transfer jobs to the queueing system, run them directly on that node.
 
 
 .. _verify-integrity: 

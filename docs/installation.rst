@@ -288,7 +288,6 @@ The ``dds-cli`` package is a global module on Dardel; No installation required. 
    The output should be the following:
 
    .. image:: ../img/dds-version.svg
-4. Follow the instructions in the :ref:`how-to-download` section to download your data.
 
 
 .. _verify-integrity: 

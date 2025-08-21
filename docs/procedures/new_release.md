@@ -93,15 +93,15 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 
 > **Dardel**
 > There is no automatic upgrade of the `dds-cli` on Dardel and we need to inform them via email whenever there is a new version. If there are breaking changes, Dardel should also (in addition to Uppmax) be informed in advance. See the Uppmax email above as a template, but change it accordingly.
-> 
+>
 > ```
 > [Recipient]: support@pdc.kth.se
 > [Subject]: Uppgrade dds-cli module
 >
-> [Message]: 
-> Hi, 
-> 
+> [Message]:
+> Hi,
+>
 > There is a new version of the dds-cli. Could you please upgrade the version to [new dds-cli version]?
-> 
+>
 > Thank you in advance!
 > ```

@@ -9,10 +9,10 @@ import datetime
 import getpass
 import logging
 import os
-import pathlib
+from pathlib import Path
 import stat
 import subprocess
-from typing import Optional
+from typing import Optional, Union
 
 # Installed
 from rich.prompt import Prompt
@@ -44,7 +44,7 @@ class User:
         self,
         force_renew_token: bool = False,
         no_prompt: bool = False,
-        token_path: str = None,
+        token_path: Optional[Union[str, Path]] = None,
         allow_group: bool = False,
         totp: str = None,
         retrieve_token: bool = True,
@@ -283,13 +283,13 @@ class User:
 class TokenFile:
     """A class to manage the saved token."""
 
-    def __init__(self, token_path=None, allow_group: bool = False):
+    def __init__(self, token_path: Optional[Union[str, Path]] = None, allow_group: bool = False):
         # 600: -rw-------, 640: -rw-r-----, 660: -rw-rw----
         self.token_permission = 0o640 if allow_group else 0o600
         if token_path is None:
             self.token_file = dds_cli.TOKEN_FILE
         else:
-            self.token_file = pathlib.Path(os.path.expanduser(token_path))
+            self.token_file = Path(token_path).expanduser()
 
     def read_token(self):
         """Attempts to fetch a valid token from the token file.

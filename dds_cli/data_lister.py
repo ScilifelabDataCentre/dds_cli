@@ -49,7 +49,7 @@ class DataLister(base.DDSBaseClass):
         tree: bool = False,
         no_prompt: bool = False,
         json: bool = False,
-        token_path: str = None,
+        token_path: Union[str, pathlib.Path, None] = None,
         binary: bool = False,
     ):
         """Handle actions regarding data listing in the cli."""

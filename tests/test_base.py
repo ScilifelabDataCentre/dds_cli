@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pathlib
 import pytest
 
 from dds_cli.base import DDSBaseClass
@@ -41,7 +42,7 @@ def test_init_base_class_with_parameters_no_authentication():
         method="list",
         authenticate=False,
         no_prompt=True,
-        token_path="/custom/token/path",
+        token_path=pathlib.Path("/custom/token/path"),
         totp=MOCK_2FA_CODE,
         allow_group=True,
     )
@@ -49,7 +50,7 @@ def test_init_base_class_with_parameters_no_authentication():
     assert base.project == MOCK_PROJECT
     assert base.method == "list"
     assert base.no_prompt is True
-    assert base.token_path == "/custom/token/path"
+    assert base.token_path == pathlib.Path("/custom/token/path")
     assert base.totp == MOCK_2FA_CODE
 
 

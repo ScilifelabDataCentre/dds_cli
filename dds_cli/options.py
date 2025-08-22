@@ -207,7 +207,7 @@ def token_path_option(
         short,
         name,
         required=required,
-        type=str,
+        type=click.Path(path_type=pathlib.Path),
         help=help_message,
     )
 

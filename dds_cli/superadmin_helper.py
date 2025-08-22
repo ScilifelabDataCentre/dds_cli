@@ -6,6 +6,8 @@
 
 # Standard library
 import logging
+import pathlib
+import typing
 
 # Installed
 
@@ -39,7 +41,7 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         self,
         authenticate: bool = True,
         no_prompt: bool = False,
-        token_path: str = None,
+        token_path: typing.Union[str, pathlib.Path, None] = None,
     ):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user

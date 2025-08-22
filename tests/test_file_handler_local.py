@@ -23,7 +23,9 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
     # Verify files exist
     assert fs.exists(file_path=pathlib.Path("parentdir") / "fileinparentdir.file")
     assert fs.exists(file_path=pathlib.Path("parentdir") / "somedir" / "fileinsomedir.file")
-    assert fs.exists(file_path=pathlib.Path("parentdir") / "somedir" / "subdir" / "fileinsubdir.file")
+    assert fs.exists(
+        file_path=pathlib.Path("parentdir") / "somedir" / "subdir" / "fileinsubdir.file"
+    )
 
     # Verify that fails with incorrect paths
     assert not fs.exists(file_path=pathlib.Path("anotherdir"))
@@ -51,7 +53,9 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
             "overwrite": False,
             "checksum": "",
         },
-        (pathlib.Path("remote_destination") / "parentdir" / "somedir" / "fileinsomedir.file").as_posix(): {
+        (
+            pathlib.Path("remote_destination") / "parentdir" / "somedir" / "fileinsomedir.file"
+        ).as_posix(): {
             "path_raw": pathlib.Path.cwd() / "parentdir" / "somedir" / "fileinsomedir.file",
             "subpath": pathlib.Path("remote_destination") / "parentdir" / "somedir",
             "size_raw": 0,
@@ -66,9 +70,17 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
             "checksum": "",
         },
         (
-            pathlib.Path("remote_destination") / "parentdir" / "somedir" / "subdir" / "fileinsubdir.file"
+            pathlib.Path("remote_destination")
+            / "parentdir"
+            / "somedir"
+            / "subdir"
+            / "fileinsubdir.file"
         ).as_posix(): {
-            "path_raw": pathlib.Path.cwd() / "parentdir" / "somedir" / "subdir" / "fileinsubdir.file",
+            "path_raw": pathlib.Path.cwd()
+            / "parentdir"
+            / "somedir"
+            / "subdir"
+            / "fileinsubdir.file",
             "subpath": pathlib.Path("remote_destination") / "parentdir" / "somedir" / "subdir",
             "size_raw": 0,
             "compressed": False,

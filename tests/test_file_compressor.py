@@ -16,6 +16,7 @@ def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture
     """Try to compress a file that doesn't exist."""
     # Define path to test
     non_existent_file: pathlib.Path = pathlib.Path("nonexistentfile.txt")
+    non_existent_file_log: str = non_existent_file.as_posix()
     assert not fs.exists(file_path=non_existent_file)
 
     # Capture logging
@@ -25,7 +26,7 @@ def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture
         assert (
             "dds_cli.file_compressor",
             logging.WARNING,
-            f"[Errno 2] No such file or directory in the fake filesystem: '{non_existent_file}'",
+            f"[Errno 2] No such file or directory in the fake filesystem: '{non_existent_file_log}'",
         ) in caplog.record_tuples
         assert (
             "dds_cli.file_compressor",
@@ -40,6 +41,7 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
     test_dir = pathlib.Path("test_dir_txt")
     fs.create_dir(test_dir)
     new_file: pathlib.Path = test_dir / "newfile.txt"
+    new_file_log: str = new_file.as_posix()
     assert not fs.exists(file_path=new_file)
 
     # Create file
@@ -78,7 +80,7 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression of 'test_dir_txt/newfile.txt' finished.",
+            f"Compression of '{new_file_log}' finished.",
         ) in caplog.record_tuples
 
         # Decompress file
@@ -102,6 +104,7 @@ def test_compress_file_img(caplog: LogCaptureFixture):
     Not decompression since I can't get it to work when one file is fake and one is real.
     """
     image_file: pathlib.Path = pathlib.Path.cwd() / pathlib.Path("tests/images/test-image_1a.jpg")
+    image_file_log: str = image_file.as_posix()
     # Compress file
     with caplog.at_level(logging.DEBUG):
         for chunk in file_compressor.Compressor.compress_file(file=image_file):
@@ -110,7 +113,7 @@ def test_compress_file_img(caplog: LogCaptureFixture):
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            f"Compression of '{image_file}' finished.",
+            f"Compression of '{image_file_log}' finished.",
         ) in caplog.record_tuples
 
 
@@ -120,6 +123,7 @@ def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCapture
     test_dir = pathlib.Path("test_dir_csv")
     fs.create_dir(test_dir)
     new_file: pathlib.Path = test_dir / "newfile.csv"
+    new_file_log: str = new_file.as_posix()
     assert not fs.exists(file_path=new_file)
 
     # Create file
@@ -160,7 +164,7 @@ def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCapture
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression of 'test_dir_csv/newfile.csv' finished.",
+            f"Compression of '{new_file_log}' finished.",
         ) in caplog.record_tuples
 
         # Decompress file

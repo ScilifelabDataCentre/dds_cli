@@ -363,7 +363,6 @@ class DataLister(base.DDSBaseClass):
 
         if self.json:
             tree_dict = __construct_file_dict_tree(None)
-            LOG.error("Tree dict: %s", tree_dict)
             return tree_dict
 
         # We use two tree walks, one for file search and one for Rich tree

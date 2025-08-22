@@ -8,7 +8,6 @@ from typing import List
 class Project:
     """A project."""
 
-    # project_name: str
     project_content: List["ProjectContentData"]
 
     @classmethod
@@ -21,7 +20,6 @@ class Project:
                 ProjectContentData.from_dict(item_data, project_name="Project Content")
             )
         return cls(
-            # project_name=data["project_name"],
             project_content=project_content,
         )
 
@@ -31,7 +29,6 @@ class ProjectContentData:
     """A project content."""
 
     name: str
-    # is_folder: bool
     children: List["ProjectContentData"]
 
     @classmethod

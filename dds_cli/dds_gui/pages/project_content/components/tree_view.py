@@ -1,7 +1,6 @@
 """DDS Tree View Widget"""
 
-from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 
 from textual.app import ComposeResult
 from textual.widget import Widget
@@ -9,18 +8,6 @@ from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
 
 from dds_cli.dds_gui.models.project import ProjectContentData
-
-
-@dataclass
-class DDSTreeNode:
-    """A node in the tree.
-    Args:
-        name: The name of the node.
-        children: A list of children nodes.
-    """
-
-    name: str
-    children: List["DDSTreeNode"]
 
 
 class TreeView(Widget):

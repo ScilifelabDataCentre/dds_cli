@@ -25,7 +25,7 @@ def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture
         assert (
             "dds_cli.file_compressor",
             logging.WARNING,
-            f"[Errno 2] No such file or directory in the fake filesystem: 'nonexistentfile.txt'",
+            f"[Errno 2] No such file or directory in the fake filesystem: '{non_existent_file}'",
         ) in caplog.record_tuples
         assert (
             "dds_cli.file_compressor",

@@ -2,12 +2,12 @@
 
 from unittest.mock import patch, MagicMock
 import pytest
-from textual.widgets import Label, Tree
+from textual.widgets import Label, Tree, LoadingIndicator
 
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
 from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
-from dds_cli.dds_gui.models.project import ProjectContentData
+from dds_cli.dds_gui.models.project import ProjectContentData, Project
 from dds_cli.exceptions import ApiRequestError, ApiResponseError, NoDataError
 
 
@@ -38,6 +38,44 @@ MOCK_PROJECT_CONTENT = {
 
 EMPTY_PROJECT_CONTENT = {"name": "empty-project", "children": {}}
 
+# Test data for Project class
+MOCK_PROJECT_DATA = {
+    "project1": {
+        "name": "project1",
+        "children": {"file1.txt": {"name": "file1.txt", "children": {}}},
+    },
+    "project2": {
+        "name": "project2",
+        "children": {"file2.txt": {"name": "file2.txt", "children": {}}},
+    },
+}
+
+# Edge case test data
+EDGE_CASE_DATA = {
+    "empty_dict": {},
+    "no_name_key": {"children": {}},
+    "no_children_key": {"name": "test"},
+    "invalid_children_type": {"name": "test", "children": "not_a_dict"},
+    "mixed_children_types": {
+        "name": "test",
+        "children": {"file1": {"name": "file1", "children": []}},
+    },
+    "list_children": {"name": "test", "children": [{"name": "file1", "children": {}}]},
+    "nested_complex": {
+        "name": "root",
+        "children": {
+            "folder1": {
+                "name": "folder1",
+                "children": {
+                    "subfolder": {
+                        "name": "subfolder",
+                        "children": {"file.txt": {"name": "file.txt", "children": {}}},
+                    }
+                },
+            }
+        },
+    },
+}
 
 # =================================================================================
 # Helper Functions
@@ -48,6 +86,230 @@ def get_content_widget(widget):
     """Helper: Get the main content widget from ProjectContent."""
     children = list(widget.children)
     return children[0] if children else None
+
+
+# =================================================================================
+# Model Tests - Project Class
+# =================================================================================
+
+
+def test_project_from_dict():
+    """Test Project.from_dict method."""
+    project = Project.from_dict(MOCK_PROJECT_DATA)
+
+    assert isinstance(project, Project)
+    assert len(project.project_content) == 2
+    assert all(isinstance(content, ProjectContentData) for content in project.project_content)
+
+    # Verify project names
+    project_names = [content.name for content in project.project_content]
+    assert "Project Content" in project_names
+
+
+def test_project_from_dict_empty():
+    """Test Project.from_dict with empty data."""
+    empty_data = {}
+    project = Project.from_dict(empty_data)
+
+    assert isinstance(project, Project)
+    assert len(project.project_content) == 0
+
+
+# =================================================================================
+# Model Tests - ProjectContentData Edge Cases
+# =================================================================================
+
+
+def test_project_content_data_edge_cases():
+    """Test ProjectContentData.from_dict with various edge cases."""
+
+    # Test empty dict
+    result = ProjectContentData.from_dict(EDGE_CASE_DATA["empty_dict"], "empty")
+    assert result.name == "empty"
+    assert len(result.children) == 0
+
+    # Test dict without name key
+    result = ProjectContentData.from_dict(EDGE_CASE_DATA["no_name_key"], "no_name")
+    assert result.name == "no_name"
+    # The method processes all dict items, even malformed ones
+    # It creates empty nodes for malformed data
+    assert len(result.children) == 1
+    assert result.children[0].name == ""
+    assert len(result.children[0].children) == 0
+
+    # Test dict without children key
+    result = ProjectContentData.from_dict(EDGE_CASE_DATA["no_children_key"], "no_children")
+    assert result.name == "no_children"
+    # Same behavior - creates empty node for malformed data
+    assert len(result.children) == 1
+    assert result.children[0].name == ""
+    assert len(result.children[0].children) == 0
+
+    # Test dict with invalid children type
+    result = ProjectContentData.from_dict(
+        EDGE_CASE_DATA["invalid_children_type"], "invalid_children"
+    )
+    assert result.name == "invalid_children"
+    # This case has both name and children keys, so it's processed as a single node
+    # The invalid children type results in empty children list
+    assert len(result.children) == 1
+    assert result.children[0].name == "test"
+    assert len(result.children[0].children) == 0
+
+    # Test dict with mixed children types (dict and list)
+    result = ProjectContentData.from_dict(EDGE_CASE_DATA["mixed_children_types"], "mixed")
+    assert result.name == "mixed"
+    # The method processes the dict children but creates empty nodes for malformed data
+    assert len(result.children) == 1
+    assert result.children[0].name == "test"
+    # The list children should be processed
+    assert len(result.children[0].children) == 1
+
+    # Test dict with list children
+    result = ProjectContentData.from_dict(EDGE_CASE_DATA["list_children"], "list_children")
+    assert result.name == "list_children"
+    assert len(result.children) == 1  # Should parse list children
+    assert result.children[0].name == "test"
+    assert len(result.children[0].children) == 1
+
+
+def test_project_content_data_complex_nesting():
+    """Test ProjectContentData.from_dict with complex nested structures."""
+
+    # Test complex nested structure
+    result = ProjectContentData.from_dict(EDGE_CASE_DATA["nested_complex"], "complex")
+    assert result.name == "complex"
+    assert len(result.children) == 1
+
+    # Verify nested structure
+    root_child = result.children[0]
+    assert root_child.name == "root"
+    assert len(root_child.children) == 1
+
+    folder1 = root_child.children[0]
+    assert folder1.name == "folder1"
+    assert len(folder1.children) == 1
+
+    subfolder = folder1.children[0]
+    assert subfolder.name == "subfolder"
+    assert len(subfolder.children) == 1
+
+    file_node = subfolder.children[0]
+    assert file_node.name == "file.txt"
+    assert len(file_node.children) == 0
+
+
+def test_project_content_data_single_node():
+    """Test ProjectContentData.from_dict with single node format."""
+
+    single_node_data = {
+        "name": "single_node",
+        "children": {"file.txt": {"name": "file.txt", "children": {}}},
+    }
+
+    result = ProjectContentData.from_dict(single_node_data, "single")
+    assert result.name == "single"
+    assert len(result.children) == 1
+
+    # The single node should be wrapped as a child
+    wrapped_node = result.children[0]
+    assert wrapped_node.name == "single_node"
+    assert len(wrapped_node.children) == 1
+
+
+def test_project_content_data_malformed_nodes():
+    """Test ProjectContentData.from_dict with malformed node data."""
+
+    # Test node without required keys
+    malformed_data = {
+        "folder1": {"name": "folder1"},  # Missing children
+        "folder2": {"children": {}},  # Missing name
+        "folder3": "not_a_dict",  # Not a dict
+        "folder4": None,  # None value
+    }
+
+    result = ProjectContentData.from_dict(malformed_data, "malformed")
+    assert result.name == "malformed"
+    # The method processes all items and creates empty nodes for malformed data
+    assert len(result.children) == 4
+
+    # Check that malformed data creates empty nodes
+    for child in result.children:
+        assert child.name == ""
+        assert len(child.children) == 0
+
+
+def test_project_content_data_empty_children():
+    """Test ProjectContentData.from_dict with various empty children formats."""
+
+    # Test empty dict children
+    empty_dict_children = {"name": "test", "children": {}}
+    result = ProjectContentData.from_dict(empty_dict_children, "empty_dict")
+    assert result.name == "empty_dict"
+    assert len(result.children) == 1
+
+    # Test None children
+    none_children = {"name": "test", "children": None}
+    result = ProjectContentData.from_dict(none_children, "none_children")
+    assert result.name == "none_children"
+    assert len(result.children) == 1
+
+    # Test empty list children
+    empty_list_children = {"name": "test", "children": []}
+    result = ProjectContentData.from_dict(empty_list_children, "empty_list")
+    assert result.name == "empty_list"
+    assert len(result.children) == 1
+
+
+# =================================================================================
+# Loading State Tests
+# =================================================================================
+
+
+def test_project_content_widget_compose_methods():
+    """Test that ProjectContent widget's compose method handles all states correctly."""
+
+    # Test 1: Loading state
+    widget = ProjectContent(title="Test")
+    widget.is_loading = True
+    widget.project_content = None
+    widget.selected_project_id = "test-project"
+
+    # Should show LoadingIndicator when loading
+    content_widgets = list(widget.compose())
+    assert len(content_widgets) == 1
+    assert isinstance(content_widgets[0], LoadingIndicator)
+
+    # Test 2: Content loaded state
+    widget.is_loading = False
+    widget.project_content = ProjectContentData.from_dict(MOCK_PROJECT_CONTENT, "test-project")
+
+    # Should show TreeView when content is loaded
+    content_widgets = list(widget.compose())
+    assert len(content_widgets) == 1
+    assert isinstance(content_widgets[0], TreeView)
+
+    # Test 3: No data found state
+    widget.is_loading = False
+    widget.project_content = None
+    widget.selected_project_id = "test-project"
+
+    # Should show "No data found" message
+    content_widgets = list(widget.compose())
+    assert len(content_widgets) == 1
+    assert isinstance(content_widgets[0], Label)
+    assert "No data found for project test-project" in str(content_widgets[0].renderable)
+
+    # Test 4: No project selected state
+    widget.is_loading = False
+    widget.project_content = None
+    widget.selected_project_id = None
+
+    # Should show "No project selected" message
+    content_widgets = list(widget.compose())
+    assert len(content_widgets) == 1
+    assert isinstance(content_widgets[0], Label)
+    assert "No project selected" in str(content_widgets[0].renderable)
 
 
 # =================================================================================

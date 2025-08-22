@@ -1,6 +1,6 @@
 """Comprehensive tests for the Important Information widget."""
 
-from pathlib import Path
+import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,7 +11,7 @@ from dds_cli.dds_gui.pages.important_information.important_information import Im
 from dds_cli.dds_gui.pages.important_information.components.motd_card import MOTDCard
 from dds_cli.exceptions import ApiRequestError, ApiResponseError, DDSCLIException, NoMOTDsError
 
-TOKEN_PATH = Path("custom") / "token" / "path"
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 
 # =================================================================================

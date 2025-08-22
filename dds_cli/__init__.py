@@ -3,7 +3,7 @@
 
 import datetime
 import os
-from pathlib import Path
+import pathlib
 import prompt_toolkit
 import rich.console
 import sys
@@ -44,7 +44,7 @@ DDS_DIR_REQUIRED_METHODS = ["put", "get"]
 DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
 
 # Token related variables
-TOKEN_FILE = Path.home() / ".dds_cli_token"
+TOKEN_FILE = pathlib.Path.home() / ".dds_cli_token"
 TOKEN_EXPIRATION_WARNING_THRESHOLD = datetime.timedelta(hours=6)
 
 

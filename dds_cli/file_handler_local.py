@@ -9,9 +9,8 @@ import hashlib
 import logging
 import os
 import pathlib
+import secrets
 import typing
-import uuid
-import random
 from rich.markup import escape
 
 # Own modules
@@ -79,12 +78,15 @@ class LocalFileHandler(fh.FileHandler):
     # Static methods ############## Static methods #
     @staticmethod
     def generate_bucket_filepath(filename="", folder=pathlib.Path("")):
-        """Generates filename and new path which the file will be
-        called in the bucket."""
+        """Generate a unique name for a file in the bucket.
 
-        # Generate new file name
-        new_name = f"{'%020x' % random.randrange(16**20)}_{uuid.uuid5(uuid.NAMESPACE_X500, str(folder))}{uuid.uuid5(uuid.NAMESPACE_X500, filename)}"  # pylint: disable=line-too-long,consider-using-f-string
-        return new_name
+        A cryptographically secure token is generated and combined with the
+        provided folder to create the path used in the bucket. The original
+        filename is ignored as the token is sufficient for uniqueness.
+        """
+
+        token = secrets.token_hex(16)
+        return (folder / token).as_posix()
 
     @staticmethod
     def read_file(file, chunk_size: int = FileSegment.SEGMENT_SIZE_RAW):

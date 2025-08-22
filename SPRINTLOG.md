@@ -447,3 +447,7 @@ _Empty sprint_
 - Add ARD's for GUI
 - Refactor MOTD to work for both the CLI and the GUI ([#771](https://github.com/ScilifelabDataCentre/dds_cli/pull/771))
 - Implement MOTD for GUI ([#772](https://github.com/ScilifelabDataCentre/dds_cli/pull/772))
+
+# 2025-08-18 - 2025-08-29
+
+- Bug: Add missing f-string to logging when cancelling file with KeyboardInterrupt ([#777](https://github.com/ScilifelabDataCentre/dds_cli/pull/777))

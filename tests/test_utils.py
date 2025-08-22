@@ -411,11 +411,8 @@ def test_get_json_response_error(capsys: CaptureFixture) -> None:
     with Mocker() as mock:
         mock.get(url, status_code=200, text="text")
         response: Response = get(url)
-        with raises(SystemExit) as exc_info:
-            response_json: Dict = get_json_response(response)
-
-            assert type(response_json) == Dict
-            assert response_json == {}
+        with raises(ApiResponseError) as exc_info:
+            get_json_response(response)
 
     # Get stderr
     captured = capsys.readouterr()
@@ -423,9 +420,8 @@ def test_get_json_response_error(capsys: CaptureFixture) -> None:
     assert captured.out == ""
     assert captured.err == ""
 
-    assert exc_info.type == SystemExit
-    assert exc_info.value.code == None
-    assert len(exc_info.value.args) == 0
+    assert exc_info.type == ApiResponseError
+    assert str(exc_info.value) == "Invalid JSON response"
 
 
 # format_api_response

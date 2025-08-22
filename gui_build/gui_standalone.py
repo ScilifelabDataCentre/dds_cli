@@ -1,6 +1,6 @@
-"""Run the DDS GUI standalone executable."""
-
-import pathlib
+"""
+This file is used to run the DDS GUI standalone for the executable.
+"""
 
 from dds_cli.dds_gui.app import DDSApp
 

@@ -16,6 +16,7 @@ import botocore
 # Own modules
 import dds_cli.utils
 from dds_cli import DDSEndpoint
+from dds_cli import exceptions
 
 ###############################################################################
 # LOGGING ########################################################### LOGGING #
@@ -105,6 +106,8 @@ class S3Connector:
             s3info.get("bucket"),
         )
         if None in [safespring_project, keys, url, bucket]:
-            raise SystemExit("Missing safespring information in response.")  # TODO: change
+            raise exceptions.ApiResponseError(
+                "Missing safespring information in response."
+            )
 
         return safespring_project, keys, url, bucket

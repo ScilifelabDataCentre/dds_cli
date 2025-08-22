@@ -160,7 +160,12 @@ class DDSBaseClass:
     # Private methods ############################### Private methods #
     def __get_safespring_keys(self):
         """Get safespring keys."""
-        return s3.S3Connector(project_id=self.project, token=self.token)
+        try:
+            return s3.S3Connector(project_id=self.project, token=self.token)
+        except exceptions.ApiResponseError as err:
+            raise exceptions.ApiResponseError(
+                message=f"Failed to retrieve cloud access information: {err}"
+            ) from err
 
     def __get_project_keys(self):
         """Get public and private project keys depending on method."""

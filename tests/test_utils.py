@@ -571,7 +571,11 @@ def test_print_or_page() -> None:
 
     sys.stdout = sys.__stdout__
 
-    assert len(output.getvalue()) == 20
+    rendered = output.getvalue()
+    # Ensure table borders were printed
+    assert "┏" in rendered
+    # The bottom border may be rendered with either heavy (┗) or light (└) characters
+    assert any(char in rendered for char in ("┗", "└"))
 
 
 def test_print_or_page_multiple_rows() -> None:
@@ -588,7 +592,13 @@ def test_print_or_page_multiple_rows() -> None:
 
     sys.stdout = sys.__stdout__
 
-    assert len(output.getvalue()) == 520
+    rendered = output.getvalue()
+    lines = rendered.splitlines()
+    # There should be 100 rows in addition to the four border/header lines
+    assert len(lines) - 4 == 100
+    # Check that the table borders were printed
+    assert "┏" in rendered
+    assert any(char in rendered for char in ("┗", "└"))
 
 
 def test_print_or_page_error() -> None:

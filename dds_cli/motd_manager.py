@@ -6,7 +6,8 @@
 
 # Standard library
 import logging
-from typing import Optional
+import pathlib
+from typing import Optional, Union
 
 # Installed
 
@@ -41,7 +42,7 @@ class MotdManager(dds_cli.base.DDSBaseClass):
         authenticate: bool = True,
         method: str = "add",
         no_prompt: bool = False,
-        token_path: str = None,
+        token_path: Union[str, pathlib.Path, None] = None,
     ):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user

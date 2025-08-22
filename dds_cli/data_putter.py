@@ -9,6 +9,7 @@ import concurrent.futures
 import itertools
 import logging
 import pathlib
+import typing
 import json
 
 # Installed
@@ -210,7 +211,7 @@ class DataPutter(base.DDSBaseClass):
         silent: bool = False,
         method: str = "put",
         no_prompt: bool = False,
-        token_path: str = None,
+        token_path: typing.Union[str, pathlib.Path, None] = None,
         destination: str = None,
     ):
         """Handle actions regarding upload of data."""

@@ -7,6 +7,7 @@
 # Standard library
 import logging
 import pathlib
+import typing
 
 # Installed
 import rich.markup
@@ -39,7 +40,7 @@ class AccountManager(dds_cli.base.DDSBaseClass):
         authenticate: bool = True,
         method: str = "add",
         no_prompt: bool = False,
-        token_path: str = None,
+        token_path: typing.Union[str, pathlib.Path, None] = None,
     ):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user

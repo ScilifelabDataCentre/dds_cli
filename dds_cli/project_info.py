@@ -3,6 +3,8 @@
 # Standard library
 import logging
 import sys
+import pathlib
+import typing
 
 # Installed
 import rich
@@ -33,7 +35,7 @@ class ProjectInfoManager(base.DDSBaseClass):
         self,
         project: str,
         no_prompt: bool = False,
-        token_path: str = None,
+        token_path: typing.Union[str, pathlib.Path, None] = None,
     ):
         """Handle actions regarding project info in the cli."""
         # Initiate DDSBaseClass to authenticate user

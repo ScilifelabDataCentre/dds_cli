@@ -1,6 +1,8 @@
 """Data Delivery System Project Creator."""
 
 import logging
+import pathlib
+import typing
 
 # Installed
 import rich.prompt
@@ -31,7 +33,7 @@ class ProjectCreator(base.DDSBaseClass):
         self,
         method: str = "create",
         no_prompt: bool = False,
-        token_path: str = None,
+        token_path: typing.Union[str, pathlib.Path, None] = None,
     ):
         """Handle actions regarding project creation in the cli."""
         # Initiate DDSBaseClass to authenticate user

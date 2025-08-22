@@ -1,5 +1,8 @@
 """GUI Application for DDS CLI."""
 
+from pathlib import Path
+from typing import Union
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.widgets import Header
@@ -36,7 +39,7 @@ theme = Theme(
 class DDSApp(App, DDSStateManager):
     """Textual App for DDS CLI."""
 
-    def __init__(self, token_path: str):
+    def __init__(self, token_path: Union[str, Path]):
         super().__init__()
         self.token_path = token_path
         self.set_auth_status(self.auth.check())

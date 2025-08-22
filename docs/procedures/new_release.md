@@ -5,13 +5,11 @@
 3. Update the version [changelog](../../CHANGELOG.rst) located at `dds_cli/CHANGELOG.rst`
 
    **Tip:** Use the PR to `master` (step 1) to see all changes since last release.
-
    - The new version should be at the top of the page
    - List the changes that the users will / may notice
    - Do not add information regarding workflow (e.g. GitHub Actions) etc
 
 4. Update the version in [`version.py`](../../dds_cli/version.py)
-
    - _Minor changes, e.g. bug fix_: Minor version upgrade, e.g. `1.0.1 --> 1.0.2`
    - _Small changes, e.g. new feature_: Mid version upgrade, e.g. `1.1.0 --> 1.2.0`
    - _Breaking changes or large new feature(s)_: Major version upgrade, e.g. `1.0.0 --> 2.0.0` _SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE._
@@ -36,7 +34,6 @@
    1. Verify that the new code example images look ok
    2. Wait for approval and merge by Product Owner or admin
 8. Create a PR from `dev` to `master`
-
    - Are you bumping the major version (e.g. 1.x.x to 2.x.x)?
      - Yes: Add this info to the PR.
    - Do the changes affect the API in any way?
@@ -52,7 +49,6 @@
    > Documentation changes are automatically updated on GitHub pages when there's a push to `master`. However, in order to keep things consistent and to avoid confusion with the versions, always release a new version when changes are pushed to `master` (assuming all the changes have been verified)
 
 9. [Draft a new release](https://github.com/ScilifelabDataCentre/dds_cli/releases)
-
    1. `Choose a tag` &rarr; `Find or create a new tag` &rarr; Fill in the new version, e.g. if the new version is `1.0.0`, you should fill in `v1.0.0`.
    2. `Target` should be set to `master`
    3. `Release title` field should be set to the same as the tag, e.g. `v1.0.0`

@@ -39,6 +39,7 @@ from dds_cli.utils import (
     get_required_in_response,
     get_token_expiration_time,
     get_token_header_contents,
+    HumanBytes,
     multiple_help_text,
     perform_request,
     print_or_page,
@@ -82,6 +83,27 @@ token_without_exp_claim_in_header = (
     "LZO-vNNKHTaGnPyGuykhMNScIgkR1l8.TEp4L"
     "s4c29JtGogmdYbTbw"
 )
+
+# HumanBytes.format
+
+
+def test_humanbytes_format_num_type_error() -> None:
+    with raises(TypeError) as exc_info:
+        HumanBytes.format(num="10")
+    assert str(exc_info.value) == "num must be an int or float"
+
+
+def test_humanbytes_format_metric_type_error() -> None:
+    with raises(TypeError) as exc_info:
+        HumanBytes.format(num=10, metric="True")
+    assert str(exc_info.value) == "metric must be a bool"
+
+
+def test_humanbytes_format_precision_value_error() -> None:
+    with raises(ValueError) as exc_info:
+        HumanBytes.format(num=10, precision=4)
+    assert str(exc_info.value) == "precision must be an int (range 0-3)"
+
 
 # sort_items
 

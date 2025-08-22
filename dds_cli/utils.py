@@ -47,11 +47,12 @@ class HumanBytes:
         """Human-readable formatting of bytes, using binary (powers of 1024)
         or metric (powers of 1000) representation.
         """
-        assert isinstance(num, (int, float)), "num must be an int or float"
-        assert isinstance(metric, bool), "metric must be a bool"
-        assert (
-            isinstance(precision, int) and 0 <= precision <= 3
-        ), "precision must be an int (range 0-3)"
+        if not isinstance(num, (int, float)):
+            raise TypeError("num must be an int or float")
+        if not isinstance(metric, bool):
+            raise TypeError("metric must be a bool")
+        if not (isinstance(precision, int) and 0 <= precision <= 3):
+            raise ValueError("precision must be an int (range 0-3)")
 
         unit_labels = HumanBytes.METRIC_LABELS if metric else HumanBytes.BINARY_LABELS
         last_label = unit_labels[-1]

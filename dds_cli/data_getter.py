@@ -197,20 +197,19 @@ class DataGetter(base.DDSBaseClass):
         file_remote = self.filehandler.data[file]["url"]
 
         try:
-            # TODO: Set timeout? (pylint)
-            with requests.get(file_remote, stream=True) as req:
+            with requests.get(
+                file_remote, stream=True, timeout=DDSEndpoint.TIMEOUT
+            ) as req:
                 req.raise_for_status()
                 with file_local.open(mode="wb") as new_file:
-                    for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
+                    for chunk in req.iter_content(
+                        chunk_size=FileSegment.SEGMENT_SIZE_CIPHER
+                    ):
                         progress.update(task, advance=len(chunk))
                         new_file.write(chunk)
-        except (
-            requests.exceptions.ConnectTimeout,
-            requests.exceptions.HTTPError,
-            requests.exceptions.ReadTimeout,
-            requests.exceptions.Timeout,
-            requests.exceptions.ConnectionError,
-        ) as err:
+        except requests.exceptions.Timeout:
+            error = "The request timed out."
+        except requests.exceptions.RequestException as err:
             if (
                 hasattr(err, "response")
                 and hasattr(err.response, "status_code")

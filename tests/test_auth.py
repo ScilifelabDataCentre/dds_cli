@@ -1,5 +1,6 @@
 """Test the auth module."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 
@@ -17,6 +18,7 @@ MOCK_PASSWORD = "testpass"
 MOCK_2FA_CODE = "123456"
 MOCK_PARTIAL_AUTH_TOKEN = "partial_auth_token_12345"
 MOCK_AUTH_TOKEN = "final_auth_token_12345"
+TOKEN_PATH = Path("custom") / "token" / "path"
 
 
 ###### Test initialization ######
@@ -37,7 +39,7 @@ def test_init_auth_with_custom_parameters() -> None:
         auth = Auth(
             authenticate=False,
             force_renew_token=False,
-            token_path="/custom/path",
+            token_path=str(TOKEN_PATH),
             totp="123456",
             allow_group=True,
         )
@@ -78,7 +80,7 @@ def test_init_auth_with_authentication_custom_params() -> None:
         auth = Auth(
             authenticate=True,
             force_renew_token=False,
-            token_path="/custom/path",
+            token_path=str(TOKEN_PATH),
             totp=MOCK_2FA_CODE,
             allow_group=True,
         )
@@ -88,7 +90,7 @@ def test_init_auth_with_authentication_custom_params() -> None:
         mock_user_class.assert_called_once_with(
             force_renew_token=False,
             no_prompt=False,
-            token_path="/custom/path",
+            token_path=TOKEN_PATH.as_posix(),
             allow_group=True,
             totp=MOCK_2FA_CODE,
         )

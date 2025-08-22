@@ -23,6 +23,7 @@ from rich.markup import escape
 
 # Own modules
 from dds_cli import FileSegment
+from dds_cli.exceptions import DecryptionError
 from dds_cli.file_handler_local import LocalFileHandler as fh
 
 ###############################################################################
@@ -247,7 +248,7 @@ class Decryptor(ECDHKeyHandler):
 
                 # Decrypt file
                 if file.tell() != 12:
-                    raise SystemExit
+                    raise DecryptionError("Invalid encrypted file format")
 
                 iv_int = int.from_bytes(first_nonce, "little")
                 aad = None
@@ -273,6 +274,9 @@ class Decryptor(ECDHKeyHandler):
                     nonce,
                 )
                 if last_nonce != nonce:
-                    raise SystemExit("Nonces do not match!!")
+                    raise DecryptionError("Nonces do not match!!")
+        except DecryptionError as err:
+            LOG.warning(str(err))
+            raise
         except Exception as err:  # pylint: disable=broad-exception-caught
             LOG.warning(str(err))

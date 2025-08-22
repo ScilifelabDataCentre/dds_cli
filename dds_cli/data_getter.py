@@ -153,21 +153,25 @@ class DataGetter(base.DDSBaseClass):
                 key_salt=file_info["salt"],
                 files_directory=self.dds_directory.directories["FILES"],
             ) as decryptor:
-                streamed_chunks = decryptor.decrypt_file(
-                    infile=file_info["path_downloaded"], outfile=file
-                )
+                try:
+                    streamed_chunks = decryptor.decrypt_file(
+                        infile=file_info["path_downloaded"], outfile=file
+                    )
 
-                stream_to_file_func = (
-                    fc.Compressor.decompress_filechunks
-                    if file_info["compressed"]
-                    else self.filehandler.write_file
-                )
+                    stream_to_file_func = (
+                        fc.Compressor.decompress_filechunks
+                        if file_info["compressed"]
+                        else self.filehandler.write_file
+                    )
 
-                file_saved, message = stream_to_file_func(
-                    chunks=streamed_chunks,
-                    outfile=file,
-                    files_directory=self.dds_directory.directories["FILES"],
-                )
+                    file_saved, message = stream_to_file_func(
+                        chunks=streamed_chunks,
+                        outfile=file,
+                        files_directory=self.dds_directory.directories["FILES"],
+                    )
+                except dds_cli.exceptions.DecryptionError as err:
+                    file_saved = False
+                    message = str(err)
 
             LOG.debug("File '%s' saved? %s", file_name_in_db, file_saved)
             if file_saved:

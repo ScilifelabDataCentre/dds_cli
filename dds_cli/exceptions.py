@@ -105,6 +105,10 @@ class DownloadError(Exception):
     """Errors relating to file download."""
 
 
+class DecryptionError(Exception):
+    """Errors relating to file decryption."""
+
+
 class NoDataError(Exception):
     """Errors when there is no data to do anything with."""
 

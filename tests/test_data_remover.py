@@ -14,6 +14,7 @@ def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFix
     """Test that the file cannot be deleted."""
     # Define path to test
     non_existent_file: pathlib.Path = pathlib.Path("nonexistentfile.txt")
+    non_existent_file_log: str = non_existent_file.as_posix()
     assert not fs.exists(file_path=non_existent_file)
 
     # Attempt to delete
@@ -22,7 +23,7 @@ def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFix
         assert (
             "dds_cli.data_remover",
             logging.ERROR,
-            f"[Errno 2] No such file or directory in the fake filesystem: '/nonexistentfile.txt'",
+            f"[Errno 2] No such file or directory in the fake filesystem: '{non_existent_file_log}'",
         ) in caplog.record_tuples
         assert (
             "dds_cli.data_remover",
@@ -35,6 +36,7 @@ def test_delete_tempfile_ok(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """An existent file should be possible to delete."""
     # Define path to test
     new_file: pathlib.Path = pathlib.Path("new_file.txt")
+    new_file_log: str = new_file.as_posix()
     assert not fs.exists(file_path=new_file)
 
     # Create file
@@ -48,7 +50,7 @@ def test_delete_tempfile_ok(fs: FakeFilesystem, caplog: LogCaptureFixture):
         assert (
             "dds_cli.data_remover",
             logging.ERROR,
-            f"[Errno 2] No such file or directory in the fake filesystem: '/nonexistentfile.txt'",
+            f"[Errno 2] No such file or directory in the fake filesystem: '{new_file_log}'",
         ) not in caplog.record_tuples
         assert (
             "dds_cli.data_remover",

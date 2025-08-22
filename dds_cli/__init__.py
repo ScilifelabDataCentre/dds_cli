@@ -44,7 +44,7 @@ DDS_DIR_REQUIRED_METHODS = ["put", "get"]
 DDS_KEYS_REQUIRED_METHODS = ["put", "get"]
 
 # Token related variables
-TOKEN_FILE = Path("~/.dds_cli_token").expanduser()
+TOKEN_FILE = Path.home() / ".dds_cli_token"
 TOKEN_EXPIRATION_WARNING_THRESHOLD = datetime.timedelta(hours=6)
 
 

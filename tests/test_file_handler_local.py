@@ -65,21 +65,16 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
             "overwrite": False,
             "checksum": "",
         },
-        (Path("remote_destination") / "parentdir" / "somedir" / "subdir" / "fileinsubdir.file").as_posix(): {
-            "path_raw": Path.cwd()
-            / "parentdir"
-            / "somedir"
-            / "subdir"
-            / "fileinsubdir.file",
+        (
+            Path("remote_destination") / "parentdir" / "somedir" / "subdir" / "fileinsubdir.file"
+        ).as_posix(): {
+            "path_raw": Path.cwd() / "parentdir" / "somedir" / "subdir" / "fileinsubdir.file",
             "subpath": Path("remote_destination") / "parentdir" / "somedir" / "subdir",
             "size_raw": 0,
             "compressed": False,
             "path_processed": filehandler.create_encrypted_name(
                 raw_file=Path("parentdir") / "somedir" / "subdir" / "fileinsubdir.file",
-                subpath=Path("remote_destination")
-                / "parentdir"
-                / "somedir"
-                / "subdir",
+                subpath=Path("remote_destination") / "parentdir" / "somedir" / "subdir",
                 no_compression=False,
             ),
             "size_processed": 0,

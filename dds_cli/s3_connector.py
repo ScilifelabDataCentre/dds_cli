@@ -95,7 +95,7 @@ class S3Connector:
             headers=token,
             error_message="Failed to get cloud information",
         )
-
+        LOG.debug("API call for S3 info")
         # Get s3 info
 
         safespring_project, keys, url, bucket = (

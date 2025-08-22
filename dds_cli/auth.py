@@ -3,6 +3,8 @@
 # Standard library
 import logging
 import getpass
+from datetime import datetime
+from typing import Optional
 
 # Installed
 from rich.prompt import Prompt
@@ -39,36 +41,95 @@ class Auth(base.DDSBaseClass):
     ):
         """Handle actions regarding session management in DDS."""
         # Initiate DDSBaseClass to authenticate user
+        # Will authenticate user automatically if authenticate is True,
+        # else need to call login and confirm_twofactor methods to authenticate user
+        # This is to be able to use the auth class in the GUI code,
+        # where the user is not prompted for username and password
         super().__init__(
             authenticate=authenticate,
-            method_check=False,
             force_renew_token=force_renew_token,
             token_path=token_path,
             totp=totp,
             allow_group=allow_group,
         )
 
-    def check(self):
-        """Check if token exists and return info."""
+        self.allow_group = allow_group
+
+    def login(self, username: Optional[str] = None, password: Optional[str] = None) -> tuple:
+        """Login user to DDS. Used to manually authenticate users with username and password.
+        If not provided, will prompt for them. Currently only used in the GUI.
+
+        :param username: The username to login with.
+        :param password: The password to login with.
+
+        :return: Partial auth token and second factor method
+        """
+        # Create a User instance to call the login method
+        user_instance = user.User(
+            force_renew_token=False,
+            no_prompt=False,
+            token_path=self.token_path,
+            allow_group=self.allow_group,
+            retrieve_token=False,
+        )
+        return user_instance.login(username, password)
+
+    def confirm_twofactor(
+        self,
+        partial_auth_token: str,
+        secondfactor_method: str,
+        totp: str = None,
+        twofactor_code: Optional[str] = None,
+    ):
+        """Confirm 2FA for user. Used to manually confirm the 2FA code.
+        If not provided, will prompt for it. Currently only used in the GUI.
+
+        Sets the token for the base class after confirming 2FA.
+
+        :param partial_auth_token: The partial auth token.
+        :param twofactor_code: The 2FA code to confirm.
+
+        """
+
+        user_instance = user.User(
+            force_renew_token=False,
+            token_path=self.token_path,
+            allow_group=self.allow_group,
+            totp=totp,
+            retrieve_token=False,
+        )
+
+        user_instance.confirm_twofactor(
+            partial_auth_token=partial_auth_token,
+            secondfactor_method=secondfactor_method,
+            totp=totp,
+            twofactor_code=twofactor_code,
+        )
+
+        self.set_token(user_instance.token_dict)
+
+    def check(self) -> Optional[datetime]:
+        """Check if token exists and returns the token expiration time.
+
+        :return: Token info if token exists, None otherwise.
+        """
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token = token_file.read_token()
             if token:
-                token_file.token_report(token=token)
-        else:
-            LOG.info(
-                "[red]No saved token found, or token has expired. "
-                "Authenticate yourself with `dds auth login` to use this functionality![/red]"
-            )
+                return token_file.token_report(token=token)
+        return None
 
-    def logout(self):
-        """Logout user by removing authenticated token."""
+    def logout(self) -> bool:
+        """Logout user by removing authenticated token.
+
+        :return: True if logout was successful, False if already logged out.
+        """
         token_file = user.TokenFile(token_path=self.token_path)
         if token_file.file_exists():
             token_file.delete_token()
-            LOG.info("[green] :white_check_mark: Successfully logged out![/green]")
-        else:
-            LOG.info("[green]Already logged out![/green]")
+            return True
+        return False
 
     def twofactor(self, auth_method: str = None):
         """Perform 2FA for user."""

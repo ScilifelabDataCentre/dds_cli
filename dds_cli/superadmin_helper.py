@@ -45,7 +45,6 @@ class SuperAdminHelper(dds_cli.base.DDSBaseClass):
         # Initiate DDSBaseClass to authenticate user
         super().__init__(
             authenticate=authenticate,
-            method_check=False,
             no_prompt=no_prompt,
             token_path=token_path,
         )

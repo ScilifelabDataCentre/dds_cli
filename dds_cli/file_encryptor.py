@@ -63,7 +63,6 @@ class ECDHKeyHandler:
             backend=backends.default_backend(),
         ).derive(shared_key)
 
-        LOG.debug("Salt: %s", salt)
         return derived_shared_key, salt.hex().upper()
 
     @staticmethod
@@ -117,7 +116,7 @@ class Encryptor(ECDHKeyHandler):
 
     # Static methods ###################### Static methods #
     @staticmethod
-    def verify_checksum(file: pathlib.Path, correct_checksum):
+    def verify_checksum(file: pathlib.Path, correct_checksum, files_directory=None):
         """Generate file checksum and verify the integrity"""
 
         verified, error = (False, "")
@@ -132,9 +131,18 @@ class Encryptor(ECDHKeyHandler):
         else:
             if checksum.hexdigest() == correct_checksum:
                 verified, error = (True, "File integrity verified.")
-                LOG.debug("Checksum verification successful. File integrity verified.")
+                if files_directory:
+                    LOG.debug(
+                        "Checksum verification successful. File integrity verified for file '%s'.",
+                        escape(str(pathlib.Path(file).relative_to(files_directory))),
+                    )
+                else:
+                    LOG.debug(
+                        "Checksum verification successful. File integrity verified for file '%s'.",
+                        escape(str(file)),
+                    )
             else:
-                error = "Checksum verification failed. File compromised."
+                error = f"Checksum verification failed. File '{file}' compromised."
                 LOG.warning(error)
 
         return verified, error
@@ -147,7 +155,6 @@ class Encryptor(ECDHKeyHandler):
         construction described in RFC8439 (obsoletes 7539).
         """
 
-        LOG.debug("Started encryption...")
         encrypted_and_saved, message = (False, "")
 
         # Additional data
@@ -186,7 +193,6 @@ class Encryptor(ECDHKeyHandler):
         else:
             encrypted_and_saved = True
             message = f"Encrypted file stored in location: {escape(str(outfile))}"
-            LOG.debug(message)
 
         return encrypted_and_saved, message
 
@@ -194,7 +200,7 @@ class Encryptor(ECDHKeyHandler):
 class Decryptor(ECDHKeyHandler):
     """Handles the decryption of the files."""
 
-    def __init__(self, project_keys: tuple, peer_public: str, key_salt: str):
+    def __init__(self, project_keys: tuple, peer_public: str, key_salt: str, files_directory=None):
         self.max_nonce = 2 ** (12 * 8)
 
         # Only private needed, public generated from it.
@@ -209,6 +215,8 @@ class Decryptor(ECDHKeyHandler):
             salt=bytes.fromhex(key_salt),
         )
 
+        self.files_directory = files_directory
+
     def __enter__(self):
         return self
 
@@ -220,7 +228,7 @@ class Decryptor(ECDHKeyHandler):
         return True
 
     # Public methods ###################### Public methods #
-    def decrypt_file(self, infile: pathlib.Path):
+    def decrypt_file(self, infile: pathlib.Path, outfile: pathlib.Path):
         """Decrypts the file"""
 
         try:
@@ -258,9 +266,13 @@ class Decryptor(ECDHKeyHandler):
                         ciphertext=chunk, aad=aad, nonce=nonce, key=self.key
                     )
 
-                LOG.debug("Testing nonce...")
+                LOG.debug(
+                    "Testing nonce for file '%s'\nExpected: %s, Found: %s",
+                    escape(str(pathlib.Path(outfile).relative_to(self.files_directory))),
+                    last_nonce,
+                    nonce,
+                )
                 if last_nonce != nonce:
                     raise SystemExit("Nonces do not match!!")
-                LOG.debug("Last nonce should be: %s, was: %s", last_nonce, nonce)
         except Exception as err:  # pylint: disable=broad-exception-caught
             LOG.warning(str(err))

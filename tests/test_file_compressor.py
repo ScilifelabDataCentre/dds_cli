@@ -37,7 +37,9 @@ def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture
 def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Compress and decompress a textfile."""
     # Define path to test
-    new_file: pathlib.Path = pathlib.Path("newfile.txt")
+    test_dir = pathlib.Path("test_dir_txt")
+    fs.create_dir(test_dir)
+    new_file: pathlib.Path = test_dir / "newfile.txt"
     assert not fs.exists(file_path=new_file)
 
     # Create file
@@ -61,7 +63,7 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
 
     with caplog.at_level(logging.DEBUG):
         # Compress file and save to new file
-        compressed_file: pathlib.Path = pathlib.Path("compressed.txt")
+        compressed_file: pathlib.Path = test_dir / "compressed.txt"
         with compressed_file.open(mode="wb+") as compfile:
             for chunk in file_compressor.Compressor.compress_file(file=new_file):
                 assert isinstance(chunk, bytes)
@@ -76,14 +78,14 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression finished.",
+            "Compression of 'test_dir_txt/newfile.txt' finished.",
         ) in caplog.record_tuples
 
         # Decompress file
-        decompressed_file: pathlib.Path = pathlib.Path("decompressed.txt")
+        decompressed_file: pathlib.Path = test_dir / "decompressed.txt"
         chunks = file_handler_local.LocalFileHandler.read_file(file=compressed_file)
         saved, message = file_compressor.Compressor.decompress_filechunks(
-            chunks=chunks, outfile=decompressed_file
+            chunks=chunks, outfile=decompressed_file, files_directory=test_dir
         )
         assert saved and message == ""
 
@@ -108,14 +110,16 @@ def test_compress_file_img(caplog: LogCaptureFixture):
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression finished.",
+            f"Compression of '{image_file}' finished.",
         ) in caplog.record_tuples
 
 
 def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Compress and decompress a csvfile."""
     # Define path to test
-    new_file: pathlib.Path = pathlib.Path("newfile.csv")
+    test_dir = pathlib.Path("test_dir_csv")
+    fs.create_dir(test_dir)
+    new_file: pathlib.Path = test_dir / "newfile.csv"
     assert not fs.exists(file_path=new_file)
 
     # Create file
@@ -142,7 +146,7 @@ def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCapture
     # Compress file
     with caplog.at_level(logging.DEBUG):
         # Compress file and save to new file
-        compressed_file: pathlib.Path = pathlib.Path("compressed.txt")
+        compressed_file: pathlib.Path = test_dir / "compressed.txt"
         with compressed_file.open(mode="wb+") as compfile:
             for chunk in file_compressor.Compressor.compress_file(file=new_file):
                 assert isinstance(chunk, bytes)
@@ -156,14 +160,14 @@ def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCapture
         assert (
             "dds_cli.file_compressor",
             logging.DEBUG,
-            "Compression finished.",
+            "Compression of 'test_dir_csv/newfile.csv' finished.",
         ) in caplog.record_tuples
 
         # Decompress file
-        decompressed_file: pathlib.Path = pathlib.Path("decompressed.csv")
+        decompressed_file: pathlib.Path = test_dir / "decompressed.csv"
         chunks = file_handler_local.LocalFileHandler.read_file(file=compressed_file)
         saved, message = file_compressor.Compressor.decompress_filechunks(
-            chunks=chunks, outfile=decompressed_file
+            chunks=chunks, outfile=decompressed_file, files_directory=test_dir
         )
         assert saved and message == ""
 

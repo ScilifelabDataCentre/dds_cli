@@ -7,15 +7,16 @@ name: Pytest
 on:
   push:
     branches: [dev, master, HMS-2305-run-pytest-on-windows]
+
   pull_request:
     branches: [dev, master]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v2
@@ -32,8 +33,9 @@ jobs:
           COVERAGE_FILE=./coverage/.coverage
           pytest --color=yes --cov=./dds_cli --cov-report=xml:coverage/report.xml
 
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/report.xml
 
   build-on-windows:

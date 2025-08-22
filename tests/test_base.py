@@ -1,6 +1,6 @@
 """Test the base module authentication functionality."""
 
-from pathlib import Path
+import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,7 +17,7 @@ MOCK_PARTIAL_AUTH_TOKEN = "partial_auth_token_12345"
 MOCK_AUTH_TOKEN = "final_auth_token_12345"
 MOCK_TOKEN_DICT = {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
 MOCK_PROJECT = "test_project_123"
-TOKEN_PATH = Path("custom") / "token" / "path"
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 
 ###### Test initialization without authentication ######

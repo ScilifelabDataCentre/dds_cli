@@ -1,6 +1,6 @@
 """Focused GUI Authentication tests - UI behavior only."""
 
-from pathlib import Path
+import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,7 +10,7 @@ from dds_cli.dds_gui.pages.authentication.modals.login_modal import LoginModal
 from dds_cli.dds_gui.pages.authentication.modals.logout_modal import LogoutModal
 from dds_cli.dds_gui.pages.authentication.modals.reauthenticate_modal import ReAuthenticateModal
 
-TOKEN_PATH = Path("custom") / "token" / "path"
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 
 # =================================================================================

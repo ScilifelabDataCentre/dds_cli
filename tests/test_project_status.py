@@ -101,7 +101,7 @@ def check_output_project_info(new_status, captured_output, caplog_tuples=None):
     # Becuase of the bold and coloring formating, it is better to test for this keyworkd. Insetad of trying to find
     # the whole string The project 'project_1' is about to be Deleted.
     assert f"{project_name}" in captured_output.out
-    assert f"{new_status}"
+    assert new_status in captured_output.out
 
     check_table_proj_info(table_output=captured_output)
     # if not confirmed operation

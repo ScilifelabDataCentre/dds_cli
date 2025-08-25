@@ -451,3 +451,4 @@ _Empty sprint_
 # 2025-08-18 - 2025-08-29
 
 - Bug: Add missing f-string to logging when cancelling file with KeyboardInterrupt ([#777](https://github.com/ScilifelabDataCentre/dds_cli/pull/777))
+- Fix text when extending deadline ([#802](https://github.com/ScilifelabDataCentre/dds_cli/pull/802))

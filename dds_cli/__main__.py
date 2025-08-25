@@ -61,7 +61,7 @@ from dds_cli.options import (
     users_flag,
 )
 
-# import dds_cli.dds_gui.app
+import dds_cli.dds_gui.app
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -214,14 +214,14 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
 # TODO: Should totp be passed to the gui?
 
 
-# @dds_main.command(name="gui")
-# @click.pass_obj
-# def gui(click_ctx):
-#     """Start the DDS GUI."""
-#     gui_app = dds_cli.dds_gui.app.DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
-#     gui_app.title = "SciLifeLab Data Delivery System"
-#     gui_app.sub_title = "CLI Version: " + dds_cli.__version__
-#     gui_app.run()
+@dds_main.command(name="gui")
+@click.pass_obj
+def gui(click_ctx):
+    """Start the DDS GUI."""
+    gui_app = dds_cli.dds_gui.app.DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
+    gui_app.title = "SciLifeLab Data Delivery System"
+    gui_app.sub_title = "CLI Version: " + dds_cli.__version__
+    gui_app.run()
 
 
 # ************************************************************************************************ #

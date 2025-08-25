@@ -8,6 +8,7 @@ from textual.widget import Widget
 from textual.widgets import Placeholder
 from dds_cli.dds_gui.pages.authentication.authentication import Authentication
 from dds_cli.dds_gui.pages.important_information.important_information import ImportantInformation
+from dds_cli.dds_gui.pages.project_information.project_information import ProjectInformation
 
 
 class ProjectView(Widget):
@@ -63,9 +64,7 @@ class ProjectView(Widget):
                     yield Placeholder(
                         id="project-content"
                     )  # ProjectContent(title="Project Content", id="project-content")
-                    yield Placeholder(
-                        id="project-information"
-                    )  # ProjectInformation(title="Project Information", id="project-information")
+                    ProjectInformation(title="Project Information", id="project-information")
                 with Horizontal(id="bottom-container"):
                     yield Placeholder(
                         id="project-actions"

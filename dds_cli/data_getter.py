@@ -51,7 +51,7 @@ class DataGetter(base.DDSBaseClass):
         verify_checksum: bool = False,
         method: str = "get",
         no_prompt: bool = False,
-        token_path: typing.Union[str, pathlib.Path, None] = None,
+        token_path: str = None,
         staging_dir: dds_cli.directory.DDSDirectory = None,
     ):
         """Handle actions regarding downloading data."""

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from os import path
+from pathlib import Path
 from io import StringIO
 import sys
 from typing import Dict, List, Tuple
@@ -615,15 +615,15 @@ def test_print_or_page_error() -> None:
 
 def test_delete_folder(fs: FakeFilesystem) -> None:
     fs.create_dir("folder")
-    fs.create_file("folder/file")
-    assert path.isdir("folder") == True
+    fs.create_file(Path("folder") / "file")
+    assert Path("folder").is_dir()
     delete_folder("folder")
-    assert path.isdir("folder") == False
+    assert not Path("folder").is_dir()
 
 
 def test_delete_folder_folder(fs: FakeFilesystem) -> None:
-    fs.create_dir("folder/folder")
-    fs.create_file("folder/file")
-    assert path.isdir("folder") == True
+    fs.create_dir(Path("folder") / "folder")
+    fs.create_file(Path("folder") / "file")
+    assert Path("folder").is_dir()
     delete_folder("folder")
-    assert path.isdir("folder") == False
+    assert not Path("folder").is_dir()

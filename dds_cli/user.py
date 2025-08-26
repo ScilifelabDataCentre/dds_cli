@@ -9,10 +9,10 @@ import datetime
 import getpass
 import logging
 import os
-from pathlib import Path
+import pathlib
 import stat
 import subprocess
-from typing import Optional, Union
+from typing import Optional
 
 # Installed
 from rich.prompt import Prompt
@@ -44,7 +44,7 @@ class User:
         self,
         force_renew_token: bool = False,
         no_prompt: bool = False,
-        token_path: Optional[Union[str, Path]] = None,
+        token_path: str = None,
         allow_group: bool = False,
         totp: str = None,
         retrieve_token: bool = True,
@@ -283,7 +283,7 @@ class User:
 class TokenFile:
     """A class to manage the saved token."""
 
-    def __init__(self, token_path: Optional[Union[str, Path]] = None, allow_group: bool = False):
+    def __init__(self, token_path = None, allow_group: bool = False):
         # 600: -rw-------, 640: -rw-r-----, 660: -rw-rw----
         self.token_permission = 0o640 if allow_group else 0o600
         if token_path is None:

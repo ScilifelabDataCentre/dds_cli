@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 from datetime import datetime
-from pathlib import Path
+import pathlib
 
 from requests_mock.mocker import Mocker
 import pytest

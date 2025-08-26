@@ -135,7 +135,7 @@ class DDSStateManager:
     """
 
     # Default token path for CLI authentication token
-    # TODO: Use the cli token path instead of new but same for gui? 
+    # TODO: Use the cli token path instead of new but same for gui?
     token_path = str(pathlib.Path.home() / ".dds_cli_token")
     # ------------------------------------------------------------
     # BASE STATES

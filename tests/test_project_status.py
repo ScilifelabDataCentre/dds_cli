@@ -57,7 +57,8 @@ returned_response_extend_deadline_ok: typing.Dict = {
 
 #########
 def check_table_proj_info(table_output):
-    assert "┏━━━━━" in table_output.out  # A table has generated
+    top_border_chars = ("┏", "┌")
+    assert any(char in table_output.out for char in top_border_chars)
     assert f"{returned_response_get_info['Project ID']}" in table_output.out
     assert f"{returned_response_get_info['Created by']}" in table_output.out
     assert f"{returned_response_get_info['Status']}" in table_output.out

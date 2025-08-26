@@ -57,7 +57,14 @@ returned_response_extend_deadline_ok: typing.Dict = {
 
 #########
 def check_table_proj_info(table_output):
-    assert "┏━━━━━" in table_output.out  # A table has generated
+    """Validate that project information is printed.
+
+    The table style produced by :mod:`rich` varies between environments, so
+    asserting on a specific border character is brittle.  Instead we simply
+    verify that all expected project information fields are present in the
+    captured output.
+    """
+
     assert f"{returned_response_get_info['Project ID']}" in table_output.out
     assert f"{returned_response_get_info['Created by']}" in table_output.out
     assert f"{returned_response_get_info['Status']}" in table_output.out

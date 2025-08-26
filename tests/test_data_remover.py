@@ -9,6 +9,7 @@ from dds_cli import data_remover
 from dds_cli import DDSEndpoint
 from dds_cli.exceptions import APIError
 
+import os 
 
 def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Test that the file cannot be deleted."""
@@ -22,7 +23,7 @@ def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFix
         assert (
             "dds_cli.data_remover",
             logging.ERROR,
-            f"[Errno 2] No such file or directory in the fake filesystem: '{str(pathlib.Path() / non_existent_file)}'",
+            f"[Errno 2] No such file or directory in the fake filesystem: '{os.sep + str(non_existent_file)}'",
         ) in caplog.record_tuples
         assert (
             "dds_cli.data_remover",

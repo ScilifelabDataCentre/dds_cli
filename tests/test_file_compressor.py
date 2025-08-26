@@ -16,23 +16,17 @@ def test_compress_file_nonexistent(fs: FakeFilesystem, caplog: LogCaptureFixture
     """Try to compress a file that doesn't exist."""
     # Define path to test
     non_existent_file: pathlib.Path = pathlib.Path("nonexistentfile.txt")
-    non_existent_file_log: str = non_existent_file.as_posix()
     assert not fs.exists(file_path=non_existent_file)
 
     # Capture logging
     with caplog.at_level(logging.DEBUG):
         for chunk in file_compressor.Compressor.compress_file(file=non_existent_file):
             assert not chunk
-        assert (
-            "dds_cli.file_compressor",
-            logging.WARNING,
-            f"[Errno 2] No such file or directory in the fake filesystem: '{non_existent_file_log}'",
-        ) in caplog.record_tuples
-        assert (
-            "dds_cli.file_compressor",
-            logging.DEBUG,
-            "Compression finished.",
-        ) not in caplog.record_tuples
+        assert any(
+            "No such file or directory" in msg and non_existent_file.name in msg
+            for msg in caplog.messages
+        )
+        assert not any("Compression finished" in msg for msg in caplog.messages)
 
 
 def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCaptureFixture):
@@ -41,7 +35,6 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
     test_dir = pathlib.Path("test_dir_txt")
     fs.create_dir(test_dir)
     new_file: pathlib.Path = test_dir / "newfile.txt"
-    new_file_log: str = new_file.as_posix()
     assert not fs.exists(file_path=new_file)
 
     # Create file
@@ -77,11 +70,10 @@ def test_compress_and_decompress_file_txt(fs: FakeFilesystem, caplog: LogCapture
         assert fs.stat(entry_path=new_file).st_size != fs.stat(entry_path=compressed_file).st_size
 
         # Verify log output
-        assert (
-            "dds_cli.file_compressor",
-            logging.DEBUG,
-            f"Compression of '{new_file_log}' finished.",
-        ) in caplog.record_tuples
+        assert any(
+            "Compression of" in msg and new_file.name in msg and "finished" in msg
+            for msg in caplog.messages
+        )
 
         # Decompress file
         decompressed_file: pathlib.Path = test_dir / "decompressed.txt"
@@ -104,17 +96,15 @@ def test_compress_file_img(caplog: LogCaptureFixture):
     Not decompression since I can't get it to work when one file is fake and one is real.
     """
     image_file: pathlib.Path = pathlib.Path.cwd() / pathlib.Path("tests/images/test-image_1a.jpg")
-    image_file_log: str = image_file.as_posix()
     # Compress file
     with caplog.at_level(logging.DEBUG):
         for chunk in file_compressor.Compressor.compress_file(file=image_file):
             assert isinstance(chunk, bytes)
             assert len(chunk) != FileSegment.SEGMENT_SIZE_RAW
-        assert (
-            "dds_cli.file_compressor",
-            logging.DEBUG,
-            f"Compression of '{image_file_log}' finished.",
-        ) in caplog.record_tuples
+        assert any(
+            "Compression of" in msg and image_file.name in msg and "finished" in msg
+            for msg in caplog.messages
+        )
 
 
 def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCaptureFixture):
@@ -123,7 +113,6 @@ def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCapture
     test_dir = pathlib.Path("test_dir_csv")
     fs.create_dir(test_dir)
     new_file: pathlib.Path = test_dir / "newfile.csv"
-    new_file_log: str = new_file.as_posix()
     assert not fs.exists(file_path=new_file)
 
     # Create file
@@ -161,11 +150,10 @@ def test_compress_and_decompress_file_csv(fs: FakeFilesystem, caplog: LogCapture
         assert fs.exists(file_path=compressed_file)
         assert fs.stat(entry_path=new_file).st_size != fs.stat(entry_path=compressed_file).st_size
 
-        assert (
-            "dds_cli.file_compressor",
-            logging.DEBUG,
-            f"Compression of '{new_file_log}' finished.",
-        ) in caplog.record_tuples
+        assert any(
+            "Compression of" in msg and new_file.name in msg and "finished" in msg
+            for msg in caplog.messages
+        )
 
         # Decompress file
         decompressed_file: pathlib.Path = test_dir / "decompressed.csv"

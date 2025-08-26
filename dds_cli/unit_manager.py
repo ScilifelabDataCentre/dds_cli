@@ -6,8 +6,6 @@
 
 # Standard library
 import logging
-import pathlib
-import typing
 
 # Installed
 
@@ -39,7 +37,7 @@ class UnitManager(dds_cli.base.DDSBaseClass):
         authenticate: bool = True,
         method: str = "ls",
         no_prompt: bool = False,
-        token_path: str  = None,
+        token_path: str = None,
     ):
         """Initialize, incl. user authentication."""
         # Initiate DDSBaseClass to authenticate user

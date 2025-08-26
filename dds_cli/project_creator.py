@@ -1,8 +1,6 @@
 """Data Delivery System Project Creator."""
 
 import logging
-import pathlib
-import typing
 
 # Installed
 import rich.prompt

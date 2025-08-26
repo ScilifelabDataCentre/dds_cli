@@ -9,7 +9,8 @@ from dds_cli import data_remover
 from dds_cli import DDSEndpoint
 from dds_cli.exceptions import APIError
 
-import os 
+import os
+
 
 def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Test that the file cannot be deleted."""

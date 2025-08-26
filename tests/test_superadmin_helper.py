@@ -234,7 +234,7 @@ def test_get_stats_print_tables(capsys: CaptureFixture):
     assert any(ch in captured_output.out for ch in ("┏", "┌", "+"))
     assert any(f"{sep} Date" in captured_output.out for sep in ("┃", "│", "|", ""))
     assert any(ch in captured_output.out for ch in ("┗", "└", "+"))
-    
+
     # A header from first table
     assert "Researchers" in captured_output.out
 

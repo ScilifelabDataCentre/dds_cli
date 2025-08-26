@@ -21,7 +21,7 @@ The DDS GUI is available in the following ways:
 Installation from the CLI
 -------------------------
 
-Install the DDS CLI as described in :ref:`installation`.
+Install the DDS CLI as described in :ref:`<installation>`.
 
 Install binaries
 ----------------
@@ -67,7 +67,7 @@ Re-authentication
 ----------------
 
 The authentication session is valid for 7 days. To reset the session during the 7 days, click the "Re-authenticate" 
-button in the bottom left corner of the GUI. The re-authentication process is the same as the login process :ref:`login`.
+button in the bottom left corner of the GUI. The re-authentication process is the same as the login process :ref:`<login>`.
 
 TODO:: Add image of the re-authentication process
 
@@ -116,6 +116,16 @@ displayed in the bottom right border of the container.
 
 TODO:: Add image of the project content
 
+Project information
+-------------------
+
+The project information is displayed in the top right of the GUI. The project information is displayed in a table format.
+The project information is updated when you select a new project.
+
+TODO:: Add image of the project information
+
+Project Actions
+===============
 
 
 

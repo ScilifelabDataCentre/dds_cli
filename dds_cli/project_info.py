@@ -3,8 +3,6 @@
 # Standard library
 import logging
 import sys
-import pathlib
-import typing
 
 # Installed
 import rich

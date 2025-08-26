@@ -4,6 +4,7 @@ from io import StringIO
 import sys
 from typing import Dict, List, Tuple
 
+import requests
 from requests import get
 from requests.exceptions import JSONDecodeError
 
@@ -180,12 +181,11 @@ def test_perform_request_error() -> None:
 
 
 def test_perform_request_request_exception() -> None:
-    with raises(ApiRequestError) as exc_info:
-        perform_request(
-            endpoint="http://localhost",
-            headers={},
-            method="get",
-        )
+    url: str = "http://localhost"
+    with Mocker() as mock:
+        mock.get(url, exc=requests.exceptions.ConnectionError)
+        with raises(ApiRequestError) as exc_info:
+            perform_request(endpoint=url, headers={}, method="get")
 
     assert len(exc_info.value.args) == 1
     assert "API Request failed.: The database seems to be down" in exc_info.value.args[0]

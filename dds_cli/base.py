@@ -48,7 +48,7 @@ class DDSBaseClass:
         force_renew_token: bool = False,
         totp: str = None,
         no_prompt: bool = False,
-        token_path: typing.Union[str, pathlib.Path, None] = None,
+        token_path: str = None,
         allow_group: bool = False,
         staging_dir: dds_cli.directory.DDSDirectory = None,
     ):

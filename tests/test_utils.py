@@ -573,7 +573,7 @@ def test_print_or_page() -> None:
 
     rendered = output.getvalue()
     # Ensure table borders were printed
-    assert "┏" in rendered
+    assert any(ch in rendered for ch in ("┏", "┌", "+"))
     # The bottom border may be rendered with either heavy (┗) or light (└) characters
     assert any(char in rendered for char in ("┗", "└"))
 

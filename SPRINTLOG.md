@@ -1,14 +1,14 @@
 # Sprintlog
 
-Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes. Not needed when PR includes _only_ tests for already existing feature.
+Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticeable changes. Not needed when PR includes _only_ tests for already existing feature.
 
 ## 2021-08-11 - 2021-08-25
 
 - Progress bar glitch fixed by creating console object in utils.py ([#130](https://github.com/ScilifelabDataCentre/dds_cli/pull/130))
 - Log messages about successful checksum verification ([#131](https://github.com/ScilifelabDataCentre/dds_cli/pull/131))
-- Removed reduntant message in `dds ls` ([#132](https://github.com/ScilifelabDataCentre/dds_cli/pull/132))
+- Removed redundant message in `dds ls` ([#132](https://github.com/ScilifelabDataCentre/dds_cli/pull/132))
 - Pagination of tables if too long ([#133](https://github.com/ScilifelabDataCentre/dds_cli/pull/133))
-- Warning about non existent files when using `--source-path-file` option in `dds put` ([#134](https://github.com/ScilifelabDataCentre/dds_cli/pull/134))
+- Warning about non-existent files when using `--source-path-file` option in `dds put` ([#134](https://github.com/ScilifelabDataCentre/dds_cli/pull/134))
 - `--tree` option for `dds ls` - display whole file tree ([#136](https://github.com/ScilifelabDataCentre/dds_cli/pull/136))
 
 ## 2021-08-25 - 2021-09-08
@@ -444,7 +444,7 @@ _Empty sprint_
 
 # 2025-08-04 - 2025-08-15
 
-- Add ARD's for GUI
+- Add ADRs for GUI
 - Refactor MOTD to work for both the CLI and the GUI ([#771](https://github.com/ScilifelabDataCentre/dds_cli/pull/771))
 
 # 2025-08-18 - 2025-08-29

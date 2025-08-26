@@ -100,8 +100,9 @@ def test_list_all_active_motds_table(capsys: CaptureFixture):
 
     # Check that all rows are printed
     for motd in returned_dict["motds"]:
+        sep = r"(?:\||│|┃)?\s*"
         row_pattern = (
-            rf"{motd['MOTD ID']}\s+{re.escape(motd['Message'])}\s+{re.escape(motd['Created'])}"
+            rf"{motd['MOTD ID']}\s*{sep}{re.escape(motd['Message'])}\s*{sep}{re.escape(motd['Created'])}"
         )
         assert re.search(row_pattern, captured.out)
 

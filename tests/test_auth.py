@@ -18,7 +18,7 @@ MOCK_PASSWORD = "testpass"
 MOCK_2FA_CODE = "123456"
 MOCK_PARTIAL_AUTH_TOKEN = "partial_auth_token_12345"
 MOCK_AUTH_TOKEN = "final_auth_token_12345"
-TOKEN_PATH = Path("custom") / "path"
+TOKEN_PATH = pathlib.Path("custom") / "path"
 
 
 ###### Test initialization ######
@@ -90,7 +90,7 @@ def test_init_auth_with_authentication_custom_params() -> None:
         mock_user_class.assert_called_once_with(
             force_renew_token=False,
             no_prompt=False,
-            token_path=TOKEN_PATH.as_posix(),
+            token_path=str(TOKEN_PATH),
             allow_group=True,
             totp=MOCK_2FA_CODE,
         )

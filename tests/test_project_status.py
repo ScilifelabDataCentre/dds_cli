@@ -59,6 +59,7 @@ returned_response_extend_deadline_ok: typing.Dict = {
 def check_table_proj_info(table_output):
     # A table has generated: check for any common border character.
     assert any(ch in table_output.out for ch in ("┏", "┌", "+"))
+    assert any(char in table_output.out for char in ("┗", "└"))
     assert f"{returned_response_get_info['Project ID']}" in table_output.out
     assert f"{returned_response_get_info['Created by']}" in table_output.out
     assert f"{returned_response_get_info['Status']}" in table_output.out

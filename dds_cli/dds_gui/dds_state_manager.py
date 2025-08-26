@@ -102,15 +102,15 @@ MOCK_DATA = {
 class DDSStateManager:
     """
 
-    A base class for state managment.
+    A base class for state management.
 
-    - BASE STATES: States that are directly derived from the cli funcitons.
+    - BASE STATES: States that are directly derived from the CLI functions.
     - DERIVED STATES: States that are derived from the base states.
     - COMPUTE METHODS: Functions that compute the derived states based on the base states.
 
-    Reciver pattern:
+    Receiver pattern:
 
-    --> Reciever/reader classes should use derived classes to get state content.
+    --> Receiver/reader classes should use derived classes to get state content.
 
     def on_mount(self) -> None:
         self.watch_state(self.auth)
@@ -118,8 +118,8 @@ class DDSStateManager:
     def watch_state(self, state) -> None:
         self.query_one(Label).update(state)
 
-    * Add base state to "on_mount" method if the state is to be watched".
-    * Add watcher method to update content based on the state".
+    * Add base state to "on_mount" method if the state is to be watched.
+    * Add watcher method to update content based on the state.
 
     Sender pattern:
 

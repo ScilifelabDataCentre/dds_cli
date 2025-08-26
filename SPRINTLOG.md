@@ -450,4 +450,6 @@ _Empty sprint_
 # 2025-08-18 - 2025-08-29
 
 - Implement MOTD for GUI ([#772](https://github.com/ScilifelabDataCentre/dds_cli/pull/772))
+- Bug: Add missing f-string to logging when cancelling file with KeyboardInterrupt ([#777](https://github.com/ScilifelabDataCentre/dds_cli/pull/777))
+- Verify file size after download and decryption ([#775](https://github.com/ScilifelabDataCentre/dds_cli/pull/775))
 - Add Dardel-related information to the documentation ([#774](https://github.com/ScilifelabDataCentre/dds_cli/pull/774))

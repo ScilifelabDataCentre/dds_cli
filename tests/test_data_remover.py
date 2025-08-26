@@ -22,7 +22,7 @@ def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFix
         assert (
             "dds_cli.data_remover",
             logging.ERROR,
-            f"[Errno 2] No such file or directory in the fake filesystem: '/nonexistentfile.txt'",
+            f"[Errno 2] No such file or directory in the fake filesystem: '{str(non_existent_file)}'",
         ) in caplog.record_tuples
         assert (
             "dds_cli.data_remover",
@@ -48,7 +48,7 @@ def test_delete_tempfile_ok(fs: FakeFilesystem, caplog: LogCaptureFixture):
         assert (
             "dds_cli.data_remover",
             logging.ERROR,
-            f"[Errno 2] No such file or directory in the fake filesystem: '/nonexistentfile.txt'",
+            f"[Errno 2] No such file or directory in the fake filesystem: '{str(new_file)}'",
         ) not in caplog.record_tuples
         assert (
             "dds_cli.data_remover",

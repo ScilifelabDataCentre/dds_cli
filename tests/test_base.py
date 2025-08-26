@@ -1,5 +1,6 @@
 """Test the base module authentication functionality."""
 
+import pathlib
 from unittest.mock import MagicMock, patch
 import pathlib
 
@@ -18,7 +19,7 @@ MOCK_PARTIAL_AUTH_TOKEN = "partial_auth_token_12345"
 MOCK_AUTH_TOKEN = "final_auth_token_12345"
 MOCK_TOKEN_DICT = {"Authorization": f"Bearer {MOCK_AUTH_TOKEN}"}
 MOCK_PROJECT = "test_project_123"
-TOKEN_PATH = pathlib.Path("custom") / "path"
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 
 ###### Test initialization without authentication ######
@@ -44,7 +45,7 @@ def test_init_base_class_with_parameters_no_authentication():
         method="list",
         authenticate=False,
         no_prompt=True,
-        token_path=pathlib.Path("/custom/token/path"),
+        token_path=str(TOKEN_PATH),
         totp=MOCK_2FA_CODE,
         allow_group=True,
     )
@@ -52,7 +53,7 @@ def test_init_base_class_with_parameters_no_authentication():
     assert base.project == MOCK_PROJECT
     assert base.method == "list"
     assert base.no_prompt is True
-    assert base.token_path == pathlib.Path("/custom/token/path")
+    assert base.token_path == str(TOKEN_PATH)
     assert base.totp == MOCK_2FA_CODE
 
 

@@ -1,5 +1,6 @@
 """Test the auth module."""
 
+import pathlib
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 import pathlib
@@ -18,7 +19,7 @@ MOCK_PASSWORD = "testpass"
 MOCK_2FA_CODE = "123456"
 MOCK_PARTIAL_AUTH_TOKEN = "partial_auth_token_12345"
 MOCK_AUTH_TOKEN = "final_auth_token_12345"
-TOKEN_PATH = pathlib.Path("custom") / "path"
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 
 ###### Test initialization ######

@@ -90,7 +90,9 @@ def test_list_all_active_motds_table(capsys: CaptureFixture):
 
     captured = capsys.readouterr()
     for motd in returned_dict["motds"]:
-        row_pattern = rf"{motd['MOTD ID']}.*{re.escape(motd['Message'])}.*{re.escape(motd['Created'])}"
+        row_pattern = (
+            rf"{motd['MOTD ID']}.*{re.escape(motd['Message'])}.*{re.escape(motd['Created'])}"
+        )
         assert re.search(row_pattern, captured.out, re.DOTALL)
 
 

@@ -64,7 +64,7 @@ class ProjectView(Widget):
                     yield Placeholder(
                         id="project-content"
                     )  # ProjectContent(title="Project Content", id="project-content")
-                    ProjectInformation(title="Project Information", id="project-information")
+                    yield ProjectInformation(title="Project Information", id="project-information")
                 with Horizontal(id="bottom-container"):
                     yield Placeholder(
                         id="project-actions"

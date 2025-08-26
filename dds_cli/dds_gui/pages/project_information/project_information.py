@@ -1,5 +1,6 @@
 """DDS Project Information Widget"""
 
+from dataclasses import dataclass
 from typing import Any
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
@@ -12,26 +13,77 @@ from dds_cli.dds_gui.components.dds_container import (
     DDSSpacedContainer,
 )
 from dds_cli.dds_gui.components.dds_status_chip import DDSStatusChip
-from dds_cli.dds_gui.dds_state_manager import ProjectInformation as ProjectInformationType
 
+from dds_cli.base import DDSBaseClass
+from dds_cli.dds_gui.types.dds_status_types import DDSStatus
+
+
+@dataclass
+class ProjectInformationDataTable:
+    """A dataclass for the project information table."""
+
+    status: DDSStatus
+    created_by: str
+    last_updated: str
+    size: str
+    pi: str
+
+    @staticmethod
+    def from_dict(data: dict) -> "ProjectInformationDataTable":
+        print(data)
+        return ProjectInformationDataTable(
+            status=DDSStatus(data["Status"]),
+            created_by=data["Created by"],
+            last_updated=data["Last updated"],
+            size=str(data["Size"]),
+            pi=data["PI"],
+        )
+
+@dataclass
+class ProjectInformationData:
+    """A dataclass for the project information."""
+
+    name: str
+    description: str
+
+    information_table: ProjectInformationDataTable
+
+    @staticmethod
+    def from_dict(data: dict) -> "ProjectInformationData":
+        return ProjectInformationData(
+            name=data["Title"],
+            description=data["Description"],
+            information_table=ProjectInformationDataTable.from_dict(data),
+        )
 
 class ProjectInformation(DDSContainer):
     """A widget for the project information."""
 
+    project_id = "someunit00002"
+
+    project_information =  ProjectInformationData.from_dict(data = DDSBaseClass(project=project_id).get_project_info())
+
+    DEFAULT_CSS = """
+    DDSSpacedContainer:first-of-type > * {
+        padding-right: 1;
+    }
+    
+    """
+
     def compose(self) -> ComposeResult:
-        if self.app.selected_project_id:
+        if self.project_information:
             with DDSSpacedContainer():
                 with DDSContentContainer():
                     yield Label(
-                        f"[b]Project Title:[/b] {self.app.project_information.name}",
+                        f"[b]Project Title:[/b] {self.project_information.name}",
                         id="project-title",
                     )
                     yield Label(
-                        f"[b]Project Description:[/b] {self.app.project_information.description}",
+                        f"[b]Project Description:[/b] {self.project_information.description}",
                         id="project-description",
                     )
                 yield ProjectInformationTable(
-                    self.app.project_information, id="project-information-table"
+                    self.project_information.information_table, id="project-information-table"
                 )
         else:
             yield Label("No project selected")
@@ -40,7 +92,7 @@ class ProjectInformation(DDSContainer):
 class ProjectInformationTable(Widget):
     """A widget for the project information table."""
 
-    def __init__(self, data: ProjectInformationType, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, data: ProjectInformationDataTable, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.data = data
 
@@ -93,7 +145,7 @@ class ProjectInformationTable(Widget):
                 classes="key-pair-row",
             )
             yield Horizontal(
-                Static("Support Contact", classes="key-pair-row-key"),
-                Static(self.data.support_contact, classes="key-pair-row-value"),
+                Static("PI", classes="key-pair-row-key"),
+                Static(self.data.pi, classes="key-pair-row-value"),
                 classes="key-pair-row",
             )

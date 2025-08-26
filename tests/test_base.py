@@ -4,7 +4,6 @@ import pathlib
 from unittest.mock import MagicMock, patch
 import pathlib
 
-import pathlib
 import pytest
 
 from dds_cli.base import DDSBaseClass

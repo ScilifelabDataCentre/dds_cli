@@ -38,7 +38,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         project: str,
         authenticate: bool = True,
         no_prompt: bool = False,
-        token_path: typing.Union[str, pathlib.Path, None] = None,
+        token_path: str  = None,
     ):
         """Handle actions regarding project status in the cli."""
         # Initiate DDSBaseClass to authenticate user
@@ -268,7 +268,7 @@ class ProjectBusyStatusManager(base.DDSBaseClass):
     def __init__(
         self,
         no_prompt: bool = False,
-        token_path: typing.Union[str, pathlib.Path, None] = None,
+        token_path: str = None,
     ):
         """Handle actions regarding project busy status in the cli."""
         # Initiate DDSBaseClass to authenticate user

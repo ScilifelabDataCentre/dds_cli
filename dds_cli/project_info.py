@@ -35,7 +35,7 @@ class ProjectInfoManager(base.DDSBaseClass):
         self,
         project: str,
         no_prompt: bool = False,
-        token_path: typing.Union[str, pathlib.Path, None] = None,
+        token_path: str = None,
     ):
         """Handle actions regarding project info in the cli."""
         # Initiate DDSBaseClass to authenticate user

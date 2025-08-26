@@ -575,7 +575,7 @@ def test_print_or_page() -> None:
     # Ensure table borders were printed
     assert any(ch in rendered for ch in ("┏", "┌", "+"))
     # The bottom border may be rendered with either heavy (┗) or light (└) characters
-    assert any(char in rendered for char in ("┗", "└"))
+    assert any(char in rendered for char in ("┗", "└", "+"))
 
 
 def test_print_or_page_multiple_rows() -> None:

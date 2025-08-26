@@ -3,7 +3,7 @@
 
 import datetime
 import os
-from pathlib import Path
+import pathlib
 import prompt_toolkit
 import rich.console
 import sys

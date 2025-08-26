@@ -19,6 +19,8 @@ def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFix
     # Attempt to delete
     with caplog.at_level(logging.WARNING):
         data_remover.DataRemover.delete_tempfile(file=non_existent_file)
+        # Substring matching should ensure more reliable cross-platform behavior
+        # instead of exact tuple matching that may break on different path separators
         assert any(
             "No such file or directory" in msg and non_existent_file.name in msg
             for msg in caplog.messages

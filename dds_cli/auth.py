@@ -5,7 +5,7 @@ import logging
 import getpass
 from datetime import datetime
 import pathlib
-from typing import Optional, Union
+from typing import Optional
 
 # Installed
 from rich.prompt import Prompt
@@ -36,7 +36,7 @@ class Auth(base.DDSBaseClass):
         self,
         authenticate: bool = True,
         force_renew_token: bool = True,  # Only used if authenticate is True
-        token_path: Union[str, pathlib.Path, None] = None,
+        token_path: str = None,
         totp: str = None,
         allow_group: bool = False,
     ):

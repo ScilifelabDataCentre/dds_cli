@@ -88,15 +88,22 @@ def test_list_all_active_motds_table(capsys: CaptureFixture):
         with motd_manager.MotdManager(authenticate=False, no_prompt=True) as mtdm:
             mtdm.list_all_active_motds(table=True)  # Run active motds listing
 
+    # Get captured output
     captured = capsys.readouterr()
+
+    # Check that table was printed
+    assert any(b in captured.out for b in ("┏", "┌", "+"))
+
+    # Check that all headers are printed
     for header in returned_dict["keys"]:
         assert header in captured.out
 
+    # Check that all rows are printed
     for motd in returned_dict["motds"]:
-        row_pattern = rf"{motd['MOTD ID']}\s+{re.escape(motd['Message'])}\s+{re.escape(motd['Created'])}"
+        row_pattern = (
+            rf"{motd['MOTD ID']}\s+{re.escape(motd['Message'])}\s+{re.escape(motd['Created'])}"
+        )
         assert re.search(row_pattern, captured.out)
-
-    assert any(b in captured.out for b in ("┏", "┌", "+"))
 
 
 def test_list_all_active_motds_nottable(capsys: CaptureFixture):

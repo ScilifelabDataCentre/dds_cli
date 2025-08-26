@@ -598,7 +598,7 @@ def test_print_or_page_multiple_rows() -> None:
     assert len(lines) - 4 == 100
     # Check that the table borders were printed
     assert any(ch in rendered for ch in ("┏", "┌", "+"))
-    assert any(char in rendered for char in ("┗", "└"))
+    assert any(char in rendered for char in ("┗", "└", "+"))
 
 
 def test_print_or_page_error() -> None:

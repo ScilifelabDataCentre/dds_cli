@@ -4,7 +4,6 @@
 import logging
 import getpass
 from datetime import datetime
-import pathlib
 from typing import Optional
 
 # Installed

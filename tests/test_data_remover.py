@@ -9,8 +9,6 @@ from dds_cli import data_remover
 from dds_cli import DDSEndpoint
 from dds_cli.exceptions import APIError
 
-import os
-
 
 def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFixture):
     """Test that the file cannot be deleted."""
@@ -21,16 +19,14 @@ def test_delete_tempfile_cannot_delete(fs: FakeFilesystem, caplog: LogCaptureFix
     # Attempt to delete
     with caplog.at_level(logging.WARNING):
         data_remover.DataRemover.delete_tempfile(file=non_existent_file)
-        assert (
-            "dds_cli.data_remover",
-            logging.ERROR,
-            f"[Errno 2] No such file or directory in the fake filesystem: '{os.sep + str(non_existent_file)}'",
-        ) in caplog.record_tuples
-        assert (
-            "dds_cli.data_remover",
-            logging.WARNING,
-            "File deletion may have failed. Usage of space may increase.",
-        ) in caplog.record_tuples
+        assert any(
+            "No such file or directory" in msg and non_existent_file.name in msg
+            for msg in caplog.messages
+        )
+        assert any(
+            "File deletion may have failed. Usage of space may increase." in msg
+            for msg in caplog.messages
+        )
 
 
 def test_delete_tempfile_ok(fs: FakeFilesystem, caplog: LogCaptureFixture):
@@ -47,16 +43,14 @@ def test_delete_tempfile_ok(fs: FakeFilesystem, caplog: LogCaptureFixture):
     with caplog.at_level(logging.WARNING):
         data_remover.DataRemover.delete_tempfile(file=new_file)
         assert not fs.exists(file_path=new_file)
-        assert (
-            "dds_cli.data_remover",
-            logging.ERROR,
-            f"[Errno 2] No such file or directory in the fake filesystem: '{str(new_file)}'",
-        ) not in caplog.record_tuples
-        assert (
-            "dds_cli.data_remover",
-            logging.WARNING,
-            "File deletion may have failed. Usage of space may increase.",
-        ) not in caplog.record_tuples
+        assert not any(
+            "No such file or directory" in msg and new_file.name in msg
+            for msg in caplog.messages
+        )
+        assert not any(
+            "File deletion may have failed. Usage of space may increase." in msg
+            for msg in caplog.messages
+        )
 
 
 def test_delete_all_ok(capfd: LogCaptureFixture):

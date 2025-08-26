@@ -262,7 +262,7 @@ def test_verify_checksum_images():
     assert (
         not fake_1_altered_verified
         and message1altered
-        == f"Checksum verification failed. File '{image_1a.as_posix()}' compromised."
+        == f"Checksum verification failed. File '{str(image_1a)}' compromised."
     )
 
 

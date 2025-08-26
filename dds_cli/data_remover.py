@@ -7,7 +7,6 @@
 # Standard Library
 import logging
 import pathlib
-import typing
 
 # Installed
 import rich
@@ -42,7 +41,7 @@ class DataRemover(base.DDSBaseClass):
         method: str = "rm",
         authenticate: bool = True,
         no_prompt: bool = False,
-        token_path: typing.Union[str, pathlib.Path, None] = None,
+        token_path: str = None,
     ):
         """Handle actions regarding data deletion in the cli."""
         # Initiate DDSBaseClass to authenticate user

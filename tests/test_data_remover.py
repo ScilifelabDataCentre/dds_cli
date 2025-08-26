@@ -44,8 +44,7 @@ def test_delete_tempfile_ok(fs: FakeFilesystem, caplog: LogCaptureFixture):
         data_remover.DataRemover.delete_tempfile(file=new_file)
         assert not fs.exists(file_path=new_file)
         assert not any(
-            "No such file or directory" in msg and new_file.name in msg
-            for msg in caplog.messages
+            "No such file or directory" in msg and new_file.name in msg for msg in caplog.messages
         )
         assert not any(
             "File deletion may have failed. Usage of space may increase." in msg

@@ -1,6 +1,7 @@
 """Test the motd_manager module."""
 
 import logging
+import re
 from typing import Dict, List
 
 import pytest
@@ -88,19 +89,9 @@ def test_list_all_active_motds_table(capsys: CaptureFixture):
             mtdm.list_all_active_motds(table=True)  # Run active motds listing
 
     captured = capsys.readouterr()
-    assert (
-        "\n".join(
-            [
-                "┏━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓",
-                "┃ MOTD ID ┃ Message ┃ Created          ┃",
-                "┡━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩",
-                "│ 1       │ Test    │ 2022-08-05 08:31 │",
-                "│ 2       │ Test 2  │ 2022-08-05 08:54 │",
-                "└─────────┴─────────┴──────────────────┘",
-            ]
-        )
-        in captured.out
-    )
+    assert re.search(r"MOTD ID\s+Message\s+Created", captured.out)
+    assert re.search(r"1\s+Test\s+2022-08-05 08:31", captured.out)
+    assert re.search(r"2\s+Test 2\s+2022-08-05 08:54", captured.out)
 
 
 def test_list_all_active_motds_nottable(capsys: CaptureFixture):

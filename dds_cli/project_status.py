@@ -2,7 +2,6 @@
 
 import datetime
 import logging
-import pathlib
 import typing
 import sys
 from dateutil.parser import parse
@@ -38,7 +37,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         project: str,
         authenticate: bool = True,
         no_prompt: bool = False,
-        token_path: str  = None,
+        token_path: str = None,
     ):
         """Handle actions regarding project status in the cli."""
         # Initiate DDSBaseClass to authenticate user

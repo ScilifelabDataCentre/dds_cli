@@ -53,7 +53,9 @@ def test_localfilehandler_with_destination(fs: FakeFilesystem):
             "overwrite": False,
             "checksum": "",
         },
-        (pathlib.Path("remote_destination") / "parentdir" / "somedir" / "fileinsomedir.file").as_posix(): {
+        (
+            pathlib.Path("remote_destination") / "parentdir" / "somedir" / "fileinsomedir.file"
+        ).as_posix(): {
             "path_raw": pathlib.Path.cwd() / "parentdir" / "somedir" / "fileinsomedir.file",
             "subpath": pathlib.Path("remote_destination") / "parentdir" / "somedir",
             "size_raw": 0,

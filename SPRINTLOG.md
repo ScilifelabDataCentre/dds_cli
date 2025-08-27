@@ -452,3 +452,4 @@ _Empty sprint_
 
 - Bug: Add missing f-string to logging when cancelling file with KeyboardInterrupt ([#777](https://github.com/ScilifelabDataCentre/dds_cli/pull/777))
 - Verify file size after download and decryption ([#775](https://github.com/ScilifelabDataCentre/dds_cli/pull/775))
+- New version: 2.12.0 ([#824](https://github.com/ScilifelabDataCentre/dds_cli/pull/824))

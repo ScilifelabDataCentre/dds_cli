@@ -17,7 +17,7 @@ Changelog
     - GUI related changes (not released yet):
         - Implement MOTD for GUI
         - Refactor MOTD to work for both CLI and GUI
-        - Refactor authentication code to support both the CLI and GUI (not released yet)
+        - Refactor authentication code to support both the CLI and GUI
 
 .. _2.11.0:
 

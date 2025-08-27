@@ -1,4 +1,4 @@
-"""Base class for the DDS CLI. Verifies the users access to the DDS."""
+"""Base class for the DDS CLI. Verifies the user's access to the DDS."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #

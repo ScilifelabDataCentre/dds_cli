@@ -1,6 +1,24 @@
 Changelog
 ==========
 
+.. _2.12.0:
+
+2.12.0 - 2025-08-27
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Check file size after download and decryption
+- 🐛 Bug Fixes
+    - Handle KeyboardInterrupt when cancelling file
+- 📄 Documentation
+    - Update installation.rst with correct Uppmax links
+- 📌 Other Changes
+    - Improve dds cli logging
+    - GUI related changes (not released yet):
+        - Implement MOTD for GUI
+        - Refactor MOTD to work for both CLI and GUI
+        - Refactor authentication code to support both the CLI and GUI (not released yet)
+
 .. _2.11.0:
 
 2.11.0 - 2025-04-29

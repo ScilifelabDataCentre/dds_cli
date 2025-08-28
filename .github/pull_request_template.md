@@ -35,16 +35,3 @@ _Anything that helps reviewers (e.g. areas needing close attention)._
 ---
 
 Once all boxes are checked, mark the PR as **Ready for Review** and tag at least one team member as the initial reviewer.
-
-
-## 5. Actions / Scans
-
-**Make sure that the following checks/actions have passed.**
-
-- **TestPyPI**
-<!--
-  What: Builds the CLI and publishes to TestPyPI in order to verify before release.
-  How to fix: Check the action logs and fix potential issues manually.
--->
-
-If an action does not pass and you need help with how to solve it, enter edit mode of this PR template or go to the [PR template](../.github/pull_request_template.md).

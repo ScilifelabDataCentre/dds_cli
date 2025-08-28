@@ -1,4 +1,4 @@
-"""Base class for the DDS CLI. Verifies the users access to the DDS."""
+"""Base class for the DDS CLI. Verifies the user's access to the DDS."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -58,6 +58,8 @@ class DDSBaseClass:
         self.no_prompt = no_prompt
         self.token_path = token_path
 
+        self.totp = totp
+
         # Keyboardinterrupt
         self.stop_doing = False
 
@@ -67,8 +69,8 @@ class DDSBaseClass:
                 force_renew_token=force_renew_token,
                 no_prompt=no_prompt,
                 token_path=token_path,
-                totp=totp,
                 allow_group=allow_group,
+                totp=totp,
             )
             self.token = dds_user.token_dict
 
@@ -112,6 +114,13 @@ class DDSBaseClass:
         return True
 
     # Public methods ############################### Public methods #
+
+    def set_token(self, token_dict: dict) -> None:
+        """Sets the token for the base class.
+        Called from auth class to set the token when authenticating
+        in the gui without running the base class with authenticate set to true.
+        """
+        self.token = token_dict
 
     def get_project_info(self):
         """Collect project information from API."""

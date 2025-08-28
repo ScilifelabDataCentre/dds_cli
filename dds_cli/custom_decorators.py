@@ -40,7 +40,7 @@ def verify_proceed(func):
         # Check if keyboardinterrupt in dds
         if self.stop_doing:
             # TODO (ina): Add save to status here
-            message = "KeyBoardInterrupt - cancelling file {escape(file)}"
+            message = f"KeyboardInterrupt - cancelling file {escape(file)}"
             LOG.warning(message)
             return False  # Do not proceed
 
@@ -52,7 +52,6 @@ def verify_proceed(func):
 
         # Mark as started
         self.status[file]["started"] = True
-        LOG.debug("File '%s' started: %s", escape(str(file)), func.__name__)
 
         # Run function
         ok_to_proceed, message = func(self, file=file, *args, **kwargs)
@@ -101,7 +100,6 @@ def update_status(func):
 
         # Update status to started
         self.status[file][func.__name__].update({"started": True})
-        LOG.debug("File '%s' status updated to %s: started", escape(str(file)), func.__name__)
 
         # Run function
         ok_to_continue, message, *_ = func(self, file=file, *args, **kwargs)
@@ -109,14 +107,12 @@ def update_status(func):
         # ok_to_continue = False
         if not ok_to_continue:
             # Save info about which operation failed
-
             self.status[file]["failed_op"] = func.__name__
             LOG.warning("%s failed: %s", func.__name__, message)
 
         else:
             # Update status to done
             self.status[file][func.__name__].update({"done": True})
-            LOG.debug("File %s status updated to %s: done", escape(str(file)), func.__name__)
 
         return ok_to_continue, message
 

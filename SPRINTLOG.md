@@ -430,3 +430,26 @@ _Empty sprint_
 - Remove "Changes" title from release-drafter template ([#751](https://github.com/ScilifelabDataCentre/dds_cli/pull/751))
 - Edit structure of release template ([#752](https://github.com/ScilifelabDataCentre/dds_cli/pull/752))
 - New version: 2.10.2 ([#754](https://github.com/ScilifelabDataCentre/dds_cli/pull/754))
+- Update instructions regarding release procedure ([#755](https://github.com/ScilifelabDataCentre/dds_cli/pull/755))
+- Update PR template and remove duplicates in release procedure ([#756](https://github.com/ScilifelabDataCentre/dds_cli/pull/756))
+
+# 2025-05-26 - 2025-06-05
+
+- Proof of concept for new GUI ([#739](https://github.com/ScilifelabDataCentre/dds_cli/pull/739))
+- Improve client logging ([#758](https://github.com/ScilifelabDataCentre/dds_cli/pull/758))
+
+# Summer 2025
+
+- Refactoring the authentication code to work for both the cli and the gui ([#762](https://github.com/ScilifelabDataCentre/dds_cli/pull/762))
+
+# 2025-08-04 - 2025-08-15
+
+- Add ARD's for GUI
+- Refactor MOTD to work for both the CLI and the GUI ([#771](https://github.com/ScilifelabDataCentre/dds_cli/pull/771))
+- Implement MOTD for GUI ([#772](https://github.com/ScilifelabDataCentre/dds_cli/pull/772))
+
+# 2025-08-18 - 2025-08-29
+
+- Bug: Add missing f-string to logging when cancelling file with KeyboardInterrupt ([#777](https://github.com/ScilifelabDataCentre/dds_cli/pull/777))
+- Verify file size after download and decryption ([#775](https://github.com/ScilifelabDataCentre/dds_cli/pull/775))
+- New version: 2.12.0 ([#824](https://github.com/ScilifelabDataCentre/dds_cli/pull/824))

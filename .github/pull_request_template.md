@@ -41,16 +41,6 @@ Once all boxes are checked, mark the PR as **Ready for Review** and tag at least
 
 **Make sure that the following checks/actions have passed.**
 
-- **Black**
-<!--
-  What: Python code formatter.
-  How to fix: Run `black .` locally to execute formatting.
--->
-- **Prettier**
-<!--
-  What: General code formatter. Our use case: MD and yaml mainly.
-  How to fix: Run npx prettier --write . locally to execute formatting.
--->
 - **Pylint**
 <!--
   What: Python code linter.

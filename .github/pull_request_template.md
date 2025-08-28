@@ -41,16 +41,6 @@ Once all boxes are checked, mark the PR as **Ready for Review** and tag at least
 
 **Make sure that the following checks/actions have passed.**
 
-- **Pylint**
-<!--
-  What: Python code linter.
-  How to fix: Manually fix the code producing warnings. Code must get 10/10.
--->
-- **Yamllint**
-<!--
-  What: Linting of yaml files.
-  How to fix: Manually fix any errors locally.
--->
 - **Tests**
 <!--
   What: Pytest to verify that functionality works as expected.

@@ -1,3 +1,8 @@
+# TestPyPi Publish Workflow
+# Uploads package to TestPyPi to verify that the package builds and installs correctly.
+# ---
+# Action failing?
+# Check the action logs and fix potential issues manually.
 ---
 name: TestPyPi
 on:

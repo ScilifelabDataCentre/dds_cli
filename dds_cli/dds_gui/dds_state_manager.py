@@ -100,7 +100,7 @@ class DDSStateManager(App):
         Reference: https://textual.textualize.io/guide/workers/
         """
         try:
-            project_content = DataLister(json=True, tree=True, project=project_id).list_recursive()
+            project_content = DataLister(json=True, project=project_id).list_recursive()
         except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
             self.call_from_thread(self._on_project_content_error, project_id, str(err), "error")
             return

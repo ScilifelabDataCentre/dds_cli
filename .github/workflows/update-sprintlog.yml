@@ -30,7 +30,10 @@ jobs:
       - name: Add entry to sprint log
         if: ${{ github.event.action == 'opened' }}
         run: |
-          echo "- ${{ github.event.pull_request.title }} ([#${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }}))" >> SPRINTLOG.md
+          title="${{ github.event.pull_request.title }}"
+          number="${{ github.event.pull_request.number }}"
+          url="${{ github.event.pull_request.html_url }}"
+          echo "- $title ([#$number]($url))" >> SPRINTLOG.md
 
       - name: Update sprint log title
         if: ${{ github.event.action == 'edited' && github.event.changes.title }}

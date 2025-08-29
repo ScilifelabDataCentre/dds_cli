@@ -89,7 +89,7 @@ There are two possible configurations for the Two-Factor Authentication:
 End authenticated session ("Log out")
 ---------------------------------------
 
-In order to avoid unauthorized users accessing the DDS (and thereby your user-privilages and data) via your account, we recommend that you manually end your session after having run the operations with ``dds-cli``. To end the session, run:
+In order to avoid unauthorized users accessing the DDS (and thereby your user-privileges and data) via your account, we recommend that you manually end your session after having run the operations with ``dds-cli``. To end the session, run:
 
 .. code-block:: 
 

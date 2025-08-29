@@ -137,7 +137,29 @@ class DataGetter(base.DDSBaseClass):
 
         LOG.debug("File '%s' downloaded: %s", file_name_in_db, file_downloaded)
 
+        file_size_verified = False
+
         if file_downloaded:
+            ## File size verification
+            expected_size = file_info["size_stored"]
+            actual_size = file_info["path_downloaded"].stat().st_size
+
+            if actual_size == expected_size:
+                file_size_verified = True
+                LOG.debug(
+                    "Downloaded file '%s' size matches expected size: %s bytes.",
+                    file_name_in_db,
+                    expected_size,
+                )
+            else:
+                LOG.debug(
+                    "Downloaded file '%s' size mismatch: expected %s bytes, got %s bytes. Not decrypting.",
+                    file_name_in_db,
+                    expected_size,
+                    actual_size,
+                )
+
+        if file_size_verified:
             db_updated, message = self.update_db(file=file)
             LOG.debug(
                 "API call: database updated for file '%s': %s",
@@ -171,6 +193,22 @@ class DataGetter(base.DDSBaseClass):
 
             LOG.debug("File '%s' saved? %s", file_name_in_db, file_saved)
             if file_saved:
+                # Check file size post-decryption and post-decompression
+                expected_size = file_info["size_original"]
+                actual_size = pathlib.Path(file).stat().st_size
+                if actual_size == expected_size:
+                    LOG.debug(
+                        "Decrypted file '%s' size matches expected size: %s bytes.",
+                        file_name_in_db,
+                        expected_size,
+                    )
+                else:
+                    LOG.debug(
+                        "Decrypted file '%s' size mismatch: expected %s bytes, got %s bytes",
+                        file_name_in_db,
+                        expected_size,
+                        actual_size,
+                    )
                 # TODO (ina): decide on checksum verification method --
                 # this checks original, the other is generated from compressed
                 all_ok, message = (

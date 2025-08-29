@@ -1,3 +1,5 @@
+<!-- Add a row at the bottom of this file when you make a new PR. This is not needed if the PR only contains tests. Follow the format of previous rows. If the PR is the first in a new sprint, add a new sprint header row; Follow the format of previous sprints. -->
+
 # Sprintlog
 
 Please add a _short_ line describing the PR you make, if the PR implements a specific feature or functionality, or refactor. Not needed if you add very small and unnoticable changes. Not needed when PR includes _only_ tests for already existing feature.
@@ -212,41 +214,41 @@ Please add a _short_ line describing the PR you make, if the PR implements a spe
 - Bug: Catch Timeout exception for when requests are too slow ([#563](https://github.com/ScilifelabDataCentre/dds_cli/pull/563))
 - Check that `dds data get` is used with either `--get-all` or `--source`/`--source-path-fail` and display appropriate message ([#564](https://github.com/ScilifelabDataCentre/dds_cli/pull/564))
 
-# 2022-11-25 - 2022-12-09
+## 2022-11-25 - 2022-12-09
 
 - Bug: Switch from using `os.path` to `pathlib` in order to facilitate cross-OS uploads-/downloads- and listing operations ([#573](https://github.com/ScilifelabDataCentre/dds_cli/pull/573))
 
-# 2022-12-09 - 2023-01-06: Longer sprint due to Christmas
+## 2022-12-09 - 2023-01-06: Longer sprint due to Christmas
 
 - Dependency: Bump `jwcrypto` due to CVE-2022-3102 ([#557](https://github.com/ScilifelabDataCentre/dds_cli/pull/577))
 - New command: `dds project info change [OPTIONS]` to change project information ([#575](https://github.com/ScilifelabDataCentre/dds_cli/pull/575))
 - Documentation: Structure changes and examples ([#585](https://github.com/ScilifelabDataCentre/dds_cli/pull/585))
 - Workflow: Python-setup action v1 bumped to v2 ([#588](https://github.com/ScilifelabDataCentre/dds_cli/pull/588))
 
-# 2023-01-09 - 2023-01-20
+## 2023-01-09 - 2023-01-20
 
 - Workflow: Scan with Trivy on PR and schedule ([#591](https://github.com/ScilifelabDataCentre/dds_cli/pull/591))
 - Workflow: Publish to TestPyPi on PR and release ([#592](https://github.com/ScilifelabDataCentre/dds_cli/pull/592))
 - Workflow: Scan with Snyk on PR and schedule ([#593](https://github.com/ScilifelabDataCentre/dds_cli/pull/593))
 - Documentation: Important testing instructions and instructions on how to install from TestPyPi ([#597](https://github.com/ScilifelabDataCentre/dds_cli/pull/597))
 
-# 2023-01-20 - 2023-02-03
+## 2023-01-20 - 2023-02-03
 
 - Documentation: Instructions on how to verify PyPI package integrity ([#598](https://github.com/ScilifelabDataCentre/dds_cli/pull/598))
 - Version: 2.2.6 ([#601](https://github.com/ScilifelabDataCentre/dds_cli/pull/601))
 
-# 2023-02-03 - 2023-02-17
+## 2023-02-03 - 2023-02-17
 
 - Workflow: Lint yaml files ([#605](https://github.com/ScilifelabDataCentre/dds_cli/pull/605))
 - Logging: Reduce debug level logging and remove logging from root ([#606](https://github.com/ScilifelabDataCentre/dds_cli/pull/606))
 - Add separate executables for Ubuntu latest (currently 22.04) and Ubuntu 20.04 ([#604](https://github.com/ScilifelabDataCentre/dds_cli/pull/604))
 - Bug: PyInstaller command not valid for Linux and macOS ([#612](https://github.com/ScilifelabDataCentre/dds_cli/pull/612))
 
-# 2023-02-17 - 2023-03-03
+## 2023-02-17 - 2023-03-03
 
 _Nothing merged in CLI during this sprint_
 
-# 2023-03-03 - 2023-03-17
+## 2023-03-03 - 2023-03-17
 
 - Bug: Return error code 1 if error during upload ([#615](https://github.com/ScilifelabDataCentre/dds_cli/pull/615))
 - Clarification: Users should check that the error-file has been generated, and keep it in case we need it for debugging purposes ([#616](https://github.com/ScilifelabDataCentre/dds_cli/pull/616))
@@ -254,38 +256,38 @@ _Nothing merged in CLI during this sprint_
 - Workflow: Restructure and clarify PR template ([#618](https://github.com/ScilifelabDataCentre/dds_cli/pull/618))
 - Workflow: Changelog changed to Sprintlog and CHANGELOG.rst created for version changes ([#621](https://github.com/ScilifelabDataCentre/dds_cli/pull/620))
 
-# 2023-03-17 - 2023-03-31
+## 2023-03-17 - 2023-03-31
 
 - New command: `dds stats` to get project and data statistics ([#624](https://github.com/ScilifelabDataCentre/dds_cli/pull/624))
 - Logging: Removed debug level logs ([#625](https://github.com/ScilifelabDataCentre/dds_cli/pull/625))
 
-# 2023-03-31 - 2023-04-14
+## 2023-03-31 - 2023-04-14
 
 _Nothing merged in CLI during this sprint_
 
-# 2023-04-14 - 2023-04-28
+## 2023-04-14 - 2023-04-28
 
 - Documentation: How to set environment variables in Windows ([#626](https://github.com/ScilifelabDataCentre/dds_cli/pull/626))
 - Documentation: Password management recommendations ([#627](https://github.com/ScilifelabDataCentre/dds_cli/pull/627))
 
-# 2023-04-28 - 2023-05-12
+## 2023-04-28 - 2023-05-12
 
 - Workflow: Added Pylint to scan code ([#630](https://github.com/ScilifelabDataCentre/dds_cli/pull/630))
 
-# 2023-05-12 - 2023-05-26
+## 2023-05-12 - 2023-05-26
 
 - Url to testing instance updated after move to new cluster ([#631](https://github.com/ScilifelabDataCentre/dds_cli/pull/631))
 - Dependency: Bump `cryptography` due to CVE-2023-0286 and dependabot ([#635](https://github.com/ScilifelabDataCentre/dds_cli/pull/635))
 
-# 2023-06-26 - 2023-08-04
+## 2023-06-26 - 2023-08-04
 
 - Dependency: Bump `cryptography` to 41.0.3 due to security vulnerability alerts(s) ([#639](https://github.com/ScilifelabDataCentre/dds_cli/pull/639))
 
-# 2023-08-07 - 2023-08-18
+## 2023-08-07 - 2023-08-18
 
 - Dependency: Bump `PyYAML` to 6.0.1 due to docker issues ([#642](https://github.com/ScilifelabDataCentre/dds_cli/pull/642))
 
-# 2023-08-21 - 2023-09-01
+## 2023-08-21 - 2023-09-01
 
 - Print understandable message when request response doesn't contain json ([#638](https://github.com/ScilifelabDataCentre/dds_cli/pull/638))
 - New option in `dds user ls`: `--save-emails` for Super Admins to save emails to file ([#641](https://github.com/ScilifelabDataCentre/dds_cli/pull/641))
@@ -293,21 +295,21 @@ _Nothing merged in CLI during this sprint_
 - New command `dds maintenance status` for Super Admins to check current Maintenance mode status ([#644](https://github.com/ScilifelabDataCentre/dds_cli/pull/644))
 - Workflow: Github Pages action fixed by bumping versions ([#648](https://github.com/ScilifelabDataCentre/dds_cli/pull/648))
 
-# 2023-09-04 - 2023-09-15
+## 2023-09-04 - 2023-09-15
 
 - Updated command: `dds stats` prints tables with stats collected from API ([#643](https://github.com/ScilifelabDataCentre/dds_cli/pull/643))
 - Dependency: Bump `requests` to 2.31.0 ([#649](https://github.com/ScilifelabDataCentre/dds_cli/pull/649))
 
-# 2023-09-18 - 2023-09-29
+## 2023-09-18 - 2023-09-29
 
 - GitHub Actions to generate the documentation fixed ([#650](https://github.com/ScilifelabDataCentre/dds_cli/pull/650))
 - Print project information and ask user for confirmation when deleting or archiving projects ([#655](https://github.com/ScilifelabDataCentre/dds_cli/pull/655))
 
-# 2023-10-02 - 2023-10-13
+## 2023-10-02 - 2023-10-13
 
 _Empty sprint_
 
-# 2023-10-16 - 2023-11-03 (Longer sprint due to OKR prep and höstlov)
+## 2023-10-16 - 2023-11-03 (Longer sprint due to OKR prep and höstlov)
 
 - Change "Checksum verification successful. File integrity verified." logging level from INFO to DEBUG in order to not print for all files ([#662](https://github.com/ScilifelabDataCentre/dds_cli/pull/662))
 - New command `dds project status extend` to allow extension of project deadline ([#661](https://github.com/ScilifelabDataCentre/dds_cli/pull/661))
@@ -315,115 +317,115 @@ _Empty sprint_
 - Catch `ApiRequestError` in `update_db` in order to get more error information ([#663](https://github.com/ScilifelabDataCentre/dds_cli/pull/663))
 - Make a single last request to update the database in the case of failed files during upload ([#656](https://github.com/ScilifelabDataCentre/dds_cli/pull/656)
 
-# 2023-11-06 - 2023-11-17
+## 2023-11-06 - 2023-11-17
 
 - New version: 2.6.0 ([#666](https://github.com/ScilifelabDataCentre/dds_cli/pull/666))
 
-# 2023-12-4 - 2023-12-15
+## 2023-12-4 - 2023-12-15
 
 - Patch update crypthography package to address cve ([#668](https://github.com/ScilifelabDataCentre/dds_cli/pull/668))
 - New version: 2.6.1 ([#669](https://github.com/ScilifelabDataCentre/dds_cli/pull/669))
 
-# 2023-12-15 - 2024-01-12
+## 2023-12-15 - 2024-01-12
 
 - Minor update jwcrypto package to address cve ([#674](https://github.com/ScilifelabDataCentre/dds_cli/pull/674))
 
-# 2024-02-12 - 2024-03-08
+## 2024-02-12 - 2024-03-08
 
 - Criptography update to address cve ([#676](https://github.com/ScilifelabDataCentre/dds_cli/pull/676))
 - Use of a fix version of black and linted files to 24.1.1 ([#675](https://github.com/ScilifelabDataCentre/dds_cli/pull/675))
 
-# 2024-02-12 - 2024-03-08
+## 2024-02-12 - 2024-03-08
 
 - Update sphinx package to be able to make a new release ([#680](https://github.com/ScilifelabDataCentre/dds_cli/pull/680))
 - New version: 2.6.2 ([#670](https://github.com/ScilifelabDataCentre/dds_cli/pull/670))
 
-# 2024-02-26 - 2024-03-08
+## 2024-02-26 - 2024-03-08
 
 - New extra release, outside maintenance window, version 2.6.3 ([#682](https://github.com/ScilifelabDataCentre/dds_cli/pull/682))
 
-# 2024-03-25 - 2024-04-5
+## 2024-03-25 - 2024-04-5
 
 - Update jwcrypto package to address cve ([#1523](https://github.com/ScilifelabDataCentre/dds_web/pull/1523))
 
-# 2024-04-8 - 2024-04-19
+## 2024-04-8 - 2024-04-19
 
 - New version: 2.6.4 ([#687](https://github.com/ScilifelabDataCentre/dds_cli/pull/687))
 
-# 2024-05-20 - 2024-05-31
+## 2024-05-20 - 2024-05-31
 
 - Update requests to solve CVE ([#690](https://github.com/ScilifelabDataCentre/dds_cli/pull/690))
 - Update docs for Testing instance migration, including removing use of 'dev' ([#691](https://github.com/ScilifelabDataCentre/dds_cli/pull/691))
 - Fix GitHub Pages action, that broke due to update in the action's image ([#695](https://github.com/ScilifelabDataCentre/dds_cli/pull/695))
 - Fix Action that builds the executable files due to update in MacOs default architecture ([#700](https://github.com/ScilifelabDataCentre/dds_cli/pull/700)
 
-# 2024-06-17 - 2024-06-28
+## 2024-06-17 - 2024-06-28
 
 - Update documentation to have correct executable name ([#702](https://github.com/ScilifelabDataCentre/dds_cli/pull/702))
 
-# 2024-07-29 - 2024-08-09
+## 2024-07-29 - 2024-08-09
 
 - Improve docs related to the testing instance ([#705](https://github.com/ScilifelabDataCentre/dds_cli/pull/705))
 
-# 2024-08-12 - 2024-08-23
+## 2024-08-12 - 2024-08-23
 
 _Empty sprint_
 
-# 2024-08-26 - 2024-09-06
+## 2024-08-26 - 2024-09-06
 
 - Remove pinned version in requirements-dev.txt to resolve CVE ([#706](https://github.com/ScilifelabDataCentre/dds_cli/pull/706))
 - Add CODEOWNERS file in order to define Team Hermes as owners of all files in repository ([#707](https://github.com/ScilifelabDataCentre/dds_cli/pull/707))
 - Update documentation and related libraries for pyton 3.12, dropped support for python 3.7 ([#709](https://github.com/ScilifelabDataCentre/dds_cli/pull/709))
 
-# 2024-09-09 - 2024-09-20
+## 2024-09-09 - 2024-09-20
 
 - Added new dev instance url to cli config ([#712](https://github.com/ScilifelabDataCentre/dds_cli/pull/712))
 - Clarify documentation about password managers ([#711](https://github.com/ScilifelabDataCentre/dds_cli/pull/711))
 
-# 2024-09-24 - 2024-10-04
+## 2024-09-24 - 2024-10-04
 
 - New version and changelog([#714](https://github.com/ScilifelabDataCentre/dds_cli/pull/714))
 - Added a new option to the motd send command to allow sending to unit personnel only ([#717](https://github.com/ScilifelabDataCentre/dds_cli/pull/717))
 
-# 2024-10-07 - 2024-10-18
+## 2024-10-07 - 2024-10-18
 
 - Update MOTD command according to post merge review ([#720](https://github.com/ScilifelabDataCentre/dds_cli/pull/720))
 - New version: 2.8.1 ([#719](https://github.com/ScilifelabDataCentre/dds_cli/pull/719))
 
-# 2024-12-02 - 2024-12-13
+## 2024-12-02 - 2024-12-13
 
 - 'Upload' or 'Download' added to end of delivery directory name depending on command ([#726](https://github.com/ScilifelabDataCentre/dds_cli/pull/726))
 
-# 2024-12-16 - 2024-12-20
+## 2024-12-16 - 2024-12-20
 
 - New version: 2.9.0 ([#728](https://github.com/ScilifelabDataCentre/dds_cli/pull/728))
 - Include legacy packages (removed in Python 3.13) in development requirements to fix documentation on GitHub Pages ([#730](https://github.com/ScilifelabDataCentre/dds_cli/pull/730))
 
-# 2025-01-20 - 2025-01-31
+## 2025-01-20 - 2025-01-31
 
 - Make release template ([#732](https://github.com/ScilifelabDataCentre/dds_cli/pull/732))
 - Fix codecov action ([#731](https://github.com/ScilifelabDataCentre/dds_cli/pull/731))
 
-# 2025-02-17 – 2025-02-28
+## 2025-02-17 – 2025-02-28
 
 - Remove executable for Ubuntu 20.04 and add one for Ubuntu 22.04 ([#733](https://github.com/ScilifelabDataCentre/dds_cli/pull/733)).
 
-# 2025-03-17 – 2025-03-28
+## 2025-03-17 – 2025-03-28
 
 - Inform users that data deletion has started when `dds data rm` is run ([#738](https://github.com/ScilifelabDataCentre/dds_cli/pull/738)).
 
-# 2025-03-31 - 2025-04-11
+## 2025-03-31 - 2025-04-11
 
 - New version: 2.10.0 ([#742](https://github.com/ScilifelabDataCentre/dds_cli/pull/742))
 - Re-introduce executable for ubuntu-20.04 ([#744](https://github.com/ScilifelabDataCentre/dds_cli/pull/744))
 - Update upload-artifact action to v4 ([#743](https://github.com/ScilifelabDataCentre/dds_cli/pull/743))
 - New version: 2.10.1 ([#746](https://github.com/ScilifelabDataCentre/dds_cli/pull/746))
 
-# 2025-04-14 - 2025-04-25
+## 2025-04-14 - 2025-04-25
 
 - Generate log file by default for put and get ([#737](https://github.com/ScilifelabDataCentre/dds_cli/pull/737))
 
-# 2025-04-28 - 2025-05-09
+## 2025-04-28 - 2025-05-09
 
 - Release Drafter configuration ([#749](https://github.com/ScilifelabDataCentre/dds_cli/pull/749))
 - New Github Action for automatically creating release draft: Release Drafter ([#750](https://github.com/ScilifelabDataCentre/dds_cli/pull/750))
@@ -433,21 +435,24 @@ _Empty sprint_
 - Update instructions regarding release procedure ([#755](https://github.com/ScilifelabDataCentre/dds_cli/pull/755))
 - Update PR template and remove duplicates in release procedure ([#756](https://github.com/ScilifelabDataCentre/dds_cli/pull/756))
 
-# 2025-05-26 - 2025-06-05
+## 2025-05-26 - 2025-06-05
 
 - Proof of concept for new GUI ([#739](https://github.com/ScilifelabDataCentre/dds_cli/pull/739))
 - Improve client logging ([#758](https://github.com/ScilifelabDataCentre/dds_cli/pull/758))
 
-# Summer 2025
+## Summer 2025
 
 - Refactoring the authentication code to work for both the cli and the gui ([#762](https://github.com/ScilifelabDataCentre/dds_cli/pull/762))
 
-# 2025-08-04 - 2025-08-15
+## 2025-08-04 - 2025-08-15
 
 - Add ARD's for GUI
 - Refactor MOTD to work for both the CLI and the GUI ([#771](https://github.com/ScilifelabDataCentre/dds_cli/pull/771))
 - Implement MOTD for GUI ([#772](https://github.com/ScilifelabDataCentre/dds_cli/pull/772))
 
-# 2025-08-18 - 2025-08-29
+## 2025-08-18 - 2025-08-29
 
 - Bug: Add missing f-string to logging when cancelling file with KeyboardInterrupt ([#777](https://github.com/ScilifelabDataCentre/dds_cli/pull/777))
+- Verify file size after download and decryption ([#775](https://github.com/ScilifelabDataCentre/dds_cli/pull/775))
+- New version: 2.12.0 ([#824](https://github.com/ScilifelabDataCentre/dds_cli/pull/824))
+- New PR template and moved all instructions to other files ([#832](https://github.com/ScilifelabDataCentre/dds_cli/pull/832))

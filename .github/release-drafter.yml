@@ -42,5 +42,3 @@ version-resolver:
       - "type: docs"
       - "type: dependency"
   default: patch
-
-commitish: "master"

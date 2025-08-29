@@ -6,6 +6,8 @@
 #   - trailing spaces
 #   - indentation
 # etc.
+# ---
+# Action failing? Manually fix any errors locally.
 ---
 name: Yamllint
 on: [push]

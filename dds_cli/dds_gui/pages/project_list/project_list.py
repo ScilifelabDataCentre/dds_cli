@@ -3,7 +3,6 @@
 from typing import List
 from textual import events
 from textual.app import ComposeResult
-from textual.reactive import reactive
 from textual.widgets import Select
 
 from dds_cli.dds_gui.components.dds_button import DDSButton

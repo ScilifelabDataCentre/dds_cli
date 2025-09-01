@@ -49,9 +49,5 @@ class ProjectList(DDSContainer):
         return [
             p["Project ID"]
             for p in self.app.project_list or []
-            if (
-                "Project ID" in p
-                and isinstance(p["Project ID"], str)
-                and p["Project ID"].strip()
-            )
+            if ("Project ID" in p and isinstance(p["Project ID"], str) and p["Project ID"].strip())
         ]

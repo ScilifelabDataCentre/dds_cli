@@ -12,6 +12,12 @@ The graphical interface (GUI) follows the same release rhythm as the CLI. Releas
 4. **Run documentation/image generation (`rich-codex`)** and re‑sign commits if needed. Open a PR `new-version_*` → `dev` and verify assets.
 5. **Merge to `master` and publish the release draft** after a brief review, similar to the CLI procedure.
 
+For new features or large changes to existing features: 
+
+6. **Book a demo session of the new features** and make sure representatives can attend.
+7. **Update documentation** of the GUI with description and images.
+8. **Decide on feedback process**, either live feedback session, a form, or something else. 
+
 ## Building the GUI executable
 
 - The helper script installs dependencies and invokes PyInstaller with required hidden imports to create a standalone binary.
@@ -34,4 +40,4 @@ The existing CI workflow builds GUI binaries for macOS, Linux and Windows using 
 ## Post-release
 
 - Inform users and relevant infrastructure teams of the new GUI release, matching the notification steps used for CLI releases.
-- Monitor downloads and user feedback.
+- Monitor user feedback with the chosen feedback method.

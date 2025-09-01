@@ -123,7 +123,7 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 
 > **Dardel**
 >
-> There is no automatic upgrade of the `dds-cli` on Dardel and we need to inform them via email every time there is a new version. 
+> There is no automatic upgrade of the `dds-cli` on Dardel and we need to inform them via email every time there is a new version.
 >
 > ```
 > [Recipient]: support@pdc.kth.se
@@ -155,4 +155,3 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 >
 > Thank you in advance!
 > ```
-

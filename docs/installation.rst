@@ -5,7 +5,7 @@ Installation guide
 
 You can install ``dds-cli`` in two different ways: 
 
-* From `PyPI <https://pypi.org/project/dds-cli/>`_. Independent on operating system (OS), we recommend this option. Note that this does not apply to HPC centres, e.g. Uppmax, Dardel, etc. 
+* From `PyPI <https://pypi.org/project/dds-cli/>`_. Independent on operating system (OS), we recommend this option. Note that this does not apply to HPC centres, e.g., Uppmax, Dardel, etc. 
 * Via executables. These are located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_. 
 
 .. note:: 

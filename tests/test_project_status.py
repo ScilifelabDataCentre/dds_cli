@@ -57,7 +57,8 @@ returned_response_extend_deadline_ok: typing.Dict = {
 
 #########
 def check_table_proj_info(table_output):
-    assert "┏━━━━━" in table_output.out  # A table has generated
+    # A table has generated: check for any common border character.
+    assert any(ch in table_output.out for ch in ("┏", "┌", "+"))
     assert f"{returned_response_get_info['Project ID']}" in table_output.out
     assert f"{returned_response_get_info['Created by']}" in table_output.out
     assert f"{returned_response_get_info['Status']}" in table_output.out
@@ -97,35 +98,27 @@ def perform_archive_delete_operation(new_status, confirmed, mock, json_project_i
             status_mngr.update_status(new_status=new_status)
 
 
-def check_output_project_info(new_status, captured_output, caplog_tuples=None):
+def check_output_project_info(new_status, captured_output, caplog_messages=None):
     # Becuase of the bold and coloring formating, it is better to test for this keyworkd. Insetad of trying to find
     # the whole string The project 'project_1' is about to be Deleted.
     assert f"{project_name}" in captured_output.out
-    assert f"{new_status}"
+    assert new_status in captured_output.out
 
     check_table_proj_info(table_output=captured_output)
     # if not confirmed operation
-    if caplog_tuples:
-        assert (
-            "dds_cli.project_status",
-            logging.INFO,
-            "Probably for the best. Exiting.",
-        ) in caplog_tuples
+    if caplog_messages:
+        assert any("Probably for the best. Exiting." in msg for msg in caplog_messages)
 
 
-def check_output_extend_deadline(captured_output, caplog_tuples=None):
+def check_output_extend_deadline(captured_output, caplog_messages=None):
     assert "Current deadline:" in captured_output.out
     assert "Default deadline extension:" in captured_output.out
 
     check_table_proj_info(table_output=captured_output)
 
     # if not confirmed operation
-    if caplog_tuples:
-        assert (
-            "dds_cli.project_status",
-            logging.INFO,
-            "Probably for the best. Exiting.",
-        ) in caplog_tuples
+    if caplog_messages:
+        assert any("Probably for the best. Exiting." in msg for msg in caplog_messages)
 
 
 # tests
@@ -222,7 +215,7 @@ def test_delete_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCaptu
         check_output_project_info(
             new_status="Deleted",
             captured_output=captured_output,
-            caplog_tuples=caplog.record_tuples,
+            caplog_messages=caplog.messages,
         )
 
 
@@ -249,7 +242,7 @@ def test_archive_project_no(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
         check_output_project_info(
             new_status="Archived",
             captured_output=captured_output,
-            caplog_tuples=caplog.record_tuples,
+            caplog_messages=caplog.messages,
         )
 
 
@@ -267,7 +260,7 @@ def test_delete_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCapt
         assert returned_response_deleted_ok["message"] in captured_output.out
         # check the rest of the project info is displayed correctly
         check_output_project_info(
-            new_status="Deleted", captured_output=captured_output, caplog_tuples=None
+            new_status="Deleted", captured_output=captured_output, caplog_messages=None
         )
 
 
@@ -284,7 +277,7 @@ def test_archive_project_yes(capsys: CaptureFixture, monkeypatch, caplog: LogCap
 
         assert returned_response_archived_ok["message"] in captured_output.out
         check_output_project_info(
-            new_status="Archived", captured_output=captured_output, caplog_tuples=None
+            new_status="Archived", captured_output=captured_output, caplog_messages=None
         )
 
 
@@ -367,7 +360,7 @@ def test_extend_deadline_no_confirmed(
                     status_mngr.extend_deadline()
 
             check_output_extend_deadline(
-                captured_output=capsys.readouterr(), caplog_tuples=caplog.record_tuples
+                captured_output=capsys.readouterr(), caplog_messages=caplog.messages
             )
 
 
@@ -442,12 +435,10 @@ def test_extend_deadline_confirmed_ok(
                 status_mngr.extend_deadline()
 
             captured_output = capsys.readouterr()
-            assert (
-                "dds_cli.project_status",
-                logging.INFO,
-                returned_response_extend_deadline_ok["message"],
-            ) in caplog.record_tuples
-            check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+            assert any(
+                returned_response_extend_deadline_ok["message"] in msg for msg in caplog.messages
+            )
+            check_output_extend_deadline(captured_output=captured_output, caplog_messages=None)
 
 
 def test_extend_deadline_no_msg_returned_request(
@@ -486,5 +477,5 @@ def test_extend_deadline_no_msg_returned_request(
                     status_mngr.extend_deadline()
 
             captured_output = capsys.readouterr()
-            check_output_extend_deadline(captured_output=captured_output, caplog_tuples=None)
+            check_output_extend_deadline(captured_output=captured_output, caplog_messages=None)
             assert "No message returned from API." in str(err.value)

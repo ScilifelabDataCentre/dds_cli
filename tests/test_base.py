@@ -102,7 +102,7 @@ def test_init_base_class_with_authentication_custom_params(mock_user_class):
     mock_user_class.assert_called_once_with(
         force_renew_token=True,
         no_prompt=True,
-        token_path=TOKEN_PATH.as_posix(),
+        token_path=str(TOKEN_PATH),
         allow_group=True,
         totp=MOCK_2FA_CODE,
     )
@@ -215,7 +215,7 @@ def test_complete_authentication_flow_integration(mock_user_class):
     mock_user_class.assert_called_once_with(
         force_renew_token=True,
         no_prompt=True,
-        token_path=TOKEN_PATH.as_posix(),
+        token_path=str(TOKEN_PATH),
         allow_group=True,
         totp=MOCK_2FA_CODE,
     )
@@ -225,6 +225,6 @@ def test_complete_authentication_flow_integration(mock_user_class):
     assert base.project == MOCK_PROJECT
     assert base.method == "list"
     assert base.no_prompt is True
-    assert base.token_path == TOKEN_PATH.as_posix()
+    assert base.token_path == str(TOKEN_PATH)
     assert base.totp == MOCK_2FA_CODE
     assert base.stop_doing is False

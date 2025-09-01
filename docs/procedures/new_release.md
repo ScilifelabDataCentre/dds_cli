@@ -30,96 +30,96 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 
 3. Fork a new branch from `dev`: `new-version_[new version]`
 4. Update the version in [`version.py`](../../dds_cli/version.py)
-<<<<<<< HEAD
+   <<<<<<< HEAD
 5. Update the [changelog](../../CHANGELOG.rst).
 
-   > Copy-paste the contents of the release draft into the top of the changelog; Follow the same structure/format as previous versions.
-=======
+   > # Copy-paste the contents of the release draft into the top of the changelog; Follow the same structure/format as previous versions.
    - _Minor changes, e.g. bug fix_: Minor version upgrade, e.g. `1.0.1 --> 1.0.2`
    - _Small changes, e.g. new feature_: Mid version upgrade, e.g. `1.1.0 --> 1.2.0`
    - _Breaking changes or large new feature(s)_: Major version upgrade, e.g. `1.0.0 --> 2.0.0` _SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE._
->>>>>>> 56f6e0e5 (prettier)
+     > > > > > > > 56f6e0e5 (prettier)
 
 6. Push the changelog and version to the `new-version_[new version]` branch
 7. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose the `new-version_[new version]` branch in the "Run workflow" drop-down button
 
 <<<<<<< HEAD
-   > `rich-codex` will push changes to your branch; these commits _will not be signed_. In order for you to merge these changes into the `dev` branch, all commits need to be signed:
-   >
-   > 1. Pull the changes to your local branch
-   > 2. Run the following command. Git should start signing all commits in your PR.
-   >
-   >    ```bash
-   >    git rebase --exec 'git commit --amend --no-edit -n -S' dev
-   >    ```
-   >
-   > 3. Force push the newly signed commits
-   >
-   >    ```bash
-   >    git push --force
-   >    ```
+
+> `rich-codex` will push changes to your branch; these commits _will not be signed_. In order for you to merge these changes into the `dev` branch, all commits need to be signed:
+>
+> 1.  Pull the changes to your local branch
+> 2.  Run the following command. Git should start signing all commits in your PR.
+>
+>     ```bash
+>     git rebase --exec 'git commit --amend --no-edit -n -S' dev
+>     ```
+>
+> 3.  Force push the newly signed commits
+>
+>     ```bash
+>     git push --force
+>     ```
 
 8. Create a new PR from `new-version_[new version]` to `dev`, and verify that the new images look OK.
-9. Create a PR from `dev` to `master`
-=======
-5. Push changelog and version change to branch
-6. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose your current branch where it says "Run workflow"
-   - `rich-codex` will push changes to your branch; these commits _will not be signed_
-   - In order for you to merge these changes into the `dev` branch, all commits need to be signed:
-     1. Pull the changes to your local branch
-     2. Run the following command:
-        ```bash
-        git rebase --exec 'git commit --amend --no-edit -n -S' dev
-        ```
-        Git should now be signing all commits in this PR.
-     3. Force push the newly signed commits
-        ```bash
-        git push --force
-        ```
-7. Create a new PR from `<your-branch>` to `dev`
-   1. Verify that the new code example images look ok
-   2. Wait for approval and merge by Product Owner or admin
-8. Create a PR from `dev` to `master`
-   - Are you bumping the major version (e.g. 1.x.x to 2.x.x)?
-     - Yes: Add this info to the PR.
-   - Do the changes affect the API in any way?
-     - Yes:
-       - Add how the API is affected in the PR.
-       - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
-   - _Backward compatibility:_ Check whether or not the dds_cli master branch works with the code in the PR. Note if the dds_web changes work with the previous version of the dds_cli. If something might break - give detailed information about what. **The users should be informed of this, e.g. via a MOTD.**
-   - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary. Instead, the team should look through the code just to see if something looks weird.
-   - All sections and checks in the PR template should be filled in and checked. Follow the instruction in the PR description field.
-   - There should be at least one approval of the PR.
-   - _Everything looks ok and there's at least one approval?_ Merge it.
->>>>>>> 56f6e0e5 (prettier)
+9. # Create a PR from `dev` to `master`
+10. Push changelog and version change to branch
+11. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose your current branch where it says "Run workflow"
+    - `rich-codex` will push changes to your branch; these commits _will not be signed_
+    - In order for you to merge these changes into the `dev` branch, all commits need to be signed:
+      1. Pull the changes to your local branch
+      2. Run the following command:
+         ```bash
+         git rebase --exec 'git commit --amend --no-edit -n -S' dev
+         ```
+         Git should now be signing all commits in this PR.
+      3. Force push the newly signed commits
+         ```bash
+         git push --force
+         ```
+12. Create a new PR from `<your-branch>` to `dev`
+    1. Verify that the new code example images look ok
+    2. Wait for approval and merge by Product Owner or admin
+13. Create a PR from `dev` to `master`
+    - Are you bumping the major version (e.g. 1.x.x to 2.x.x)?
+      - Yes: Add this info to the PR.
+    - Do the changes affect the API in any way?
+      - Yes:
+        - Add how the API is affected in the PR.
+        - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
+    - _Backward compatibility:_ Check whether or not the dds_cli master branch works with the code in the PR. Note if the dds_web changes work with the previous version of the dds_cli. If something might break - give detailed information about what. **The users should be informed of this, e.g. via a MOTD.**
+    - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary. Instead, the team should look through the code just to see if something looks weird.
+    - All sections and checks in the PR template should be filled in and checked. Follow the instruction in the PR description field.
+    - There should be at least one approval of the PR.
+    - _Everything looks ok and there's at least one approval?_ Merge it.
+      > > > > > > > 56f6e0e5 (prettier)
 
-   > **Do the changes affect the API in any way?**
-   > If yes:
-   >
-   > - Add how the API is affected in the PR.
-   > - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
-   >
-   > **Re: Documentation and pushes to `master`**
-   > Documentation changes are automatically updated on GitHub pages when there's a push to `master`. However, in order to keep things consistent and to avoid confusion with the versions, always release a new version when changes are pushed to `master` (assuming all the changes have been verified)
-   >
-   > **Re: PR approval**
-   >
-   > - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary.Instead, the team should look through the code just to see if something looks weird.
-   > - When there's at least one approval: Merge it.
+    > **Do the changes affect the API in any way?**
+    > If yes:
+    >
+    > - Add how the API is affected in the PR.
+    > - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
+    >
+    > **Re: Documentation and pushes to `master`**
+    > Documentation changes are automatically updated on GitHub pages when there's a push to `master`. However, in order to keep things consistent and to avoid confusion with the versions, always release a new version when changes are pushed to `master` (assuming all the changes have been verified)
+    >
+    > **Re: PR approval**
+    >
+    > - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary.Instead, the team should look through the code just to see if something looks weird.
+    > - When there's at least one approval: Merge it.
 
-<<<<<<< HEAD
-10. [Publish the Release Draft](https://github.com/ScilifelabDataCentre/dds_cli/releases)
+<<<<<<< HEAD 10. [Publish the Release Draft](https://github.com/ScilifelabDataCentre/dds_cli/releases)
 
     > A new version of the CLI will be published to [PyPi](https://pypi.org/project/dds-cli/)
-=======
-9. [Draft a new release](https://github.com/ScilifelabDataCentre/dds_cli/releases)
-   1. `Choose a tag` &rarr; `Find or create a new tag` &rarr; Fill in the new version, e.g. if the new version is `1.0.0`, you should fill in `v1.0.0`.
-   2. `Target` should be set to `master`
-   3. `Release title` field should be set to the same as the tag, e.g. `v1.0.0`
-   4. `Write` &rarr; `Generate release notes`.
->>>>>>> 56f6e0e5 (prettier)
 
-11. Inform users (`dds-status` Slack channel) and relevant IT departments / HPC centers about new version
+======= 9. [Draft a new release](https://github.com/ScilifelabDataCentre/dds_cli/releases)
+
+1.  `Choose a tag` &rarr; `Find or create a new tag` &rarr; Fill in the new version, e.g. if the new version is `1.0.0`, you should fill in `v1.0.0`.
+2.  `Target` should be set to `master`
+3.  `Release title` field should be set to the same as the tag, e.g. `v1.0.0`
+4.  `Write` &rarr; `Generate release notes`.
+
+    > > > > > > > 56f6e0e5 (prettier)
+
+5.  Inform users (`dds-status` Slack channel) and relevant IT departments / HPC centers about new version
 
 > **Uppmax**
 > Uppmax automatically upgrades the `dds-cli` version every day at midnight.

@@ -3,6 +3,8 @@
 from unittest.mock import patch, MagicMock
 import pytest
 
+from textual.widgets import Select
+
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
@@ -40,9 +42,6 @@ async def test_basic_widget_functionality():
             widget = ProjectList(title="Project List")
             app.mount(widget)
             await pilot.pause()
-
-            # Verify reactive state worked
-            assert app.project_ids == ["project-001", "project-002"]
 
             # Verify widget components
             select_widgets = widget.query(DDSSelect)
@@ -169,8 +168,6 @@ async def test_empty_projects():
             app.set_auth_status(True)
             await pilot.pause()
 
-            assert app.project_ids == []
-
             widget = ProjectList(title="Project List")
             app.mount(widget)
             await pilot.pause()
@@ -203,7 +200,7 @@ async def test_api_error():
             await pilot.pause()
 
             # Error should be handled
-            assert app.projects is None
+            assert app.project_list is None
             assert len(notifications) > 0
             assert "Failed to fetch projects" in notifications[-1]
 
@@ -224,12 +221,11 @@ async def test_auth_state_changes():
             # Start unauthenticated
             app.set_auth_status(False)
             await pilot.pause()
-            assert app.projects is None
+            assert app.project_list is None
 
             # Authenticate
             app.set_auth_status(True)
             await pilot.pause()
-            assert len(app.project_ids) == 2
 
             # Test widget reflects state
             widget = ProjectList(title="Project List")
@@ -263,9 +259,6 @@ async def test_data_validation():
         async with app.run_test() as pilot:
             app.set_auth_status(True)
             await pilot.pause()
-
-            # Only valid project ID should be extracted
-            assert app.project_ids == ["valid-001"]
 
             widget = ProjectList(title="Project List")
             app.mount(widget)
@@ -335,7 +328,7 @@ async def test_multiple_api_errors():
             app.set_auth_status(True)
             await pilot.pause()
 
-            assert app.projects is None
+            assert app.project_list is None
             assert len(notifications) > 0
             assert notifications[-1]["severity"] == "error"
 
@@ -387,10 +380,6 @@ async def test_special_characters():
             app.set_auth_status(True)
             await pilot.pause()
 
-            # Should handle all special characters
-            assert len(app.project_ids) == 5
-            assert "project-with-unicode-émojis🎉" in app.project_ids
-
             widget = ProjectList(title="Project List")
             app.mount(widget)
             await pilot.pause()
@@ -432,7 +421,7 @@ async def test_auth_logout_clears_data():
             await pilot.pause()
 
             # Verify data cleared
-            assert app.projects is None
+            assert app.project_list is None
             assert app.selected_project_id is None
 
             # Test fresh widget reflects logout state
@@ -467,9 +456,6 @@ async def test_large_dataset_performance():
         async with app.run_test() as pilot:
             app.set_auth_status(True)
             await pilot.pause()
-
-            # Verify large dataset handled correctly
-            assert len(app.project_ids) == 100
 
             widget = ProjectList(title="Project List")
             app.mount(widget)

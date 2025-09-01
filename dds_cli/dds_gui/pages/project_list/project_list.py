@@ -1,7 +1,9 @@
 """DDS Project List Widget"""
 
+from typing import List
 from textual import events
 from textual.app import ComposeResult
+from textual.reactive import reactive
 from textual.widgets import Select
 
 from dds_cli.dds_gui.components.dds_button import DDSButton
@@ -20,7 +22,7 @@ class ProjectList(DDSContainer):
             )
             yield DDSSelect(
                 title="Select a project",
-                data=self.app.project_ids if self.app.project_ids else [],
+                data=self.extract_project_ids(),
                 value=(
                     self.app.selected_project_id if self.app.selected_project_id else Select.BLANK
                 ),
@@ -41,3 +43,15 @@ class ProjectList(DDSContainer):
                 self.notify("Please select a project to view project content.", severity="warning")
             else:
                 self.app.set_selected_project_id(value)
+
+    def extract_project_ids(self) -> List[str]:
+        """Extract the project IDs from the project list."""
+        return [
+            p["Project ID"]
+            for p in self.app.project_list or []
+            if (
+                "Project ID" in p
+                and isinstance(p["Project ID"], str)
+                and p["Project ID"].strip()
+            )
+        ]

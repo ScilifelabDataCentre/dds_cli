@@ -90,7 +90,7 @@ def test_init_auth_with_authentication_custom_params() -> None:
         mock_user_class.assert_called_once_with(
             force_renew_token=False,
             no_prompt=False,
-            token_path=TOKEN_PATH.as_posix(),
+            token_path=str(TOKEN_PATH),
             allow_group=True,
             totp=MOCK_2FA_CODE,
         )

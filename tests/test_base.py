@@ -51,7 +51,7 @@ def test_init_base_class_with_parameters_no_authentication():
     assert base.project == MOCK_PROJECT
     assert base.method == "list"
     assert base.no_prompt is True
-    assert base.token_path == TOKEN_PATH.as_posix()
+    assert base.token_path == str(TOKEN_PATH)
     assert base.totp == MOCK_2FA_CODE
 
 

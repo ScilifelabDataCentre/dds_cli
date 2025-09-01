@@ -1,6 +1,5 @@
 """Test the base module authentication functionality."""
 
-import pathlib
 from unittest.mock import MagicMock, patch
 import pathlib
 

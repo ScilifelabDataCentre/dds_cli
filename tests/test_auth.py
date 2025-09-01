@@ -1,6 +1,5 @@
 """Test the auth module."""
 
-import pathlib
 from unittest.mock import MagicMock, patch
 from datetime import datetime
 import pathlib

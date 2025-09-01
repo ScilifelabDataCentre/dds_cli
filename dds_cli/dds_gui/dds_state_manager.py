@@ -1,6 +1,7 @@
 """DDS State Manager"""
 
 from dataclasses import dataclass
+import pathlib
 
 from textual.reactive import reactive
 
@@ -133,8 +134,9 @@ class DDSStateManager:
 
     """
 
-    # TODO: Make this get the token path correctly
-    token_path = "~/.dds_cli_token"
+    # Default token path for CLI authentication token
+    # TODO: Use the cli token path instead of new but same for gui?
+    token_path = str(pathlib.Path.home() / ".dds_cli_token")
     # ------------------------------------------------------------
     # BASE STATES
     # ------------------------------------------------------------

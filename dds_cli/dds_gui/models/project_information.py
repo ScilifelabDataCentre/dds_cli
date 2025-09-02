@@ -1,11 +1,11 @@
 """Dataclasses for the project information."""
 
-from dataclasses import dataclass
+import dataclasses
 
 from dds_cli.dds_gui.types.dds_status_types import DDSStatus
 
 
-@dataclass
+@dataclasses.dataclass
 class ProjectInformationDataTable:
     """A dataclass for the project information table."""
 
@@ -40,7 +40,7 @@ class ProjectInformationDataTable:
         )
 
 
-@dataclass
+@dataclasses.dataclass
 class ProjectInformationData:
     """A dataclass for the project information."""
 

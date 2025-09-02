@@ -5,13 +5,13 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
 from textual.widgets import Static
+
 from dds_cli.dds_gui.components.dds_container import (
     DDSContainer,
     DDSContentContainer,
     DDSSpacedContainer,
 )
 from dds_cli.dds_gui.components.dds_status_chip import DDSStatusChip
-
 from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 from dds_cli.dds_gui.models.project_information import ProjectInformationDataTable
 
@@ -23,7 +23,6 @@ class ProjectInformation(DDSContainer):
     DDSSpacedContainer:first-of-type > * {
         padding-right: 1;
     }
-    
     """
 
     def compose(self) -> ComposeResult:

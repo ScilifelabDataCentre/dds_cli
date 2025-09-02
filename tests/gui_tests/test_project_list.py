@@ -7,7 +7,7 @@ import pytest
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
-from dds_cli.exceptions import ApiRequestError, ApiResponseError, NoDataError
+import dds_cli.exceptions
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
@@ -230,7 +230,7 @@ async def test_api_error():
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.side_effect = ApiRequestError("Connection failed")
+        mock_data_lister_instance.list_projects.side_effect = dds_cli.exceptions.ApiRequestError("Connection failed")
 
         app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
@@ -387,7 +387,7 @@ async def test_multiple_api_errors():
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.side_effect = ApiResponseError(
+        mock_data_lister_instance.list_projects.side_effect = dds_cli.exceptions.ApiResponseError(
             "Invalid API response"
         )
 
@@ -418,7 +418,7 @@ async def test_multiple_api_errors():
             # Mock DataLister to prevent authentication attempts
             mock_data_lister_instance = MagicMock()
             mock_data_lister_class.return_value = mock_data_lister_instance
-            mock_data_lister_instance.list_projects.side_effect = NoDataError(
+            mock_data_lister_instance.list_projects.side_effect = dds_cli.exceptions.NoDataError(
                 "No projects available"
             )
 
@@ -426,7 +426,7 @@ async def test_multiple_api_errors():
                 app2.set_auth_status(True)
                 await pilot.pause()
                 # NoDataError should be raised and not caught
-            except NoDataError:
+            except dds_cli.exceptions.NoDataError:
                 # This is expected - NoDataError not handled in watch_auth_status
                 assert True
 

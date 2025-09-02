@@ -1,15 +1,15 @@
 """GUI tests for Project Content widget using reactive patterns."""
 
+import pathlib
 from unittest.mock import patch, MagicMock
 import pytest
 from textual.widgets import Label, Tree, LoadingIndicator
-import pathlib
 
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
 from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
 from dds_cli.dds_gui.models.project import ProjectContentData, Project
-from dds_cli.exceptions import ApiRequestError, ApiResponseError, NoDataError
+import dds_cli.exceptions
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
@@ -484,7 +484,7 @@ async def test_no_data_error_handling():
             "Size": "1024",
             "PI": "Test PI",
         }
-        mock_data_lister_instance.list_recursive.side_effect = NoDataError("No files found")
+        mock_data_lister_instance.list_recursive.side_effect = dds_cli.exceptions.NoDataError("No files found")
 
         app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
@@ -542,7 +542,7 @@ async def test_api_error_during_content_fetch():
             "Size": "1024",
             "PI": "Test PI",
         }
-        mock_data_lister_instance.list_recursive.side_effect = ApiRequestError("Connection failed")
+        mock_data_lister_instance.list_recursive.side_effect = dds_cli.exceptions.ApiRequestError("Connection failed")
 
         app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
@@ -736,8 +736,8 @@ async def test_multiple_error_types():
     """Test handling of different error types during content loading."""
 
     error_cases = [
-        ApiRequestError("Connection failed"),
-        ApiResponseError("Invalid response"),
+        dds_cli.exceptions.ApiRequestError("Connection failed"),
+        dds_cli.exceptions.ApiResponseError("Invalid response"),
     ]
 
     for exception in error_cases:

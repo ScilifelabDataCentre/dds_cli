@@ -6,13 +6,13 @@ from textual.app import App
 from textual import work
 from textual.reactive import reactive
 
-from dds_cli.auth import Auth
-from dds_cli.data_lister import DataLister
+import dds_cli.auth
+import dds_cli.data_lister
+import dds_cli.exceptions
+import dds_cli.project_info
+
 from dds_cli.dds_gui.models.project import ProjectContentData
 from dds_cli.dds_gui.models.project_information import ProjectInformationData
-from dds_cli.exceptions import ApiRequestError, ApiResponseError, DDSCLIException, NoDataError
-from dds_cli.project_info import ProjectInfoManager
-
 
 class DDSStateManager(App):
     """
@@ -37,7 +37,7 @@ class DDSStateManager(App):
 
     #### AUTH ################################################################
 
-    auth: reactive[Auth] = reactive(Auth(authenticate=False, token_path=token_path), recompose=True)
+    auth: reactive[dds_cli.auth.Auth] = reactive(dds_cli.auth.Auth(authenticate=False, token_path=token_path), recompose=True)
     auth_status: reactive[bool] = reactive(False, recompose=True)
 
     def set_auth_status(self, new_auth_status: bool) -> None:
@@ -51,7 +51,7 @@ class DDSStateManager(App):
 
     def fetch_projects(self) -> List[str]:
         """Fetch the projects and automatically compute project_ids via reactive watcher."""
-        self.project_list: List[dict] = DataLister(json=True).list_projects()
+        self.project_list: List[dict] = dds_cli.data_lister.DataLister(json=True).list_projects()
 
     def set_selected_project_id(self, project_id: str) -> None:
         """Set the selected project id."""
@@ -70,11 +70,11 @@ class DDSStateManager(App):
         Reference: https://textual.textualize.io/guide/workers/
         """
         try:
-            project_content = DataLister(json=True, project=project_id).list_recursive()
-        except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
+            project_content = dds_cli.data_lister.DataLister(json=True, project=project_id).list_recursive()
+        except (dds_cli.exceptions.ApiRequestError, dds_cli.exceptions.ApiResponseError, dds_cli.exceptions.DDSCLIException) as err:
             self.call_from_thread(self._on_project_content_error, project_id, str(err), "error")
             return
-        except NoDataError as data_err:
+        except dds_cli.exceptions.NoDataError as data_err:
             self.call_from_thread(
                 self._on_project_content_error, project_id, str(data_err), "warning"
             )
@@ -106,9 +106,9 @@ class DDSStateManager(App):
         """Fetch the project information for a project id."""
         try:
             self.project_information = ProjectInformationData.from_dict(
-                ProjectInfoManager(project=project_id).get_project_info()
+                dds_cli.project_info.ProjectInfoManager(project=project_id).get_project_info()
             )
-        except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
+        except (dds_cli.exceptions.ApiRequestError, dds_cli.exceptions.ApiResponseError, dds_cli.exceptions.DDSCLIException) as err:
             self.notify(f"Failed to fetch project information: {err}", severity="error")
             self.project_information = None
 
@@ -123,7 +123,7 @@ class DDSStateManager(App):
             #  will try to authenticate in the CLI.
             try:
                 self.fetch_projects()
-            except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
+            except (dds_cli.exceptions.ApiRequestError, dds_cli.exceptions.ApiResponseError, dds_cli.exceptions.DDSCLIException) as err:
                 self.notify(f"Failed to fetch projects: {err}", severity="error")
                 self.project_list = None  # This triggers watch_projects to clear project_ids
         else:

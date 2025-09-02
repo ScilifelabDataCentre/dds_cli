@@ -3,6 +3,7 @@
 from unittest.mock import patch, MagicMock
 import pytest
 from textual.widgets import Label, Tree, LoadingIndicator
+import pathlib
 
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
@@ -10,6 +11,7 @@ from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
 from dds_cli.dds_gui.models.project import ProjectContentData, Project
 from dds_cli.exceptions import ApiRequestError, ApiResponseError, NoDataError
 
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 # =================================================================================
 # Test Data
@@ -327,7 +329,7 @@ async def test_no_project_selected_state():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -355,7 +357,7 @@ async def test_content_loading_and_display():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -395,7 +397,7 @@ async def test_empty_project_content():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.return_value = EMPTY_PROJECT_CONTENT
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -424,7 +426,7 @@ async def test_no_data_error_handling():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.side_effect = NoDataError("No files found")
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
 
         def capture_notify(message, **kwargs):
@@ -467,7 +469,7 @@ async def test_api_error_during_content_fetch():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.side_effect = ApiRequestError("Connection failed")
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
 
         def capture_notify(message, **kwargs):
@@ -501,7 +503,7 @@ async def test_project_selection_change():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -530,7 +532,7 @@ async def test_project_selection_change():
 async def test_tree_view_component():
     """Test TreeView component directly."""
 
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         # Create test data using the model
@@ -562,7 +564,7 @@ async def test_tree_node_selection_event():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -641,7 +643,7 @@ async def test_multiple_error_types():
             mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
             mock_data_lister_instance.list_recursive.side_effect = exception
 
-            app = DDSApp(token_path="test_path")
+            app = DDSApp(token_path=str(TOKEN_PATH))
             notifications = []
 
             def capture_notify(message, **kwargs):
@@ -690,7 +692,7 @@ async def test_large_project_structure():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.return_value = large_content
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -722,7 +724,7 @@ async def test_widget_state_synchronization():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -763,7 +765,7 @@ async def test_project_deselection():
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -813,7 +815,7 @@ async def test_tree_view_structure_validation():
     content_data = ProjectContentData.from_dict(simple_content, "simple-project")
 
     # Create TreeView and test structure
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         tree_view = TreeView(content_data)

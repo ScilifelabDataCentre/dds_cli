@@ -1,15 +1,15 @@
 """GUI tests for Project List widget using reactive patterns."""
 
+import pathlib
 from unittest.mock import patch, MagicMock
 import pytest
-
-from textual.widgets import Select
 
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
 from dds_cli.exceptions import ApiRequestError, ApiResponseError, NoDataError
 
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 # Test data
 MOCK_PROJECTS = [
@@ -32,7 +32,7 @@ async def test_basic_widget_functionality():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             # Set up state and mount widget
@@ -62,7 +62,7 @@ async def test_unauthenticated_state():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(False)
@@ -89,7 +89,7 @@ async def test_project_selection():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -124,7 +124,7 @@ async def test_no_selection_warning():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
 
         def capture_notify(message, **kwargs):
@@ -162,7 +162,7 @@ async def test_empty_projects():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -187,7 +187,7 @@ async def test_api_error():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.side_effect = ApiRequestError("Connection failed")
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
 
         def capture_notify(message, **kwargs):
@@ -215,7 +215,7 @@ async def test_auth_state_changes():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             # Start unauthenticated
@@ -254,7 +254,7 @@ async def test_data_validation():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = malformed_projects
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -284,7 +284,7 @@ async def test_preselected_project():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -316,7 +316,7 @@ async def test_multiple_api_errors():
             "Invalid API response"
         )
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
 
         def capture_notify(message, **kwargs):
@@ -333,7 +333,7 @@ async def test_multiple_api_errors():
             assert notifications[-1]["severity"] == "error"
 
     # Test NoDataError (start with unauthenticated app to avoid init error)
-    app2 = DDSApp(token_path="test_path")
+    app2 = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app2.run_test() as pilot:
         app2.set_auth_status(False)
@@ -374,7 +374,7 @@ async def test_special_characters():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = special_projects
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -399,7 +399,7 @@ async def test_auth_logout_clears_data():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             # Authenticate and load data
@@ -451,7 +451,7 @@ async def test_large_dataset_performance():
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = large_projects
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)

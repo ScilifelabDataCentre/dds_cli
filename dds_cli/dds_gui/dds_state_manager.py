@@ -30,7 +30,7 @@ class DDSStateManager(App):
     """
 
     #### TOKEN PATH #########################################################
-    
+
     # Default token path for CLI authentication token
     token_path = str(pathlib.Path.home() / ".dds_cli_token")
 

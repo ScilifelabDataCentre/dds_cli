@@ -12,7 +12,6 @@ from dds_cli.dds_gui.pages.authentication.modals.reauthenticate_modal import ReA
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
-
 # =================================================================================
 # Core UI State Management Tests
 # =================================================================================
@@ -27,7 +26,7 @@ async def test_auth_status_ui_switching() -> None:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
-        
+
         app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:

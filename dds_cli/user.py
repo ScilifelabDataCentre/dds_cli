@@ -289,7 +289,7 @@ class TokenFile:
         if token_path is None:
             self.token_file = dds_cli.TOKEN_FILE
         else:
-            self.token_file = pathlib.Path(os.path.expanduser(token_path))
+            self.token_file = pathlib.Path(token_path).expanduser()
 
     def read_token(self):
         """Attempts to fetch a valid token from the token file.

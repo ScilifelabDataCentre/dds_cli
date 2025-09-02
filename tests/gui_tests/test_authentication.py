@@ -1,5 +1,6 @@
 """Focused GUI Authentication tests - UI behavior only."""
 
+import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -8,6 +9,8 @@ from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.authentication.modals.login_modal import LoginModal
 from dds_cli.dds_gui.pages.authentication.modals.logout_modal import LogoutModal
 from dds_cli.dds_gui.pages.authentication.modals.reauthenticate_modal import ReAuthenticateModal
+
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 
 # =================================================================================
@@ -24,8 +27,8 @@ async def test_auth_status_ui_switching() -> None:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
-
-        app = DDSApp(token_path="test_path")
+        
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             # Test not authenticated state
@@ -77,7 +80,7 @@ async def test_login_modal_ui_workflow() -> None:
         mock_auth_form_instance.login.return_value = ("partial_token_456", "TOTP")
         mock_auth_form_instance.confirm_twofactor.return_value = None
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(False)
@@ -146,7 +149,7 @@ async def test_logout_modal_interactions() -> None:
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -210,7 +213,7 @@ async def test_reauthentication_modal_form_interactions() -> None:
         mock_auth_form_instance.login.return_value = ("partial_token_456", "TOTP")
         mock_auth_form_instance.confirm_twofactor.return_value = None
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
@@ -283,7 +286,7 @@ async def test_keyboard_navigation() -> None:
         mock_auth_form_instance = MagicMock()
         mock_auth_form_class.return_value = mock_auth_form_instance
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             login_modal = LoginModal()

@@ -3,6 +3,8 @@
 from typing import List
 from textual.app import App
 from textual import work
+from dataclasses import dataclass
+import pathlib
 from textual.reactive import reactive
 
 from dds_cli.auth import Auth
@@ -28,9 +30,9 @@ class DDSStateManager(App):
     """
 
     #### TOKEN PATH #########################################################
-
-    # TODO: Make this get the token path correctly
-    token_path = "~/.dds_cli_token"
+    
+    # Default token path for CLI authentication token
+    token_path = str(pathlib.Path.home() / ".dds_cli_token")
 
     #### AUTH ################################################################
 

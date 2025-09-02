@@ -26,8 +26,8 @@ MOCK_PROJECTS = [
 async def test_basic_widget_functionality():
     """Test basic widget functionality with projects."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -71,7 +71,7 @@ async def test_basic_widget_functionality():
 async def test_unauthenticated_state():
     """Test widget when not authenticated."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
@@ -98,8 +98,8 @@ async def test_unauthenticated_state():
 async def test_project_selection():
     """Test project selection and button interaction."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -148,8 +148,8 @@ async def test_project_selection():
 async def test_no_selection_warning():
     """Test warning when no project is selected."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -201,7 +201,7 @@ async def test_no_selection_warning():
 async def test_empty_projects():
     """Test behavior with empty project list."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
@@ -226,7 +226,7 @@ async def test_empty_projects():
 async def test_api_error():
     """Test API error handling."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
@@ -256,8 +256,8 @@ async def test_api_error():
 async def test_auth_state_changes():
     """Test authentication state changes."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -310,7 +310,7 @@ async def test_data_validation():
         {"Project ID": "", "Title": "Empty ID"},  # Invalid
     ]
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
@@ -340,8 +340,8 @@ async def test_data_validation():
 async def test_preselected_project():
     """Test widget when a project is already selected."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -385,7 +385,7 @@ async def test_multiple_api_errors():
     """Test handling of different API error types."""
 
     # Test ApiResponseError
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
@@ -416,7 +416,7 @@ async def test_multiple_api_errors():
         app2.set_auth_status(False)
         await pilot.pause()
 
-        with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
             # Mock DataLister to prevent authentication attempts
             mock_data_lister_instance = MagicMock()
             mock_data_lister_class.return_value = mock_data_lister_instance
@@ -445,7 +445,7 @@ async def test_special_characters():
         {"Project ID": "project.with.dots", "Title": "Test"},
     ]
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
@@ -470,8 +470,8 @@ async def test_special_characters():
 async def test_auth_logout_clears_data():
     """Test that logging out clears project data."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -537,7 +537,7 @@ async def test_large_dataset_performance():
         {"Project ID": f"project-{i:03d}", "Title": f"Project {i}"} for i in range(1, 101)
     ]  # 100 projects
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance

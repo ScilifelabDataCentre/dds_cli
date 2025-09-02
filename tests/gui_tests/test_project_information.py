@@ -159,7 +159,7 @@ async def test_project_information_table_compose():
     data_table = ProjectInformationDataTable.from_dict(MOCK_PROJECT_INFO_DATA)
     table_widget = ProjectInformationTable(data_table)
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
@@ -197,7 +197,7 @@ async def test_project_information_table_with_none_values():
     data_table = ProjectInformationDataTable.from_dict(MOCK_PROJECT_INFO_DATA_WITH_NONE)
     table_widget = ProjectInformationTable(data_table)
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
@@ -227,7 +227,7 @@ async def test_project_information_table_size_display():
     data_table = ProjectInformationDataTable.from_dict(data_with_size)
     table_widget = ProjectInformationTable(data_table)
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
@@ -254,7 +254,7 @@ async def test_project_information_with_data():
     """Test ProjectInformation widget with project data."""
     project_data = ProjectInformationData.from_dict(MOCK_PROJECT_INFO_DATA)
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
@@ -287,7 +287,7 @@ async def test_project_information_with_data():
 @pytest.mark.asyncio
 async def test_project_information_without_data():
     """Test ProjectInformation widget without project data."""
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
@@ -318,7 +318,7 @@ async def test_project_information_without_data():
 @pytest.mark.asyncio
 async def test_project_information_reactive_updates():
     """Test ProjectInformation widget reactive updates."""
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
@@ -367,8 +367,8 @@ async def test_project_information_reactive_updates():
 @pytest.mark.asyncio
 async def test_fetch_project_information_success():
     """Test successful project information fetching."""
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
 
         mock_data_lister_instance = MagicMock()
@@ -399,8 +399,8 @@ async def test_fetch_project_information_success():
 @pytest.mark.asyncio
 async def test_fetch_project_information_api_error():
     """Test project information fetching with API error."""
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
 
         mock_data_lister_instance = MagicMock()
@@ -439,8 +439,8 @@ async def test_fetch_project_information_api_error():
 @pytest.mark.asyncio
 async def test_fetch_project_information_response_error():
     """Test project information fetching with API response error."""
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
 
         mock_data_lister_instance = MagicMock()
@@ -478,8 +478,8 @@ async def test_fetch_project_information_response_error():
 @pytest.mark.asyncio
 async def test_fetch_project_information_dds_exception():
     """Test project information fetching with DDS CLI exception."""
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
 
         mock_data_lister_instance = MagicMock()
@@ -581,8 +581,8 @@ def test_project_information_data_table_unicode_content():
 @pytest.mark.asyncio
 async def test_full_project_information_workflow():
     """Test complete project information workflow from app state to UI display."""
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
     ) as mock_project_info_class:
 
         mock_data_lister_instance = MagicMock()

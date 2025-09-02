@@ -39,7 +39,7 @@ class ProjectList(DDSContainer):
             value = self.query_one(DDSSelect).value
             if value is Select.BLANK:
                 self.app.set_selected_project_id(None)
-                self.notify("Please select a project to view project content.", severity="warning")
+                self.notify("Please select a project to view project content and information.", severity="warning")
             else:
                 self.app.set_selected_project_id(value)
 

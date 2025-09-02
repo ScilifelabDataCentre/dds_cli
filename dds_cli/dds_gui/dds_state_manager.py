@@ -9,7 +9,9 @@ from textual.reactive import reactive
 from dds_cli.auth import Auth
 from dds_cli.data_lister import DataLister
 from dds_cli.dds_gui.models.project import ProjectContentData
+from dds_cli.dds_gui.models.project_information import ProjectInformationData
 from dds_cli.exceptions import ApiRequestError, ApiResponseError, DDSCLIException, NoDataError
+from dds_cli.project_info import ProjectInfoManager
 
 
 class DDSStateManager(App):
@@ -49,7 +51,7 @@ class DDSStateManager(App):
 
     def fetch_projects(self) -> List[str]:
         """Fetch the projects and automatically compute project_ids via reactive watcher."""
-        self.project_list = DataLister(json=True).list_projects()
+        self.project_list: List[dict] = DataLister(json=True).list_projects()
 
     def set_selected_project_id(self, project_id: str) -> None:
         """Set the selected project id."""
@@ -59,19 +61,6 @@ class DDSStateManager(App):
 
     project_content: reactive[ProjectContentData] = reactive(None, recompose=True)
     is_loading: reactive[bool] = reactive(False, recompose=True)
-
-    def watch_selected_project_id(self, selected_project_id: str) -> None:
-        """Start loading project content when the selected project changes."""
-        # Clear current content when switching projects
-        self.project_content = None
-
-        if not selected_project_id:
-            self.is_loading = False
-            return
-
-        # Start loading
-        self.is_loading = True
-        self.load_project_content(selected_project_id)
 
     @work(exclusive=True, thread=True)
     def load_project_content(self, project_id: str) -> None:
@@ -109,6 +98,25 @@ class DDSStateManager(App):
         if self.selected_project_id == project_id:
             self.project_content = None
 
+
+    #### PROJECT INFORMATION #################################################
+    
+    project_information: reactive[ProjectInformationData] = reactive(None, recompose=True)
+
+    def fetch_project_information(self, project_id: str) -> None:
+        """Fetch the project information for a project id."""
+        try:
+            self.project_information = ProjectInformationData.from_dict(
+                ProjectInfoManager(project=project_id).get_project_info()
+            )
+        except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
+            self.notify(f"Failed to fetch project information: {err}", severity="error")
+            self.project_information = None
+
+        print(self.project_information)
+        
+        
+
     #### WATCHERS ###########################################################
 
     def watch_auth_status(self, auth_status: bool) -> None:
@@ -126,3 +134,20 @@ class DDSStateManager(App):
         else:
             self.project_list = None  # This triggers watch_projects to clear project_ids
             self.selected_project_id = None
+
+    def watch_selected_project_id(self, selected_project_id: str) -> None:
+        """Start loading project content when the selected project changes."""
+        # Clear current content and information when switching projects
+        self.project_information = None
+        self.project_content = None
+
+        if not selected_project_id:
+            self.is_loading = False
+            return
+        
+        # Get project information
+        self.fetch_project_information(selected_project_id)
+
+        # Start loading project content
+        self.is_loading = True
+        self.load_project_content(selected_project_id)    

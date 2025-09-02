@@ -6,7 +6,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
 from textual.widgets import Label, Static
-
+from textual.reactive import reactive
 from dds_cli.dds_gui.components.dds_container import (
     DDSContainer,
     DDSContentContainer,
@@ -15,65 +15,15 @@ from dds_cli.dds_gui.components.dds_container import (
 from dds_cli.dds_gui.components.dds_status_chip import DDSStatusChip
 
 from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
+from dds_cli.dds_gui.models.project_information import ProjectInformationDataTable
 from dds_cli.dds_gui.types.dds_status_types import DDSStatus
 
 
-@dataclass
-class ProjectInformationDataTable:
-    """A dataclass for the project information table."""
 
-    status: DDSStatus
-    created_by: str
-    last_updated: str
-    size: str
-    pi: str
-
-    @staticmethod
-    def from_dict(data: dict) -> "ProjectInformationDataTable":
-        print(data)
-        return ProjectInformationDataTable(
-            status=DDSStatus(data["Status"]),
-            created_by=data["Created by"],
-            last_updated=data["Last updated"],
-            size=str(data["Size"]),
-            pi=data["PI"],
-        )
-
-
-@dataclass
-class ProjectInformationData:
-    """A dataclass for the project information."""
-
-    name: str
-    description: str
-
-    information_table: ProjectInformationDataTable
-
-    @staticmethod
-    def from_dict(data: dict) -> "ProjectInformationData":
-        return ProjectInformationData(
-            name=data["Title"],
-            description=data["Description"],
-            information_table=ProjectInformationDataTable.from_dict(data),
-        )
 
 
 class ProjectInformation(DDSContainer):
     """A widget for the project information."""
-
-    project_id = "someunit00002"
-
-    project_information = ProjectInformationData(
-        name="Example Project",
-        description="This is a mock project used for demonstration purposes.",
-        information_table=ProjectInformationDataTable(
-            status=DDSStatus("Available"),
-            created_by="Jane Doe",
-            last_updated="2024-06-01",
-            size="42 GB",
-            pi="Dr. John Smith",
-        ),
-    )
 
     DEFAULT_CSS = """
     DDSSpacedContainer:first-of-type > * {
@@ -83,23 +33,26 @@ class ProjectInformation(DDSContainer):
     """
 
     def compose(self) -> ComposeResult:
-        if self.project_information:
+        if self.app.project_information:
             with DDSSpacedContainer():
                 with DDSContentContainer():
                     yield DDSTextItem(
-                        f"[b]Project Title:[/b] {self.project_information.name}",
+                        f"[b]Project Title:[/b] {self.app.project_information.name}",
                         id="project-title",
                     )
                     yield DDSTextItem(
-                        f"[b]Project Description:[/b] {self.project_information.description}",
+                        f"[b]Project Description:[/b] {self.app.project_information.description}",
                         id="project-description",
                     )
                 yield ProjectInformationTable(
-                    self.project_information.information_table, id="project-information-table"
+                    self.app.project_information.information_table, id="project-information-table"
                 )
         else:
             yield DDSTextItem("No project selected")
 
+    # def compute_project_information(self) -> ProjectInformationData:
+    #     project: Project = self.app.project_list[self.app.selected_project_id]
+    #     project_information = ProjectInformationData.from_dict(project)
 
 class ProjectInformationTable(Widget):
     """A widget for the project information table."""
@@ -148,21 +101,21 @@ class ProjectInformationTable(Widget):
             )
             yield Horizontal(
                 Static("Created By", classes="key-pair-row-key"),
-                Static(self.data.created_by, classes="key-pair-row-value"),
+                Static(self.data.created_by or "N/A", classes="key-pair-row-value"),
                 classes="key-pair-row",
             )
             yield Horizontal(
                 Static("Last Updated", classes="key-pair-row-key"),
-                Static(self.data.last_updated, classes="key-pair-row-value"),
+                Static(self.data.last_updated or "N/A", classes="key-pair-row-value"),
                 classes="key-pair-row",
             )
             yield Horizontal(
                 Static("Size", classes="key-pair-row-key"),
-                Static(self.data.size, classes="key-pair-row-value"),
+                Static(f"{self.data.size or 'N/A'} {'B' if self.data.size else ""}", classes="key-pair-row-value"),
                 classes="key-pair-row",
             )
             yield Horizontal(
                 Static("PI", classes="key-pair-row-key"),
-                Static(self.data.pi, classes="key-pair-row-value"),
+                Static(self.data.pi or "N/A", classes="key-pair-row-value"),
                 classes="key-pair-row",
             )

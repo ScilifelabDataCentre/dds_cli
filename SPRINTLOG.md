@@ -461,3 +461,4 @@ _Empty sprint_
 
 - Workflow: Add action to run pytest on Windows ([#734](https://github.com/ScilifelabDataCentre/dds_cli/pull/734))
 - Add Dardel-related information to the documentation ([#774](https://github.com/ScilifelabDataCentre/dds_cli/pull/774))
+- Implement Project Info in GUI ([#838](https://github.com/ScilifelabDataCentre/dds_cli/pull/838))

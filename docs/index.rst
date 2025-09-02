@@ -85,6 +85,7 @@ In order to use the DDS, you first need to install the CLI. The installation pro
 * :ref:`MacOS / Linux<mac-linux>` 
 * :ref:`Windows<windows>`
 * :ref:`Uppmax<uppmax>`
+* :ref:`Dardel<dardel>`
 
 .. _runit:
 
@@ -175,6 +176,7 @@ Once the unit has uploaded your data and made it available to you, you can downl
 .. note::
    
    **Downloading the data to Uppmax?** Follow the instructions :ref:`here<uppmax>` first.
+   **Downloading the data to Dardel?** Follow the instructions :ref:`here<dardel>` first.
 
 .. image:: ../img/dds-data-get.svg
 

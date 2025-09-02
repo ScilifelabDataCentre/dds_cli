@@ -14,7 +14,7 @@ from dds_cli.dds_gui.components.dds_container import (
 )
 from dds_cli.dds_gui.components.dds_status_chip import DDSStatusChip
 
-from dds_cli.base import DDSBaseClass
+from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 from dds_cli.dds_gui.types.dds_status_types import DDSStatus
 
 
@@ -39,6 +39,7 @@ class ProjectInformationDataTable:
             pi=data["PI"],
         )
 
+
 @dataclass
 class ProjectInformationData:
     """A dataclass for the project information."""
@@ -56,12 +57,23 @@ class ProjectInformationData:
             information_table=ProjectInformationDataTable.from_dict(data),
         )
 
+
 class ProjectInformation(DDSContainer):
     """A widget for the project information."""
 
     project_id = "someunit00002"
 
-    project_information =  ProjectInformationData.from_dict(data = DDSBaseClass(project=project_id).get_project_info())
+    project_information = ProjectInformationData(
+        name="Example Project",
+        description="This is a mock project used for demonstration purposes.",
+        information_table=ProjectInformationDataTable(
+            status=DDSStatus("Available"),
+            created_by="Jane Doe",
+            last_updated="2024-06-01",
+            size="42 GB",
+            pi="Dr. John Smith",
+        ),
+    )
 
     DEFAULT_CSS = """
     DDSSpacedContainer:first-of-type > * {
@@ -74,11 +86,11 @@ class ProjectInformation(DDSContainer):
         if self.project_information:
             with DDSSpacedContainer():
                 with DDSContentContainer():
-                    yield Label(
+                    yield DDSTextItem(
                         f"[b]Project Title:[/b] {self.project_information.name}",
                         id="project-title",
                     )
-                    yield Label(
+                    yield DDSTextItem(
                         f"[b]Project Description:[/b] {self.project_information.description}",
                         id="project-description",
                     )
@@ -86,7 +98,7 @@ class ProjectInformation(DDSContainer):
                     self.project_information.information_table, id="project-information-table"
                 )
         else:
-            yield Label("No project selected")
+            yield DDSTextItem("No project selected")
 
 
 class ProjectInformationTable(Widget):
@@ -97,8 +109,13 @@ class ProjectInformationTable(Widget):
         self.data = data
 
     DEFAULT_CSS = """
+    ProjectInformationTable {
+        height: auto;
+    }
+
     .key-pair-table {
         width: 100%;
+        height: auto;
     }
     .key-pair-row {
         width: 100%;

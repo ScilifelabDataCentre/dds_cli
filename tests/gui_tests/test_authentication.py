@@ -12,7 +12,6 @@ from dds_cli.dds_gui.pages.authentication.modals.reauthenticate_modal import ReA
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
-
 # =================================================================================
 # Core UI State Management Tests
 # =================================================================================
@@ -22,25 +21,31 @@ TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 async def test_auth_status_ui_switching() -> None:
     """Test that UI components change correctly when authentication status changes."""
 
-    app = DDSApp(token_path=str(TOKEN_PATH))
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
 
-    async with app.run_test() as pilot:
-        # Test not authenticated state
-        app.set_auth_status(False)
-        await pilot.pause()
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
-        switcher = app.query_one("#auth-status-switcher")
-        assert switcher.current == "auth-status-invalid-container"
-        assert len(app.query("#login")) > 0, "Login button should be available"
+        async with app.run_test() as pilot:
+            # Test not authenticated state
+            app.set_auth_status(False)
+            await pilot.pause()
 
-        # Test authenticated state
-        app.set_auth_status(True)
-        await pilot.pause()
+            switcher = app.query_one("#auth-status-switcher")
+            assert switcher.current == "auth-status-invalid-container"
+            assert len(app.query("#login")) > 0, "Login button should be available"
 
-        switcher = app.query_one("#auth-status-switcher")
-        assert switcher.current == "auth-status-ok-container"
-        assert len(app.query("#logout")) > 0, "Logout button should be available"
-        assert len(app.query("#re-authenticate")) > 0, "Re-auth button should be available"
+            # Test authenticated state
+            app.set_auth_status(True)
+            await pilot.pause()
+
+            switcher = app.query_one("#auth-status-switcher")
+            assert switcher.current == "auth-status-ok-container"
+            assert len(app.query("#logout")) > 0, "Logout button should be available"
+            assert len(app.query("#re-authenticate")) > 0, "Re-auth button should be available"
 
 
 # =================================================================================
@@ -52,11 +57,27 @@ async def test_auth_status_ui_switching() -> None:
 async def test_login_modal_ui_workflow() -> None:
     """Test 2FA UI workflow: form switching and field appearance."""
 
-    with patch("dds_cli.dds_gui.pages.authentication.authentication_form.Auth") as mock_auth_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.DataLister"
+    ) as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
         mock_auth_instance = MagicMock()
         mock_auth_class.return_value = mock_auth_instance
         mock_auth_instance.login.return_value = ("partial_token_456", "TOTP")
         mock_auth_instance.confirm_twofactor.return_value = None
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.return_value = ("partial_token_456", "TOTP")
+        mock_auth_form_instance.confirm_twofactor.return_value = None
 
         app = DDSApp(token_path=str(TOKEN_PATH))
 
@@ -115,9 +136,17 @@ async def test_login_modal_ui_workflow() -> None:
 async def test_logout_modal_interactions() -> None:
     """Test logout modal UI interactions."""
 
-    with patch("dds_cli.dds_gui.pages.authentication.authentication_form.Auth") as mock_auth_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.DataLister"
+    ) as mock_data_lister_class:
+
         mock_auth_instance = MagicMock()
         mock_auth_class.return_value = mock_auth_instance
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
 
         app = DDSApp(token_path=str(TOKEN_PATH))
 
@@ -161,11 +190,27 @@ async def test_logout_modal_interactions() -> None:
 async def test_reauthentication_modal_form_interactions() -> None:
     """Test reauthentication modal form interactions."""
 
-    with patch("dds_cli.dds_gui.pages.authentication.authentication_form.Auth") as mock_auth_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.DataLister"
+    ) as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
         mock_auth_instance = MagicMock()
         mock_auth_class.return_value = mock_auth_instance
         mock_auth_instance.login.return_value = ("partial_token_456", "TOTP")
         mock_auth_instance.confirm_twofactor.return_value = None
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.return_value = ("partial_token_456", "TOTP")
+        mock_auth_form_instance.confirm_twofactor.return_value = None
 
         app = DDSApp(token_path=str(TOKEN_PATH))
 
@@ -222,9 +267,23 @@ async def test_reauthentication_modal_form_interactions() -> None:
 async def test_keyboard_navigation() -> None:
     """Test keyboard navigation in authentication forms."""
 
-    with patch("dds_cli.dds_gui.pages.authentication.authentication_form.Auth") as mock_auth_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.DataLister"
+    ) as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
         mock_auth_instance = MagicMock()
         mock_auth_class.return_value = mock_auth_instance
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
 
         app = DDSApp(token_path=str(TOKEN_PATH))
 

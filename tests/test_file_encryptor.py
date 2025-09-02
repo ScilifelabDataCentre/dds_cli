@@ -261,8 +261,7 @@ def test_verify_checksum_images():
     )
     assert (
         not fake_1_altered_verified
-        and message1altered
-        == "Checksum verification failed. File '/home/runner/work/dds_cli/dds_cli/tests/images/test-image_1a.jpg' compromised."
+        and message1altered == f"Checksum verification failed. File '{str(image_1a)}' compromised."
     )
 
 

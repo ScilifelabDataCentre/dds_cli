@@ -784,12 +784,12 @@ def delete_user(click_ctx, email, self, is_invite):
         proceed_deletion = True
     else:
         if is_invite and self:
-            LOG.error("You cannot specify both `--self` and `--is-invite. Choose one.")
+            LOG.error("You cannot specify both `--self` and `--is-invite`. Choose one.")
             sys.exit(0)
 
         if not self and not email:
             LOG.error(
-                "You must specify an email adress associated to the user you're requesting to delete."
+                "You must specify an email address associated to the user you're requesting to delete."
             )
             sys.exit(0)
 

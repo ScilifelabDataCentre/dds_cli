@@ -61,7 +61,7 @@ The DDS **does not** store the passwords in plain text; We **cannot see** what y
 
 If you have forgotten your password, you will need to reset it. Resetting the password will remove your access from all delivery projects within the system. If you’re interested in the details behind this, please read the information box in section ``2.6. Creating a Project`` in the `Technical Overview <https://delivery.scilifelab.se/technical>`_
 
-The data **is not** deleted when you loose access to the data. The data is encrypted with a combination of encryption keys, and you will have lost access to use those keys. However, your access can be renewed:
+The data **is not** deleted when you lose access to the data. The data is encrypted with a combination of encryption keys, and you will have lost access to use those keys. However, your access can be renewed:
 
 ======================= =============================================================================================================================================== ==============================================================================
 Role                    What happens at password reset?                                                                                                                 What do I do? 

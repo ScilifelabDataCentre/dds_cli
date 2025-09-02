@@ -323,11 +323,26 @@ def test_project_content_widget_compose_methods():
 async def test_no_project_selected_state():
     """Test widget display when no project is selected."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
 
         app = DDSApp(token_path=str(TOKEN_PATH))
 
@@ -350,11 +365,26 @@ async def test_no_project_selected_state():
 async def test_content_loading_and_display():
     """Test content loading and TreeView display."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -390,11 +420,26 @@ async def test_content_loading_and_display():
 async def test_empty_project_content():
     """Test handling of empty project content."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.return_value = EMPTY_PROJECT_CONTENT
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -419,11 +464,26 @@ async def test_empty_project_content():
 async def test_no_data_error_handling():
     """Test handling when project has no data (NoDataError)."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.side_effect = NoDataError("No files found")
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -462,11 +522,26 @@ async def test_no_data_error_handling():
 async def test_api_error_during_content_fetch():
     """Test API errors during project content fetching."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.side_effect = ApiRequestError("Connection failed")
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -496,11 +571,26 @@ async def test_api_error_during_content_fetch():
 async def test_project_selection_change():
     """Test widget updates when project selection changes."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -557,11 +647,26 @@ async def test_tree_view_component():
 async def test_tree_node_selection_event():
     """Test tree node selection and subtitle updates."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -636,12 +741,27 @@ async def test_multiple_error_types():
     ]
 
     for exception in error_cases:
-        with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+        with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+            "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+        ) as mock_project_info_class:
             # Mock DataLister to prevent authentication attempts
             mock_data_lister_instance = MagicMock()
             mock_data_lister_class.return_value = mock_data_lister_instance
             mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
             mock_data_lister_instance.list_recursive.side_effect = exception
+
+            # Mock ProjectInfoManager to prevent authentication attempts
+            mock_project_info_instance = MagicMock()
+            mock_project_info_class.return_value = mock_project_info_instance
+            mock_project_info_instance.get_project_info.return_value = {
+                "Title": "Test Project",
+                "Description": "Test Description",
+                "Status": "Available",
+                "Created by": "test_user",
+                "Last updated": "2024-01-01",
+                "Size": "1024",
+                "PI": "Test PI",
+            }
 
             app = DDSApp(token_path=str(TOKEN_PATH))
             notifications = []
@@ -685,11 +805,26 @@ async def test_large_project_structure():
         },
     }
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.return_value = large_content
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -717,11 +852,26 @@ async def test_large_project_structure():
 async def test_widget_state_synchronization():
     """Test that widget syncs with app state via watchers."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -758,11 +908,26 @@ async def test_widget_state_synchronization():
 async def test_project_deselection():
     """Test clearing content when project is deselected."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.dds_state_manager.ProjectInfoManager"
+    ) as mock_project_info_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager to prevent authentication attempts
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
         mock_data_lister_instance.list_recursive.return_value = MOCK_PROJECT_CONTENT
 
         app = DDSApp(token_path=str(TOKEN_PATH))

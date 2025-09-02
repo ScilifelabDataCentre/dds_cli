@@ -18,13 +18,25 @@ class ProjectInformationDataTable:
     @staticmethod
     def from_dict(data: dict) -> "ProjectInformationDataTable":
         """Create a ProjectInformationDataTable instance from dictionary data."""
-        print(data)
+        # Validate required fields
+        required_fields = ["Status", "Created by", "Last updated", "Size", "PI"]
+        for field in required_fields:
+            if field not in data:
+                raise ValueError(f"Missing required field: {field}")
+
+        # Handle size field - convert to string if not None, otherwise use "N/A"
+        size_value = data["Size"]
+        if size_value is None:
+            size_str = "N/A"
+        else:
+            size_str = str(size_value)
+
         return ProjectInformationDataTable(
             status=DDSStatus(data["Status"]),
-            created_by=data["Created by"],
-            last_updated=data["Last updated"],
-            size=str(data["Size"]),
-            pi=data["PI"],
+            created_by=data["Created by"] or "N/A",
+            last_updated=data["Last updated"] or "N/A",
+            size=size_str,
+            pi=data["PI"] or "N/A",
         )
 
 
@@ -40,8 +52,14 @@ class ProjectInformationData:
     @staticmethod
     def from_dict(data: dict) -> "ProjectInformationData":
         """Create a ProjectInformationData instance from dictionary data."""
+        # Validate required fields
+        required_fields = ["Title", "Description"]
+        for field in required_fields:
+            if field not in data:
+                raise ValueError(f"Missing required field: {field}")
+
         return ProjectInformationData(
-            name=data["Title"],
-            description=data["Description"],
+            name=data["Title"] or "N/A",
+            description=data["Description"] or "N/A",
             information_table=ProjectInformationDataTable.from_dict(data),
         )

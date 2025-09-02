@@ -98,9 +98,8 @@ class DDSStateManager(App):
         if self.selected_project_id == project_id:
             self.project_content = None
 
-
     #### PROJECT INFORMATION #################################################
-    
+
     project_information: reactive[ProjectInformationData] = reactive(None, recompose=True)
 
     def fetch_project_information(self, project_id: str) -> None:
@@ -112,10 +111,6 @@ class DDSStateManager(App):
         except (ApiRequestError, ApiResponseError, DDSCLIException) as err:
             self.notify(f"Failed to fetch project information: {err}", severity="error")
             self.project_information = None
-
-        print(self.project_information)
-        
-        
 
     #### WATCHERS ###########################################################
 
@@ -144,10 +139,10 @@ class DDSStateManager(App):
         if not selected_project_id:
             self.is_loading = False
             return
-        
+
         # Get project information
         self.fetch_project_information(selected_project_id)
 
         # Start loading project content
         self.is_loading = True
-        self.load_project_content(selected_project_id)    
+        self.load_project_content(selected_project_id)

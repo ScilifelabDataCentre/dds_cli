@@ -1,12 +1,10 @@
 """DDS Project Information Widget"""
 
-from dataclasses import dataclass
 from typing import Any
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
-from textual.widgets import Label, Static
-from textual.reactive import reactive
+from textual.widgets import Static
 from dds_cli.dds_gui.components.dds_container import (
     DDSContainer,
     DDSContentContainer,
@@ -16,10 +14,6 @@ from dds_cli.dds_gui.components.dds_status_chip import DDSStatusChip
 
 from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 from dds_cli.dds_gui.models.project_information import ProjectInformationDataTable
-from dds_cli.dds_gui.types.dds_status_types import DDSStatus
-
-
-
 
 
 class ProjectInformation(DDSContainer):
@@ -53,6 +47,7 @@ class ProjectInformation(DDSContainer):
     # def compute_project_information(self) -> ProjectInformationData:
     #     project: Project = self.app.project_list[self.app.selected_project_id]
     #     project_information = ProjectInformationData.from_dict(project)
+
 
 class ProjectInformationTable(Widget):
     """A widget for the project information table."""
@@ -101,21 +96,24 @@ class ProjectInformationTable(Widget):
             )
             yield Horizontal(
                 Static("Created By", classes="key-pair-row-key"),
-                Static(self.data.created_by or "N/A", classes="key-pair-row-value"),
+                Static(self.data.created_by, classes="key-pair-row-value"),
                 classes="key-pair-row",
             )
             yield Horizontal(
                 Static("Last Updated", classes="key-pair-row-key"),
-                Static(self.data.last_updated or "N/A", classes="key-pair-row-value"),
+                Static(self.data.last_updated, classes="key-pair-row-value"),
                 classes="key-pair-row",
             )
             yield Horizontal(
                 Static("Size", classes="key-pair-row-key"),
-                Static(f"{self.data.size or 'N/A'} {'B' if self.data.size else ""}", classes="key-pair-row-value"),
+                Static(
+                    f"{self.data.size} {'B' if self.data.size and self.data.size != 'N/A' else ''}",
+                    classes="key-pair-row-value",
+                ),
                 classes="key-pair-row",
             )
             yield Horizontal(
                 Static("PI", classes="key-pair-row-key"),
-                Static(self.data.pi or "N/A", classes="key-pair-row-value"),
+                Static(self.data.pi, classes="key-pair-row-value"),
                 classes="key-pair-row",
             )

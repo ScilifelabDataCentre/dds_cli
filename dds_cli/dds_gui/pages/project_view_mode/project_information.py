@@ -12,7 +12,6 @@ from dds_cli.dds_gui.components.dds_container import (
     DDSSpacedContainer,
 )
 from dds_cli.dds_gui.components.dds_status_chip import DDSStatusChip
-from dds_cli.dds_gui.dds_state_manager import ProjectInformation as ProjectInformationType
 
 
 class ProjectInformation(DDSContainer):
@@ -40,7 +39,7 @@ class ProjectInformation(DDSContainer):
 class ProjectInformationTable(Widget):
     """A widget for the project information table."""
 
-    def __init__(self, data: ProjectInformationType, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, data: Any, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.data = data
 

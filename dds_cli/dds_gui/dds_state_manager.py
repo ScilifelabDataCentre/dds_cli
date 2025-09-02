@@ -1,10 +1,9 @@
 """DDS State Manager"""
 
+import pathlib
 from typing import List
 from textual.app import App
 from textual import work
-from dataclasses import dataclass
-import pathlib
 from textual.reactive import reactive
 
 from dds_cli.auth import Auth

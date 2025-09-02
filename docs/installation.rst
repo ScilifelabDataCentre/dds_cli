@@ -5,7 +5,7 @@ Installation guide
 
 You can install ``dds-cli`` in two different ways: 
 
-* From `PyPI <https://pypi.org/project/dds-cli/>`_. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax. 
+* From `PyPI <https://pypi.org/project/dds-cli/>`_. Independent on operating system (OS), we recommend this option. Note that this does not apply to HPC centres, e.g., Uppmax, Dardel, etc. 
 * Via executables. These are located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_. 
 
 .. note:: 
@@ -14,7 +14,7 @@ You can install ``dds-cli`` in two different ways:
    
    If you want to request an executable for another OS, please contact us at `delivery@scilifelab.se <delivery@scilifelab.se>`_. Start the subject line with "Feature Request".
 
-The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>` and :ref:`Windows<windows>`, and how to load ``dds-cli`` on :ref:`Uppmax<uppmax>`. 
+The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>` and :ref:`Windows<windows>`, and how to load ``dds-cli`` on :ref:`Uppmax<uppmax>` / :ref:`Dardel<dardel>`. 
 Note that the sections describing installation from PyPI are focused on the ``install`` command, and do not provide a guide on how to verify the package integrity with checksums. Instructions on how to do this can be found at the :ref:`bottom of this page<verify-integrity>`.
 
 .. _mac-linux:
@@ -160,6 +160,10 @@ Install via the **executable**
 Uppmax 
 =======
 
+.. note:: 
+
+   This information may be outdated, as both Rackham and Bianca are being replaced. See `here <https://www.uu.se/en/centre/uppmax>` for more information.
+
 The ``dds-cli`` package is a global module on Uppmax; No installation required. However, there are a few steps you need to perform prior to using it. These steps differ between Rackham and Bianca. 
 
 .. note:: 
@@ -261,6 +265,35 @@ Bianca
 
    * Bianca user guide: https://docs.uppmax.uu.se/cluster_guides/bianca/
    * Transit user guide: https://docs.uppmax.uu.se/cluster_guides/transfer_transit/
+
+.. _dardel:
+
+Dardel
+=======
+
+The ``dds-cli`` package is a global module on Dardel; No installation required. However, there are a few steps you need to perform prior to using it. 
+
+1. First, you need to set up an account for accessing PDC's cluster Dardel. Their guide on how to do this can be found at https://support.pdc.kth.se/doc/basics/quickstart/.
+2. SSH into Dardel's dedicated transfer node ``dardel-ftn01.pdc.kth.se`` (see https://support.pdc.kth.se/doc/data_management/file_transfer/) by running
+
+   .. code-block:: bash
+
+      $ ssh <your_dardel_username>@dardel-ftn01.pdc.kth.se
+3. Load the ``dds-cli`` module by running
+
+   .. code-block:: bash
+
+      $ module load dds-cli
+4. Check the ``dds-cli`` version by running
+
+   .. code-block:: bash
+
+      $ dds --version
+
+   The output should be the following:
+
+   .. image:: ../img/dds-version.svg
+5. Run the ``dds data get ...`` command directly on that node, i.e. do **NOT** submit data-transfer jobs to the queueing system.
 
 
 .. _verify-integrity: 

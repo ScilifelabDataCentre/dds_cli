@@ -1,5 +1,8 @@
 # Pylint
 # Checks for errors in Python code and encourages good Python coding patterns.
+# ---
+# Action failing?
+# Manually fix the code producing warnings. Code must get 10/10.
 ---
 name: Pylint
 on: [push]

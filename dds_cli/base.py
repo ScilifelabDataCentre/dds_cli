@@ -1,4 +1,4 @@
-"""Base class for the DDS CLI. Verifies the users access to the DDS."""
+"""Base class for the DDS CLI. Verifies the user's access to the DDS."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -118,7 +118,7 @@ class DDSBaseClass:
     def set_token(self, token_dict: dict) -> None:
         """Sets the token for the base class.
         Called from auth class to set the token when authenticating
-        in the gui without running the base class with autheticate set to true.
+        in the gui without running the base class with authenticate set to true.
         """
         self.token = token_dict
 

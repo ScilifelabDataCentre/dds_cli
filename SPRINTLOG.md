@@ -448,10 +448,10 @@ _Empty sprint_
 
 - Add ARD's for GUI
 - Refactor MOTD to work for both the CLI and the GUI ([#771](https://github.com/ScilifelabDataCentre/dds_cli/pull/771))
-- Implement MOTD for GUI ([#772](https://github.com/ScilifelabDataCentre/dds_cli/pull/772))
 
 ## 2025-08-18 - 2025-08-29
 
+- Implement MOTD for GUI ([#772](https://github.com/ScilifelabDataCentre/dds_cli/pull/772))
 - Bug: Add missing f-string to logging when cancelling file with KeyboardInterrupt ([#777](https://github.com/ScilifelabDataCentre/dds_cli/pull/777))
 - Verify file size after download and decryption ([#775](https://github.com/ScilifelabDataCentre/dds_cli/pull/775))
 - New version: 2.12.0 ([#824](https://github.com/ScilifelabDataCentre/dds_cli/pull/824))
@@ -460,3 +460,4 @@ _Empty sprint_
 ## 2025-09-01 - 2025-09-12
 
 - Workflow: Add action to run pytest on Windows ([#734](https://github.com/ScilifelabDataCentre/dds_cli/pull/734))
+- Add Dardel-related information to the documentation ([#774](https://github.com/ScilifelabDataCentre/dds_cli/pull/774))

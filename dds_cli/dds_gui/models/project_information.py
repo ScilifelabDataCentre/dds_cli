@@ -13,7 +13,7 @@ class ProjectInformationDataTable:
     created_by: str
     last_updated: str
     size: str
-    pi: str
+    pi: str # pylint: disable=invalid-name
 
     @staticmethod
     def from_dict(data: dict) -> "ProjectInformationDataTable":

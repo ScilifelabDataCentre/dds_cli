@@ -484,7 +484,9 @@ async def test_no_data_error_handling():
             "Size": "1024",
             "PI": "Test PI",
         }
-        mock_data_lister_instance.list_recursive.side_effect = dds_cli.exceptions.NoDataError("No files found")
+        mock_data_lister_instance.list_recursive.side_effect = dds_cli.exceptions.NoDataError(
+            "No files found"
+        )
 
         app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []
@@ -542,7 +544,9 @@ async def test_api_error_during_content_fetch():
             "Size": "1024",
             "PI": "Test PI",
         }
-        mock_data_lister_instance.list_recursive.side_effect = dds_cli.exceptions.ApiRequestError("Connection failed")
+        mock_data_lister_instance.list_recursive.side_effect = dds_cli.exceptions.ApiRequestError(
+            "Connection failed"
+        )
 
         app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []

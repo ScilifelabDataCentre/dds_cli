@@ -409,8 +409,8 @@ async def test_fetch_project_information_api_error():
 
         mock_project_info_instance = MagicMock()
         mock_project_info_class.return_value = mock_project_info_instance
-        mock_project_info_instance.get_project_info.side_effect = dds_cli.exceptions.ApiRequestError(
-            "Connection failed"
+        mock_project_info_instance.get_project_info.side_effect = (
+            dds_cli.exceptions.ApiRequestError("Connection failed")
         )
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -449,8 +449,8 @@ async def test_fetch_project_information_response_error():
 
         mock_project_info_instance = MagicMock()
         mock_project_info_class.return_value = mock_project_info_instance
-        mock_project_info_instance.get_project_info.side_effect = dds_cli.exceptions.ApiResponseError(
-            "Invalid response"
+        mock_project_info_instance.get_project_info.side_effect = (
+            dds_cli.exceptions.ApiResponseError("Invalid response")
         )
 
         app = DDSApp(token_path=str(TOKEN_PATH))
@@ -488,7 +488,9 @@ async def test_fetch_project_information_dds_exception():
 
         mock_project_info_instance = MagicMock()
         mock_project_info_class.return_value = mock_project_info_instance
-        mock_project_info_instance.get_project_info.side_effect = dds_cli.exceptions.DDSCLIException("DDS error")
+        mock_project_info_instance.get_project_info.side_effect = (
+            dds_cli.exceptions.DDSCLIException("DDS error")
+        )
 
         app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []

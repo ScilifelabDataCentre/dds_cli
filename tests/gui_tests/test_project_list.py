@@ -230,7 +230,9 @@ async def test_api_error():
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.side_effect = dds_cli.exceptions.ApiRequestError("Connection failed")
+        mock_data_lister_instance.list_projects.side_effect = dds_cli.exceptions.ApiRequestError(
+            "Connection failed"
+        )
 
         app = DDSApp(token_path=str(TOKEN_PATH))
         notifications = []

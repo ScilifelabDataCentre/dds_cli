@@ -23,6 +23,7 @@ class Project:
             project_content=project_content,
         )
 
+
 @dataclass
 class ProjectContentData:
     """A project content."""

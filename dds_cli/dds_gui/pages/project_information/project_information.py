@@ -44,10 +44,6 @@ class ProjectInformation(DDSContainer):
         else:
             yield DDSTextItem("No project selected")
 
-    # def compute_project_information(self) -> ProjectInformationData:
-    #     project: Project = self.app.project_list[self.app.selected_project_id]
-    #     project_information = ProjectInformationData.from_dict(project)
-
 
 class ProjectInformationTable(Widget):
     """A widget for the project information table."""
@@ -84,7 +80,6 @@ class ProjectInformationTable(Widget):
         align: right middle;
         width: 50%;
     }
-    
     """
 
     def compose(self) -> ComposeResult:

@@ -3,28 +3,7 @@
 import dataclasses
 
 from dds_cli.dds_gui.types.dds_status_types import DDSStatus
-
-
-def size_to_str(size: str | None) -> str:
-    """Convert a size to a string.
-    Args:
-        size: The size in B.
-
-    Returns:
-        The size as a string with a unit prefix.
-    """
-    if size is None:
-        return "N/A"
-    if size >= 1000:
-        return str(size / 1000) + " KB"
-    if size >= 1000000:
-        return str(size / 1000000) + " MB"
-    if size >= 1000000000:
-        return str(size / 1000000000) + " GB"
-    if size >= 1000000000000:
-        return str(size / 1000000000000) + " TB"
-
-    return str(size) + " B"
+import dds_cli.utils
 
 
 @dataclasses.dataclass
@@ -47,8 +26,11 @@ class ProjectInformationDataTable:
                 raise ValueError(f"Missing required field: {field}")
 
         # Handle size field - convert to string if not None, otherwise use "N/A"
-        size_value = data["Size"]
-        size_str = size_to_str(size_value)
+        if data["Size"] is None:
+            size_str = "N/A"
+        else:
+            size_value = int(data["Size"])
+            size_str = dds_cli.utils.HumanBytes.format(size_value)
 
         return ProjectInformationDataTable(
             status=DDSStatus(data["Status"]),

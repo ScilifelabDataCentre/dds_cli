@@ -101,7 +101,7 @@ class ProjectInformationTable(Widget):
             yield Horizontal(
                 Static("Size", classes="key-pair-row-key"),
                 Static(
-                    f"{self.data.size} {'B' if self.data.size and self.data.size != 'N/A' else ''}",
+                    self.data.size,
                     classes="key-pair-row-value",
                 ),
                 classes="key-pair-row",

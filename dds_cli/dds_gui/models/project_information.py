@@ -5,6 +5,28 @@ import dataclasses
 from dds_cli.dds_gui.types.dds_status_types import DDSStatus
 
 
+def size_to_str(size: str | None) -> str:
+    """Convert a size to a string.
+    Args:
+        size: The size in B.
+
+    Returns:
+        The size as a string with a unit prefix.
+    """
+    if size is None:
+        return "N/A"
+    if size >= 1000:
+        return str(size / 1000) + " KB"
+    if size >= 1000000:
+        return str(size / 1000000) + " MB"
+    if size >= 1000000000:
+        return str(size / 1000000000) + " GB"
+    if size >= 1000000000000:
+        return str(size / 1000000000000) + " TB"
+
+    return str(size) + " B"
+
+
 @dataclasses.dataclass
 class ProjectInformationDataTable:
     """A dataclass for the project information table."""
@@ -26,10 +48,7 @@ class ProjectInformationDataTable:
 
         # Handle size field - convert to string if not None, otherwise use "N/A"
         size_value = data["Size"]
-        if size_value is None:
-            size_str = "N/A"
-        else:
-            size_str = str(size_value)
+        size_str = size_to_str(size_value)
 
         return ProjectInformationDataTable(
             status=DDSStatus(data["Status"]),

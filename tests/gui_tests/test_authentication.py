@@ -21,7 +21,7 @@ TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 async def test_auth_status_ui_switching() -> None:
     """Test that UI components change correctly when authentication status changes."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
@@ -57,8 +57,8 @@ async def test_auth_status_ui_switching() -> None:
 async def test_login_modal_ui_workflow() -> None:
     """Test 2FA UI workflow: form switching and field appearance."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.DataLister"
+    with patch("dds_cli.auth.Auth") as mock_auth_class, patch(
+        "dds_cli.data_lister.DataLister"
     ) as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
@@ -136,8 +136,8 @@ async def test_login_modal_ui_workflow() -> None:
 async def test_logout_modal_interactions() -> None:
     """Test logout modal UI interactions."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.DataLister"
+    with patch("dds_cli.auth.Auth") as mock_auth_class, patch(
+        "dds_cli.data_lister.DataLister"
     ) as mock_data_lister_class:
 
         mock_auth_instance = MagicMock()
@@ -190,8 +190,8 @@ async def test_logout_modal_interactions() -> None:
 async def test_reauthentication_modal_form_interactions() -> None:
     """Test reauthentication modal form interactions."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.DataLister"
+    with patch("dds_cli.auth.Auth") as mock_auth_class, patch(
+        "dds_cli.data_lister.DataLister"
     ) as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
@@ -267,8 +267,8 @@ async def test_reauthentication_modal_form_interactions() -> None:
 async def test_keyboard_navigation() -> None:
     """Test keyboard navigation in authentication forms."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.DataLister"
+    with patch("dds_cli.auth.Auth") as mock_auth_class, patch(
+        "dds_cli.data_lister.DataLister"
     ) as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:

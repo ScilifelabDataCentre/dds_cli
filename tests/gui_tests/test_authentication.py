@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import dds_cli.exceptions
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.authentication.modals.login_modal import LoginModal
 from dds_cli.dds_gui.pages.authentication.modals.logout_modal import LogoutModal
@@ -57,16 +58,9 @@ async def test_auth_status_ui_switching() -> None:
 async def test_login_modal_ui_workflow() -> None:
     """Test 2FA UI workflow: form switching and field appearance."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.DataLister"
-    ) as mock_data_lister_class, patch(
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
-
-        mock_auth_instance = MagicMock()
-        mock_auth_class.return_value = mock_auth_instance
-        mock_auth_instance.login.return_value = ("partial_token_456", "TOTP")
-        mock_auth_instance.confirm_twofactor.return_value = None
 
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -136,12 +130,7 @@ async def test_login_modal_ui_workflow() -> None:
 async def test_logout_modal_interactions() -> None:
     """Test logout modal UI interactions."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.DataLister"
-    ) as mock_data_lister_class:
-
-        mock_auth_instance = MagicMock()
-        mock_auth_class.return_value = mock_auth_instance
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class:
 
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -190,16 +179,9 @@ async def test_logout_modal_interactions() -> None:
 async def test_reauthentication_modal_form_interactions() -> None:
     """Test reauthentication modal form interactions."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.DataLister"
-    ) as mock_data_lister_class, patch(
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
-
-        mock_auth_instance = MagicMock()
-        mock_auth_class.return_value = mock_auth_instance
-        mock_auth_instance.login.return_value = ("partial_token_456", "TOTP")
-        mock_auth_instance.confirm_twofactor.return_value = None
 
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -267,14 +249,9 @@ async def test_reauthentication_modal_form_interactions() -> None:
 async def test_keyboard_navigation() -> None:
     """Test keyboard navigation in authentication forms."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.Auth") as mock_auth_class, patch(
-        "dds_cli.dds_gui.dds_state_manager.DataLister"
-    ) as mock_data_lister_class, patch(
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
-
-        mock_auth_instance = MagicMock()
-        mock_auth_class.return_value = mock_auth_instance
 
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -304,3 +281,903 @@ async def test_keyboard_navigation() -> None:
                 # Test escape to cancel
                 await pilot.press("escape")
                 await pilot.pause()
+
+
+# =================================================================================
+# Error Handling Tests
+# =================================================================================
+
+
+@pytest.mark.asyncio
+async def test_invalid_credentials_error_handling() -> None:
+    """Test that invalid credentials show error notification and don't crash the GUI."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise AuthenticationError
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.AuthenticationError(
+            "Invalid username or password"
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill invalid credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "invalid_user"
+            password_inputs.first().value = "invalid_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            # The app should still be running and not crashed
+            assert len(app.screen_stack) > 1, "Login modal should still be displayed after error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+            # Verify 2FA form is not shown
+            code_inputs = app.query("Input#code")
+            assert len(code_inputs) == 0, "2FA code field should not be present after error"
+
+
+@pytest.mark.asyncio
+async def test_invalid_2fa_code_error_handling() -> None:
+    """Test that invalid 2FA code shows error notification and doesn't crash the GUI."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.return_value = ("partial_token_456", "TOTP")
+        mock_auth_form_instance.confirm_twofactor.side_effect = (
+            dds_cli.exceptions.AuthenticationError("Invalid 2FA code")
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill valid credentials to get to 2FA step
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "valid_user"
+            password_inputs.first().value = "valid_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify 2FA form is now displayed
+            code_inputs = app.query("Input#code")
+            assert len(code_inputs) > 0, "2FA code field should be present"
+
+            # Fill invalid 2FA code
+            code_inputs.first().value = "000000"
+            await pilot.pause()
+
+            # Click login button to submit 2FA code
+            login_buttons = app.query("Button#login")
+            await pilot.click(login_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown and modal closed
+            # The app should still be running and not crashed
+            assert len(app.screen_stack) == 1, "Login modal should be closed after 2FA error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+
+@pytest.mark.asyncio
+async def test_network_error_handling() -> None:
+    """Test that network/API errors show error notification and don't crash the GUI."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise ApiRequestError
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.ApiRequestError(
+            "Network connection failed"
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user"
+            password_inputs.first().value = "test_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            # The app should still be running and not crashed
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after network error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_empty_credentials_error_handling() -> None:
+    """Test that empty credentials show error notification and don't crash the GUI."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise AuthenticationError for empty credentials
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.AuthenticationError(
+            "Non-empty username needed to be able to authenticate."
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Leave credentials empty
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = ""
+            password_inputs.first().value = ""
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            # The app should still be running and not crashed
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after empty credentials error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_reauthentication_invalid_credentials_error_handling() -> None:
+    """Test that invalid credentials in reauthentication show error notification and don't crash the GUI."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise AuthenticationError
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.AuthenticationError(
+            "Invalid username or password"
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)  # Start as authenticated
+            await pilot.pause()
+
+            # Push reauthentication modal
+            reauth_modal = ReAuthenticateModal()
+            app.push_screen(reauth_modal)
+            await pilot.pause()
+
+            # Fill invalid credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "invalid_user"
+            password_inputs.first().value = "invalid_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            # The app should still be running and not crashed
+            assert (
+                len(app.screen_stack) > 1
+            ), "Reauthentication modal should still be displayed after error"
+            assert app.auth_status, "Authentication status should remain True (original state)"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+            # Verify 2FA form is not shown
+            code_inputs = app.query("Input#code")
+            assert len(code_inputs) == 0, "2FA code field should not be present after error"
+
+
+# =================================================================================
+# Comprehensive Exception Tests - All Auth Class Exceptions
+# =================================================================================
+
+
+@pytest.mark.asyncio
+async def test_no_prompt_authentication_error() -> None:
+    """Test AuthenticationError when no-prompt is used during authentication."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise AuthenticationError for no-prompt
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.AuthenticationError(
+            "Authentication not possible when running with --no-prompt. "
+            "Please run the `dds auth login` command and authenticate interactively."
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user"
+            password_inputs.first().value = "test_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after no-prompt error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_unicode_encode_error() -> None:
+    """Test ApiRequestError when username/password contains invalid characters."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise ApiRequestError for UnicodeEncodeError
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.ApiRequestError(
+            "The entered username or password seems to contain invalid characters. Please try again."
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials with invalid characters
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user_with_émojis"
+            password_inputs.first().value = "test_password_with_special_chars"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after Unicode error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_totp_not_enabled_error() -> None:
+    """Test AuthenticationError when TOTP is used but not enabled."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.return_value = ("partial_token_456", "HOTP")  # HOTP, not TOTP
+        mock_auth_form_instance.confirm_twofactor.side_effect = (
+            dds_cli.exceptions.AuthenticationError(
+                "Authentication failed, you have not yet activated one-time "
+                "authentication codes from authenticator app."
+            )
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill valid credentials to get to 2FA step
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "valid_user"
+            password_inputs.first().value = "valid_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify 2FA form is now displayed
+            code_inputs = app.query("Input#code")
+            assert len(code_inputs) > 0, "2FA code field should be present"
+
+            # Fill TOTP code (but user has HOTP enabled)
+            code_inputs.first().value = "123456"  # TOTP format
+            await pilot.pause()
+
+            # Click login button to submit 2FA code
+            login_buttons = app.query("Button#login")
+            await pilot.click(login_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown and modal closed
+            assert len(app.screen_stack) == 1, "Login modal should be closed after TOTP error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+
+@pytest.mark.asyncio
+async def test_empty_2fa_code_error() -> None:
+    """Test AuthenticationError when 2FA code is empty."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.return_value = ("partial_token_456", "HOTP")
+        mock_auth_form_instance.confirm_twofactor.side_effect = (
+            dds_cli.exceptions.AuthenticationError(
+                "Exited due to no one-time authentication code entered."
+            )
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill valid credentials to get to 2FA step
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "valid_user"
+            password_inputs.first().value = "valid_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify 2FA form is now displayed
+            code_inputs = app.query("Input#code")
+            assert len(code_inputs) > 0, "2FA code field should be present"
+
+            # Leave 2FA code empty
+            code_inputs.first().value = ""
+            await pilot.pause()
+
+            # Click login button to submit empty 2FA code
+            login_buttons = app.query("Button#login")
+            await pilot.click(login_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown and modal closed
+            assert len(app.screen_stack) == 1, "Login modal should be closed after empty 2FA error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+
+@pytest.mark.asyncio
+async def test_json_decode_error() -> None:
+    """Test ApiResponseError when API returns invalid JSON."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise ApiResponseError for JSON decode error
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.ApiResponseError(
+            "Response code: 200. The request did not return a valid JSON response. Details: Expecting value: line 1 column 1 (char 0)"
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user"
+            password_inputs.first().value = "test_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after JSON decode error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_connection_error() -> None:
+    """Test ApiRequestError when connection fails."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise ApiRequestError for connection error
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.ApiRequestError(
+            "Failed to authenticate user: The database seems to be down -- \nConnection refused"
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user"
+            password_inputs.first().value = "test_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after connection error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_timeout_error() -> None:
+    """Test ApiRequestError when request times out."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise ApiRequestError for timeout
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.ApiRequestError(
+            "Failed to authenticate user: The request timed out."
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user"
+            password_inputs.first().value = "test_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after timeout error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_bad_request_error() -> None:
+    """Test DDSCLIException when API returns 400 Bad Request."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise DDSCLIException for bad request
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.DDSCLIException(
+            "Failed to authenticate user: Invalid credentials provided"
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user"
+            password_inputs.first().value = "test_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after bad request error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_forbidden_error() -> None:
+    """Test DDSCLIException when API returns 403 Forbidden."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise DDSCLIException for forbidden
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.DDSCLIException(
+            "Failed to authenticate user: Access denied"
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user"
+            password_inputs.first().value = "test_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after forbidden error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"
+
+
+@pytest.mark.asyncio
+async def test_internal_server_error() -> None:
+    """Test ApiResponseError when API returns 500 Internal Server Error."""
+
+    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
+    ) as mock_auth_form_class:
+
+        # Mock DataLister to prevent authentication attempts
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = []
+
+        # Mock Auth in AuthenticationForm to raise ApiResponseError for internal server error
+        mock_auth_form_instance = MagicMock()
+        mock_auth_form_class.return_value = mock_auth_form_instance
+        mock_auth_form_instance.login.side_effect = dds_cli.exceptions.ApiResponseError(
+            "Failed to authenticate user: Internal server error occurred"
+        )
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(False)
+            await pilot.pause()
+
+            # Push login modal
+            login_modal = LoginModal()
+            app.push_screen(login_modal)
+            await pilot.pause()
+
+            # Fill credentials
+            username_inputs = app.query("Input#username")
+            password_inputs = app.query("Input#password")
+
+            username_inputs.first().value = "test_user"
+            password_inputs.first().value = "test_password"
+            await pilot.pause()
+
+            # Click "Send 2FA code" button to trigger authentication
+            send_2fa_buttons = app.query("Button#send-2fa-code")
+            await pilot.click(send_2fa_buttons.first())
+            await pilot.pause()
+
+            # Verify error notification was shown
+            assert (
+                len(app.screen_stack) > 1
+            ), "Login modal should still be displayed after internal server error"
+            assert not app.auth_status, "Authentication status should remain False"
+
+            # Verify the form is still in login state (not switched to 2FA)
+            username_inputs_after = app.query("Input#username")
+            password_inputs_after = app.query("Input#password")
+            assert len(username_inputs_after) > 0, "Username field should still be present"
+            assert len(password_inputs_after) > 0, "Password field should still be present"

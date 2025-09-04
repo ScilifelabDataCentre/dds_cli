@@ -30,7 +30,7 @@ class ProjectInformationDataTable:
             size_str = "N/A"
         else:
             size_value = int(data["Size"])
-            size_str = dds_cli.utils.HumanBytes.format(size_value)
+            size_str = dds_cli.utils.HumanBytes.format(size_value, metric=True)
 
         return ProjectInformationDataTable(
             status=DDSStatus(data["Status"]),

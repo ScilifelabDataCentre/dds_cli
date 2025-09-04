@@ -25,7 +25,7 @@ MOCK_PROJECT_INFO_DATA = {
     "Status": "Available",
     "Created by": "test_user@example.com",
     "Last updated": "2024-01-15 10:30:00",
-    "Size": 1024,
+    "Size": 1000,
     "PI": "Dr. Test Investigator",
 }
 
@@ -52,7 +52,7 @@ def test_project_information_data_table_from_dict_valid():
     assert data_table.status == DDSStatus.AVAILABLE
     assert data_table.created_by == "test_user@example.com"
     assert data_table.last_updated == "2024-01-15 10:30:00"
-    assert data_table.size == "1.0 KiB"
+    assert data_table.size == "1.0 KB"
     assert data_table.pi == "Dr. Test Investigator"
 
 
@@ -224,7 +224,7 @@ async def test_project_information_table_size_display():
     """Test ProjectInformationTable size display logic."""
     # Test with valid size
     data_with_size = MOCK_PROJECT_INFO_DATA.copy()
-    data_with_size["Size"] = "2048"  # Use numeric value, will be formatted to "2.0 KiB"
+    data_with_size["Size"] = "2048"  # Use numeric value, will be formatted to "2.0 KB"
     data_table = ProjectInformationDataTable.from_dict(data_with_size)
     table_widget = ProjectInformationTable(data_table)
 
@@ -241,7 +241,7 @@ async def test_project_information_table_size_display():
 
             # Check that size is displayed with "B" suffix
             static_elements = app.query("Static")
-            size_elements = [elem for elem in static_elements if "2.0 KiB" in str(elem.renderable)]
+            size_elements = [elem for elem in static_elements if "2.0 KB" in str(elem.renderable)]
             assert len(size_elements) == 1
 
 
@@ -533,10 +533,10 @@ def test_project_information_data_table_all_status_values():
 def test_project_information_data_table_large_size():
     """Test ProjectInformationDataTable with large size value."""
     large_size_data = MOCK_PROJECT_INFO_DATA.copy()
-    large_size_data["Size"] = "1073741824"  # 1GB
+    large_size_data["Size"] = "1000000000"  # 1.0GB
 
     data_table = ProjectInformationDataTable.from_dict(large_size_data)
-    assert data_table.size == "1.0 GiB"
+    assert data_table.size == "1.0 GB"
 
 
 def test_project_information_data_table_zero_size():

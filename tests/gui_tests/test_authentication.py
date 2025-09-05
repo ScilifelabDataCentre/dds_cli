@@ -303,7 +303,7 @@ async def test_keyboard_navigation() -> None:
 async def test_invalid_credentials_error_handling() -> None:
     """Test that invalid credentials show error notification and don't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -363,7 +363,7 @@ async def test_invalid_credentials_error_handling() -> None:
 async def test_invalid_2fa_code_error_handling() -> None:
     """Test that invalid 2FA code shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -427,7 +427,7 @@ async def test_invalid_2fa_code_error_handling() -> None:
 async def test_network_error_handling() -> None:
     """Test that network/API errors show error notification and don't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -485,7 +485,7 @@ async def test_network_error_handling() -> None:
 async def test_empty_credentials_error_handling() -> None:
     """Test that empty credentials show error notification and don't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -543,7 +543,7 @@ async def test_empty_credentials_error_handling() -> None:
 async def test_reauthentication_invalid_credentials_error_handling() -> None:
     """Test that invalid credentials in reauthentication show error notification and don't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -617,7 +617,7 @@ async def test_reauthentication_invalid_credentials_error_handling() -> None:
 async def test_empty_field_error_handling(field, value, error_msg):
     """Test that empty fields show error notification and don't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -673,7 +673,7 @@ async def test_empty_field_error_handling(field, value, error_msg):
 async def test_empty_2fa_code_error_handling() -> None:
     """Test that empty 2FA code shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -739,7 +739,7 @@ async def test_empty_2fa_code_error_handling() -> None:
 async def test_login_json_decode_error() -> None:
     """Test that JSON decode error during login shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -792,7 +792,7 @@ async def test_login_json_decode_error() -> None:
 async def test_login_internal_server_error() -> None:
     """Test that 500 Internal Server Error during login shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -843,7 +843,7 @@ async def test_login_internal_server_error() -> None:
 async def test_login_bad_request_error() -> None:
     """Test that 400 Bad Request during login shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -896,7 +896,7 @@ async def test_login_bad_request_error() -> None:
 async def test_login_forbidden_error() -> None:
     """Test that 403 Forbidden during login shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -949,7 +949,7 @@ async def test_login_forbidden_error() -> None:
 async def test_no_prompt_authentication_error() -> None:
     """Test that no-prompt authentication error shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1002,7 +1002,7 @@ async def test_no_prompt_authentication_error() -> None:
 async def test_totp_not_enabled_error() -> None:
     """Test that TOTP not enabled error shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1053,7 +1053,7 @@ async def test_totp_not_enabled_error() -> None:
 async def test_unicode_decode_error() -> None:
     """Test that Unicode decode error during login shows error notification and doesn't crash the GUI."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1109,7 +1109,7 @@ async def test_unicode_decode_error() -> None:
 async def test_2fa_json_decode_error() -> None:
     """Test ApiResponseError when API returns invalid JSON during 2FA confirmation."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1175,7 +1175,7 @@ async def test_2fa_json_decode_error() -> None:
 async def test_2fa_connection_error() -> None:
     """Test ApiRequestError when connection fails during 2FA confirmation."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1241,7 +1241,7 @@ async def test_2fa_connection_error() -> None:
 async def test_2fa_timeout_error() -> None:
     """Test ApiRequestError when request times out during 2FA confirmation."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1307,7 +1307,7 @@ async def test_2fa_timeout_error() -> None:
 async def test_2fa_bad_request_error() -> None:
     """Test DDSCLIException when API returns 400 Bad Request during 2FA confirmation."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1373,7 +1373,7 @@ async def test_2fa_bad_request_error() -> None:
 async def test_2fa_forbidden_error() -> None:
     """Test DDSCLIException when API returns 403 Forbidden during 2FA confirmation."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1439,7 +1439,7 @@ async def test_2fa_forbidden_error() -> None:
 async def test_2fa_internal_server_error() -> None:
     """Test ApiResponseError when API returns 500 Internal Server Error during 2FA confirmation."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 
@@ -1505,7 +1505,7 @@ async def test_2fa_internal_server_error() -> None:
 async def test_2fa_missing_token_error() -> None:
     """Test AuthenticationError when token is missing from 2FA response."""
 
-    with patch("dds_cli.dds_gui.dds_state_manager.DataLister") as mock_data_lister_class, patch(
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
         "dds_cli.dds_gui.pages.authentication.authentication_form.Auth"
     ) as mock_auth_form_class:
 

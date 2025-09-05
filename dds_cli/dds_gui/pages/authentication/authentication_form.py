@@ -76,7 +76,6 @@ class AuthenticationForm(Container):
             dds_cli.exceptions.DDSCLIException,
         ) as error:
             self.notify(f"Error: {error}", severity="error")
-            self.auth = None
             return False
         return True
 

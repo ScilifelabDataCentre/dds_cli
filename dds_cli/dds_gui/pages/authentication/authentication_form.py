@@ -68,6 +68,8 @@ class AuthenticationForm(Container):
         except (
             dds_cli.exceptions.AuthenticationError,
             dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
         ) as error:
             self.notify(f"Error: {error}", severity="error")
             self.auth = None
@@ -84,7 +86,12 @@ class AuthenticationForm(Container):
             )
             self.notify("Successfully authenticated.")
             self.app.set_auth_status(True)
-        except dds_cli.exceptions.AuthenticationError as error:
+        except (
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as error:
             self.notify(f"Error: {error}", severity="error", timeout=10)
         self.close_modal()
 

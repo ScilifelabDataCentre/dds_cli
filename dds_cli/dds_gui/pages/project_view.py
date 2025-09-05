@@ -1,15 +1,16 @@
 """DDS Project View Page"""
 
 from typing import Any
-
 from textual.app import ComposeResult
 from textual.containers import Vertical, Horizontal
 from textual.widget import Widget
 from textual.widgets import Placeholder
+
 from dds_cli.dds_gui.pages.authentication.authentication import Authentication
 from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.pages.important_information.important_information import ImportantInformation
+from dds_cli.dds_gui.pages.project_information.project_information import ProjectInformation
 
 
 class ProjectView(Widget):
@@ -61,9 +62,7 @@ class ProjectView(Widget):
             with Vertical(id="right-container"):
                 with Horizontal(id="top-container"):
                     yield ProjectContent(title="Project Content", id="project-content")
-                    yield Placeholder(
-                        id="project-information"
-                    )  # ProjectInformation(title="Project Information", id="project-information")
+                    yield ProjectInformation(title="Project Information", id="project-information")
                 with Horizontal(id="bottom-container"):
                     yield Placeholder(
                         id="project-actions"

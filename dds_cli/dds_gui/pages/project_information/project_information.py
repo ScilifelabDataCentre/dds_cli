@@ -4,7 +4,7 @@ from typing import Any
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
-from textual.widgets import Label, Static
+from textual.widgets import Static
 
 from dds_cli.dds_gui.components.dds_container import (
     DDSContainer,
@@ -12,40 +12,53 @@ from dds_cli.dds_gui.components.dds_container import (
     DDSSpacedContainer,
 )
 from dds_cli.dds_gui.components.dds_status_chip import DDSStatusChip
+from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
+from dds_cli.dds_gui.models.project_information import ProjectInformationDataTable
 
 
 class ProjectInformation(DDSContainer):
     """A widget for the project information."""
 
+    DEFAULT_CSS = """
+    DDSSpacedContainer:first-of-type > * {
+        padding-right: 1;
+    }
+    """
+
     def compose(self) -> ComposeResult:
-        if self.app.selected_project_id:
+        if self.app.project_information:
             with DDSSpacedContainer():
                 with DDSContentContainer():
-                    yield Label(
+                    yield DDSTextItem(
                         f"[b]Project Title:[/b] {self.app.project_information.name}",
                         id="project-title",
                     )
-                    yield Label(
+                    yield DDSTextItem(
                         f"[b]Project Description:[/b] {self.app.project_information.description}",
                         id="project-description",
                     )
                 yield ProjectInformationTable(
-                    self.app.project_information, id="project-information-table"
+                    self.app.project_information.information_table, id="project-information-table"
                 )
         else:
-            yield Label("No project selected")
+            yield DDSTextItem("No project selected")
 
 
 class ProjectInformationTable(Widget):
     """A widget for the project information table."""
 
-    def __init__(self, data: Any, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, data: ProjectInformationDataTable, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.data = data
 
     DEFAULT_CSS = """
+    ProjectInformationTable {
+        height: auto;
+    }
+
     .key-pair-table {
         width: 100%;
+        height: auto;
     }
     .key-pair-row {
         width: 100%;
@@ -66,7 +79,6 @@ class ProjectInformationTable(Widget):
         align: right middle;
         width: 50%;
     }
-    
     """
 
     def compose(self) -> ComposeResult:
@@ -88,11 +100,14 @@ class ProjectInformationTable(Widget):
             )
             yield Horizontal(
                 Static("Size", classes="key-pair-row-key"),
-                Static(self.data.size, classes="key-pair-row-value"),
+                Static(
+                    self.data.size,
+                    classes="key-pair-row-value",
+                ),
                 classes="key-pair-row",
             )
             yield Horizontal(
-                Static("Support Contact", classes="key-pair-row-key"),
-                Static(self.data.support_contact, classes="key-pair-row-value"),
+                Static("PI", classes="key-pair-row-key"),
+                Static(self.data.pi, classes="key-pair-row-value"),
                 classes="key-pair-row",
             )

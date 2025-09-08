@@ -1,0 +1,613 @@
+"""Project downloader utility for GUI integration."""
+
+###############################################################################
+# IMPORTS ########################################################### IMPORTS #
+###############################################################################
+
+# Standard library
+import concurrent.futures
+import itertools
+import logging
+import pathlib
+import threading
+from typing import Callable, Dict, List, Optional, Tuple, Any
+from dataclasses import dataclass
+
+# Installed
+# Note: Rich progress removed for Textual compatibility
+
+# Own modules
+import dds_cli
+import dds_cli.data_getter
+import dds_cli.directory
+import dds_cli.exceptions
+import dds_cli.utils
+
+###############################################################################
+# START LOGGING CONFIG ################################# START LOGGING CONFIG #
+###############################################################################
+
+LOG = logging.getLogger(__name__)
+
+###############################################################################
+# CLASSES ########################################################### CLASSES #
+###############################################################################
+
+
+@dataclass
+class DownloadProgress:
+    """Progress information for a download operation."""
+
+    current_file: str
+    total_files: int
+    completed_files: int
+    current_file_progress: float  # 0.0 to 1.0
+    overall_progress: float  # 0.0 to 1.0
+    overall_percentage: float  # 0.0 to 100.0 for easy Textual integration
+    status: str  # "preparing", "downloading", "decrypting", "completed", "error"
+    error_message: Optional[str] = None
+
+
+@dataclass
+class DownloadResult:
+    """Result of a download operation."""
+
+    success: bool
+    file_path: str
+    error_message: Optional[str] = None
+    file_size: Optional[int] = None
+
+
+class ProjectDownloader:
+    """GUI-friendly project downloader class.
+
+    This class provides a modular interface for downloading project data
+    that can be easily integrated with GUI applications. It supports:
+    - Progress callbacks for real-time updates
+    - Error handling and reporting
+    - Concurrent downloads with configurable threading
+    - Individual file or batch downloads
+    - Cancellation support
+
+    Example usage:
+        ```python
+        # Basic usage
+        downloader = ProjectDownloader(project="my-project-id")
+
+        # Set up callbacks for GUI integration
+        def on_progress(progress):
+            print(f"Progress: {progress.overall_progress:.1%} - {progress.status}")
+
+        def on_file_completed(result):
+            if result.success:
+                print(f"Downloaded: {result.file_path}")
+            else:
+                print(f"Failed: {result.file_path} - {result.error_message}")
+
+        def on_error(error_msg):
+            print(f"Error: {error_msg}")
+
+        downloader.set_progress_callback(on_progress)
+        downloader.set_file_completed_callback(on_file_completed)
+        downloader.set_error_callback(on_error)
+
+        # Initialize and download
+        if downloader.initialize(get_all=True):
+            success = downloader.download_all(num_threads=4)
+            if success:
+                print("All downloads completed!")
+            else:
+                print("Download failed or was cancelled")
+
+        # Clean up
+        downloader.cleanup()
+        ```
+
+        ```python
+        # Download specific files
+        downloader = ProjectDownloader(project="my-project-id")
+
+        if downloader.initialize(source=("file1.txt", "folder/file2.txt")):
+            # Download all specified files
+            downloader.download_all()
+
+            # Or download individual files
+            result = downloader.download_file("file1.txt")
+            if result.success:
+                print(f"Downloaded {result.file_path}")
+        ```
+
+        ```python
+        # Using as context manager
+        with ProjectDownloader(project="my-project-id") as downloader:
+            downloader.set_progress_callback(my_progress_handler)
+
+            if downloader.initialize(get_all=True):
+                downloader.download_all()
+        ```
+    """
+
+    def __init__(
+        self,
+        project: str,
+        destination: Optional[pathlib.Path] = None,
+        token_path: Optional[str] = None,
+        no_prompt: bool = True,
+    ):
+        """Initialize the project downloader.
+
+        Args:
+            project: Project ID to download from
+            destination: Optional destination directory (defaults to current directory)
+            token_path: Optional path to authentication token
+            no_prompt: Whether to skip user prompts (default True for GUI)
+        """
+        self.project = project
+        self.destination = destination
+        self.token_path = token_path
+        self.no_prompt = no_prompt
+
+        # Internal state
+        self._getter: Optional[dds_cli.data_getter.DataGetter] = None
+        self._staging_dir: Optional[dds_cli.directory.DDSDirectory] = None
+        self._is_initialized = False
+        self._is_downloading = False
+        self._cancelled = False
+
+        # Callbacks
+        self._progress_callback: Optional[Callable[[DownloadProgress], None]] = None
+        self._file_completed_callback: Optional[Callable[[DownloadResult], None]] = None
+        self._error_callback: Optional[Callable[[str], None]] = None
+
+        # Threading
+        self._executor: Optional[concurrent.futures.ThreadPoolExecutor] = None
+        self._download_threads: Dict[concurrent.futures.Future, str] = {}
+
+        # Progress tracking
+        self._progress_lock = threading.Lock()
+        self._completed_files = 0
+        self._total_files = 0
+
+    def set_progress_callback(self, callback: Callable[[DownloadProgress], None]) -> None:
+        """Set callback for progress updates.
+
+        Args:
+            callback: Function to call with progress updates
+        """
+        self._progress_callback = callback
+
+    def set_file_completed_callback(self, callback: Callable[[DownloadResult], None]) -> None:
+        """Set callback for when individual files complete.
+
+        Args:
+            callback: Function to call when a file download completes
+        """
+        self._file_completed_callback = callback
+
+    def set_error_callback(self, callback: Callable[[str], None]) -> None:
+        """Set callback for error reporting.
+
+        Args:
+            callback: Function to call when errors occur
+        """
+        self._error_callback = callback
+
+    def initialize(
+        self,
+        get_all: bool = False,
+        source: Tuple = (),
+        source_path_file: Optional[pathlib.Path] = None,
+        break_on_fail: bool = False,
+        verify_checksum: bool = False,
+    ) -> bool:
+        """Initialize the downloader with project data.
+
+        Args:
+            get_all: Whether to download all project contents
+            source: Specific files/folders to download
+            source_path_file: Path to file containing source list
+            break_on_fail: Whether to stop on first failure
+            verify_checksum: Whether to verify file checksums
+
+        Returns:
+            True if initialization successful, False otherwise
+        """
+        try:
+            self._update_progress("preparing", "Initializing download...")
+
+            # Validate parameters
+            if get_all and (source or source_path_file):
+                self._report_error("Cannot use 'get_all' with specific sources")
+                return False
+            elif not get_all and not (source or source_path_file):
+                self._report_error("Must specify sources or use 'get_all'")
+                return False
+
+            # Setup staging directory
+            if self.destination:
+                staging_dir_path = self.destination
+            else:
+                staging_dir_path = pathlib.Path.cwd() / pathlib.Path(
+                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{self.project}_download"
+                )
+
+            self._staging_dir = dds_cli.directory.DDSDirectory(path=staging_dir_path)
+
+            # Initialize data getter
+            self._getter = dds_cli.data_getter.DataGetter(
+                project=self.project,
+                get_all=get_all,
+                source=source,
+                source_path_file=source_path_file,
+                break_on_fail=break_on_fail,
+                silent=True,  # GUI handles output
+                verify_checksum=verify_checksum,
+                no_prompt=self.no_prompt,
+                token_path=self.token_path,
+                staging_dir=self._staging_dir,
+            )
+
+            # Check if we have files to download
+            if not self._getter.filehandler.data:
+                self._report_error("No files to download")
+                return False
+
+            self._total_files = len(self._getter.filehandler.data)
+            self._completed_files = 0
+            self._is_initialized = True
+
+            self._update_progress("preparing", f"Found {self._total_files} files to download")
+            return True
+
+        except (
+            dds_cli.exceptions.InvalidMethodError,
+            dds_cli.exceptions.TokenNotFoundError,
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.DownloadError,
+            OSError,
+            ValueError,
+        ) as e:
+            self._report_error(f"Initialization failed: {str(e)}")
+            return False
+
+    def download_all(self, num_threads: int = 4) -> bool:
+        """Download all files with concurrent threading.
+
+        Args:
+            num_threads: Number of concurrent download threads
+
+        Returns:
+            True if all downloads successful, False otherwise
+        """
+        if not self._is_initialized:
+            self._report_error("Downloader not initialized")
+            return False
+
+        if self._is_downloading:
+            self._report_error("Download already in progress")
+            return False
+
+        self._is_downloading = True
+        self._cancelled = False
+
+        try:
+            # Create thread pool
+            with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+                self._executor = executor
+
+                # Iterator for files
+                file_iterator = iter(self._getter.filehandler.data.copy())
+
+                # Schedule initial batch of downloads
+                for file in itertools.islice(file_iterator, num_threads):
+                    if self._cancelled:
+                        break
+                    self._schedule_download(file)
+
+                # Process completed downloads and schedule new ones
+                while self._download_threads and not self._cancelled:
+                    # Wait for next completion
+                    done, _ = concurrent.futures.wait(
+                        self._download_threads, return_when=concurrent.futures.FIRST_COMPLETED
+                    )
+
+                    new_tasks = 0
+
+                    for future in done:
+                        # Check if future was cancelled
+                        if future.cancelled():
+                            continue
+
+                        # Check if we should stop due to cancellation
+                        if self._cancelled:
+                            break
+
+                        file_path = self._download_threads.pop(future)
+
+                        try:
+                            success, message = future.result()
+                            self._completed_files += 1
+
+                            # Update progress
+                            self._update_download_progress(file_path)
+
+                            # Create result object
+                            result = DownloadResult(
+                                success=success,
+                                file_path=str(file_path),
+                                error_message=message if not success else None,
+                            )
+
+                            # Notify callbacks
+                            if self._file_completed_callback:
+                                self._file_completed_callback(result)
+
+                            if success:
+                                LOG.debug("Download successful: %s", file_path)
+                            else:
+                                LOG.warning("Download failed: %s - %s", file_path, message)
+
+                            new_tasks += 1
+
+                        except (
+                            dds_cli.exceptions.DownloadError,
+                            dds_cli.exceptions.ApiRequestError,
+                            OSError,
+                            RuntimeError,
+                        ) as e:
+                            LOG.error("Download thread error: %s", str(e))
+                            self._report_error(f"Download error: {str(e)}")
+
+                    # Schedule next batch
+                    if not self._cancelled:
+                        for next_file in itertools.islice(file_iterator, new_tasks):
+                            self._schedule_download(next_file)
+
+            success = not self._cancelled and self._completed_files == self._total_files
+            if success:
+                self._update_progress("completed", "All downloads completed successfully")
+            else:
+                self._update_progress("error", "Download incomplete or cancelled")
+
+            return success
+
+        except (
+            dds_cli.exceptions.DownloadError,
+            dds_cli.exceptions.ApiRequestError,
+            OSError,
+            RuntimeError,
+        ) as e:
+            self._report_error(f"Download failed: {str(e)}")
+            return False
+        finally:
+            self._is_downloading = False
+            self._executor = None
+            self._download_threads.clear()
+
+    def download_file(self, file_path: str) -> DownloadResult:
+        """Download a single file.
+
+        Args:
+            file_path: Path to file to download
+
+        Returns:
+            DownloadResult with success status and details
+        """
+        if not self._is_initialized:
+            return DownloadResult(
+                success=False, file_path=file_path, error_message="Downloader not initialized"
+            )
+
+        if file_path not in self._getter.filehandler.data:
+            return DownloadResult(
+                success=False, file_path=file_path, error_message="File not found in project"
+            )
+
+        try:
+            # Create a minimal progress object for single file download
+            # We'll use a simple progress tracker that doesn't require Rich
+            class SimpleProgress:
+                def __init__(self):
+                    self.tasks = {}
+
+                def add_task(self, description, total=None, step=None):  # noqa: ARG002, W0613
+                    # step parameter required for Rich progress compatibility
+                    task_id = len(self.tasks)
+                    self.tasks[task_id] = {
+                        "description": description,
+                        "total": total,
+                        "completed": 0,
+                    }
+                    return task_id
+
+                def update(self, task_id, advance=None, description=None):
+                    if task_id in self.tasks:
+                        if advance:
+                            self.tasks[task_id]["completed"] += advance
+                        if description:
+                            self.tasks[task_id]["description"] = description
+
+                def reset(self, task_id, description=None, total=None):
+                    if task_id in self.tasks:
+                        if description:
+                            self.tasks[task_id]["description"] = description
+                        if total:
+                            self.tasks[task_id]["total"] = total
+                        self.tasks[task_id]["completed"] = 0
+
+                def remove_task(self, task_id):
+                    if task_id in self.tasks:
+                        del self.tasks[task_id]
+
+            progress = SimpleProgress()
+            success, message = self._getter.download_and_verify(file=file_path, progress=progress)
+
+            return DownloadResult(
+                success=success, file_path=file_path, error_message=message if not success else None
+            )
+
+        except (
+            dds_cli.exceptions.DownloadError,
+            dds_cli.exceptions.ApiRequestError,
+            OSError,
+            RuntimeError,
+        ) as e:
+            return DownloadResult(success=False, file_path=file_path, error_message=str(e))
+
+    def cancel_download(self) -> None:
+        """Cancel ongoing download operations."""
+        self._cancelled = True
+        self._is_downloading = False
+        if self._executor:
+            # Cancel pending futures
+            for future in self._download_threads:
+                future.cancel()
+            self._download_threads.clear()
+
+        self._update_progress("error", "Download cancelled by user")
+
+    def get_file_list(self) -> List[str]:
+        """Get list of files available for download.
+
+        Returns:
+            List of file paths
+        """
+        if not self._is_initialized or not self._getter:
+            return []
+
+        return list(self._getter.filehandler.data.keys())
+
+    def get_file_info(self, file_path: str) -> Optional[Dict[str, Any]]:
+        """Get information about a specific file.
+
+        Args:
+            file_path: Path to file
+
+        Returns:
+            File information dictionary or None if not found
+        """
+        if not self._is_initialized or not self._getter:
+            return None
+
+        return self._getter.filehandler.data.get(file_path)
+
+    def cleanup(self) -> None:
+        """Clean up resources and temporary files."""
+        if self._is_downloading:
+            self.cancel_download()
+
+        if self._getter and hasattr(self._getter, "temporary_directory"):
+            if self._getter.temporary_directory and self._getter.temporary_directory.is_dir():
+                LOG.debug("Cleaning up temporary directory: %s", self._getter.temporary_directory)
+                dds_cli.utils.delete_folder(self._getter.temporary_directory)
+
+    def _schedule_download(self, file_path: str) -> None:
+        """Schedule a file download in the thread pool."""
+        if self._executor and not self._cancelled:
+            # Create a simple progress object for the download
+            class SimpleProgress:
+                def __init__(self):
+                    self.tasks = {}
+
+                def add_task(self, description, total=None, step=None):  # noqa: ARG002, W0613
+                    # step parameter required for Rich progress compatibility
+                    task_id = len(self.tasks)
+                    self.tasks[task_id] = {
+                        "description": description,
+                        "total": total,
+                        "completed": 0,
+                    }
+                    return task_id
+
+                def update(self, task_id, advance=None, description=None):
+                    if task_id in self.tasks:
+                        if advance:
+                            self.tasks[task_id]["completed"] += advance
+                        if description:
+                            self.tasks[task_id]["description"] = description
+
+                def reset(self, task_id, description=None, total=None):
+                    if task_id in self.tasks:
+                        if description:
+                            self.tasks[task_id]["description"] = description
+                        if total:
+                            self.tasks[task_id]["total"] = total
+                        self.tasks[task_id]["completed"] = 0
+
+                def remove_task(self, task_id):
+                    if task_id in self.tasks:
+                        del self.tasks[task_id]
+
+            progress = SimpleProgress()
+            future = self._executor.submit(
+                self._getter.download_and_verify, file=file_path, progress=progress
+            )
+            self._download_threads[future] = file_path
+
+    def _update_download_progress(self, current_file: str) -> None:
+        """Update progress during download operations."""
+        with self._progress_lock:
+            overall_progress = self._completed_files / max(self._total_files, 1)
+            overall_percentage = overall_progress * 100.0
+
+            progress_info = DownloadProgress(
+                current_file=current_file,
+                total_files=self._total_files,
+                completed_files=self._completed_files,
+                current_file_progress=0.0,  # Individual file progress not tracked in this implementation
+                overall_progress=overall_progress,
+                overall_percentage=overall_percentage,
+                status="downloading",
+                error_message=None,
+            )
+
+            if self._progress_callback:
+                self._progress_callback(progress_info)
+
+            LOG.debug(
+                "Download progress: %d/%d files (%.1f%%)",
+                self._completed_files,
+                self._total_files,
+                overall_percentage,
+            )
+
+    def _update_progress(
+        self, status: str, message: str, error_message: Optional[str] = None
+    ) -> None:
+        """Update progress and notify callbacks."""
+        with self._progress_lock:
+            overall_progress = self._completed_files / max(self._total_files, 1)
+            overall_percentage = overall_progress * 100.0
+
+            progress_info = DownloadProgress(
+                current_file="",
+                total_files=self._total_files,
+                completed_files=self._completed_files,
+                current_file_progress=0.0,
+                overall_progress=overall_progress,
+                overall_percentage=overall_percentage,
+                status=status,
+                error_message=error_message,
+            )
+
+            if self._progress_callback:
+                self._progress_callback(progress_info)
+
+            LOG.debug("Progress update: %s - %s", status, message)
+
+    def _report_error(self, message: str) -> None:
+        """Report an error and notify callbacks."""
+        LOG.error(message)
+        self._update_progress("error", message, error_message=message)
+
+        if self._error_callback:
+            self._error_callback(message)
+
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit with cleanup."""
+        self.cleanup()

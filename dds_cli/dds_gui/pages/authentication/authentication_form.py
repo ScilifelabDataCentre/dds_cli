@@ -48,8 +48,8 @@ class AuthenticationForm(Container):
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""
         if event.button.id == "send-2fa-code":
-            self.authenticate_user_credentials()
-            if self.auth:
+            success = self.authenticate_user_credentials()
+            if success:
                 self.query_one("#dds-auth-form").remove()
                 self.query_one("#dds-auth-form-container").mount(
                     TwoFactorFormFields(id="dds-2fa-form")
@@ -57,10 +57,14 @@ class AuthenticationForm(Container):
         if event.button.id == "login":
             self.confirm_2factor_code()
 
-    def authenticate_user_credentials(self) -> None:
+    def authenticate_user_credentials(self) -> bool:
         """Authenticate the user credentials."""
         username = self.query_one("#username").value
         password = self.query_one("#password").value
+
+        if not username or not password:
+            self.notify("Error: Username and password are required.", severity="error", timeout=10)
+            return False
 
         try:
             self.partial_auth_token, self.secondfactor_method = self.auth.login(username, password)
@@ -68,13 +72,20 @@ class AuthenticationForm(Container):
         except (
             dds_cli.exceptions.AuthenticationError,
             dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
         ) as error:
             self.notify(f"Error: {error}", severity="error")
-            self.auth = None
+            return False
+        return True
 
     def confirm_2factor_code(self) -> None:
         """Confirm the 2FA code."""
         code = self.query_one("#code").value
+
+        if not code:
+            self.notify("Error: 2FA code is required.", severity="error", timeout=10)
+            return
 
         try:
             self.auth.confirm_twofactor(
@@ -84,7 +95,12 @@ class AuthenticationForm(Container):
             )
             self.notify("Successfully authenticated.")
             self.app.set_auth_status(True)
-        except dds_cli.exceptions.AuthenticationError as error:
+        except (
+            dds_cli.exceptions.AuthenticationError,
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as error:
             self.notify(f"Error: {error}", severity="error", timeout=10)
         self.close_modal()
 

@@ -75,7 +75,7 @@ class S3Connector:
                 endpoint_url=self.url,
                 aws_access_key_id=self.keys["access_key"],
                 aws_secret_access_key=self.keys["secret_key"],
-                region_name="us-east-1",  # Will be ignored by Safespring
+                config=botocore.client.Config(read_timeout=300, connect_timeout=60, retries={"max_attempts": 10}),
             )
         except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
             LOG.warning("S3 connection failed: %s", err)

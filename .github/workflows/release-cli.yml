@@ -136,19 +136,15 @@ jobs:
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
       - name: Build the HTML documentation
-        uses: matthiaszepper/sphinx-action-v4@latest
+        uses: ./.github/actions/sphinx-build
         with:
-          container: latest
-          pre-build-command: "apt-get update && apt-get install -y gcc && pip install ."
-          build-command: "make html"
-          docs-folder: "docs/"
+          build-command: make html
+          docs-folder: docs
       - name: Build the pdf with Sphinx
-        uses: matthiaszepper/sphinx-action-v4@pdflatex
+        uses: ./.github/actions/sphinx-build
         with:
-          container: pdflatex
-          pre-build-command: "apt-get update && apt-get install -y librsvg2-bin && apt-get -y install build-essential"
-          build-command: "make latexpdf"
-          docs-folder: "docs/"
+          build-command: make latexpdf
+          docs-folder: docs
       - name: Create an artifact of the previously built HTML
         uses: actions/upload-artifact@v4
         with:

@@ -69,3 +69,23 @@ html_theme_options = {
 html_static_path = ["_static"]
 
 html_css_files = ["custom.css"]
+
+latex_engine = "xelatex"  # or 'lualatex', but xelatex is usually easier
+
+latex_elements = {
+    "preamble": r"""
+        \usepackage{fontspec}
+        \setmainfont{DejaVu Sans}
+        \newfontfamily\EmojiFont{Noto Color Emoji}
+        \ExplSyntaxOn
+        \NewDocumentCommand{\emoji}{m}
+        {
+        \group_begin:
+            \char_set_lccode:nn {`~} {`#1}
+            \tl_to_lowercase:n {~}
+            \text{\EmojiFont #1}
+        \group_end:
+        }
+        \ExplSyntaxOff
+        """,
+}

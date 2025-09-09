@@ -137,7 +137,7 @@ jobs:
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
       - name: Preprocess emojis in documentation
-        run: python scripts/preprocess_emojis.py docs
+        run: python scripts/preprocess_emojis.py CHANGELOG.rst
       - name: Build the HTML documentation
         uses: ./.github/actions/sphinx-build
         with:

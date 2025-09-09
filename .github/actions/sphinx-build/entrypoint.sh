@@ -7,7 +7,7 @@ DOCS_FOLDER="${DOCS_FOLDER%/}"
 
 # Install required system packages
 apt-get update
-apt-get install -y make gcc librsvg2-bin texlive-latex-extra texlive-fonts-recommended texlive-latex-recommended latexmk
+apt-get install -y make gcc librsvg2-bin texlive-latex-extra texlive-xetex texlive-fonts-recommended fonts-noto-color-emoji texlive-latex-recommended latexmk
 
 # Install Python dependencies if available
 if [ -f "$GITHUB_WORKSPACE/$DOCS_FOLDER/requirements.txt" ]; then

@@ -136,6 +136,8 @@ jobs:
       - name: Make dependencies available to Docker container
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
+      - name: Preprocess emojis in documentation
+        run: python scripts/preprocess_emojis.py docs
       - name: Build the HTML documentation
         uses: ./.github/actions/sphinx-build
         with:

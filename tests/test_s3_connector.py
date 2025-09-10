@@ -63,6 +63,26 @@ def test_connect_uses_custom_config(mock_session_class, mock_config_class):
     assert result is mock_resource
 
 
+@patch("dds_cli.s3_connector.boto3.session.Session.resource")
+def test_connect_logs_success(mock_resource_method, caplog):
+    """Verify successful connection returns resource and logs debug message."""
+
+    # Mock resource and set the actual method to return it when called in test
+    mock_res = MagicMock()
+    mock_resource_method.return_value = mock_res
+
+    # Create connector
+    connector = _create_connector()
+
+    with caplog.at_level(logging.DEBUG):
+        # Attempt to connect to S3
+        result = connector.connect()
+
+    # Verify that the connector returns a mocked resource and that the correct message is logged
+    assert result is mock_res
+    assert "Connected to S3." in caplog.messages
+
+
 # Set up the boto3 resource to raise a BotoCoreError
 @patch(
     "dds_cli.s3_connector.boto3.session.Session.resource",

@@ -79,9 +79,9 @@ class S3Connector:
                     read_timeout=300,
                     connect_timeout=60,
                     retries={
-                        "max_attempts": 10, 
+                        "max_attempts": 10,
                         # TODO: Add retry strategy mode="standard" when boto3 version >= 1.26.0
-                    },  
+                    },
                 ),
             )
         except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:

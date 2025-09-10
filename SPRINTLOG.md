@@ -467,4 +467,4 @@ _Empty sprint_
 
 # 2025-09-01 - 2025-09-12
 
-- Security: Bump cryptography library to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))
+- Bump cryptography library to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))

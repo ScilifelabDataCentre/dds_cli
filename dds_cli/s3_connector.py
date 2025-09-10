@@ -76,7 +76,12 @@ class S3Connector:
                 aws_access_key_id=self.keys["access_key"],
                 aws_secret_access_key=self.keys["secret_key"],
                 config=botocore.client.Config(
-                    read_timeout=300, connect_timeout=60, retries={"max_attempts": 10}
+                    read_timeout=300,
+                    connect_timeout=60,
+                    retries={
+                        "max_attempts": 10, 
+                        # TODO: Add retry strategy mode="standard" when boto3 version >= 1.26.0
+                    },  
                 ),
             )
         except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:

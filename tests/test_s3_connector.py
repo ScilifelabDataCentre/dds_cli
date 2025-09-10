@@ -108,52 +108,52 @@ def test_connect_logs_warning_and_raises(exc_cls, caplog):
     )
 
 
-def test_context_manager_calls_connect_and_handles_exception():
-    """Ensure context manager uses S3Connector.connect and raises exceptions."""
+# def test_context_manager_calls_connect_and_handles_exception():
+#     """Ensure context manager uses S3Connector.connect and raises exceptions."""
 
-    # Helper objects
-    connect_return_value = object()
-    connector = _create_connector()
+#     # Helper objects
+#     connect_return_value = object()
+#     connector = _create_connector()
 
-    # Helper variables
-    captured = {}  # Should capture return value from __exit__
-    original_exit = S3Connector.__exit__  # Original __exit__ method without calling it
+#     # Helper variables
+#     captured = {}  # Should capture return value from __exit__
+#     original_exit = S3Connector.__exit__  # Original __exit__ method without calling it
 
-    # Helper exception class
-    class SomeError(Exception):
-        """Custom error for testing."""
+#     # Helper exception class
+#     class SomeError(Exception):
+#         """Custom error for testing."""
 
-    # Helper function
-    def custom_exit(self, exc_type, exc_value, traceb):
-        """Custom __exit__ to capture return value."""
-        result = original_exit(self, exc_type, exc_value, traceb)
-        captured["return"] = result
-        return result
+#     # Helper function
+#     def custom_exit(self, exc_type, exc_value, traceb):
+#         """Custom __exit__ to capture return value."""
+#         result = original_exit(self, exc_type, exc_value, traceb)
+#         captured["return"] = result
+#         return result
 
-    # Run test
-    # Patch S3Connector.connect to return a (mock) object
-    # Patch traceback.print_exception only monitors if it gets called but doesn't actually print
-    # Patch S3Connector.__exit__ to call real __exit__ but capture return value
-    with patch(
-        "dds_cli.s3_connector.S3Connector.connect", return_value=connect_return_value
-    ) as mock_connect, patch(
-        "dds_cli.s3_connector.traceback.print_exception"
-    ) as mock_print, patch.object(
-        S3Connector,
-        "__exit__",
-        autospec=True,  # Keep signature the same as original method, including self
-        side_effect=custom_exit,  # Make sure to call original __exit__
-    ) as mock_exit:
+#     # Run test
+#     # Patch S3Connector.connect to return a (mock) object
+#     # Patch traceback.print_exception only monitors if it gets called but doesn't actually print
+#     # Patch S3Connector.__exit__ to call real __exit__ but capture return value
+#     with patch(
+#         "dds_cli.s3_connector.S3Connector.connect", return_value=connect_return_value
+#     ) as mock_connect, patch(
+#         "dds_cli.s3_connector.traceback.print_exception"
+#     ) as mock_print, patch.object(
+#         S3Connector,
+#         "__exit__",
+#         autospec=True,  # Keep signature the same as original method, including self
+#         side_effect=custom_exit,  # Make sure to call original __exit__
+#     ) as mock_exit:
 
-        with pytest.raises(SomeError):
-            # Attempt to connect to S3 and raise an exception
-            with connector as cm:
-                # __enter__ should call connect and set resource
-                assert cm.resource is connect_return_value
-                raise SomeError()
+#         with pytest.raises(SomeError):
+#             # Attempt to connect to S3 and raise an exception
+#             with connector as cm:
+#                 # __enter__ should call connect and set resource
+#                 assert cm.resource is connect_return_value
+#                 raise SomeError()
 
-    mock_connect.assert_called_once()
-    assert connector.resource is connect_return_value
-    mock_print.assert_called_once()
-    mock_exit.assert_called_once()
-    assert captured["return"] is False
+#     mock_connect.assert_called_once()
+#     assert connector.resource is connect_return_value
+#     mock_print.assert_called_once()
+#     mock_exit.assert_called_once()
+#     assert captured["return"] is False

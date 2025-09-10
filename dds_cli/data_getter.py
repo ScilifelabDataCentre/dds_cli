@@ -14,6 +14,7 @@ from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
+import dds_cli.constants as constants
 from dds_cli import DDSEndpoint, FileSegment
 from dds_cli import file_handler_remote as fhr
 from dds_cli import data_remover as dr
@@ -235,8 +236,11 @@ class DataGetter(base.DDSBaseClass):
         file_remote = self.filehandler.data[file]["url"]
 
         try:
-            # TODO: Set timeout? (pylint)
-            with requests.get(file_remote, stream=True) as req:
+            with requests.get(
+                file_remote,
+                stream=True,
+                timeout=(constants.CONNECT_TIMEOUT, constants.READ_TIMEOUT),
+            ) as req:
                 req.raise_for_status()
                 with file_local.open(mode="wb") as new_file:
                     for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):

@@ -1,8 +1,11 @@
 """Tests for dds_cli.s3_connector."""
 
 # IMPORTS ######################################################################
+import logging
 from unittest.mock import MagicMock, patch
 
+import pytest
+from botocore.exceptions import BotoCoreError
 from dds_cli.s3_connector import S3Connector
 
 
@@ -58,3 +61,24 @@ def test_connect_uses_custom_config(mock_session_class, mock_config_class):
     # Verify that the returned resource is the mock resource and the config used is the mock config
     assert mock_session.resource.call_args.kwargs["config"] is mock_config
     assert result is mock_resource
+
+# Set up the boto3 resource to raise a BotoCoreError
+@patch(
+    "dds_cli.s3_connector.boto3.session.Session.resource",
+    side_effect=BotoCoreError(),
+)
+def test_connect_logs_warning_and_raises(mock_resource, caplog):
+    """Verify that S3Connector.connect propagates errors and logs a warning."""
+    # Create connector
+    connector = _create_connector()
+
+    with caplog.at_level(logging.WARNING):
+        # Attempt to connect
+        with pytest.raises(BotoCoreError):
+            connector.connect()
+
+    # Verify that the correct warning was logged
+    assert any(
+        record.levelno == logging.WARNING and "S3 connection failed" in record.message
+        for record in caplog.records
+    )

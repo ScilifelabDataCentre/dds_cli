@@ -29,4 +29,9 @@ jobs:
       - name: Analysing the code with pylint
         # Disable rule that limits to 5 the number of positional arguments
         run: |
-          pylint --rcfile=.pylintrc --disable=too-many-positional-arguments --disable=use-yield-from --disable=possibly-used-before-assignment -- $(git ls-files '*.py')
+          pylint \  
+            --rcfile=.pylintrc \
+            --disable=too-many-positional-arguments \
+            --disable=use-yield-from \
+            --disable=possibly-used-before-assignment \
+            -- $(git ls-files '*.py')

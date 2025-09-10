@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # If new Python versions are added, update pylint accordingly
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v3
@@ -26,5 +27,6 @@ jobs:
           pip install setuptools wheel
           pip install pylint==3.3.0
       - name: Analysing the code with pylint
+        # Disable rule that limits to 5 the number of positional arguments
         run: |
-          pylint --rcfile=.pylintrc $(git ls-files '*.py')
+          pylint --rcfile=.pylintrc --disable=too-many-positional-arguments $(git ls-files '*.py')

@@ -467,4 +467,4 @@ _Empty sprint_
 
 # 2025-09-01 - 2025-09-12
 
-- Security: Bump requests library to solve vulnerabities ([#842](https://github.com/ScilifelabDataCentre/dds_cli/pull/842))
+- Bump requests library from 2.32.2 to 2.32.4 to solve vulnerabities ([#842](https://github.com/ScilifelabDataCentre/dds_cli/pull/842))

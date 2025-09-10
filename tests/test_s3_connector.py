@@ -19,9 +19,10 @@ def _create_connector():
 
     return connector
 
+
 # TESTS ########################################################################
-@patch("dds_cli.s3_connector.botocore.client.Config") # --> mock_config_class
-@patch("dds_cli.s3_connector.boto3.session.Session") # --> mock_session_class
+@patch("dds_cli.s3_connector.botocore.client.Config")  # --> mock_config_class
+@patch("dds_cli.s3_connector.boto3.session.Session")  # --> mock_session_class
 def test_connect_uses_custom_config(mock_session_class, mock_config_class):
     """Verify S3Connector.connect sets up boto3 session with custom config."""
     # Mock the session, resource and config
@@ -57,4 +58,3 @@ def test_connect_uses_custom_config(mock_session_class, mock_config_class):
     # Verify that the returned resource is the mock resource and the config used is the mock config
     assert mock_session.resource.call_args.kwargs["config"] is mock_config
     assert result is mock_resource
-    

@@ -467,4 +467,4 @@ _Empty sprint_
 
 # 2025-09-01 - 2025-09-12
 
-- Security: Dropped support for python 3.8 and 3.9 ([#843](https://github.com/ScilifelabDataCentre/dds_cli/pull/843))
+- Dropped support for python 3.8 and 3.9 due to CVE ([#843](https://github.com/ScilifelabDataCentre/dds_cli/pull/843))

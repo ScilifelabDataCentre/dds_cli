@@ -11,7 +11,7 @@ from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.pages.important_information.important_information import ImportantInformation
 from dds_cli.dds_gui.pages.project_information.project_information import ProjectInformation
-
+from dds_cli.dds_gui.pages.project_actions.project_actions import ProjectActions
 
 class ProjectView(Widget):
     """Project view page. Contains the project list, important information,
@@ -64,6 +64,4 @@ class ProjectView(Widget):
                     yield ProjectContent(title="Project Content", id="project-content")
                     yield ProjectInformation(title="Project Information", id="project-information")
                 with Horizontal(id="bottom-container"):
-                    yield Placeholder(
-                        id="project-actions"
-                    )  # ProjectActions(title="Project Actions", id="project-actions")
+                    yield ProjectActions(title="Project Actions", id="project-actions")

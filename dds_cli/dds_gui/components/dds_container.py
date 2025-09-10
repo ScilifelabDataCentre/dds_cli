@@ -1,6 +1,6 @@
 """DDS Container Widgets"""
 
-from typing import Any
+from typing import Any, Optional, Literal
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.reactive import Reactive
 
@@ -49,9 +49,27 @@ class DDSContentContainer(Vertical):
 class DDSSpacedContainer(VerticalScroll):
     """A container widget with vertical spacing between child widgets."""
 
+    def __init__(
+        self,
+        *args: Any,
+        align: Optional[Literal[
+            "center top",
+            "right top",
+            "left top",
+            "center middle",
+            "right middle",
+            "left middle",
+            "center bottom",
+            "right bottom",
+            "left bottom"
+        ]] = "center top",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.align = align
+
     DEFAULT_CSS = """
     DDSSpacedContainer {
-        align: center top;
         scrollbar-size: 1 1;
         scrollbar-color: $primary 80%;
         scrollbar-color-active: $primary;

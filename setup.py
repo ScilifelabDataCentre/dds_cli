@@ -28,7 +28,6 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
-        "Programming Language :: Python :: 3.14",
     ],
     url="https://github.com/ScilifelabDataCentre/dds_cli",
     author="SciLifeLab Data Centre",

@@ -62,6 +62,7 @@ def test_connect_uses_custom_config(mock_session_class, mock_config_class):
     assert mock_session.resource.call_args.kwargs["config"] is mock_config
     assert result is mock_resource
 
+
 # Set up the boto3 resource to raise a BotoCoreError
 @patch(
     "dds_cli.s3_connector.boto3.session.Session.resource",

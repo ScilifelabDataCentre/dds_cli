@@ -140,26 +140,6 @@ def test_login_invalid_credentials() -> None:
         assert "Failed to authenticate user" in str(exc_info.value)
 
 
-def test_login_empty_username() -> None:
-    """Test that login raises error with empty username."""
-    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        user.login("", MOCK_PASSWORD)
-
-    assert "Non-empty username needed to be able to authenticate" in str(exc_info.value)
-
-
-def test_login_empty_password() -> None:
-    """Test that login raises error with empty password."""
-    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        user.login(MOCK_USERNAME, "")
-
-    assert "Non-empty password needed to be able to authenticate" in str(exc_info.value)
-
-
 def test_login_unicode_error() -> None:
     """Test handling of unicode characters in credentials."""
     user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
@@ -259,6 +239,8 @@ def test_login_no_prompt_without_credentials() -> None:
     [
         (None, MOCK_PASSWORD),
         (MOCK_USERNAME, None),
+        ("", MOCK_PASSWORD),
+        (MOCK_USERNAME, ""),
     ],
 )
 def test_login_no_prompt_partial_credentials(username, password) -> None:

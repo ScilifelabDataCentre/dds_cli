@@ -464,3 +464,4 @@ _Empty sprint_
 - Add Dardel-related information to the documentation ([#774](https://github.com/ScilifelabDataCentre/dds_cli/pull/774))
 - Implement Project Info in GUI ([#838](https://github.com/ScilifelabDataCentre/dds_cli/pull/838))
 - Fix error handling bug in GUI authentication ([#839](https://github.com/ScilifelabDataCentre/dds_cli/pull/839))
+- Specify upload timeouts to avoid s3 errors ([#840](https://github.com/ScilifelabDataCentre/dds_cli/pull/840))

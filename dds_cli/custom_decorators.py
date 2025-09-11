@@ -155,7 +155,7 @@ def removal_spinner(func):
             console=dds_cli.utils.stderr_console,
         ) as progress:
 
-            description: str | None = None # type hint, initialized
+            description: str | None = None  # type hint, initialized
             # Determine spinner text
             if func.__name__ == "remove_all":
                 description = f"Removing all files in project {self.project}"

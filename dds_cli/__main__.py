@@ -544,7 +544,7 @@ def configure():
             "Which method would you like to use?", choices=["Email", "Authenticator App", "Cancel"]
         ).ask()
 
-        auth_method: str | None = None # type hint, initialized
+        auth_method: str | None = None  # type hint, initialized
         if auth_method_choice == "Cancel":
             LOG.info("Two-factor authentication method not configured.")
             sys.exit(0)
@@ -886,7 +886,7 @@ def activate_user(click_ctx, email):
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
-    proceed_activation = False # default assignment
+    proceed_activation = False  # default assignment
 
     if click_ctx.get("NO_PROMPT", False):
         pass
@@ -928,7 +928,7 @@ def deactivate_user(click_ctx, email):
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
-    proceed_deactivation = False # default assignment
+    proceed_deactivation = False  # default assignment
 
     if click_ctx.get("NO_PROMPT", False):
         pass

@@ -278,9 +278,9 @@ class LocalFileHandler(fh.FileHandler):
             #     "Test: %s",
             # )
             yield from fc.Compressor.compress_file(file=file_info["path_raw"])
-                # LOG.debug("Chunk type: %s", type(chunk))
-                # checksum.update(chunk)
-                # break
+            # LOG.debug("Chunk type: %s", type(chunk))
+            # checksum.update(chunk)
+            # break
 
         # LOG.debug("Streaming file finished.")
         # Add checksum to file info

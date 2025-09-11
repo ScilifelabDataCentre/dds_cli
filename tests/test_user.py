@@ -252,6 +252,25 @@ def test_login_no_prompt_without_credentials() -> None:
 
     assert "Authentication not possible when running with --no-prompt" in str(exc_info.value)
 
+# Run the test twice with different parameters
+@pytest.mark.parametrize(
+    "username, password",
+    [
+        (None, MOCK_PASSWORD),
+        (MOCK_USERNAME, None),
+    ],
+)
+def test_login_no_prompt_partial_credentials(username, password) -> None:
+    """Test that login raises error when no_prompt=True and only one credential provided."""
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        # Attempt to login with only username or only password
+        user.login(username, password)
+
+    assert "Authentication not possible when running with --no-prompt" in str(exc_info.value)
+
+
 
 ###### Test confirm_twofactor ######
 

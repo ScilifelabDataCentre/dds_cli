@@ -128,6 +128,33 @@ def test_login_prompts_called_correctly() -> None:
 
 # Run test twice with different parameters
 @pytest.mark.parametrize(
+    "username_input,password_input,expected_message",
+    [
+        ("", MOCK_PASSWORD, "Non-empty username needed to be able to authenticate."),
+        (MOCK_USERNAME, "", "Non-empty password needed to be able to authenticate."),
+    ],
+)
+def test_login_prompt_empty_credentials(
+    username_input: str, password_input: str, expected_message: str
+) -> None:
+    """Test that prompts returning empty credentials raise errors."""
+    user = User(force_renew_token=False, no_prompt=False, retrieve_token=False)
+
+    with pytest.MonkeyPatch().context() as mp:
+        # Mock prompts to return empty values
+        mp.setattr("dds_cli.user.Prompt.ask", lambda prompt: username_input)
+        mp.setattr("dds_cli.user.getpass.getpass", lambda prompt: password_input)
+
+        with pytest.raises(AuthenticationError) as exc_info:
+            # Attempt login (should prompt and get empty values)
+            user.login()
+
+        # Verify the error message is as expected
+        assert exc_info.value.message == expected_message
+
+
+# Run test twice with different parameters
+@pytest.mark.parametrize(
     "username,password",
     [(None, MOCK_PASSWORD), (MOCK_USERNAME, None)],
     ids=["missing_username", "missing_password"],

@@ -14,7 +14,7 @@ from rich.markup import escape
 from rich.progress import Progress, SpinnerColumn
 
 # Own modules
-import dds_cli.constants as constants
+from dds_cli import constants
 from dds_cli import DDSEndpoint, FileSegment
 from dds_cli import file_handler_remote as fhr
 from dds_cli import data_remover as dr

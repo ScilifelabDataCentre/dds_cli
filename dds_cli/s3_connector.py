@@ -14,8 +14,8 @@ import boto3
 import botocore
 
 # Own modules
-import dds_cli.constants as constants
 import dds_cli.utils
+from dds_cli import constants
 from dds_cli import DDSEndpoint
 
 ###############################################################################

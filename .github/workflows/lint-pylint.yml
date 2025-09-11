@@ -31,6 +31,4 @@ jobs:
         run: |
           pylint --rcfile=.pylintrc \
             --disable=too-many-positional-arguments \
-            --disable=use-yield-from \
-            --disable=possibly-used-before-assignment \
             -- $(git ls-files '*.py')

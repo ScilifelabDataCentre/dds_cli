@@ -2,11 +2,37 @@
 
 # Imports
 
+import pathlib
+import requests
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from dds_cli.data_getter import DataGetter
 from dds_cli import constants
+
+# Helpers 
+
+def _prepare_data_getter(file_name):
+    """Mock a DataGetter instance with a filehandler containing a single file entry."""
+    # Create DataGetter instance without running __init__
+    dg = DataGetter.__new__(DataGetter)
+
+    # Mock filehandler with necessary data
+    # Using SimpleNamespace because it allows you to create simple objects
+    # with attributes without defining a custom class
+    # Here we use it to mock the filehandler instead of initializing
+    # the full FileHandler class which requires more inputs etc
+    # Could technically also use Filehandler.__new__(FileHandler) but this is cleaner
+    dg.filehandler = SimpleNamespace(
+        # Only data attribute needed for DataGetter.get
+        data={
+            file_name: {
+                "path_downloaded": pathlib.Path(file_name),
+                "url": "https://example.com/file",
+            }
+        }
+    )
+    return dg
 
 # Tests
 
@@ -17,24 +43,9 @@ def test_get_uses_timeout(monkeypatch, tmp_path):
     monkeypatch is a pytest fixture that allows you to modify objects temporatily.
     tmp_path is a pytest fixture that provides a temporary directory.
     """
-    # Create DataGetter instance without running __init__
-    getter = DataGetter.__new__(DataGetter)
-
-    # Mock filehandler with necessary data
-    # Using SimpleNamespace because it allows you to create simple objects
-    # with attributes without defining a custom class
-    # Here we use it to mock the filehandler instead of initializing
-    # the full FileHandler class which requires more inputs etc
-    # Could technically also use Filehandler.__new__(FileHandler) but this is cleaner
-    getter.filehandler = SimpleNamespace(
-        # Only data attribute needed for DataGetter.get
-        data={
-            "file": {
-                "path_downloaded": tmp_path / "file.bin",
-                "url": "http://example.com/file",
-            }
-        }
-    )
+    file_path = tmp_path / "file.bin"
+    # Mock DataGetter instance with helper
+    getter = _prepare_data_getter(file_name=file_path)
 
     # Create mock objects
     progress = MagicMock()  # needed for get method but doesn't invoke real progress
@@ -60,3 +71,29 @@ def test_get_uses_timeout(monkeypatch, tmp_path):
         stream=True,
         timeout=(constants.CONNECT_TIMEOUT, constants.READ_TIMEOUT),
     )
+
+
+def test_get_connect_timeout(monkeypatch):
+    """Test that DataGetter.get handles a connection timeout correctly."""
+    file_name = "file.txt"
+
+    # Mock DataGetter instance with helper
+    getter = _prepare_data_getter(file_name)
+
+    # Helper function to replace requests.get and raise a timeout error
+    err = requests.exceptions.ConnectTimeout("connect timeout")
+    def fake_get(*_, **__):
+        raise err
+
+    # Use monkeypatch to replace requests.get with our fake_get function
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    # Call the DataGetter.get method
+    # __wrapped__ is used to call the original method without any decorators
+    downloaded, message = DataGetter.get.__wrapped__(
+        getter, file=file_name, progress=None, task=None
+    )
+
+    # Verify that the method returns the expected values
+    assert (downloaded, message) == (False, str(err))
+    assert not pathlib.Path(file_name).exists()

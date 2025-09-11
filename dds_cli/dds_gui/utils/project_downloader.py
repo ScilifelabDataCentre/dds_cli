@@ -46,6 +46,8 @@ class DownloadProgress:
     overall_percentage: float  # 0.0 to 100.0 for easy Textual integration
     status: str  # "preparing", "downloading", "decrypting", "completed", "error"
     error_message: Optional[str] = None
+    bytes_downloaded: int = 0
+    total_bytes: int = 0
 
 
 @dataclass
@@ -57,6 +59,130 @@ class DownloadResult:
     files_downloaded: int = 1
     error_message: Optional[str] = None
     file_size: Optional[int] = None
+
+
+class CallbackProgress:
+    """Progress class that triggers callbacks for real-time updates."""
+
+    def __init__(
+        self, 
+        progress_callback: Optional[Callable[[DownloadProgress], None]], 
+        file_path: str, 
+        total_size: int,
+        downloader_instance: 'ProjectDownloader'
+    ):
+        """Initialize callback progress tracker.
+        
+        Args:
+            progress_callback: Function to call with progress updates
+            file_path: Path of the file being downloaded
+            total_size: Total size of the file in bytes
+            downloader_instance: Reference to the downloader for thread-safe updates
+        """
+        self.progress_callback = progress_callback
+        self.file_path = file_path
+        self.total_size = total_size
+        self.downloader_instance = downloader_instance
+        self.tasks = {}
+        self.completed = 0
+        self._lock = threading.Lock()
+        self._last_callback_time = 0
+        self._callback_throttle = 0.05  # Minimum 50ms between callbacks
+        self._last_callback_progress = 0  # Track last reported progress percentage
+
+    def add_task(
+        self, description, total=None, step=None, visible=True
+    ):  # noqa: ARG002, W0613
+        """Add a progress task (Rich compatibility)."""
+        with self._lock:
+            task_id = len(self.tasks)
+            self.tasks[task_id] = {
+                "description": description,
+                "total": total or self.total_size,
+                "completed": 0,
+                "visible": visible,
+            }
+            return task_id
+
+    def update(self, task_id, advance=None, description=None):
+        """Update progress and trigger callbacks."""
+        with self._lock:
+            if task_id in self.tasks:
+                if advance:
+                    self.tasks[task_id]["completed"] += advance
+                    self.completed += advance
+                    LOG.debug(f"Progress update: {self.completed}/{self.total_size} bytes ({self.completed/self.total_size*100:.1f}%)")
+                if description:
+                    self.tasks[task_id]["description"] = description
+
+                # Trigger real-time progress callback
+                if self.progress_callback:
+                    self._trigger_progress_callback()
+
+    def reset(self, task_id, description=None, total=None):
+        """Reset task progress."""
+        with self._lock:
+            if task_id in self.tasks:
+                if description:
+                    self.tasks[task_id]["description"] = description
+                if total:
+                    self.tasks[task_id]["total"] = total
+                self.tasks[task_id]["completed"] = 0
+
+    def remove_task(self, task_id):
+        """Remove a task."""
+        with self._lock:
+            if task_id in self.tasks:
+                del self.tasks[task_id]
+
+    def _trigger_progress_callback(self):
+        """Trigger progress callback with current state."""
+        if not self.progress_callback:
+            return
+
+        # Calculate current file progress
+        current_file_progress = self.completed / max(self.total_size, 1)
+        current_percentage = int(current_file_progress * 100)
+        
+        # Trigger callback if:
+        # 1. Enough time has passed (throttling), OR
+        # 2. Progress percentage has changed by at least 1%, OR
+        # 3. This is the first update (0% progress)
+        import time
+        current_time = time.time()
+        time_elapsed = current_time - self._last_callback_time
+        progress_changed = current_percentage != self._last_callback_progress
+        
+        if (time_elapsed >= self._callback_throttle or 
+            progress_changed or 
+            current_percentage == 0):
+            
+            LOG.debug(f"Triggering callback: {current_percentage}% progress, time_elapsed={time_elapsed:.3f}s, progress_changed={progress_changed}")
+            self._last_callback_time = current_time
+            self._last_callback_progress = current_percentage
+        
+            # Get overall progress from downloader
+            with self.downloader_instance._progress_lock:
+                overall_progress = self.downloader_instance._completed_files / max(self.downloader_instance._total_files, 1)
+                overall_percentage = overall_progress * 100.0
+
+            progress_info = DownloadProgress(
+                current_file=self.file_path,
+                total_files=self.downloader_instance._total_files,
+                completed_files=self.downloader_instance._completed_files,
+                current_file_progress=current_file_progress,
+                overall_progress=overall_progress,
+                overall_percentage=overall_percentage,
+                status="downloading",
+                error_message=None,
+                bytes_downloaded=self.completed,
+                total_bytes=self.total_size,
+            )
+
+            # Use thread-safe callback execution
+            self.downloader_instance._safe_callback_execution(
+                lambda: self.progress_callback(progress_info)
+            )
 
 
 class ProjectDownloader:
@@ -168,6 +294,9 @@ class ProjectDownloader:
         self._progress_lock = threading.Lock()
         self._completed_files = 0
         self._total_files = 0
+        
+        # Thread-safe callback execution
+        self._callback_lock = threading.Lock()
 
     def set_progress_callback(self, callback: Callable[[DownloadProgress], None]) -> None:
         """Set callback for progress updates.
@@ -192,6 +321,18 @@ class ProjectDownloader:
             callback: Function to call when errors occur
         """
         self._error_callback = callback
+
+    def _safe_callback_execution(self, callback_func: Callable[[], None]) -> None:
+        """Execute callback in a thread-safe manner.
+        
+        Args:
+            callback_func: Function to execute safely
+        """
+        try:
+            with self._callback_lock:
+                callback_func()
+        except Exception as e:
+            LOG.warning("Callback execution failed: %s", str(e))
 
     def initialize(
         self,
@@ -333,15 +474,33 @@ class ProjectDownloader:
                             if isinstance(result, tuple) and len(result) == 2:
                                 success, message = result
                             else:
-                                # Handle case where result is not a tuple
+                                # Handle case where result is not a tuple (DataGetter returns boolean)
                                 success = bool(result)
                                 message = "Download completed" if success else "Download failed"
-                                LOG.warning("Unexpected result format: %s", result)
+                                LOG.debug("DataGetter returned boolean result: %s", result)
 
                             self._completed_files += 1
 
-                            # Update progress
+                            # Update progress with final file completion
                             self._update_download_progress(file_path)
+                            
+                            # Trigger final progress callback for this file
+                            if self._progress_callback:
+                                final_progress = DownloadProgress(
+                                    current_file=file_path,
+                                    total_files=self._total_files,
+                                    completed_files=self._completed_files,
+                                    current_file_progress=1.0,  # File is complete
+                                    overall_progress=self._completed_files / max(self._total_files, 1),
+                                    overall_percentage=(self._completed_files / max(self._total_files, 1)) * 100.0,
+                                    status="completed" if success else "error",
+                                    error_message=message if not success else None,
+                                    bytes_downloaded=self._getter.filehandler.data[file_path]["size_stored"] if success else 0,
+                                    total_bytes=self._getter.filehandler.data[file_path]["size_stored"],
+                                )
+                                self._safe_callback_execution(
+                                    lambda: self._progress_callback(final_progress)
+                                )
 
                             # Create result object
                             result = DownloadResult(
@@ -352,7 +511,9 @@ class ProjectDownloader:
 
                             # Notify callbacks
                             if self._file_completed_callback:
-                                self._file_completed_callback(result)
+                                self._safe_callback_execution(
+                                    lambda: self._file_completed_callback(result)
+                                )
 
                             if success:
                                 LOG.debug("Download successful: %s", file_path)
@@ -416,45 +577,17 @@ class ProjectDownloader:
             )
 
         try:
-            # Create a minimal progress object for single file download
-            # We'll use a simple progress tracker that doesn't require Rich
-            class SimpleProgress:
-                def __init__(self):
-                    self.tasks = {}
-
-                def add_task(
-                    self, description, total=None, step=None, visible=True
-                ):  # noqa: ARG002, W0613
-                    # step and visible parameters required for Rich progress compatibility
-                    task_id = len(self.tasks)
-                    self.tasks[task_id] = {
-                        "description": description,
-                        "total": total,
-                        "completed": 0,
-                        "visible": visible,
-                    }
-                    return task_id
-
-                def update(self, task_id, advance=None, description=None):
-                    if task_id in self.tasks:
-                        if advance:
-                            self.tasks[task_id]["completed"] += advance
-                        if description:
-                            self.tasks[task_id]["description"] = description
-
-                def reset(self, task_id, description=None, total=None):
-                    if task_id in self.tasks:
-                        if description:
-                            self.tasks[task_id]["description"] = description
-                        if total:
-                            self.tasks[task_id]["total"] = total
-                        self.tasks[task_id]["completed"] = 0
-
-                def remove_task(self, task_id):
-                    if task_id in self.tasks:
-                        del self.tasks[task_id]
-
-            progress = SimpleProgress()
+            # Get file size for progress tracking
+            file_size = self._getter.filehandler.data[file_path]["size_stored"]
+            
+            # Create callback-aware progress object for single file download
+            progress = CallbackProgress(
+                progress_callback=self._progress_callback,
+                file_path=file_path,
+                total_size=file_size,
+                downloader_instance=self
+            )
+            
             success, message = self._getter.download_and_verify(file=file_path, progress=progress)
 
             return DownloadResult(
@@ -519,44 +652,17 @@ class ProjectDownloader:
     def _schedule_download(self, file_path: str) -> None:
         """Schedule a file download in the thread pool."""
         if self._executor and not self._cancelled:
-            # Create a simple progress object for the download
-            class SimpleProgress:
-                def __init__(self):
-                    self.tasks = {}
-
-                def add_task(
-                    self, description, total=None, step=None, visible=True
-                ):  # noqa: ARG002, W0613
-                    # step and visible parameters required for Rich progress compatibility
-                    task_id = len(self.tasks)
-                    self.tasks[task_id] = {
-                        "description": description,
-                        "total": total,
-                        "completed": 0,
-                        "visible": visible,
-                    }
-                    return task_id
-
-                def update(self, task_id, advance=None, description=None):
-                    if task_id in self.tasks:
-                        if advance:
-                            self.tasks[task_id]["completed"] += advance
-                        if description:
-                            self.tasks[task_id]["description"] = description
-
-                def reset(self, task_id, description=None, total=None):
-                    if task_id in self.tasks:
-                        if description:
-                            self.tasks[task_id]["description"] = description
-                        if total:
-                            self.tasks[task_id]["total"] = total
-                        self.tasks[task_id]["completed"] = 0
-
-                def remove_task(self, task_id):
-                    if task_id in self.tasks:
-                        del self.tasks[task_id]
-
-            progress = SimpleProgress()
+            # Get file size for progress tracking
+            file_size = self._getter.filehandler.data[file_path]["size_stored"]
+            
+            # Create callback-aware progress object
+            progress = CallbackProgress(
+                progress_callback=self._progress_callback,
+                file_path=file_path,
+                total_size=file_size,
+                downloader_instance=self
+            )
+            
             future = self._executor.submit(
                 self._getter.download_and_verify, file=file_path, progress=progress
             )
@@ -577,10 +683,14 @@ class ProjectDownloader:
                 overall_percentage=overall_percentage,
                 status="downloading",
                 error_message=None,
+                bytes_downloaded=0,
+                total_bytes=0,
             )
 
             if self._progress_callback:
-                self._progress_callback(progress_info)
+                self._safe_callback_execution(
+                    lambda: self._progress_callback(progress_info)
+                )
 
             LOG.debug(
                 "Download progress: %d/%d files (%.1f%%)",
@@ -606,10 +716,14 @@ class ProjectDownloader:
                 overall_percentage=overall_percentage,
                 status=status,
                 error_message=error_message,
+                bytes_downloaded=0,
+                total_bytes=0,
             )
 
             if self._progress_callback:
-                self._progress_callback(progress_info)
+                self._safe_callback_execution(
+                    lambda: self._progress_callback(progress_info)
+                )
 
             LOG.debug("Progress update: %s - %s", status, message)
 
@@ -619,7 +733,9 @@ class ProjectDownloader:
         self._update_progress("error", message, error_message=message)
 
         if self._error_callback:
-            self._error_callback(message)
+            self._safe_callback_execution(
+                lambda: self._error_callback(message)
+            )
 
     def __enter__(self):
         """Context manager entry."""

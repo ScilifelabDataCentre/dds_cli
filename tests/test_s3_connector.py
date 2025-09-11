@@ -49,7 +49,9 @@ def test_connect_uses_custom_config(mock_session_class, mock_config_class):
 
     # Verify that the config class was called with the expected timeout and retry values
     mock_config_class.assert_called_once_with(
-        read_timeout=constants.READ_TIMEOUT, connect_timeout=constants.CONNECT_TIMEOUT, retries={"max_attempts": 10}
+        read_timeout=constants.READ_TIMEOUT,
+        connect_timeout=constants.CONNECT_TIMEOUT,
+        retries={"max_attempts": 10},
     )
 
     # Verify that the session resource was called with the expected parameters and config

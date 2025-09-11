@@ -465,3 +465,4 @@ _Empty sprint_
 - Implement Project Info in GUI ([#838](https://github.com/ScilifelabDataCentre/dds_cli/pull/838))
 - Fix error handling bug in GUI authentication ([#839](https://github.com/ScilifelabDataCentre/dds_cli/pull/839))
 - Specify upload timeouts to avoid s3 errors ([#840](https://github.com/ScilifelabDataCentre/dds_cli/pull/840))
+- Specify download timeouts to avoid s3 errors ([#846](https://github.com/ScilifelabDataCentre/dds_cli/pull/846))

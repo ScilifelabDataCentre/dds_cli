@@ -82,9 +82,36 @@ def test_get_connect_timeout(monkeypatch):
     # Mock DataGetter instance with helper
     getter = _prepare_data_getter(file_name)
 
-    # Helper function to replace requests.get and raise a timeout error
     err = requests.exceptions.ConnectTimeout("connect timeout")
 
+    # Helper function to replace requests.get and raise a timeout error
+    def fake_get(*_, **__):
+        raise err
+
+    # Use monkeypatch to replace requests.get with our fake_get function
+    monkeypatch.setattr(requests, "get", fake_get)
+
+    # Call the DataGetter.get method
+    # __wrapped__ is used to call the original method without any decorators
+    downloaded, message = DataGetter.get.__wrapped__(
+        getter, file=file_name, progress=None, task=None
+    )
+
+    # Verify that the method returns the expected values
+    assert (downloaded, message) == (False, str(err))
+    assert not pathlib.Path(file_name).exists()
+
+
+def test_get_read_timeout(monkeypatch):
+    """Test that DataGetter.get handles a read timeout correctly."""
+    file_name = "file.txt"
+
+    # Mock DataGetter instance with helper
+    getter = _prepare_data_getter(file_name)
+
+    err = requests.exceptions.ReadTimeout("read timeout")
+
+    # Helper function to replace requests.get and raise a timeout error
     def fake_get(*_, **__):
         raise err
 

@@ -87,7 +87,7 @@ class CallbackProgress:
         self.completed = 0
         self._lock = threading.Lock()
         self._last_callback_time = 0
-        self._callback_throttle = 0.05  # Minimum 50ms between callbacks
+        self._callback_throttle = 0.1  # Minimum 100ms between callbacks for less frequent updates
         self._last_callback_progress = 0  # Track last reported progress percentage
 
     def add_task(
@@ -112,12 +112,13 @@ class CallbackProgress:
                     self.tasks[task_id]["completed"] += advance
                     self.completed += advance
                     LOG.debug(f"Progress update: {self.completed}/{self.total_size} bytes ({self.completed/self.total_size*100:.1f}%)")
+                    
+                    # Always trigger callback when advance is provided (chunk downloaded)
+                    if self.progress_callback:
+                        self._trigger_progress_callback()
+                        
                 if description:
                     self.tasks[task_id]["description"] = description
-
-                # Trigger real-time progress callback
-                if self.progress_callback:
-                    self._trigger_progress_callback()
 
     def reset(self, task_id, description=None, total=None):
         """Reset task progress."""
@@ -142,20 +143,28 @@ class CallbackProgress:
 
         # Calculate current file progress
         current_file_progress = self.completed / max(self.total_size, 1)
-        current_percentage = int(current_file_progress * 100)
+        current_percentage = int(current_file_progress * 20)  # 5% increments instead of 1%
         
         # Trigger callback if:
         # 1. Enough time has passed (throttling), OR
-        # 2. Progress percentage has changed by at least 1%, OR
-        # 3. This is the first update (0% progress)
+        # 2. Progress percentage has changed by at least 5%, OR
+        # 3. This is the first update (0% progress), OR
+        # 4. This is the final update (100% progress), OR
+        # 5. For small files, trigger less frequently based on bytes downloaded
         import time
         current_time = time.time()
         time_elapsed = current_time - self._last_callback_time
         progress_changed = current_percentage != self._last_callback_progress
         
+        # For small files (< 1MB), trigger callbacks less frequently
+        bytes_since_last_callback = self.completed - (self._last_callback_progress * self.total_size / 100)
+        small_file_frequent_updates = self.total_size < 1024 * 1024 and bytes_since_last_callback >= 1024  # 1KB instead of 64 bytes
+        
         if (time_elapsed >= self._callback_throttle or 
             progress_changed or 
-            current_percentage == 0):
+            current_percentage == 0 or
+            current_percentage == 100 or
+            small_file_frequent_updates):
             
             LOG.debug(f"Triggering callback: {current_percentage}% progress, time_elapsed={time_elapsed:.3f}s, progress_changed={progress_changed}")
             self._last_callback_time = current_time
@@ -163,8 +172,31 @@ class CallbackProgress:
         
             # Get overall progress from downloader
             with self.downloader_instance._progress_lock:
-                overall_progress = self.downloader_instance._completed_files / max(self.downloader_instance._total_files, 1)
-                overall_percentage = overall_progress * 100.0
+                # Calculate overall progress based on bytes downloaded vs total bytes
+                total_downloaded_bytes = self.downloader_instance._total_downloaded_bytes
+                total_bytes = self.downloader_instance._total_bytes
+                
+                if total_bytes > 0:
+                    # Calculate overall progress based on bytes
+                    # total_downloaded_bytes includes completed files
+                    # Add current file progress to it
+                    current_file_downloaded = self.completed
+                    overall_downloaded = total_downloaded_bytes + current_file_downloaded
+                    overall_progress = min(overall_downloaded / total_bytes, 1.0)  # Cap at 100%
+                    overall_percentage = overall_progress * 100.0
+                else:
+                    # Fallback to file-based progress if total bytes not available
+                    completed_files = self.downloader_instance._completed_files
+                    total_files = self.downloader_instance._total_files
+                    
+                    if total_files == 1:
+                        overall_progress = current_file_progress
+                        overall_percentage = current_file_progress * 100.0
+                    else:
+                        base_progress = completed_files / max(total_files, 1)
+                        current_file_contribution = current_file_progress / max(total_files, 1)
+                        overall_progress = base_progress + current_file_contribution
+                        overall_percentage = overall_progress * 100.0
 
             progress_info = DownloadProgress(
                 current_file=self.file_path,
@@ -294,6 +326,8 @@ class ProjectDownloader:
         self._progress_lock = threading.Lock()
         self._completed_files = 0
         self._total_files = 0
+        self._total_bytes = 0
+        self._total_downloaded_bytes = 0
         
         # Thread-safe callback execution
         self._callback_lock = threading.Lock()
@@ -396,6 +430,14 @@ class ProjectDownloader:
 
             self._total_files = len(self._getter.filehandler.data)
             self._completed_files = 0
+            
+            # Calculate total bytes for all files
+            self._total_bytes = sum(
+                file_info["size_stored"] 
+                for file_info in self._getter.filehandler.data.values()
+            )
+            self._total_downloaded_bytes = 0
+            
             self._is_initialized = True
 
             self._update_progress("preparing", f"Found {self._total_files} files to download")
@@ -433,6 +475,9 @@ class ProjectDownloader:
         self._is_downloading = True
         self._cancelled = False
 
+        # Send initial progress update
+        self._update_download_progress("preparing")
+
         try:
             # Create thread pool
             with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
@@ -446,6 +491,10 @@ class ProjectDownloader:
                     if self._cancelled:
                         break
                     self._schedule_download(file)
+                
+                # Update status to downloading when first files are scheduled
+                if self._download_threads:
+                    self._update_download_progress("downloading")
 
                 # Process completed downloads and schedule new ones
                 while self._download_threads and not self._cancelled:
@@ -480,6 +529,10 @@ class ProjectDownloader:
                                 LOG.debug("DataGetter returned boolean result: %s", result)
 
                             self._completed_files += 1
+                            
+                            # Update total downloaded bytes
+                            file_size = self._getter.filehandler.data[file_path]["size_stored"]
+                            self._total_downloaded_bytes += file_size
 
                             # Update progress with final file completion
                             self._update_download_progress(file_path)

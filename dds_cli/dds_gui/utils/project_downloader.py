@@ -54,6 +54,7 @@ class DownloadResult:
 
     success: bool
     file_path: str
+    files_downloaded: int = 1
     error_message: Optional[str] = None
     file_size: Optional[int] = None
 
@@ -326,7 +327,17 @@ class ProjectDownloader:
                         file_path = self._download_threads.pop(future)
 
                         try:
-                            success, message = future.result()
+                            result = future.result()
+                            LOG.debug("Download result type: %s, value: %s", type(result), result)
+
+                            if isinstance(result, tuple) and len(result) == 2:
+                                success, message = result
+                            else:
+                                # Handle case where result is not a tuple
+                                success = bool(result)
+                                message = "Download completed" if success else "Download failed"
+                                LOG.warning("Unexpected result format: %s", result)
+
                             self._completed_files += 1
 
                             # Update progress
@@ -411,13 +422,16 @@ class ProjectDownloader:
                 def __init__(self):
                     self.tasks = {}
 
-                def add_task(self, description, total=None, step=None):  # noqa: ARG002, W0613
-                    # step parameter required for Rich progress compatibility
+                def add_task(
+                    self, description, total=None, step=None, visible=True
+                ):  # noqa: ARG002, W0613
+                    # step and visible parameters required for Rich progress compatibility
                     task_id = len(self.tasks)
                     self.tasks[task_id] = {
                         "description": description,
                         "total": total,
                         "completed": 0,
+                        "visible": visible,
                     }
                     return task_id
 
@@ -510,13 +524,16 @@ class ProjectDownloader:
                 def __init__(self):
                     self.tasks = {}
 
-                def add_task(self, description, total=None, step=None):  # noqa: ARG002, W0613
-                    # step parameter required for Rich progress compatibility
+                def add_task(
+                    self, description, total=None, step=None, visible=True
+                ):  # noqa: ARG002, W0613
+                    # step and visible parameters required for Rich progress compatibility
                     task_id = len(self.tasks)
                     self.tasks[task_id] = {
                         "description": description,
                         "total": total,
                         "completed": 0,
+                        "visible": visible,
                     }
                     return task_id
 

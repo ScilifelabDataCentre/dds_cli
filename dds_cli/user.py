@@ -76,7 +76,7 @@ class User:
         LOG.debug("Starting authentication on the API...")
 
         # If no username or password is provided, prompt for them
-        if not username and not password:
+        if not username or not password:
             if self.no_prompt:
                 raise exceptions.AuthenticationError(
                     message=(

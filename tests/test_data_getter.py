@@ -15,7 +15,7 @@ from dds_cli import constants
 # HELPERS ######################################################################
 
 
-def _prepare_data_getter(file_name):
+def _prepare_data_getter(file_name, download_path=None):
     """Mock a DataGetter instance with a filehandler containing a single file entry."""
     # Create DataGetter instance without running __init__
     dg = DataGetter.__new__(DataGetter)
@@ -30,7 +30,7 @@ def _prepare_data_getter(file_name):
         # Only data attribute needed for DataGetter.get
         data={
             file_name: {
-                "path_downloaded": pathlib.Path(file_name),
+                "path_downloaded": pathlib.Path(download_path or file_name),
                 "url": "https://example.com/file",
             }
         }
@@ -47,9 +47,11 @@ def test_get_uses_timeout(monkeypatch, tmp_path):
     monkeypatch is a pytest fixture that allows you to modify objects temporatily.
     tmp_path is a pytest fixture that provides a temporary directory.
     """
-    file_path = tmp_path / "file.bin"
+    file_name = "file.bin"
+    file_path = tmp_path / file_name
+
     # Mock DataGetter instance with helper
-    getter = _prepare_data_getter(file_name=file_path)
+    getter = _prepare_data_getter(file_name=file_name, download_path=file_path)
 
     # Create mock objects
     progress = MagicMock()  # needed for get method but doesn't invoke real progress
@@ -67,11 +69,11 @@ def test_get_uses_timeout(monkeypatch, tmp_path):
 
     # Call the DataGetter.get method
     # __wrapped__ is used to call the original method without any decorators
-    DataGetter.get.__wrapped__(getter, file="file", progress=progress, task=1)
+    DataGetter.get.__wrapped__(getter, file="file.bin", progress=progress, task=1)
 
     # Verify that requests.get was called with the correct timeout values
     mock_get.assert_called_once_with(
-        "http://example.com/file",
+        "https://example.com/file",
         stream=True,
         timeout=(constants.CONNECT_TIMEOUT, constants.READ_TIMEOUT),
     )

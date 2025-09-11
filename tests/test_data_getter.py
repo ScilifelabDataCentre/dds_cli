@@ -10,7 +10,8 @@ from unittest.mock import MagicMock
 from dds_cli.data_getter import DataGetter
 from dds_cli import constants
 
-# Helpers 
+# Helpers
+
 
 def _prepare_data_getter(file_name):
     """Mock a DataGetter instance with a filehandler containing a single file entry."""
@@ -33,6 +34,7 @@ def _prepare_data_getter(file_name):
         }
     )
     return dg
+
 
 # Tests
 
@@ -82,6 +84,7 @@ def test_get_connect_timeout(monkeypatch):
 
     # Helper function to replace requests.get and raise a timeout error
     err = requests.exceptions.ConnectTimeout("connect timeout")
+
     def fake_get(*_, **__):
         raise err
 

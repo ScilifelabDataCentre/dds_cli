@@ -252,6 +252,7 @@ def test_login_no_prompt_without_credentials() -> None:
 
     assert "Authentication not possible when running with --no-prompt" in str(exc_info.value)
 
+
 # Run the test twice with different parameters
 @pytest.mark.parametrize(
     "username, password",
@@ -269,7 +270,6 @@ def test_login_no_prompt_partial_credentials(username, password) -> None:
         user.login(username, password)
 
     assert "Authentication not possible when running with --no-prompt" in str(exc_info.value)
-
 
 
 ###### Test confirm_twofactor ######

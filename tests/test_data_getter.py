@@ -1,6 +1,7 @@
 """Tests for the data_getter module."""
 
-# Imports
+# IMPORTS ######################################################################
+
 
 import pathlib
 import requests
@@ -10,7 +11,8 @@ from unittest.mock import MagicMock
 from dds_cli.data_getter import DataGetter
 from dds_cli import constants
 
-# Helpers
+
+# HELPERS ######################################################################
 
 
 def _prepare_data_getter(file_name):
@@ -36,7 +38,7 @@ def _prepare_data_getter(file_name):
     return dg
 
 
-# Tests
+# TESTS ########################################################################
 
 
 def test_get_uses_timeout(monkeypatch, tmp_path):

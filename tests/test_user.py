@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from requests_mock.mocker import Mocker
+from requests.auth import _basic_auth_str
 
 from dds_cli import DDSEndpoint
 from dds_cli.user import User
@@ -123,6 +124,54 @@ def test_login_prompts_called_correctly() -> None:
             # Verify prompts were called with correct messages
             mock_prompt.assert_called_once_with("DDS username")
             mock_getpass.assert_called_once_with(prompt="DDS password: ")
+
+
+# Run test twice with different parameters
+@pytest.mark.parametrize(
+    "username,password",
+    [(None, MOCK_PASSWORD), (MOCK_USERNAME, None)],
+    ids=["missing_username", "missing_password"],
+)
+def test_login_prompt_partial_credentials(username, password) -> None:
+    """Test that the login prompts when only one credential is provided."""
+    # Mock the API response
+    mock_response = {"token": MOCK_PARTIAL_AUTH_TOKEN, "secondfactor_method": "HOTP"}
+
+    with Mocker() as mock:
+        # Attempt request
+        mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=200, json=mock_response)
+
+        # Create user that allows prompting (no_prompt=False) but doesn't auto-retrieve token
+        user = User(force_renew_token=False, no_prompt=False, retrieve_token=False)
+
+        with pytest.MonkeyPatch().context() as mp:
+            # Mock the prompts
+            mock_prompt = MagicMock(return_value=MOCK_USERNAME)
+            mock_getpass = MagicMock(return_value=MOCK_PASSWORD)
+            mp.setattr("dds_cli.user.Prompt.ask", mock_prompt)
+            mp.setattr("dds_cli.user.getpass.getpass", mock_getpass)
+
+            # Attempt login with only one credential provided
+            partial_token, second_factor_method = user.login(username=username, password=password)
+
+            # Verify the prompts were called to get the missing credential
+            mock_prompt.assert_called_once_with("DDS username")
+            mock_getpass.assert_called_once_with(prompt="DDS password: ")
+
+            # Verify that the request was made correctly
+            assert mock.called
+            request = mock.request_history[0]
+            assert request.method == "GET"
+            assert request.url == DDSEndpoint.ENCRYPTED_TOKEN
+
+            # Verify the authorization header contains the correct credentials
+            assert request.headers["Authorization"] == _basic_auth_str(MOCK_USERNAME, MOCK_PASSWORD)
+
+            # Verify that partial token returned is the same as the expected
+            assert partial_token == MOCK_PARTIAL_AUTH_TOKEN
+
+            # Verify the second factor method is as expected
+            assert second_factor_method == "HOTP"
 
 
 def test_login_invalid_credentials() -> None:

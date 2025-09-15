@@ -468,3 +468,7 @@ _Empty sprint_
 - Bump requests library from 2.32.2 to 2.32.4 to solve vulnerabities ([#842](https://github.com/ScilifelabDataCentre/dds_cli/pull/842))
 - Specify download timeouts to avoid s3 errors ([#846](https://github.com/ScilifelabDataCentre/dds_cli/pull/846))
 - Prompt for username and password if either of them are empty ([#847](https://github.com/ScilifelabDataCentre/dds_cli/pull/847))
+
+# 2025-09-15 - 2025-09-26
+
+- New version: 2.13.0 ([#849](https://github.com/ScilifelabDataCentre/dds_cli/pull/849))

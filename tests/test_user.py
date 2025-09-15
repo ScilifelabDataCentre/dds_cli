@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from requests_mock.mocker import Mocker
+from requests.auth import _basic_auth_str
 
 from dds_cli import DDSEndpoint
 from dds_cli.user import User
@@ -125,6 +126,81 @@ def test_login_prompts_called_correctly() -> None:
             mock_getpass.assert_called_once_with(prompt="DDS password: ")
 
 
+# Run test twice with different parameters
+@pytest.mark.parametrize(
+    "username_input,password_input,expected_message",
+    [
+        ("", MOCK_PASSWORD, "Non-empty username needed to be able to authenticate."),
+        (MOCK_USERNAME, "", "Non-empty password needed to be able to authenticate."),
+    ],
+)
+def test_login_prompt_empty_credentials(
+    username_input: str, password_input: str, expected_message: str
+) -> None:
+    """Test that prompts returning empty credentials raise errors."""
+    user = User(force_renew_token=False, no_prompt=False, retrieve_token=False)
+
+    with pytest.MonkeyPatch().context() as mp:
+        # Mock prompts to return empty values
+        mp.setattr("dds_cli.user.Prompt.ask", lambda prompt: username_input)
+        mp.setattr("dds_cli.user.getpass.getpass", lambda prompt: password_input)
+
+        with pytest.raises(AuthenticationError) as exc_info:
+            # Attempt login (should prompt and get empty values)
+            user.login()
+
+        # Verify the error message is as expected
+        assert exc_info.value.message == expected_message
+
+
+# Run test twice with different parameters
+@pytest.mark.parametrize(
+    "username,password",
+    [(None, MOCK_PASSWORD), (MOCK_USERNAME, None)],
+    ids=["missing_username", "missing_password"],
+)
+def test_login_prompt_partial_credentials(username, password) -> None:
+    """Test that the login prompts when only one credential is provided."""
+    # Mock the API response
+    mock_response = {"token": MOCK_PARTIAL_AUTH_TOKEN, "secondfactor_method": "HOTP"}
+
+    with Mocker() as mock:
+        # Attempt request
+        mock.get(DDSEndpoint.ENCRYPTED_TOKEN, status_code=200, json=mock_response)
+
+        # Create user that allows prompting (no_prompt=False) but doesn't auto-retrieve token
+        user = User(force_renew_token=False, no_prompt=False, retrieve_token=False)
+
+        with pytest.MonkeyPatch().context() as mp:
+            # Mock the prompts
+            mock_prompt = MagicMock(return_value=MOCK_USERNAME)
+            mock_getpass = MagicMock(return_value=MOCK_PASSWORD)
+            mp.setattr("dds_cli.user.Prompt.ask", mock_prompt)
+            mp.setattr("dds_cli.user.getpass.getpass", mock_getpass)
+
+            # Attempt login with only one credential provided
+            partial_token, second_factor_method = user.login(username=username, password=password)
+
+            # Verify the prompts were called to get the missing credential
+            mock_prompt.assert_called_once_with("DDS username")
+            mock_getpass.assert_called_once_with(prompt="DDS password: ")
+
+            # Verify that the request was made correctly
+            assert mock.called
+            request = mock.request_history[0]
+            assert request.method == "GET"
+            assert request.url == DDSEndpoint.ENCRYPTED_TOKEN
+
+            # Verify the authorization header contains the correct credentials
+            assert request.headers["Authorization"] == _basic_auth_str(MOCK_USERNAME, MOCK_PASSWORD)
+
+            # Verify that partial token returned is the same as the expected
+            assert partial_token == MOCK_PARTIAL_AUTH_TOKEN
+
+            # Verify the second factor method is as expected
+            assert second_factor_method == "HOTP"
+
+
 def test_login_invalid_credentials() -> None:
     """Test login with invalid credentials returns 401."""
     mock_response = {"message": "Missing or incorrect credentials"}
@@ -138,26 +214,6 @@ def test_login_invalid_credentials() -> None:
             user.login("wrong_user", "wrong_password")
 
         assert "Failed to authenticate user" in str(exc_info.value)
-
-
-def test_login_empty_username() -> None:
-    """Test that login raises error with empty username."""
-    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        user.login("", MOCK_PASSWORD)
-
-    assert "Non-empty username needed to be able to authenticate" in str(exc_info.value)
-
-
-def test_login_empty_password() -> None:
-    """Test that login raises error with empty password."""
-    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
-
-    with pytest.raises(AuthenticationError) as exc_info:
-        user.login(MOCK_USERNAME, "")
-
-    assert "Non-empty password needed to be able to authenticate" in str(exc_info.value)
 
 
 def test_login_unicode_error() -> None:
@@ -249,6 +305,27 @@ def test_login_no_prompt_without_credentials() -> None:
 
     with pytest.raises(AuthenticationError) as exc_info:
         user.login()  # No username/password provided
+
+    assert "Authentication not possible when running with --no-prompt" in str(exc_info.value)
+
+
+# Run the test twice with different parameters
+@pytest.mark.parametrize(
+    "username, password",
+    [
+        (None, MOCK_PASSWORD),
+        (MOCK_USERNAME, None),
+        ("", MOCK_PASSWORD),
+        (MOCK_USERNAME, ""),
+    ],
+)
+def test_login_no_prompt_partial_credentials(username, password) -> None:
+    """Test that login raises error when no_prompt=True and only one credential provided."""
+    user = User(force_renew_token=False, no_prompt=True, retrieve_token=False)
+
+    with pytest.raises(AuthenticationError) as exc_info:
+        # Attempt to login with only username or only password
+        user.login(username, password)
 
     assert "Authentication not possible when running with --no-prompt" in str(exc_info.value)
 

@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from boto3.exceptions import Boto3Error
 from botocore.exceptions import BotoCoreError
+
+from dds_cli import constants
 from dds_cli.s3_connector import S3Connector
 
 
@@ -47,7 +49,9 @@ def test_connect_uses_custom_config(mock_session_class, mock_config_class):
 
     # Verify that the config class was called with the expected timeout and retry values
     mock_config_class.assert_called_once_with(
-        read_timeout=300, connect_timeout=60, retries={"max_attempts": 10}
+        read_timeout=constants.READ_TIMEOUT,
+        connect_timeout=constants.CONNECT_TIMEOUT,
+        retries={"max_attempts": 10},
     )
 
     # Verify that the session resource was called with the expected parameters and config

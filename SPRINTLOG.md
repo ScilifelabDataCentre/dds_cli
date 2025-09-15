@@ -466,3 +466,4 @@ _Empty sprint_
 - Fix error handling bug in GUI authentication ([#839](https://github.com/ScilifelabDataCentre/dds_cli/pull/839))
 - Specify upload timeouts to avoid s3 errors ([#840](https://github.com/ScilifelabDataCentre/dds_cli/pull/840))
 - Bump requests library from 2.32.2 to 2.32.4 to solve vulnerabities ([#842](https://github.com/ScilifelabDataCentre/dds_cli/pull/842))
+- Specify download timeouts to avoid s3 errors ([#846](https://github.com/ScilifelabDataCentre/dds_cli/pull/846))

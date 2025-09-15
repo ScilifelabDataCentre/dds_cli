@@ -51,10 +51,50 @@ class DDSStateManager(App):
 
     project_list: reactive[List[dict]] = reactive(None, recompose=True)
     selected_project_id: reactive[str] = reactive(None, recompose=True)
+    projects_loading: reactive[bool] = reactive(False, recompose=True)
 
-    def fetch_projects(self) -> List[str]:
-        """Fetch the projects and automatically compute project_ids via reactive watcher."""
-        self.project_list: List[dict] = dds_cli.data_lister.DataLister(json=True).list_projects()
+    def fetch_projects(self) -> None:
+        """Fetch the projects synchronously for initialization."""
+        try:
+            self.project_list = dds_cli.data_lister.DataLister(json=True).list_projects()
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            self.notify(f"Failed to fetch projects: {err}", severity="error")
+            self.project_list = None
+
+    @work(exclusive=True, thread=True)
+    def fetch_projects_async(self) -> None:
+        """Fetch the projects asynchronously for background loading."""
+        # Set loading state on main thread
+        self.call_from_thread(self._set_projects_loading, True)
+        
+        try:
+            project_list = dds_cli.data_lister.DataLister(json=True).list_projects()
+            self.call_from_thread(self._on_projects_loaded, project_list)
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            self.call_from_thread(self._on_projects_error, str(err))
+
+    def _set_projects_loading(self, loading: bool) -> None:
+        """Set the projects loading state."""
+        self.projects_loading = loading
+
+    def _on_projects_loaded(self, project_list: List[dict]) -> None:
+        """Handle successful project list load on the main thread."""
+        self.projects_loading = False
+        self.project_list = project_list
+
+    def _on_projects_error(self, error_message: str) -> None:
+        """Handle project list load error on the main thread."""
+        self.projects_loading = False
+        self.notify(f"Failed to fetch projects: {error_message}", severity="error")
+        self.project_list = None
 
     def set_selected_project_id(self, project_id: str) -> None:
         """Set the selected project id."""
@@ -133,16 +173,9 @@ class DDSStateManager(App):
             # Fetch the projects when the auth status is True.
             # This is to ensure that the projects are fetched when the user is authenticated only.
             # If called without auth status, recursion error occurs and/or the base class
-            #  will try to authenticate in the CLI.
-            try:
-                self.fetch_projects()
-            except (
-                dds_cli.exceptions.ApiRequestError,
-                dds_cli.exceptions.ApiResponseError,
-                dds_cli.exceptions.DDSCLIException,
-            ) as err:
-                self.notify(f"Failed to fetch projects: {err}", severity="error")
-                self.project_list = None  # This triggers watch_projects to clear project_ids
+            # will try to authenticate in the CLI.
+            # Use async version since this is called after GUI is mounted
+            self.fetch_projects_async()
         else:
             self.project_list = None  # This triggers watch_projects to clear project_ids
             self.selected_project_id = None

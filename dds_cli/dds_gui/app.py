@@ -5,6 +5,7 @@ from textual.binding import Binding
 from textual.widgets import Header
 from textual.theme import Theme
 
+import dds_cli
 from dds_cli.dds_gui.components.dds_footer import DDSFooter
 from dds_cli.dds_gui.dds_state_manager import DDSStateManager
 from dds_cli.dds_gui.pages.project_view import ProjectView
@@ -39,7 +40,7 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
     def __init__(self, token_path: str):
         super().__init__()
         self.token_path = token_path
-        self.set_auth_status(self.auth.check())
+        # Don't set auth status immediately - wait until GUI is mounted
 
     # TODO: add scrollbar styling here?
     DEFAULT_CSS = """
@@ -58,7 +59,7 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
     ]
 
     def compose(self) -> ComposeResult:
-        yield Header(show_clock=True, time_format="%H:%M:%S", icon="")
+        yield Header(icon="", show_clock=True, time_format="%H:%M:%S")
         yield ProjectView()
         yield DDSFooter()
 
@@ -66,6 +67,14 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
         """On mount, register the theme and set it as the active theme."""
         self.register_theme(theme)
         self.theme = "custom"
+        # Now that the GUI is mounted, check authentication status asynchronously
+        self.call_after_refresh(self._check_auth_and_fetch_projects)
+
+    def _check_auth_and_fetch_projects(self) -> None:
+        """Check authentication and fetch projects after GUI is ready."""
+        auth_status = self.auth.check()
+        self.set_auth_status(auth_status)
+        
 
     def action_help(self) -> None:
         """Action to show the help screen."""

@@ -1,6 +1,27 @@
 Changelog
 ==========
 
+.. _2.13.0:
+
+2.13.0 - 2025-09-15
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Specify download timeouts to avoid s3 errors
+    - Specify upload timeouts to avoid s3 errors
+- 🐛 Bug Fixes
+    - Prompt for username and password if either of them are empty
+- 📄 Documentation
+    - Correct info regarding extending deadline in CLI
+    - Add Dardel section to the documentation
+- 🛡️ Dependencies
+    - Bump requests library from 2.32.2 to 2.32.4
+- 📌 Other Changes
+    - GUI related changes (not released yet):
+        - Implement Project Info in GUI
+        - Implement project listing in GUI
+        - Fix error handling bug in GUI authentication
+
 .. _2.12.0:
 
 2.12.0 - 2025-08-27

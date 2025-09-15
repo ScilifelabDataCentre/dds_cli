@@ -458,7 +458,6 @@ _Empty sprint_
 - New version: 2.12.0 ([#824](https://github.com/ScilifelabDataCentre/dds_cli/pull/824))
 - New PR template and moved all instructions to other files ([#832](https://github.com/ScilifelabDataCentre/dds_cli/pull/832))
 
-## 2025-09-01 - 2025-09-12
 
 - Workflow: Add action to run pytest on Windows ([#734](https://github.com/ScilifelabDataCentre/dds_cli/pull/734))
 - Add Dardel-related information to the documentation ([#774](https://github.com/ScilifelabDataCentre/dds_cli/pull/774))
@@ -466,4 +465,9 @@ _Empty sprint_
 - Fix error handling bug in GUI authentication ([#839](https://github.com/ScilifelabDataCentre/dds_cli/pull/839))
 - Specify upload timeouts to avoid s3 errors ([#840](https://github.com/ScilifelabDataCentre/dds_cli/pull/840))
 - Bump requests library from 2.32.2 to 2.32.4 to solve vulnerabities ([#842](https://github.com/ScilifelabDataCentre/dds_cli/pull/842))
-- Bump cryptography library to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))
+- Specify download timeouts to avoid s3 errors ([#846](https://github.com/ScilifelabDataCentre/dds_cli/pull/846))
+- Prompt for username and password if either of them are empty ([#847](https://github.com/ScilifelabDataCentre/dds_cli/pull/847))
+
+## 2025-09-15 - 2025-09-26
+
+- Bump cryptography library from 42.0.4 to 44.0.1 to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))

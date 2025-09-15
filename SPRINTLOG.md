@@ -458,6 +458,7 @@ _Empty sprint_
 - New version: 2.12.0 ([#824](https://github.com/ScilifelabDataCentre/dds_cli/pull/824))
 - New PR template and moved all instructions to other files ([#832](https://github.com/ScilifelabDataCentre/dds_cli/pull/832))
 
+## 2025-09-01 - 2025-09-12
 
 - Workflow: Add action to run pytest on Windows ([#734](https://github.com/ScilifelabDataCentre/dds_cli/pull/734))
 - Add Dardel-related information to the documentation ([#774](https://github.com/ScilifelabDataCentre/dds_cli/pull/774))

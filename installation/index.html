@@ -43,7 +43,7 @@
 <span id="installation"></span><h1>Installation guide<a class="headerlink" href="#installation-guide" title="Permalink to this heading">¶</a></h1>
 <p>You can install <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> in two different ways:</p>
 <ul class="simple">
-<li><p>From <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPI</a>. Independent on operating system (OS), we recommend this option. Note that this does not apply to Uppmax.</p></li>
+<li><p>From <a class="reference external" href="https://pypi.org/project/dds-cli/">PyPI</a>. Independent on operating system (OS), we recommend this option. Note that this does not apply to HPC centres, e.g., Uppmax, Dardel, etc.</p></li>
 <li><p>Via executables. These are located in the latest release on <a class="reference external" href="https://github.com/ScilifelabDataCentre/dds_cli/releases/latest">GitHub</a>.</p></li>
 </ul>
 <div class="admonition note">
@@ -51,7 +51,7 @@
 <p>The executables are only available for Ubuntu, MacOS and Windows.</p>
 <p>If you want to request an executable for another OS, please contact us at <a class="reference external" href="mailto:delivery&#37;&#52;&#48;scilifelab&#46;se">delivery<span>&#64;</span>scilifelab<span>&#46;</span>se</a>. Start the subject line with “Feature Request”.</p>
 </div>
-<p>The following sections describe the installation process on <a class="reference internal" href="#mac-linux"><span class="std std-ref">MacOS / Linux</span></a> and <a class="reference internal" href="#windows"><span class="std std-ref">Windows</span></a>, and how to load <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> on <a class="reference internal" href="#uppmax"><span class="std std-ref">Uppmax</span></a>.
+<p>The following sections describe the installation process on <a class="reference internal" href="#mac-linux"><span class="std std-ref">MacOS / Linux</span></a> and <a class="reference internal" href="#windows"><span class="std std-ref">Windows</span></a>, and how to load <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> on <a class="reference internal" href="#uppmax"><span class="std std-ref">Uppmax</span></a> / <a class="reference internal" href="#dardel"><span class="std std-ref">Dardel</span></a>.
 Note that the sections describing installation from PyPI are focused on the <code class="docutils literal notranslate"><span class="pre">install</span></code> command, and do not provide a guide on how to verify the package integrity with checksums. Instructions on how to do this can be found at the <a class="reference internal" href="#verify-integrity"><span class="std std-ref">bottom of this page</span></a>.</p>
 <section id="macos-linux">
 <span id="mac-linux"></span><h2>MacOS / Linux<a class="headerlink" href="#macos-linux" title="Permalink to this heading">¶</a></h2>
@@ -176,6 +176,10 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </section>
 <section id="uppmax">
 <span id="id5"></span><h2>Uppmax<a class="headerlink" href="#uppmax" title="Permalink to this heading">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This information may be outdated, as both Rackham and Bianca are being replaced. See <cite>here &lt;https://www.uu.se/en/centre/uppmax&gt;</cite> for more information.</p>
+</div>
 <p>The <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package is a global module on Uppmax; No installation required. However, there are a few steps you need to perform prior to using it. These steps differ between Rackham and Bianca.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -283,6 +287,30 @@ $<span class="w"> </span>./dds_cli_macos_x86_64<span class="w"> </span>ls
 </div>
 </section>
 </section>
+<section id="dardel">
+<span id="id8"></span><h2>Dardel<a class="headerlink" href="#dardel" title="Permalink to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package is a global module on Dardel; No installation required. However, there are a few steps you need to perform prior to using it.</p>
+<ol class="arabic">
+<li><p>First, you need to set up an account for accessing PDC’s cluster Dardel. Their guide on how to do this can be found at <a class="reference external" href="https://support.pdc.kth.se/doc/basics/quickstart/">https://support.pdc.kth.se/doc/basics/quickstart/</a>.</p></li>
+<li><p>SSH into Dardel’s dedicated transfer node <code class="docutils literal notranslate"><span class="pre">dardel-ftn01.pdc.kth.se</span></code> (see <a class="reference external" href="https://support.pdc.kth.se/doc/data_management/file_transfer/">https://support.pdc.kth.se/doc/data_management/file_transfer/</a>) by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ssh<span class="w"> </span>&lt;your_dardel_username&gt;@dardel-ftn01.pdc.kth.se
+</pre></div>
+</div>
+</li>
+<li><p>Load the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> module by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>module<span class="w"> </span>load<span class="w"> </span>dds-cli
+</pre></div>
+</div>
+</li>
+<li><p>Check the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> version by running</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>dds<span class="w"> </span>--version
+</pre></div>
+</div>
+<p>The output should be the following:</p>
+<img alt="../_images/dds-version.svg" src="../_images/dds-version.svg" /></li>
+<li><p>Run the <code class="docutils literal notranslate"><span class="pre">dds</span> <span class="pre">data</span> <span class="pre">get</span> <span class="pre">...</span></code> command directly on that node, i.e. do <strong>NOT</strong> submit data-transfer jobs to the queueing system.</p></li>
+</ol>
+</section>
 <section id="verify-the-package-integrity-prior-to-installing-it">
 <span id="verify-integrity"></span><h2>Verify the package integrity prior to installing it<a class="headerlink" href="#verify-the-package-integrity-prior-to-installing-it" title="Permalink to this heading">¶</a></h2>
 <p>This installation guide is for those that want to verify that the <code class="docutils literal notranslate"><span class="pre">dds-cli</span></code> package published on PyPI is identical to the one you install locally, thereby catching potential (albeit unlikely) corruptions in the package prior to running the installation. Note that the hashes used to verify this are generated by PyPI itself, not by the Data Centre.</p>
@@ -346,7 +374,7 @@ pip<span class="w"> </span><span class="nb">hash</span><span class="w"> </span>d
 
 
 
-<p class="blurb">Version: 2.12.0</p>
+<p class="blurb">Version: 2.13.0</p>
 
 
 

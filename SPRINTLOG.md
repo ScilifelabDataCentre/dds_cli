@@ -473,4 +473,3 @@ _Empty sprint_
 
 - Bump cryptography library from 42.0.4 to 44.0.1 to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))
 - Fix style according to guidelines and drop support for python 3.8 and 3.9 due to CVE ([#843](https://github.com/ScilifelabDataCentre/dds_cli/pull/843))
-

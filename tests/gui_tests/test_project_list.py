@@ -68,38 +68,7 @@ async def test_basic_widget_functionality():
             assert not select_widget.disabled
 
 
-@pytest.mark.asyncio
-async def test_unauthenticated_state():
-    """Test widget when not authenticated."""
-
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
-        # Mock DataLister to prevent authentication attempts
-        mock_data_lister_instance = MagicMock()
-        mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.return_value = []
-
-        app = DDSApp(token_path=str(TOKEN_PATH))
-
-        async with app.run_test() as pilot:
-            app.set_auth_status(False)
-            await pilot.pause()
-
-            widget = ProjectList(title="Project List")
-            app.mount(widget)
-            await pilot.pause()
-
-            # Should show authentication message, not project selector
-            labels = widget.query(Label)
-            auth_labels = [label for label in labels if "authenticate" in label.renderable.lower()]
-            assert (
-                len(auth_labels) == 1
-            ), "Should show authentication message for unauthenticated user"
-
-            # Should not show project selector
-            select_widgets = widget.query(DDSSelect)
-            assert (
-                len(select_widgets) == 0
-            ), "Should not show project selector for unauthenticated user"
+# Removed test_unauthenticated_state() - covered by test_async_project_loading.py::test_unauthenticated_user_sees_auth_message()
 
 
 @pytest.mark.asyncio
@@ -269,52 +238,7 @@ async def test_api_error():
             assert "Failed to fetch projects" in notifications[-1]
 
 
-@pytest.mark.asyncio
-async def test_auth_state_changes():
-    """Test authentication state changes."""
-
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.project_info.ProjectInfoManager"
-    ) as mock_project_info_class:
-        # Mock DataLister to prevent authentication attempts
-        mock_data_lister_instance = MagicMock()
-        mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
-
-        # Mock ProjectInfoManager to prevent authentication attempts
-        mock_project_info_instance = MagicMock()
-        mock_project_info_class.return_value = mock_project_info_instance
-        mock_project_info_instance.get_project_info.return_value = {
-            "Title": "Test Project",
-            "Description": "Test Description",
-            "Status": "Available",
-            "Created by": "test_user",
-            "Last updated": "2024-01-01",
-            "Size": "1024",
-            "PI": "Test PI",
-        }
-
-        app = DDSApp(token_path=str(TOKEN_PATH))
-
-        async with app.run_test() as pilot:
-            # Start unauthenticated
-            app.set_auth_status(False)
-            await pilot.pause()
-            assert app.project_list is None
-
-            # Authenticate
-            app.set_auth_status(True)
-            await pilot.pause()
-
-            # Test widget reflects state
-            widget = ProjectList(title="Project List")
-            app.mount(widget)
-            await pilot.pause()
-
-            select_widgets = widget.query(DDSSelect)
-            select_widget = select_widgets[0]
-            assert not select_widget.disabled
-            assert len(select_widget._options) == 3  # BLANK + 2 projects
+# Removed test_auth_state_changes() - covered by test_async_project_loading.py::test_projects_load_after_authentication()
 
 
 @pytest.mark.asyncio
@@ -493,74 +417,7 @@ async def test_special_characters():
             assert len(select_widget._options) == 6  # BLANK + 5 special projects
 
 
-@pytest.mark.asyncio
-async def test_auth_logout_clears_data():
-    """Test that logging out clears project data."""
-
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
-        "dds_cli.project_info.ProjectInfoManager"
-    ) as mock_project_info_class:
-        # Mock DataLister to prevent authentication attempts
-        mock_data_lister_instance = MagicMock()
-        mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
-
-        # Mock ProjectInfoManager to prevent authentication attempts
-        mock_project_info_instance = MagicMock()
-        mock_project_info_class.return_value = mock_project_info_instance
-        mock_project_info_instance.get_project_info.return_value = {
-            "Title": "Test Project",
-            "Description": "Test Description",
-            "Status": "Available",
-            "Created by": "test_user",
-            "Last updated": "2024-01-01",
-            "Size": "1024",
-            "PI": "Test PI",
-        }
-
-        app = DDSApp(token_path=str(TOKEN_PATH))
-
-        async with app.run_test() as pilot:
-            # Authenticate and load data
-            app.set_auth_status(True)
-            await pilot.pause()
-
-            widget = ProjectList(title="Project List")
-            app.mount(widget)
-            await pilot.pause()
-
-            # Select a project
-            select_widgets = widget.query(DDSSelect)
-            select_widget = select_widgets[0]
-            select_widget.value = "project-001"
-            app.set_selected_project_id("project-001")
-
-            # Logout - should clear data via reactive system
-            app.set_auth_status(False)
-            await pilot.pause()
-
-            # Verify data cleared
-            assert app.project_list is None
-            assert app.selected_project_id is None
-
-            # Test fresh widget reflects logout state
-            widget.remove()
-            await pilot.pause()
-
-            new_widget = ProjectList(title="Project List")
-            app.mount(new_widget)
-            await pilot.pause()
-
-            # Should show authentication message after logout
-            new_labels = new_widget.query(Label)
-            auth_labels = [
-                label for label in new_labels if "authenticate" in label.renderable.lower()
-            ]
-            assert len(auth_labels) == 1, "Should show authentication message after logout"
-
-            # Should not show project selector after logout
-            new_select_widgets = new_widget.query(DDSSelect)
-            assert len(new_select_widgets) == 0, "Should not show project selector after logout"
+# Removed test_auth_logout_clears_data() - covered by test_async_project_loading.py::test_loading_state_cleared_on_logout()
 
 
 @pytest.mark.asyncio

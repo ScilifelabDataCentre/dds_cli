@@ -274,65 +274,7 @@ async def test_loading_state_cleared_on_logout():
             assert len(select_widgets) == 0, "Should not show project selector after logout"
 
 
-@pytest.mark.asyncio
-async def test_no_projects_found_state():
-    """Test behavior when authenticated but no projects are found."""
-
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
-        DDSApp, "fetch_projects_async"
-    ) as mock_fetch_projects:
-        # Mock DataLister to prevent interactive authentication
-        mock_data_lister_instance = MagicMock()
-        mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.return_value = []
-
-        # Mock fetch_projects_async to prevent it from running
-        mock_fetch_projects.return_value = None
-
-        app = DDSApp(token_path=str(TOKEN_PATH))
-
-        async with app.run_test() as pilot:
-            # Start authenticated
-            app.set_auth_status(True)
-            await pilot.pause()
-
-            # Mount project list widget
-            widget = ProjectList(title="Project List")
-            app.mount(widget)
-            await pilot.pause()
-
-            # Wait for loading state to be set
-            await wait_for_loading_state(app, pilot, expected_loading=True)
-
-            # Should show loading indicator initially
-            loading_indicators = widget.query(LoadingIndicator)
-            assert len(loading_indicators) == 1, "Should show loading indicator initially"
-
-            # Simulate async project loading completion with empty results
-            app.project_list = []
-            app.projects_loading = False
-            await pilot.pause()
-
-            # Wait for reactive changes to propagate
-            await wait_for_reactive_change(app, pilot, "project_list", [])
-            await wait_for_reactive_change(app, pilot, "projects_loading", False)
-
-            # Verify empty project list state
-            assert app.project_list == [], "Project list should be empty"
-            assert app.projects_loading is False, "Projects loading should be False"
-            assert app.auth_status is True, "Auth status should still be True"
-
-            # Should not show loading indicator anymore
-            loading_indicators = widget.query(LoadingIndicator)
-            assert (
-                len(loading_indicators) == 0
-            ), "Should not show loading indicator after loading completes"
-
-            # Should not show project selector
-            select_widgets = widget.query(DDSSelect)
-            assert (
-                len(select_widgets) == 0
-            ), "Should not show project selector when no projects found"
+# Removed test_no_projects_found_state() - covered by test_project_list.py::test_empty_projects()
 
 
 @pytest.mark.asyncio

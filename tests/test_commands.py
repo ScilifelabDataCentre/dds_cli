@@ -1,4 +1,4 @@
-"""Test the commands."""
+"""Test for the commands."""
 
 #### Very incomplete suite #####
 

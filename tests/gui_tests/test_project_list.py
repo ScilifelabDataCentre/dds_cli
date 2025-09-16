@@ -7,6 +7,7 @@ import pytest
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
+from textual.widgets import Label
 import dds_cli.exceptions
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
@@ -87,11 +88,14 @@ async def test_unauthenticated_state():
             app.mount(widget)
             await pilot.pause()
 
+            # Should show authentication message, not project selector
+            labels = widget.query(Label)
+            auth_labels = [label for label in labels if "authenticate" in label.renderable.lower()]
+            assert len(auth_labels) == 1, "Should show authentication message for unauthenticated user"
+            
+            # Should not show project selector
             select_widgets = widget.query(DDSSelect)
-            select_widget = select_widgets[0]
-
-            assert select_widget.disabled
-            assert len(select_widget._options) == 1  # Only BLANK
+            assert len(select_widgets) == 0, "Should not show project selector for unauthenticated user"
 
 
 @pytest.mark.asyncio
@@ -217,9 +221,14 @@ async def test_empty_projects():
             app.mount(widget)
             await pilot.pause()
 
+            # Should show "No projects found" message for authenticated user with empty project list
+            labels = widget.query(Label)
+            no_projects_labels = [label for label in labels if "no projects" in label.renderable.lower()]
+            assert len(no_projects_labels) == 1, "Should show no projects found message"
+            
+            # Should not show project selector when no projects
             select_widgets = widget.query(DDSSelect)
-            select_widget = select_widgets[0]
-            assert len(select_widget._options) == 1  # Only BLANK
+            assert len(select_widgets) == 0, "Should not show project selector when no projects found"
 
 
 @pytest.mark.asyncio
@@ -424,13 +433,19 @@ async def test_multiple_api_errors():
                 "No projects available"
             )
 
-            try:
-                app2.set_auth_status(True)
-                await pilot.pause()
-                # NoDataError should be raised and not caught
-            except dds_cli.exceptions.NoDataError:
-                # This is expected - NoDataError not handled in watch_auth_status
-                assert True
+            # Set up notification capture
+            notifications2 = []
+            def capture_notify2(message, **kwargs):
+                notifications2.append({"message": message, "severity": kwargs.get("severity")})
+            app2.notify = capture_notify2
+
+            app2.set_auth_status(True)
+            await pilot.pause()
+            
+            # NoDataError should be handled gracefully and show error notification
+            assert app2.project_list is None, "Project list should be None after NoDataError"
+            assert len(notifications2) > 0, "Should show error notification for NoDataError"
+            assert notifications2[-1]["severity"] == "error", "Should show error severity for NoDataError"
 
 
 @pytest.mark.asyncio
@@ -524,9 +539,14 @@ async def test_auth_logout_clears_data():
             app.mount(new_widget)
             await pilot.pause()
 
+            # Should show authentication message after logout
+            new_labels = new_widget.query(Label)
+            auth_labels = [label for label in new_labels if "authenticate" in label.renderable.lower()]
+            assert len(auth_labels) == 1, "Should show authentication message after logout"
+            
+            # Should not show project selector after logout
             new_select_widgets = new_widget.query(DDSSelect)
-            new_select_widget = new_select_widgets[0]
-            assert new_select_widget.disabled
+            assert len(new_select_widgets) == 0, "Should not show project selector after logout"
 
 
 @pytest.mark.asyncio

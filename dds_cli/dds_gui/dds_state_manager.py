@@ -77,6 +77,7 @@ class DDSStateManager(App):
         except (
             dds_cli.exceptions.ApiRequestError,
             dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.NoDataError,
             dds_cli.exceptions.DDSCLIException,
         ) as err:
             self.call_from_thread(self._on_projects_error, str(err))

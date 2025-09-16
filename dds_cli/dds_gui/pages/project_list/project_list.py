@@ -15,20 +15,15 @@ from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 class ProjectList(DDSContainer):
     """A widget for the project list selection."""
 
-    # Local reactive attributes that mirror app state and trigger recomposition
-    project_list: reactive[List[dict]] = reactive(None, recompose=True)
-    projects_loading: reactive[bool] = reactive(False, recompose=True)
-    auth_status: reactive[bool] = reactive(False, recompose=True)
-
     def compose(self) -> ComposeResult:
         with DDSSpacedContainer():
-            if not self.auth_status:
+            if not self.app.auth_status:
                 # Show message when not authenticated
                 yield Label("Please authenticate to view projects")
-            elif self.projects_loading:
+            elif self.app.projects_loading:
                 # Show loading indicator when fetching projects
                 yield LoadingIndicator()
-            elif self.project_list:
+            elif self.app.project_list:
                 # Show project selector when projects are loaded
                 yield DDSTextItem(
                     "Select a project to view the project content, information, invite users, and upload and download data."
@@ -39,34 +34,32 @@ class ProjectList(DDSContainer):
                     value=(
                         self.app.selected_project_id if self.app.selected_project_id else Select.BLANK
                     ),
-                    disabled=not self.auth_status,
+                    disabled=not self.app.auth_status,
                 )
                 yield DDSButton(
                     "View Project",
                     id="view-project",
-                    disabled=not self.auth_status,
+                    disabled=not self.app.auth_status,
                 )
             else:
                 # Show message when authenticated but no projects found
                 yield Label("No projects found")
 
     def on_mount(self) -> None:
-        """On mount, sync initial state and set up watchers."""
-        self.project_list = self.app.project_list
-        self.projects_loading = self.app.projects_loading
-        self.auth_status = self.app.auth_status
+        """On mount, set up the widget."""
+        # Watch for changes in app state to trigger recomposition
+        self.watch(self.app, "auth_status", self._on_app_state_change)
+        self.watch(self.app, "projects_loading", self._on_app_state_change)
+        self.watch(self.app, "project_list", self._on_app_state_change)
 
-    def watch_project_list(self, project_list: List[dict]) -> None:
-        """Watch for changes in project list."""
-        self.project_list = project_list
+    def _on_app_state_change(self) -> None:
+        """Handle changes in app state by recomposing the widget."""
+        # Schedule recomposition for the next event loop iteration
+        self.call_after_refresh(self._recompose_widget)
 
-    def watch_projects_loading(self, projects_loading: bool) -> None:
-        """Watch for changes in projects loading state."""
-        self.projects_loading = projects_loading
-
-    def watch_auth_status(self, auth_status: bool) -> None:
-        """Watch for changes in auth status."""
-        self.auth_status = auth_status
+    async def _recompose_widget(self) -> None:
+        """Recompose the widget."""
+        await self.recompose()
 
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""
@@ -85,6 +78,6 @@ class ProjectList(DDSContainer):
         """Extract the project IDs from the project list."""
         return [
             p["Project ID"]
-            for p in self.project_list or []
+            for p in self.app.project_list or []
             if ("Project ID" in p and isinstance(p["Project ID"], str) and p["Project ID"].strip())
         ]

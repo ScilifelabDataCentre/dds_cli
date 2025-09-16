@@ -1,6 +1,6 @@
 """GUI Application for DDS CLI."""
 
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widgets import Header
 from textual.theme import Theme
@@ -33,7 +33,7 @@ theme = Theme(
 )
 
 
-class DDSApp(App, DDSStateManager):
+class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to access notifications
     """Textual App for DDS CLI."""
 
     def __init__(self, token_path: str):

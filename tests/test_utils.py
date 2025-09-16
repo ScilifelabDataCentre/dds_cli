@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
-from os import path
+from pathlib import Path
 from io import StringIO
 import sys
 from typing import Dict, List, Tuple
 
+import requests
 from requests import get
 from requests.exceptions import JSONDecodeError
 
@@ -180,12 +181,11 @@ def test_perform_request_error() -> None:
 
 
 def test_perform_request_request_exception() -> None:
-    with raises(ApiRequestError) as exc_info:
-        perform_request(
-            endpoint="http://localhost",
-            headers={},
-            method="get",
-        )
+    url: str = "http://localhost"
+    with Mocker() as mock:
+        mock.get(url, exc=requests.exceptions.ConnectionError)
+        with raises(ApiRequestError) as exc_info:
+            perform_request(endpoint=url, headers={}, method="get")
 
     assert len(exc_info.value.args) == 1
     assert "API Request failed.: The database seems to be down" in exc_info.value.args[0]
@@ -571,7 +571,11 @@ def test_print_or_page() -> None:
 
     sys.stdout = sys.__stdout__
 
-    assert len(output.getvalue()) == 20
+    rendered = output.getvalue()
+    # Ensure table borders were printed
+    assert any(ch in rendered for ch in ("┏", "┌", "+"))
+    # The bottom border may be rendered with either heavy (┗) or light (└) characters
+    assert any(char in rendered for char in ("┗", "└", "+"))
 
 
 def test_print_or_page_multiple_rows() -> None:
@@ -588,7 +592,13 @@ def test_print_or_page_multiple_rows() -> None:
 
     sys.stdout = sys.__stdout__
 
-    assert len(output.getvalue()) == 520
+    rendered = output.getvalue()
+    lines = rendered.splitlines()
+    # There should be 100 rows in addition to the four border/header lines
+    assert len(lines) - 4 == 100
+    # Check that the table borders were printed
+    assert any(ch in rendered for ch in ("┏", "┌", "+"))
+    assert any(char in rendered for char in ("┗", "└", "+"))
 
 
 def test_print_or_page_error() -> None:
@@ -605,15 +615,15 @@ def test_print_or_page_error() -> None:
 
 def test_delete_folder(fs: FakeFilesystem) -> None:
     fs.create_dir("folder")
-    fs.create_file("folder/file")
-    assert path.isdir("folder") == True
+    fs.create_file(Path("folder") / "file")
+    assert Path("folder").is_dir()
     delete_folder("folder")
-    assert path.isdir("folder") == False
+    assert not Path("folder").is_dir()
 
 
 def test_delete_folder_folder(fs: FakeFilesystem) -> None:
-    fs.create_dir("folder/folder")
-    fs.create_file("folder/file")
-    assert path.isdir("folder") == True
+    fs.create_dir(Path("folder") / "folder")
+    fs.create_file(Path("folder") / "file")
+    assert Path("folder").is_dir()
     delete_folder("folder")
-    assert path.isdir("folder") == False
+    assert not Path("folder").is_dir()

@@ -16,6 +16,7 @@ Changelog
     - Add Dardel section to the documentation
 - 🛡️ Dependencies
     - Bump requests library from 2.32.2 to 2.32.4
+    - Bump cryptography library from 42.0.4 to 44.0.1
 - 📌 Other Changes
     - GUI related changes (not released yet):
         - Implement Project Info in GUI

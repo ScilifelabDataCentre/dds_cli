@@ -170,15 +170,18 @@ class DDSStateManager(App):
     def watch_auth_status(self, auth_status: bool) -> None:
         """Watch the auth status."""
         if auth_status:
-            # Fetch the projects when the auth status is True.
-            # This is to ensure that the projects are fetched when the user is authenticated only.
-            # If called without auth status, recursion error occurs and/or the base class
-            # will try to authenticate in the CLI.
-            # Use async version since this is called after GUI is mounted
-            self.fetch_projects_async()
+            # Set loading state when user becomes authenticated
+            self.projects_loading = True
+            # Only fetch projects if this is a change from False to True (user authenticated during app usage)
+            # Initial auth status is handled separately in on_mount()
+            # We can detect this by checking if we're in the middle of app initialization
+            # by seeing if the GUI is already mounted
+            if hasattr(self, '_mounted') and self._mounted:
+                self.fetch_projects_async()
         else:
             self.project_list = None  # This triggers watch_projects to clear project_ids
             self.selected_project_id = None
+            self.projects_loading = False
 
     def watch_selected_project_id(self, selected_project_id: str) -> None:
         """Start loading project content when the selected project changes."""

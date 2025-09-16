@@ -40,7 +40,9 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
     def __init__(self, token_path: str):
         super().__init__()
         self.token_path = token_path
-        # Don't set auth status immediately - wait until GUI is mounted
+        # Check auth status immediately so UI shows correct state
+        auth_status = self.auth.check()
+        self.set_auth_status(auth_status)
 
     # TODO: add scrollbar styling here?
     DEFAULT_CSS = """
@@ -67,13 +69,15 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
         """On mount, register the theme and set it as the active theme."""
         self.register_theme(theme)
         self.theme = "custom"
-        # Now that the GUI is mounted, check authentication status asynchronously
-        self.call_after_refresh(self._check_auth_and_fetch_projects)
+        # Mark that the GUI is mounted so auth status watcher knows to fetch projects
+        self._mounted = True
+        # Now that the GUI is mounted, fetch projects if authenticated
+        self.call_after_refresh(self._fetch_projects_if_authenticated)
 
-    def _check_auth_and_fetch_projects(self) -> None:
-        """Check authentication and fetch projects after GUI is ready."""
-        auth_status = self.auth.check()
-        self.set_auth_status(auth_status)
+    def _fetch_projects_if_authenticated(self) -> None:
+        """Fetch projects if user is authenticated, after GUI is ready."""
+        if self.auth_status:
+            self.fetch_projects_async()
         
 
     def action_help(self) -> None:

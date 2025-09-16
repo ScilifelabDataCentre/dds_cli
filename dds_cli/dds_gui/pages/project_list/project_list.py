@@ -22,10 +22,6 @@ class ProjectList(DDSContainer):
 
     def compose(self) -> ComposeResult:
         with DDSSpacedContainer():
-            yield DDSTextItem(
-                "Select a project to view the project content, information, invite users, and upload and download data."
-            )
-            
             if not self.auth_status:
                 # Show message when not authenticated
                 yield Label("Please authenticate to view projects")
@@ -34,6 +30,9 @@ class ProjectList(DDSContainer):
                 yield LoadingIndicator()
             elif self.project_list:
                 # Show project selector when projects are loaded
+                yield DDSTextItem(
+                    "Select a project to view the project content, information, invite users, and upload and download data."
+                )
                 yield DDSSelect(
                     title="Select a project",
                     data=self.extract_project_ids(),
@@ -48,7 +47,7 @@ class ProjectList(DDSContainer):
                     disabled=not self.auth_status,
                 )
             else:
-                # Show message when no projects found
+                # Show message when authenticated but no projects found
                 yield Label("No projects found")
 
     def on_mount(self) -> None:

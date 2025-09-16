@@ -70,7 +70,7 @@ class DDSStateManager(App):
         """Fetch the projects asynchronously for background loading."""
         # Set loading state on main thread
         self.call_from_thread(self._set_projects_loading, True)
-        
+
         try:
             project_list = dds_cli.data_lister.DataLister(json=True).list_projects()
             self.call_from_thread(self._on_projects_loaded, project_list)
@@ -177,7 +177,7 @@ class DDSStateManager(App):
             # Initial auth status is handled separately in on_mount()
             # We can detect this by checking if we're in the middle of app initialization
             # by seeing if the GUI is already mounted
-            if hasattr(self, '_mounted') and self._mounted:
+            if hasattr(self, "_mounted") and self._mounted:
                 self.fetch_projects_async()
         else:
             self.project_list = None  # This triggers watch_projects to clear project_ids

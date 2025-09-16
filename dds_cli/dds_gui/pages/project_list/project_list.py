@@ -32,7 +32,9 @@ class ProjectList(DDSContainer):
                     title="Select a project",
                     data=self.extract_project_ids(),
                     value=(
-                        self.app.selected_project_id if self.app.selected_project_id else Select.BLANK
+                        self.app.selected_project_id
+                        if self.app.selected_project_id
+                        else Select.BLANK
                     ),
                     disabled=not self.app.auth_status,
                 )

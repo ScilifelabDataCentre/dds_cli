@@ -44,7 +44,7 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
         auth_result = self.auth.check()
         auth_status = auth_result is not None
         self.set_auth_status(auth_status)
-        
+
         # If authenticated, set loading state for projects
         if auth_status:
             self.projects_loading = True
@@ -74,7 +74,7 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
         """On mount, register the theme and set it as the active theme."""
         self.register_theme(theme)
         self.theme = "custom"
-        # Mark that the GUI is mounted so auth status watcher knows to fetch projects
+        # Mark that the GUI is mounted - prevents auth watcher from fetching projects during initialization
         self._mounted = True
         # Now that the GUI is mounted, fetch projects if authenticated
         self.call_after_refresh(self._fetch_projects_if_authenticated)
@@ -83,7 +83,6 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
         """Fetch projects if user is authenticated, after GUI is ready."""
         if self.auth_status:
             self.fetch_projects_async()
-        
 
     def action_help(self) -> None:
         """Action to show the help screen."""

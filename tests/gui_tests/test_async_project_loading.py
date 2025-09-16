@@ -86,6 +86,7 @@ async def wait_for_widget_state_change(widget, pilot, check_function, max_attemp
         await pilot.pause()
     return False
 
+
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 # Test data
@@ -103,7 +104,7 @@ MOCK_PROJECTS = [
 @pytest.mark.asyncio
 async def test_authenticated_user_sees_loading_indicator():
     """Test that authenticated users see loading indicator before projects load."""
-    
+
     app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
@@ -131,7 +132,7 @@ async def test_authenticated_user_sees_loading_indicator():
 @pytest.mark.asyncio
 async def test_unauthenticated_user_sees_auth_message():
     """Test that unauthenticated users see authentication message."""
-    
+
     app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
@@ -151,13 +152,15 @@ async def test_unauthenticated_user_sees_auth_message():
 
         # Should not show loading indicator
         loading_indicators = widget.query(LoadingIndicator)
-        assert len(loading_indicators) == 0, "Should not show loading indicator for unauthenticated user"
+        assert (
+            len(loading_indicators) == 0
+        ), "Should not show loading indicator for unauthenticated user"
 
 
 @pytest.mark.asyncio
 async def test_projects_load_after_authentication():
     """Test state transitions when projects load after authentication."""
-    
+
     app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
@@ -200,7 +203,7 @@ async def test_projects_load_after_authentication():
 @pytest.mark.asyncio
 async def test_loading_state_cleared_on_logout():
     """Test that loading state is cleared when user logs out."""
-    
+
     app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
@@ -246,7 +249,7 @@ async def test_loading_state_cleared_on_logout():
 @pytest.mark.asyncio
 async def test_no_projects_found_state():
     """Test behavior when authenticated but no projects are found."""
-    
+
     app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
@@ -282,7 +285,9 @@ async def test_no_projects_found_state():
 
         # Should not show loading indicator anymore
         loading_indicators = widget.query(LoadingIndicator)
-        assert len(loading_indicators) == 0, "Should not show loading indicator after loading completes"
+        assert (
+            len(loading_indicators) == 0
+        ), "Should not show loading indicator after loading completes"
 
         # Should not show project selector
         select_widgets = widget.query(DDSSelect)
@@ -292,7 +297,7 @@ async def test_no_projects_found_state():
 @pytest.mark.asyncio
 async def test_async_project_loading_error_handling():
     """Test error handling during async project loading."""
-    
+
     app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
@@ -338,7 +343,7 @@ async def test_async_project_loading_error_handling():
 @pytest.mark.asyncio
 async def test_loading_state_transitions():
     """Test all possible loading state transitions."""
-    
+
     app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
@@ -401,7 +406,7 @@ async def test_loading_state_transitions():
 @pytest.mark.asyncio
 async def test_app_initialization_with_auth_check():
     """Test that app initialization properly checks auth status without blocking."""
-    
+
     # Create app - this should check auth status immediately
     app = DDSApp(token_path=str(TOKEN_PATH))
 
@@ -422,7 +427,7 @@ async def test_app_initialization_with_auth_check():
 @pytest.mark.asyncio
 async def test_app_initialization_without_auth():
     """Test that app initialization properly handles unauthenticated state."""
-    
+
     # Create app - this should check auth status immediately
     app = DDSApp(token_path=str(TOKEN_PATH))
 
@@ -442,4 +447,6 @@ async def test_app_initialization_without_auth():
 
         # Should not show loading indicator
         loading_indicators = widget.query(LoadingIndicator)
-        assert len(loading_indicators) == 0, "Should not show loading indicator for unauthenticated user"
+        assert (
+            len(loading_indicators) == 0
+        ), "Should not show loading indicator for unauthenticated user"

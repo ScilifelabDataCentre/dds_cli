@@ -24,7 +24,7 @@ MOCK_PROJECTS = [
 @pytest.mark.asyncio
 async def test_sync_fetch_projects():
     """Test synchronous project fetching for initialization."""
-    
+
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to return projects
         mock_data_lister_instance = MagicMock()
@@ -46,7 +46,7 @@ async def test_sync_fetch_projects():
 @pytest.mark.asyncio
 async def test_sync_fetch_projects_error():
     """Test synchronous project fetching error handling."""
-    
+
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to raise an error
         mock_data_lister_instance = MagicMock()
@@ -78,7 +78,7 @@ async def test_sync_fetch_projects_error():
 @pytest.mark.asyncio
 async def test_async_fetch_projects():
     """Test asynchronous project fetching."""
-    
+
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to return projects
         mock_data_lister_instance = MagicMock()
@@ -100,7 +100,7 @@ async def test_async_fetch_projects():
 @pytest.mark.asyncio
 async def test_async_fetch_projects_error():
     """Test asynchronous project fetching error handling."""
-    
+
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to raise an error
         mock_data_lister_instance = MagicMock()
@@ -132,7 +132,7 @@ async def test_async_fetch_projects_error():
 @pytest.mark.asyncio
 async def test_watch_auth_status_sets_loading():
     """Test that auth status watcher sets loading state."""
-    
+
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -156,7 +156,7 @@ async def test_watch_auth_status_sets_loading():
 @pytest.mark.asyncio
 async def test_watch_auth_status_clears_loading_on_logout():
     """Test that auth status watcher clears loading state on logout."""
-    
+
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -180,13 +180,15 @@ async def test_watch_auth_status_clears_loading_on_logout():
             # Should clear loading state and project list
             assert app.projects_loading is False, "Loading state should be cleared when logged out"
             assert app.project_list is None, "Project list should be cleared when logged out"
-            assert app.selected_project_id is None, "Selected project should be cleared when logged out"
+            assert (
+                app.selected_project_id is None
+            ), "Selected project should be cleared when logged out"
 
 
 @pytest.mark.asyncio
 async def test_mounted_flag_prevents_initial_fetch():
     """Test that mounted flag prevents initial project fetch."""
-    
+
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to prevent authentication attempts
         mock_data_lister_instance = MagicMock()
@@ -216,7 +218,7 @@ async def test_mounted_flag_prevents_initial_fetch():
 @pytest.mark.asyncio
 async def test_loading_state_callback_methods():
     """Test loading state callback methods."""
-    
+
     app = DDSStateManager()
 
     async with app.run_test() as pilot:
@@ -250,7 +252,7 @@ async def test_loading_state_callback_methods():
 @pytest.mark.asyncio
 async def test_dual_fetch_methods_coexistence():
     """Test that both sync and async fetch methods work correctly."""
-    
+
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to return projects
         mock_data_lister_instance = MagicMock()
@@ -278,7 +280,7 @@ async def test_dual_fetch_methods_coexistence():
 @pytest.mark.asyncio
 async def test_error_types_handling():
     """Test handling of different error types in async fetch."""
-    
+
     error_types = [
         (dds_cli.exceptions.ApiRequestError("Request failed"), "error"),
         (dds_cli.exceptions.ApiResponseError("Response failed"), "error"),
@@ -306,7 +308,15 @@ async def test_error_types_handling():
                 await pilot.pause()
 
                 # Should handle error gracefully
-                assert app.project_list is None, f"Project list should be None after {type(error).__name__}"
-                assert app.projects_loading is False, f"Loading state should be False after {type(error).__name__}"
-                assert len(notifications) > 0, f"Should show error notification for {type(error).__name__}"
-                assert notifications[-1]["severity"] == expected_severity, f"Should show {expected_severity} severity for {type(error).__name__}"
+                assert (
+                    app.project_list is None
+                ), f"Project list should be None after {type(error).__name__}"
+                assert (
+                    app.projects_loading is False
+                ), f"Loading state should be False after {type(error).__name__}"
+                assert (
+                    len(notifications) > 0
+                ), f"Should show error notification for {type(error).__name__}"
+                assert (
+                    notifications[-1]["severity"] == expected_severity
+                ), f"Should show {expected_severity} severity for {type(error).__name__}"

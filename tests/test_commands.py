@@ -8,7 +8,7 @@ import pytest
 
 
 import dds_cli.exceptions
-from dds_cli import dds_main
+from dds_cli.__main__ import dds_main
 
 
 ### PARAMETERIZED options to pass to tests ###
@@ -28,9 +28,12 @@ from dds_cli import dds_main
 
 def test_configure_choices(user_choice, expected_auth_method, expected_exit_code):
     runner = CliRunner()
-    with patch(
-        questionary.select, "auth_method_choice", return_value=user_choice
-    ) as mock_select, patch("dds_cli.auth.Auth") as mock_auth:
+    with patch("dds_cli.__main__.questionary.select") as mock_select, patch(
+        "dds_cli.auth.Auth"
+    ) as mock_auth:
+
+        # Mock the questionary.select call
+        mock_select.return_value.ask.return_value = user_choice
 
         # Mock the Auth context manager
         mock_auth_instance = MagicMock()

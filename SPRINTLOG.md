@@ -469,6 +469,6 @@ _Empty sprint_
 - Specify download timeouts to avoid s3 errors ([#846](https://github.com/ScilifelabDataCentre/dds_cli/pull/846))
 - Prompt for username and password if either of them are empty ([#847](https://github.com/ScilifelabDataCentre/dds_cli/pull/847))
 
-# 2025-09-15 - 2025-09-26
+## 2025-09-15 - 2025-09-26
 
-- New version: 2.13.0 ([#849](https://github.com/ScilifelabDataCentre/dds_cli/pull/849))
+- Bump cryptography library from 42.0.4 to 44.0.1 to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))

@@ -177,7 +177,9 @@ class DDSStateManager(App):
             # Initial auth status is handled separately in on_mount()
             # We can detect this by checking if we're in the middle of app initialization
             # by seeing if the GUI is already mounted
-            if hasattr(self, "_mounted") and getattr(self, "_mounted", False):  # pylint: disable=no-member
+            if hasattr(self, "_mounted") and getattr(
+                self, "_mounted", False
+            ):  # pylint: disable=no-member
                 self.fetch_projects_async()
         else:
             self.project_list = None  # This triggers watch_projects to clear project_ids

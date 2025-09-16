@@ -105,13 +105,14 @@ MOCK_PROJECTS = [
 async def test_authenticated_user_sees_loading_indicator():
     """Test that authenticated users see loading indicator before projects load."""
 
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, \
-         patch.object(DDSApp, "fetch_projects_async") as mock_fetch_projects:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects:
         # Mock DataLister to prevent interactive authentication
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
-        
+
         # Mock fetch_projects_async to prevent it from running
         mock_fetch_projects.return_value = None
 
@@ -166,13 +167,14 @@ async def test_unauthenticated_user_sees_auth_message():
 async def test_projects_load_after_authentication():
     """Test state transitions when projects load after authentication."""
 
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, \
-         patch.object(DDSApp, "fetch_projects_async") as mock_fetch_projects:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects:
         # Mock DataLister to prevent interactive authentication
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
-        
+
         # Mock fetch_projects_async to prevent it from running
         mock_fetch_projects.return_value = None
 
@@ -219,13 +221,14 @@ async def test_projects_load_after_authentication():
 async def test_loading_state_cleared_on_logout():
     """Test that loading state is cleared when user logs out."""
 
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, \
-         patch.object(DDSApp, "fetch_projects_async") as mock_fetch_projects:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects:
         # Mock DataLister to prevent interactive authentication
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
-        
+
         # Mock fetch_projects_async to prevent it from running
         mock_fetch_projects.return_value = None
 
@@ -275,13 +278,14 @@ async def test_loading_state_cleared_on_logout():
 async def test_no_projects_found_state():
     """Test behavior when authenticated but no projects are found."""
 
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, \
-         patch.object(DDSApp, "fetch_projects_async") as mock_fetch_projects:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects:
         # Mock DataLister to prevent interactive authentication
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = []
-        
+
         # Mock fetch_projects_async to prevent it from running
         mock_fetch_projects.return_value = None
 
@@ -321,25 +325,28 @@ async def test_no_projects_found_state():
             # Should not show loading indicator anymore
             loading_indicators = widget.query(LoadingIndicator)
             assert (
-            len(loading_indicators) == 0
-        ), "Should not show loading indicator after loading completes"
+                len(loading_indicators) == 0
+            ), "Should not show loading indicator after loading completes"
 
             # Should not show project selector
             select_widgets = widget.query(DDSSelect)
-            assert len(select_widgets) == 0, "Should not show project selector when no projects found"
+            assert (
+                len(select_widgets) == 0
+            ), "Should not show project selector when no projects found"
 
 
 @pytest.mark.asyncio
 async def test_async_project_loading_error_handling():
     """Test error handling during async project loading."""
 
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, \
-         patch.object(DDSApp, "fetch_projects_async") as mock_fetch_projects:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects:
         # Mock DataLister to prevent interactive authentication
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.side_effect = Exception("Network error")
-        
+
         # Mock fetch_projects_async to prevent it from running
         mock_fetch_projects.return_value = None
 
@@ -389,13 +396,14 @@ async def test_async_project_loading_error_handling():
 async def test_loading_state_transitions():
     """Test all possible loading state transitions."""
 
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, \
-         patch.object(DDSApp, "fetch_projects_async") as mock_fetch_projects:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects:
         # Mock DataLister to prevent interactive authentication
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
-        
+
         # Mock fetch_projects_async to prevent it from running
         mock_fetch_projects.return_value = None
 
@@ -464,13 +472,14 @@ async def test_loading_state_transitions():
 async def test_app_initialization_with_auth_check():
     """Test that app initialization properly checks auth status without blocking."""
 
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, \
-         patch.object(DDSApp, "fetch_projects_async") as mock_fetch_projects:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects:
         # Mock DataLister to prevent interactive authentication
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
-        
+
         # Mock fetch_projects_async to prevent it from running
         mock_fetch_projects.return_value = None
 
@@ -488,20 +497,23 @@ async def test_app_initialization_with_auth_check():
 
             # Should show loading indicator since we're authenticated
             loading_indicators = widget.query(LoadingIndicator)
-            assert len(loading_indicators) == 1, "Should show loading indicator for authenticated user"
+            assert (
+                len(loading_indicators) == 1
+            ), "Should show loading indicator for authenticated user"
 
 
 @pytest.mark.asyncio
 async def test_app_initialization_without_auth():
     """Test that app initialization properly handles unauthenticated state."""
 
-    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, \
-         patch.object(DDSApp, "fetch_projects_async") as mock_fetch_projects:
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects:
         # Mock DataLister to prevent interactive authentication
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
         mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
-        
+
         # Mock fetch_projects_async to prevent it from running
         mock_fetch_projects.return_value = None
 
@@ -520,10 +532,53 @@ async def test_app_initialization_without_auth():
             # Should show authentication message
             labels = widget.query(Label)
             auth_labels = [label for label in labels if "authenticate" in label.renderable.lower()]
-            assert len(auth_labels) == 1, "Should show authentication message for unauthenticated user"
+            assert (
+                len(auth_labels) == 1
+            ), "Should show authentication message for unauthenticated user"
 
             # Should not show loading indicator
             loading_indicators = widget.query(LoadingIndicator)
             assert (
                 len(loading_indicators) == 0
             ), "Should not show loading indicator for unauthenticated user"
+
+
+@pytest.mark.asyncio
+async def test_app_initialization_with_authenticated_user():
+    """Test that app initialization sets projects_loading=True when user is already authenticated."""
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch.object(
+        DDSApp, "fetch_projects_async"
+    ) as mock_fetch_projects, patch.object(DDSApp, "auth") as mock_auth:
+
+        # Mock auth.check() to return a valid result (simulating authenticated user)
+        mock_auth.check.return_value = {"user": "test_user", "token": "valid_token"}
+
+        # Mock DataLister to prevent interactive authentication
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock fetch_projects_async to prevent it from running
+        mock_fetch_projects.return_value = None
+
+        # Create app - this should check auth status and set projects_loading=True
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        # Verify that projects_loading was set to True during initialization (line 50)
+        assert (
+            app.projects_loading is True
+        ), "Projects loading should be True when user is authenticated during initialization"
+        assert app.auth_status is True, "Auth status should be True when user is authenticated"
+
+        async with app.run_test() as pilot:
+            # Mount project list widget
+            widget = ProjectList(title="Project List")
+            app.mount(widget)
+            await pilot.pause()
+
+            # Should show loading indicator since we're authenticated and projects_loading=True
+            loading_indicators = widget.query(LoadingIndicator)
+            assert (
+                len(loading_indicators) == 1
+            ), "Should show loading indicator for authenticated user during initialization"

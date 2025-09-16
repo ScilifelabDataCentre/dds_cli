@@ -44,7 +44,7 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
         auth_result = self.auth.check()
         auth_status = auth_result is not None
         self.set_auth_status(auth_status)
-        
+
         # If authenticated, set loading state for projects
         if auth_status:
             self.projects_loading = True

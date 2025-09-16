@@ -4,7 +4,6 @@ from typing import List
 from textual import events
 from textual.app import ComposeResult
 from textual.widgets import Select, LoadingIndicator, Label
-from textual.reactive import reactive
 
 from dds_cli.dds_gui.components.dds_button import DDSButton
 from dds_cli.dds_gui.components.dds_container import DDSContainer, DDSSpacedContainer
@@ -26,7 +25,8 @@ class ProjectList(DDSContainer):
             elif self.app.project_list:
                 # Show project selector when projects are loaded
                 yield DDSTextItem(
-                    "Select a project to view the project content, information, invite users, and upload and download data."
+                    "Select a project to view the project content, \
+                    information, invite users, and upload and download data."
                 )
                 yield DDSSelect(
                     title="Select a project",

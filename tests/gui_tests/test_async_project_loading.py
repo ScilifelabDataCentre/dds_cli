@@ -8,7 +8,6 @@ from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
 from textual.widgets import LoadingIndicator, Label
-import dds_cli.exceptions
 
 
 async def wait_for_loading_state(app, pilot, expected_loading=True, max_attempts=10):

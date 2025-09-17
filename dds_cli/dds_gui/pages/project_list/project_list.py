@@ -18,7 +18,7 @@ class ProjectList(DDSContainer):
         with DDSSpacedContainer():
             if not self.app.auth_status:
                 # Show message when not authenticated
-                yield Label("Please authenticate to view projects")
+                yield DDSTextItem("Please authenticate to view projects")
             elif self.app.projects_loading:
                 # Show loading indicator when fetching projects
                 yield LoadingIndicator()

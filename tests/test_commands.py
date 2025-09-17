@@ -1,6 +1,4 @@
-"""Test for the commands."""
-
-#### Very incomplete suite #####
+"""Tests for CLI commands in dds_cli.__main__"""
 
 from click.testing import CliRunner
 from unittest.mock import MagicMock, patch
@@ -13,7 +11,7 @@ from dds_cli.__main__ import dds_main
 
 #### AUTH COMMANDS #####
 
-# TWOFACTOR ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ TWOFACTOR #
+## TWOFACTOR subcommands ##
 
 
 # parametrized options to pass to the test
@@ -33,7 +31,7 @@ def test_auth_configure_ok(user_choice, expected_auth_method, expected_exit_code
         "dds_cli.auth.Auth"
     ) as mock_auth:
 
-        # Mock the questionary.select call
+        # Mock the user selecting option
         mock_select.return_value.ask.return_value = user_choice
 
         # Mock the Auth context manager
@@ -64,7 +62,7 @@ def test_auth_configure_exceptions(exc_type, user_choice):
         "dds_cli.auth.Auth"
     ) as mock_auth:
 
-        # Mock user selecting
+        # Mock the user selecting option
         mock_select.return_value.ask.return_value = user_choice
 
         # Mock Auth context manager to raise exception
@@ -79,7 +77,7 @@ def test_auth_configure_exceptions(exc_type, user_choice):
 
 #### USER COMMANDS #####
 
-# Activate and deativate users
+## Activate and deativate users ##
 
 
 @pytest.mark.parametrize("confirm", [True, False])

@@ -11,17 +11,21 @@ PROJECT_ID = "test-123"
 
 ##### HELPER FUNCTIONS AND DECORATORS
 
+
 class DecoratorHelper:
-    """ Helper class to simulate attributes used by decorators. """
-    def __init__(self, project_id = PROJECT_ID):
+    """Helper class to simulate attributes used by decorators."""
+
+    def __init__(self, project_id=PROJECT_ID):
         self.project = project_id  # used by the removal spinner
         self.failed_table = None  # used by the removal spinner
         self.failed_files = None  # used by the removal spinner
+
 
 @pytest.fixture
 def helper():
     """Fixture returning a new helper instance."""
     return DecoratorHelper()
+
 
 # the removal spinner relies on the function name, so we need to replace it dynamically
 # https://stackoverflow.com/questions/10874432/possible-to-change-function-name-in-definition
@@ -73,7 +77,7 @@ def test_removal_spinner_success(helper, func_name, expected_printed_description
 
 @pytest.mark.parametrize("func_name", ["remove_all", "remove_file", "remove_folder"])
 def test_removal_spinner_failed_table(helper, func_name):
-    """ Test the removal spinner decorator - fails - prints failed_table and logs warning."""
+    """Test the removal spinner decorator - fails - prints failed_table and logs warning."""
 
     @custom_decorators.removal_spinner
     @rename(func_name)

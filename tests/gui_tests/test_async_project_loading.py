@@ -7,6 +7,7 @@ import pytest
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
+from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 from textual.widgets import LoadingIndicator, Label
 
 
@@ -26,7 +27,7 @@ async def wait_for_widget_recomposition(widget, pilot, max_attempts=10):
         await pilot.pause()  # Allow recomposition to happen
         # Check if the widget has the expected content
         try:
-            # Try to query the widget to see if it has been recomposed
+            # Try to query thblack e widget to see if it has been recomposed
             widget.query("*")
             return True
         except Exception:
@@ -151,9 +152,11 @@ async def test_unauthenticated_user_sees_auth_message():
         await pilot.pause()
 
         # Should show authentication message
-        labels = widget.query(Label)
-        auth_labels = [label for label in labels if "authenticate" in label.renderable.lower()]
-        assert len(auth_labels) == 1, "Should show authentication message for unauthenticated user"
+        text_items = widget.query(DDSTextItem)
+        auth_text_items = [item for item in text_items if "authenticate" in item.renderable.lower()]
+        assert (
+            len(auth_text_items) == 1
+        ), "Should show authentication message for unauthenticated user"
 
         # Should not show loading indicator
         loading_indicators = widget.query(LoadingIndicator)
@@ -190,9 +193,11 @@ async def test_projects_load_after_authentication():
             await pilot.pause()
 
             # Should show auth message initially
-            labels = widget.query(Label)
-            auth_labels = [label for label in labels if "authenticate" in label.renderable.lower()]
-            assert len(auth_labels) == 1, "Should show authentication message initially"
+            text_items = widget.query(DDSTextItem)
+            auth_text_items = [
+                item for item in text_items if "authenticate" in item.renderable.lower()
+            ]
+            assert len(auth_text_items) == 1, "Should show authentication message initially"
 
             # Now authenticate - this should trigger the natural loading flow
             app.set_auth_status(True)
@@ -471,10 +476,12 @@ async def test_app_initialization_without_auth():
             await pilot.pause()
 
             # Should show authentication message
-            labels = widget.query(Label)
-            auth_labels = [label for label in labels if "authenticate" in label.renderable.lower()]
+            text_items = widget.query(DDSTextItem)
+            auth_text_items = [
+                item for item in text_items if "authenticate" in item.renderable.lower()
+            ]
             assert (
-                len(auth_labels) == 1
+                len(auth_text_items) == 1
             ), "Should show authentication message for unauthenticated user"
 
             # Should not show loading indicator

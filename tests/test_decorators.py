@@ -12,12 +12,12 @@ project_id = "test-123"
 ## DUMMY CLASS
 
 
-# Dummy class to help with the decorator functions - add atributes to complete more tests
-class Dummy:
+# Dummy class to help with the decorator functions - add the needed atributes as we add more tests
+class DecoratorHelper:
     def __init__(self):
-        self.project = project_id
-        self.failed_table = None
-        self.failed_files = None
+        self.project = project_id  # used by the removal spinner
+        self.failed_table = None  # used by the removal spinner
+        self.failed_files = None  # used by the removal spinner
 
 
 ##### HELPER FUNCTIONS AND DECORATORS
@@ -49,7 +49,7 @@ def test_removal_spinner_success(func_name, expected_printed_description):
 
     @custom_decorators.removal_spinner
     @rename(func_name)
-    def dummy_func(self):
+    def fake_func(self):  # fake function that uses the decorator
         # gets renamed to func_name
         pass
 
@@ -60,8 +60,8 @@ def test_removal_spinner_success(func_name, expected_printed_description):
         mock_progress_instance = MagicMock()
         mock_progress.return_value.__enter__.return_value = mock_progress_instance
 
-        dummy = Dummy()
-        dummy_func(dummy)
+        helper = DecoratorHelper()
+        fake_func(helper)  # trigger the removal spinner
 
         # progress bar interactions happened
         mock_progress_instance.add_task.assert_called_once()
@@ -72,57 +72,57 @@ def test_removal_spinner_success(func_name, expected_printed_description):
         assert expected_printed_description in printed
 
 
-def test_removal_spinner_failed_table():
+@pytest.mark.parametrize("func_name", ["remove_all", "remove_file", "remove_folder"])
+def test_removal_spinner_failed_table(func_name):
     """Test decorator prints failed_table and logs warning."""
 
     @custom_decorators.removal_spinner
-    @rename("remove_file")
-    def dummy_func(self):
-        # gets renamed to remove_file
+    @rename(func_name)
+    def fake_func(self):  # fake function that uses the decorator
         pass
 
     with patch("dds_cli.custom_decorators.Progress"), patch(
         "dds_cli.custom_decorators.dds_cli.utils.console"
     ) as mock_console, patch("dds_cli.custom_decorators.LOG") as mock_log:
 
-        dummy = Dummy()
+        helper = DecoratorHelper()
 
         mock_console.height = 10
         # Fake a failed_table with row_count
         fake_table = MagicMock()
         fake_table.renderable.row_count = 3
-        dummy.failed_table = fake_table
+        helper.failed_table = fake_table
 
-        dummy_func(dummy)
+        fake_func(helper)
 
         # Console printed the failed table
         mock_console.print.assert_called_with(fake_table)
 
-        # Should log a warning mentioning "removing file(s)"
         msg = mock_log.warning.call_args[0][0]
         assert "with errors" in msg.lower()
 
 
-def test_removal_spinner_failed_files():
+@pytest.mark.parametrize("func_name", ["remove_all", "remove_file", "remove_folder"])
+def test_removal_spinner_failed_files(func_name):
     """Test decorator prints failed_files dict with result message."""
 
     @custom_decorators.removal_spinner
-    @rename("remove_folder")
-    def dummy_func(self):
-        # gets renamed to remove_folder
+    @rename(func_name)
+    def fake_func(self):
+        # gets renamed to func_name
         pass
 
     with patch("dds_cli.custom_decorators.Progress"), patch(
         "dds_cli.custom_decorators.dds_cli.utils.console"
     ) as mock_console:
 
-        dummy = Dummy()
-        dummy.failed_files = {"some": "file"}
-        dummy_func(dummy)
+        helper = DecoratorHelper()
+        helper.failed_files = {"some": "file"}
+        fake_func(helper)
 
         # failed_files dict should have been updated
-        assert "result" in dummy.failed_files
-        assert "with errors" in dummy.failed_files["result"]
+        assert "result" in helper.failed_files
+        assert "with errors" in helper.failed_files["result"]
 
         # Console printed the failed_files dict
-        mock_console.print.assert_called_with(dummy.failed_files)
+        mock_console.print.assert_called_with(helper.failed_files)

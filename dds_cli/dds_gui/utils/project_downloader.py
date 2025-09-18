@@ -140,6 +140,10 @@ class CallbackProgress:
         """Trigger progress callback with current state."""
         if not self.progress_callback:
             return
+            
+        # Check if download was cancelled
+        if self.downloader_instance._cancelled:
+            return
 
         # Calculate current file progress
         current_file_progress = self.completed / max(self.total_size, 1)
@@ -498,10 +502,18 @@ class ProjectDownloader:
 
                 # Process completed downloads and schedule new ones
                 while self._download_threads and not self._cancelled:
-                    # Wait for next completion
-                    done, _ = concurrent.futures.wait(
-                        self._download_threads, return_when=concurrent.futures.FIRST_COMPLETED
-                    )
+                    # Wait for next completion with timeout for more responsive cancellation
+                    try:
+                        done, _ = concurrent.futures.wait(
+                            self._download_threads, 
+                            return_when=concurrent.futures.FIRST_COMPLETED,
+                            timeout=0.1  # 100ms timeout for responsive cancellation
+                        )
+                    except concurrent.futures.TimeoutError:
+                        # Timeout occurred, check for cancellation and continue
+                        if self._cancelled:
+                            break
+                        continue
 
                     new_tasks = 0
 

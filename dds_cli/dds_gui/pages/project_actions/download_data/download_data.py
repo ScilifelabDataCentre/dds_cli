@@ -166,7 +166,26 @@ class DownloadData(Widget):
             # Start download
             self._update_status("Starting download...")
             print(f"[DEBUG] Starting download_all...")
-            success = self.downloader.download_all(num_threads=4)
+            
+            # Start download in a separate thread so we can monitor cancellation
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(self.downloader.download_all, 4)
+                
+                # Monitor the download with cancellation checks
+                while not future.done():
+                    try:
+                        success = future.result(timeout=0.1)
+                        break
+                    except concurrent.futures.TimeoutError:
+                        # Check if download was cancelled
+                        if self._stop_download.is_set():
+                            print(f"[DEBUG] Download cancelled during execution")
+                            self.downloader.cancel_download()
+                            success = False
+                            break
+                        continue
+            
             print(f"[DEBUG] Download completed with success: {success}")
             
             if success:

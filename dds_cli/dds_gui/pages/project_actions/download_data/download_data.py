@@ -12,6 +12,7 @@ from dds_cli.dds_gui.utils.project_downloader import DownloadProgress, DownloadR
 from dds_cli import exceptions as dds_cli_exceptions
 from typing import Any, Optional
 import asyncio
+import concurrent.futures
 
 
 class ProgressUpdateMessage(Message):
@@ -28,6 +29,12 @@ class StatusUpdateMessage(Message):
         super().__init__()
 
 
+class CancelDownloadMessage(Message):
+    """Message sent to cancel download."""
+    def __init__(self) -> None:
+        super().__init__()
+
+
 
 class DownloadData(Widget):
     """A widget for downloading data."""
@@ -35,12 +42,18 @@ class DownloadData(Widget):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.downloader: Optional[ProjectDownloader] = None
+        self.download_worker = None
+        # Initialize reactive attributes with default values
+        self.selected_project_id = None
         self.is_downloading = False
 
     progress = reactive(0.0, recompose=True)
     status = reactive("Ready", recompose=True)
     files_downloaded = reactive(0, recompose=True)
     total_files = reactive(0, recompose=True)
+    # Local reactive attributes that mirror app state and trigger recomposition
+    selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
+    is_downloading: reactive[bool] = reactive(False, recompose=True)
 
     DEFAULT_CSS = """
     DownloadData {
@@ -54,17 +67,29 @@ class DownloadData(Widget):
             yield DDSButton(
                 "Download project content",
                 id="download-project-content-button",
-                disabled=not self.app.selected_project_id,
+                disabled=not self.selected_project_id or self.is_downloading,
             )
             yield DDSButton(
                 "Cancel download",
                 id="cancel-download-button",
-                disabled=True,
+                disabled=not self.is_downloading,
                 variant="error",
             )
             yield Label(f"Progress: {self.progress:.1%}", id="progress-label")
             yield Label(f"Files: {self.files_downloaded}/{self.total_files}", id="files-label")
             yield Label(f"Status: {self.status}", id="status-label")
+
+    def on_mount(self) -> None:
+        """On mount, sync initial state and set up watchers."""
+        # Initialize local reactive attributes with current app state
+        self.selected_project_id = self.app.selected_project_id
+        
+        # Set up watchers to keep local state in sync with app state
+        self.watch(self.app, "selected_project_id", self.watch_selected_project_id)
+
+    def watch_selected_project_id(self, selected_project_id: Optional[str]) -> None:
+        """Watch the app's selected_project_id state and sync to local reactive attribute."""
+        self.selected_project_id = selected_project_id
 
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""
@@ -77,10 +102,10 @@ class DownloadData(Widget):
             self.is_downloading = True
             # Force UI update before starting worker
             self.refresh()
-            self.run_worker(self._initialize_and_download_worker(), name="download")
+            self.download_worker = self.run_worker(self._initialize_and_download_worker(), name="download")
         elif event.button.id == "cancel-download-button":
-            # Cancel the download
-            self._cancel_download()
+            # Cancel the download via message system
+            self.post_message(CancelDownloadMessage())
 
     async def _initialize_and_download_worker(self) -> None:
         """Worker function for initializing downloader and starting download."""
@@ -107,14 +132,12 @@ class DownloadData(Widget):
             self.post_message(StatusUpdateMessage("Starting download..."))
             await asyncio.sleep(0.1)  # Allow UI to update
             
-            # Update button states
-            self._update_button_states()
+            # Update button states via message to main thread
+            self.post_message(StatusUpdateMessage("Download ready"))
 
             # Start the actual download in a separate thread to avoid blocking
-            print("[WORKER] Starting download_all...")
-            
             # Run download_all in a thread pool to avoid blocking the worker
-            import concurrent.futures
+            
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 # Submit the download task
                 future = executor.submit(self.downloader.download_all, 4)
@@ -125,11 +148,15 @@ class DownloadData(Widget):
                         success = future.result(timeout=0.1)
                         break
                     except concurrent.futures.TimeoutError:
+                        # Check if download was cancelled
+                        if self.downloader and self.downloader._cancelled:
+                            print("[WORKER] Download was cancelled")
+                            success = False
+                            break
                         # Yield control to allow message processing
                         await asyncio.sleep(0.01)
                         continue
             
-            print(f"[WORKER] Download completed: {success}")
             if success:
                 self.app.notify("Download completed successfully", severity="information")
                 self.post_message(StatusUpdateMessage("Download completed"))
@@ -139,47 +166,27 @@ class DownloadData(Widget):
             
             # Reset download state when download completes
             self.is_downloading = False
-            self._update_button_states()
+            self.download_worker = None
 
-        except dds_cli_exceptions.DownloadError as e:
-            error_msg = str(e)
-            if "File not found" in error_msg:
-                self.app.notify("Download failed: File not found on server. Please contact support.", severity="error")
-                self.post_message(StatusUpdateMessage("File not found"))
-            else:
-                self.app.notify(f"Download failed: {error_msg}", severity="error")
-                self.post_message(StatusUpdateMessage("Download failed"))
-            # Reset download state on error
-            self.is_downloading = False
-            self._update_button_states()
-        except dds_cli_exceptions.AuthenticationError as e:
-            self.app.notify("Download failed: Authentication error. Please check your credentials.", severity="error")
-            self.post_message(StatusUpdateMessage("Authentication failed"))
-            # Reset download state on error
-            self.is_downloading = False
-            self._update_button_states()
-        except dds_cli_exceptions.TokenNotFoundError as e:
-            self.app.notify("Download failed: No authentication token found. Please log in again.", severity="error")
-            self.post_message(StatusUpdateMessage("Token not found"))
-            # Reset download state on error
-            self.is_downloading = False
-            self._update_button_states()
-        except dds_cli_exceptions.ApiRequestError as e:
-            self.app.notify("Download failed: Server communication error. Please check your connection.", severity="error")
-            self.post_message(StatusUpdateMessage("Server error"))
-            # Reset download state on error
-            self.is_downloading = False
-            self._update_button_states()
-        except (ValueError, OSError, RuntimeError, dds_cli_exceptions.DDSCLIException) as e:
+        except (
+            dds_cli_exceptions.DownloadError,
+            dds_cli_exceptions.AuthenticationError,
+            dds_cli_exceptions.TokenNotFoundError,
+            dds_cli_exceptions.ApiRequestError,
+            ValueError,
+            OSError,
+            RuntimeError,
+            dds_cli_exceptions.DDSCLIException,
+        ) as e:
             self.app.notify(f"Download failed: {e}", severity="error")
-            self.post_message(StatusUpdateMessage("Download failed"))
+
             # Reset download state on error
             self.is_downloading = False
-            self._update_button_states()
+            self.download_worker = None
+            self.post_message(StatusUpdateMessage("Download failed"))
 
     def _on_progress_update(self, progress: DownloadProgress) -> None:
         """Handle progress updates from the downloader."""
-        print(f"[WORKER] Progress callback: {progress.overall_percentage:.1f}% - {progress.status}")
         # Post message to main thread for thread-safe UI update
         self.post_message(ProgressUpdateMessage(progress))
     
@@ -194,8 +201,10 @@ class DownloadData(Widget):
     def on_status_update_message(self, message: StatusUpdateMessage) -> None:
         """Handle status update messages on the main thread."""
         self.status = message.status
-        # Update button states when status changes
-        self._update_button_states()
+    
+    def on_cancel_download_message(self, message: CancelDownloadMessage) -> None:
+        """Handle cancel download messages on the main thread."""
+        self._cancel_download()
     
     
     def _on_file_completed(self, result: DownloadResult) -> None:
@@ -204,33 +213,22 @@ class DownloadData(Widget):
 
     def _on_error(self, error: str) -> None:
         """Handle error from the downloader."""
-        if "File not found" in error:
-            self.app.notify("Error: File not found on server. Please contact support.", severity="error")
-        elif "Authentication" in error or "Token" in error:
-            self.app.notify("Error: Authentication issue. Please check your credentials.", severity="error")
-        elif "Connection" in error or "Network" in error:
-            self.app.notify("Error: Network connection issue. Please check your internet connection.", severity="error")
-        else:
-            self.app.notify(f"Error: {error}", severity="error")
+        self.app.notify(f"Error: {error}", severity="error")
 
     def _cancel_download(self) -> None:
         """Cancel the ongoing download."""
         if self.downloader and self.is_downloading:
+            # Cancel the downloader
             self.downloader.cancel_download()
-            self.status = "Cancelling..."
+            
+            # Cancel the worker thread if it exists
+            if self.download_worker:
+                self.download_worker.cancel()
+                self.download_worker = None
+            
+            # Update status
+            self.status = "Download cancelled"
             self.app.notify("Download cancelled", severity="information")
+            
             # Reset download state
             self.is_downloading = False
-            self._update_button_states()
-
-    def _update_button_states(self) -> None:
-        """Update button states based on current download status."""
-        download_button = self.query_one("#download-project-content-button", DDSButton)
-        cancel_button = self.query_one("#cancel-download-button", DDSButton)
-        
-        if self.is_downloading:
-            download_button.disabled = True
-            cancel_button.disabled = False
-        else:
-            download_button.disabled = not self.app.selected_project_id
-            cancel_button.disabled = True

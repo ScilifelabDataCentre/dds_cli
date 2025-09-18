@@ -41,8 +41,7 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
         self.token_path = token_path
         self._mounted = False  # Initialize _mounted attribute
         # Check auth status immediately so UI shows correct state
-        auth_result = self.auth.check()
-        auth_status = auth_result is not None
+        auth_status = self.auth.check() is not None
         self.set_auth_status(auth_status)
 
         # If authenticated, set loading state for projects

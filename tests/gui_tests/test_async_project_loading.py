@@ -8,7 +8,7 @@ from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
 from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
-from textual.widgets import LoadingIndicator, Label
+from textual.widgets import LoadingIndicator
 
 
 async def wait_for_loading_state(app, pilot, expected_loading=True, max_attempts=10):
@@ -27,7 +27,7 @@ async def wait_for_widget_recomposition(widget, pilot, max_attempts=10):
         await pilot.pause()  # Allow recomposition to happen
         # Check if the widget has the expected content
         try:
-            # Try to query thblack e widget to see if it has been recomposed
+            # Try to query the widget to see if it has been recomposed
             widget.query("*")
             return True
         except Exception:

@@ -142,7 +142,7 @@ class CallbackProgress:
             return
             
         # Check if download was cancelled
-        if self.downloader_instance._cancelled:
+        if self.downloader_instance._cancelled or (self.downloader_instance._getter and self.downloader_instance._getter.stop_doing):
             return
 
         # Calculate current file progress
@@ -370,7 +370,12 @@ class ProjectDownloader:
             with self._callback_lock:
                 callback_func()
         except Exception as e:
-            LOG.warning("Callback execution failed: %s", str(e))
+            # Don't log warnings for app shutdown errors as they're expected during shutdown
+            error_msg = str(e).lower()
+            if not any(phrase in error_msg for phrase in [
+                "not running", "no active app", "no screen", "event loop is closed"
+            ]):
+                LOG.warning("Callback execution failed: %s", str(e))
 
     def initialize(
         self,
@@ -478,6 +483,11 @@ class ProjectDownloader:
 
         self._is_downloading = True
         self._cancelled = False
+        
+        # Check if we should stop before starting
+        if self._getter and self._getter.stop_doing:
+            self._is_downloading = False
+            return False
 
         # Send initial progress update
         self._update_download_progress("preparing")
@@ -492,7 +502,7 @@ class ProjectDownloader:
 
                 # Schedule initial batch of downloads
                 for file in itertools.islice(file_iterator, num_threads):
-                    if self._cancelled:
+                    if self._cancelled or self._getter.stop_doing:
                         break
                     self._schedule_download(file)
                 
@@ -501,7 +511,7 @@ class ProjectDownloader:
                     self._update_download_progress("downloading")
 
                 # Process completed downloads and schedule new ones
-                while self._download_threads and not self._cancelled:
+                while self._download_threads and not self._cancelled and not self._getter.stop_doing:
                     # Wait for next completion with timeout for more responsive cancellation
                     try:
                         done, _ = concurrent.futures.wait(
@@ -511,7 +521,7 @@ class ProjectDownloader:
                         )
                     except concurrent.futures.TimeoutError:
                         # Timeout occurred, check for cancellation and continue
-                        if self._cancelled:
+                        if self._cancelled or self._getter.stop_doing:
                             break
                         continue
 
@@ -523,7 +533,7 @@ class ProjectDownloader:
                             continue
 
                         # Check if we should stop due to cancellation
-                        if self._cancelled:
+                        if self._cancelled or self._getter.stop_doing:
                             break
 
                         file_path = self._download_threads.pop(future)
@@ -597,11 +607,11 @@ class ProjectDownloader:
                             self._report_error(f"Download error: {str(e)}")
 
                     # Schedule next batch
-                    if not self._cancelled:
+                    if not self._cancelled and not self._getter.stop_doing:
                         for next_file in itertools.islice(file_iterator, new_tasks):
                             self._schedule_download(next_file)
 
-            success = not self._cancelled and self._completed_files == self._total_files
+            success = not self._cancelled and not self._getter.stop_doing and self._completed_files == self._total_files
             if success:
                 self._update_progress("completed", "All downloads completed successfully")
             else:
@@ -669,15 +679,42 @@ class ProjectDownloader:
 
     def cancel_download(self) -> None:
         """Cancel ongoing download operations."""
-        self._cancelled = True
-        self._is_downloading = False
-        if self._executor:
-            # Cancel pending futures
-            for future in self._download_threads:
-                future.cancel()
-            self._download_threads.clear()
+        try:
+            LOG.debug("Cancelling download...")
+            self._cancelled = True
+            self._is_downloading = False
+            
+            # Set stop_doing flag on the underlying DataGetter to stop ongoing downloads
+            if self._getter:
+                self._getter.stop_doing = True
+                
+            if self._executor:
+                # Cancel pending futures
+                for future in self._download_threads:
+                    future.cancel()
+                self._download_threads.clear()
 
-        self._update_progress("error", "Download cancelled by user")
+            # Update progress with error handling
+            try:
+                self._update_progress("error", "Download cancelled by user")
+            except Exception as e:
+                LOG.warning("Failed to update progress during cancellation: %s", str(e))
+                # Don't let progress update errors crash the app
+                pass
+                
+            LOG.debug("Download cancellation completed")
+        except Exception as e:
+            LOG.error("Error during download cancellation: %s", str(e))
+            # Still set the flags even if there's an error
+            try:
+                self._cancelled = True
+                self._is_downloading = False
+                if self._getter:
+                    self._getter.stop_doing = True
+            except Exception as e2:
+                LOG.error("Error setting cancellation flags: %s", str(e2))
+                # Don't let this crash the app either
+                pass
 
     def get_file_list(self) -> List[str]:
         """Get list of files available for download.
@@ -716,7 +753,7 @@ class ProjectDownloader:
 
     def _schedule_download(self, file_path: str) -> None:
         """Schedule a file download in the thread pool."""
-        if self._executor and not self._cancelled:
+        if self._executor and not self._cancelled and not self._getter.stop_doing:
             # Get file size for progress tracking
             file_size = self._getter.filehandler.data[file_path]["size_stored"]
             
@@ -768,29 +805,32 @@ class ProjectDownloader:
         self, status: str, message: str, error_message: Optional[str] = None
     ) -> None:
         """Update progress and notify callbacks."""
-        with self._progress_lock:
-            overall_progress = self._completed_files / max(self._total_files, 1)
-            overall_percentage = overall_progress * 100.0
+        try:
+            with self._progress_lock:
+                overall_progress = self._completed_files / max(self._total_files, 1)
+                overall_percentage = overall_progress * 100.0
 
-            progress_info = DownloadProgress(
-                current_file="",
-                total_files=self._total_files,
-                completed_files=self._completed_files,
-                current_file_progress=0.0,
-                overall_progress=overall_progress,
-                overall_percentage=overall_percentage,
-                status=status,
-                error_message=error_message,
-                bytes_downloaded=0,
-                total_bytes=0,
-            )
-
-            if self._progress_callback:
-                self._safe_callback_execution(
-                    lambda: self._progress_callback(progress_info)
+                progress_info = DownloadProgress(
+                    current_file="",
+                    total_files=self._total_files,
+                    completed_files=self._completed_files,
+                    current_file_progress=0.0,
+                    overall_progress=overall_progress,
+                    overall_percentage=overall_percentage,
+                    status=status,
+                    error_message=error_message,
+                    bytes_downloaded=0,
+                    total_bytes=0,
                 )
 
-            LOG.debug("Progress update: %s - %s", status, message)
+                if self._progress_callback:
+                    self._safe_callback_execution(
+                        lambda: self._progress_callback(progress_info)
+                    )
+
+                LOG.debug("Progress update: %s - %s", status, message)
+        except Exception as e:
+            LOG.warning("Error in _update_progress: %s", str(e))
 
     def _report_error(self, message: str) -> None:
         """Report an error and notify callbacks."""

@@ -70,12 +70,6 @@ class DownloadData(Widget):
                 id="download-project-content-button",
                 #disabled=not self.selected_project_id or self.is_downloading,
             )
-            yield DDSButton(
-                "Cancel download",
-                id="cancel-download-button",
-                #disabled=not self.is_downloading,
-                #variant="error",
-            )
             yield Label(f"Progress: {self.progress:.1%}", id="progress-label")
             yield Label(f"Files: {self.files_downloaded}/{self.total_files}", id="files-label")
             yield Label(f"Status: {self.status}", id="status-label")
@@ -90,10 +84,19 @@ class DownloadData(Widget):
 
     def on_unmount(self) -> None:
         """On unmount, clean up any ongoing downloads."""
-        if self.download_thread and self.download_thread.is_alive():
-            self._stop_download.set()
-            if self.downloader:
+        # Signal stop immediately
+        self._stop_download.set()
+        
+        # Cancel the downloader if it exists
+        if self.downloader:
+            try:
                 self.downloader.cancel_download()
+            except Exception as e:
+                pass  # Silently handle errors during unmount
+        
+        # Wait for download thread to finish (with timeout)
+        if self.download_thread and self.download_thread.is_alive():
+            self.download_thread.join(timeout=1.0)  # Reduced timeout to 1 second
         
         self.is_downloading = False
 
@@ -103,25 +106,20 @@ class DownloadData(Widget):
 
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""
-        if event.button.id == "download-project-content-button":
-            self._start_download()
-        elif event.button.id == "cancel-download-button":
-            self._cancel_download()
+        try:
+            if event.button.id == "download-project-content-button":
+                self._start_download()
+        except Exception as e:
+            pass  # Silently handle errors
 
     def _start_download(self) -> None:
         """Start the download process."""
-        print(f"[DEBUG] _start_download called")
-        
         if self.is_downloading:
-            print(f"[DEBUG] Already downloading, returning")
             return
             
         if not self.selected_project_id:
-            print(f"[DEBUG] No project selected")
             self.app.notify("No project selected", severity="error")
             return
-            
-        print(f"[DEBUG] Starting download for project: {self.selected_project_id}")
         
         # Reset state
         self.status = "Initializing..."
@@ -133,60 +131,42 @@ class DownloadData(Widget):
         
         # Start initialization and download in background thread
         project_id = self.selected_project_id
-        print(f"[DEBUG] Creating thread for initialization and download...")
         self.download_thread = threading.Thread(target=self._full_download_worker, args=(project_id,), daemon=True)
         self.download_thread.start()
-        print(f"[DEBUG] Download thread started")
 
     def _full_download_worker(self, project_id: str) -> None:
         """Complete worker function for initialization and downloading."""
         try:
-            print(f"[DEBUG] Starting full download worker for project: {project_id}")
+            # Check if we should stop before starting
+            if self._stop_download.is_set():
+                return
             
             # Initialize downloader
-            print(f"[DEBUG] Creating ProjectDownloader...")
             self.downloader = ProjectDownloader(project=project_id)
-            print(f"[DEBUG] ProjectDownloader created")
             
             # Set up callbacks
-            print(f"[DEBUG] Setting up callbacks...")
             self.downloader.set_progress_callback(self._on_progress_update)
             self.downloader.set_file_completed_callback(self._on_file_completed)
             self.downloader.set_error_callback(self._on_error)
-            print(f"[DEBUG] Callbacks set up")
 
             # Initialize
-            print(f"[DEBUG] Starting initialization...")
             if not self.downloader.initialize(get_all=True):
-                print(f"[DEBUG] Initialization failed")
                 self._update_status("Initialization failed")
                 return
-            print(f"[DEBUG] Initialization successful")
+            
+            # Check if we should stop after initialization
+            if self._stop_download.is_set():
+                return
 
             # Start download
             self._update_status("Starting download...")
-            print(f"[DEBUG] Starting download_all...")
             
-            # Start download in a separate thread so we can monitor cancellation
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(self.downloader.download_all, 4)
-                
-                # Monitor the download with cancellation checks
-                while not future.done():
-                    try:
-                        success = future.result(timeout=0.1)
-                        break
-                    except concurrent.futures.TimeoutError:
-                        # Check if download was cancelled
-                        if self._stop_download.is_set():
-                            print(f"[DEBUG] Download cancelled during execution")
-                            self.downloader.cancel_download()
-                            success = False
-                            break
-                        continue
+            # Check if we should stop before starting download
+            if self._stop_download.is_set():
+                return
             
-            print(f"[DEBUG] Download completed with success: {success}")
+            # Start download directly - the ProjectDownloader handles cancellation internally
+            success = self.downloader.download_all(4)
             
             if success:
                 self._update_status("Download completed")
@@ -194,35 +174,47 @@ class DownloadData(Widget):
                 self._update_status("Download failed")
                 
         except Exception as e:
-            print(f"[DEBUG] Exception in full download worker: {e}")
-            import traceback
-            traceback.print_exc()
             self._update_status(f"Download failed: {e}")
         finally:
             # Reset state on main thread
             try:
-                self.app.call_from_thread(self._reset_download_state)
+                # Check if app is still running before trying to reset state
+                try:
+                    if hasattr(self, 'app') and self.app.is_running:
+                        self.app.call_from_thread(self._reset_download_state)
+                    else:
+                        # Direct assignment as fallback
+                        self.is_downloading = False
+                        self.download_thread = None
+                except Exception:
+                    # App context is gone (NoActiveAppError)
+                    # Direct assignment as fallback
+                    self.is_downloading = False
+                    self.download_thread = None
             except Exception as e:
-                print(f"[DEBUG] Error resetting state: {e}")
                 # Fallback: try direct assignment
                 try:
                     self.is_downloading = False
                     self.download_thread = None
                 except Exception as e2:
-                    print(f"[DEBUG] Direct reset also failed: {e2}")
+                    pass  # Silently handle final fallback error
 
     def _update_status(self, status: str) -> None:
         """Update status from worker thread."""
-        print(f"[DEBUG] Updating status to: {status}")
+        # Check if app is still running before trying to update
+        try:
+            if not hasattr(self, 'app') or not self.app.is_running:
+                return
+        except Exception:
+            # App context is gone (NoActiveAppError)
+            return
+            
         try:
             self.app.call_from_thread(lambda: setattr(self, 'status', status))
         except Exception as e:
-            print(f"[DEBUG] Error updating status: {e}")
-            # Fallback: try direct assignment (not thread-safe but might work)
-            try:
-                self.status = status
-            except Exception as e2:
-                print(f"[DEBUG] Direct assignment also failed: {e2}")
+            # Don't try fallback assignment if app is not running
+            if any(phrase in str(e).lower() for phrase in ["not running", "no active app", "no screen"]):
+                return
 
     def _reset_download_state(self) -> None:
         """Reset download state on main thread."""
@@ -231,8 +223,20 @@ class DownloadData(Widget):
 
     def _on_progress_update(self, progress: DownloadProgress) -> None:
         """Handle progress updates from the downloader."""
-        # Update UI on main thread
-        self.app.call_from_thread(self._update_progress_ui, progress)
+        # Check if app is still running before trying to update UI
+        try:
+            if not hasattr(self, 'app') or not self.app.is_running:
+                return
+        except Exception:
+            # App context is gone (NoActiveAppError)
+            return
+            
+        try:
+            # Update UI on main thread
+            self.app.call_from_thread(self._update_progress_ui, progress)
+        except Exception as e:
+            if any(phrase in str(e).lower() for phrase in ["not running", "no active app", "no screen"]):
+                return
     
     def _update_progress_ui(self, progress: DownloadProgress) -> None:
         """Update progress UI on main thread."""
@@ -240,6 +244,7 @@ class DownloadData(Widget):
         self.status = progress.status.title()
         self.files_downloaded = progress.completed_files
         self.total_files = progress.total_files
+
 
     def _on_file_completed(self, result: DownloadResult) -> None:
         """Handle file completed from the downloader."""
@@ -249,19 +254,3 @@ class DownloadData(Widget):
         """Handle error from the downloader."""
         self._update_status(f"Error: {error}")
     
-    def _cancel_download(self) -> None:
-        """Cancel the ongoing download."""
-        if self.is_downloading:
-            # Signal stop
-            self._stop_download.set()
-            
-            # Cancel the downloader if it exists
-            if self.downloader:
-                self.downloader.cancel_download()
-            
-            # Update status
-            self.status = "Download cancelled"
-            self.is_downloading = False
-            
-            # Notify user
-            self.app.notify("Download cancelled by user", severity="warning")

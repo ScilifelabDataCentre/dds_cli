@@ -41,6 +41,7 @@ class DownloadProgress:
     current_file: str
     total_files: int
     completed_files: int
+    error_files: int
     current_file_progress: float  # 0.0 to 1.0
     overall_progress: float  # 0.0 to 1.0
     overall_percentage: float  # 0.0 to 100.0 for easy Textual integration
@@ -206,6 +207,7 @@ class CallbackProgress:
                 current_file=self.file_path,
                 total_files=self.downloader_instance._total_files,
                 completed_files=self.downloader_instance._completed_files,
+                error_files=self.downloader_instance._error_files,
                 current_file_progress=current_file_progress,
                 overall_progress=overall_progress,
                 overall_percentage=overall_percentage,
@@ -329,6 +331,7 @@ class ProjectDownloader:
         # Progress tracking
         self._progress_lock = threading.Lock()
         self._completed_files = 0
+        self._error_files = 0
         self._total_files = 0
         self._total_bytes = 0
         self._total_downloaded_bytes = 0
@@ -550,11 +553,13 @@ class ProjectDownloader:
                                 message = "Download completed" if success else "Download failed"
                                 LOG.debug("DataGetter returned boolean result: %s", result)
 
-                            self._completed_files += 1
-                            
-                            # Update total downloaded bytes
-                            file_size = self._getter.filehandler.data[file_path]["size_stored"]
-                            self._total_downloaded_bytes += file_size
+                            if success:
+                                self._completed_files += 1
+                                # Update total downloaded bytes
+                                file_size = self._getter.filehandler.data[file_path]["size_stored"]
+                                self._total_downloaded_bytes += file_size
+                            else:
+                                self._error_files += 1
 
                             # Update progress with final file completion
                             self._update_download_progress(file_path)
@@ -565,9 +570,10 @@ class ProjectDownloader:
                                     current_file=file_path,
                                     total_files=self._total_files,
                                     completed_files=self._completed_files,
+                                    error_files=self._error_files,
                                     current_file_progress=1.0,  # File is complete
-                                    overall_progress=self._completed_files / max(self._total_files, 1),
-                                    overall_percentage=(self._completed_files / max(self._total_files, 1)) * 100.0,
+                                    overall_progress=(self._completed_files + self._error_files) / max(self._total_files, 1),
+                                    overall_percentage=((self._completed_files + self._error_files) / max(self._total_files, 1)) * 100.0,
                                     status="completed" if success else "error",
                                     error_message=message if not success else None,
                                     bytes_downloaded=self._getter.filehandler.data[file_path]["size_stored"] if success else 0,
@@ -780,6 +786,7 @@ class ProjectDownloader:
                 current_file=current_file,
                 total_files=self._total_files,
                 completed_files=self._completed_files,
+                error_files=self._error_files,
                 current_file_progress=0.0,  # Individual file progress not tracked in this implementation
                 overall_progress=overall_progress,
                 overall_percentage=overall_percentage,
@@ -814,9 +821,10 @@ class ProjectDownloader:
                     current_file="",
                     total_files=self._total_files,
                     completed_files=self._completed_files,
+                    error_files=self._error_files,
                     current_file_progress=0.0,
                     overall_progress=overall_progress,
-                    overall_percentage=overall_percentage,
+                    overall_percentage=overall_progress * 100.0,
                     status=status,
                     error_message=error_message,
                     bytes_downloaded=0,

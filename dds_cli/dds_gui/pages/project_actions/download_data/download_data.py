@@ -6,13 +6,19 @@ from textual import events
 from textual.reactive import reactive
 from textual.widgets import Label, ProgressBar
 from textual.message import Message
-from dds_cli.dds_gui.components.dds_container import DDSSpacedContainer
+from dds_cli.dds_gui.components.dds_container import DDSSpacedContainer, DDSSpacedHorizontalContainer
 from dds_cli.dds_gui.components.dds_button import DDSButton
 from dds_cli.dds_gui.utils.project_downloader import DownloadProgress, DownloadResult, ProjectDownloader
 from dds_cli import exceptions as dds_cli_exceptions
 from typing import Any, Optional
 import threading
 import time
+
+
+class DownloadDataProgressBar(ProgressBar):
+    """A progress bar for the download data widget."""
+    
+    
 
 
 class ProgressUpdateMessage(Message):
@@ -51,6 +57,7 @@ class DownloadData(Widget):
     progress = reactive(0.0)
     status = reactive("Ready")
     files_downloaded = reactive(0)
+    error_files = reactive(0)
     total_files = reactive(0)
     # Local reactive attributes that mirror app state and trigger recomposition
     selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
@@ -61,6 +68,15 @@ class DownloadData(Widget):
         height: auto;
         width: 100%;
     }
+
+    #files-label.disabled {
+        color: $primary;
+        
+    }
+
+    #progress-bar.disabled {
+        color: $primary;
+    }
     """
 
     def compose(self) -> ComposeResult:
@@ -68,14 +84,16 @@ class DownloadData(Widget):
             yield DDSButton(
                 "Download project content",
                 id="download-project-content-button",
-                #disabled=not self.selected_project_id or self.is_downloading,
+                disabled=not self.selected_project_id or self.is_downloading,
             )
-            yield Label(f"Progress: {self.progress:.1%}", id="progress-label")
-            yield Label(f"Files: {self.files_downloaded}/{self.total_files}", id="files-label")
-            yield Label(f"Status: {self.status}", id="status-label")
+            #yield Label(f"Progress: {self.progress:.1%}", id="progress-label")
+            #yield Label(f"Files: {self.files_downloaded}/{self.total_files}", id="files-label")
 
-            yield ProgressBar(show_eta=False, id="progress-bar", total=100, show_percentage=True)
-
+            with DDSSpacedHorizontalContainer(id="progress-bar-container"):
+                yield ProgressBar(show_eta=False, id="progress-bar", total=100, show_percentage=True, classes="disabled")
+                yield Label(f"Files: {self.files_downloaded}/{self.total_files} (Errors: {self.error_files})", id="files-label", classes="disabled")
+            
+            
     def on_mount(self) -> None:
         """On mount, sync initial state and set up watchers."""
         # Initialize local reactive attributes with current app state
@@ -88,6 +106,7 @@ class DownloadData(Widget):
         self.watch(self, "progress", self.watch_progress)
         self.watch(self, "status", self.watch_status)
         self.watch(self, "files_downloaded", self.watch_files_downloaded)
+        self.watch(self, "error_files", self.watch_error_files)
         self.watch(self, "total_files", self.watch_total_files)
         self.watch(self, "is_downloading", self.watch_is_downloading)
 
@@ -138,7 +157,16 @@ class DownloadData(Widget):
         try:
             files_label = self.query_one("#files-label", None)
             if files_label:
-                files_label.update(f"Files: {files_downloaded}/{self.total_files}")
+                files_label.update(f"Files: {files_downloaded}/{self.total_files} (Errors: {self.error_files})")
+        except Exception:
+            pass  # Label might not exist yet
+
+    def watch_error_files(self, error_files: int) -> None:
+        """Watch error_files changes and update the files label."""
+        try:
+            files_label = self.query_one("#files-label", None)
+            if files_label:
+                files_label.update(f"Files: {self.files_downloaded}/{self.total_files} (Errors: {error_files})")
         except Exception:
             pass  # Label might not exist yet
 
@@ -147,7 +175,7 @@ class DownloadData(Widget):
         try:
             files_label = self.query_one("#files-label", None)
             if files_label:
-                files_label.update(f"Files: {self.files_downloaded}/{total_files}")
+                files_label.update(f"Files: {self.files_downloaded}/{total_files} (Errors: {self.error_files})")
         except Exception:
             pass  # Label might not exist yet
 
@@ -164,6 +192,8 @@ class DownloadData(Widget):
         """Handle button presses."""
         try:
             if event.button.id == "download-project-content-button":
+                self.query_one("#progress-bar", None).classes = "enabled"
+                self.query_one("#files-label", None).classes = "enabled"
                 self._start_download()
         except Exception as e:
             pass  # Silently handle errors
@@ -182,6 +212,7 @@ class DownloadData(Widget):
         self.status = "Initializing..."
         self.progress = 0.0
         self.files_downloaded = 0
+        self.error_files = 0
         self.total_files = 0
         self.is_downloading = True
         self._stop_download.clear()
@@ -314,6 +345,7 @@ class DownloadData(Widget):
         self.progress = progress.overall_percentage / 100.0
         self.status = progress.status.title()
         self.files_downloaded = progress.completed_files
+        self.error_files = progress.error_files
         self.total_files = progress.total_files
 
         # Update the progress bar widget if it exists

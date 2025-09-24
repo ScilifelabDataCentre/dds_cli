@@ -13,6 +13,7 @@ from dds_cli.dds_gui.pages.project_actions.download_data.project_downloader impo
     ProjectDownloader,
     DownloadProgress,
     DownloadResult,
+    CallbackProgress,
 )
 
 
@@ -609,3 +610,170 @@ class TestProjectDownloader:
         # All progress values should be valid percentages
         for progress in progress_calls:
             assert 0.0 <= progress <= 100.0
+
+    def test_callback_progress_init(self):
+        """Test CallbackProgress initialization."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        assert progress.downloader_instance == downloader
+        assert progress.total_size == 1000
+        assert progress.completed == 0
+        assert progress.progress_callback is None
+
+    def test_callback_progress_trigger_no_callback(self):
+        """Test CallbackProgress trigger with no callback."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Should not raise exception
+        progress._trigger_progress_callback()
+
+    def test_callback_progress_trigger_cancelled(self):
+        """Test CallbackProgress trigger when cancelled."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = True
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        progress._trigger_progress_callback()
+        
+        # Should not call callback when cancelled
+        progress.progress_callback.assert_not_called()
+
+    def test_callback_progress_trigger_stop_doing(self):
+        """Test CallbackProgress trigger when stop_doing is True."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._getter = MagicMock()
+        downloader._getter.stop_doing = True
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        progress._trigger_progress_callback()
+        
+        # Should not call callback when stop_doing is True
+        progress.progress_callback.assert_not_called()
+
+    def test_callback_progress_trigger_first_update(self):
+        """Test CallbackProgress trigger for first update."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # First update should trigger callback
+        progress._trigger_progress_callback()
+        
+        progress.progress_callback.assert_called_once()
+
+    def test_callback_progress_trigger_final_update(self):
+        """Test CallbackProgress trigger for final update."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        progress.completed = 1000  # 100% complete
+        
+        progress._trigger_progress_callback()
+        
+        progress.progress_callback.assert_called_once()
+
+    def test_callback_progress_trigger_percentage_change(self):
+        """Test CallbackProgress trigger when percentage changes."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Set initial state
+        progress.completed = 0
+        progress._last_callback_time = time.time()
+        progress._last_callback_percentage = 0
+        
+        # Update to 10% (should trigger callback)
+        progress.completed = 100
+        progress._trigger_progress_callback()
+        
+        progress.progress_callback.assert_called_once()
+
+    def test_callback_progress_trigger_time_throttling(self):
+        """Test CallbackProgress trigger with time throttling."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Set initial state
+        progress.completed = 100
+        progress._last_callback_time = time.time() - 1.0  # 1 second ago
+        progress._last_callback_percentage = 2  # 10%
+        
+        # Update to same percentage but enough time has passed
+        progress._trigger_progress_callback()
+        
+        progress.progress_callback.assert_called_once()
+
+    def test_callback_progress_trigger_small_file(self):
+        """Test CallbackProgress trigger for small files."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=100,  # Small file
+            downloader_instance=downloader
+        )
+        
+        # Set initial state
+        progress.completed = 0
+        progress._last_callback_time = time.time()
+        progress._last_callback_percentage = 0
+        
+        # Update to 50 bytes (should trigger callback for small files)
+        progress.completed = 50
+        progress._trigger_progress_callback()
+        
+        progress.progress_callback.assert_called_once()
+
+    def test_callback_progress_trigger_callback_exception(self):
+        """Test CallbackProgress trigger with callback exception."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(side_effect=Exception("Callback failed")),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Should not raise exception
+        progress._trigger_progress_callback()
+

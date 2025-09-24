@@ -7,14 +7,11 @@
 # Standard library
 import concurrent.futures
 import itertools
-import logging
 import pathlib
 import threading
+import time
 from typing import Callable, Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
-
-# Installed
-# Note: Rich progress removed for Textual compatibility
 
 # Own modules
 import dds_cli
@@ -24,15 +21,8 @@ import dds_cli.exceptions
 import dds_cli.utils
 
 ###############################################################################
-# START LOGGING CONFIG ################################# START LOGGING CONFIG #
-###############################################################################
-
-LOG = logging.getLogger(__name__)
-
-###############################################################################
 # CLASSES ########################################################### CLASSES #
 ###############################################################################
-
 
 @dataclass
 class DownloadProgress:
@@ -93,7 +83,7 @@ class CallbackProgress:
 
     def add_task(
         self, description, total=None, step=None, visible=True
-    ):  # noqa: ARG002, W0613
+    ):
         """Add a progress task (Rich compatibility)."""
         with self._lock:
             task_id = len(self.tasks)
@@ -112,7 +102,6 @@ class CallbackProgress:
                 if advance:
                     self.tasks[task_id]["completed"] += advance
                     self.completed += advance
-                    LOG.debug(f"Progress update: {self.completed}/{self.total_size} bytes ({self.completed/self.total_size*100:.1f}%)")
                     
                     # Always trigger callback when advance is provided (chunk downloaded)
                     if self.progress_callback:
@@ -156,7 +145,6 @@ class CallbackProgress:
         # 3. This is the first update (0% progress), OR
         # 4. This is the final update (100% progress), OR
         # 5. For small files, trigger less frequently based on bytes downloaded
-        import time
         current_time = time.time()
         time_elapsed = current_time - self._last_callback_time
         progress_changed = current_percentage != self._last_callback_progress
@@ -171,7 +159,6 @@ class CallbackProgress:
             current_percentage == 100 or
             small_file_frequent_updates):
             
-            LOG.debug(f"Triggering callback: {current_percentage}% progress, time_elapsed={time_elapsed:.3f}s, progress_changed={progress_changed}")
             self._last_callback_time = current_time
             self._last_callback_progress = current_percentage
         
@@ -234,62 +221,6 @@ class ProjectDownloader:
     - Individual file or batch downloads
     - Cancellation support
 
-    Example usage:
-        ```python
-        # Basic usage
-        downloader = ProjectDownloader(project="my-project-id")
-
-        # Set up callbacks for GUI integration
-        def on_progress(progress):
-            print(f"Progress: {progress.overall_progress:.1%} - {progress.status}")
-
-        def on_file_completed(result):
-            if result.success:
-                print(f"Downloaded: {result.file_path}")
-            else:
-                print(f"Failed: {result.file_path} - {result.error_message}")
-
-        def on_error(error_msg):
-            print(f"Error: {error_msg}")
-
-        downloader.set_progress_callback(on_progress)
-        downloader.set_file_completed_callback(on_file_completed)
-        downloader.set_error_callback(on_error)
-
-        # Initialize and download
-        if downloader.initialize(get_all=True):
-            success = downloader.download_all(num_threads=4)
-            if success:
-                print("All downloads completed!")
-            else:
-                print("Download failed or was cancelled")
-
-        # Clean up
-        downloader.cleanup()
-        ```
-
-        ```python
-        # Download specific files
-        downloader = ProjectDownloader(project="my-project-id")
-
-        if downloader.initialize(source=("file1.txt", "folder/file2.txt")):
-            # Download all specified files
-            downloader.download_all()
-
-            # Or download individual files
-            result = downloader.download_file("file1.txt")
-            if result.success:
-                print(f"Downloaded {result.file_path}")
-        ```
-
-        ```python
-        # Using as context manager
-        with ProjectDownloader(project="my-project-id") as downloader:
-            downloader.set_progress_callback(my_progress_handler)
-
-            if downloader.initialize(get_all=True):
-                downloader.download_all()
-        ```
     """
 
     def __init__(
@@ -378,7 +309,7 @@ class ProjectDownloader:
             if not any(phrase in error_msg for phrase in [
                 "not running", "no active app", "no screen", "event loop is closed"
             ]):
-                LOG.warning("Callback execution failed: %s", str(e))
+                pass  # Silently handle expected errors
 
     def initialize(
         self,
@@ -543,7 +474,6 @@ class ProjectDownloader:
 
                         try:
                             result = future.result()
-                            LOG.debug("Download result type: %s, value: %s", type(result), result)
 
                             if isinstance(result, tuple) and len(result) == 2:
                                 success, message = result
@@ -551,7 +481,6 @@ class ProjectDownloader:
                                 # Handle case where result is not a tuple (DataGetter returns boolean)
                                 success = bool(result)
                                 message = "Download completed" if success else "Download failed"
-                                LOG.debug("DataGetter returned boolean result: %s", result)
 
                             if success:
                                 self._completed_files += 1
@@ -596,10 +525,7 @@ class ProjectDownloader:
                                     lambda: self._file_completed_callback(result)
                                 )
 
-                            if success:
-                                LOG.debug("Download successful: %s", file_path)
-                            else:
-                                LOG.warning("Download failed: %s - %s", file_path, message)
+                            # Download completed (success or failure)
 
                             new_tasks += 1
 
@@ -609,7 +535,6 @@ class ProjectDownloader:
                             OSError,
                             RuntimeError,
                         ) as e:
-                            LOG.error("Download thread error: %s", str(e))
                             self._report_error(f"Download error: {str(e)}")
 
                     # Schedule next batch
@@ -686,7 +611,6 @@ class ProjectDownloader:
     def cancel_download(self) -> None:
         """Cancel ongoing download operations."""
         try:
-            LOG.debug("Cancelling download...")
             self._cancelled = True
             self._is_downloading = False
             
@@ -703,22 +627,18 @@ class ProjectDownloader:
             # Update progress with error handling
             try:
                 self._update_progress("error", "Download cancelled by user")
-            except Exception as e:
-                LOG.warning("Failed to update progress during cancellation: %s", str(e))
+            except Exception:
                 # Don't let progress update errors crash the app
                 pass
                 
-            LOG.debug("Download cancellation completed")
-        except Exception as e:
-            LOG.error("Error during download cancellation: %s", str(e))
+        except Exception:
             # Still set the flags even if there's an error
             try:
                 self._cancelled = True
                 self._is_downloading = False
                 if self._getter:
                     self._getter.stop_doing = True
-            except Exception as e2:
-                LOG.error("Error setting cancellation flags: %s", str(e2))
+            except Exception:
                 # Don't let this crash the app either
                 pass
 
@@ -754,7 +674,6 @@ class ProjectDownloader:
 
         if self._getter and hasattr(self._getter, "temporary_directory"):
             if self._getter.temporary_directory and self._getter.temporary_directory.is_dir():
-                LOG.debug("Cleaning up temporary directory: %s", self._getter.temporary_directory)
                 dds_cli.utils.delete_folder(self._getter.temporary_directory)
 
     def _schedule_download(self, file_path: str) -> None:
@@ -801,12 +720,6 @@ class ProjectDownloader:
                     lambda: self._progress_callback(progress_info)
                 )
 
-            LOG.debug(
-                "Download progress: %d/%d files (%.1f%%)",
-                self._completed_files,
-                self._total_files,
-                overall_percentage,
-            )
 
     def _update_progress(
         self, status: str, message: str, error_message: Optional[str] = None
@@ -824,7 +737,7 @@ class ProjectDownloader:
                     error_files=self._error_files,
                     current_file_progress=0.0,
                     overall_progress=overall_progress,
-                    overall_percentage=overall_progress * 100.0,
+                    overall_percentage=overall_percentage,
                     status=status,
                     error_message=error_message,
                     bytes_downloaded=0,
@@ -836,13 +749,11 @@ class ProjectDownloader:
                         lambda: self._progress_callback(progress_info)
                     )
 
-                LOG.debug("Progress update: %s - %s", status, message)
-        except Exception as e:
-            LOG.warning("Error in _update_progress: %s", str(e))
+        except Exception:
+            pass
 
     def _report_error(self, message: str) -> None:
         """Report an error and notify callbacks."""
-        LOG.error(message)
         self._update_progress("error", message, error_message=message)
 
         if self._error_callback:

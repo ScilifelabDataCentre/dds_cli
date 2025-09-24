@@ -5,41 +5,11 @@ from textual.widget import Widget
 from textual import events
 from textual.reactive import reactive
 from textual.widgets import Label, ProgressBar
-from textual.message import Message
 from dds_cli.dds_gui.components.dds_container import DDSSpacedContainer, DDSSpacedHorizontalContainer
 from dds_cli.dds_gui.components.dds_button import DDSButton
-from dds_cli.dds_gui.utils.project_downloader import DownloadProgress, DownloadResult, ProjectDownloader
-from dds_cli import exceptions as dds_cli_exceptions
+from dds_cli.dds_gui.pages.project_actions.download_data.project_downloader import DownloadProgress, DownloadResult, ProjectDownloader
 from typing import Any, Optional
 import threading
-import time
-
-
-class DownloadDataProgressBar(ProgressBar):
-    """A progress bar for the download data widget."""
-    
-    
-
-
-class ProgressUpdateMessage(Message):
-    """Message sent when download progress updates."""
-    def __init__(self, progress: DownloadProgress) -> None:
-        self.progress = progress
-        super().__init__()
-
-
-class StatusUpdateMessage(Message):
-    """Message sent to update status."""
-    def __init__(self, status: str) -> None:
-        self.status = status
-        super().__init__()
-
-
-class CancelDownloadMessage(Message):
-    """Message sent to cancel download."""
-    def __init__(self) -> None:
-        super().__init__()
-
 
 
 class DownloadData(Widget):
@@ -50,15 +20,13 @@ class DownloadData(Widget):
         self.downloader: Optional[ProjectDownloader] = None
         self.download_thread: Optional[threading.Thread] = None
         self._stop_download = threading.Event()
-        # Initialize reactive attributes with default values
-        self.selected_project_id = None
-        self.is_downloading = False
 
     progress = reactive(0.0)
-    status = reactive("Ready")
     files_downloaded = reactive(0)
     error_files = reactive(0)
     total_files = reactive(0)
+    show_error_label = reactive(False)
+    
     # Local reactive attributes that mirror app state and trigger recomposition
     selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
     is_downloading: reactive[bool] = reactive(False)
@@ -71,7 +39,6 @@ class DownloadData(Widget):
 
     #files-label.disabled {
         color: $primary;
-        
     }
 
     #progress-bar.disabled {
@@ -86,14 +53,11 @@ class DownloadData(Widget):
                 id="download-project-content-button",
                 disabled=not self.selected_project_id or self.is_downloading,
             )
-            #yield Label(f"Progress: {self.progress:.1%}", id="progress-label")
-            #yield Label(f"Files: {self.files_downloaded}/{self.total_files}", id="files-label")
 
             with DDSSpacedHorizontalContainer(id="progress-bar-container"):
                 yield ProgressBar(show_eta=False, id="progress-bar", total=100, show_percentage=True, classes="disabled")
-                yield Label(f"Files: {self.files_downloaded}/{self.total_files} (Errors: {self.error_files})", id="files-label", classes="disabled")
-            
-            
+                yield Label(f"Files: {self.files_downloaded}/{self.total_files}", id="files-label", classes="disabled")
+
     def on_mount(self) -> None:
         """On mount, sync initial state and set up watchers."""
         # Initialize local reactive attributes with current app state
@@ -103,8 +67,6 @@ class DownloadData(Widget):
         self.watch(self.app, "selected_project_id", self.watch_selected_project_id)
         
         # Set up watchers for reactive attributes to update labels manually
-        self.watch(self, "progress", self.watch_progress)
-        self.watch(self, "status", self.watch_status)
         self.watch(self, "files_downloaded", self.watch_files_downloaded)
         self.watch(self, "error_files", self.watch_error_files)
         self.watch(self, "total_files", self.watch_total_files)
@@ -134,30 +96,16 @@ class DownloadData(Widget):
         # Also update button state when project selection changes
         self.watch_is_downloading(self.is_downloading)
 
-    def watch_progress(self, progress: float) -> None:
-        """Watch progress changes and update the progress label."""
-        try:
-            progress_label = self.query_one("#progress-label", None)
-            if progress_label:
-                progress_label.update(f"Progress: {progress:.1%}")
-        except Exception:
-            pass  # Label might not exist yet
-
-    def watch_status(self, status: str) -> None:
-        """Watch status changes and update the status label."""
-        try:
-            status_label = self.query_one("#status-label", None)
-            if status_label:
-                status_label.update(f"Status: {status}")
-        except Exception:
-            pass  # Label might not exist yet
 
     def watch_files_downloaded(self, files_downloaded: int) -> None:
         """Watch files_downloaded changes and update the files label."""
         try:
             files_label = self.query_one("#files-label", None)
             if files_label:
-                files_label.update(f"Files: {files_downloaded}/{self.total_files} (Errors: {self.error_files})")
+                if self.error_files > 0:
+                    files_label.update(f"Files: {files_downloaded}/{self.total_files} (Errors: {self.error_files})")
+                else:
+                    files_label.update(f"Files: {files_downloaded}/{self.total_files}")
         except Exception:
             pass  # Label might not exist yet
 
@@ -166,7 +114,15 @@ class DownloadData(Widget):
         try:
             files_label = self.query_one("#files-label", None)
             if files_label:
-                files_label.update(f"Files: {self.files_downloaded}/{self.total_files} (Errors: {error_files})")
+                if error_files > 0:
+                    files_label.update(f"Files: {self.files_downloaded}/{self.total_files} (Errors: {error_files})")
+                else:
+                    files_label.update(f"Files: {self.files_downloaded}/{self.total_files}")
+            
+            # Show error label when first error occurs
+            if error_files > 0 and not self.show_error_label:
+                self.show_error_label = True
+                self._mount_error_label()
         except Exception:
             pass  # Label might not exist yet
 
@@ -175,7 +131,10 @@ class DownloadData(Widget):
         try:
             files_label = self.query_one("#files-label", None)
             if files_label:
-                files_label.update(f"Files: {self.files_downloaded}/{total_files} (Errors: {self.error_files})")
+                if self.error_files > 0:
+                    files_label.update(f"Files: {self.files_downloaded}/{total_files} (Errors: {self.error_files})")
+                else:
+                    files_label.update(f"Files: {self.files_downloaded}/{total_files}")
         except Exception:
             pass  # Label might not exist yet
 
@@ -209,13 +168,21 @@ class DownloadData(Widget):
         
         # Set up download destination
         # Reset state only when starting a new download
-        self.status = "Initializing..."
         self.progress = 0.0
         self.files_downloaded = 0
         self.error_files = 0
         self.total_files = 0
+        self.show_error_label = False
         self.is_downloading = True
         self._stop_download.clear()
+        
+        # Remove any existing error label
+        try:
+            error_label = self.query_one("#error-label", None)
+            if error_label:
+                error_label.remove()
+        except Exception:
+            pass  # Error label might not exist
         
         # Start initialization and download in background thread
         project_id = self.selected_project_id
@@ -308,42 +275,27 @@ class DownloadData(Widget):
         """Reset download state on main thread."""
         self.is_downloading = False
         self.download_thread = None
-        
-        # Unmount progress bar if it exists
-        # try:
-        #     progress_bar = self.query_one("#progress-bar", None)
-        #     if progress_bar:
-        #         progress_bar.remove()
-        # except Exception:
-        #     # Progress bar might not exist
-        #     pass
 
     def _on_progress_update(self, progress: DownloadProgress) -> None:
         """Handle progress updates from the downloader."""
-        print(f"[DEBUG] Progress update received: {progress.overall_percentage}% - {progress.status}")
-        
         # Check if app is still running before trying to update UI
         try:
             if not hasattr(self, 'app') or not self.app.is_running:
-                print(f"[DEBUG] App not running, skipping progress update")
                 return
         except Exception:
             # App context is gone (NoActiveAppError)
-            print(f"[DEBUG] App context gone, skipping progress update")
             return
             
         try:
             # Update UI on main thread
             self.app.call_from_thread(self._update_progress_ui, progress)
         except Exception as e:
-            print(f"[DEBUG] Error calling from thread: {e}")
             if any(phrase in str(e).lower() for phrase in ["not running", "no active app", "no screen"]):
                 return
     
     def _update_progress_ui(self, progress: DownloadProgress) -> None:
         """Update progress UI on main thread."""
-        self.progress = progress.overall_percentage / 100.0
-        self.status = progress.status.title()
+        self.progress = progress.overall_percentage
         self.files_downloaded = progress.completed_files
         self.error_files = progress.error_files
         self.total_files = progress.total_files
@@ -354,21 +306,37 @@ class DownloadData(Widget):
             if progress_bar:
                 # Update progress bar with the percentage value
                 progress_bar.update(progress=progress.overall_percentage)
-                print(f"[DEBUG] Updated progress bar to {progress.overall_percentage}% (total files: {progress.total_files})")
-            else:
-                print(f"[DEBUG] Progress bar not found")
-        except Exception as e:
+        except Exception:
             # Progress bar might not exist yet or might have been removed
-            print(f"[DEBUG] Error updating progress bar: {e}")
-            try:
-                self.app.notify(f"Error updating progress bar: {e}")
-            except Exception:
-                pass
+            pass
 
 
     def _on_file_completed(self, result: DownloadResult) -> None:
         """Handle file completed from the downloader."""
         pass  # We don't need to do anything special for individual files
+
+    def _mount_error_label(self) -> None:
+        """Mount the error label when first error occurs."""
+        try:
+            # Check if error label already exists
+            existing_error_label = self.query_one("#error-label", None)
+            if existing_error_label:
+                return  # Already mounted
+            
+            # Create and mount the error label
+            error_label = Label("⚠️ Some files failed to download", id="error-label", classes="disabled")
+            
+            # Find the progress bar container and mount the error label after it
+            progress_container = self.query_one("#progress-bar-container", None)
+            if progress_container:
+                progress_container.mount(error_label)
+            else:
+                # Fallback: mount to the main container
+                main_container = self.query_one("#download-data-container", None)
+                if main_container:
+                    main_container.mount(error_label)
+        except Exception:
+            pass
 
     def _on_error(self, error: str) -> None:
         """Handle error from the downloader."""

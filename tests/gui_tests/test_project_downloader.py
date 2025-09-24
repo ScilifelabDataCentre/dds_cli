@@ -9,7 +9,7 @@ from typing import List
 import pytest
 
 import dds_cli.exceptions
-from dds_cli.dds_gui.utils.project_downloader import (
+from dds_cli.dds_gui.pages.project_actions.download_data.project_downloader import (
     ProjectDownloader,
     DownloadProgress,
     DownloadResult,
@@ -25,6 +25,7 @@ class TestDownloadProgress:
             current_file="test.txt",
             total_files=10,
             completed_files=5,
+            error_files=1,
             current_file_progress=0.5,
             overall_progress=0.5,
             overall_percentage=50.0,
@@ -35,6 +36,7 @@ class TestDownloadProgress:
         assert progress.current_file == "test.txt"
         assert progress.total_files == 10
         assert progress.completed_files == 5
+        assert progress.error_files == 1
         assert progress.current_file_progress == 0.5
         assert progress.overall_progress == 0.5
         assert progress.overall_percentage == 50.0
@@ -47,6 +49,7 @@ class TestDownloadProgress:
             current_file="",
             total_files=5,
             completed_files=0,
+            error_files=1,
             current_file_progress=0.0,
             overall_progress=0.0,
             overall_percentage=0.0,
@@ -98,9 +101,9 @@ class TestProjectDownloader:
         mock_getter = MagicMock()
         mock_getter.filehandler = MagicMock()
         mock_getter.filehandler.data = {
-            "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000},
-            "file2.txt": {"name_in_db": "file2.txt", "size_original": 2000},
-            "file3.txt": {"name_in_db": "file3.txt", "size_original": 3000},
+            "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            "file2.txt": {"name_in_db": "file2.txt", "size_original": 2000, "size_stored": 2000},
+            "file3.txt": {"name_in_db": "file3.txt", "size_original": 3000, "size_stored": 3000},
         }
         mock_getter.download_and_verify.return_value = (True, "")
         return mock_getter
@@ -150,8 +153,8 @@ class TestProjectDownloader:
         assert downloader._file_completed_callback == file_completed_callback
         assert downloader._error_callback == error_callback
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_initialize_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -168,8 +171,8 @@ class TestProjectDownloader:
         assert downloader._total_files == 3
         assert downloader._completed_files == 0
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_initialize_with_specific_files(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -188,8 +191,8 @@ class TestProjectDownloader:
         assert result is True
         assert downloader._is_initialized is True
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_initialize_validation_errors(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -213,8 +216,8 @@ class TestProjectDownloader:
         )
         assert result is False
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_initialize_no_files(
         self, mock_data_getter_class, mock_directory_class, mock_staging_dir
     ):
@@ -231,8 +234,8 @@ class TestProjectDownloader:
 
         assert result is False
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_initialize_exception_handling(
         self, mock_data_getter_class, mock_directory_class, mock_staging_dir
     ):
@@ -264,8 +267,8 @@ class TestProjectDownloader:
 
         assert result is False
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_download_all_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -289,8 +292,8 @@ class TestProjectDownloader:
         assert result is True
         assert len(progress_calls) > 0  # Should have progress updates
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_download_all_with_callbacks(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -335,8 +338,8 @@ class TestProjectDownloader:
         assert result.success is False
         assert result.error_message == "Downloader not initialized"
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_download_file_file_not_found(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -352,8 +355,8 @@ class TestProjectDownloader:
         assert result.success is False
         assert result.error_message == "File not found in project"
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_download_file_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -370,8 +373,8 @@ class TestProjectDownloader:
         assert result.file_path == "file1.txt"
         assert result.error_message is None
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_download_file_failure(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -408,8 +411,8 @@ class TestProjectDownloader:
 
         assert result == []
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_get_file_list_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -435,8 +438,8 @@ class TestProjectDownloader:
 
         assert result is None
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_get_file_info_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -453,8 +456,8 @@ class TestProjectDownloader:
         assert result["name_in_db"] == "file1.txt"
         assert result["size_original"] == 1000
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_get_file_info_not_found(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -488,8 +491,8 @@ class TestProjectDownloader:
 
     def test_context_manager(self):
         """Test using ProjectDownloader as context manager."""
-        with patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory"):
-            with patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter"):
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"):
+            with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"):
                 with ProjectDownloader(project="test-project") as downloader:
                     assert downloader.project == "test-project"
 
@@ -530,8 +533,8 @@ class TestProjectDownloader:
         assert len(error_calls) == 1
         assert error_calls[0] == "Test error"
 
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.utils.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
     def test_download_all_with_failures(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):

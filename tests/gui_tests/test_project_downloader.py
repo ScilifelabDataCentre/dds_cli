@@ -1,5 +1,6 @@
 """Tests for ProjectDownloader GUI utility class."""
 
+import concurrent.futures
 import pathlib
 import threading
 import time
@@ -708,6 +709,623 @@ class TestProjectDownloader:
         # Should not raise exception
         progress._trigger_progress_callback()
 
+
+class TestProjectDownloaderEdgeCases:
+    """Test edge cases and error conditions for ProjectDownloader."""
+
+    def test_callback_progress_add_task(self):
+        """Test CallbackProgress add_task method."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task
+        task_id = progress.add_task("Downloading file", total=500)
+        
+        assert task_id == 0
+        assert len(progress.tasks) == 1
+        assert progress.tasks[0]["description"] == "Downloading file"
+        assert progress.tasks[0]["total"] == 500
+        assert progress.tasks[0]["completed"] == 0
+        assert progress.tasks[0]["visible"] is True
+
+    def test_callback_progress_add_task_with_parameters(self):
+        """Test CallbackProgress add_task method with all parameters."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task with all parameters
+        task_id = progress.add_task("Processing", total=200, step=10, visible=False)
+        
+        assert task_id == 0
+        assert progress.tasks[0]["description"] == "Processing"
+        assert progress.tasks[0]["total"] == 200
+        assert progress.tasks[0]["visible"] is False
+
+    def test_callback_progress_update_task(self):
+        """Test CallbackProgress update method."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task
+        task_id = progress.add_task("Downloading")
+        
+        # Update task with advance
+        progress.update(task_id, advance=100, description="Downloading chunk")
+        
+        assert progress.tasks[task_id]["completed"] == 100
+        assert progress.tasks[task_id]["description"] == "Downloading chunk"
+        assert progress.completed == 100
+
+    def test_callback_progress_update_task_description_only(self):
+        """Test CallbackProgress update method with description only."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task
+        task_id = progress.add_task("Downloading")
+        
+        # Update task description only
+        progress.update(task_id, description="Processing")
+        
+        assert progress.tasks[task_id]["description"] == "Processing"
+        assert progress.tasks[task_id]["completed"] == 0  # Should not change
+
+    def test_callback_progress_reset_task(self):
+        """Test CallbackProgress reset method."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task and update it
+        task_id = progress.add_task("Downloading", total=500)
+        progress.update(task_id, advance=100)
+        
+        # Reset the task
+        progress.reset(task_id, description="Restarted", total=300)
+        
+        assert progress.tasks[task_id]["completed"] == 0
+        assert progress.tasks[task_id]["description"] == "Restarted"
+        assert progress.tasks[task_id]["total"] == 300
+
+    def test_callback_progress_remove_task(self):
+        """Test CallbackProgress remove_task method."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task
+        task_id = progress.add_task("Downloading")
+        
+        # Remove the task
+        progress.remove_task(task_id)
+        
+        assert task_id not in progress.tasks
+
+    def test_callback_progress_trigger_with_cancelled_downloader(self):
+        """Test CallbackProgress trigger when downloader is cancelled."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = True
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        progress._trigger_progress_callback()
+        
+        # Should not call callback when cancelled
+        progress.progress_callback.assert_not_called()
+
+    def test_callback_progress_trigger_with_stop_doing(self):
+        """Test CallbackProgress trigger when stop_doing is True."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._getter = MagicMock()
+        downloader._getter.stop_doing = True
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        progress._trigger_progress_callback()
+        
+        # Should not call callback when stop_doing is True
+        progress.progress_callback.assert_not_called()
+
+    def test_callback_progress_trigger_with_progress_callback_exception(self):
+        """Test CallbackProgress trigger when callback raises exception."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(side_effect=Exception("Callback failed")),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Should not raise exception
+        progress._trigger_progress_callback()
+
+    def test_callback_progress_trigger_percentage_calculation(self):
+        """Test CallbackProgress trigger percentage calculation."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._total_bytes = 10000
+        downloader._total_downloaded_bytes = 3000
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        progress.completed = 500
+        
+        progress._trigger_progress_callback()
+        
+        # Verify callback was called
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.current_file == "test.txt"
+        assert call_args.total_files == 10
+        assert call_args.completed_files == 3
+
+    def test_callback_progress_trigger_fallback_calculation(self):
+        """Test CallbackProgress trigger fallback calculation when total_bytes is 0."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 5
+        downloader._completed_files = 2
+        downloader._total_bytes = 0  # No total bytes available
+        downloader._total_downloaded_bytes = 0
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        progress.completed = 500
+        
+        progress._trigger_progress_callback()
+        
+        # Verify callback was called with fallback calculation
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.total_files == 5
+        assert call_args.completed_files == 2
+
+    def test_callback_progress_trigger_single_file_calculation(self):
+        """Test CallbackProgress trigger calculation for single file."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 1
+        downloader._completed_files = 0
+        downloader._total_bytes = 0
+        downloader._total_downloaded_bytes = 0
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        progress.completed = 500
+        
+        progress._trigger_progress_callback()
+        
+        # Verify callback was called
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.current_file_progress == 0.5  # 500/1000
+
+    def test_initialize_with_source_path_file(self):
+        """Test initialization with source_path_file parameter."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            
+            # Create a temporary file for source_path_file
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+                f.write("file1.txt\nfile2.txt\n")
+                temp_file = f.name
+            
+            try:
+                result = downloader.initialize(
+                    get_all=False,
+                    source=(),
+                    source_path_file=pathlib.Path(temp_file),
+                )
+                
+                assert result is True
+                assert downloader._is_initialized is True
+            finally:
+                import os
+                os.unlink(temp_file)
+
+    def test_initialize_with_break_on_fail(self):
+        """Test initialization with break_on_fail parameter."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            
+            result = downloader.initialize(
+                get_all=True,
+                break_on_fail=True,
+                verify_checksum=True,
+            )
+            
+            assert result is True
+            assert downloader._is_initialized is True
+
+    def test_initialize_with_custom_destination(self):
+        """Test initialization with custom destination."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            custom_dest = pathlib.Path("/custom/path")
+            downloader = ProjectDownloader(
+                project="test-project",
+                destination=custom_dest
+            )
+            
+            result = downloader.initialize(get_all=True)
+            
+            assert result is True
+            assert downloader._is_initialized is True
+
+    def test_download_all_with_stop_doing_before_start(self):
+        """Test download_all when stop_doing is True before starting."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter.stop_doing = True  # Set stop_doing before starting
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            result = downloader.download_all()
+            
+            assert result is False
+            assert downloader._is_downloading is False
+
+    def test_download_all_with_cancellation_during_execution(self):
+        """Test download_all with cancellation during execution."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+                "file2.txt": {"name_in_db": "file2.txt", "size_original": 2000, "size_stored": 2000},
+            }
+            mock_data_getter.download_and_verify.return_value = (True, "Success")
+            mock_data_getter.stop_doing = False
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            # Cancel during execution
+            def mock_submit(func, *args, **kwargs):
+                downloader._cancelled = True
+                return MagicMock()
+            
+            with patch("concurrent.futures.ThreadPoolExecutor.submit", side_effect=mock_submit):
+                result = downloader.download_all(num_threads=1)
+            
+            assert result is False
+
+    def test_download_all_with_future_cancelled(self):
+        """Test download_all when future is cancelled."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            # Create a cancelled future
+            cancelled_future = MagicMock()
+            cancelled_future.cancelled.return_value = True
+            
+            with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+                mock_executor = MagicMock()
+                mock_executor_class.return_value.__enter__.return_value = mock_executor
+                mock_executor.submit.return_value = cancelled_future
+                
+                # Mock wait to return the cancelled future
+                with patch("concurrent.futures.wait") as mock_wait:
+                    mock_wait.return_value = ([cancelled_future], [])
+                    
+                    result = downloader.download_all(num_threads=1)
+                    
+                    # Should handle cancelled future gracefully
+                    assert result is False
+
+    def test_download_all_with_future_exception(self):
+        """Test download_all when future raises exception."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            # Create a future that raises exception
+            exception_future = MagicMock()
+            exception_future.cancelled.return_value = False
+            exception_future.result.side_effect = dds_cli.exceptions.DownloadError("Download failed")
+            
+            with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+                mock_executor = MagicMock()
+                mock_executor_class.return_value.__enter__.return_value = mock_executor
+                mock_executor.submit.return_value = exception_future
+                
+                # Mock wait to return the exception future
+                with patch("concurrent.futures.wait") as mock_wait:
+                    mock_wait.return_value = ([exception_future], [])
+                    
+                    with patch.object(downloader, '_report_error') as mock_report_error:
+                        result = downloader.download_all(num_threads=1)
+                        
+                        # Should handle exception gracefully and return False
+                        assert result is False
+
+    def test_download_all_with_non_tuple_result(self):
+        """Test download_all when download_and_verify returns non-tuple result."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter.download_and_verify.return_value = True  # Non-tuple result
+            mock_data_getter.stop_doing = False
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            result = downloader.download_all(num_threads=1)
+            
+            assert result is True
+
+    def test_download_all_with_timeout_error(self):
+        """Test download_all with timeout error."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter.stop_doing = False
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+                mock_executor = MagicMock()
+                mock_executor_class.return_value.__enter__.return_value = mock_executor
+                mock_executor.submit.return_value = MagicMock()
+                
+                # Mock wait to raise timeout error
+                with patch("concurrent.futures.wait") as mock_wait:
+                    mock_wait.side_effect = concurrent.futures.TimeoutError()
+                    
+                    result = downloader.download_all(num_threads=1)
+                    
+                    # Should handle timeout gracefully
+                    assert result is False
+
+    def test_download_all_with_general_exception(self):
+        """Test download_all with general exception."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+                mock_executor_class.side_effect = RuntimeError("Executor failed")
+                
+                with patch.object(downloader, '_report_error') as mock_report_error:
+                    result = downloader.download_all(num_threads=1)
+                    
+                    # Should handle exception gracefully
+                    mock_report_error.assert_called()
+                    assert result is False
+
+    def test_cancel_download_with_exception(self):
+        """Test cancel_download with exception during cleanup."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = False
+        downloader._executor = MagicMock()
+        downloader._download_threads = {MagicMock(): "file1.txt"}
+        
+        # Mock executor to raise exception
+        downloader._executor = MagicMock()
+        downloader._executor.shutdown.side_effect = Exception("Shutdown failed")
+        
+        # Should not raise exception
+        downloader.cancel_download()
+        
+        assert downloader._cancelled is True
+
+    def test_cancel_download_fallback_error_handling(self):
+        """Test cancel_download fallback error handling."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = False
+        downloader._executor = MagicMock()
+        downloader._download_threads = {MagicMock(): "file1.txt"}
+        
+        # Mock getter to raise exception
+        downloader._getter = MagicMock()
+        downloader._getter.stop_doing = True
+        
+        # Mock progress update to raise exception
+        with patch.object(downloader, '_update_progress') as mock_update:
+            mock_update.side_effect = Exception("Progress update failed")
+            
+            # Should not raise exception
+            downloader.cancel_download()
+            
+            assert downloader._cancelled is True
+
+    def test_safe_callback_execution_with_exception(self):
+        """Test _safe_callback_execution with callback exception."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def failing_callback():
+            raise Exception("Callback failed")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(failing_callback)
+
+    def test_safe_callback_execution_with_app_shutdown_error(self):
+        """Test _safe_callback_execution with app shutdown error."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def app_shutdown_callback():
+            raise Exception("No active app")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(app_shutdown_callback)
+
+    def test_safe_callback_execution_with_event_loop_error(self):
+        """Test _safe_callback_execution with event loop error."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def event_loop_callback():
+            raise Exception("Event loop is closed")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(event_loop_callback)
+
+    def test_update_progress_with_exception(self):
+        """Test _update_progress with exception."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._progress_callback = MagicMock(side_effect=Exception("Callback failed"))
+        
+        # Should not raise exception
+        downloader._update_progress("downloading", "Test message")
+
+    def test_report_error_with_exception(self):
+        """Test _report_error with exception."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._progress_callback = MagicMock(side_effect=Exception("Callback failed"))
+        downloader._error_callback = MagicMock(side_effect=Exception("Error callback failed"))
+        
+        # Should not raise exception
+        downloader._report_error("Test error")
+
+    def test_context_manager_exit_with_exception(self):
+        """Test context manager exit with exception."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"):
+            with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"):
+                with ProjectDownloader(project="test-project") as downloader:
+                    # Mock cleanup to raise exception
+                    with patch.object(downloader, 'cleanup', side_effect=Exception("Cleanup failed")):
+                        # Should not raise exception
+                        pass  # Context manager should handle the exception
+
     def test_callback_progress_trigger_cancelled(self):
         """Test CallbackProgress trigger when cancelled."""
         downloader = ProjectDownloader(project="test-project")
@@ -845,3 +1463,1429 @@ class TestProjectDownloader:
 
         # Should not raise exception
         progress._trigger_progress_callback()
+
+
+class TestProjectDownloaderEdgeCases:
+    """Test edge cases and error conditions for ProjectDownloader."""
+
+    def test_callback_progress_add_task(self):
+        """Test CallbackProgress add_task method."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task
+        task_id = progress.add_task("Downloading file", total=500)
+        
+        assert task_id == 0
+        assert len(progress.tasks) == 1
+        assert progress.tasks[0]["description"] == "Downloading file"
+        assert progress.tasks[0]["total"] == 500
+        assert progress.tasks[0]["completed"] == 0
+        assert progress.tasks[0]["visible"] is True
+
+    def test_callback_progress_add_task_with_parameters(self):
+        """Test CallbackProgress add_task method with all parameters."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task with all parameters
+        task_id = progress.add_task("Processing", total=200, step=10, visible=False)
+        
+        assert task_id == 0
+        assert progress.tasks[0]["description"] == "Processing"
+        assert progress.tasks[0]["total"] == 200
+        assert progress.tasks[0]["visible"] is False
+
+    def test_callback_progress_update_task(self):
+        """Test CallbackProgress update method."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task
+        task_id = progress.add_task("Downloading")
+        
+        # Update task with advance
+        progress.update(task_id, advance=100, description="Downloading chunk")
+        
+        assert progress.tasks[task_id]["completed"] == 100
+        assert progress.tasks[task_id]["description"] == "Downloading chunk"
+        assert progress.completed == 100
+
+    def test_callback_progress_update_task_description_only(self):
+        """Test CallbackProgress update method with description only."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task
+        task_id = progress.add_task("Downloading")
+        
+        # Update task description only
+        progress.update(task_id, description="Processing")
+        
+        assert progress.tasks[task_id]["description"] == "Processing"
+        assert progress.tasks[task_id]["completed"] == 0  # Should not change
+
+    def test_callback_progress_reset_task(self):
+        """Test CallbackProgress reset method."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task and update it
+        task_id = progress.add_task("Downloading", total=500)
+        progress.update(task_id, advance=100)
+        
+        # Reset the task
+        progress.reset(task_id, description="Restarted", total=300)
+        
+        assert progress.tasks[task_id]["completed"] == 0
+        assert progress.tasks[task_id]["description"] == "Restarted"
+        assert progress.tasks[task_id]["total"] == 300
+
+    def test_callback_progress_remove_task(self):
+        """Test CallbackProgress remove_task method."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=None,
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Add a task
+        task_id = progress.add_task("Downloading")
+        
+        # Remove the task
+        progress.remove_task(task_id)
+        
+        assert task_id not in progress.tasks
+
+    def test_callback_progress_trigger_with_cancelled_downloader(self):
+        """Test CallbackProgress trigger when downloader is cancelled."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = True
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        progress._trigger_progress_callback()
+        
+        # Should not call callback when cancelled
+        progress.progress_callback.assert_not_called()
+
+    def test_callback_progress_trigger_with_stop_doing(self):
+        """Test CallbackProgress trigger when stop_doing is True."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._getter = MagicMock()
+        downloader._getter.stop_doing = True
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        progress._trigger_progress_callback()
+        
+        # Should not call callback when stop_doing is True
+        progress.progress_callback.assert_not_called()
+
+    def test_callback_progress_trigger_with_progress_callback_exception(self):
+        """Test CallbackProgress trigger when callback raises exception."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(side_effect=Exception("Callback failed")),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        
+        # Should not raise exception
+        progress._trigger_progress_callback()
+
+    def test_callback_progress_trigger_percentage_calculation(self):
+        """Test CallbackProgress trigger percentage calculation."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._total_bytes = 10000
+        downloader._total_downloaded_bytes = 3000
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        progress.completed = 500
+        
+        progress._trigger_progress_callback()
+        
+        # Verify callback was called
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.current_file == "test.txt"
+        assert call_args.total_files == 10
+        assert call_args.completed_files == 3
+
+    def test_callback_progress_trigger_fallback_calculation(self):
+        """Test CallbackProgress trigger fallback calculation when total_bytes is 0."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 5
+        downloader._completed_files = 2
+        downloader._total_bytes = 0  # No total bytes available
+        downloader._total_downloaded_bytes = 0
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        progress.completed = 500
+        
+        progress._trigger_progress_callback()
+        
+        # Verify callback was called with fallback calculation
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.total_files == 5
+        assert call_args.completed_files == 2
+
+    def test_callback_progress_trigger_single_file_calculation(self):
+        """Test CallbackProgress trigger calculation for single file."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 1
+        downloader._completed_files = 0
+        downloader._total_bytes = 0
+        downloader._total_downloaded_bytes = 0
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader
+        )
+        progress.completed = 500
+        
+        progress._trigger_progress_callback()
+        
+        # Verify callback was called
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.current_file_progress == 0.5  # 500/1000
+
+    def test_initialize_with_source_path_file(self):
+        """Test initialization with source_path_file parameter."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            
+            # Create a temporary file for source_path_file
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+                f.write("file1.txt\nfile2.txt\n")
+                temp_file = f.name
+            
+            try:
+                result = downloader.initialize(
+                    get_all=False,
+                    source=(),
+                    source_path_file=pathlib.Path(temp_file),
+                )
+                
+                assert result is True
+                assert downloader._is_initialized is True
+            finally:
+                import os
+                os.unlink(temp_file)
+
+    def test_initialize_with_break_on_fail(self):
+        """Test initialization with break_on_fail parameter."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            
+            result = downloader.initialize(
+                get_all=True,
+                break_on_fail=True,
+                verify_checksum=True,
+            )
+            
+            assert result is True
+            assert downloader._is_initialized is True
+
+    def test_initialize_with_custom_destination(self):
+        """Test initialization with custom destination."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            custom_dest = pathlib.Path("/custom/path")
+            downloader = ProjectDownloader(
+                project="test-project",
+                destination=custom_dest
+            )
+            
+            result = downloader.initialize(get_all=True)
+            
+            assert result is True
+            assert downloader._is_initialized is True
+
+    def test_download_all_with_stop_doing_before_start(self):
+        """Test download_all when stop_doing is True before starting."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter.stop_doing = True  # Set stop_doing before starting
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            result = downloader.download_all()
+            
+            assert result is False
+            assert downloader._is_downloading is False
+
+    def test_download_all_with_cancellation_during_execution(self):
+        """Test download_all with cancellation during execution."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+                "file2.txt": {"name_in_db": "file2.txt", "size_original": 2000, "size_stored": 2000},
+            }
+            mock_data_getter.download_and_verify.return_value = (True, "Success")
+            mock_data_getter.stop_doing = False
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            # Cancel during execution
+            def mock_submit(func, *args, **kwargs):
+                downloader._cancelled = True
+                return MagicMock()
+            
+            with patch("concurrent.futures.ThreadPoolExecutor.submit", side_effect=mock_submit):
+                result = downloader.download_all(num_threads=1)
+            
+            assert result is False
+
+    def test_download_all_with_future_cancelled(self):
+        """Test download_all when future is cancelled."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            # Create a cancelled future
+            cancelled_future = MagicMock()
+            cancelled_future.cancelled.return_value = True
+            
+            with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+                mock_executor = MagicMock()
+                mock_executor_class.return_value.__enter__.return_value = mock_executor
+                mock_executor.submit.return_value = cancelled_future
+                
+                # Mock wait to return the cancelled future
+                with patch("concurrent.futures.wait") as mock_wait:
+                    mock_wait.return_value = ([cancelled_future], [])
+                    
+                    result = downloader.download_all(num_threads=1)
+                    
+                    # Should handle cancelled future gracefully
+                    assert result is False
+
+    def test_download_all_with_future_exception(self):
+        """Test download_all when future raises exception."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            # Create a future that raises exception
+            exception_future = MagicMock()
+            exception_future.cancelled.return_value = False
+            exception_future.result.side_effect = dds_cli.exceptions.DownloadError("Download failed")
+            
+            with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+                mock_executor = MagicMock()
+                mock_executor_class.return_value.__enter__.return_value = mock_executor
+                mock_executor.submit.return_value = exception_future
+                
+                # Mock wait to return the exception future
+                with patch("concurrent.futures.wait") as mock_wait:
+                    mock_wait.return_value = ([exception_future], [])
+                    
+                    with patch.object(downloader, '_report_error') as mock_report_error:
+                        result = downloader.download_all(num_threads=1)
+                        
+                        # Should handle exception gracefully and return False
+                        assert result is False
+
+    def test_download_all_with_non_tuple_result(self):
+        """Test download_all when download_and_verify returns non-tuple result."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter.download_and_verify.return_value = True  # Non-tuple result
+            mock_data_getter.stop_doing = False
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            result = downloader.download_all(num_threads=1)
+            
+            assert result is True
+
+    def test_download_all_with_timeout_error(self):
+        """Test download_all with timeout error."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter.stop_doing = False
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+                mock_executor = MagicMock()
+                mock_executor_class.return_value.__enter__.return_value = mock_executor
+                mock_executor.submit.return_value = MagicMock()
+                
+                # Mock wait to raise timeout error
+                with patch("concurrent.futures.wait") as mock_wait:
+                    mock_wait.side_effect = concurrent.futures.TimeoutError()
+                    
+                    result = downloader.download_all(num_threads=1)
+                    
+                    # Should handle timeout gracefully
+                    assert result is False
+
+    def test_download_all_with_general_exception(self):
+        """Test download_all with general exception."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            downloader.initialize(get_all=True)
+            
+            with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+                mock_executor_class.side_effect = RuntimeError("Executor failed")
+                
+                with patch.object(downloader, '_report_error') as mock_report_error:
+                    result = downloader.download_all(num_threads=1)
+                    
+                    # Should handle exception gracefully
+                    mock_report_error.assert_called()
+                    assert result is False
+
+    def test_cancel_download_with_exception(self):
+        """Test cancel_download with exception during cleanup."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = False
+        downloader._executor = MagicMock()
+        downloader._download_threads = {MagicMock(): "file1.txt"}
+        
+        # Mock executor to raise exception
+        downloader._executor = MagicMock()
+        downloader._executor.shutdown.side_effect = Exception("Shutdown failed")
+        
+        # Should not raise exception
+        downloader.cancel_download()
+        
+        assert downloader._cancelled is True
+
+    def test_cancel_download_fallback_error_handling(self):
+        """Test cancel_download fallback error handling."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = False
+        downloader._executor = MagicMock()
+        downloader._download_threads = {MagicMock(): "file1.txt"}
+        
+        # Mock getter to raise exception
+        downloader._getter = MagicMock()
+        downloader._getter.stop_doing = True
+        
+        # Mock progress update to raise exception
+        with patch.object(downloader, '_update_progress') as mock_update:
+            mock_update.side_effect = Exception("Progress update failed")
+            
+            # Should not raise exception
+            downloader.cancel_download()
+            
+            assert downloader._cancelled is True
+
+    def test_safe_callback_execution_with_exception(self):
+        """Test _safe_callback_execution with callback exception."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def failing_callback():
+            raise Exception("Callback failed")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(failing_callback)
+
+    def test_safe_callback_execution_with_app_shutdown_error(self):
+        """Test _safe_callback_execution with app shutdown error."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def app_shutdown_callback():
+            raise Exception("No active app")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(app_shutdown_callback)
+
+    def test_safe_callback_execution_with_event_loop_error(self):
+        """Test _safe_callback_execution with event loop error."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def event_loop_callback():
+            raise Exception("Event loop is closed")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(event_loop_callback)
+
+    def test_update_progress_with_exception(self):
+        """Test _update_progress with exception."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._progress_callback = MagicMock(side_effect=Exception("Callback failed"))
+        
+        # Should not raise exception
+        downloader._update_progress("downloading", "Test message")
+
+    def test_report_error_with_exception(self):
+        """Test _report_error with exception."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._progress_callback = MagicMock(side_effect=Exception("Callback failed"))
+        downloader._error_callback = MagicMock(side_effect=Exception("Error callback failed"))
+        
+        # Should not raise exception
+        downloader._report_error("Test error")
+
+    def test_context_manager_exit_with_exception(self):
+        """Test context manager exit with exception."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"):
+            with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"):
+                with ProjectDownloader(project="test-project") as downloader:
+                    # Mock cleanup to raise exception
+                    with patch.object(downloader, 'cleanup', side_effect=Exception("Cleanup failed")):
+                        # Should not raise exception
+                        pass  # Context manager should handle the exception
+    def test_callback_progress_init_with_all_parameters(self):
+        """Test CallbackProgress initialization with all parameters."""
+        downloader = ProjectDownloader(project="test-project")
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+
+        assert progress.progress_callback is not None
+        assert progress.file_path == "test.txt"
+        assert progress.total_size == 1000
+        assert progress.downloader_instance == downloader
+        assert progress.tasks == {}
+        assert progress.completed == 0
+        assert progress._lock is not None
+        assert progress._last_callback_time == 0
+        assert progress._callback_throttle == 0.1
+        assert progress._last_callback_progress == 0
+
+    def test_callback_progress_trigger_with_cancelled_downloader_early_return(self):
+        """Test CallbackProgress trigger early return when downloader is cancelled."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = True
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+
+        progress._trigger_progress_callback()
+
+        # Should not call callback when cancelled
+        progress.progress_callback.assert_not_called()
+
+    def test_callback_progress_trigger_with_stop_doing_early_return(self):
+        """Test CallbackProgress trigger early return when stop_doing is True."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._getter = MagicMock()
+        downloader._getter.stop_doing = True
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+
+        progress._trigger_progress_callback()
+
+        # Should not call callback when stop_doing is True
+        progress.progress_callback.assert_not_called()
+
+    def test_callback_progress_trigger_progress_calculation_detailed(self):
+        """Test CallbackProgress trigger with detailed progress calculation."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._total_bytes = 10000
+        downloader._total_downloaded_bytes = 3000
+        downloader._progress_lock = threading.Lock()
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+        progress.completed = 500
+
+        progress._trigger_progress_callback()
+
+        # Verify callback was called with correct calculations
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.current_file == "test.txt"
+        assert call_args.total_files == 10
+        assert call_args.completed_files == 3
+        assert call_args.current_file_progress == 0.5  # 500/1000
+        # Overall progress = (3000 + 500) / 10000 = 0.35
+        assert call_args.overall_progress == 0.35
+        assert call_args.overall_percentage == 35.0
+
+    def test_callback_progress_trigger_fallback_calculation_zero_total_bytes(self):
+        """Test CallbackProgress trigger with fallback calculation when total_bytes is 0."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 5
+        downloader._completed_files = 2
+        downloader._total_bytes = 0
+        downloader._total_downloaded_bytes = 0
+        downloader._progress_lock = threading.Lock()
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+        progress.completed = 500
+
+        progress._trigger_progress_callback()
+
+        # Verify callback was called with fallback calculation
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.total_files == 5
+        assert call_args.completed_files == 2
+        # Fallback calculation: base_progress (2/5) + current_file_contribution (0.5/5) = 0.4 + 0.1 = 0.5
+        assert call_args.overall_progress == 0.5
+        assert call_args.overall_percentage == 50.0
+
+    def test_callback_progress_trigger_single_file_calculation(self):
+        """Test CallbackProgress trigger calculation for single file scenario."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 1
+        downloader._completed_files = 0
+        downloader._total_bytes = 0
+        downloader._total_downloaded_bytes = 0
+        downloader._progress_lock = threading.Lock()
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+        progress.completed = 500
+
+        progress._trigger_progress_callback()
+
+        # Verify callback was called
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.current_file_progress == 0.5  # 500/1000
+        # For single file, overall_progress = current_file_progress
+        assert call_args.overall_progress == 0.5
+        assert call_args.overall_percentage == 50.0
+
+    def test_callback_progress_trigger_time_throttling(self):
+        """Test CallbackProgress trigger with time throttling."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._total_bytes = 10000
+        downloader._total_downloaded_bytes = 3000
+        downloader._progress_lock = threading.Lock()
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+
+        # Set initial state with recent callback
+        progress.completed = 100
+        progress._last_callback_time = time.time()
+        # Set the last callback progress to match the current percentage (2% = int(0.1 * 20))
+        progress._last_callback_progress = 2  # 2%
+
+        # Update to same percentage but not enough time has passed
+        progress._trigger_progress_callback()
+
+        # Should not call callback due to throttling (same percentage, recent time)
+        progress.progress_callback.assert_not_called()
+
+        # Now set enough time has passed
+        progress._last_callback_time = time.time() - 0.2  # 200ms ago
+        progress._trigger_progress_callback()
+
+        # Should call callback now (enough time has passed)
+        progress.progress_callback.assert_called_once()
+
+    def test_callback_progress_trigger_small_file_frequent_updates(self):
+        """Test CallbackProgress trigger for small files with frequent updates."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 1
+        downloader._completed_files = 0
+        downloader._total_bytes = 0
+        downloader._total_downloaded_bytes = 0
+        downloader._progress_lock = threading.Lock()
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=500,  # Small file (< 1MB)
+            downloader_instance=downloader,
+        )
+
+        # Set initial state
+        progress.completed = 0
+        progress._last_callback_time = time.time()
+        progress._last_callback_progress = 0
+
+        # Update to 1KB (should trigger callback for small files)
+        progress.completed = 1024
+        progress._trigger_progress_callback()
+
+        # Should call callback for small file frequent updates
+        progress.progress_callback.assert_called_once()
+
+    def test_callback_progress_trigger_progress_percentage_change(self):
+        """Test CallbackProgress trigger when progress percentage changes."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 1
+        downloader._completed_files = 0
+        downloader._total_bytes = 0
+        downloader._total_downloaded_bytes = 0
+        downloader._progress_lock = threading.Lock()
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+
+        # Set initial state
+        progress.completed = 0
+        progress._last_callback_time = time.time()
+        progress._last_callback_progress = 0
+
+        # Update to 10% (should trigger callback due to percentage change)
+        progress.completed = 100
+        progress._trigger_progress_callback()
+
+        # Should call callback due to percentage change
+        progress.progress_callback.assert_called_once()
+
+    def test_callback_progress_trigger_final_update(self):
+        """Test CallbackProgress trigger for final update (100%)."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 1
+        downloader._completed_files = 1
+        downloader._total_bytes = 1000
+        downloader._total_downloaded_bytes = 1000
+        downloader._progress_lock = threading.Lock()
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+
+        # Set to 100% completion
+        progress.completed = 1000
+        progress._last_callback_time = time.time()
+        progress._last_callback_progress = 95
+
+        progress._trigger_progress_callback()
+
+        # Should call callback for final update
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.current_file_progress == 1.0  # 100%
+        assert call_args.overall_percentage == 100.0
+
+    def test_callback_progress_trigger_first_update(self):
+        """Test CallbackProgress trigger for first update (0%)."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 1
+        downloader._completed_files = 0
+        downloader._total_bytes = 0
+        downloader._total_downloaded_bytes = 0
+        downloader._progress_lock = threading.Lock()
+        
+        progress = CallbackProgress(
+            progress_callback=MagicMock(),
+            file_path="test.txt",
+            total_size=1000,
+            downloader_instance=downloader,
+        )
+
+        # First update should trigger callback
+        progress.completed = 0
+        progress._trigger_progress_callback()
+
+        # Should call callback for first update
+        progress.progress_callback.assert_called_once()
+        call_args = progress.progress_callback.call_args[0][0]
+        assert call_args.current_file_progress == 0.0  # 0%
+        assert call_args.overall_percentage == 0.0
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_initialize_validation_get_all_with_source_conflict(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test initialize validation when get_all=True but source is specified."""
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        
+        result = downloader.initialize(
+            get_all=True,
+            source=("file1.txt",),
+        )
+        
+        assert result is False
+        assert not downloader._is_initialized
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_initialize_validation_no_source_specified(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test initialize validation when get_all=False but no source specified."""
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        
+        result = downloader.initialize(
+            get_all=False,
+            source=(),
+            source_path_file=None,
+        )
+        
+        assert result is False
+        assert not downloader._is_initialized
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_initialize_custom_destination_path(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test initialize with custom destination path."""
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        custom_dest = pathlib.Path("/custom/download/path")
+        downloader = ProjectDownloader(
+            project="test-project",
+            destination=custom_dest
+        )
+        
+        result = downloader.initialize(get_all=True)
+        
+        assert result is True
+        assert downloader._is_initialized
+        # Verify DataGetter was called with custom destination
+        mock_data_getter_class.assert_called_once()
+        call_args = mock_data_getter_class.call_args
+        assert call_args[1]["staging_dir"] is not None
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.timestamp.TimeStamp")
+    def test_initialize_default_destination_path(
+        self, mock_timestamp_class, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test initialize with default destination path generation."""
+        mock_timestamp = MagicMock()
+        mock_timestamp.timestamp = "2025-01-01_12-00-00"
+        mock_timestamp_class.return_value = mock_timestamp
+        
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        
+        result = downloader.initialize(get_all=True)
+        
+        assert result is True
+        assert downloader._is_initialized
+        # Verify DataGetter was called with generated destination
+        mock_data_getter_class.assert_called_once()
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_initialize_no_files_to_download(
+        self, mock_data_getter_class, mock_directory_class, mock_staging_dir
+    ):
+        """Test initialize when no files are available to download."""
+        mock_getter = MagicMock()
+        mock_getter.filehandler = MagicMock()
+        mock_getter.filehandler.data = {}  # No files
+        mock_data_getter_class.return_value = mock_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        
+        result = downloader.initialize(get_all=True)
+        
+        assert result is False
+        assert not downloader._is_initialized
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_initialize_calculates_total_bytes(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test initialize calculates total bytes correctly."""
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        
+        result = downloader.initialize(get_all=True)
+        
+        assert result is True
+        assert downloader._is_initialized
+        assert downloader._total_files == 3
+        assert downloader._total_bytes == 6000  # 1000 + 2000 + 3000
+        assert downloader._completed_files == 0
+        assert downloader._total_downloaded_bytes == 0
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_initialize_with_all_parameters(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test initialize with all optional parameters."""
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        
+        result = downloader.initialize(
+            get_all=True,
+            break_on_fail=True,
+            verify_checksum=True,
+        )
+        
+        assert result is True
+        assert downloader._is_initialized
+        # Verify DataGetter was called with all parameters
+        mock_data_getter_class.assert_called_once()
+        call_args = mock_data_getter_class.call_args
+        assert call_args[1]["break_on_fail"] is True
+        assert call_args[1]["verify_checksum"] is True
+        assert call_args[1]["silent"] is True
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_download_all_stop_doing_before_start(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test download_all when stop_doing is True before starting."""
+        mock_data_getter.stop_doing = True  # Set stop_doing before starting
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+        
+        result = downloader.download_all()
+        
+        assert result is False
+        assert downloader._is_downloading is False
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_download_all_cancellation_during_execution(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test download_all with cancellation during execution."""
+        mock_data_getter.download_and_verify.return_value = (True, "Success")
+        mock_data_getter.stop_doing = False
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+        
+        # Cancel during execution
+        def mock_submit(func, *args, **kwargs):
+            downloader._cancelled = True
+            return MagicMock()
+        
+        with patch("concurrent.futures.ThreadPoolExecutor.submit", side_effect=mock_submit):
+            result = downloader.download_all(num_threads=1)
+        
+        assert result is False
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_download_all_future_cancelled(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test download_all when future is cancelled."""
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+        
+        # Create a cancelled future
+        cancelled_future = MagicMock()
+        cancelled_future.cancelled.return_value = True
+        
+        with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor = MagicMock()
+            mock_executor_class.return_value.__enter__.return_value = mock_executor
+            mock_executor.submit.return_value = cancelled_future
+            
+            # Mock wait to return the cancelled future
+            with patch("concurrent.futures.wait") as mock_wait:
+                mock_wait.return_value = ([cancelled_future], [])
+                
+                result = downloader.download_all(num_threads=1)
+                
+                # Should handle cancelled future gracefully
+                assert result is False
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_download_all_future_exception(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test download_all when future raises exception."""
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+        
+        # Create a future that raises exception
+        exception_future = MagicMock()
+        exception_future.cancelled.return_value = False
+        exception_future.result.side_effect = dds_cli.exceptions.DownloadError("Download failed")
+        
+        with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor = MagicMock()
+            mock_executor_class.return_value.__enter__.return_value = mock_executor
+            mock_executor.submit.return_value = exception_future
+            
+            # Mock wait to return the exception future
+            with patch("concurrent.futures.wait") as mock_wait:
+                mock_wait.return_value = ([exception_future], [])
+                
+                with patch.object(downloader, '_report_error') as mock_report_error:
+                    result = downloader.download_all(num_threads=1)
+                    
+                    # Should handle exception gracefully and return False
+                    assert result is False
+                    mock_report_error.assert_called()
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_download_all_non_tuple_result(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test download_all when download_and_verify returns non-tuple result."""
+        mock_data_getter.download_and_verify.return_value = True  # Non-tuple result
+        mock_data_getter.stop_doing = False
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+        
+        result = downloader.download_all(num_threads=1)
+        
+        assert result is True
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_download_all_timeout_error(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test download_all with timeout error."""
+        mock_data_getter.stop_doing = False
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+        
+        with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor = MagicMock()
+            mock_executor_class.return_value.__enter__.return_value = mock_executor
+            mock_executor.submit.return_value = MagicMock()
+            
+            # Mock wait to raise timeout error
+            with patch("concurrent.futures.wait") as mock_wait:
+                mock_wait.side_effect = concurrent.futures.TimeoutError()
+                
+                result = downloader.download_all(num_threads=1)
+                
+                # Should handle timeout gracefully
+                assert result is False
+
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
+    def test_download_all_general_exception(
+        self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
+    ):
+        """Test download_all with general exception."""
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = mock_staging_dir
+        
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+        
+        with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor_class.side_effect = RuntimeError("Executor failed")
+            
+            with patch.object(downloader, '_report_error') as mock_report_error:
+                result = downloader.download_all(num_threads=1)
+                
+                # Should handle exception gracefully
+                mock_report_error.assert_called()
+                assert result is False
+
+    def test_cancel_download_with_exception(self):
+        """Test cancel_download with exception during cleanup."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = False
+        downloader._executor = MagicMock()
+        downloader._download_threads = {MagicMock(): "file1.txt"}
+        
+        # Mock executor to raise exception
+        downloader._executor = MagicMock()
+        downloader._executor.shutdown.side_effect = Exception("Shutdown failed")
+        
+        # Should not raise exception
+        downloader.cancel_download()
+        
+        assert downloader._cancelled is True
+
+    def test_cancel_download_fallback_error_handling(self):
+        """Test cancel_download fallback error handling."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._cancelled = False
+        downloader._executor = MagicMock()
+        downloader._download_threads = {MagicMock(): "file1.txt"}
+        
+        # Mock getter to raise exception
+        downloader._getter = MagicMock()
+        downloader._getter.stop_doing = True
+        
+        # Mock progress update to raise exception
+        with patch.object(downloader, '_update_progress') as mock_update:
+            mock_update.side_effect = Exception("Progress update failed")
+            
+            # Should not raise exception
+            downloader.cancel_download()
+            
+            assert downloader._cancelled is True
+
+    def test_safe_callback_execution_with_exception(self):
+        """Test _safe_callback_execution with callback exception."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def failing_callback():
+            raise Exception("Callback failed")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(failing_callback)
+
+    def test_safe_callback_execution_with_app_shutdown_error(self):
+        """Test _safe_callback_execution with app shutdown error."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def app_shutdown_callback():
+            raise Exception("No active app")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(app_shutdown_callback)
+
+    def test_safe_callback_execution_with_event_loop_error(self):
+        """Test _safe_callback_execution with event loop error."""
+        downloader = ProjectDownloader(project="test-project")
+        
+        def event_loop_callback():
+            raise Exception("Event loop is closed")
+        
+        # Should not raise exception
+        downloader._safe_callback_execution(event_loop_callback)
+
+    def test_update_progress_with_exception(self):
+        """Test _update_progress with exception."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._progress_callback = MagicMock(side_effect=Exception("Callback failed"))
+        
+        # Should not raise exception
+        downloader._update_progress("downloading", "Test message")
+
+    def test_report_error_with_exception(self):
+        """Test _report_error with exception."""
+        downloader = ProjectDownloader(project="test-project")
+        downloader._total_files = 10
+        downloader._completed_files = 3
+        downloader._progress_callback = MagicMock(side_effect=Exception("Callback failed"))
+        downloader._error_callback = MagicMock(side_effect=Exception("Error callback failed"))
+        
+        # Should not raise exception
+        downloader._report_error("Test error")
+
+    def test_context_manager_exit_with_exception(self):
+        """Test context manager exit with exception."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"):
+            with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"):
+                with ProjectDownloader(project="test-project") as downloader:
+                    # Mock cleanup to raise exception
+                    with patch.object(downloader, 'cleanup', side_effect=Exception("Cleanup failed")):
+                        # Should not raise exception
+                        pass  # Context manager should handle the exception
+
+    def test_initialize_exception_handling(self):
+        """Test initialize exception handling."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter_class.side_effect = dds_cli.exceptions.AuthenticationError("Auth failed")
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            
+            result = downloader.initialize(get_all=True)
+            
+            assert result is False
+            assert not downloader._is_initialized
+
+    def test_initialize_with_source_path_file(self):
+        """Test initialization with source_path_file parameter."""
+        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory") as mock_directory_class, \
+             patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter") as mock_data_getter_class:
+            
+            mock_data_getter = MagicMock()
+            mock_data_getter.filehandler = MagicMock()
+            mock_data_getter.filehandler.data = {
+                "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            }
+            mock_data_getter_class.return_value = mock_data_getter
+            mock_directory_class.return_value = MagicMock()
+            
+            downloader = ProjectDownloader(project="test-project")
+            
+            # Create a temporary file for source_path_file
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:
+                f.write("file1.txt\nfile2.txt\n")
+                temp_file = f.name
+            
+            try:
+                result = downloader.initialize(
+                    get_all=False,
+                    source=(),
+                    source_path_file=pathlib.Path(temp_file),
+                )
+                
+                assert result is True
+                assert downloader._is_initialized is True
+            finally:
+                import os
+                os.unlink(temp_file)

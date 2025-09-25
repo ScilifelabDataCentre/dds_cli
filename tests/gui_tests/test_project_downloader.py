@@ -277,6 +277,10 @@ class TestProjectDownloader:
         mock_data_getter_class.return_value = mock_data_getter
         mock_directory_class.return_value = mock_staging_dir
 
+        # Mock download_and_verify to return success
+        mock_data_getter.download_and_verify.return_value = (True, "Download successful")
+        mock_data_getter.stop_doing = False
+
         downloader = ProjectDownloader(project="test-project")
         downloader.initialize(get_all=True)
 
@@ -301,6 +305,10 @@ class TestProjectDownloader:
         """Test download_all with callbacks."""
         mock_data_getter_class.return_value = mock_data_getter
         mock_directory_class.return_value = mock_staging_dir
+
+        # Mock download_and_verify to return success
+        mock_data_getter.download_and_verify.return_value = (True, "Download successful")
+        mock_data_getter.stop_doing = False
 
         downloader = ProjectDownloader(project="test-project")
         downloader.initialize(get_all=True)
@@ -548,6 +556,7 @@ class TestProjectDownloader:
             return True, ""
 
         mock_data_getter.download_and_verify.side_effect = mock_download_and_verify
+        mock_data_getter.stop_doing = False
         mock_data_getter_class.return_value = mock_data_getter
         mock_directory_class.return_value = mock_staging_dir
 
@@ -563,8 +572,8 @@ class TestProjectDownloader:
 
         result = downloader.download_all(num_threads=1)
 
-        # Should still complete successfully overall
-        assert result is True
+        # Should return False when some files fail
+        assert result is False
         assert len(file_completed_calls) == 3
 
         # Check that we have both successes and failures

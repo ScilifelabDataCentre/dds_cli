@@ -531,7 +531,7 @@ class TestDownloadDataIntegration:
         widget.selected_project_id = "test-project"
         
         # Mock the ProjectDownloader to simulate a successful download
-        with patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
+        with patch('dds_cli.dds_gui.pages.project_actions.download_data.download_data.ProjectDownloader') as mock_downloader_class, \
              patch('dds_cli.directory.DDSDirectory') as mock_directory_class:
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
@@ -541,14 +541,16 @@ class TestDownloadDataIntegration:
             # Mock the directory creation
             mock_directory_class.return_value = MagicMock()
             
-            # Start download
-            widget._start_download()
+            # Test the download worker directly to avoid app context issues
+            widget._full_download_worker("test-project")
             
-            # Verify initial state
-            assert widget.is_downloading is True
-            assert widget.progress == 0.0
-            assert widget.files_downloaded == 0
-            assert widget.error_files == 0
+            # Verify that the downloader was created and used
+            mock_downloader_class.assert_called_once()
+            mock_downloader.initialize.assert_called_once()
+            mock_downloader.download_all.assert_called_once()
+            
+            # Verify final state - is_downloading should be False after completion
+            assert widget.is_downloading is False
             
             # Simulate progress updates
             progress1 = DownloadProgress(

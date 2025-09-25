@@ -52,17 +52,19 @@ class DDSSpacedContainer(VerticalScroll):
     def __init__(
         self,
         *args: Any,
-        align: Optional[Literal[
-            "center top",
-            "right top",
-            "left top",
-            "center middle",
-            "right middle",
-            "left middle",
-            "center bottom",
-            "right bottom",
-            "left bottom"
-        ]] = "center top",
+        align: Optional[
+            Literal[
+                "center top",
+                "right top",
+                "left top",
+                "center middle",
+                "right middle",
+                "left middle",
+                "center bottom",
+                "right bottom",
+                "left bottom",
+            ]
+        ] = "center top",
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)

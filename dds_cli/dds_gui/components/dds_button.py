@@ -31,6 +31,7 @@ class DDSButton(Button):
             # Return a simple empty line
             from textual.geometry import Region
             from textual.strip import Strip
+
             return Strip([], Region(0, y, 0, 1))
 
     DEFAULT_CSS = """
@@ -70,6 +71,7 @@ class DDSSkinnyButton(Button):
             # Return a simple empty line
             from textual.geometry import Region
             from textual.strip import Strip
+
             return Strip([], Region(0, y, 0, 1))
 
     ## Styling to mimic the default styling of textual buttons

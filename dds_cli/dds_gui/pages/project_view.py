@@ -13,6 +13,7 @@ from dds_cli.dds_gui.pages.important_information.important_information import Im
 from dds_cli.dds_gui.pages.project_information.project_information import ProjectInformation
 from dds_cli.dds_gui.pages.project_actions.project_actions import ProjectActions
 
+
 class ProjectView(Widget):
     """Project view page. Contains the project list, important information,
     authentication menu, project content, project information, and project actions.

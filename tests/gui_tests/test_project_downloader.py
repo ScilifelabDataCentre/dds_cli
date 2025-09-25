@@ -154,8 +154,12 @@ class TestProjectDownloader:
         assert downloader._file_completed_callback == file_completed_callback
         assert downloader._error_callback == error_callback
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_initialize_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -172,8 +176,12 @@ class TestProjectDownloader:
         assert downloader._total_files == 3
         assert downloader._completed_files == 0
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_initialize_with_specific_files(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -192,8 +200,12 @@ class TestProjectDownloader:
         assert result is True
         assert downloader._is_initialized is True
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_initialize_validation_errors(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -217,8 +229,12 @@ class TestProjectDownloader:
         )
         assert result is False
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_initialize_no_files(
         self, mock_data_getter_class, mock_directory_class, mock_staging_dir
     ):
@@ -235,8 +251,12 @@ class TestProjectDownloader:
 
         assert result is False
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_initialize_exception_handling(
         self, mock_data_getter_class, mock_directory_class, mock_staging_dir
     ):
@@ -268,8 +288,12 @@ class TestProjectDownloader:
 
         assert result is False
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_download_all_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -297,8 +321,12 @@ class TestProjectDownloader:
         assert result is True
         assert len(progress_calls) > 0  # Should have progress updates
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_download_all_with_callbacks(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -347,8 +375,12 @@ class TestProjectDownloader:
         assert result.success is False
         assert result.error_message == "Downloader not initialized"
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_download_file_file_not_found(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -364,8 +396,12 @@ class TestProjectDownloader:
         assert result.success is False
         assert result.error_message == "File not found in project"
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_download_file_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -382,8 +418,12 @@ class TestProjectDownloader:
         assert result.file_path == "file1.txt"
         assert result.error_message is None
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_download_file_failure(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -420,8 +460,12 @@ class TestProjectDownloader:
 
         assert result == []
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_get_file_list_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -447,8 +491,12 @@ class TestProjectDownloader:
 
         assert result is None
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_get_file_info_success(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -465,8 +513,12 @@ class TestProjectDownloader:
         assert result["name_in_db"] == "file1.txt"
         assert result["size_original"] == 1000
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_get_file_info_not_found(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -500,8 +552,12 @@ class TestProjectDownloader:
 
     def test_context_manager(self):
         """Test using ProjectDownloader as context manager."""
-        with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"):
-            with patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"):
+        with patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+        ):
+            with patch(
+                "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+            ):
                 with ProjectDownloader(project="test-project") as downloader:
                     assert downloader.project == "test-project"
 
@@ -542,8 +598,12 @@ class TestProjectDownloader:
         assert len(error_calls) == 1
         assert error_calls[0] == "Test error"
 
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory")
-    @patch("dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter")
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    )
+    @patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    )
     def test_download_all_with_failures(
         self, mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
     ):
@@ -627,9 +687,9 @@ class TestProjectDownloader:
             progress_callback=None,
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         assert progress.downloader_instance == downloader
         assert progress.total_size == 1000
         assert progress.completed == 0
@@ -642,9 +702,9 @@ class TestProjectDownloader:
             progress_callback=None,
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         # Should not raise exception
         progress._trigger_progress_callback()
 
@@ -656,11 +716,11 @@ class TestProjectDownloader:
             progress_callback=MagicMock(),
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         progress._trigger_progress_callback()
-        
+
         # Should not call callback when cancelled
         progress.progress_callback.assert_not_called()
 
@@ -673,11 +733,11 @@ class TestProjectDownloader:
             progress_callback=MagicMock(),
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         progress._trigger_progress_callback()
-        
+
         # Should not call callback when stop_doing is True
         progress.progress_callback.assert_not_called()
 
@@ -688,12 +748,12 @@ class TestProjectDownloader:
             progress_callback=MagicMock(),
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         # First update should trigger callback
         progress._trigger_progress_callback()
-        
+
         progress.progress_callback.assert_called_once()
 
     def test_callback_progress_trigger_final_update(self):
@@ -703,12 +763,12 @@ class TestProjectDownloader:
             progress_callback=MagicMock(),
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
         progress.completed = 1000  # 100% complete
-        
+
         progress._trigger_progress_callback()
-        
+
         progress.progress_callback.assert_called_once()
 
     def test_callback_progress_trigger_percentage_change(self):
@@ -718,18 +778,18 @@ class TestProjectDownloader:
             progress_callback=MagicMock(),
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         # Set initial state
         progress.completed = 0
         progress._last_callback_time = time.time()
         progress._last_callback_percentage = 0
-        
+
         # Update to 10% (should trigger callback)
         progress.completed = 100
         progress._trigger_progress_callback()
-        
+
         progress.progress_callback.assert_called_once()
 
     def test_callback_progress_trigger_time_throttling(self):
@@ -739,17 +799,17 @@ class TestProjectDownloader:
             progress_callback=MagicMock(),
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         # Set initial state
         progress.completed = 100
         progress._last_callback_time = time.time() - 1.0  # 1 second ago
         progress._last_callback_percentage = 2  # 10%
-        
+
         # Update to same percentage but enough time has passed
         progress._trigger_progress_callback()
-        
+
         progress.progress_callback.assert_called_once()
 
     def test_callback_progress_trigger_small_file(self):
@@ -759,18 +819,18 @@ class TestProjectDownloader:
             progress_callback=MagicMock(),
             file_path="test.txt",
             total_size=100,  # Small file
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         # Set initial state
         progress.completed = 0
         progress._last_callback_time = time.time()
         progress._last_callback_percentage = 0
-        
+
         # Update to 50 bytes (should trigger callback for small files)
         progress.completed = 50
         progress._trigger_progress_callback()
-        
+
         progress.progress_callback.assert_called_once()
 
     def test_callback_progress_trigger_callback_exception(self):
@@ -780,9 +840,8 @@ class TestProjectDownloader:
             progress_callback=MagicMock(side_effect=Exception("Callback failed")),
             file_path="test.txt",
             total_size=1000,
-            downloader_instance=downloader
+            downloader_instance=downloader,
         )
-        
+
         # Should not raise exception
         progress._trigger_progress_callback()
-

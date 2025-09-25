@@ -24,7 +24,7 @@ class TestDownloadData:
     def test_download_data_initialization(self):
         """Test DownloadData widget initialization."""
         widget = DownloadData()
-        
+
         assert widget.downloader is None
         assert widget.download_thread is None
         assert widget.progress == 0.0
@@ -46,13 +46,13 @@ class TestDownloadData:
         widget = DownloadData()
         widget.error_files = 0
         widget.total_files = 10
-        
-        with patch.object(widget, 'query_one') as mock_query:
+
+        with patch.object(widget, "query_one") as mock_query:
             mock_label = MagicMock()
             mock_query.return_value = mock_label
-            
+
             widget.watch_files_downloaded(5)
-            
+
             mock_label.update.assert_called_once_with("Files: 5/10")
 
     def test_watch_files_downloaded_with_errors(self):
@@ -60,13 +60,13 @@ class TestDownloadData:
         widget = DownloadData()
         widget.error_files = 2
         widget.total_files = 10
-        
-        with patch.object(widget, 'query_one') as mock_query:
+
+        with patch.object(widget, "query_one") as mock_query:
             mock_label = MagicMock()
             mock_query.return_value = mock_label
-            
+
             widget.watch_files_downloaded(5)
-            
+
             mock_label.update.assert_called_once_with("Files: 5/10 (Errors: 2)")
 
     def test_watch_error_files_first_error(self):
@@ -75,14 +75,15 @@ class TestDownloadData:
         widget.show_error_label = False
         widget.files_downloaded = 3
         widget.total_files = 10
-        
-        with patch.object(widget, 'query_one') as mock_query, \
-             patch.object(widget, '_mount_error_label') as mock_mount:
+
+        with patch.object(widget, "query_one") as mock_query, patch.object(
+            widget, "_mount_error_label"
+        ) as mock_mount:
             mock_label = MagicMock()
             mock_query.return_value = mock_label
-            
+
             widget.watch_error_files(1)
-            
+
             assert widget.show_error_label is True
             mock_mount.assert_called_once()
             mock_label.update.assert_called_once_with("Files: 3/10 (Errors: 1)")
@@ -93,14 +94,15 @@ class TestDownloadData:
         widget.show_error_label = True
         widget.files_downloaded = 3
         widget.total_files = 10
-        
-        with patch.object(widget, 'query_one') as mock_query, \
-             patch.object(widget, '_mount_error_label') as mock_mount:
+
+        with patch.object(widget, "query_one") as mock_query, patch.object(
+            widget, "_mount_error_label"
+        ) as mock_mount:
             mock_label = MagicMock()
             mock_query.return_value = mock_label
-            
+
             widget.watch_error_files(2)
-            
+
             # Should not mount error label again
             mock_mount.assert_not_called()
             mock_label.update.assert_called_once_with("Files: 3/10 (Errors: 2)")
@@ -109,32 +111,32 @@ class TestDownloadData:
         """Test watching is_downloading changes enables button."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch.object(widget, 'query_one') as mock_query:
+
+        with patch.object(widget, "query_one") as mock_query:
             mock_button = MagicMock()
             mock_query.return_value = mock_button
-            
+
             widget.watch_is_downloading(False)
-            
+
             mock_button.disabled = False
 
     def test_watch_is_downloading_disables_button(self):
         """Test watching is_downloading changes disables button."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch.object(widget, 'query_one') as mock_query:
+
+        with patch.object(widget, "query_one") as mock_query:
             mock_button = MagicMock()
             mock_query.return_value = mock_button
-            
+
             widget.watch_is_downloading(True)
-            
+
             mock_button.disabled = True
 
     def test_update_progress_ui(self):
         """Test updating progress UI."""
         widget = DownloadData()
-        
+
         progress = DownloadProgress(
             current_file="test.txt",
             total_files=10,
@@ -148,30 +150,34 @@ class TestDownloadData:
             bytes_downloaded=1000,
             total_bytes=2000,
         )
-        
-        with patch.object(widget, 'query_one') as mock_query:
+
+        with patch.object(widget, "query_one") as mock_query:
             mock_progress_bar = MagicMock()
             mock_query.return_value = mock_progress_bar
-            
+
             widget._update_progress_ui(progress)
-            
+
             # Verify reactive attributes were updated
             assert widget.progress == 50.0
             assert widget.files_downloaded == 5
             assert widget.error_files == 1
             assert widget.total_files == 10
-            
+
             # Verify progress bar was updated (may be called multiple times due to watchers)
             assert mock_progress_bar.update.called
             # Check that the progress update call was made
-            progress_calls = [call for call in mock_progress_bar.update.call_args_list if 'progress' in call.kwargs]
+            progress_calls = [
+                call
+                for call in mock_progress_bar.update.call_args_list
+                if "progress" in call.kwargs
+            ]
             assert len(progress_calls) > 0
-            assert progress_calls[0].kwargs['progress'] == 50.0
+            assert progress_calls[0].kwargs["progress"] == 50.0
 
     def test_update_progress_ui_no_progress_bar(self):
         """Test updating progress UI when progress bar doesn't exist."""
         widget = DownloadData()
-        
+
         progress = DownloadProgress(
             current_file="test.txt",
             total_files=10,
@@ -182,13 +188,13 @@ class TestDownloadData:
             overall_percentage=50.0,
             status="downloading",
         )
-        
-        with patch.object(widget, 'query_one') as mock_query:
+
+        with patch.object(widget, "query_one") as mock_query:
             mock_query.return_value = None  # No progress bar found
-            
+
             # Should not raise exception
             widget._update_progress_ui(progress)
-            
+
             # Verify reactive attributes were still updated
             assert widget.progress == 50.0
             assert widget.files_downloaded == 5
@@ -198,40 +204,44 @@ class TestDownloadData:
     def test_mount_error_label(self):
         """Test mounting error label."""
         widget = DownloadData()
-        
-        with patch.object(widget, 'query_one') as mock_query, \
-             patch('dds_cli.dds_gui.pages.project_actions.download_data.download_data.Label') as mock_label_class:
+
+        with patch.object(widget, "query_one") as mock_query, patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.download_data.Label"
+        ) as mock_label_class:
             # First call returns None (no existing error label), second returns container
             mock_container = MagicMock()
             mock_query.side_effect = [None, mock_container]
             mock_label = MagicMock()
             mock_label_class.return_value = mock_label
-            
+
             widget._mount_error_label()
-            
+
             # Verify label was created
-            mock_label_class.assert_called_once_with("⚠️ Some files failed to download", id="error-label", classes="disabled")
+            mock_label_class.assert_called_once_with(
+                "⚠️ Some files failed to download", id="error-label", classes="disabled"
+            )
             # Verify mount was called on the container
             mock_container.mount.assert_called_once_with(mock_label)
 
     def test_mount_error_label_already_exists(self):
         """Test mounting error label when it already exists."""
         widget = DownloadData()
-        
-        with patch.object(widget, 'query_one') as mock_query, \
-             patch('dds_cli.dds_gui.pages.project_actions.download_data.download_data.Label') as mock_label_class:
+
+        with patch.object(widget, "query_one") as mock_query, patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.download_data.Label"
+        ) as mock_label_class:
             # First call returns existing error label
             mock_query.return_value = MagicMock()
-            
+
             widget._mount_error_label()
-            
+
             # Should not create new label
             mock_label_class.assert_not_called()
 
     def test_on_file_completed(self):
         """Test file completed callback."""
         widget = DownloadData()
-        
+
         result = DownloadResult(
             success=True,
             file_path="test.txt",
@@ -239,7 +249,7 @@ class TestDownloadData:
             error_message=None,
             file_size=1000,
         )
-        
+
         # Should not raise exception
         widget._on_file_completed(result)
 
@@ -248,28 +258,29 @@ class TestDownloadData:
         widget = DownloadData()
         widget.is_downloading = True
         widget.download_thread = MagicMock()
-        
+
         widget._reset_download_state()
-        
+
         assert widget.is_downloading is False
         assert widget.download_thread is None
 
     def test_on_button_pressed_success(self):
         """Test button press handling."""
         widget = DownloadData()
-        
-        with patch.object(widget, 'query_one') as mock_query, \
-             patch.object(widget, '_start_download') as mock_start:
+
+        with patch.object(widget, "query_one") as mock_query, patch.object(
+            widget, "_start_download"
+        ) as mock_start:
             mock_progress_bar = MagicMock()
             mock_files_label = MagicMock()
             mock_query.side_effect = [mock_progress_bar, mock_files_label]
-            
+
             # Create a mock click event
             mock_event = MagicMock()
             mock_event.button.id = "download-project-content-button"
-            
+
             widget.on_button_pressed(mock_event)
-            
+
             mock_progress_bar.classes = "enabled"
             mock_files_label.classes = "enabled"
             mock_start.assert_called_once()
@@ -277,14 +288,14 @@ class TestDownloadData:
     def test_on_button_pressed_exception(self):
         """Test button press handling with exception."""
         widget = DownloadData()
-        
-        with patch.object(widget, 'query_one') as mock_query:
+
+        with patch.object(widget, "query_one") as mock_query:
             mock_query.side_effect = Exception("Query failed")
-            
+
             # Create a mock click event
             mock_event = MagicMock()
             mock_event.button.id = "download-project-content-button"
-            
+
             # Should not raise exception
             widget.on_button_pressed(mock_event)
 
@@ -292,10 +303,10 @@ class TestDownloadData:
         """Test starting download when already downloading."""
         widget = DownloadData()
         widget.is_downloading = True
-        
+
         # Should return early without starting download
         widget._start_download()
-        
+
         # Verify that is_downloading is still True
         assert widget.is_downloading is True
 
@@ -303,7 +314,7 @@ class TestDownloadData:
         """Test starting download with no project selected."""
         widget = DownloadData()
         widget.selected_project_id = None
-        
+
         # Test that the method returns early without starting download
         # We can't easily test the app.notify call due to Textual's app context requirements
         # This test is skipped as it requires complex app mocking
@@ -313,21 +324,22 @@ class TestDownloadData:
         """Test download worker stopping after initialization."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class:
+
+        with patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch("dds_cli.directory.DDSDirectory") as mock_directory_class:
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_downloader.initialize.return_value = True
-            
+
             # Mock the directory creation
             mock_directory_class.return_value = MagicMock()
-            
+
             # Set stop flag before starting
             widget._stop_download.set()
-            
+
             widget._full_download_worker("test-project")
-            
+
             # Should not call download_all
             mock_downloader.download_all.assert_not_called()
 
@@ -335,25 +347,26 @@ class TestDownloadData:
         """Test download worker stopping before download starts."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class:
+
+        with patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch("dds_cli.directory.DDSDirectory") as mock_directory_class:
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_downloader.initialize.return_value = True
-            
+
             # Mock the directory creation
             mock_directory_class.return_value = MagicMock()
-            
+
             # Set stop flag after initialization but before download
             def mock_initialize(*args, **kwargs):
                 widget._stop_download.set()
                 return True
-            
+
             mock_downloader.initialize.side_effect = mock_initialize
-            
+
             widget._full_download_worker("test-project")
-            
+
             # Should not call download_all
             mock_downloader.download_all.assert_not_called()
 
@@ -361,61 +374,77 @@ class TestDownloadData:
         """Test successful download in worker."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class, \
-             patch.object(widget, '_update_status') as mock_update:
+
+        with patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch(
+            "dds_cli.directory.DDSDirectory"
+        ) as mock_directory_class, patch.object(
+            widget, "_update_status"
+        ) as mock_update:
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_downloader.initialize.return_value = True
             mock_downloader.download_all.return_value = True
-            
+
             # Mock the directory creation
             mock_directory_class.return_value = MagicMock()
-            
+
             widget._full_download_worker("test-project")
-            
+
             # Verify status updates
-            assert mock_update.call_count >= 2  # At least "Starting download..." and "Download completed"
+            assert (
+                mock_update.call_count >= 2
+            )  # At least "Starting download..." and "Download completed"
 
     def test_full_download_worker_download_failure(self):
         """Test download failure in worker."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class, \
-             patch.object(widget, '_update_status') as mock_update:
+
+        with patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch(
+            "dds_cli.directory.DDSDirectory"
+        ) as mock_directory_class, patch.object(
+            widget, "_update_status"
+        ) as mock_update:
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_downloader.initialize.return_value = True
             mock_downloader.download_all.return_value = False
-            
+
             # Mock the directory creation
             mock_directory_class.return_value = MagicMock()
-            
+
             widget._full_download_worker("test-project")
-            
+
             # Verify status updates
-            assert mock_update.call_count >= 2  # At least "Starting download..." and "Download failed"
+            assert (
+                mock_update.call_count >= 2
+            )  # At least "Starting download..." and "Download failed"
 
     def test_full_download_worker_exception(self):
         """Test exception handling in worker."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class, \
-             patch.object(widget, '_update_status') as mock_update:
+
+        with patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch(
+            "dds_cli.directory.DDSDirectory"
+        ) as mock_directory_class, patch.object(
+            widget, "_update_status"
+        ) as mock_update:
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_downloader.initialize.side_effect = Exception("Init failed")
-            
+
             # Mock the directory creation
             mock_directory_class.return_value = MagicMock()
-            
+
             widget._full_download_worker("test-project")
-            
+
             # Verify error status was set (the actual implementation calls "Initialization failed")
             mock_update.assert_called_with("Initialization failed")
 
@@ -425,9 +454,9 @@ class TestDownloadData:
         widget.downloader = MagicMock()
         widget.download_thread = MagicMock()
         widget.download_thread.is_alive.return_value = True
-        
+
         widget.on_unmount()
-        
+
         # Verify cancellation was called
         widget.downloader.cancel_download.assert_called_once()
         widget.download_thread.join.assert_called_once_with(timeout=1.0)
@@ -439,7 +468,7 @@ class TestDownloadData:
         widget.downloader.cancel_download.side_effect = Exception("Cancel failed")
         widget.download_thread = MagicMock()
         widget.download_thread.is_alive.return_value = False
-        
+
         # Should not raise exception
         widget.on_unmount()
 
@@ -447,26 +476,29 @@ class TestDownloadData:
         """Test that _start_download removes existing error label."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch.object(widget, 'query_one') as mock_query, \
-             patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class, \
-             patch('threading.Thread') as mock_thread_class:
+
+        with patch.object(widget, "query_one") as mock_query, patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch(
+            "dds_cli.directory.DDSDirectory"
+        ) as mock_directory_class, patch(
+            "threading.Thread"
+        ) as mock_thread_class:
             # Mock existing error label
             mock_error_label = MagicMock()
             mock_query.return_value = mock_error_label
-            
+
             # Mock downloader and directory
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_directory_class.return_value = MagicMock()
-            
+
             # Mock thread
             mock_thread = MagicMock()
             mock_thread_class.return_value = mock_thread
-            
+
             widget._start_download()
-            
+
             # Verify error label was removed
             mock_error_label.remove.assert_called_once()
 
@@ -474,23 +506,26 @@ class TestDownloadData:
         """Test _start_download handles error label removal exception."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch.object(widget, 'query_one') as mock_query, \
-             patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class, \
-             patch('threading.Thread') as mock_thread_class:
+
+        with patch.object(widget, "query_one") as mock_query, patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch(
+            "dds_cli.directory.DDSDirectory"
+        ) as mock_directory_class, patch(
+            "threading.Thread"
+        ) as mock_thread_class:
             # Mock query_one to raise exception
             mock_query.side_effect = Exception("Query failed")
-            
+
             # Mock downloader and directory
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_directory_class.return_value = MagicMock()
-            
+
             # Mock thread
             mock_thread = MagicMock()
             mock_thread_class.return_value = mock_thread
-            
+
             # Should not raise exception
             widget._start_download()
 
@@ -498,27 +533,32 @@ class TestDownloadData:
         """Test that _start_download creates and starts download thread."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
-        with patch.object(widget, 'query_one') as mock_query, \
-             patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class, \
-             patch('threading.Thread') as mock_thread_class:
+
+        with patch.object(widget, "query_one") as mock_query, patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch(
+            "dds_cli.directory.DDSDirectory"
+        ) as mock_directory_class, patch(
+            "threading.Thread"
+        ) as mock_thread_class:
             # Mock query_one to return None (no error label)
             mock_query.return_value = None
-            
+
             # Mock downloader and directory
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_directory_class.return_value = MagicMock()
-            
+
             # Mock thread
             mock_thread = MagicMock()
             mock_thread_class.return_value = mock_thread
-            
+
             widget._start_download()
-            
+
             # Verify thread was created and started
-            mock_thread_class.assert_called_once_with(target=widget._full_download_worker, args=("test-project",), daemon=True)
+            mock_thread_class.assert_called_once_with(
+                target=widget._full_download_worker, args=("test-project",), daemon=True
+            )
             mock_thread.start.assert_called_once()
 
 
@@ -529,29 +569,30 @@ class TestDownloadDataIntegration:
         """Test complete download workflow."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
+
         # Mock the ProjectDownloader to simulate a successful download
-        with patch('dds_cli.dds_gui.pages.project_actions.download_data.download_data.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class:
+        with patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.download_data.ProjectDownloader"
+        ) as mock_downloader_class, patch("dds_cli.directory.DDSDirectory") as mock_directory_class:
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_downloader.initialize.return_value = True
             mock_downloader.download_all.return_value = True
-            
+
             # Mock the directory creation
             mock_directory_class.return_value = MagicMock()
-            
+
             # Test the download worker directly to avoid app context issues
             widget._full_download_worker("test-project")
-            
+
             # Verify that the downloader was created and used
             mock_downloader_class.assert_called_once()
             mock_downloader.initialize.assert_called_once()
             mock_downloader.download_all.assert_called_once()
-            
+
             # Verify final state - is_downloading should be False after completion
             assert widget.is_downloading is False
-            
+
             # Simulate progress updates
             progress1 = DownloadProgress(
                 current_file="file1.txt",
@@ -563,7 +604,7 @@ class TestDownloadDataIntegration:
                 overall_percentage=33.0,
                 status="downloading",
             )
-            
+
             progress2 = DownloadProgress(
                 current_file="file2.txt",
                 total_files=3,
@@ -574,7 +615,7 @@ class TestDownloadDataIntegration:
                 overall_percentage=67.0,
                 status="downloading",
             )
-            
+
             progress3 = DownloadProgress(
                 current_file="file3.txt",
                 total_files=3,
@@ -585,18 +626,18 @@ class TestDownloadDataIntegration:
                 overall_percentage=100.0,
                 status="completed",
             )
-            
+
             # Update progress
             widget._update_progress_ui(progress1)
             assert widget.progress == 33.0
             assert widget.files_downloaded == 1
             assert widget.error_files == 0
-            
+
             widget._update_progress_ui(progress2)
             assert widget.progress == 67.0
             assert widget.files_downloaded == 2
             assert widget.error_files == 1
-            
+
             widget._update_progress_ui(progress3)
             assert widget.progress == 100.0
             assert widget.files_downloaded == 3
@@ -606,20 +647,21 @@ class TestDownloadDataIntegration:
         """Test error handling workflow."""
         widget = DownloadData()
         widget.selected_project_id = "test-project"
-        
+
         # Mock the ProjectDownloader to simulate an error
-        with patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class, \
-             patch('dds_cli.directory.DDSDirectory') as mock_directory_class:
+        with patch(
+            "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+        ) as mock_downloader_class, patch("dds_cli.directory.DDSDirectory") as mock_directory_class:
             mock_downloader = MagicMock()
             mock_downloader_class.return_value = mock_downloader
             mock_downloader.initialize.return_value = False  # Simulate initialization failure
-            
+
             # Mock the directory creation
             mock_directory_class.return_value = MagicMock()
-            
-            with patch.object(widget, '_update_status') as mock_update:
+
+            with patch.object(widget, "_update_status") as mock_update:
                 widget._full_download_worker("test-project")
-                
+
                 # Verify error status was set
                 mock_update.assert_called_with("Initialization failed")
 
@@ -631,10 +673,10 @@ class TestDownloadDataIntegration:
         widget.downloader = MagicMock()
         widget.download_thread = MagicMock()
         widget.download_thread.is_alive.return_value = True
-        
+
         # Test unmount (which triggers cancellation)
         widget.on_unmount()
-        
+
         # Verify cancellation was called
         widget.downloader.cancel_download.assert_called_once()
         widget.download_thread.join.assert_called_once_with(timeout=1.0)
@@ -648,20 +690,20 @@ class TestDownloadDataWithApp:
     async def test_download_data_with_app_context(self):
         """Test DownloadData widget with proper app context."""
         app = DDSApp(token_path="/tmp/test_token")
-        
+
         async with app.run_test() as pilot:
             # Create the widget within the app context
             widget = DownloadData()
             app.mount(widget)
-            
+
             # Test that the widget can access app properties
-            assert hasattr(widget, 'app')
+            assert hasattr(widget, "app")
             assert widget.app is not None
-            
+
             # Test setting project ID
             widget.selected_project_id = "test-project"
             assert widget.selected_project_id == "test-project"
-            
+
             # Test button state
             widget.is_downloading = False
             assert widget.is_downloading is False
@@ -670,24 +712,26 @@ class TestDownloadDataWithApp:
     async def test_download_workflow_with_app(self):
         """Test download workflow with proper app context."""
         app = DDSApp(token_path="/tmp/test_token")
-        
+
         async with app.run_test() as pilot:
             widget = DownloadData()
             app.mount(widget)
-            
+
             # Set up the widget
             widget.selected_project_id = "test-project"
-            
+
             # Mock the ProjectDownloader
-            with patch('dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader') as mock_downloader_class:
+            with patch(
+                "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.ProjectDownloader"
+            ) as mock_downloader_class:
                 mock_downloader = MagicMock()
                 mock_downloader_class.return_value = mock_downloader
                 mock_downloader.initialize.return_value = True
                 mock_downloader.download_all.return_value = True
-                
+
                 # Test starting download
                 widget._start_download()
-                
+
                 # Verify state
                 assert widget.is_downloading is True
                 assert widget.progress == 0.0
@@ -700,20 +744,20 @@ class TestDownloadDataWithApp:
     async def test_error_label_mounting_with_app(self):
         """Test error label mounting with proper app context."""
         app = DDSApp(token_path="/tmp/test_token")
-        
+
         async with app.run_test() as pilot:
             widget = DownloadData()
             app.mount(widget)
-            
+
             # Set up initial state
             widget.files_downloaded = 2
             widget.total_files = 3
             widget.show_error_label = False
-            
+
             # Test that we can manually set the error label state
             widget.show_error_label = True
             assert widget.show_error_label is True
-            
+
             # The error label mounting is tested in the unit tests
             # This test verifies the reactive behavior works in app context
 
@@ -721,11 +765,11 @@ class TestDownloadDataWithApp:
     async def test_progress_updates_with_app(self):
         """Test progress updates with proper app context."""
         app = DDSApp(token_path="/tmp/test_token")
-        
+
         async with app.run_test() as pilot:
             widget = DownloadData()
             app.mount(widget)
-            
+
             # Create progress data
             progress = DownloadProgress(
                 current_file="test.txt",
@@ -737,15 +781,15 @@ class TestDownloadDataWithApp:
                 overall_percentage=80.0,
                 status="downloading",
             )
-            
+
             # Update progress
             widget._update_progress_ui(progress)
-            
+
             # Verify reactive attributes were updated
             assert widget.progress == 80.0
             assert widget.files_downloaded == 3
             assert widget.error_files == 1
             assert widget.total_files == 5
-            
+
             # The progress bar update is tested in the unit tests
             # This test verifies the reactive behavior works in app context

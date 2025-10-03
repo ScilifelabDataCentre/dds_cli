@@ -472,4 +472,8 @@ _Empty sprint_
 ## 2025-09-15 - 2025-09-26
 
 - Bump cryptography library from 42.0.4 to 44.0.1 to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))
+- Add loading to GUI project listing ([#850](https://github.com/ScilifelabDataCentre/dds_cli/pull/850))
+
+## 2025-09-29 - 2025-10-10
+
 - Fix style according to guidelines and drop support for python 3.8 and 3.9 due to CVE, added new tests ([#843](https://github.com/ScilifelabDataCentre/dds_cli/pull/843))

@@ -3,9 +3,7 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.theme import Theme
-from textual.widget import Widget
-from textual.containers import Horizontal
-from textual.widgets import Header, Static
+from textual.widgets import Header
 
 from dds_cli.dds_gui.components.dds_footer import DDSFooter
 from dds_cli.dds_gui.dds_state_manager import DDSStateManager

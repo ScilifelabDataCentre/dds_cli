@@ -473,3 +473,7 @@ _Empty sprint_
 
 - Bump cryptography library from 42.0.4 to 44.0.1 to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))
 - Add loading to GUI project listing ([#850](https://github.com/ScilifelabDataCentre/dds_cli/pull/850))
+
+## 2025-09-29 - 2025-10-10
+
+- Update Textual version to 6.2.1 ([#852](https://github.com/ScilifelabDataCentre/dds_cli/pull/852))

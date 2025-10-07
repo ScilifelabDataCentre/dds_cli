@@ -2,7 +2,6 @@
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import Header
 from textual.theme import Theme
 from textual.widget import Widget
 from textual.containers import Horizontal
@@ -38,7 +37,7 @@ theme = Theme(
 
 class DDSHeader(Widget):
     """Custom header widget that doesn't have the HeaderTitle issue."""
-    
+
     def compose(self) -> ComposeResult:
         with Horizontal():
             yield Static("DDS CLI", classes="header-title")

@@ -33,7 +33,7 @@ async def test_auth_status_ui_switching() -> None:
         async with app.run_test() as pilot:
             # Wait for the app to fully initialize
             await pilot.pause()
-            
+
             # Test not authenticated state
             app.set_auth_status(False)
             await pilot.pause()

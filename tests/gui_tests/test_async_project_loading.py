@@ -153,7 +153,9 @@ async def test_unauthenticated_user_sees_auth_message():
 
         # Should show authentication message
         text_items = widget.query(DDSTextItem)
-        auth_text_items = [item for item in text_items if "authenticate" in str(item.render().plain).lower()]
+        auth_text_items = [
+            item for item in text_items if "authenticate" in str(item.render().plain).lower()
+        ]
         assert (
             len(auth_text_items) == 1
         ), "Should show authentication message for unauthenticated user"

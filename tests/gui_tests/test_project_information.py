@@ -182,12 +182,16 @@ async def test_project_information_table_compose():
 
             # Verify specific content
             created_by_elements = [
-                elem for elem in static_elements if str(elem.render().plain) == "test_user@example.com"
+                elem
+                for elem in static_elements
+                if str(elem.render().plain) == "test_user@example.com"
             ]
             assert len(created_by_elements) == 1
 
             pi_elements = [
-                elem for elem in static_elements if str(elem.render().plain) == "Dr. Test Investigator"
+                elem
+                for elem in static_elements
+                if str(elem.render().plain) == "Dr. Test Investigator"
             ]
             assert len(pi_elements) == 1
 
@@ -241,7 +245,9 @@ async def test_project_information_table_size_display():
 
             # Check that size is displayed with "B" suffix
             static_elements = app.query("Static")
-            size_elements = [elem for elem in static_elements if "2.0 KB" in str(elem.render().plain)]
+            size_elements = [
+                elem for elem in static_elements if "2.0 KB" in str(elem.render().plain)
+            ]
             assert len(size_elements) == 1
 
 

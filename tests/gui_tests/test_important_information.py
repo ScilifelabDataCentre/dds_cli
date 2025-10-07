@@ -126,7 +126,9 @@ async def test_empty_state_handling():
             # Empty state static widget should be present
             statics = widget.query(Static)
             empty_statics = [
-                static for static in statics if "No important information" in str(static.render().plain)
+                static
+                for static in statics
+                if "No important information" in str(static.render().plain)
             ]
             assert len(empty_statics) == 1
 
@@ -146,7 +148,9 @@ async def test_empty_state_handling():
             # Check that empty state static widget is shown
             statics = widget.query(Static)
             empty_statics = [
-                static for static in statics if "No important information" in str(static.render().plain)
+                static
+                for static in statics
+                if "No important information" in str(static.render().plain)
             ]
             assert len(empty_statics) == 1
 

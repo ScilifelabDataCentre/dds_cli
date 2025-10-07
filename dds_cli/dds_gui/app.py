@@ -5,7 +5,7 @@ from textual.binding import Binding
 from textual.theme import Theme
 from textual.widget import Widget
 from textual.containers import Horizontal
-from textual.widgets import Static
+from textual.widgets import Header, Static
 
 from dds_cli.dds_gui.components.dds_footer import DDSFooter
 from dds_cli.dds_gui.dds_state_manager import DDSStateManager
@@ -33,16 +33,6 @@ theme = Theme(
         # "block-cursor-background": "#12F0E1", #Tab color
     },
 )
-
-
-class DDSHeader(Widget):
-    """Custom header widget that doesn't have the HeaderTitle issue."""
-
-    def compose(self) -> ComposeResult:
-        with Horizontal():
-            yield Static("DDS CLI", classes="header-title")
-            yield Static("", classes="header-spacer")
-            yield Static("", classes="header-clock")
 
 
 class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to access notifications
@@ -77,7 +67,7 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
     ]
 
     def compose(self) -> ComposeResult:
-        yield DDSHeader()
+        yield Header(icon="", show_clock=True)
         yield ProjectView()
         yield DDSFooter()
 

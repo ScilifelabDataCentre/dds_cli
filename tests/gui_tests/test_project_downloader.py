@@ -1392,7 +1392,178 @@ def test_report_error_with_exception():
     downloader._report_error("Test error")
 
 
-def test_context_manager_exit_with_exception():
+def test_download_all_cancellation_during_execution_detailed():
+    """Test download_all with detailed cancellation scenarios."""
+    with patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    ) as mock_directory_class, patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    ) as mock_data_getter_class:
+
+        mock_data_getter = MagicMock()
+        mock_data_getter.filehandler = MagicMock()
+        mock_data_getter.filehandler.data = {
+            "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+            "file2.txt": {"name_in_db": "file2.txt", "size_original": 2000, "size_stored": 2000},
+        }
+        mock_data_getter.download_and_verify.return_value = (True, "Success")
+        mock_data_getter.stop_doing = False
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = MagicMock()
+
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+
+        # Test cancellation during execution
+        def mock_submit(func, *args, **kwargs):
+            downloader._cancelled = True
+            return MagicMock()
+
+        with patch("concurrent.futures.ThreadPoolExecutor.submit", side_effect=mock_submit):
+            result = downloader.download_all(num_threads=1)
+
+        assert result is False
+
+def test_download_all_future_cancelled_detailed():
+    """Test download_all when future is cancelled with detailed handling."""
+    with patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    ) as mock_directory_class, patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    ) as mock_data_getter_class:
+
+        mock_data_getter = MagicMock()
+        mock_data_getter.filehandler = MagicMock()
+        mock_data_getter.filehandler.data = {
+            "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+        }
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = MagicMock()
+
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+
+        # Create a cancelled future
+        cancelled_future = MagicMock()
+        cancelled_future.cancelled.return_value = True
+
+        with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor = MagicMock()
+            mock_executor_class.return_value.__enter__.return_value = mock_executor
+            mock_executor.submit.return_value = cancelled_future
+
+            # Mock wait to return the cancelled future
+            with patch("concurrent.futures.wait") as mock_wait:
+                mock_wait.return_value = ([cancelled_future], [])
+
+                result = downloader.download_all(num_threads=1)
+
+                # Should handle cancelled future gracefully
+                assert result is False
+
+def test_download_all_exception_handling_detailed():
+    """Test download_all exception handling with detailed scenarios."""
+    with patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    ) as mock_directory_class, patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    ) as mock_data_getter_class:
+
+        mock_data_getter = MagicMock()
+        mock_data_getter.filehandler = MagicMock()
+        mock_data_getter.filehandler.data = {
+            "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+        }
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = MagicMock()
+
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+
+        # Create a future that raises exception
+        exception_future = MagicMock()
+        exception_future.cancelled.return_value = False
+        exception_future.result.side_effect = dds_cli.exceptions.DownloadError("Download failed")
+
+        with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor = MagicMock()
+            mock_executor_class.return_value.__enter__.return_value = mock_executor
+            mock_executor.submit.return_value = exception_future
+
+            # Mock wait to return the exception future
+            with patch("concurrent.futures.wait") as mock_wait:
+                mock_wait.return_value = ([exception_future], [])
+
+                result = downloader.download_all(num_threads=1)
+
+                # Should handle exception gracefully and return False
+                assert result is False
+
+def test_download_file_exception_handling():
+    """Test download_file exception handling."""
+    with patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
+    ) as mock_directory_class, patch(
+        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
+    ) as mock_data_getter_class:
+
+        mock_data_getter = MagicMock()
+        mock_data_getter.filehandler = MagicMock()
+        mock_data_getter.filehandler.data = {
+            "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
+        }
+        mock_data_getter.download_and_verify.side_effect = dds_cli.exceptions.DownloadError("Download failed")
+        mock_data_getter_class.return_value = mock_data_getter
+        mock_directory_class.return_value = MagicMock()
+
+        downloader = ProjectDownloader(project="test-project")
+        downloader.initialize(get_all=True)
+
+        result = downloader.download_file("file1.txt")
+
+        assert result.success is False
+        assert result.file_path == "file1.txt"
+        assert result.error_message == "Download failed"
+
+def test_cancel_download_exception_handling():
+    """Test cancel_download exception handling."""
+    downloader = ProjectDownloader(project="test-project")
+    downloader._cancelled = False
+    downloader._executor = MagicMock()
+    downloader._download_threads = {MagicMock(): "file1.txt"}
+    downloader._getter = MagicMock()
+
+    # Mock progress update to raise exception
+    with patch.object(downloader, "_update_progress") as mock_update:
+        mock_update.side_effect = Exception("Progress update failed")
+
+        # Should not raise exception
+        downloader.cancel_download()
+
+        assert downloader._cancelled is True
+
+def test_update_progress_exception_handling():
+    """Test _update_progress exception handling."""
+    downloader = ProjectDownloader(project="test-project")
+    downloader._total_files = 10
+    downloader._completed_files = 3
+    downloader._progress_callback = MagicMock(side_effect=Exception("Callback failed"))
+
+    # Should not raise exception
+    downloader._update_progress("downloading", "Test message")
+
+def test_report_error_exception_handling():
+    """Test _report_error exception handling."""
+    downloader = ProjectDownloader(project="test-project")
+    downloader._total_files = 10
+    downloader._completed_files = 3
+    downloader._progress_callback = MagicMock(side_effect=Exception("Callback failed"))
+    downloader._error_callback = MagicMock(side_effect=Exception("Error callback failed"))
+
+    # Should not raise exception
+    downloader._report_error("Test error")
+
+def test_context_manager_exit_exception():
     """Test context manager exit with exception."""
     with patch(
         "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"

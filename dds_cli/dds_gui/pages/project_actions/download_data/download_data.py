@@ -222,7 +222,7 @@ class DownloadData(Widget):
 
             # Initialize
             if not self.downloader.initialize(get_all=True):
-                self._update_status("Initialization failed")
+                self._update_status("Failed to initialize download")
                 return
 
             # Check if we should stop after initialization

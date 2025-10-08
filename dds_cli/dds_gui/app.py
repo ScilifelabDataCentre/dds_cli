@@ -65,7 +65,6 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
     ]
 
     def compose(self) -> ComposeResult:
-        # yield Header(icon="", show_clock=True, time_format="%H:%M:%S")
         yield ProjectView()
         yield DDSFooter()
 

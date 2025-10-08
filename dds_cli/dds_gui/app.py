@@ -3,9 +3,7 @@
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.theme import Theme
-from textual.widgets import Header, Static
-from textual.widgets._header import HeaderTitle
-from textual.css.query import NoMatches
+from textual.widgets import Header
 
 from dds_cli.dds_gui.components.dds_footer import DDSFooter
 from dds_cli.dds_gui.dds_state_manager import DDSStateManager
@@ -33,24 +31,6 @@ theme = Theme(
         # "block-cursor-background": "#12F0E1", #Tab color
     },
 )
-
-
-class SafeHeader(Header):
-    """Header widget that handles HeaderTitle access gracefully in test environments."""
-
-    def query_one(self, selector, expect_type=None):
-        """Override query_one to handle HeaderTitle access gracefully."""
-        try:
-            return super().query_one(selector, expect_type)
-        except NoMatches as err:
-            # If we're looking for HeaderTitle and it's not found, return a mock
-            if selector == HeaderTitle:
-                # Return a mock HeaderTitle widget that won't cause issues
-
-                mock_title = Static("")
-                mock_title.update = lambda x: None  # Mock update method
-                return mock_title
-            raise err
 
 
 class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to access notifications
@@ -85,7 +65,7 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
     ]
 
     def compose(self) -> ComposeResult:
-        yield SafeHeader(icon="", show_clock=True, time_format="%H:%M:%S")
+        yield Header(icon="", show_clock=True, time_format="%H:%M:%S")
         yield ProjectView()
         yield DDSFooter()
 

@@ -65,12 +65,14 @@ class DDSApp(DDSStateManager):  ### Moved Textual App class to State Manager to 
     ]
 
     def compose(self) -> ComposeResult:
-        yield Header(icon="", show_clock=True, time_format="%H:%M:%S")
+        #yield Header(icon="", show_clock=True, time_format="%H:%M:%S")
         yield ProjectView()
         yield DDSFooter()
 
     def on_mount(self) -> None:
         """On mount, register the theme and set it as the active theme."""
+        self.mount(Header(icon="", show_clock=True, time_format="%H:%M:%S"))
+        # Register the theme and set it as the active theme
         self.register_theme(theme)
         self.theme = "custom"
         # Mark that the GUI is mounted - prevents auth watcher from fetching projects during initialization

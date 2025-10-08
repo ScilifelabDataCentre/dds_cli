@@ -473,3 +473,4 @@ _Empty sprint_
 
 - Bump cryptography library from 42.0.4 to 44.0.1 to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))
 - Add loading to GUI project listing ([#850](https://github.com/ScilifelabDataCentre/dds_cli/pull/850))
+- Revert Windows version to 2022 in pytest workflow ([#853](https://github.com/ScilifelabDataCentre/dds_cli/pull/853))

@@ -32,7 +32,7 @@ class DownloadData(Widget):
     files_downloaded = reactive(0)
     error_files = reactive(0)
     total_files = reactive(0)
-    show_error_label = reactive(False)
+    status = reactive(None)
 
     # Local reactive attributes that mirror app state and trigger recomposition
     selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
@@ -120,7 +120,7 @@ class DownloadData(Widget):
             if files_label:
                 if self.error_files > 0:
                     files_label.update(
-                        f"Files: {files_downloaded}/{self.total_files} (Errors: {self.error_files})"
+                        f"Files: {files_downloaded}/{self.total_files} (❌ Errors: {self.error_files})"
                     )
                 else:
                     files_label.update(f"Files: {files_downloaded}/{self.total_files}")
@@ -134,7 +134,7 @@ class DownloadData(Widget):
             if files_label:
                 if error_files > 0:
                     files_label.update(
-                        f"Files: {self.files_downloaded}/{self.total_files} (Errors: {error_files})"
+                        f"Files: {self.files_downloaded}/{self.total_files} (❌ Errors: {error_files})"
                     )
                 else:
                     files_label.update(f"Files: {self.files_downloaded}/{self.total_files}")
@@ -153,7 +153,7 @@ class DownloadData(Widget):
             if files_label:
                 if self.error_files > 0:
                     files_label.update(
-                        f"Files: {self.files_downloaded}/{total_files} (Errors: {self.error_files})"
+                        f"Files: {self.files_downloaded}/{total_files} (❌ Errors: {self.error_files})"
                     )
                 else:
                     files_label.update(f"Files: {self.files_downloaded}/{total_files}")
@@ -194,17 +194,9 @@ class DownloadData(Widget):
         self.files_downloaded = 0
         self.error_files = 0
         self.total_files = 0
-        self.show_error_label = False
         self.is_downloading = True
         self._stop_download.clear()
 
-        # Remove any existing error label
-        try:
-            error_label = self.query_one("#error-label", None)
-            if error_label:
-                error_label.remove()
-        except Exception:
-            pass  # Error label might not exist
 
         # Start initialization and download in background thread
         project_id = self.selected_project_id
@@ -327,6 +319,7 @@ class DownloadData(Widget):
         self.files_downloaded = progress.completed_files
         self.error_files = progress.error_files
         self.total_files = progress.total_files
+        self.progress_status = progress.status
 
         # Update the progress bar widget if it exists
         try:
@@ -338,34 +331,28 @@ class DownloadData(Widget):
             # Progress bar might not exist yet or might have been removed
             pass
 
+        # Send notifications when the status changes
+        try: 
+            if self.progress_status == "preparing" and not self.status == "preparing":
+                self.app.notify("⏳ Preparing to download project content", severity="info")
+                self.status = "preparing"
+            elif self.progress_status == "completed" and self.progress == 100 and not self.status == "completed":
+                self.app.notify("✅ Project content downloaded successfully", severity="info")  
+                self.status = "completed"
+        except Exception:
+            pass
+
+        #Send error notifications when the status changes
+        try:
+            if self.error_files == 1 and not self.status == "error":
+                self.app.notify("⚠️ Error downloading project content, please contact support", severity="error", timeout=10)
+                self.status = "error"
+        except Exception:
+            pass
+
     def _on_file_completed(self, result: DownloadResult) -> None:
         """Handle file completed from the downloader."""
         pass  # We don't need to do anything special for individual files
-
-    def _mount_error_label(self) -> None:
-        """Mount the error label when first error occurs."""
-        try:
-            # Check if error label already exists
-            existing_error_label = self.query_one("#error-label", None)
-            if existing_error_label:
-                return  # Already mounted
-
-            # Create and mount the error label
-            error_label = Label(
-                "⚠️ Some files failed to download", id="error-label", classes="disabled"
-            )
-
-            # Find the progress bar container and mount the error label after it
-            progress_container = self.query_one("#progress-bar-container", None)
-            if progress_container:
-                progress_container.mount(error_label)
-            else:
-                # Fallback: mount to the main container
-                main_container = self.query_one("#download-data-container", None)
-                if main_container:
-                    main_container.mount(error_label)
-        except Exception:
-            pass
 
     def _on_error(self, error: str) -> None:
         """Handle error from the downloader."""

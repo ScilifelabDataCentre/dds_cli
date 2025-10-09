@@ -115,7 +115,7 @@ class DownloadData(Widget):
                 self.downloader.cancel_download()
             except (DownloadError, ApiRequestError, OSError) as error:
                 LOG.warning("Error cancelling download during unmount: %s", error)
-            except Exception as error:
+            except Exception as error: # pylint: disable=broad-exception-caught
                 LOG.error("Unexpected error cancelling download during unmount: %s", error)
 
         # Wait for download thread to finish (with timeout)
@@ -147,7 +147,7 @@ class DownloadData(Widget):
             if "not running" in str(error).lower():
                 pass
             LOG.warning("Runtime error during unmount: %s", error)
-        except Exception as error:
+        except Exception as error: # pylint: disable=broad-exception-caught
             LOG.warning("Error updating files label: %s", error)
 
     def watch_error_files(self, error_files: int) -> None:
@@ -170,7 +170,7 @@ class DownloadData(Widget):
             if "not running" in str(error).lower():
                 pass
             LOG.warning("Runtime error during unmount: %s", error)
-        except Exception as error:
+        except Exception as error: # pylint: disable=broad-exception-caught
             LOG.warning("Error updating error files label: %s", error)
 
     def watch_total_files(self, total_files: int) -> None:
@@ -190,7 +190,7 @@ class DownloadData(Widget):
             if "not running" in str(error).lower():
                 pass
             LOG.warning("Runtime error during unmount: %s", error)
-        except Exception as error:
+        except Exception as error: # pylint: disable=broad-exception-caught 
             LOG.warning("Error updating total files label: %s", error)
 
     def watch_is_downloading(self, is_downloading: bool) -> None:
@@ -204,7 +204,7 @@ class DownloadData(Widget):
             if "not running" in str(error).lower():
                 pass
             LOG.warning("Runtime error during unmount: %s", error)
-        except Exception as error:
+        except Exception as error: # pylint: disable=broad-exception-caught
             LOG.warning("Error updating button state: %s", error)
 
     def on_button_pressed(self, event: events.Click) -> None:
@@ -219,7 +219,7 @@ class DownloadData(Widget):
             if "not running" in str(error).lower():
                 pass
             LOG.warning("Runtime error during unmount: %s", error)
-        except Exception as error:
+        except Exception as error: # pylint: disable=broad-exception-caught
             LOG.error("Error handling button press: %s", error)
             self.app.notify(f"Error starting download: {error}", severity="error")
 
@@ -296,7 +296,7 @@ class DownloadData(Widget):
         except (OSError, RuntimeError) as error:
             self._update_status(f"System error: {error}")
             LOG.error("System error during download: %s", error)
-        except Exception as error:
+        except Exception as error: # pylint: disable=broad-exception-caught
             self._update_status(f"Unexpected error: {error}")
             LOG.error("Unexpected error during download: %s", error)
         finally:
@@ -319,12 +319,12 @@ class DownloadData(Widget):
                         LOG.warning(f"Runtime error resetting download state: {error}")
                         self.is_downloading = False
                         self.download_thread = None
-                except Exception as error:
+                except Exception as error: # pylint: disable=broad-exception-caught
                     LOG.warning("Error resetting download state: %s", error)
                     # Direct assignment as fallback
                     self.is_downloading = False
                     self.download_thread = None
-            except Exception as error:
+            except Exception as error: # pylint: disable=broad-exception-caught
                 LOG.warning("Error in download worker finally block: %s", error)
                 # Fallback: try direct assignment
                 try:
@@ -447,7 +447,7 @@ class DownloadData(Widget):
             if "not running" in str(error).lower():
                 pass
             LOG.warning("Runtime error during unmount: %s", error)
-        except Exception as error:
+        except Exception as error: # pylint: disable=broad-exception-caught
             LOG.warning("Error sending error notifications: %s", error)
 
     def _on_file_completed(self, result: DownloadResult) -> None:

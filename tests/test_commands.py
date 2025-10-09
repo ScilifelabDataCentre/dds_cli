@@ -68,16 +68,17 @@ def test_auth_configure_exceptions(exc_type, user_choice):
         # Mock Auth context manager to raise exception
         mock_auth_instance = MagicMock()
         mock_auth.return_value.__enter__.return_value = mock_auth_instance
-        mock_auth_instance.twofactor.side_effect = exc_type("message")
+        mock_auth_instance.twofactor.side_effect = exc_type("error")
 
         result = runner.invoke(dds_main, ["auth", "twofactor", "configure"])
 
         assert result.exit_code == 1
+        assert "error" in result.output
 
 
 #### USER COMMANDS #####
 
-## Activate and deativate users ##
+## Activate and deactivate users ##
 
 
 @pytest.mark.parametrize("confirm", [True, False])
@@ -107,7 +108,7 @@ def test_user_activate_confirm_ok(confirm):
 
 @pytest.mark.parametrize("confirm", [True, False])
 def test_user_deactivate_confirm_ok(confirm):
-    """Test user de-activation when confirmation is yes/no. - no errors"""
+    """Test user deactivation when confirmation is yes/no. - no errors"""
 
     runner = CliRunner()
     with patch(
@@ -167,7 +168,7 @@ def test_user_activate_exceptions(exc_type):
     ],
 )
 def test_user_deactivate_exceptions(exc_type):
-    """Test user de-activation when AccountManager raises errors."""
+    """Test user deactivation when AccountManager raises errors."""
 
     runner = CliRunner()
     with patch("dds_cli.__main__.rich.prompt.Confirm.ask", return_value=True), patch(

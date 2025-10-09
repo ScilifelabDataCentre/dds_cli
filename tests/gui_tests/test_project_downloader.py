@@ -763,7 +763,7 @@ def test_callback_progress_add_task_with_parameters():
     )
 
     # Add a task with all parameters
-    task_id = progress.add_task("Processing", total=200, step=10, visible=False)
+    task_id = progress.add_task("Processing", total=200, _step=10, visible=False)
 
     assert task_id == 0
     assert progress.tasks[0]["description"] == "Processing"

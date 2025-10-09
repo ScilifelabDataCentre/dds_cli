@@ -126,7 +126,9 @@ async def test_empty_state_handling():
             # Empty state static widget should be present
             statics = widget.query(Static)
             empty_statics = [
-                static for static in statics if "No important information" in static.renderable
+                static
+                for static in statics
+                if "No important information" in str(static.render().plain)
             ]
             assert len(empty_statics) == 1
 
@@ -146,7 +148,9 @@ async def test_empty_state_handling():
             # Check that empty state static widget is shown
             statics = widget.query(Static)
             empty_statics = [
-                static for static in statics if "No important information" in static.renderable
+                static
+                for static in statics
+                if "No important information" in str(static.render().plain)
             ]
             assert len(empty_statics) == 1
 
@@ -311,7 +315,7 @@ async def test_fetch_motds_error_handling():
         notifications_received = []
         original_notify = app.notify
 
-        def capture_notify(message, *, severity="information", timeout=3.0, title=""):
+        def capture_notify(message, *, severity="information", timeout=3.0, title="", markup=True):
             notifications_received.append(
                 {"message": message, "severity": severity, "timeout": timeout, "title": title}
             )

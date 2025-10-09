@@ -250,7 +250,7 @@ def test_on_button_pressed_exception():
     widget = DownloadData()
 
     with patch.object(widget, "query_one") as mock_query:
-        mock_query.side_effect = Exception("Query failed")
+        mock_query.side_effect = RuntimeError("Query failed")
 
         # Create a mock click event
         mock_event = MagicMock()
@@ -454,9 +454,9 @@ def test_full_download_worker_exception():
 
         # Verify error status was set - should contain the exception message
         assert mock_update.call_count >= 1
-        # Check that the call contains "Download failed"
+        # Check that the call contains "Unexpected error" (new behavior)
         call_args = str(mock_update.call_args)
-        assert "Download failed" in call_args
+        assert "Unexpected error" in call_args
 
 
 def test_on_unmount_with_downloader():
@@ -1114,7 +1114,7 @@ def test_on_button_pressed_with_exception():
     widget = DownloadData()
 
     with patch.object(widget, "query_one") as mock_query:
-        mock_query.side_effect = Exception("Query failed")
+        mock_query.side_effect = RuntimeError("Query failed")
 
         # Create a mock click event
         mock_event = MagicMock()

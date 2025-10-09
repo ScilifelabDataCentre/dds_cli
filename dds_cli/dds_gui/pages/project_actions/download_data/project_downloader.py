@@ -10,6 +10,7 @@ import itertools
 import pathlib
 import threading
 import time
+import logging
 from typing import Callable, Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 
@@ -19,6 +20,9 @@ import dds_cli.data_getter
 import dds_cli.directory
 import dds_cli.exceptions
 import dds_cli.utils
+
+# Logger
+LOG = logging.getLogger(__name__)
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -83,7 +87,14 @@ class CallbackProgress:
         self._last_callback_progress = 0  # Track last reported progress percentage
 
     def add_task(self, description, total=None, step=None, visible=True):
-        """Add a progress task (Rich compatibility)."""
+        """Add a progress task (Rich compatibility).
+
+        Args:
+            description: Task description
+            total: Total progress value
+            step: Step size (unused, kept for Rich compatibility)
+            visible: Whether task is visible
+        """
         with self._lock:
             task_id = len(self.tasks)
             self.tasks[task_id] = {
@@ -131,8 +142,8 @@ class CallbackProgress:
             return
 
         # Check if download was cancelled
-        if self.downloader_instance._cancelled or (
-            self.downloader_instance._getter and self.downloader_instance._getter.stop_doing
+        if self.downloader_instance.cancelled or (
+            self.downloader_instance.getter and self.downloader_instance.getter.stop_doing
         ):
             return
 
@@ -170,10 +181,10 @@ class CallbackProgress:
             self._last_callback_progress = current_percentage
 
             # Get overall progress from downloader
-            with self.downloader_instance._progress_lock:
+            with self.downloader_instance.progress_lock:
                 # Calculate overall progress based on bytes downloaded vs total bytes
-                total_downloaded_bytes = self.downloader_instance._total_downloaded_bytes
-                total_bytes = self.downloader_instance._total_bytes
+                total_downloaded_bytes = self.downloader_instance.total_downloaded_bytes
+                total_bytes = self.downloader_instance.total_bytes
 
                 if total_bytes > 0:
                     # Calculate overall progress based on bytes
@@ -185,8 +196,8 @@ class CallbackProgress:
                     overall_percentage = overall_progress * 100.0
                 else:
                     # Fallback to file-based progress if total bytes not available
-                    completed_files = self.downloader_instance._completed_files
-                    total_files = self.downloader_instance._total_files
+                    completed_files = self.downloader_instance.completed_files
+                    total_files = self.downloader_instance.total_files
 
                     if total_files == 1:
                         overall_progress = current_file_progress
@@ -199,9 +210,9 @@ class CallbackProgress:
 
             progress_info = DownloadProgress(
                 current_file=self.file_path,
-                total_files=self.downloader_instance._total_files,
-                completed_files=self.downloader_instance._completed_files,
-                error_files=self.downloader_instance._error_files,
+                total_files=self.downloader_instance.total_files,
+                completed_files=self.downloader_instance.completed_files,
+                error_files=self.downloader_instance.error_files,
                 current_file_progress=current_file_progress,
                 overall_progress=overall_progress,
                 overall_percentage=overall_percentage,
@@ -212,7 +223,7 @@ class CallbackProgress:
             )
 
             # Use thread-safe callback execution
-            self.downloader_instance._safe_callback_execution(
+            self.downloader_instance.safe_callback_execution(
                 lambda: self.progress_callback(progress_info)
             )
 
@@ -277,6 +288,69 @@ class ProjectDownloader:
         # Thread-safe callback execution
         self._callback_lock = threading.Lock()
 
+    # Public properties for CallbackProgress access
+    @property
+    def cancelled(self) -> bool:
+        """Get cancellation status."""
+        return self._cancelled
+
+    @property
+    def getter(self) -> Optional[dds_cli.data_getter.DataGetter]:
+        """Get the data getter instance."""
+        return self._getter
+
+    @property
+    def progress_lock(self) -> threading.Lock:
+        """Get the progress lock."""
+        return self._progress_lock
+
+    @property
+    def total_downloaded_bytes(self) -> int:
+        """Get total downloaded bytes."""
+        return self._total_downloaded_bytes
+
+    @property
+    def total_bytes(self) -> int:
+        """Get total bytes."""
+        return self._total_bytes
+
+    @property
+    def completed_files(self) -> int:
+        """Get completed files count."""
+        return self._completed_files
+
+    @property
+    def total_files(self) -> int:
+        """Get total files count."""
+        return self._total_files
+
+    @property
+    def error_files(self) -> int:
+        """Get error files count."""
+        return self._error_files
+
+    def safe_callback_execution(self, callback_func: Callable[[], None]) -> None:
+        """Execute callback in a thread-safe manner.
+
+        Args:
+            callback_func: Function to execute safely
+        """
+        try:
+            with self._callback_lock:
+                callback_func()
+        except (dds_cli.exceptions.ApiRequestError, dds_cli.exceptions.DownloadError) as error:
+            LOG.warning(f"Callback execution failed due to DDS error: {error}")
+        except OSError as error:
+            LOG.warning(f"Callback execution failed due to OS error: {error}")
+        except Exception as error:
+            # Don't log warnings for app shutdown errors as they're expected during shutdown
+            error_msg = str(error).lower()
+            if not any(
+                phrase in error_msg
+                for phrase in ["not running", "no active app", "no screen", "event loop is closed"]
+            ):
+                LOG.warning(f"Unexpected error in callback execution: {error}")
+
     def set_progress_callback(self, callback: Callable[[DownloadProgress], None]) -> None:
         """Set callback for progress updates.
 
@@ -300,24 +374,6 @@ class ProjectDownloader:
             callback: Function to call when errors occur
         """
         self._error_callback = callback
-
-    def _safe_callback_execution(self, callback_func: Callable[[], None]) -> None:
-        """Execute callback in a thread-safe manner.
-
-        Args:
-            callback_func: Function to execute safely
-        """
-        try:
-            with self._callback_lock:
-                callback_func()
-        except Exception as e:
-            # Don't log warnings for app shutdown errors as they're expected during shutdown
-            error_msg = str(e).lower()
-            if not any(
-                phrase in error_msg
-                for phrase in ["not running", "no active app", "no screen", "event loop is closed"]
-            ):
-                pass  # Silently handle expected errors
 
     def initialize(
         self,
@@ -346,7 +402,7 @@ class ProjectDownloader:
             if get_all and (source or source_path_file):
                 self._report_error("Cannot use 'get_all' with specific sources")
                 return False
-            elif not get_all and not (source or source_path_file):
+            if not get_all and not (source or source_path_file):
                 self._report_error("Must specify sources or use 'get_all'")
                 return False
 
@@ -402,8 +458,13 @@ class ProjectDownloader:
             dds_cli.exceptions.DownloadError,
             OSError,
             ValueError,
-        ) as e:
-            self._report_error(f"Initialization failed: {str(e)}")
+        ) as error:
+            LOG.error(f"Initialization failed: {str(error)}")
+            self._report_error(f"Initialization failed: {str(error)}")
+            return False
+        except Exception as error:
+            LOG.error(f"Unexpected error during initialization: {str(error)}")
+            self._report_error(f"Unexpected initialization error: {str(error)}")
             return False
 
     def download_all(self, num_threads: int = 4) -> bool:
@@ -530,12 +591,14 @@ class ProjectDownloader:
                                         "size_stored"
                                     ],
                                 )
-                                self._safe_callback_execution(
-                                    lambda: self._progress_callback(final_progress)
+                                self.safe_callback_execution(
+                                    lambda progress=final_progress: self._progress_callback(
+                                        progress
+                                    )
                                 )
 
                             # Create result object
-                            result = DownloadResult(
+                            download_result = DownloadResult(
                                 success=success,
                                 file_path=str(file_path),
                                 error_message=message if not success else None,
@@ -543,8 +606,10 @@ class ProjectDownloader:
 
                             # Notify callbacks
                             if self._file_completed_callback:
-                                self._safe_callback_execution(
-                                    lambda: self._file_completed_callback(result)
+                                self.safe_callback_execution(
+                                    lambda result=download_result: self._file_completed_callback(
+                                        result
+                                    )
                                 )
 
                             # Download completed (success or failure)
@@ -556,8 +621,14 @@ class ProjectDownloader:
                             dds_cli.exceptions.ApiRequestError,
                             OSError,
                             RuntimeError,
-                        ) as e:
-                            self._report_error(f"Download error: {str(e)}")
+                        ) as error:
+                            LOG.error(f"Download error for file {file_path}: {str(error)}")
+                            self._report_error(f"Download error: {str(error)}")
+                        except Exception as error:
+                            LOG.error(
+                                f"Unexpected error downloading file {file_path}: {str(error)}"
+                            )
+                            self._report_error(f"Unexpected download error: {str(error)}")
 
                     # Schedule next batch
                     if not self._cancelled and not self._getter.stop_doing:
@@ -581,8 +652,13 @@ class ProjectDownloader:
             dds_cli.exceptions.ApiRequestError,
             OSError,
             RuntimeError,
-        ) as e:
-            self._report_error(f"Download failed: {str(e)}")
+        ) as error:
+            LOG.error(f"Download operation failed: {str(error)}")
+            self._report_error(f"Download failed: {str(error)}")
+            return False
+        except Exception as error:
+            LOG.error(f"Unexpected error during download operation: {str(error)}")
+            self._report_error(f"Unexpected download error: {str(error)}")
             return False
         finally:
             self._is_downloading = False
@@ -631,8 +707,14 @@ class ProjectDownloader:
             dds_cli.exceptions.ApiRequestError,
             OSError,
             RuntimeError,
-        ) as e:
-            return DownloadResult(success=False, file_path=file_path, error_message=str(e))
+        ) as error:
+            LOG.error(f"Single file download error for {file_path}: {str(error)}")
+            return DownloadResult(success=False, file_path=file_path, error_message=str(error))
+        except Exception as error:
+            LOG.error(f"Unexpected error downloading single file {file_path}: {str(error)}")
+            return DownloadResult(
+                success=False, file_path=file_path, error_message=f"Unexpected error: {str(error)}"
+            )
 
     def cancel_download(self) -> None:
         """Cancel ongoing download operations."""
@@ -653,20 +735,31 @@ class ProjectDownloader:
             # Update progress with error handling
             try:
                 self._update_progress("error", "Download cancelled by user")
-            except Exception:
-                # Don't let progress update errors crash the app
-                pass
+            except (OSError, RuntimeError) as error:
+                LOG.warning(f"Error updating progress during cancellation: {error}")
+            except Exception as error:
+                LOG.warning(f"Unexpected error updating progress during cancellation: {error}")
 
-        except Exception:
+        except (OSError, RuntimeError) as error:
+            LOG.error(f"Error during download cancellation: {error}")
             # Still set the flags even if there's an error
             try:
                 self._cancelled = True
                 self._is_downloading = False
                 if self._getter:
                     self._getter.stop_doing = True
-            except Exception:
-                # Don't let this crash the app either
-                pass
+            except Exception as final_error:
+                LOG.error(f"Error setting cancellation flags: {final_error}")
+        except Exception as error:
+            LOG.error(f"Unexpected error during download cancellation: {error}")
+            # Still set the flags even if there's an error
+            try:
+                self._cancelled = True
+                self._is_downloading = False
+                if self._getter:
+                    self._getter.stop_doing = True
+            except Exception as final_error:
+                LOG.error(f"Error setting cancellation flags: {final_error}")
 
     def get_file_list(self) -> List[str]:
         """Get list of files available for download.
@@ -742,12 +835,18 @@ class ProjectDownloader:
             )
 
             if self._progress_callback:
-                self._safe_callback_execution(lambda: self._progress_callback(progress_info))
+                self.safe_callback_execution(lambda: self._progress_callback(progress_info))
 
     def _update_progress(
         self, status: str, message: str, error_message: Optional[str] = None
     ) -> None:
-        """Update progress and notify callbacks."""
+        """Update progress and notify callbacks.
+
+        Args:
+            status: Current status
+            message: Status message (unused, kept for compatibility)
+            error_message: Optional error message
+        """
         try:
             with self._progress_lock:
                 overall_progress = self._completed_files / max(self._total_files, 1)
@@ -768,17 +867,19 @@ class ProjectDownloader:
                 )
 
                 if self._progress_callback:
-                    self._safe_callback_execution(lambda: self._progress_callback(progress_info))
+                    self.safe_callback_execution(lambda: self._progress_callback(progress_info))
 
-        except Exception:
-            pass
+        except (OSError, RuntimeError) as error:
+            LOG.warning(f"Error updating progress: {error}")
+        except Exception as error:
+            LOG.warning(f"Unexpected error updating progress: {error}")
 
     def _report_error(self, message: str) -> None:
         """Report an error and notify callbacks."""
         self._update_progress("error", message, error_message=message)
 
         if self._error_callback:
-            self._safe_callback_execution(lambda: self._error_callback(message))
+            self.safe_callback_execution(lambda: self._error_callback(message))
 
     def __enter__(self):
         """Context manager entry."""

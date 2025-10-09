@@ -1339,36 +1339,36 @@ def test_cancel_download_fallback_error_handling():
 
 
 def test_safe_callback_execution_with_exception():
-    """Test _safe_callback_execution with callback exception."""
+    """Test safe_callback_execution with callback exception."""
     downloader = ProjectDownloader(project="test-project")
 
     def failing_callback():
         raise Exception("Callback failed")
 
     # Should not raise exception
-    downloader._safe_callback_execution(failing_callback)
+    downloader.safe_callback_execution(failing_callback)
 
 
 def test_safe_callback_execution_with_app_shutdown_error():
-    """Test _safe_callback_execution with app shutdown error."""
+    """Test safe_callback_execution with app shutdown error."""
     downloader = ProjectDownloader(project="test-project")
 
     def app_shutdown_callback():
         raise Exception("No active app")
 
     # Should not raise exception
-    downloader._safe_callback_execution(app_shutdown_callback)
+    downloader.safe_callback_execution(app_shutdown_callback)
 
 
 def test_safe_callback_execution_with_event_loop_error():
-    """Test _safe_callback_execution with event loop error."""
+    """Test safe_callback_execution with event loop error."""
     downloader = ProjectDownloader(project="test-project")
 
     def event_loop_callback():
         raise Exception("Event loop is closed")
 
     # Should not raise exception
-    downloader._safe_callback_execution(event_loop_callback)
+    downloader.safe_callback_execution(event_loop_callback)
 
 
 def test_update_progress_with_exception():

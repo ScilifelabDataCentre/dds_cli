@@ -2,12 +2,15 @@
 
 from typing import Any, Optional
 import threading
+import logging
 
 from textual.app import ComposeResult
 from textual.widget import Widget
 from textual import events
 from textual.reactive import reactive
 from textual.widgets import Label, ProgressBar
+
+# NoActiveAppError doesn't exist in textual.errors, we'll catch RuntimeError instead
 from dds_cli.dds_gui.components.dds_container import (
     DDSSpacedContainer,
     DDSSpacedHorizontalContainer,
@@ -18,6 +21,16 @@ from dds_cli.dds_gui.pages.project_actions.download_data.project_downloader impo
     DownloadResult,
     ProjectDownloader,
 )
+from dds_cli.exceptions import (
+    AuthenticationError,
+    TokenNotFoundError,
+    ApiRequestError,
+    DownloadError,
+    InvalidMethodError,
+)
+
+# Logger
+LOG = logging.getLogger(__name__)
 
 
 class DownloadData(Widget):
@@ -101,8 +114,10 @@ class DownloadData(Widget):
         if self.downloader:
             try:
                 self.downloader.cancel_download()
-            except Exception:
-                pass  # Silently handle errors during unmount
+            except (DownloadError, ApiRequestError, OSError) as e:
+                LOG.warning(f"Error cancelling download during unmount: {e}")
+            except Exception as e:
+                LOG.error(f"Unexpected error cancelling download during unmount: {e}")
 
         # Wait for download thread to finish (with timeout)
         if self.download_thread and self.download_thread.is_alive():
@@ -128,8 +143,14 @@ class DownloadData(Widget):
                     )
                 else:
                     files_label.update(f"Files: {files_downloaded}/{self.total_files}")
-        except Exception:
-            pass  # Label might not exist yet
+        except RuntimeError as error:
+            # App is shutting down, ignore
+            if "not running" in str(error).lower():
+                pass
+            else:
+                LOG.warning(f"Runtime error during unmount: {error}")
+        except Exception as e:
+            LOG.warning(f"Error updating files label: {e}")
 
     def watch_error_files(self, error_files: int) -> None:
         """Watch error_files changes and update the files label."""
@@ -146,8 +167,14 @@ class DownloadData(Widget):
 
             # Show error label when first error occurs
             # Note: Error label functionality not yet implemented
-        except Exception:
-            pass  # Label might not exist yet
+        except RuntimeError as error:
+            # App is shutting down, ignore
+            if "not running" in str(error).lower():
+                pass
+            else:
+                LOG.warning(f"Runtime error during unmount: {error}")
+        except Exception as e:
+            LOG.warning(f"Error updating error files label: {e}")
 
     def watch_total_files(self, total_files: int) -> None:
         """Watch total_files changes and update the files label."""
@@ -161,8 +188,14 @@ class DownloadData(Widget):
                     )
                 else:
                     files_label.update(f"Files: {self.files_downloaded}/{total_files}")
-        except Exception:
-            pass  # Label might not exist yet
+        except RuntimeError as error:
+            # App is shutting down, ignore
+            if "not running" in str(error).lower():
+                pass
+            else:
+                LOG.warning(f"Runtime error during unmount: {error}")
+        except Exception as e:
+            LOG.warning(f"Error updating total files label: {e}")
 
     def watch_is_downloading(self, is_downloading: bool) -> None:
         """Watch is_downloading changes and update the button state."""
@@ -170,8 +203,14 @@ class DownloadData(Widget):
             button = self.query_one("#download-project-content-button", None)
             if button:
                 button.disabled = not self.selected_project_id or is_downloading
-        except Exception:
-            pass  # Button might not exist yet
+        except RuntimeError as error:
+            # App is shutting down, ignore
+            if "not running" in str(error).lower():
+                pass
+            else:
+                LOG.warning(f"Runtime error during unmount: {error}")
+        except Exception as e:
+            LOG.warning(f"Error updating button state: {e}")
 
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""
@@ -180,8 +219,15 @@ class DownloadData(Widget):
                 self.query_one("#progress-bar", None).classes = "enabled"
                 self.query_one("#files-label", None).classes = "enabled"
                 self._start_download()
-        except Exception:
-            pass  # Silently handle errors
+        except RuntimeError as error:
+            # App is shutting down, ignore
+            if "not running" in str(error).lower():
+                pass
+            else:
+                LOG.warning(f"Runtime error during unmount: {error}")
+        except Exception as e:
+            LOG.error(f"Error handling button press: {e}")
+            self.app.notify(f"Error starting download: {e}", severity="error")
 
     def _start_download(self) -> None:
         """Start the download process."""
@@ -247,8 +293,18 @@ class DownloadData(Widget):
             else:
                 self._update_status("Download failed")
 
-        except Exception as exc:
+        except (AuthenticationError, TokenNotFoundError) as exc:
+            self._update_status(f"Authentication failed: {exc}")
+            LOG.error(f"Authentication error during download: {exc}")
+        except (ApiRequestError, DownloadError) as exc:
             self._update_status(f"Download failed: {exc}")
+            LOG.error(f"Download error: {exc}")
+        except (OSError, RuntimeError) as exc:
+            self._update_status(f"System error: {exc}")
+            LOG.error(f"System error during download: {exc}")
+        except Exception as exc:
+            self._update_status(f"Unexpected error: {exc}")
+            LOG.error(f"Unexpected error during download: {exc}")
         finally:
             # Reset state on main thread
             try:
@@ -260,18 +316,28 @@ class DownloadData(Widget):
                         # Direct assignment as fallback
                         self.is_downloading = False
                         self.download_thread = None
-                except Exception:
-                    # App context is gone (NoActiveAppError)
+                except RuntimeError as error:
+                    # App context is gone, direct assignment as fallback
+                    if "not running" in str(error).lower():
+                        self.is_downloading = False
+                        self.download_thread = None
+                    else:
+                        LOG.warning(f"Runtime error resetting download state: {error}")
+                        self.is_downloading = False
+                        self.download_thread = None
+                except Exception as e:
+                    LOG.warning(f"Error resetting download state: {e}")
                     # Direct assignment as fallback
                     self.is_downloading = False
                     self.download_thread = None
-            except Exception:
+            except Exception as e:
+                LOG.warning(f"Error in download worker finally block: {e}")
                 # Fallback: try direct assignment
                 try:
                     self.is_downloading = False
                     self.download_thread = None
-                except Exception:
-                    pass  # Silently handle final fallback error
+                except Exception as final_e:
+                    LOG.error(f"Final fallback error: {final_e}")
 
     def _update_status(self, status: str) -> None:
         """Update status from worker thread."""
@@ -279,19 +345,27 @@ class DownloadData(Widget):
         try:
             if not hasattr(self, "app") or not self.app.is_running:
                 return
-        except Exception:
-            # App context is gone (NoActiveAppError)
+        except RuntimeError as error:
+            # App context is gone
+            if "not running" in str(error).lower():
+                return
+            else:
+                LOG.warning(f"Runtime error checking app state: {error}")
+                return
+        except Exception as e:
+            LOG.warning(f"Error checking app state: {e}")
             return
 
         try:
             self.app.call_from_thread(lambda: setattr(self, "status", status))
-        except Exception as exc:
-            # Don't try fallback assignment if app is not running
-            if any(
-                phrase in str(exc).lower()
-                for phrase in ["not running", "no active app", "no screen"]
-            ):
+        except RuntimeError as error:
+            # App is no longer active, ignore
+            if "not running" in str(error).lower():
                 return
+            else:
+                LOG.warning(f"Runtime error updating status: {error}")
+        except Exception as exc:
+            LOG.warning(f"Error updating status: {exc}")
 
     def _reset_download_state(self) -> None:
         """Reset download state on main thread."""
@@ -304,19 +378,28 @@ class DownloadData(Widget):
         try:
             if not hasattr(self, "app") or not self.app.is_running:
                 return
-        except Exception:
-            # App context is gone (NoActiveAppError)
+        except RuntimeError as error:
+            # App context is gone
+            if "not running" in str(error).lower():
+                return
+            else:
+                LOG.warning(f"Runtime error checking app state: {error}")
+                return
+        except Exception as e:
+            LOG.warning(f"Error checking app state for progress update: {e}")
             return
 
         try:
             # Update UI on main thread
             self.app.call_from_thread(self._update_progress_ui, progress)
-        except Exception as exc:
-            if any(
-                phrase in str(exc).lower()
-                for phrase in ["not running", "no active app", "no screen"]
-            ):
+        except RuntimeError as error:
+            # App is no longer active, ignore
+            if "not running" in str(error).lower():
                 return
+            else:
+                LOG.warning(f"Runtime error updating status: {error}")
+        except Exception as exc:
+            LOG.warning(f"Error updating progress UI: {exc}")
 
     def _update_progress_ui(self, progress: DownloadProgress) -> None:
         """Update progress UI on main thread."""
@@ -332,9 +415,14 @@ class DownloadData(Widget):
             if progress_bar:
                 # Update progress bar with the percentage value
                 progress_bar.update(progress=progress.overall_percentage)
-        except Exception:
-            # Progress bar might not exist yet or might have been removed
-            pass
+        except RuntimeError as error:
+            # App is shutting down, ignore
+            if "not running" in str(error).lower():
+                pass
+            else:
+                LOG.warning(f"Runtime error during unmount: {error}")
+        except Exception as e:
+            LOG.warning(f"Error updating progress bar: {e}")
 
         # Send notifications when the status changes
         try:
@@ -348,8 +436,14 @@ class DownloadData(Widget):
             ):
                 self.app.notify("✅ Project content downloaded successfully", severity="info")
                 self.status = "completed"
-        except Exception:
-            pass
+        except RuntimeError as error:
+            # App is shutting down, ignore
+            if "not running" in str(error).lower():
+                pass
+            else:
+                LOG.warning(f"Runtime error during unmount: {error}")
+        except Exception as e:
+            LOG.warning(f"Error sending status notifications: {e}")
 
         # Send error notifications when the status changes
         try:
@@ -360,8 +454,14 @@ class DownloadData(Widget):
                     timeout=10,
                 )
                 self.status = "error"
-        except Exception:
-            pass
+        except RuntimeError as error:
+            # App is shutting down, ignore
+            if "not running" in str(error).lower():
+                pass
+            else:
+                LOG.warning(f"Runtime error during unmount: {error}")
+        except Exception as e:
+            LOG.warning(f"Error sending error notifications: {e}")
 
     def _on_file_completed(self, result: DownloadResult) -> None:
         """Handle file completed from the downloader."""

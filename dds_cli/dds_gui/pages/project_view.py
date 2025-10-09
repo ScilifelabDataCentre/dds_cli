@@ -4,7 +4,6 @@ from typing import Any
 from textual.app import ComposeResult
 from textual.containers import Vertical, Horizontal
 from textual.widget import Widget
-from textual.widgets import Placeholder
 
 from dds_cli.dds_gui.pages.authentication.authentication import Authentication
 from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent

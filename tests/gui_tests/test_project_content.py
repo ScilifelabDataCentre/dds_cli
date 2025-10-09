@@ -300,7 +300,7 @@ def test_project_content_widget_compose_methods():
     content_widgets = list(widget.compose())
     assert len(content_widgets) == 1
     assert isinstance(content_widgets[0], Label)
-    assert "No data found for project test-project" in str(content_widgets[0].renderable)
+    assert "No data found for project test-project" in str(content_widgets[0].render().plain)
 
     # Test 4: No project selected state
     widget.is_loading = False
@@ -311,7 +311,7 @@ def test_project_content_widget_compose_methods():
     content_widgets = list(widget.compose())
     assert len(content_widgets) == 1
     assert isinstance(content_widgets[0], Label)
-    assert "No project selected" in str(content_widgets[0].renderable)
+    assert "No project selected" in str(content_widgets[0].render().plain)
 
 
 # =================================================================================
@@ -358,7 +358,7 @@ async def test_no_project_selected_state():
             # Should show "No project selected" message
             content_widget = get_content_widget(widget)
             assert isinstance(content_widget, Label)
-            assert "No project selected" in str(content_widget.renderable)
+            assert "No project selected" in str(content_widget.render().plain)
 
 
 @pytest.mark.asyncio
@@ -517,7 +517,7 @@ async def test_no_data_error_handling():
             # Should show "No data found" message
             content_widget = get_content_widget(widget)
             assert isinstance(content_widget, Label)
-            assert "No data found for project test-project" in str(content_widget.renderable)
+            assert "No data found for project test-project" in str(content_widget.render().plain)
 
 
 @pytest.mark.asyncio
@@ -610,7 +610,7 @@ async def test_project_selection_change():
             # Initially no project selected
             content_widget = get_content_widget(widget)
             assert isinstance(content_widget, Label)
-            assert "No project selected" in str(content_widget.renderable)
+            assert "No project selected" in str(content_widget.render().plain)
 
             # Select a project
             app.set_selected_project_id("test-project")

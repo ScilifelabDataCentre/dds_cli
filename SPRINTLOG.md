@@ -477,4 +477,5 @@ _Empty sprint_
 ## 2025-09-29 - 2025-10-10
 
 - Revert Windows version to 2022 in pytest workflow ([#853](https://github.com/ScilifelabDataCentre/dds_cli/pull/853))
+- Update Textual version to 6.2.1 ([#852](https://github.com/ScilifelabDataCentre/dds_cli/pull/852))
 - Fix style according to guidelines and drop support for python 3.8 and 3.9 due to CVE, added new tests ([#843](https://github.com/ScilifelabDataCentre/dds_cli/pull/843))

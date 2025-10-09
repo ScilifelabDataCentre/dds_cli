@@ -153,7 +153,9 @@ async def test_unauthenticated_user_sees_auth_message():
 
         # Should show authentication message
         text_items = widget.query(DDSTextItem)
-        auth_text_items = [item for item in text_items if "authenticate" in item.renderable.lower()]
+        auth_text_items = [
+            item for item in text_items if "authenticate" in str(item.render().plain).lower()
+        ]
         assert (
             len(auth_text_items) == 1
         ), "Should show authentication message for unauthenticated user"
@@ -195,7 +197,7 @@ async def test_projects_load_after_authentication():
             # Should show auth message initially
             text_items = widget.query(DDSTextItem)
             auth_text_items = [
-                item for item in text_items if "authenticate" in item.renderable.lower()
+                item for item in text_items if "authenticate" in str(item.render().plain).lower()
             ]
             assert len(auth_text_items) == 1, "Should show authentication message initially"
 
@@ -478,7 +480,7 @@ async def test_app_initialization_without_auth():
             # Should show authentication message
             text_items = widget.query(DDSTextItem)
             auth_text_items = [
-                item for item in text_items if "authenticate" in item.renderable.lower()
+                item for item in text_items if "authenticate" in str(item.render().plain).lower()
             ]
             assert (
                 len(auth_text_items) == 1

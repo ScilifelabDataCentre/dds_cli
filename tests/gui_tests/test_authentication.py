@@ -31,6 +31,9 @@ async def test_auth_status_ui_switching() -> None:
         app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
+            # Wait for the app to fully initialize
+            await pilot.pause()
+
             # Test not authenticated state
             app.set_auth_status(False)
             await pilot.pause()
@@ -91,9 +94,14 @@ async def test_login_modal_ui_workflow() -> None:
             # Verify modal displayed
             assert len(app.screen_stack) > 1, "Login modal should be displayed"
 
-            # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            # Wait for modal to be fully composed
+            await pilot.pause()
+            await pilot.pause()
+
+            # Fill credentials - query from the modal screen
+            modal_screen = app.screen_stack[-1]  # Get the top modal screen
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
@@ -103,13 +111,13 @@ async def test_login_modal_ui_workflow() -> None:
             assert password_inputs.first().value == "test_password"
 
             # UI Workflow Test: Click "Send 2FA code" triggers form switch
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
 
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # UI Verification: 2FA form should now be displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
 
             # Test 2FA field interaction
             code_inputs.first().value = "123456"
@@ -118,7 +126,7 @@ async def test_login_modal_ui_workflow() -> None:
             assert code_inputs.first().value == "123456", "2FA code field should work"
 
             # UI Verification: Login button should be available for final submission
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
 
             await pilot.click(login_buttons.first())
             await pilot.pause()
@@ -159,8 +167,11 @@ async def test_logout_modal_interactions() -> None:
 
                 assert len(app.screen_stack) > 1, "Logout modal should be displayed"
 
+                # Get the modal screen for queries
+                modal_screen = app.screen_stack[-1]
+
                 # Test cancel functionality
-                cancel_button = app.query("Button#cancel")
+                cancel_button = modal_screen.query("Button#cancel")
 
                 await pilot.click(cancel_button.first())
                 await pilot.pause()
@@ -172,8 +183,11 @@ async def test_logout_modal_interactions() -> None:
                 await pilot.pause()
                 assert len(app.screen_stack) > 1, "Logout modal should be displayed"
 
+                # Get the modal screen for queries
+                modal_screen = app.screen_stack[-1]
+
                 # Test logout functionality
-                logout_button = app.query("Button#confirm")
+                logout_button = modal_screen.query("Button#confirm")
 
                 await pilot.click(logout_button.first())
                 await pilot.pause()
@@ -217,9 +231,12 @@ async def test_reauthentication_modal_form_interactions() -> None:
             # Verify modal displayed
             assert len(app.screen_stack) > 1, "Reauthentication modal should be displayed"
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
@@ -229,13 +246,13 @@ async def test_reauthentication_modal_form_interactions() -> None:
             assert password_inputs.first().value == "test_password"
 
             # UI Workflow Test: Click "Send 2FA code" triggers form switch
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
 
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # UI Verification: 2FA form should now be displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
 
             # Test 2FA field interaction
             code_inputs.first().value = "123456"
@@ -244,7 +261,7 @@ async def test_reauthentication_modal_form_interactions() -> None:
             assert code_inputs.first().value == "123456", "2FA code field should work"
 
             # UI Verification: Login button should be available for final submission
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
 
             await pilot.click(login_buttons.first())
             await pilot.pause()
@@ -280,8 +297,11 @@ async def test_keyboard_navigation() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Test tab navigation between fields
-            username_inputs = app.query("Input#username")
+            username_inputs = modal_screen.query("Input#username")
             if username_inputs:
                 await pilot.click(username_inputs.first())
                 await pilot.press("t", "e", "s", "t")
@@ -330,16 +350,19 @@ async def test_invalid_credentials_error_handling() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill invalid credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "invalid_user"
             password_inputs.first().value = "invalid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button to trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -349,13 +372,13 @@ async def test_invalid_credentials_error_handling() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify the form is still in login state (not switched to 2FA)
-            username_inputs_after = app.query("Input#username")
-            password_inputs_after = app.query("Input#password")
+            username_inputs_after = modal_screen.query("Input#username")
+            password_inputs_after = modal_screen.query("Input#password")
             assert len(username_inputs_after) > 0, "Username field should still be present"
             assert len(password_inputs_after) > 0, "Password field should still be present"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -391,21 +414,24 @@ async def test_invalid_2fa_code_error_handling() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill valid credentials to get to 2FA step
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Verify 2FA form is now displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
 
             # Fill invalid 2FA code
@@ -413,7 +439,7 @@ async def test_invalid_2fa_code_error_handling() -> None:
             await pilot.pause()
 
             # Click login button to submit 2FA code
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 
@@ -454,16 +480,19 @@ async def test_network_error_handling() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button to trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -475,8 +504,8 @@ async def test_network_error_handling() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify the form is still in login state (not switched to 2FA)
-            username_inputs_after = app.query("Input#username")
-            password_inputs_after = app.query("Input#password")
+            username_inputs_after = modal_screen.query("Input#username")
+            password_inputs_after = modal_screen.query("Input#password")
             assert len(username_inputs_after) > 0, "Username field should still be present"
             assert len(password_inputs_after) > 0, "Password field should still be present"
 
@@ -512,16 +541,19 @@ async def test_empty_credentials_error_handling() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Leave credentials empty
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = ""
             password_inputs.first().value = ""
             await pilot.pause()
 
             # Click "Send 2FA code" button to trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -533,8 +565,8 @@ async def test_empty_credentials_error_handling() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify the form is still in login state (not switched to 2FA)
-            username_inputs_after = app.query("Input#username")
-            password_inputs_after = app.query("Input#password")
+            username_inputs_after = modal_screen.query("Input#username")
+            password_inputs_after = modal_screen.query("Input#password")
             assert len(username_inputs_after) > 0, "Username field should still be present"
             assert len(password_inputs_after) > 0, "Password field should still be present"
 
@@ -570,16 +602,19 @@ async def test_reauthentication_invalid_credentials_error_handling() -> None:
             app.push_screen(reauth_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill invalid credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "invalid_user"
             password_inputs.first().value = "invalid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button to trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -591,13 +626,13 @@ async def test_reauthentication_invalid_credentials_error_handling() -> None:
             assert app.auth_status, "Authentication status should remain True (original state)"
 
             # Verify the form is still in login state (not switched to 2FA)
-            username_inputs_after = app.query("Input#username")
-            password_inputs_after = app.query("Input#password")
+            username_inputs_after = modal_screen.query("Input#username")
+            password_inputs_after = modal_screen.query("Input#password")
             assert len(username_inputs_after) > 0, "Username field should still be present"
             assert len(password_inputs_after) > 0, "Password field should still be present"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -643,16 +678,19 @@ async def test_empty_field_error_handling(field, value, error_msg):
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill form with empty field
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "test_user" if field == "password" else value
             password_inputs.first().value = "test_password" if field == "username" else value
             await pilot.pause()
 
             # Trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -663,8 +701,8 @@ async def test_empty_field_error_handling(field, value, error_msg):
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify form fields still present
-            username_inputs_after = app.query("Input#username")
-            password_inputs_after = app.query("Input#password")
+            username_inputs_after = modal_screen.query("Input#username")
+            password_inputs_after = modal_screen.query("Input#password")
             assert len(username_inputs_after) > 0, "Username field should still be present"
             assert len(password_inputs_after) > 0, "Password field should still be present"
 
@@ -702,24 +740,27 @@ async def test_empty_2fa_code_error_handling() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Go to 2FA step
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Submit empty 2FA code
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
             code_inputs.first().value = ""  # Empty 2FA code
             await pilot.pause()
 
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 
@@ -765,15 +806,18 @@ async def test_login_json_decode_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
             await pilot.pause()
 
             # Trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -784,7 +828,7 @@ async def test_login_json_decode_error() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -818,15 +862,18 @@ async def test_login_internal_server_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
             await pilot.pause()
 
             # Trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -835,7 +882,7 @@ async def test_login_internal_server_error() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -869,15 +916,18 @@ async def test_login_bad_request_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
             await pilot.pause()
 
             # Trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -888,7 +938,7 @@ async def test_login_bad_request_error() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -922,15 +972,18 @@ async def test_login_forbidden_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
             await pilot.pause()
 
             # Trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -941,7 +994,7 @@ async def test_login_forbidden_error() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -975,15 +1028,18 @@ async def test_no_prompt_authentication_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
             await pilot.pause()
 
             # Trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -994,7 +1050,7 @@ async def test_no_prompt_authentication_error() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -1028,15 +1084,18 @@ async def test_totp_not_enabled_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
             username_inputs.first().value = "test_user"
             password_inputs.first().value = "test_password"
             await pilot.pause()
 
             # Trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -1045,7 +1104,7 @@ async def test_totp_not_enabled_error() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -1079,15 +1138,18 @@ async def test_unicode_decode_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill credentials with invalid characters
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
             username_inputs.first().value = "test_user_with_ñ"
             password_inputs.first().value = "test_password_with_é"
             await pilot.pause()
 
             # Trigger authentication
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
@@ -1096,7 +1158,7 @@ async def test_unicode_decode_error() -> None:
             assert not app.auth_status, "Authentication status should remain False"
 
             # Verify 2FA form is not shown
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) == 0, "2FA code field should not be present after error"
 
 
@@ -1137,21 +1199,24 @@ async def test_2fa_json_decode_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill valid credentials to get to 2FA step
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Verify 2FA form is now displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
 
             # Fill 2FA code
@@ -1159,7 +1224,7 @@ async def test_2fa_json_decode_error() -> None:
             await pilot.pause()
 
             # Click login button to submit 2FA code
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 
@@ -1203,21 +1268,24 @@ async def test_2fa_connection_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill valid credentials to get to 2FA step
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Verify 2FA form is now displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
 
             # Fill 2FA code
@@ -1225,7 +1293,7 @@ async def test_2fa_connection_error() -> None:
             await pilot.pause()
 
             # Click login button to submit 2FA code
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 
@@ -1269,21 +1337,24 @@ async def test_2fa_timeout_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill valid credentials to get to 2FA step
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Verify 2FA form is now displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
 
             # Fill 2FA code
@@ -1291,7 +1362,7 @@ async def test_2fa_timeout_error() -> None:
             await pilot.pause()
 
             # Click login button to submit 2FA code
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 
@@ -1335,21 +1406,24 @@ async def test_2fa_bad_request_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill valid credentials to get to 2FA step
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Verify 2FA form is now displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
 
             # Fill 2FA code
@@ -1357,7 +1431,7 @@ async def test_2fa_bad_request_error() -> None:
             await pilot.pause()
 
             # Click login button to submit 2FA code
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 
@@ -1401,21 +1475,24 @@ async def test_2fa_forbidden_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill valid credentials to get to 2FA step
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Verify 2FA form is now displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
 
             # Fill 2FA code
@@ -1423,7 +1500,7 @@ async def test_2fa_forbidden_error() -> None:
             await pilot.pause()
 
             # Click login button to submit 2FA code
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 
@@ -1467,21 +1544,24 @@ async def test_2fa_internal_server_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill valid credentials to get to 2FA step
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Verify 2FA form is now displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
 
             # Fill 2FA code
@@ -1489,7 +1569,7 @@ async def test_2fa_internal_server_error() -> None:
             await pilot.pause()
 
             # Click login button to submit 2FA code
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 
@@ -1533,21 +1613,24 @@ async def test_2fa_missing_token_error() -> None:
             app.push_screen(login_modal)
             await pilot.pause()
 
+            # Get the modal screen for queries
+            modal_screen = app.screen_stack[-1]
+
             # Fill valid credentials to get to 2FA step
-            username_inputs = app.query("Input#username")
-            password_inputs = app.query("Input#password")
+            username_inputs = modal_screen.query("Input#username")
+            password_inputs = modal_screen.query("Input#password")
 
             username_inputs.first().value = "valid_user"
             password_inputs.first().value = "valid_password"
             await pilot.pause()
 
             # Click "Send 2FA code" button
-            send_2fa_buttons = app.query("Button#send-2fa-code")
+            send_2fa_buttons = modal_screen.query("Button#send-2fa-code")
             await pilot.click(send_2fa_buttons.first())
             await pilot.pause()
 
             # Verify 2FA form is now displayed
-            code_inputs = app.query("Input#code")
+            code_inputs = modal_screen.query("Input#code")
             assert len(code_inputs) > 0, "2FA code field should be present"
 
             # Fill 2FA code
@@ -1555,7 +1638,7 @@ async def test_2fa_missing_token_error() -> None:
             await pilot.pause()
 
             # Click login button to submit 2FA code
-            login_buttons = app.query("Button#login")
+            login_buttons = modal_screen.query("Button#login")
             await pilot.click(login_buttons.first())
             await pilot.pause()
 

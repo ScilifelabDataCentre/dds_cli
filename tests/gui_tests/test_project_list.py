@@ -197,7 +197,7 @@ async def test_empty_projects():
             # Should show "No projects found" message for authenticated user with empty project list
             labels = widget.query(Label)
             no_projects_labels = [
-                label for label in labels if "no projects" in label.renderable.lower()
+                label for label in labels if "no projects" in str(label.render().plain).lower()
             ]
             assert len(no_projects_labels) == 1, "Should show no projects found message"
 

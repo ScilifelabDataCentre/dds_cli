@@ -355,7 +355,8 @@ class ProjectDownloader:
                 staging_dir_path = self.destination
             else:
                 staging_dir_path = pathlib.Path.cwd() / pathlib.Path(
-                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_{self.project}_download"
+                    f"DataDelivery_{dds_cli.timestamp.TimeStamp().timestamp}_"
+                    f"{self.project}_download"
                 )
 
             self._staging_dir = dds_cli.directory.DDSDirectory(path=staging_dir_path)
@@ -487,7 +488,8 @@ class ProjectDownloader:
                             if isinstance(result, tuple) and len(result) == 2:
                                 success, message = result
                             else:
-                                # Handle case where result is not a tuple (DataGetter returns boolean)
+                                # Handle case where result is not a tuple
+                                # (DataGetter returns boolean)
                                 success = bool(result)
                                 message = "Download completed" if success else "Download failed"
 
@@ -730,7 +732,7 @@ class ProjectDownloader:
                 total_files=self._total_files,
                 completed_files=self._completed_files,
                 error_files=self._error_files,
-                current_file_progress=0.0,  # Individual file progress not tracked in this implementation
+                current_file_progress=0.0,  # Individual file progress not tracked
                 overall_progress=overall_progress,
                 overall_percentage=overall_percentage,
                 status="downloading",

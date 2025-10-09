@@ -16,6 +16,17 @@ from dds_cli.dds_gui.models.project_information import (
 from dds_cli.dds_gui.types.dds_status_types import DDSStatus
 import dds_cli.exceptions
 
+
+def get_element_text(elem):
+    """Safely get the plain text content from a widget element."""
+    render_result = elem.render()
+    if hasattr(render_result, "plain"):
+        return render_result.plain
+    else:
+        # If render() returns a string directly, return it
+        return str(render_result)
+
+
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 # Test data
@@ -176,22 +187,22 @@ async def test_project_information_table_compose():
             assert len(status_chips) == 1
             assert status_chips[0].status == DDSStatus.AVAILABLE
 
-            # Check all static text elements
-            static_elements = app.query("Static")
-            assert len(static_elements) >= 8  # 4 keys + 4 values
+            # Check all static text elements in the table widget
+            table_static_elements = table_widget.query("Static")
+            assert len(table_static_elements) >= 8  # 4 keys + 4 values
 
             # Verify specific content
             created_by_elements = [
                 elem
-                for elem in static_elements
-                if str(elem.render().plain) == "test_user@example.com"
+                for elem in table_static_elements
+                if get_element_text(elem) == "test_user@example.com"
             ]
             assert len(created_by_elements) == 1
 
             pi_elements = [
                 elem
-                for elem in static_elements
-                if str(elem.render().plain) == "Dr. Test Investigator"
+                for elem in table_static_elements
+                if get_element_text(elem) == "Dr. Test Investigator"
             ]
             assert len(pi_elements) == 1
 
@@ -214,12 +225,16 @@ async def test_project_information_table_with_none_values():
             await pilot.pause()
 
             # Check that N/A values are displayed
-            static_elements = app.query("Static")
-            na_elements = [elem for elem in static_elements if str(elem.render().plain) == "N/A"]
+            table_static_elements = table_widget.query("Static")
+            na_elements = [
+                elem for elem in table_static_elements if get_element_text(elem) == "N/A"
+            ]
             assert len(na_elements) == 4  # created_by, last_updated, size, pi
 
             # Check size display (should show "N/A" without "B")
-            size_elements = [elem for elem in static_elements if "N/A" in str(elem.render().plain)]
+            size_elements = [
+                elem for elem in table_static_elements if "N/A" in get_element_text(elem)
+            ]
             assert len(size_elements) >= 1
 
 
@@ -244,9 +259,9 @@ async def test_project_information_table_size_display():
             await pilot.pause()
 
             # Check that size is displayed with "B" suffix
-            static_elements = app.query("Static")
+            table_static_elements = table_widget.query("Static")
             size_elements = [
-                elem for elem in static_elements if "2.0 KB" in str(elem.render().plain)
+                elem for elem in table_static_elements if "2.0 KB" in get_element_text(elem)
             ]
             assert len(size_elements) == 1
 
@@ -280,11 +295,11 @@ async def test_project_information_with_data():
             # Check that project information is displayed
             title_elements = app.query("#project-title")
             assert len(title_elements) >= 1
-            assert "Test Project" in str(title_elements[0].render().plain)
+            assert "Test Project" in get_element_text(title_elements[0])
 
             description_elements = app.query("#project-description")
             assert len(description_elements) >= 1
-            assert "A test project for unit testing" in str(description_elements[0].render().plain)
+            assert "A test project for unit testing" in get_element_text(description_elements[0])
 
             # Check that table is present
             table_elements = app.query("#project-information-table")
@@ -313,7 +328,7 @@ async def test_project_information_without_data():
             # Check that "No project selected" message is displayed
             text_elements = app.query("DDSTextItem")
             no_project_elements = [
-                elem for elem in text_elements if "No project selected" in str(elem.render().plain)
+                elem for elem in text_elements if "No project selected" in get_element_text(elem)
             ]
             assert len(no_project_elements) >= 1
 
@@ -340,7 +355,7 @@ async def test_project_information_reactive_updates():
             # Initially no data
             text_elements = app.query("DDSTextItem")
             no_project_elements = [
-                elem for elem in text_elements if "No project selected" in str(elem.render().plain)
+                elem for elem in text_elements if "No project selected" in get_element_text(elem)
             ]
             assert len(no_project_elements) >= 1
 
@@ -352,7 +367,7 @@ async def test_project_information_reactive_updates():
             # Check that content updated
             title_elements = app.query("#project-title")
             assert len(title_elements) >= 1
-            assert "Test Project" in str(title_elements[0].render().plain)
+            assert "Test Project" in get_element_text(title_elements[0])
 
             # Remove project data
             app.project_information = None
@@ -361,7 +376,7 @@ async def test_project_information_reactive_updates():
             # Check that it reverted to "No project selected"
             text_elements = app.query("DDSTextItem")
             no_project_elements = [
-                elem for elem in text_elements if "No project selected" in str(elem.render().plain)
+                elem for elem in text_elements if "No project selected" in get_element_text(elem)
             ]
             assert len(no_project_elements) >= 1
 
@@ -620,7 +635,7 @@ async def test_full_project_information_workflow():
             # Initially no project information
             text_elements = app.query("DDSTextItem")
             no_project_elements = [
-                elem for elem in text_elements if "No project selected" in str(elem.render().plain)
+                elem for elem in text_elements if "No project selected" in get_element_text(elem)
             ]
             assert len(no_project_elements) >= 1
 
@@ -633,11 +648,11 @@ async def test_full_project_information_workflow():
 
             title_elements = app.query("#project-title")
             assert len(title_elements) >= 1
-            assert "Test Project" in str(title_elements[0].render().plain)
+            assert "Test Project" in get_element_text(title_elements[0])
 
             description_elements = app.query("#project-description")
             assert len(description_elements) >= 1
-            assert "A test project for unit testing" in str(description_elements[0].render().plain)
+            assert "A test project for unit testing" in get_element_text(description_elements[0])
 
             # Verify table is present and functional
             table_elements = app.query("#project-information-table")

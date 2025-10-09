@@ -1232,6 +1232,7 @@ def test_download_all_with_non_tuple_result():
 
         assert result is True
 
+
 @pytest.mark.skip("Skipping timeout error test")
 def test_download_all_with_timeout_error():
     """Test download_all with timeout error."""
@@ -1266,6 +1267,7 @@ def test_download_all_with_timeout_error():
 
                 # Should handle timeout gracefully
                 assert result is False
+
 
 @pytest.mark.skip("Skipping general exception test")
 def test_download_all_with_general_exception():
@@ -1424,6 +1426,7 @@ def test_download_all_cancellation_during_execution_detailed():
 
         assert result is False
 
+
 def test_download_all_future_cancelled_detailed():
     """Test download_all when future is cancelled with detailed handling."""
     with patch(
@@ -1460,6 +1463,7 @@ def test_download_all_future_cancelled_detailed():
 
                 # Should handle cancelled future gracefully
                 assert result is False
+
 
 def test_download_all_exception_handling_detailed():
     """Test download_all exception handling with detailed scenarios."""
@@ -1499,6 +1503,7 @@ def test_download_all_exception_handling_detailed():
                 # Should handle exception gracefully and return False
                 assert result is False
 
+
 def test_download_file_exception_handling():
     """Test download_file exception handling."""
     with patch(
@@ -1512,7 +1517,9 @@ def test_download_file_exception_handling():
         mock_data_getter.filehandler.data = {
             "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
         }
-        mock_data_getter.download_and_verify.side_effect = dds_cli.exceptions.DownloadError("Download failed")
+        mock_data_getter.download_and_verify.side_effect = dds_cli.exceptions.DownloadError(
+            "Download failed"
+        )
         mock_data_getter_class.return_value = mock_data_getter
         mock_directory_class.return_value = MagicMock()
 
@@ -1524,6 +1531,7 @@ def test_download_file_exception_handling():
         assert result.success is False
         assert result.file_path == "file1.txt"
         assert result.error_message == "Download failed"
+
 
 def test_cancel_download_exception_handling():
     """Test cancel_download exception handling."""
@@ -1542,6 +1550,7 @@ def test_cancel_download_exception_handling():
 
         assert downloader._cancelled is True
 
+
 def test_update_progress_exception_handling():
     """Test _update_progress exception handling."""
     downloader = ProjectDownloader(project="test-project")
@@ -1551,6 +1560,7 @@ def test_update_progress_exception_handling():
 
     # Should not raise exception
     downloader._update_progress("downloading", "Test message")
+
 
 def test_report_error_exception_handling():
     """Test _report_error exception handling."""
@@ -1562,6 +1572,7 @@ def test_report_error_exception_handling():
 
     # Should not raise exception
     downloader._report_error("Test error")
+
 
 def test_context_manager_exit_exception():
     """Test context manager exit with exception."""
@@ -1898,6 +1909,7 @@ def test_callback_progress_trigger_progress_percentage_change():
     # Should call callback due to percentage change
     progress.progress_callback.assert_called_once()
 
+
 @pytest.mark.skip("Skipping source conflict test")
 def test_initialize_validation_get_all_with_source_conflict(
     mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
@@ -2168,6 +2180,7 @@ def test_download_all_future_cancelled(
             # Should handle cancelled future gracefully
             assert result is False
 
+
 @pytest.mark.skip("Skipping future exception test")
 @patch(
     "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
@@ -2262,6 +2275,7 @@ def test_download_all_timeout_error(
             # Should handle timeout gracefully
             assert result is False
 
+
 @pytest.mark.skip("Skipping general exception test")
 @patch(
     "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
@@ -2288,4 +2302,3 @@ def test_download_all_general_exception(
             # Should handle exception gracefully
             mock_report_error.assert_called()
             assert result is False
-

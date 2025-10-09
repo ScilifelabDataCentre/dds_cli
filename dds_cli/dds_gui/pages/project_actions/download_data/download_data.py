@@ -1,5 +1,8 @@
 """Download data widget for the DDS GUI."""
 
+from typing import Any, Optional
+import threading
+
 from textual.app import ComposeResult
 from textual.widget import Widget
 from textual import events
@@ -15,14 +18,13 @@ from dds_cli.dds_gui.pages.project_actions.download_data.project_downloader impo
     DownloadResult,
     ProjectDownloader,
 )
-from typing import Any, Optional
-import threading
 
 
 class DownloadData(Widget):
     """A widget for downloading data."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the DownloadData widget."""
         super().__init__(*args, **kwargs)
         self.downloader: Optional[ProjectDownloader] = None
         self.download_thread: Optional[threading.Thread] = None
@@ -33,6 +35,7 @@ class DownloadData(Widget):
     error_files = reactive(0)
     total_files = reactive(0)
     status = reactive(None)
+    progress_status = reactive(None)
 
     # Local reactive attributes that mirror app state and trigger recomposition
     selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
@@ -98,7 +101,7 @@ class DownloadData(Widget):
         if self.downloader:
             try:
                 self.downloader.cancel_download()
-            except Exception as e:
+            except Exception:
                 pass  # Silently handle errors during unmount
 
         # Wait for download thread to finish (with timeout)
@@ -120,7 +123,8 @@ class DownloadData(Widget):
             if files_label:
                 if self.error_files > 0:
                     files_label.update(
-                        f"Files: {files_downloaded}/{self.total_files} (❌ Errors: {self.error_files})"
+                        f"Files: {files_downloaded}/{self.total_files} "
+                        f"(❌ Errors: {self.error_files})"
                     )
                 else:
                     files_label.update(f"Files: {files_downloaded}/{self.total_files}")
@@ -134,15 +138,14 @@ class DownloadData(Widget):
             if files_label:
                 if error_files > 0:
                     files_label.update(
-                        f"Files: {self.files_downloaded}/{self.total_files} (❌ Errors: {error_files})"
+                        f"Files: {self.files_downloaded}/{self.total_files} "
+                        f"(❌ Errors: {error_files})"
                     )
                 else:
                     files_label.update(f"Files: {self.files_downloaded}/{self.total_files}")
 
             # Show error label when first error occurs
-            if error_files > 0 and not self.show_error_label:
-                self.show_error_label = True
-                self._mount_error_label()
+            # Note: Error label functionality not yet implemented
         except Exception:
             pass  # Label might not exist yet
 
@@ -153,7 +156,8 @@ class DownloadData(Widget):
             if files_label:
                 if self.error_files > 0:
                     files_label.update(
-                        f"Files: {self.files_downloaded}/{total_files} (❌ Errors: {self.error_files})"
+                        f"Files: {self.files_downloaded}/{total_files} "
+                        f"(❌ Errors: {self.error_files})"
                     )
                 else:
                     files_label.update(f"Files: {self.files_downloaded}/{total_files}")
@@ -176,7 +180,7 @@ class DownloadData(Widget):
                 self.query_one("#progress-bar", None).classes = "enabled"
                 self.query_one("#files-label", None).classes = "enabled"
                 self._start_download()
-        except Exception as e:
+        except Exception:
             pass  # Silently handle errors
 
     def _start_download(self) -> None:
@@ -196,7 +200,6 @@ class DownloadData(Widget):
         self.total_files = 0
         self.is_downloading = True
         self._stop_download.clear()
-
 
         # Start initialization and download in background thread
         project_id = self.selected_project_id
@@ -244,8 +247,8 @@ class DownloadData(Widget):
             else:
                 self._update_status("Download failed")
 
-        except Exception as e:
-            self._update_status(f"Download failed: {e}")
+        except Exception as exc:
+            self._update_status(f"Download failed: {exc}")
         finally:
             # Reset state on main thread
             try:
@@ -262,12 +265,12 @@ class DownloadData(Widget):
                     # Direct assignment as fallback
                     self.is_downloading = False
                     self.download_thread = None
-            except Exception as e:
+            except Exception:
                 # Fallback: try direct assignment
                 try:
                     self.is_downloading = False
                     self.download_thread = None
-                except Exception as e2:
+                except Exception:
                     pass  # Silently handle final fallback error
 
     def _update_status(self, status: str) -> None:
@@ -282,10 +285,11 @@ class DownloadData(Widget):
 
         try:
             self.app.call_from_thread(lambda: setattr(self, "status", status))
-        except Exception as e:
+        except Exception as exc:
             # Don't try fallback assignment if app is not running
             if any(
-                phrase in str(e).lower() for phrase in ["not running", "no active app", "no screen"]
+                phrase in str(exc).lower()
+                for phrase in ["not running", "no active app", "no screen"]
             ):
                 return
 
@@ -307,9 +311,10 @@ class DownloadData(Widget):
         try:
             # Update UI on main thread
             self.app.call_from_thread(self._update_progress_ui, progress)
-        except Exception as e:
+        except Exception as exc:
             if any(
-                phrase in str(e).lower() for phrase in ["not running", "no active app", "no screen"]
+                phrase in str(exc).lower()
+                for phrase in ["not running", "no active app", "no screen"]
             ):
                 return
 
@@ -332,20 +337,28 @@ class DownloadData(Widget):
             pass
 
         # Send notifications when the status changes
-        try: 
+        try:
             if self.progress_status == "preparing" and not self.status == "preparing":
                 self.app.notify("⏳ Preparing to download project content", severity="info")
                 self.status = "preparing"
-            elif self.progress_status == "completed" and self.progress == 100 and not self.status == "completed":
-                self.app.notify("✅ Project content downloaded successfully", severity="info")  
+            elif (
+                self.progress_status == "completed"
+                and self.progress == 100
+                and not self.status == "completed"
+            ):
+                self.app.notify("✅ Project content downloaded successfully", severity="info")
                 self.status = "completed"
         except Exception:
             pass
 
-        #Send error notifications when the status changes
+        # Send error notifications when the status changes
         try:
             if self.error_files == 1 and not self.status == "error":
-                self.app.notify("⚠️ Error downloading project content, please contact support", severity="error", timeout=10)
+                self.app.notify(
+                    "⚠️ Error downloading project content, please contact support",
+                    severity="error",
+                    timeout=10,
+                )
                 self.status = "error"
         except Exception:
             pass

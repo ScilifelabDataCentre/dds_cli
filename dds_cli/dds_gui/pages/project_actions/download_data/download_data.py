@@ -340,8 +340,8 @@ class DownloadData(Widget):
         self._send_progress_notifications(progress)
 
     def _send_progress_notifications(
-        self, progress: DownloadProgress
-    ) -> None:  # pylint: disable=unused-argument
+        self, progress: DownloadProgress  # pylint: disable=unused-argument
+    ) -> None:
         """Send appropriate notifications based on progress status."""
 
         def send_notifications():

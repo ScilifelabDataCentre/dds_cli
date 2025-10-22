@@ -748,7 +748,7 @@ class ProjectDownloader:
                 self._is_downloading = False
                 if self._getter:
                     self._getter.stop_doing = True
-            except Exception as final_error:
+            except Exception as final_error:  # pylint: disable=broad-exception-caught
                 LOG.error("Error setting cancellation flags: %s", final_error)
         except Exception as error:  # pylint: disable=broad-exception-caught
             LOG.error("Unexpected error during download cancellation: %s", error)

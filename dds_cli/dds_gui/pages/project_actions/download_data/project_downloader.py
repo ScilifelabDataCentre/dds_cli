@@ -342,7 +342,7 @@ class ProjectDownloader:
             LOG.warning("Callback execution failed due to DDS error: %s", error)
         except OSError as error:
             LOG.warning("Callback execution failed due to OS error: %s", error)
-        except Exception as error: # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-exception-caught
             # Don't log warnings for app shutdown errors as they're expected during shutdown
             error_msg = str(error).lower()
             if not any(
@@ -462,7 +462,7 @@ class ProjectDownloader:
             LOG.error("Initialization failed: %s", str(error))
             self._report_error(f"Initialization failed: {str(error)}")
             return False
-        except Exception as error: # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-exception-caught
             LOG.error("Unexpected error during initialization: %s", str(error))
             self._report_error(f"Unexpected initialization error: {str(error)}")
             return False
@@ -624,9 +624,9 @@ class ProjectDownloader:
                         ) as error:
                             LOG.error("Download error for file %s: %s", file_path, str(error))
                             self._report_error(f"Download error: {str(error)}")
-                        except Exception as error: # pylint: disable=broad-exception-caught
+                        except Exception as error:  # pylint: disable=broad-exception-caught
                             LOG.error(
-                                f"Unexpected error downloading file {file_path}: {str(error)}"
+                                "Unexpected error downloading file %s: %s", file_path, str(error)
                             )
                             self._report_error(f"Unexpected download error: {str(error)}")
 
@@ -656,7 +656,7 @@ class ProjectDownloader:
             LOG.error("Download operation failed: %s", str(error))
             self._report_error(f"Download failed: {str(error)}")
             return False
-        except Exception as error: # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-exception-caught
             LOG.error("Unexpected error during download operation: %s", str(error))
             self._report_error(f"Unexpected download error: {str(error)}")
             return False
@@ -710,7 +710,7 @@ class ProjectDownloader:
         ) as error:
             LOG.error("Single file download error for %s: %s", file_path, str(error))
             return DownloadResult(success=False, file_path=file_path, error_message=str(error))
-        except Exception as error: # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-exception-caught
             LOG.error("Unexpected error downloading single file %s: %s", file_path, str(error))
             return DownloadResult(
                 success=False, file_path=file_path, error_message=f"Unexpected error: {str(error)}"
@@ -737,8 +737,8 @@ class ProjectDownloader:
                 self._update_progress("error", "Download cancelled by user")
             except (OSError, RuntimeError) as error:
                 LOG.warning("Error updating progress during cancellation: %s", error)
-            except Exception as error: # pylint: disable=broad-exception-caught
-                LOG.warning(f"Unexpected error updating progress during cancellation: {error}")
+            except Exception as error:  # pylint: disable=broad-exception-caught
+                LOG.warning("Unexpected error updating progress during cancellation: %s", error)
 
         except (OSError, RuntimeError) as error:
             LOG.error("Error during download cancellation: %s", error)
@@ -750,7 +750,7 @@ class ProjectDownloader:
                     self._getter.stop_doing = True
             except Exception as final_error:
                 LOG.error("Error setting cancellation flags: %s", final_error)
-        except Exception as error: # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-exception-caught
             LOG.error("Unexpected error during download cancellation: %s", error)
             # Still set the flags even if there's an error
             try:
@@ -758,7 +758,7 @@ class ProjectDownloader:
                 self._is_downloading = False
                 if self._getter:
                     self._getter.stop_doing = True
-            except Exception as final_error: # pylint: disable=broad-exception-caught   
+            except Exception as final_error:  # pylint: disable=broad-exception-caught
                 LOG.error("Error setting cancellation flags: %s", final_error)
 
     def get_file_list(self) -> List[str]:
@@ -871,7 +871,7 @@ class ProjectDownloader:
 
         except (OSError, RuntimeError) as error:
             LOG.warning("Error updating progress: %s", error)
-        except Exception as error: # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-exception-caught
             LOG.warning("Unexpected error updating progress: %s", error)
 
     def _report_error(self, message: str) -> None:

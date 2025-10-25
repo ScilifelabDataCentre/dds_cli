@@ -1,0 +1,16 @@
+name: "Sphinx build"
+description: "Build Sphinx documentation (HTML or PDF)"
+inputs:
+  build-command:
+    description: "Command to build the documentation (e.g., make html)"
+    required: true
+  docs-folder:
+    description: "Path to the documentation folder relative to the repository root"
+    required: false
+    default: docs
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  args:
+    - ${{ inputs.build-command }}
+    - ${{ inputs.docs-folder }}

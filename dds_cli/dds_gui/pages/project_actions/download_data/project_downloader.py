@@ -553,9 +553,7 @@ class ProjectDownloader:
                                     completed_files=self._completed_files,
                                     error_files=self._error_files,
                                     current_file_progress=0.0,
-                                    overall_progress=(
-                                        self._completed_files + self._error_files
-                                    )
+                                    overall_progress=(self._completed_files + self._error_files)
                                     / max(self._total_files, 1),
                                     overall_percentage=(
                                         (self._completed_files + self._error_files)

@@ -533,15 +533,66 @@ class ProjectDownloader:
                     new_tasks = 0
 
                     for future in done:
+                        file_path = self._download_threads.pop(future, None)
+
+                        if file_path is None:
+                            continue
+
                         # Check if future was cancelled
                         if future.cancelled():
+                            self._error_files += 1
+                            cancel_message = "Download cancelled"
+
+                            # Update progress with cancellation information
+                            self._update_download_progress(file_path)
+
+                            if self._progress_callback:
+                                final_progress = DownloadProgress(
+                                    current_file=file_path,
+                                    total_files=self._total_files,
+                                    completed_files=self._completed_files,
+                                    error_files=self._error_files,
+                                    current_file_progress=0.0,
+                                    overall_progress=(
+                                        self._completed_files + self._error_files
+                                    )
+                                    / max(self._total_files, 1),
+                                    overall_percentage=(
+                                        (self._completed_files + self._error_files)
+                                        / max(self._total_files, 1)
+                                    )
+                                    * 100.0,
+                                    status="cancelled",
+                                    error_message=cancel_message,
+                                    bytes_downloaded=0,
+                                    total_bytes=self._getter.filehandler.data[file_path][
+                                        "size_stored"
+                                    ],
+                                )
+                                self.safe_callback_execution(
+                                    lambda progress=final_progress: self._progress_callback(
+                                        progress
+                                    )
+                                )
+
+                            if self._file_completed_callback:
+                                download_result = DownloadResult(
+                                    success=False,
+                                    file_path=str(file_path),
+                                    error_message=cancel_message,
+                                )
+                                self.safe_callback_execution(
+                                    lambda result=download_result: self._file_completed_callback(
+                                        result
+                                    )
+                                )
+
+                            new_tasks += 1
                             continue
 
                         # Check if we should stop due to cancellation
                         if self._cancelled or self._getter.stop_doing:
                             break
-
-                        file_path = self._download_threads.pop(future)
 
                         try:
                             result = future.result()

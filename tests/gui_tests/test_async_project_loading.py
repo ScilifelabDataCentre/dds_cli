@@ -8,6 +8,7 @@ from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
 from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
+from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
 from textual.widgets import LoadingIndicator
 
 
@@ -91,8 +92,8 @@ TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 # Test data
 MOCK_PROJECTS = [
-    {"Project ID": "project-001", "Title": "Project Alpha"},
-    {"Project ID": "project-002", "Title": "Project Beta"},
+    {"Project ID": "project-001", "Title": "Project Alpha", "Access": True},
+    {"Project ID": "project-002", "Title": "Project Beta", "Access": True},
 ]
 
 
@@ -214,12 +215,13 @@ async def test_projects_load_after_authentication():
             assert app.project_list is None, "Project list should be None initially"
 
             # Simulate project loading completion
-            app.project_list = MOCK_PROJECTS
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             app.projects_loading = False
             await pilot.pause()
 
             # Verify the app state is correct after loading
-            assert app.project_list == MOCK_PROJECTS, "Project list should be set"
+            assert app.project_list is not None, "Project list should be set"
+            assert len(app.project_list.projects) == 2, "Project list should have 2 projects"
             assert app.projects_loading is False, "Projects loading should be False"
 
 
@@ -323,7 +325,6 @@ async def test_async_project_loading_error_handling():
             await pilot.pause()
 
             # Wait for reactive changes to propagate
-            await wait_for_reactive_change(app, pilot, "project_list", None)
             await wait_for_reactive_change(app, pilot, "projects_loading", False)
 
             # Verify error state
@@ -376,16 +377,16 @@ async def test_loading_state_transitions():
             assert app.project_list is None, "Project list should be None initially"
 
             # Test 2: Loading -> Projects loaded (should show selector)
-            app.project_list = MOCK_PROJECTS
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             app.projects_loading = False
             await pilot.pause()
 
             # Wait for reactive changes to propagate
-            await wait_for_reactive_change(app, pilot, "project_list", MOCK_PROJECTS)
             await wait_for_reactive_change(app, pilot, "projects_loading", False)
 
             # Verify projects loaded state
-            assert app.project_list == MOCK_PROJECTS, "Project list should be set"
+            assert app.project_list is not None, "Project list should be set"
+            assert len(app.project_list.projects) == 2, "Project list should have 2 projects"
             assert app.projects_loading is False, "Projects loading should be False"
             assert app.auth_status is True, "Auth status should still be True"
 

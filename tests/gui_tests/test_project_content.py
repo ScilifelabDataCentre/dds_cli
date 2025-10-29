@@ -9,6 +9,7 @@ from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
 from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
 from dds_cli.dds_gui.models.project_content import ProjectContentData, ProjectWithContent
+from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
 import dds_cli.exceptions
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
@@ -19,8 +20,8 @@ TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 # Project list data (needed for select widget validation)
 MOCK_PROJECTS = [
-    {"Project ID": "test-project", "Title": "Test Project"},
-    {"Project ID": "empty-project", "Title": "Empty Project"},
+    {"Project ID": "test-project", "Title": "Test Project", "Access": True},
+    {"Project ID": "empty-project", "Title": "Empty Project", "Access": True},
 ]
 
 # Project content structures
@@ -268,50 +269,57 @@ def test_project_content_data_empty_children():
 # =================================================================================
 
 
-def test_project_content_widget_compose_methods():
+@pytest.mark.asyncio
+async def test_project_content_widget_compose_methods():
     """Test that ProjectContent widget's compose method handles all states correctly."""
 
-    # Test 1: Loading state
-    widget = ProjectContent(title="Test")
-    widget.is_loading = True
-    widget.project_content = None
-    widget.selected_project_id = "test-project"
+    app = DDSApp(token_path=str(TOKEN_PATH))
+    app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
 
-    # Should show LoadingIndicator when loading
-    content_widgets = list(widget.compose())
-    assert len(content_widgets) == 1
-    assert isinstance(content_widgets[0], LoadingIndicator)
+    async with app.run_test() as pilot:
+        # Test 1: Loading state
+        widget = ProjectContent(title="Test")
+        app.mount(widget)
+        await pilot.pause()
+        widget.is_loading = True
+        widget.project_content = None
+        widget.selected_project_id = "test-project"
 
-    # Test 2: Content loaded state
-    widget.is_loading = False
-    widget.project_content = ProjectContentData.from_dict(MOCK_PROJECT_CONTENT, "test-project")
+        # Should show LoadingIndicator when loading
+        content_widgets = list(widget.compose())
+        assert len(content_widgets) == 1
+        assert isinstance(content_widgets[0], LoadingIndicator)
 
-    # Should show TreeView when content is loaded
-    content_widgets = list(widget.compose())
-    assert len(content_widgets) == 1
-    assert isinstance(content_widgets[0], TreeView)
+        # Test 2: Content loaded state
+        widget.is_loading = False
+        widget.project_content = ProjectContentData.from_dict(MOCK_PROJECT_CONTENT, "test-project")
 
-    # Test 3: No data found state
-    widget.is_loading = False
-    widget.project_content = None
-    widget.selected_project_id = "test-project"
+        # Should show TreeView when content is loaded
+        content_widgets = list(widget.compose())
+        assert len(content_widgets) == 1
+        assert isinstance(content_widgets[0], TreeView)
 
-    # Should show "No data found" message
-    content_widgets = list(widget.compose())
-    assert len(content_widgets) == 1
-    assert isinstance(content_widgets[0], Label)
-    assert "No data found for project test-project" in str(content_widgets[0].render().plain)
+        # Test 3: No data found state
+        widget.is_loading = False
+        widget.project_content = None
+        widget.selected_project_id = "test-project"
 
-    # Test 4: No project selected state
-    widget.is_loading = False
-    widget.project_content = None
-    widget.selected_project_id = None
+        # Should show "No data found" message
+        content_widgets = list(widget.compose())
+        assert len(content_widgets) == 1
+        assert isinstance(content_widgets[0], Label)
+        assert "No data found for project test-project" in str(content_widgets[0].render().plain)
 
-    # Should show "No project selected" message
-    content_widgets = list(widget.compose())
-    assert len(content_widgets) == 1
-    assert isinstance(content_widgets[0], Label)
-    assert "No project selected" in str(content_widgets[0].render().plain)
+        # Test 4: No project selected state
+        widget.is_loading = False
+        widget.project_content = None
+        widget.selected_project_id = None
+
+        # Should show "No project selected" message
+        content_widgets = list(widget.compose())
+        assert len(content_widgets) == 1
+        assert isinstance(content_widgets[0], Label)
+        assert "No project selected" in str(content_widgets[0].render().plain)
 
 
 # =================================================================================
@@ -348,6 +356,7 @@ async def test_no_project_selected_state():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             # Don't select any project
@@ -391,6 +400,7 @@ async def test_content_loading_and_display():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             # Select a valid project from the project list
@@ -446,6 +456,7 @@ async def test_empty_project_content():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             app.set_selected_project_id("empty-project")
@@ -498,6 +509,7 @@ async def test_no_data_error_handling():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             app.set_selected_project_id("test-project")
@@ -558,6 +570,7 @@ async def test_api_error_during_content_fetch():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             app.set_selected_project_id("test-project")
@@ -601,6 +614,7 @@ async def test_project_selection_change():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             widget = ProjectContent(title="Project Content")
@@ -677,6 +691,7 @@ async def test_tree_node_selection_event():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             app.set_selected_project_id("test-project")
@@ -777,6 +792,7 @@ async def test_multiple_error_types():
 
             async with app.run_test() as pilot:
                 app.set_auth_status(True)
+                app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
                 await pilot.pause()
 
                 app.set_selected_project_id("test-project")
@@ -835,6 +851,7 @@ async def test_large_project_structure():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             app.set_selected_project_id("test-project")
@@ -882,6 +899,7 @@ async def test_widget_state_synchronization():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             widget = ProjectContent(title="Project Content")
@@ -938,6 +956,7 @@ async def test_project_deselection():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             # Load content first

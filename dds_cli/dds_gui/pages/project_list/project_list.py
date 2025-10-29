@@ -22,7 +22,7 @@ class ProjectList(DDSContainer):
             elif self.app.projects_loading:
                 # Show loading indicator when fetching projects
                 yield LoadingIndicator()
-            elif self.app.project_list:
+            elif self.app.project_list and self.app.project_list.projects:
                 # Show project selector when projects are loaded
                 yield DDSTextItem(
                     "Select a project to view the project content, \
@@ -78,4 +78,6 @@ class ProjectList(DDSContainer):
 
     def extract_project_ids(self) -> List[str]:
         """Extract the project IDs from the project list."""
+        if not self.app.project_list or not self.app.project_list.projects:
+            return []
         return list(self.app.project_list.projects.keys())

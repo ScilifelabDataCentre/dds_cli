@@ -5,14 +5,15 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from dds_cli.dds_gui.dds_state_manager import DDSStateManager
+from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
 import dds_cli.exceptions
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 # Test data
 MOCK_PROJECTS = [
-    {"Project ID": "project-001", "Title": "Project Alpha"},
-    {"Project ID": "project-002", "Title": "Project Beta"},
+    {"Project ID": "project-001", "Title": "Project Alpha", "Access": True},
+    {"Project ID": "project-002", "Title": "Project Beta", "Access": True},
 ]
 
 
@@ -24,7 +25,8 @@ MOCK_PROJECTS = [
 @pytest.mark.asyncio
 async def test_sync_fetch_projects():
     """Test synchronous project fetching for initialization."""
-
+    # NOTE: fetch_projects() method was removed, only fetch_projects_async() exists now
+    # This test is kept for reference but tests async method instead
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to return projects
         mock_data_lister_instance = MagicMock()
@@ -34,19 +36,21 @@ async def test_sync_fetch_projects():
         app = DDSStateManager()
 
         async with app.run_test() as pilot:
-            # Call sync fetch_projects
-            app.fetch_projects()
+            # Call async fetch_projects_async (sync method no longer exists)
+            app.fetch_projects_async()
             await pilot.pause()
 
             # Should have projects loaded
-            assert app.project_list == MOCK_PROJECTS, "Projects should be loaded synchronously"
-            assert app.projects_loading is False, "Loading state should be False after sync fetch"
+            assert app.project_list is not None, "Projects should be loaded"
+            assert len(app.project_list.projects) == 2, "Should have 2 projects"
+            assert app.projects_loading is False, "Loading state should be False after fetch"
 
 
 @pytest.mark.asyncio
 async def test_sync_fetch_projects_error():
     """Test synchronous project fetching error handling."""
-
+    # NOTE: fetch_projects() method was removed, only fetch_projects_async() exists now
+    # This test is kept for reference but tests async method instead
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         # Mock DataLister to raise an error
         mock_data_lister_instance = MagicMock()
@@ -64,8 +68,8 @@ async def test_sync_fetch_projects_error():
         app.notify = capture_notify
 
         async with app.run_test() as pilot:
-            # Call sync fetch_projects
-            app.fetch_projects()
+            # Call async fetch_projects_async (sync method no longer exists)
+            app.fetch_projects_async()
             await pilot.pause()
 
             # Should handle error gracefully
@@ -93,7 +97,8 @@ async def test_async_fetch_projects():
             await pilot.pause()
 
             # Should have projects loaded
-            assert app.project_list == MOCK_PROJECTS, "Projects should be loaded asynchronously"
+            assert app.project_list is not None, "Projects should be loaded asynchronously"
+            assert len(app.project_list.projects) == 2, "Should have 2 projects"
             assert app.projects_loading is False, "Loading state should be False after async fetch"
 
 
@@ -212,7 +217,8 @@ async def test_mounted_flag_prevents_initial_fetch():
             await pilot.pause()
 
             # Should now fetch projects
-            assert app.project_list == MOCK_PROJECTS, "Projects should be fetched when mounted"
+            assert app.project_list is not None, "Projects should be fetched when mounted"
+            assert len(app.project_list.projects) == 2, "Should have 2 projects"
 
 
 @pytest.mark.asyncio
@@ -231,7 +237,8 @@ async def test_loading_state_callback_methods():
 
         # Test _on_projects_loaded
         app._on_projects_loaded(MOCK_PROJECTS)
-        assert app.project_list == MOCK_PROJECTS, "Should set project list"
+        assert app.project_list is not None, "Should set project list"
+        assert len(app.project_list.projects) == 2, "Should have 2 projects"
         assert app.projects_loading is False, "Should clear loading state"
 
         # Test _on_projects_error
@@ -262,19 +269,21 @@ async def test_dual_fetch_methods_coexistence():
         app = DDSStateManager()
 
         async with app.run_test() as pilot:
-            # Test sync method
-            app.fetch_projects()
+            # Test async method (sync method was removed)
+            app.fetch_projects_async()
             await pilot.pause()
-            assert app.project_list == MOCK_PROJECTS, "Sync method should work"
+            assert app.project_list is not None, "Async method should work"
+            assert len(app.project_list.projects) == 2, "Should have 2 projects"
 
-            # Clear and test async method
+            # Clear and test async method again
             app.project_list = None
             app.fetch_projects_async()
             await pilot.pause()
-            assert app.project_list == MOCK_PROJECTS, "Async method should work"
+            assert app.project_list is not None, "Async method should work again"
+            assert len(app.project_list.projects) == 2, "Should have 2 projects"
 
-            # Both methods should produce the same result
-            assert app.projects_loading is False, "Loading state should be False after both methods"
+            # Loading state should be False after fetch
+            assert app.projects_loading is False, "Loading state should be False after async fetch"
 
 
 @pytest.mark.asyncio

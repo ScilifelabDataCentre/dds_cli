@@ -8,7 +8,7 @@ from textual.widgets import Label, Tree, LoadingIndicator
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
 from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
-from dds_cli.dds_gui.models.project import ProjectContentData, Project
+from dds_cli.dds_gui.models.project_content import ProjectContentData, ProjectWithContent
 import dds_cli.exceptions
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
@@ -97,9 +97,9 @@ def get_content_widget(widget):
 
 def test_project_from_dict():
     """Test Project.from_dict method."""
-    project = Project.from_dict(MOCK_PROJECT_DATA)
+    project = ProjectWithContent.from_dict(MOCK_PROJECT_DATA)
 
-    assert isinstance(project, Project)
+    assert isinstance(project, ProjectWithContent)
     assert len(project.project_content) == 2
     assert all(isinstance(content, ProjectContentData) for content in project.project_content)
 
@@ -111,9 +111,9 @@ def test_project_from_dict():
 def test_project_from_dict_empty():
     """Test Project.from_dict with empty data."""
     empty_data = {}
-    project = Project.from_dict(empty_data)
+    project = ProjectWithContent.from_dict(empty_data)
 
-    assert isinstance(project, Project)
+    assert isinstance(project, ProjectWithContent)
     assert len(project.project_content) == 0
 
 

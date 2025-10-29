@@ -7,7 +7,7 @@ from textual.widget import Widget
 from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
 
-from dds_cli.dds_gui.models.project import ProjectContentData
+from dds_cli.dds_gui.models.project_content import ProjectContentData
 
 
 class TreeView(Widget):

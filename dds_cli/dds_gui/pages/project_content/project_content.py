@@ -7,7 +7,7 @@ from textual.reactive import reactive
 
 from dds_cli.dds_gui.components.dds_container import DDSContainer
 from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
-from dds_cli.dds_gui.models.project import ProjectContentData
+from dds_cli.dds_gui.models.project_content import ProjectContentData
 
 
 class ProjectContent(DDSContainer):
@@ -25,14 +25,21 @@ class ProjectContent(DDSContainer):
     selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
     is_loading: reactive[bool] = reactive(False, recompose=True)
 
+
     def compose(self) -> ComposeResult:
+        
         """Compose the widget based on current state."""
+
         if self.project_content:
             # Show tree view when we have content
             yield TreeView(self.project_content)
         elif self.is_loading:
             # Show loading when project selected but no content yet
             yield LoadingIndicator()
+
+        elif self.selected_project_id and self.app.project_list.projects.get(self.selected_project_id).access is False:
+            # Show no access message when project selected but no access
+            yield Label(f"You do not have access to view the content of project {self.selected_project_id}")
         elif self.selected_project_id and not self.is_loading and not self.project_content:
             # Show no data message when project selected but no content found
             yield Label(f"No data found for project {self.selected_project_id}")

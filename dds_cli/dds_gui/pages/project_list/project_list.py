@@ -78,8 +78,4 @@ class ProjectList(DDSContainer):
 
     def extract_project_ids(self) -> List[str]:
         """Extract the project IDs from the project list."""
-        return [
-            p["Project ID"]
-            for p in self.app.project_list or []
-            if ("Project ID" in p and isinstance(p["Project ID"], str) and p["Project ID"].strip())
-        ]
+        return list(self.app.project_list.projects.keys())

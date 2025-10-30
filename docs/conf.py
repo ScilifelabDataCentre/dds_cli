@@ -88,8 +88,18 @@ latex_elements = {
 \setsansfont{Noto Sans}
 \setmonofont{Noto Sans Mono}
 
-% emoji font
-\newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz,Scale=MatchLowercase]
+% ---------------------------------------------------------------
+% Emoji font setup
+% ---------------------------------------------------------------
+
+\IfFontExistsTF{Noto Color Emoji}{
+  \newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz,Scale=MatchLowercase]
+}{
+  \newfontfamily\EmojiFont{Symbola}[Scale=MatchLowercase]
+}
+
+\newcommand{\emoji}[1]{{\EmojiFont #1}}
+
 
 % ---------------------------------------------------------------
 % Fallback - replace the emoji with text

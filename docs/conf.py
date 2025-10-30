@@ -69,3 +69,41 @@ html_theme_options = {
 html_static_path = ["_static"]
 
 html_css_files = ["custom.css"]
+
+# -- Options for LaTeX output ------------------------------------------------
+
+# LaTeX configuration for emoji support  
+latex_engine = 'lualatex'
+
+latex_elements = {
+    'preamble': r'''
+% ---------------------------------------------------------------
+% Unicode + emoji support with LuaLaTeX
+% ---------------------------------------------------------------
+\usepackage{fontspec}
+\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+
+% base text main fonts
+\setmainfont{Noto Serif}
+\setsansfont{Noto Sans}
+\setmonofont{Noto Sans Mono}
+
+% emoji font
+\newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz,Scale=MatchLowercase]
+
+% ---------------------------------------------------------------
+% Fallback - replace the emoji with text
+% ---------------------------------------------------------------
+\usepackage{newunicodechar}
+\newunicodechar{🚀}{\emoji{🚀}}
+\newunicodechar{🐛}{\emoji{🐛}}
+\newunicodechar{📄}{\emoji{📄}}
+\newunicodechar{🛡}{\emoji{🛡}}
+\newunicodechar{📌}{\emoji{📌}}
+\newunicodechar{␣}{\textvisiblespace}
+
+% ---------------------------------------------------------------
+% End of preamble
+% ---------------------------------------------------------------
+''',
+}

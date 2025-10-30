@@ -1669,7 +1669,7 @@ def test_callback_progress_trigger_percentage_change():
     # Set initial state
     progress.completed = 0
     progress._last_callback_time = time.time()
-    progress._last_callback_percentage = 0
+    progress._last_callback_progress = 0
 
     # Update to 10% (should trigger callback)
     progress.completed = 100
@@ -1691,7 +1691,7 @@ def test_callback_progress_trigger_time_throttling():
     # Set initial state
     progress.completed = 100
     progress._last_callback_time = time.time() - 1.0  # 1 second ago
-    progress._last_callback_percentage = 2  # 10%
+    progress._last_callback_progress = 10  # 10% (in 0-100 range)
 
     # Update to same percentage but enough time has passed
     progress._trigger_progress_callback()
@@ -1712,7 +1712,7 @@ def test_callback_progress_trigger_small_file():
     # Set initial state
     progress.completed = 0
     progress._last_callback_time = time.time()
-    progress._last_callback_percentage = 0
+    progress._last_callback_progress = 0
 
     # Update to 50 bytes (should trigger callback for small files)
     progress.completed = 50

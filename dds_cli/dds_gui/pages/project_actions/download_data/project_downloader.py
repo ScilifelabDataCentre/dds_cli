@@ -148,13 +148,19 @@ class CallbackProgress:
         ):
             return
 
-        # Calculate current file progress
+        # Calculate current file progress as a fraction (0.0 to 1.0)
         current_file_progress = self.completed / max(self.total_size, 1)
-        current_percentage = int(current_file_progress * 20)  # 5% increments instead of 1%
+        # Convert to integer percentage (0-100) with 1% increments
+        # Using int() truncates to floor, so this gives us 1% granularity:
+        # - 0.0-0.0099... -> 0%
+        # - 0.01-0.0199... -> 1%
+        # - 0.99-0.9999... -> 99%
+        # - Exactly 1.0 (when completed == total_size) -> 100%
+        current_percentage = int(current_file_progress * 100)
 
         # Trigger callback if:
         # 1. Enough time has passed (throttling), OR
-        # 2. Progress percentage has changed by at least 5%, OR
+        # 2. Progress percentage has changed by at least 1%, OR
         # 3. This is the first update (0% progress), OR
         # 4. This is the final update (100% progress), OR
         # 5. For small files, trigger less frequently based on bytes downloaded
@@ -162,7 +168,12 @@ class CallbackProgress:
         time_elapsed = current_time - self._last_callback_time
         progress_changed = current_percentage != self._last_callback_progress
 
-        # For small files (< 1MB), trigger callbacks less frequently
+        # For small files (< 1MB), trigger callbacks less frequently based on bytes
+        # Calculate how many bytes have been downloaded since the last callback by:
+        # 1. Getting the current bytes completed (self.completed)
+        # 2. Subtracting the bytes that were completed at the last callback
+        #    (calculated from the percentage stored: _last_callback_progress / 100 * total_size)
+        # Note: _last_callback_progress is in 0-100 range, so dividing by 100 gives us the fraction
         bytes_since_last_callback = self.completed - (
             self._last_callback_progress * self.total_size / 100
         )

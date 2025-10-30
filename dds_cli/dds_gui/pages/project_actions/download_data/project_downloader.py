@@ -83,7 +83,8 @@ class CallbackProgress:
         self.completed = 0
         self._lock = threading.Lock()
         self._last_callback_time = 0
-        self._callback_throttle = 0.1  # Minimum 100ms between callbacks for less frequent updates
+        self._callback_throttle = 0.1  # Time-based throttle trigger: minimum 100ms between callbacks if no other conditions trigger
+
         self._last_callback_progress = 0  # Track last reported progress percentage
 
     def add_task(self, description, total=None, _step=None, visible=True):

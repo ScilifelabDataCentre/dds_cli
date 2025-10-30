@@ -72,11 +72,11 @@ html_css_files = ["custom.css"]
 
 # -- Options for LaTeX output ------------------------------------------------
 
-# LaTeX configuration for emoji support  
-latex_engine = 'lualatex'
+# LaTeX configuration for emoji support
+latex_engine = "lualatex"
 
 latex_elements = {
-    'preamble': r'''
+    "preamble": r"""
 % ---------------------------------------------------------------
 % Unicode + emoji support with LuaLaTeX
 % ---------------------------------------------------------------
@@ -115,5 +115,5 @@ latex_elements = {
 % ---------------------------------------------------------------
 % End of preamble
 % ---------------------------------------------------------------
-''',
+""",
 }

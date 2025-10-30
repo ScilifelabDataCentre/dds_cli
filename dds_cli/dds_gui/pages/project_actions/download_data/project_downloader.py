@@ -83,7 +83,8 @@ class CallbackProgress:
         self.completed = 0
         self._lock = threading.Lock()
         self._last_callback_time = 0
-        self._callback_throttle = 0.1  # Time-based throttle trigger: minimum 100ms between callbacks if no other conditions trigger
+        self._callback_throttle = 0.1  # Time-based throttle trigger: minimum 100ms
+        # between callbacks if no other conditions trigger it.
 
         self._last_callback_progress = 0  # Track last reported progress percentage
 

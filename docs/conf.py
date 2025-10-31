@@ -71,49 +71,28 @@ html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
 # -- Options for LaTeX output ------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-latex-output
 
-# LaTeX configuration for emoji support
-latex_engine = "lualatex"
+latex_engine = "lualatex" # lualatex has better unicode support
 
 latex_elements = {
     "preamble": r"""
 % ---------------------------------------------------------------
-% Unicode + emoji support with LuaLaTeX
+% Font setup for emoji support
 % ---------------------------------------------------------------
 \usepackage{fontspec}
 \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
-
-% base text main fonts
-\setmainfont{Noto Serif}
-\setsansfont{Noto Sans}
-\setmonofont{Noto Sans Mono}
+\newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz,Scale=MatchLowercase]
 
 % ---------------------------------------------------------------
-% Emoji font setup
-% ---------------------------------------------------------------
-
-\IfFontExistsTF{Noto Color Emoji}{
-  \newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz,Scale=MatchLowercase]
-}{
-  \newfontfamily\EmojiFont{Symbola}[Scale=MatchLowercase]
-}
-
-\newcommand{\emoji}[1]{{\EmojiFont #1}}
-
-
-% ---------------------------------------------------------------
-% Fallback - replace the emoji with text
+% Fallback - Explicitly tells LaTeX what to do if the emoji is not found
 % ---------------------------------------------------------------
 \usepackage{newunicodechar}
-\newunicodechar{🚀}{\emoji{🚀}}
-\newunicodechar{🐛}{\emoji{🐛}}
-\newunicodechar{📄}{\emoji{📄}}
-\newunicodechar{🛡}{\emoji{🛡}}
-\newunicodechar{📌}{\emoji{📌}}
-\newunicodechar{␣}{\textvisiblespace}
+\newunicodechar{🚀}{\EmojiFont 🚀 }
+\newunicodechar{🐛}{\EmojiFont 🐛}
+\newunicodechar{📄}{\EmojiFont 📄}
+\newunicodechar{🛡}{\EmojiFont 🛡}
+\newunicodechar{📌}{\EmojiFont 📌}
 
-% ---------------------------------------------------------------
-% End of preamble
-% ---------------------------------------------------------------
 """,
 }

@@ -71,28 +71,35 @@ html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
 # -- Options for LaTeX output ------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-latex-output
 
-latex_engine = "lualatex"  # lualatex has better unicode support
+latex_engine = "lualatex"
 
 latex_elements = {
     "preamble": r"""
-% ---------------------------------------------------------------
-% Font setup for emoji support
-% ---------------------------------------------------------------
 \usepackage{fontspec}
-\defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
-\newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz,Scale=MatchLowercase]
-
-% ---------------------------------------------------------------
-% Fallback - Explicitly tells LaTeX what to do if the emoji is not found
-% ---------------------------------------------------------------
 \usepackage{newunicodechar}
-\newunicodechar{🚀}{\EmojiFont 🚀 }
-\newunicodechar{🐛}{\EmojiFont 🐛}
-\newunicodechar{📄}{\EmojiFont 📄}
-\newunicodechar{🛡}{\EmojiFont 🛡}
-\newunicodechar{📌}{\EmojiFont 📌}
 
+% Set up emoji font with fallbacks
+\IfFontExistsTF{Noto Color Emoji}{
+    \newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz]
+}{
+    \IfFontExistsTF{Apple Color Emoji}{
+        \newfontfamily\EmojiFont{Apple Color Emoji}[Renderer=Harfbuzz]
+    }{
+        \newfontfamily\EmojiFont{Segoe UI Emoji}[Renderer=Harfbuzz]
+    }
+}
+
+% Map common emojis
+\newunicodechar{🚀}{{\EmojiFont 🚀}}
+\newunicodechar{🐛}{{\EmojiFont 🐛}}
+\newunicodechar{📄}{{\EmojiFont 📄}}
+\newunicodechar{🛡}{{\EmojiFont 🛡}}
+\newunicodechar{📌}{{\EmojiFont 📌}}
+
+% Strip Unicode Variation Selector-16 (U+FE0F) to prevent LaTeX rendering issues
+% https://unicode.org/faq/vs.html#5
+\catcode`\️=\active
+\def️{}
 """,
 }

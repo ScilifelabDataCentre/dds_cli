@@ -26,3 +26,4 @@ dirhtml:
 # Ensure that lualatex is used for PDF builds
 latexpdf:
 	@$(SPHINXBUILD) -M latexpdf "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) -D latex_engine=lualatex
+	

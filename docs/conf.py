@@ -73,7 +73,7 @@ html_css_files = ["custom.css"]
 # -- Options for LaTeX output ------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-latex-output
 
-latex_engine = "lualatex" # lualatex has better unicode support
+latex_engine = "lualatex"  # lualatex has better unicode support
 
 latex_elements = {
     "preamble": r"""

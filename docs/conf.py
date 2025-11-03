@@ -72,34 +72,21 @@ html_css_files = ["custom.css"]
 
 # -- Options for LaTeX output ------------------------------------------------
 
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-latex_engine
 latex_engine = "lualatex"
-
 latex_elements = {
     "preamble": r"""
 \usepackage{fontspec}
 \usepackage{newunicodechar}
 
-% Set up emoji font with fallbacks
-\IfFontExistsTF{Noto Color Emoji}{
-    \newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz]
-}{
-    \IfFontExistsTF{Apple Color Emoji}{
-        \newfontfamily\EmojiFont{Apple Color Emoji}[Renderer=Harfbuzz]
-    }{
-        \newfontfamily\EmojiFont{Segoe UI Emoji}[Renderer=Harfbuzz]
-    }
-}
+% Set up emoji font
+\newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz]
 
-% Map common emojis
+% Tell Latex to map the emoji symbol to a command to render them
 \newunicodechar{🚀}{{\EmojiFont 🚀}}
 \newunicodechar{🐛}{{\EmojiFont 🐛}}
 \newunicodechar{📄}{{\EmojiFont 📄}}
 \newunicodechar{🛡}{{\EmojiFont 🛡}}
 \newunicodechar{📌}{{\EmojiFont 📌}}
-
-% Strip Unicode Variation Selector-16 (U+FE0F) to prevent LaTeX rendering issues
-% https://unicode.org/faq/vs.html#5
-\catcode`\️=\active
-\def️{}
 """,
 }

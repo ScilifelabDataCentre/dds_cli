@@ -1,11 +1,9 @@
 """Tests for ProjectDownloader GUI utility class."""
 
-import concurrent.futures
 import pathlib
 import threading
 import time
-from unittest.mock import MagicMock, Mock, patch
-from typing import List
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -1233,73 +1231,6 @@ def test_download_all_with_non_tuple_result():
         assert result is True
 
 
-@pytest.mark.skip("Skipping timeout error test")
-def test_download_all_with_timeout_error():
-    """Test download_all with timeout error."""
-    with patch(
-        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
-    ) as mock_directory_class, patch(
-        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
-    ) as mock_data_getter_class:
-
-        mock_data_getter = MagicMock()
-        mock_data_getter.filehandler = MagicMock()
-        mock_data_getter.filehandler.data = {
-            "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
-        }
-        mock_data_getter.stop_doing = False
-        mock_data_getter_class.return_value = mock_data_getter
-        mock_directory_class.return_value = MagicMock()
-
-        downloader = ProjectDownloader(project="test-project")
-        downloader.initialize(get_all=True)
-
-        with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
-            mock_executor = MagicMock()
-            mock_executor_class.return_value.__enter__.return_value = mock_executor
-            mock_executor.submit.return_value = MagicMock()
-
-            # Mock wait to raise timeout error
-            with patch("concurrent.futures.wait") as mock_wait:
-                mock_wait.side_effect = concurrent.futures.TimeoutError()
-
-                result = downloader.download_all(num_threads=1)
-
-                # Should handle timeout gracefully
-                assert result is False
-
-
-@pytest.mark.skip("Skipping general exception test")
-def test_download_all_with_general_exception():
-    """Test download_all with general exception."""
-    with patch(
-        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
-    ) as mock_directory_class, patch(
-        "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
-    ) as mock_data_getter_class:
-
-        mock_data_getter = MagicMock()
-        mock_data_getter.filehandler = MagicMock()
-        mock_data_getter.filehandler.data = {
-            "file1.txt": {"name_in_db": "file1.txt", "size_original": 1000, "size_stored": 1000},
-        }
-        mock_data_getter_class.return_value = mock_data_getter
-        mock_directory_class.return_value = MagicMock()
-
-        downloader = ProjectDownloader(project="test-project")
-        downloader.initialize(get_all=True)
-
-        with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
-            mock_executor_class.side_effect = RuntimeError("Executor failed")
-
-            with patch.object(downloader, "_report_error") as mock_report_error:
-                result = downloader.download_all(num_threads=1)
-
-                # Should handle exception gracefully
-                mock_report_error.assert_called()
-                assert result is False
-
-
 def test_cancel_download_with_exception():
     """Test cancel_download with exception during cleanup."""
     downloader = ProjectDownloader(project="test-project")
@@ -1575,18 +1506,29 @@ def test_report_error_exception_handling():
 
 
 def test_context_manager_exit_exception():
-    """Test context manager exit with exception."""
+    """Test context manager exit suppresses and logs exceptions from cleanup."""
     with patch(
         "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
     ):
         with patch(
             "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
         ):
-            with ProjectDownloader(project="test-project") as downloader:
-                # Mock cleanup to raise exception
+            with patch(
+                "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.LOG.warning"
+            ) as mock_log_warning:
+                downloader = ProjectDownloader(project="test-project")
+                # Mock cleanup to raise exception when context manager exits
                 with patch.object(downloader, "cleanup", side_effect=Exception("Cleanup failed")):
-                    # Should not raise exception
-                    pass  # Context manager should handle the exception
+                    # Enter and exit context manager - exception from cleanup should be suppressed
+                    with downloader:
+                        pass  # Context manager exit triggers cleanup
+
+                # Verify exception was suppressed (no exception raised above)
+                # Verify exception was logged
+                mock_log_warning.assert_called_once()
+                call_args = str(mock_log_warning.call_args)
+                assert "Error during cleanup in context manager" in call_args
+                assert "Cleanup failed" in call_args
 
 
 def test_callback_progress_trigger_cancelled():
@@ -1910,25 +1852,6 @@ def test_callback_progress_trigger_progress_percentage_change():
     progress.progress_callback.assert_called_once()
 
 
-@pytest.mark.skip("Skipping source conflict test")
-def test_initialize_validation_get_all_with_source_conflict(
-    mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
-):
-    """Test initialize validation when get_all=True but source is specified."""
-    mock_data_getter_class.return_value = mock_data_getter
-    mock_directory_class.return_value = mock_staging_dir
-
-    downloader = ProjectDownloader(project="test-project")
-
-    result = downloader.initialize(
-        get_all=True,
-        source=("file1.txt",),
-    )
-
-    assert result is False
-    assert not downloader._is_initialized
-
-
 @patch(
     "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
 )
@@ -2181,45 +2104,6 @@ def test_download_all_future_cancelled(
             assert result is False
 
 
-@pytest.mark.skip("Skipping future exception test")
-@patch(
-    "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
-)
-@patch(
-    "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
-)
-def test_download_all_future_exception(
-    mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
-):
-    """Test download_all when future raises exception."""
-    mock_data_getter_class.return_value = mock_data_getter
-    mock_directory_class.return_value = mock_staging_dir
-
-    downloader = ProjectDownloader(project="test-project")
-    downloader.initialize(get_all=True)
-
-    # Create a future that raises exception
-    exception_future = MagicMock()
-    exception_future.cancelled.return_value = False
-    exception_future.result.side_effect = dds_cli.exceptions.DownloadError("Download failed")
-
-    with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
-        mock_executor = MagicMock()
-        mock_executor_class.return_value.__enter__.return_value = mock_executor
-        mock_executor.submit.return_value = exception_future
-
-        # Mock wait to return the exception future
-        with patch("concurrent.futures.wait") as mock_wait:
-            mock_wait.return_value = ([exception_future], [])
-
-            with patch.object(downloader, "_report_error") as mock_report_error:
-                result = downloader.download_all(num_threads=1)
-
-                # Should handle exception gracefully and return False
-                assert result is False
-                mock_report_error.assert_called()
-
-
 @patch(
     "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
 )
@@ -2241,64 +2125,3 @@ def test_download_all_non_tuple_result(
     result = downloader.download_all(num_threads=1)
 
     assert result is True
-
-
-@patch(
-    "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
-)
-@pytest.mark.skip("Skipping timeout error test")
-@patch(
-    "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
-)
-def test_download_all_timeout_error(
-    mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
-):
-    """Test download_all with timeout error."""
-    mock_data_getter.stop_doing = False
-    mock_data_getter_class.return_value = mock_data_getter
-    mock_directory_class.return_value = mock_staging_dir
-
-    downloader = ProjectDownloader(project="test-project")
-    downloader.initialize(get_all=True)
-
-    with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
-        mock_executor = MagicMock()
-        mock_executor_class.return_value.__enter__.return_value = mock_executor
-        mock_executor.submit.return_value = MagicMock()
-
-        # Mock wait to raise timeout error
-        with patch("concurrent.futures.wait") as mock_wait:
-            mock_wait.side_effect = concurrent.futures.TimeoutError()
-
-            result = downloader.download_all(num_threads=1)
-
-            # Should handle timeout gracefully
-            assert result is False
-
-
-@pytest.mark.skip("Skipping general exception test")
-@patch(
-    "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.directory.DDSDirectory"
-)
-@patch(
-    "dds_cli.dds_gui.pages.project_actions.download_data.project_downloader.dds_cli.data_getter.DataGetter"
-)
-def test_download_all_general_exception(
-    mock_data_getter_class, mock_directory_class, mock_data_getter, mock_staging_dir
-):
-    """Test download_all with general exception."""
-    mock_data_getter_class.return_value = mock_data_getter
-    mock_directory_class.return_value = mock_staging_dir
-
-    downloader = ProjectDownloader(project="test-project")
-    downloader.initialize(get_all=True)
-
-    with patch("concurrent.futures.ThreadPoolExecutor") as mock_executor_class:
-        mock_executor_class.side_effect = RuntimeError("Executor failed")
-
-        with patch.object(downloader, "_report_error") as mock_report_error:
-            result = downloader.download_all(num_threads=1)
-
-            # Should handle exception gracefully
-            mock_report_error.assert_called()
-            assert result is False

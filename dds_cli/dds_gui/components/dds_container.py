@@ -6,7 +6,7 @@ from textual.reactive import Reactive
 
 
 class DDSContainer(VerticalScroll):
-    """A contianer widget with border and title for wrapping main content in the GUI.
+    """A container widget with border and title for wrapping main content in the GUI.
     Args:
         title: The title to be displayed in the border of the container.
     """
@@ -15,7 +15,7 @@ class DDSContainer(VerticalScroll):
         super().__init__(*args, **kwargs)
         self.border_title = title.upper()
 
-    subtitle: Reactive[str] = Reactive(None, recompose=False)
+    subtitle: Reactive[str | None] = Reactive(None, recompose=False)
 
     DEFAULT_CSS = """
     DDSContainer {
@@ -68,7 +68,7 @@ class DDSSpacedContainer(VerticalScroll):
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.align = align
+        self.styles.align = align.split(" ")
 
     DEFAULT_CSS = """
     DDSSpacedContainer {
@@ -81,8 +81,6 @@ class DDSSpacedContainer(VerticalScroll):
     DDSSpacedContainer > * {
         margin-bottom: 1;
     }
-
-    
     """
 
 

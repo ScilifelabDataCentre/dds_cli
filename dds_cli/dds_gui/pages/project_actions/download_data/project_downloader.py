@@ -948,5 +948,20 @@ class ProjectDownloader:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit with cleanup."""
-        self.cleanup()
+        """Context manager exit with cleanup.
+
+        Suppresses any exceptions raised during cleanup to ensure
+        context manager exit always completes gracefully.
+
+        Args:
+            exc_type: Exception type (if any)
+            exc_val: Exception value (if any)
+            exc_tb: Exception traceback (if any)
+
+        Returns:
+            None - exceptions from cleanup are suppressed
+        """
+        try:
+            self.cleanup()
+        except Exception as error:  # pylint: disable=broad-exception-caught
+            LOG.warning("Error during cleanup in context manager: %s", error)

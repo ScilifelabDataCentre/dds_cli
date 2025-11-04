@@ -101,6 +101,8 @@ Project Select
 --------------
 
 The project list is displayed in the top left of the GUI. 
+After authentication, the project list is displayed. If there are no projects, you will see a message "No projects found".
+If there are projects, you will see a dropdown menu with the project names. It might take a few seconds to load the project list. There is a loading indicator displayed in the project list container.
 In the dropdown menu you can select the project you want to view. You need to select a project to view its contents.
 When selecting a project, it might take a few seconds to load the project contents. There is a loading indicator displayed in the project content container.
 
@@ -122,21 +124,44 @@ Project information
 The project information is displayed in the top right of the GUI. The project information is displayed in a table format.
 The project information is updated when you select a new project.
 
+The project information contains the following information:
+- Project title
+- Project description
+- Status
+- Created by
+- Last updated
+- Size
+- PI
+
+The status can be one of the following:
+- Available: Data can be downloaded by all users
+- In Progress: Data can be downloaded, uploaded and deleted by users with the roles "Unit Admin" or "Unit Personnel"
+- Deleted: All data is removed and can not be downloaded or uploaded by any user
+- Expired: Data can not be downloaded or uploaded by any user, the project can be renewed and set to "Available" by "Unit Admin" or "Unit Personnel"
+- Archived: Data can not be downloaded or uploaded by any user, the project can not be renewed
+- Aborted: Data can not be downloaded or uploaded by any user, the project can not be renewed
+
 .. TODO:: Add image of the project information
 
 Project Actions
 ===============
 
-.. TODO:: Add information on the project actions
+The project actions are displayed in the bottom right of the GUI. The project actions are displayed in a tabbed format. 
+To switch between the tabs, click on the tab you want to view. 
 
+There are currently two tabs:
+- Download data
+- User Access
 
+Download data
+-------------
 
+In the download data tab, you can download the data from the project. To download the project data, click on the "Download project content" button.
+This will download the entire project contents. The project data will be downloaded to the same directory as the GUI is running from. 
 
+After clicking the "Download project content" button, the download will be prepared. After the download has been prepared, the download will start.
+The progress of the download can be seen in the progress bar below the "Download project content" button.
+If an error occurs during the download and a file can not be downloaded, a label with a count of the files that could not be downloaded will be displayed. 
+The download will continue to download the remaining files. Please contact the support if you encounter any errors during the download.
 
-
-
-
-
-
-
-
+To abort the download, close the GUI. This will be improved on in the future.

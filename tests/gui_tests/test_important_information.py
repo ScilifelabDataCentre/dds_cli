@@ -1,5 +1,6 @@
 """Comprehensive tests for the Important Information widget."""
 
+import pathlib
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,6 +10,8 @@ from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.important_information.important_information import ImportantInformation
 from dds_cli.dds_gui.pages.important_information.components.motd_card import MOTDCard
 from dds_cli.exceptions import ApiRequestError, ApiResponseError, DDSCLIException, NoMOTDsError
+
+TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 
 # =================================================================================
@@ -45,7 +48,7 @@ EMPTY_MOTDS = []
 async def test_important_information_initialization():
     """Test that ImportantInformation widget initializes correctly."""
 
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         widget = ImportantInformation("Test MOTDs")
@@ -67,7 +70,7 @@ async def test_important_information_initialization():
 async def test_motd_cards_rendering_and_ordering():
     """Test MOTDCard rendering, content, and latest-first ordering."""
 
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         with patch(
@@ -105,7 +108,7 @@ async def test_empty_state_handling():
         # Configure the mock to return empty list
         mock_list_motds.return_value = []
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
             # Test with empty list from API - this prevents the widget from fetching real data
@@ -123,7 +126,9 @@ async def test_empty_state_handling():
             # Empty state static widget should be present
             statics = widget.query(Static)
             empty_statics = [
-                static for static in statics if "No important information" in static.renderable
+                static
+                for static in statics
+                if "No important information" in str(static.render().plain)
             ]
             assert len(empty_statics) == 1
 
@@ -143,7 +148,9 @@ async def test_empty_state_handling():
             # Check that empty state static widget is shown
             statics = widget.query(Static)
             empty_statics = [
-                static for static in statics if "No important information" in static.renderable
+                static
+                for static in statics
+                if "No important information" in str(static.render().plain)
             ]
             assert len(empty_statics) == 1
 
@@ -157,7 +164,7 @@ async def test_empty_state_handling():
 async def test_motd_fetching_integration():
     """Test MOTD fetching integration - success case and API calls."""
 
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         # Test successful fetching
@@ -188,7 +195,7 @@ async def test_motd_fetching_integration():
 async def test_reactive_motd_updates():
     """Test that UI updates when MOTDs are changed reactively."""
 
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         with patch(
@@ -223,7 +230,7 @@ async def test_update_motds_method():
         # Configure the mock to return empty list initially
         mock_list_motds.return_value = []
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         # Create a MagicMock for the app's notify method to track calls
         mock_notify = MagicMock(side_effect=app.notify)
@@ -272,7 +279,7 @@ async def test_update_motds_method():
 async def test_timer_setup():
     """Test that timer is set up correctly with proper interval."""
 
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         with patch(
@@ -302,13 +309,13 @@ async def test_fetch_motds_error_handling():
         # Start with empty list for initial mount
         mock_list_motds.return_value = []
 
-        app = DDSApp(token_path="test_path")
+        app = DDSApp(token_path=str(TOKEN_PATH))
 
         # Track notifications by patching the app's notify method
         notifications_received = []
         original_notify = app.notify
 
-        def capture_notify(message, *, severity="information", timeout=3.0, title=""):
+        def capture_notify(message, *, severity="information", timeout=3.0, title="", markup=True):
             notifications_received.append(
                 {"message": message, "severity": severity, "timeout": timeout, "title": title}
             )
@@ -385,7 +392,7 @@ async def test_fetch_motds_error_handling():
 async def test_full_important_information_workflow():
     """Test complete workflow from mount to MOTD display."""
 
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         with patch(
@@ -440,7 +447,7 @@ async def test_large_number_of_motds():
             {"Created": f"2025-01-{i:02d} 10:00", "Message": f"MOTD number {i}", "ID": i}
         )
 
-    app = DDSApp(token_path="test_path")
+    app = DDSApp(token_path=str(TOKEN_PATH))
 
     async with app.run_test() as pilot:
         with patch(

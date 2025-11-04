@@ -544,13 +544,14 @@ def configure():
             "Which method would you like to use?", choices=["Email", "Authenticator App", "Cancel"]
         ).ask()
 
+        auth_method: str | None = None  # type hint, initialized
         if auth_method_choice == "Cancel":
             LOG.info("Two-factor authentication method not configured.")
             sys.exit(0)
         elif auth_method_choice == "Authenticator App":
-            auth_method: str = "totp"
+            auth_method = "totp"
         elif auth_method_choice == "Email":
-            auth_method: str = "hotp"
+            auth_method = "hotp"
 
         with dds_cli.auth.Auth(authenticate=True, force_renew_token=False) as authenticator:
             authenticator.twofactor(auth_method=auth_method)
@@ -784,12 +785,12 @@ def delete_user(click_ctx, email, self, is_invite):
         proceed_deletion = True
     else:
         if is_invite and self:
-            LOG.error("You cannot specify both `--self` and `--is-invite. Choose one.")
+            LOG.error("You cannot specify both `--self` and `--is-invite`. Choose one.")
             sys.exit(0)
 
         if not self and not email:
             LOG.error(
-                "You must specify an email adress associated to the user you're requesting to delete."
+                "You must specify an email address associated to the user you're requesting to delete."
             )
             sys.exit(0)
 
@@ -885,6 +886,8 @@ def activate_user(click_ctx, email):
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
+    proceed_activation = False  # default assignment
+
     if click_ctx.get("NO_PROMPT", False):
         pass
     else:
@@ -925,6 +928,8 @@ def deactivate_user(click_ctx, email):
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
+    proceed_deactivation = False  # default assignment
+
     if click_ctx.get("NO_PROMPT", False):
         pass
     else:

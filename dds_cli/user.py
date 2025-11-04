@@ -76,7 +76,7 @@ class User:
         LOG.debug("Starting authentication on the API...")
 
         # If no username or password is provided, prompt for them
-        if not username and not password:
+        if not username or not password:
             if self.no_prompt:
                 raise exceptions.AuthenticationError(
                     message=(
@@ -88,12 +88,12 @@ class User:
             username = Prompt.ask("DDS username")
             password = getpass.getpass(prompt="DDS password: ")
 
-        if username == "":
+        if not username:
             raise exceptions.AuthenticationError(
                 message="Non-empty username needed to be able to authenticate."
             )
 
-        if password == "":
+        if not password:
             raise exceptions.AuthenticationError(
                 message="Non-empty password needed to be able to authenticate."
             )
@@ -289,7 +289,7 @@ class TokenFile:
         if token_path is None:
             self.token_file = dds_cli.TOKEN_FILE
         else:
-            self.token_file = pathlib.Path(os.path.expanduser(token_path))
+            self.token_file = pathlib.Path(token_path).expanduser()
 
     def read_token(self):
         """Attempts to fetch a valid token from the token file.

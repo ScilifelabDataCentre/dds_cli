@@ -1,6 +1,46 @@
 Changelog
 ==========
 
+.. _2.13.0:
+
+2.13.0 - 2025-09-15
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Specify download timeouts to avoid s3 errors
+    - Specify upload timeouts to avoid s3 errors
+- 🐛 Bug Fixes
+    - Prompt for username and password if either of them are empty
+- 📄 Documentation
+    - Correct info regarding extending deadline in CLI
+    - Add Dardel section to the documentation
+- 🛡️ Dependencies
+    - Bump requests library from 2.32.2 to 2.32.4
+    - Bump cryptography library from 42.0.4 to 44.0.1
+- 📌 Other Changes
+    - GUI related changes (not released yet):
+        - Implement Project Info in GUI
+        - Implement project listing in GUI
+        - Fix error handling bug in GUI authentication
+
+.. _2.12.0:
+
+2.12.0 - 2025-08-27
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Check file size after download and decryption
+- 🐛 Bug Fixes
+    - Handle KeyboardInterrupt when cancelling file
+- 📄 Documentation
+    - Update installation.rst with correct Uppmax links
+- 📌 Other Changes
+    - Improve dds cli logging
+    - GUI related changes (not released yet):
+        - Implement MOTD for GUI
+        - Refactor MOTD to work for both CLI and GUI
+        - Refactor authentication code to support both the CLI and GUI
+
 .. _2.11.0:
 
 2.11.0 - 2025-04-29

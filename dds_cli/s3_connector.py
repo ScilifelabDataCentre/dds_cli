@@ -15,6 +15,7 @@ import botocore
 
 # Own modules
 import dds_cli.utils
+from dds_cli import constants
 from dds_cli import DDSEndpoint
 
 ###############################################################################
@@ -75,6 +76,14 @@ class S3Connector:
                 endpoint_url=self.url,
                 aws_access_key_id=self.keys["access_key"],
                 aws_secret_access_key=self.keys["secret_key"],
+                config=botocore.client.Config(
+                    read_timeout=constants.READ_TIMEOUT,
+                    connect_timeout=constants.CONNECT_TIMEOUT,
+                    retries={
+                        "max_attempts": 10,
+                        # TODO: Add retry strategy mode="standard" when boto3 version >= 1.26.0
+                    },
+                ),
             )
         except (boto3.exceptions.Boto3Error, botocore.exceptions.BotoCoreError) as err:
             LOG.warning("S3 connection failed: %s", err)

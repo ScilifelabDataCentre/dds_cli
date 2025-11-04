@@ -1,20 +1,14 @@
 """Tests for DownloadData GUI widget."""
 
-import threading
-import time
-from unittest.mock import MagicMock, Mock, patch
-from typing import Any, Optional
+from unittest.mock import MagicMock, patch
 
 import pytest
-from textual.app import App
-from textual.widget import Widget
 
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_actions.download_data.download_data import DownloadData
 from dds_cli.dds_gui.pages.project_actions.download_data.project_downloader import (
     DownloadProgress,
     DownloadResult,
-    ProjectDownloader,
 )
 
 
@@ -110,7 +104,7 @@ def test_watch_is_downloading_enables_button():
 
         widget.watch_is_downloading(False)
 
-        mock_button.disabled = False
+        assert mock_button.disabled is False
 
 
 def test_watch_is_downloading_disables_button():
@@ -124,7 +118,7 @@ def test_watch_is_downloading_disables_button():
 
         widget.watch_is_downloading(True)
 
-        mock_button.disabled = True
+        assert mock_button.disabled is True
 
 
 def test_update_progress_ui():
@@ -272,17 +266,6 @@ def test_start_download_already_downloading():
     assert widget.is_downloading is True
 
 
-def test_start_download_no_project_selected():
-    """Test starting download with no project selected."""
-    widget = DownloadData()
-    widget.selected_project_id = None
-
-    # Test that the method returns early without starting download
-    # We can't easily test the app.notify call due to Textual's app context requirements
-    # This test is skipped as it requires complex app mocking
-    pass
-
-
 def test_full_download_worker_stop_after_init():
     """Test download worker stopping after initialization."""
     widget = DownloadData()
@@ -301,9 +284,6 @@ def test_full_download_worker_stop_after_init():
 
         # Mock the directory creation
         mock_directory_class.return_value = MagicMock()
-
-        # Mock the data getter
-        mock_data_getter_class.return_value = MagicMock()
 
         # Mock the data getter
         mock_data_getter_class.return_value = MagicMock()
@@ -335,9 +315,6 @@ def test_full_download_worker_stop_before_download():
 
         # Mock the directory creation
         mock_directory_class.return_value = MagicMock()
-
-        # Mock the data getter
-        mock_data_getter_class.return_value = MagicMock()
 
         # Mock the data getter
         mock_data_getter_class.return_value = MagicMock()
@@ -380,9 +357,6 @@ def test_full_download_worker_download_success():
         # Mock the data getter
         mock_data_getter_class.return_value = MagicMock()
 
-        # Mock the data getter
-        mock_data_getter_class.return_value = MagicMock()
-
         widget._full_download_worker("test-project")
 
         # Verify status updates - should have at least one call
@@ -414,9 +388,6 @@ def test_full_download_worker_download_failure():
         # Mock the data getter
         mock_data_getter_class.return_value = MagicMock()
 
-        # Mock the data getter
-        mock_data_getter_class.return_value = MagicMock()
-
         widget._full_download_worker("test-project")
 
         # Verify status updates - should have at least one call
@@ -443,9 +414,6 @@ def test_full_download_worker_exception():
 
         # Mock the directory creation
         mock_directory_class.return_value = MagicMock()
-
-        # Mock the data getter
-        mock_data_getter_class.return_value = MagicMock()
 
         # Mock the data getter
         mock_data_getter_class.return_value = MagicMock()
@@ -632,9 +600,6 @@ def test_error_handling_workflow():
         # Mock the data getter
         mock_data_getter_class.return_value = MagicMock()
 
-        # Mock the data getter
-        mock_data_getter_class.return_value = MagicMock()
-
         with patch.object(widget, "_update_status") as mock_update:
             widget._full_download_worker("test-project")
 
@@ -752,31 +717,27 @@ async def test_progress_updates_with_app():
         # This test verifies the reactive behavior works in app context
 
 
-def test_start_download_no_project_selected_with_app_context():
+@pytest.mark.asyncio
+async def test_start_download_no_project_selected_with_app_context():
     """Test starting download with no project selected in app context."""
     app = DDSApp(token_path="/tmp/test_token")
 
-    async def run_test():
-        async with app.run_test() as pilot:
-            widget = DownloadData()
-            app.mount(widget)
+    async with app.run_test() as pilot:
+        widget = DownloadData()
+        app.mount(widget)
 
-            # Set no project selected
-            widget.selected_project_id = None
+        # Set no project selected
+        widget.selected_project_id = None
 
-            # Mock the app.notify method to track calls
-            with patch.object(app, "notify") as mock_notify:
-                widget._start_download()
+        # Mock the app.notify method to track calls
+        with patch.object(app, "notify") as mock_notify:
+            widget._start_download()
 
-                # Verify notification was called
-                mock_notify.assert_called_once_with("No project selected", severity="error")
+            # Verify notification was called
+            mock_notify.assert_called_once_with("No project selected", severity="error")
 
-                # Verify is_downloading is still False
-                assert widget.is_downloading is False
-
-    import asyncio
-
-    asyncio.run(run_test())
+            # Verify is_downloading is still False
+            assert widget.is_downloading is False
 
 
 def test_full_download_worker_stop_after_initialization():
@@ -1256,5 +1217,5 @@ def test_on_unmount_with_thread_join_exception():
     with pytest.raises(Exception, match="Join failed"):
         widget.on_unmount()
 
-    # Verify cancellation was called
+    # Confirm unmount tried to cancel
     widget.downloader.cancel_download.assert_called_once()

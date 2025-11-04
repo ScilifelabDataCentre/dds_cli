@@ -7,7 +7,7 @@ from dds_cli.dds_gui.pages.project_actions.download_data.download_data import Do
 
 
 class ProjectActions(DDSContainer):
-    """Widget contianing tabbed content for the project actions."""
+    """Widget containing tabbed content for the project actions."""
 
     DEFAULT_CSS = """
     .project-actions-tab {

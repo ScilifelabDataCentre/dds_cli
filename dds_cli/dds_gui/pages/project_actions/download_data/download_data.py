@@ -1,30 +1,30 @@
 """Download data widget for the DDS GUI."""
 
-from typing import Any, Optional
-import threading
 import logging
+import threading
+from typing import Any, Optional
 
-from textual.app import ComposeResult
-from textual.widget import Widget
 from textual import events
+from textual.app import ComposeResult
 from textual.reactive import reactive
+from textual.widget import Widget
 from textual.widgets import Label, ProgressBar
 
+from dds_cli.dds_gui.components.dds_button import DDSButton
 from dds_cli.dds_gui.components.dds_container import (
     DDSSpacedContainer,
     DDSSpacedHorizontalContainer,
 )
-from dds_cli.dds_gui.components.dds_button import DDSButton
 from dds_cli.dds_gui.pages.project_actions.download_data.project_downloader import (
     DownloadProgress,
     DownloadResult,
     ProjectDownloader,
 )
 from dds_cli.exceptions import (
-    AuthenticationError,
-    TokenNotFoundError,
     ApiRequestError,
+    AuthenticationError,
     DownloadError,
+    TokenNotFoundError,
 )
 
 # Logger
@@ -146,53 +146,40 @@ class DownloadData(Widget):
         # Also update button state when project selection changes
         self.watch_is_downloading(self.is_downloading)
 
-    def watch_files_downloaded(self, files_downloaded: int) -> None:
-        """Watch files_downloaded changes and update the files label."""
+    def _update_files_label(
+        self,
+        files_downloaded: Optional[int] = None,
+        error_files: Optional[int] = None,
+        total_files: Optional[int] = None,
+    ) -> None:
+        """Update the files label with provided or current instance values."""
 
         def update_label():
             files_label = self.query_one("#files-label", None)
             if files_label:
-                if self.error_files > 0:
-                    files_label.update(
-                        f"Files: {files_downloaded}/{self.total_files} "
-                        f"(❌ Errors: {self.error_files})"
-                    )
+                # Use provided values or fall back to instance values
+                files = files_downloaded if files_downloaded is not None else self.files_downloaded
+                errors = error_files if error_files is not None else self.error_files
+                total = total_files if total_files is not None else self.total_files
+
+                if errors > 0:
+                    files_label.update(f"Files: {files}/{total} (❌ Errors: {errors})")
                 else:
-                    files_label.update(f"Files: {files_downloaded}/{self.total_files}")
+                    files_label.update(f"Files: {files}/{total}")
 
         self._safe_ui_operation(update_label, "files label update")
+
+    def watch_files_downloaded(self, files_downloaded: int) -> None:
+        """Watch files_downloaded changes and update the files label."""
+        self._update_files_label(files_downloaded=files_downloaded)
 
     def watch_error_files(self, error_files: int) -> None:
         """Watch error_files changes and update the files label."""
-
-        def update_label():
-            files_label = self.query_one("#files-label", None)
-            if files_label:
-                if error_files > 0:
-                    files_label.update(
-                        f"Files: {self.files_downloaded}/{self.total_files} "
-                        f"(❌ Errors: {error_files})"
-                    )
-                else:
-                    files_label.update(f"Files: {self.files_downloaded}/{self.total_files}")
-
-        self._safe_ui_operation(update_label, "files label update")
+        self._update_files_label(error_files=error_files)
 
     def watch_total_files(self, total_files: int) -> None:
         """Watch total_files changes and update the files label."""
-
-        def update_label():
-            files_label = self.query_one("#files-label", None)
-            if files_label:
-                if self.error_files > 0:
-                    files_label.update(
-                        f"Files: {self.files_downloaded}/{total_files} "
-                        f"(❌ Errors: {self.error_files})"
-                    )
-                else:
-                    files_label.update(f"Files: {self.files_downloaded}/{total_files}")
-
-        self._safe_ui_operation(update_label, "files label update")
+        self._update_files_label(total_files=total_files)
 
     def watch_is_downloading(self, is_downloading: bool) -> None:
         """Watch is_downloading changes and update the button state."""

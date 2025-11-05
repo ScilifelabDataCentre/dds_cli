@@ -69,3 +69,24 @@ html_theme_options = {
 html_static_path = ["_static"]
 
 html_css_files = ["custom.css"]
+
+# -- Options for LaTeX output ------------------------------------------------
+
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-latex_engine
+latex_engine = "lualatex"
+latex_elements = {
+    "preamble": r"""
+\usepackage{fontspec}
+\usepackage{newunicodechar}
+
+% Set up emoji font
+\newfontfamily\EmojiFont{Noto Color Emoji}[Renderer=Harfbuzz]
+
+% Tell Latex to map the emoji symbol to a command to render them
+\newunicodechar{🚀}{{\EmojiFont 🚀}}
+\newunicodechar{🐛}{{\EmojiFont 🐛}}
+\newunicodechar{📄}{{\EmojiFont 📄}}
+\newunicodechar{🛡}{{\EmojiFont 🛡}}
+\newunicodechar{📌}{{\EmojiFont 📌}}
+""",
+}

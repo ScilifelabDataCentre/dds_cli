@@ -483,3 +483,7 @@ _Empty sprint_
 ## 2025-10-13 - 2025-10-24
 
 - Remove custom button styling ([#854](https://github.com/ScilifelabDataCentre/dds_cli/pull/854))
+
+## 2025-10-27 - 2025-11-07
+
+- Latex action for documentation failing due to emojis ([#855](https://github.com/ScilifelabDataCentre/dds_cli/pull/855))

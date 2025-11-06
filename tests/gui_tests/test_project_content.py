@@ -1,16 +1,18 @@
 """GUI tests for Project Content widget using reactive patterns."""
 
 import pathlib
-from unittest.mock import patch, MagicMock
-import pytest
-from textual.widgets import Label, Tree, LoadingIndicator
+from unittest.mock import MagicMock, patch
 
-from dds_cli.dds_gui.app import DDSApp
-from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
-from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
-from dds_cli.dds_gui.models.project_content import ProjectContentData, ProjectWithContent
-from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
+import pytest
+from textual.widgets import LoadingIndicator, Tree
+
 import dds_cli.exceptions
+from dds_cli.dds_gui.app import DDSApp
+from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
+from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
+from dds_cli.dds_gui.models.project_content import ProjectContentData, ProjectWithContent
+from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
+from dds_cli.dds_gui.pages.project_content.project_content import ProjectContent
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
@@ -307,7 +309,7 @@ async def test_project_content_widget_compose_methods():
         # Should show "No data found" message
         content_widgets = list(widget.compose())
         assert len(content_widgets) == 1
-        assert isinstance(content_widgets[0], Label)
+        assert isinstance(content_widgets[0], DDSTextItem)
         assert "No data found for project test-project" in str(content_widgets[0].render().plain)
 
         # Test 4: No project selected state
@@ -318,7 +320,7 @@ async def test_project_content_widget_compose_methods():
         # Should show "No project selected" message
         content_widgets = list(widget.compose())
         assert len(content_widgets) == 1
-        assert isinstance(content_widgets[0], Label)
+        assert isinstance(content_widgets[0], DDSTextItem)
         assert "No project selected" in str(content_widgets[0].render().plain)
 
 
@@ -366,7 +368,7 @@ async def test_no_project_selected_state():
 
             # Should show "No project selected" message
             content_widget = get_content_widget(widget)
-            assert isinstance(content_widget, Label)
+            assert isinstance(content_widget, DDSTextItem)
             assert "No project selected" in str(content_widget.render().plain)
 
 
@@ -528,7 +530,7 @@ async def test_no_data_error_handling():
 
             # Should show "No data found" message
             content_widget = get_content_widget(widget)
-            assert isinstance(content_widget, Label)
+            assert isinstance(content_widget, DDSTextItem)
             assert "No data found for project test-project" in str(content_widget.render().plain)
 
 
@@ -623,7 +625,7 @@ async def test_project_selection_change():
 
             # Initially no project selected
             content_widget = get_content_widget(widget)
-            assert isinstance(content_widget, Label)
+            assert isinstance(content_widget, DDSTextItem)
             assert "No project selected" in str(content_widget.render().plain)
 
             # Select a project
@@ -1014,6 +1016,13 @@ async def test_tree_view_structure_validation():
         tree_widgets = tree_view.query(Tree)
         assert len(tree_widgets) == 1
 
+        tree_widget = tree_widgets[0]
+        # Root should have children
+        assert len(tree_widget.root.children) > 0
+
+        tree_widget = tree_widgets[0]
+        # Root should have children
+        assert len(tree_widget.root.children) > 0
         tree_widget = tree_widgets[0]
         # Root should have children
         assert len(tree_widget.root.children) > 0

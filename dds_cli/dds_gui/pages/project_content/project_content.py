@@ -26,9 +26,7 @@ class ProjectContent(DDSContainer):
     selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
     is_loading: reactive[bool] = reactive(False, recompose=True)
 
-
     def compose(self) -> ComposeResult:
-        
         """Compose the widget based on current state."""
 
         if self.project_content:

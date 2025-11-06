@@ -437,7 +437,8 @@ async def test_large_dataset_performance():
     """Test performance with large number of projects."""
 
     large_projects = [
-        {"Project ID": f"project-{i:03d}", "Title": f"Project {i}", "Access": True} for i in range(1, 101)
+        {"Project ID": f"project-{i:03d}", "Title": f"Project {i}", "Access": True}
+        for i in range(1, 101)
     ]  # 100 projects
 
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:

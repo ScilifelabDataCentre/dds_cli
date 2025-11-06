@@ -1,4 +1,5 @@
 """Dataclasses for the project."""
+
 from dataclasses import dataclass
 
 
@@ -17,6 +18,7 @@ class Project:
             access=data["Access"],
         )
 
+
 @dataclass
 class ProjectList:
     """A list of projects."""
@@ -26,18 +28,18 @@ class ProjectList:
     @classmethod
     def from_dict(cls, data: list | dict) -> "ProjectList":
         """Create a ProjectList instance from dictionary data.
-        
+
         Filters out invalid projects that don't have required "Project ID" and "Access" keys.
-        
+
         Args:
             data: List of project dictionaries
-            
+
         Returns:
             ProjectList instance with valid projects only
         """
         if not isinstance(data, list):
             return cls(projects={})
-        
+
         valid_projects = {}
         for project in data:
             # Only include projects with valid "Project ID" and "Access" keys
@@ -53,5 +55,5 @@ class ProjectList:
                 except (KeyError, TypeError):
                     # Skip projects that fail to parse
                     continue
-        
+
         return cls(projects=valid_projects)

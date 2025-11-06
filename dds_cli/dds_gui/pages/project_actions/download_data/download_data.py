@@ -89,7 +89,7 @@ class DownloadData(Widget):
             yield DDSButton(
                 "Download project content",
                 id="download-project-content-button",
-                disabled=not self.selected_project_id or self.is_downloading,
+                disabled=not self.selected_project_id or self.is_downloading or not self.app.projects_access,
             )
 
             with DDSSpacedHorizontalContainer(id="progress-bar-container"):

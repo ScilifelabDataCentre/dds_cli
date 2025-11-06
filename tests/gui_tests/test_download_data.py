@@ -1219,3 +1219,212 @@ def test_on_unmount_with_thread_join_exception():
 
     # Confirm unmount tried to cancel
     widget.downloader.cancel_download.assert_called_once()
+
+
+# =================================================================================
+# Project Access Tests
+# =================================================================================
+
+
+@pytest.mark.asyncio
+async def test_download_button_disabled_when_no_access():
+    """Test that download button is disabled when user doesn't have access to project."""
+    from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
+
+    # Create mock projects with Access=False
+    mock_projects_no_access = [
+        {"Project ID": "test-project", "Title": "Test Project", "Access": False},
+    ]
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
+    ) as mock_project_info_class:
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = mock_projects_no_access
+
+        # Mock ProjectInfoManager
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
+
+        app = DDSApp(token_path="/tmp/test_token")
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(mock_projects_no_access)
+
+            # Select project without access
+            app.set_selected_project_id("test-project")
+            await pilot.pause()
+
+            widget = DownloadData()
+            app.mount(widget)
+            await pilot.pause()
+
+            # Find the download button
+            download_button = widget.query_one("#download-project-content-button")
+
+            # Button should be disabled
+            assert (
+                download_button.disabled is True
+            ), "Button should be disabled when user has no access"
+
+
+@pytest.mark.asyncio
+async def test_download_button_enabled_when_has_access():
+    """Test that download button is enabled when user has access to project."""
+    from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
+
+    # Create mock projects with Access=True
+    mock_projects_with_access = [
+        {"Project ID": "test-project", "Title": "Test Project", "Access": True},
+    ]
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
+    ) as mock_project_info_class:
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = mock_projects_with_access
+
+        # Mock ProjectInfoManager
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
+
+        app = DDSApp(token_path="/tmp/test_token")
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(mock_projects_with_access)
+
+            # Select project with access
+            app.set_selected_project_id("test-project")
+            await pilot.pause()
+
+            widget = DownloadData()
+            app.mount(widget)
+            await pilot.pause()
+
+            # Find the download button
+            download_button = widget.query_one("#download-project-content-button")
+
+            # Button should be enabled
+            assert (
+                download_button.disabled is False
+            ), "Button should be enabled when user has access"
+
+
+@pytest.mark.asyncio
+async def test_download_button_disabled_when_no_project_selected():
+    """Test that download button is disabled when no project is selected."""
+    from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
+
+    mock_projects = [
+        {"Project ID": "test-project", "Title": "Test Project", "Access": True},
+    ]
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = mock_projects
+
+        app = DDSApp(token_path="/tmp/test_token")
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(mock_projects)
+
+            # Don't select any project
+            app.set_selected_project_id(None)
+            await pilot.pause()
+
+            widget = DownloadData()
+            app.mount(widget)
+            await pilot.pause()
+
+            # Find the download button
+            download_button = widget.query_one("#download-project-content-button")
+
+            # Button should be disabled
+            assert (
+                download_button.disabled is True
+            ), "Button should be disabled when no project selected"
+
+
+@pytest.mark.asyncio
+async def test_download_button_access_state_changes():
+    """Test that download button updates when access state changes."""
+    from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
+
+    # Create projects with different access levels
+    mock_projects = [
+        {"Project ID": "project-with-access", "Title": "Project 1", "Access": True},
+        {"Project ID": "project-no-access", "Title": "Project 2", "Access": False},
+    ]
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
+    ) as mock_project_info_class:
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = mock_projects
+
+        # Mock ProjectInfoManager
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
+
+        app = DDSApp(token_path="/tmp/test_token")
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(mock_projects)
+            await pilot.pause()
+
+            widget = DownloadData()
+            app.mount(widget)
+            await pilot.pause()
+
+            # Select project with access
+            app.set_selected_project_id("project-with-access")
+            await pilot.pause()
+
+            # Verify the app state is correct
+            assert app.projects_access is True, "Should have access for first project"
+
+            # Select project without access
+            app.set_selected_project_id("project-no-access")
+            await pilot.pause()
+
+            # Verify app state changed
+            assert app.projects_access is False, "Should not have access for second project"
+            # Verify app state changed
+            assert app.projects_access is False, "Should not have access for second project"
+            # Verify app state changed
+            assert app.projects_access is False, "Should not have access for second project"

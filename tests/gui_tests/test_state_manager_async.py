@@ -1,12 +1,12 @@
 """Tests for DDS State Manager async functionality."""
 
 import pathlib
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from dds_cli.dds_gui.dds_state_manager import DDSStateManager
-from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
 import dds_cli.exceptions
+from dds_cli.dds_gui.dds_state_manager import DDSStateManager
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
@@ -329,3 +329,132 @@ async def test_error_types_handling():
                 assert (
                     notifications[-1]["severity"] == expected_severity
                 ), f"Should show {expected_severity} severity for {type(error).__name__}"
+
+
+# =================================================================================
+# Project Access Tests
+# =================================================================================
+
+
+@pytest.mark.asyncio
+async def test_projects_access_set_when_project_selected():
+    """Test that projects_access is set when a project is selected."""
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
+    ) as mock_project_info_class:
+        # Mock DataLister to return projects
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
+
+        app = DDSStateManager()
+
+        async with app.run_test() as pilot:
+            # Load projects
+            app.fetch_projects_async()
+            await pilot.pause()
+
+            assert app.project_list is not None, "Projects should be loaded"
+
+            # Select a project with access
+            app.set_selected_project_id("project-001")
+            await pilot.pause()
+
+            # Verify projects_access is True
+            assert (
+                app.projects_access is True
+            ), "projects_access should be True for project with access"
+
+
+@pytest.mark.asyncio
+async def test_projects_access_false_for_project_without_access():
+    """Test that projects_access is False when a project without access is selected."""
+
+    # Create mock projects with one project having Access=False
+    mock_projects_with_no_access = [
+        {"Project ID": "project-001", "Title": "Project Alpha", "Access": True},
+        {"Project ID": "project-002", "Title": "Project Beta", "Access": False},
+    ]
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
+    ) as mock_project_info_class:
+        # Mock DataLister to return projects
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = mock_projects_with_no_access
+
+        # Mock ProjectInfoManager
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
+
+        app = DDSStateManager()
+
+        async with app.run_test() as pilot:
+            # Load projects
+            app.fetch_projects_async()
+            await pilot.pause()
+
+            assert app.project_list is not None, "Projects should be loaded"
+
+            # Select a project without access
+            app.set_selected_project_id("project-002")
+            await pilot.pause()
+
+            # Verify projects_access is False
+            assert (
+                app.projects_access is False
+            ), "projects_access should be False for project without access"
+
+
+@pytest.mark.asyncio
+async def test_projects_access_cleared_when_no_project_selected():
+    """Test that projects_access is False when no project is selected."""
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
+        # Mock DataLister to return projects
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        app = DDSStateManager()
+
+        async with app.run_test() as pilot:
+            # Load projects
+            app.fetch_projects_async()
+            await pilot.pause()
+
+            # Don't select any project
+            app.set_selected_project_id(None)
+            await pilot.pause()
+
+            # Verify projects_access is False
+            assert (
+                app.projects_access is False
+            ), "projects_access should be False when no project selected"
+            assert (
+                app.projects_access is False
+            ), "projects_access should be False when no project selected"

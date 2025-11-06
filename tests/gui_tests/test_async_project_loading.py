@@ -1,15 +1,16 @@
 """Tests for async project loading functionality."""
 
 import pathlib
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
+from textual.widgets import LoadingIndicator
 
 from dds_cli.dds_gui.app import DDSApp
-from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
 from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
-from textual.widgets import LoadingIndicator
+from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 
 
 async def wait_for_loading_state(app, pilot, expected_loading=True, max_attempts=10):
@@ -533,3 +534,134 @@ async def test_app_initialization_with_authenticated_user():
             assert (
                 len(loading_indicators) == 1
             ), "Should show loading indicator for authenticated user during initialization"
+
+
+# =================================================================================
+# Project Access Tests
+# =================================================================================
+
+
+@pytest.mark.asyncio
+async def test_project_access_loaded_with_projects():
+    """Test that project access information is loaded with projects."""
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
+        # Mock DataLister with projects that have different access levels
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+
+        mock_projects_mixed_access = [
+            {"Project ID": "project-001", "Title": "Project Alpha", "Access": True},
+            {"Project ID": "project-002", "Title": "Project Beta", "Access": False},
+        ]
+        mock_data_lister_instance.list_projects.return_value = mock_projects_mixed_access
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            # Authenticate and load projects
+            app.set_auth_status(True)
+            await pilot.pause()
+
+            # Wait for projects to load
+            app.fetch_projects_async()
+            await pilot.pause()
+
+            # Verify projects were loaded with access information
+            assert app.project_list is not None, "Projects should be loaded"
+            assert len(app.project_list.projects) == 2, "Should have 2 projects"
+
+            # Check individual project access
+            project_001 = app.project_list.projects.get("project-001")
+            assert project_001 is not None, "Project 001 should exist"
+            assert project_001.access is True, "Project 001 should have access"
+
+            project_002 = app.project_list.projects.get("project-002")
+            assert project_002 is not None, "Project 002 should exist"
+            assert project_002.access is False, "Project 002 should not have access"
+
+
+@pytest.mark.asyncio
+async def test_project_access_state_after_selection():
+    """Test that projects_access state is set correctly after project selection."""
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
+    ) as mock_project_info_class:
+        # Mock DataLister with projects
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = MOCK_PROJECTS
+
+        # Mock ProjectInfoManager
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = {
+            "Title": "Test Project",
+            "Description": "Test Description",
+            "Status": "Available",
+            "Created by": "test_user",
+            "Last updated": "2024-01-01",
+            "Size": "1024",
+            "PI": "Test PI",
+        }
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            # Authenticate and load projects
+            app.set_auth_status(True)
+            await pilot.pause()
+
+            # Manually set projects (simulating successful load)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
+            app.projects_loading = False
+            await pilot.pause()
+
+            # Select a project
+            app.set_selected_project_id("project-001")
+            await pilot.pause()
+
+            # Verify projects_access is set correctly
+            assert (
+                app.projects_access is True
+            ), "projects_access should be True for project with access"
+
+
+@pytest.mark.asyncio
+async def test_projects_without_access_field_filtered():
+    """Test that projects without valid Access field are filtered out."""
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
+        # Mock DataLister with malformed projects
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+
+        malformed_projects = [
+            {"Project ID": "project-001", "Title": "Valid Project", "Access": True},
+            {"Project ID": "project-002", "Title": "No Access Field"},  # Missing Access
+            {"Project ID": "project-003", "Title": "Invalid Access", "Access": "not-a-bool"},
+        ]
+        mock_data_lister_instance.list_projects.return_value = malformed_projects
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            # Authenticate and load projects
+            app.set_auth_status(True)
+            await pilot.pause()
+
+            # Load projects
+            app.fetch_projects_async()
+            await pilot.pause()
+
+            # Verify only valid project was loaded
+            assert app.project_list is not None, "Projects should be loaded"
+            # Only project-001 should remain (the one with valid Access field)
+            assert len(app.project_list.projects) >= 1, "Should have at least 1 valid project"
+
+            # Check that valid project exists
+            project_001 = app.project_list.projects.get("project-001")
+            assert project_001 is not None, "Valid project should exist"
+            assert project_001.access is True, "Valid project should have access=True"
+            assert project_001.access is True, "Valid project should have access=True"

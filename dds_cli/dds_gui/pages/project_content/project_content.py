@@ -6,6 +6,7 @@ from textual.widgets import Label, LoadingIndicator, Tree
 from textual.reactive import reactive
 
 from dds_cli.dds_gui.components.dds_container import DDSContainer
+from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
 from dds_cli.dds_gui.models.project_content import ProjectContentData
 
@@ -36,16 +37,12 @@ class ProjectContent(DDSContainer):
         elif self.is_loading:
             # Show loading when project selected but no content yet
             yield LoadingIndicator()
-
-        elif self.selected_project_id and self.app.project_list.projects.get(self.selected_project_id).access is False:
-            # Show no access message when project selected but no access
-            yield Label(f"You do not have access to view the content of project {self.selected_project_id}")
         elif self.selected_project_id and not self.is_loading and not self.project_content:
             # Show no data message when project selected but no content found
-            yield Label(f"No data found for project {self.selected_project_id}")
+            yield DDSTextItem(f"No data found for project {self.selected_project_id}")
         else:
             # Show default message when no project selected
-            yield Label("No project selected")
+            yield DDSTextItem("No project selected")
 
     def on_mount(self) -> None:
         """On mount, sync initial state and set up watchers."""

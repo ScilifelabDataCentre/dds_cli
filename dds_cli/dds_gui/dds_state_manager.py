@@ -53,6 +53,7 @@ class DDSStateManager(App):
     project_list: reactive[ProjectList] = reactive(None, recompose=True)
     selected_project_id: reactive[str] = reactive(None, recompose=True)
     projects_loading: reactive[bool] = reactive(False, recompose=True)
+    projects_access: reactive[bool] = reactive(False, recompose=True)
 
     @work(exclusive=True, thread=True)
     def fetch_projects_async(self) -> None:
@@ -183,7 +184,11 @@ class DDSStateManager(App):
 
         if not selected_project_id:
             self.is_loading = False
+            self.projects_access = False
             return
+
+        # Check project access
+        self.projects_access = self.project_list.projects.get(selected_project_id).access
 
         # Get project information
         self.fetch_project_information(selected_project_id)

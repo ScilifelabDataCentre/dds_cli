@@ -2,7 +2,7 @@
 
 from typing import Optional
 from textual.app import ComposeResult
-from textual.widgets import Label, LoadingIndicator, Tree
+from textual.widgets import LoadingIndicator, Tree
 from textual.reactive import reactive
 
 from dds_cli.dds_gui.components.dds_container import DDSContainer

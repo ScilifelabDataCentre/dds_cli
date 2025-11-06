@@ -2,18 +2,18 @@
 
 import pathlib
 from typing import List
-from textual.app import App
+
 from textual import work
+from textual.app import App
 from textual.reactive import reactive
 
 import dds_cli.auth
 import dds_cli.data_lister
-import dds_cli.exceptions
-import dds_cli.project_info
-
+from dds_cli.dds_gui.models.project import ProjectList
 from dds_cli.dds_gui.models.project_content import ProjectContentData
 from dds_cli.dds_gui.models.project_information import ProjectInformationData
-from dds_cli.dds_gui.models.project import Project, ProjectList
+import dds_cli.exceptions
+import dds_cli.project_info
 
 
 class DDSStateManager(App):
@@ -112,7 +112,9 @@ class DDSStateManager(App):
             dds_cli.exceptions.ApiResponseError,
             dds_cli.exceptions.DDSCLIException,
         ) as err:
-            self.call_from_thread(self._on_project_content_error, project_id, str(err), "error")
+            self.call_from_thread(
+                self._on_project_content_error, project_id, str(err), "error"
+            )
             return
         except dds_cli.exceptions.NoDataError as data_err:
             self.call_from_thread(
@@ -128,11 +130,15 @@ class DDSStateManager(App):
         self.is_loading = False
         self.project_content = content
 
-    def _on_project_content_error(self, project_id: str, message: str, severity: str) -> None:
+    def _on_project_content_error(
+        self, project_id: str, message: str, severity: str
+    ) -> None:
         """Handle content load error on the main thread."""
         self.is_loading = False
         if severity == "warning":
-            self.notify(f"No data found for project {project_id}: {message}", severity="warning")
+            self.notify(
+                f"No data found for project {project_id}: {message}", severity="warning"
+            )
         else:
             self.notify(f"Failed to fetch project content: {message}", severity="error")
         if self.selected_project_id == project_id:
@@ -140,13 +146,17 @@ class DDSStateManager(App):
 
     #### PROJECT INFORMATION #################################################
 
-    project_information: reactive[ProjectInformationData] = reactive(None, recompose=True)
+    project_information: reactive[ProjectInformationData] = reactive(
+        None, recompose=True
+    )
 
     def fetch_project_information(self, project_id: str) -> None:
         """Fetch the project information for a project id."""
         try:
             self.project_information = ProjectInformationData.from_dict(
-                dds_cli.project_info.ProjectInfoManager(project=project_id).get_project_info()
+                dds_cli.project_info.ProjectInfoManager(
+                    project=project_id
+                ).get_project_info()
             )
         except (
             dds_cli.exceptions.ApiRequestError,
@@ -167,12 +177,12 @@ class DDSStateManager(App):
             # Initial auth status is handled separately in on_mount()
             # We can detect this by checking if we're in the middle of app initialization
             # by seeing if the GUI is already mounted
-            if hasattr(self, "_mounted") and getattr(
-                self, "_mounted", False
-            ):  # pylint: disable=no-member
+            if hasattr(self, "_mounted") and getattr(self, "_mounted", False):  # pylint: disable=no-member
                 self.fetch_projects_async()
         else:
-            self.project_list = None  # This triggers watch_projects to clear project_ids
+            self.project_list = (
+                None  # This triggers watch_projects to clear project_ids
+            )
             self.selected_project_id = None
             self.projects_loading = False
 
@@ -188,7 +198,9 @@ class DDSStateManager(App):
             return
 
         # Check project access
-        self.projects_access = self.project_list.projects.get(selected_project_id).access
+        self.projects_access = self.project_list.projects.get(
+            selected_project_id
+        ).access
 
         # Get project information
         self.fetch_project_information(selected_project_id)

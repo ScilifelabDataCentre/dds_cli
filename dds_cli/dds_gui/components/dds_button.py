@@ -32,6 +32,7 @@ class DDSSkinnyButton(Button):
     def __init__(self, label: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(label.capitalize(), *args, **kwargs)
 
+    ## Styling to mimic the default styling of textual buttons
     DEFAULT_CSS = """
         DDSSkinnyButton {
             width: 100%;

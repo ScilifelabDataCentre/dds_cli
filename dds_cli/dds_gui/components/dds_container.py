@@ -1,12 +1,12 @@
 """DDS Container Widgets"""
 
-from typing import Any
+from typing import Any, Optional, Literal
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.reactive import Reactive
 
 
 class DDSContainer(VerticalScroll):
-    """A contianer widget with border and title for wrapping main content in the GUI.
+    """A container widget with border and title for wrapping main content in the GUI.
     Args:
         title: The title to be displayed in the border of the container.
     """
@@ -15,7 +15,7 @@ class DDSContainer(VerticalScroll):
         super().__init__(*args, **kwargs)
         self.border_title = title.upper()
 
-    subtitle: Reactive[str] = Reactive(None, recompose=False)
+    subtitle: Reactive[str | None] = Reactive(None, recompose=False)
 
     DEFAULT_CSS = """
     DDSContainer {
@@ -49,9 +49,29 @@ class DDSContentContainer(Vertical):
 class DDSSpacedContainer(VerticalScroll):
     """A container widget with vertical spacing between child widgets."""
 
+    def __init__(
+        self,
+        *args: Any,
+        align: Optional[
+            Literal[
+                "center top",
+                "right top",
+                "left top",
+                "center middle",
+                "right middle",
+                "left middle",
+                "center bottom",
+                "right bottom",
+                "left bottom",
+            ]
+        ] = "center top",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.styles.align = align.split(" ")
+
     DEFAULT_CSS = """
     DDSSpacedContainer {
-        align: center top;
         scrollbar-size: 1 1;
         scrollbar-color: $primary 80%;
         scrollbar-color-active: $primary;
@@ -61,8 +81,6 @@ class DDSSpacedContainer(VerticalScroll):
     DDSSpacedContainer > * {
         margin-bottom: 1;
     }
-
-    
     """
 
 

@@ -32,7 +32,7 @@ class AccessChip(Widget):
         color: #A0FF77;
     }
     .no-access {
-        color: #F8B4B4;
+        color: #ff073a;
     }
     """
 

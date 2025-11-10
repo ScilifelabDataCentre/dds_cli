@@ -51,6 +51,7 @@ class DownloadData(Widget):
     # Local reactive attributes that mirror app state and trigger recomposition
     selected_project_id: reactive[Optional[str]] = reactive(None, recompose=True)
     is_downloading: reactive[bool] = reactive(False)
+    has_project_access: reactive[bool] = reactive(False, recompose=True)
 
     def _safe_ui_operation(
         self, operation: callable, error_message: str = "UI operation failed"
@@ -91,7 +92,7 @@ class DownloadData(Widget):
                 id="download-project-content-button",
                 disabled=not self.selected_project_id
                 or self.is_downloading
-                or not self.app.projects_access,
+                or not self.has_project_access,
             )
 
             with DDSSpacedHorizontalContainer(id="progress-bar-container"):
@@ -112,15 +113,18 @@ class DownloadData(Widget):
         """On mount, sync initial state and set up watchers."""
         # Initialize local reactive attributes with current app state
         self.selected_project_id = self.app.selected_project_id
+        self.has_project_access = self.app.projects_access
 
         # Set up watchers to keep local state in sync with app state
         self.watch(self.app, "selected_project_id", self.watch_selected_project_id)
+        self.watch(self.app, "projects_access", self.watch_projects_access)
 
         # Set up watchers for reactive attributes to update labels manually
         self.watch(self, "files_downloaded", self.watch_files_downloaded)
         self.watch(self, "error_files", self.watch_error_files)
         self.watch(self, "total_files", self.watch_total_files)
         self.watch(self, "is_downloading", self.watch_is_downloading)
+        self.watch(self, "has_project_access", self.watch_has_project_access)
 
     def on_unmount(self) -> None:
         """On unmount, clean up any ongoing downloads."""
@@ -146,7 +150,11 @@ class DownloadData(Widget):
         """Watch the app's selected_project_id state and sync to local reactive attribute."""
         self.selected_project_id = selected_project_id
         # Also update button state when project selection changes
-        self.watch_is_downloading(self.is_downloading)
+        self._update_button_state()
+
+    def watch_projects_access(self, has_access: bool) -> None:
+        """Watch the app's projects_access state and sync to local reactive attribute."""
+        self.has_project_access = has_access
 
     def _update_files_label(
         self,
@@ -183,15 +191,29 @@ class DownloadData(Widget):
         """Watch total_files changes and update the files label."""
         self._update_files_label(total_files=total_files)
 
-    def watch_is_downloading(self, is_downloading: bool) -> None:
-        """Watch is_downloading changes and update the button state."""
+    def _update_button_state(self) -> None:
+        """Update the disabled state of the download button."""
 
         def update_button():
             button = self.query_one("#download-project-content-button", None)
             if button:
-                button.disabled = not self.selected_project_id or is_downloading
+                button.disabled = (
+                    not self.selected_project_id
+                    or self.is_downloading
+                    or not self.has_project_access
+                )
 
         self._safe_ui_operation(update_button, "button state update")
+
+    def watch_is_downloading(self, is_downloading: bool) -> None:
+        """Watch is_downloading changes and update the button state."""
+        _ = is_downloading  # unused, but kept for signature compatibility
+        self._update_button_state()
+
+    def watch_has_project_access(self, has_access: bool) -> None:
+        """Watch has_project_access changes and update the button state."""
+        _ = has_access  # unused, but kept for signature compatibility
+        self._update_button_state()
 
     def on_button_pressed(self, event: events.Click) -> None:
         """Handle button presses."""

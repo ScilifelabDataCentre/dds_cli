@@ -97,6 +97,7 @@ def test_watch_is_downloading_enables_button():
     """Test watching is_downloading changes enables button."""
     widget = DownloadData()
     widget.selected_project_id = "test-project"
+    widget.has_project_access = True  # Ensure access is granted
 
     with patch.object(widget, "query_one") as mock_query:
         mock_button = MagicMock()
@@ -1422,6 +1423,10 @@ async def test_download_button_access_state_changes():
             app.set_selected_project_id("project-no-access")
             await pilot.pause()
 
+            # Verify app state changed
+            assert app.projects_access is False, "Should not have access for second project"
+            # Verify app state changed
+            assert app.projects_access is False, "Should not have access for second project"
             # Verify app state changed
             assert app.projects_access is False, "Should not have access for second project"
             # Verify app state changed

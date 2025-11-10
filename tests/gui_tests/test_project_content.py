@@ -1019,7 +1019,6 @@ async def test_tree_view_structure_validation():
         tree_widget = tree_widgets[0]
         # Root should have children
         assert len(tree_widget.root.children) > 0
-
         tree_widget = tree_widgets[0]
         # Root should have children
         assert len(tree_widget.root.children) > 0

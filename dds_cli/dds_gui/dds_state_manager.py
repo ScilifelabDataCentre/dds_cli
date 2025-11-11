@@ -188,7 +188,11 @@ class DDSStateManager(App):
             return
 
         # Check project access
-        self.projects_access = self.project_list.projects.get(selected_project_id).access
+        project = self.project_list.projects.get(selected_project_id)
+        if project:
+            self.projects_access = project.access
+        else:
+            self.projects_access = False
 
         # Get project information
         self.fetch_project_information(selected_project_id)

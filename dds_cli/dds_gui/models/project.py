@@ -2,6 +2,10 @@
 
 from dataclasses import dataclass
 
+import logging
+
+LOG = logging.getLogger(__name__)
+
 
 @dataclass
 class Project:
@@ -54,6 +58,7 @@ class ProjectList:
                     valid_projects[project["Project ID"]] = Project.from_dict(project)
                 except (KeyError, TypeError):
                     # Skip projects that fail to parse
+                    LOG.error("Failed to parse project: %s", project.get("Project ID"))
                     continue
 
         return cls(projects=valid_projects)

@@ -32,13 +32,14 @@ class AccessChip(Widget):
         color: #A0FF77;
     }
     .no-access {
-        color: #ff073a;
+       background: #ff073a;
+        color: #ffffff;
     }
     """
 
     def compose(self) -> ComposeResult:
         yield Static(
             ACCESS_CHIP_TEXT[self.access],
-            classes=ACCESS_CHIP_CLASSES[self.access],
+            classes="no-access",  # ACCESS_CHIP_CLASSES[self.access],
             id="access-chip",
         )

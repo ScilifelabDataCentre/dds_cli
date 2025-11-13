@@ -25,21 +25,25 @@ class AccessChip(Widget):
 
     DEFAULT_CSS = """
     #access-chip {
-        text-align: right;
-        padding: 0;
+        height: auto;
+        width: auto;
+        padding: 0 1;
+        text-align: center;
+        text-style: bold;
     }
     .access {
-        color: #A0FF77;
+        color: #ebf7e6;
+        background: #41911f;
     }
     .no-access {
-       background: #ff073a;
-        color: #ffffff;
+        background: #ff073a;
+        color: #fae1e6;
     }
     """
 
     def compose(self) -> ComposeResult:
         yield Static(
             ACCESS_CHIP_TEXT[self.access],
-            classes="no-access",  # ACCESS_CHIP_CLASSES[self.access],
+            classes=ACCESS_CHIP_CLASSES[self.access],
             id="access-chip",
         )

@@ -2,12 +2,13 @@
 
 from typing import Optional
 from textual.app import ComposeResult
-from textual.widgets import Label, LoadingIndicator, Tree
+from textual.widgets import LoadingIndicator, Tree
 from textual.reactive import reactive
 
 from dds_cli.dds_gui.components.dds_container import DDSContainer
+from dds_cli.dds_gui.components.dds_text_item import DDSTextItem
 from dds_cli.dds_gui.pages.project_content.components.tree_view import TreeView
-from dds_cli.dds_gui.models.project import ProjectContentData
+from dds_cli.dds_gui.models.project_content import ProjectContentData
 
 
 class ProjectContent(DDSContainer):
@@ -27,6 +28,7 @@ class ProjectContent(DDSContainer):
 
     def compose(self) -> ComposeResult:
         """Compose the widget based on current state."""
+
         if self.project_content:
             # Show tree view when we have content
             yield TreeView(self.project_content)
@@ -35,10 +37,10 @@ class ProjectContent(DDSContainer):
             yield LoadingIndicator()
         elif self.selected_project_id and not self.is_loading and not self.project_content:
             # Show no data message when project selected but no content found
-            yield Label(f"No data found for project {self.selected_project_id}")
+            yield DDSTextItem(f"No data found for project {self.selected_project_id}")
         else:
             # Show default message when no project selected
-            yield Label("No project selected")
+            yield DDSTextItem("No project selected")
 
     def on_mount(self) -> None:
         """On mount, sync initial state and set up watchers."""

@@ -493,3 +493,4 @@ _Empty sprint_
 ## 2025-11-10 - 2025-11-21
 
 - Add legacy-cgi dependency ([#857](https://github.com/ScilifelabDataCentre/dds_cli/pull/857))
+- Fix combine --size and --tree bug([#858](https://github.com/ScilifelabDataCentre/dds_cli/pull/858))

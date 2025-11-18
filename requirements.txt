@@ -18,4 +18,4 @@ simplejson==3.17.6
 tzlocal==4.2
 zstandard==0.23.0
 textual==6.2.1
-legacy-cgi==2.6.1
+legacy-cgi==2.6.1 ; python_version >= '3.13'

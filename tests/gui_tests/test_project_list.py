@@ -7,6 +7,7 @@ import pytest
 from dds_cli.dds_gui.app import DDSApp
 from dds_cli.dds_gui.pages.project_list.project_list import ProjectList
 from dds_cli.dds_gui.components.dds_select import DDSSelect
+from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
 from textual.widgets import Label
 import dds_cli.exceptions
 
@@ -14,8 +15,8 @@ TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
 # Test data
 MOCK_PROJECTS = [
-    {"Project ID": "project-001", "Title": "Project Alpha"},
-    {"Project ID": "project-002", "Title": "Project Beta"},
+    {"Project ID": "project-001", "Title": "Project Alpha", "Access": True},
+    {"Project ID": "project-002", "Title": "Project Beta", "Access": True},
 ]
 
 # =================================================================================
@@ -53,6 +54,7 @@ async def test_basic_widget_functionality():
         async with app.run_test() as pilot:
             # Set up state and mount widget
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             widget = ProjectList(title="Project List")
@@ -100,6 +102,7 @@ async def test_project_selection():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             widget = ProjectList(title="Project List")
@@ -156,6 +159,7 @@ async def test_no_selection_warning():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             widget = ProjectList(title="Project List")
@@ -188,6 +192,7 @@ async def test_empty_projects():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict([])
             await pilot.pause()
 
             widget = ProjectList(title="Project List")
@@ -246,9 +251,9 @@ async def test_data_validation():
     """Test malformed data is handled properly."""
 
     malformed_projects = [
-        {"Project ID": "valid-001", "Title": "Valid"},
-        {"Title": "No ID"},  # Invalid
-        {"Project ID": "", "Title": "Empty ID"},  # Invalid
+        {"Project ID": "valid-001", "Title": "Valid", "Access": True},
+        {"Title": "No ID"},  # Invalid - will be skipped
+        {"Project ID": "", "Title": "Empty ID", "Access": True},  # Invalid - will be skipped
     ]
 
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
@@ -261,13 +266,18 @@ async def test_data_validation():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            # ProjectList.from_dict() now automatically filters invalid projects
+            app.project_list = ProjectListModel.from_dict(malformed_projects)
             await pilot.pause()
 
             widget = ProjectList(title="Project List")
             app.mount(widget)
             await pilot.pause()
 
+            # Should show project selector with only valid projects
             select_widgets = widget.query(DDSSelect)
+            # Only 1 valid project should remain after filtering
+            assert len(select_widgets) == 1, "Should show project selector"
             select_widget = select_widgets[0]
             assert len(select_widget._options) == 2  # BLANK + 1 valid project
 
@@ -306,6 +316,7 @@ async def test_preselected_project():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(MOCK_PROJECTS)
             await pilot.pause()
 
             # Set selected project after projects are loaded
@@ -389,11 +400,11 @@ async def test_special_characters():
     """Test handling of project IDs with special characters."""
 
     special_projects = [
-        {"Project ID": "project-with-spaces in name", "Title": "Test"},
-        {"Project ID": "project_with_underscores", "Title": "Test"},
-        {"Project ID": "project-with-unicode-émojis🎉", "Title": "Test"},
-        {"Project ID": "project/with/slashes", "Title": "Test"},
-        {"Project ID": "project.with.dots", "Title": "Test"},
+        {"Project ID": "project-with-spaces in name", "Title": "Test", "Access": True},
+        {"Project ID": "project_with_underscores", "Title": "Test", "Access": True},
+        {"Project ID": "project-with-unicode-émojis🎉", "Title": "Test", "Access": True},
+        {"Project ID": "project/with/slashes", "Title": "Test", "Access": True},
+        {"Project ID": "project.with.dots", "Title": "Test", "Access": True},
     ]
 
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
@@ -406,6 +417,7 @@ async def test_special_characters():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(special_projects)
             await pilot.pause()
 
             widget = ProjectList(title="Project List")
@@ -425,7 +437,8 @@ async def test_large_dataset_performance():
     """Test performance with large number of projects."""
 
     large_projects = [
-        {"Project ID": f"project-{i:03d}", "Title": f"Project {i}"} for i in range(1, 101)
+        {"Project ID": f"project-{i:03d}", "Title": f"Project {i}", "Access": True}
+        for i in range(1, 101)
     ]  # 100 projects
 
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
@@ -438,6 +451,7 @@ async def test_large_dataset_performance():
 
         async with app.run_test() as pilot:
             app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(large_projects)
             await pilot.pause()
 
             widget = ProjectList(title="Project List")

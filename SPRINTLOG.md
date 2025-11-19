@@ -483,3 +483,13 @@ _Empty sprint_
 ## 2025-10-13 - 2025-10-24
 
 - Remove custom button styling ([#854](https://github.com/ScilifelabDataCentre/dds_cli/pull/854))
+
+## 2025-10-27 - 2025-11-07
+
+- Latex action for documentation failing due to emojis ([#855](https://github.com/ScilifelabDataCentre/dds_cli/pull/855))
+- Add project download to the GUI ([#851](https://github.com/ScilifelabDataCentre/dds_cli/pull/851))
+- Display project access in the GUI ([#856](https://github.com/ScilifelabDataCentre/dds_cli/pull/856))
+
+## 2025-11-10 - 2025-11-21
+
+- Add legacy-cgi dependency ([#857](https://github.com/ScilifelabDataCentre/dds_cli/pull/857))

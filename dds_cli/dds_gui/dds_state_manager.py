@@ -2,17 +2,18 @@
 
 import pathlib
 from typing import List
-from textual.app import App
+
 from textual import work
+from textual.app import App
 from textual.reactive import reactive
 
 import dds_cli.auth
 import dds_cli.data_lister
+from dds_cli.dds_gui.models.project import ProjectList
+from dds_cli.dds_gui.models.project_content import ProjectContentData
+from dds_cli.dds_gui.models.project_information import ProjectInformationData
 import dds_cli.exceptions
 import dds_cli.project_info
-
-from dds_cli.dds_gui.models.project import ProjectContentData
-from dds_cli.dds_gui.models.project_information import ProjectInformationData
 
 
 class DDSStateManager(App):
@@ -49,21 +50,10 @@ class DDSStateManager(App):
 
     #### PROJECT LISTING ####################################################
 
-    project_list: reactive[List[dict]] = reactive(None, recompose=True)
+    project_list: reactive[ProjectList] = reactive(None, recompose=True)
     selected_project_id: reactive[str] = reactive(None, recompose=True)
     projects_loading: reactive[bool] = reactive(False, recompose=True)
-
-    def fetch_projects(self) -> None:
-        """Fetch the projects synchronously for initialization."""
-        try:
-            self.project_list = dds_cli.data_lister.DataLister(json=True).list_projects()
-        except (
-            dds_cli.exceptions.ApiRequestError,
-            dds_cli.exceptions.ApiResponseError,
-            dds_cli.exceptions.DDSCLIException,
-        ) as err:
-            self.notify(f"Failed to fetch projects: {err}", severity="error")
-            self.project_list = None
+    projects_access: reactive[bool] = reactive(False, recompose=True)
 
     @work(exclusive=True, thread=True)
     def fetch_projects_async(self) -> None:
@@ -89,7 +79,7 @@ class DDSStateManager(App):
     def _on_projects_loaded(self, project_list: List[dict]) -> None:
         """Handle successful project list load on the main thread."""
         self.projects_loading = False
-        self.project_list = project_list
+        self.project_list = ProjectList.from_dict(project_list)
 
     def _on_projects_error(self, error_message: str) -> None:
         """Handle project list load error on the main thread."""
@@ -194,7 +184,15 @@ class DDSStateManager(App):
 
         if not selected_project_id:
             self.is_loading = False
+            self.projects_access = False
             return
+
+        # Check project access
+        project = self.project_list.projects.get(selected_project_id)
+        if project:
+            self.projects_access = project.access
+        else:
+            self.projects_access = False
 
         # Get project information
         self.fetch_project_information(selected_project_id)

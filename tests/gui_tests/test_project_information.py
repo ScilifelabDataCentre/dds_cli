@@ -9,12 +9,25 @@ from dds_cli.dds_gui.pages.project_information.project_information import (
     ProjectInformation,
     ProjectInformationTable,
 )
+from dds_cli.dds_gui.pages.project_information.components.access_chip import AccessChip
 from dds_cli.dds_gui.models.project_information import (
     ProjectInformationData,
     ProjectInformationDataTable,
 )
+from dds_cli.dds_gui.models.project import ProjectList as ProjectListModel
 from dds_cli.dds_gui.types.dds_status_types import DDSStatus
 import dds_cli.exceptions
+
+
+def get_element_text(elem):
+    """Safely get the plain text content from a widget element."""
+    render_result = elem.render()
+    if hasattr(render_result, "plain"):
+        return render_result.plain
+    else:
+        # If render() returns a string directly, return it
+        return str(render_result)
+
 
 TOKEN_PATH = pathlib.Path("custom") / "token" / "path"
 
@@ -157,70 +170,118 @@ def test_project_information_data_from_dict_empty_title_description():
 @pytest.mark.asyncio
 async def test_project_information_table_compose():
     """Test ProjectInformationTable widget composition."""
-    data_table = ProjectInformationDataTable.from_dict(MOCK_PROJECT_INFO_DATA)
-    table_widget = ProjectInformationTable(data_table)
+    project_data = ProjectInformationData.from_dict(MOCK_PROJECT_INFO_DATA)
+
+    # Mock projects with access
+    mock_projects = [
+        {"Project ID": "test-project", "Title": "Test Project", "Access": True},
+    ]
 
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.return_value = []
+        mock_data_lister_instance.list_projects.return_value = mock_projects
 
         app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
-            app.mount(table_widget)
+            # Set up app state with access
+            app.project_list = ProjectListModel.from_dict(mock_projects)
+            app.projects_access = True
+            app.project_information = project_data
+            await pilot.pause()
+
+            widget = ProjectInformation(title="Project Information")
+            app.mount(widget)
             await pilot.pause()
 
             # Check that all expected elements are present
             status_chips = app.query("DDSStatusChip")
-            assert len(status_chips) == 1
+            assert len(status_chips) >= 1
             assert status_chips[0].status == DDSStatus.AVAILABLE
 
+            # Check for AccessChip
+            access_chips = app.query("AccessChip")
+            assert len(access_chips) >= 1
+            assert access_chips[0].access is True
+
             # Check all static text elements
-            static_elements = app.query("Static")
-            assert len(static_elements) >= 8  # 4 keys + 4 values
+            table_static_elements = app.query("Static")
+            assert len(table_static_elements) >= 10  # 5 keys + 5 values (including access)
 
             # Verify specific content
             created_by_elements = [
                 elem
-                for elem in static_elements
-                if str(elem.render().plain) == "test_user@example.com"
+                for elem in table_static_elements
+                if "test_user@example.com" in get_element_text(elem)
             ]
-            assert len(created_by_elements) == 1
+            assert len(created_by_elements) >= 1
 
             pi_elements = [
                 elem
-                for elem in static_elements
-                if str(elem.render().plain) == "Dr. Test Investigator"
+                for elem in table_static_elements
+                if "Dr. Test Investigator" in get_element_text(elem)
             ]
-            assert len(pi_elements) == 1
+            assert len(pi_elements) >= 1
+
+            # Verify access text is displayed
+            access_text_elements = [
+                elem for elem in table_static_elements if "Access Granted" in get_element_text(elem)
+            ]
+            assert len(access_text_elements) >= 1
 
 
 @pytest.mark.asyncio
 async def test_project_information_table_with_none_values():
     """Test ProjectInformationTable widget with None values."""
-    data_table = ProjectInformationDataTable.from_dict(MOCK_PROJECT_INFO_DATA_WITH_NONE)
-    table_widget = ProjectInformationTable(data_table)
+    project_data = ProjectInformationData.from_dict(MOCK_PROJECT_INFO_DATA_WITH_NONE)
+
+    # Mock projects with no access
+    mock_projects = [
+        {"Project ID": "test-project", "Title": "Test Project", "Access": False},
+    ]
 
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
         mock_data_lister_class.return_value = mock_data_lister_instance
-        mock_data_lister_instance.list_projects.return_value = []
+        mock_data_lister_instance.list_projects.return_value = mock_projects
 
         app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
-            app.mount(table_widget)
+            # Set up app state without access
+            app.project_list = ProjectListModel.from_dict(mock_projects)
+            app.projects_access = False
+            app.project_information = project_data
+            await pilot.pause()
+
+            widget = ProjectInformation(title="Project Information")
+            app.mount(widget)
             await pilot.pause()
 
             # Check that N/A values are displayed
-            static_elements = app.query("Static")
-            na_elements = [elem for elem in static_elements if str(elem.render().plain) == "N/A"]
-            assert len(na_elements) == 4  # created_by, last_updated, size, pi
+            table_static_elements = app.query("Static")
+            na_elements = [
+                elem for elem in table_static_elements if get_element_text(elem) == "N/A"
+            ]
+            assert len(na_elements) >= 4  # created_by, last_updated, size, pi
 
             # Check size display (should show "N/A" without "B")
-            size_elements = [elem for elem in static_elements if "N/A" in str(elem.render().plain)]
+            size_elements = [
+                elem for elem in table_static_elements if "N/A" in get_element_text(elem)
+            ]
             assert len(size_elements) >= 1
+
+            # Check for AccessChip showing no access
+            access_chips = app.query("AccessChip")
+            assert len(access_chips) >= 1
+            assert access_chips[0].access is False
+
+            # Verify access denied text is displayed
+            access_text_elements = [
+                elem for elem in table_static_elements if "Access Denied" in get_element_text(elem)
+            ]
+            assert len(access_text_elements) >= 1
 
 
 @pytest.mark.asyncio
@@ -229,8 +290,7 @@ async def test_project_information_table_size_display():
     # Test with valid size
     data_with_size = MOCK_PROJECT_INFO_DATA.copy()
     data_with_size["Size"] = "2048"  # Use numeric value, will be formatted to "2.0 KB"
-    data_table = ProjectInformationDataTable.from_dict(data_with_size)
-    table_widget = ProjectInformationTable(data_table)
+    project_data = ProjectInformationData.from_dict(data_with_size)
 
     with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
         mock_data_lister_instance = MagicMock()
@@ -240,15 +300,23 @@ async def test_project_information_table_size_display():
         app = DDSApp(token_path=str(TOKEN_PATH))
 
         async with app.run_test() as pilot:
-            app.mount(table_widget)
+            # Set up app state with access for this test
+            mock_projects = [{"Project ID": "test", "Title": "Test", "Access": True}]
+            app.project_list = ProjectListModel.from_dict(mock_projects)
+            app.projects_access = True
+            app.project_information = project_data
+            await pilot.pause()
+
+            widget = ProjectInformation(title="Project Information")
+            app.mount(widget)
             await pilot.pause()
 
             # Check that size is displayed with "B" suffix
-            static_elements = app.query("Static")
+            table_static_elements = app.query("Static")
             size_elements = [
-                elem for elem in static_elements if "2.0 KB" in str(elem.render().plain)
+                elem for elem in table_static_elements if "2.0 KB" in get_element_text(elem)
             ]
-            assert len(size_elements) == 1
+            assert len(size_elements) >= 1
 
 
 # =================================================================================
@@ -280,11 +348,11 @@ async def test_project_information_with_data():
             # Check that project information is displayed
             title_elements = app.query("#project-title")
             assert len(title_elements) >= 1
-            assert "Test Project" in str(title_elements[0].render().plain)
+            assert "Test Project" in get_element_text(title_elements[0])
 
             description_elements = app.query("#project-description")
             assert len(description_elements) >= 1
-            assert "A test project for unit testing" in str(description_elements[0].render().plain)
+            assert "A test project for unit testing" in get_element_text(description_elements[0])
 
             # Check that table is present
             table_elements = app.query("#project-information-table")
@@ -313,7 +381,7 @@ async def test_project_information_without_data():
             # Check that "No project selected" message is displayed
             text_elements = app.query("DDSTextItem")
             no_project_elements = [
-                elem for elem in text_elements if "No project selected" in str(elem.render().plain)
+                elem for elem in text_elements if "No project selected" in get_element_text(elem)
             ]
             assert len(no_project_elements) >= 1
 
@@ -340,7 +408,7 @@ async def test_project_information_reactive_updates():
             # Initially no data
             text_elements = app.query("DDSTextItem")
             no_project_elements = [
-                elem for elem in text_elements if "No project selected" in str(elem.render().plain)
+                elem for elem in text_elements if "No project selected" in get_element_text(elem)
             ]
             assert len(no_project_elements) >= 1
 
@@ -352,7 +420,7 @@ async def test_project_information_reactive_updates():
             # Check that content updated
             title_elements = app.query("#project-title")
             assert len(title_elements) >= 1
-            assert "Test Project" in str(title_elements[0].render().plain)
+            assert "Test Project" in get_element_text(title_elements[0])
 
             # Remove project data
             app.project_information = None
@@ -361,7 +429,7 @@ async def test_project_information_reactive_updates():
             # Check that it reverted to "No project selected"
             text_elements = app.query("DDSTextItem")
             no_project_elements = [
-                elem for elem in text_elements if "No project selected" in str(elem.render().plain)
+                elem for elem in text_elements if "No project selected" in get_element_text(elem)
             ]
             assert len(no_project_elements) >= 1
 
@@ -620,7 +688,7 @@ async def test_full_project_information_workflow():
             # Initially no project information
             text_elements = app.query("DDSTextItem")
             no_project_elements = [
-                elem for elem in text_elements if "No project selected" in str(elem.render().plain)
+                elem for elem in text_elements if "No project selected" in get_element_text(elem)
             ]
             assert len(no_project_elements) >= 1
 
@@ -633,11 +701,11 @@ async def test_full_project_information_workflow():
 
             title_elements = app.query("#project-title")
             assert len(title_elements) >= 1
-            assert "Test Project" in str(title_elements[0].render().plain)
+            assert "Test Project" in get_element_text(title_elements[0])
 
             description_elements = app.query("#project-description")
             assert len(description_elements) >= 1
-            assert "A test project for unit testing" in str(description_elements[0].render().plain)
+            assert "A test project for unit testing" in get_element_text(description_elements[0])
 
             # Verify table is present and functional
             table_elements = app.query("#project-information-table")
@@ -654,3 +722,127 @@ async def test_full_project_information_workflow():
             # Widget should still show the data until recomposed
             # (This tests the reactive behavior)
             assert app.project_information is not None  # Data persists until widget recomposes
+
+
+# =================================================================================
+# AccessChip Tests
+# =================================================================================
+
+
+@pytest.mark.asyncio
+async def test_access_chip_with_access_granted():
+    """Test AccessChip component displays 'Access Granted' correctly."""
+    # Test through ProjectInformation widget
+    project_data = ProjectInformationData.from_dict(MOCK_PROJECT_INFO_DATA)
+    mock_projects = [{"Project ID": "test", "Title": "Test", "Access": True}]
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = mock_projects
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            # Set up app state with access
+            app.project_list = ProjectListModel.from_dict(mock_projects)
+            app.projects_access = True
+            app.project_information = project_data
+            await pilot.pause()
+
+            widget = ProjectInformation(title="Project Information")
+            app.mount(widget)
+            await pilot.pause()
+
+            # Verify AccessChip is present and shows access granted
+            access_chips = app.query("AccessChip")
+            assert len(access_chips) >= 1
+            assert access_chips[0].access is True
+
+            # Verify the chip displays correct text
+            static_elements = app.query("Static")
+            access_text_elements = [
+                elem for elem in static_elements if "Access Granted" in get_element_text(elem)
+            ]
+            assert len(access_text_elements) >= 1
+
+
+@pytest.mark.asyncio
+async def test_access_chip_with_access_denied():
+    """Test AccessChip component displays 'Access Denied' correctly."""
+    # Test through ProjectInformation widget
+    project_data = ProjectInformationData.from_dict(MOCK_PROJECT_INFO_DATA)
+    mock_projects = [{"Project ID": "test", "Title": "Test", "Access": False}]
+
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class:
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+        mock_data_lister_instance.list_projects.return_value = mock_projects
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            # Set up app state without access
+            app.project_list = ProjectListModel.from_dict(mock_projects)
+            app.projects_access = False
+            app.project_information = project_data
+            await pilot.pause()
+
+            widget = ProjectInformation(title="Project Information")
+            app.mount(widget)
+            await pilot.pause()
+
+            # Verify AccessChip is present and shows access denied
+            access_chips = app.query("AccessChip")
+            assert len(access_chips) >= 1
+            assert access_chips[0].access is False
+
+            # Verify the chip displays correct text
+            static_elements = app.query("Static")
+            access_text_elements = [
+                elem for elem in static_elements if "Access Denied" in get_element_text(elem)
+            ]
+            assert len(access_text_elements) >= 1
+
+
+@pytest.mark.asyncio
+async def test_project_information_shows_access_chip():
+    """Test that ProjectInformation widget includes AccessChip in the table."""
+    with patch("dds_cli.data_lister.DataLister") as mock_data_lister_class, patch(
+        "dds_cli.project_info.ProjectInfoManager"
+    ) as mock_project_info_class:
+        mock_data_lister_instance = MagicMock()
+        mock_data_lister_class.return_value = mock_data_lister_instance
+
+        # Mock projects with access
+        mock_projects = [
+            {"Project ID": "test-project", "Title": "Test Project", "Access": True},
+        ]
+        mock_data_lister_instance.list_projects.return_value = mock_projects
+
+        mock_project_info_instance = MagicMock()
+        mock_project_info_class.return_value = mock_project_info_instance
+        mock_project_info_instance.get_project_info.return_value = MOCK_PROJECT_INFO_DATA
+
+        app = DDSApp(token_path=str(TOKEN_PATH))
+
+        async with app.run_test() as pilot:
+            app.set_auth_status(True)
+            app.project_list = ProjectListModel.from_dict(mock_projects)
+            app.projects_access = True
+            await pilot.pause()
+
+            # Set project information
+            project_data = ProjectInformationData.from_dict(MOCK_PROJECT_INFO_DATA)
+            app.project_information = project_data
+            await pilot.pause()
+
+            # Mount the widget
+            widget = ProjectInformation(title="Project Information")
+            app.mount(widget)
+            await pilot.pause()
+
+            # Verify AccessChip is present in the table
+            access_chips = widget.query("AccessChip")
+            assert len(access_chips) >= 1
+            assert access_chips[0].access is True

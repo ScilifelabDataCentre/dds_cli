@@ -23,16 +23,7 @@ from rich.tree import Tree
 from dds_cli import DDSEndpoint, base, exceptions
 from dds_cli import text_handler as th
 import dds_cli.utils
-# Installed
-from rich.padding import Padding
-from rich.table import Table
-from rich.tree import Tree
 
-import dds_cli.utils
-
-# Own modules
-from dds_cli import DDSEndpoint, base, exceptions
-from dds_cli import text_handler as th
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #

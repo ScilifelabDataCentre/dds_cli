@@ -1,6 +1,6 @@
-# Release new GUI version
+# Release new GUI binaries
 ---
-name: New GUI Release
+name: New GUI Binary Release
 on:
   release:
     types: [published]
@@ -28,8 +28,8 @@ jobs:
       - name: Build the distribution
         run: python setup.py sdist bdist_wheel
 
-  executable:
-    name: Build GUI executables
+  dds_gui_binaries:
+    name: Build DDS GUI binaries
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -63,10 +63,10 @@ jobs:
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
       - uses: actions/checkout@v4
-      - name: Python 3.9 setup
+      - name: Python 3.13 setup
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.13
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

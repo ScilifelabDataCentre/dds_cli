@@ -4,9 +4,6 @@ name: New GUI Binary Release
 on:
   release:
     types: [published]
-    branches:
-      - "master"
-  workflow_dispatch:
 
 jobs:
   build:

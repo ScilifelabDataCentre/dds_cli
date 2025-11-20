@@ -17,6 +17,10 @@ You can install ``dds-cli`` in two different ways:
 The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>` and :ref:`Windows<windows>`, and how to load ``dds-cli`` on :ref:`Uppmax<uppmax>` / :ref:`Dardel<dardel>`. 
 Note that the sections describing installation from PyPI are focused on the ``install`` command, and do not provide a guide on how to verify the package integrity with checksums. Instructions on how to do this can be found at the :ref:`bottom of this page<verify-integrity>`.
 
+.. note::
+   The DDS GUI is not available for installation from PyPI. It is only available via the executables, or as a command in the CLI. 
+   To install the GUI executable, see the :ref:`installation instructions for the GUI<gui-installation>`.
+
 .. _mac-linux:
 
 MacOS / Linux
@@ -349,3 +353,28 @@ This installation guide is for those that want to verify that the ``dds-cli`` pa
    The output should be the following:
 
    .. image:: ../img/dds-version.svg
+
+.. _gui-installation:
+
+Installation of the DDS GUI
+============================
+
+MacOS / Linux
+-------------
+
+Follow step 1-3 of the :ref:`installation instructions for the CLI<exec-unix>`, but replace the executable name with ``dds gui``. 
+
+The executables can be found here:
+   * MacOS: `Download MacOS GUI Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_gui_macos_x86_64>`_
+   * Linux: `Download Linux GUI Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_gui_ubuntu-latest_x86_64>`_
+
+Once the setup is complete, you can either run the GUI by typing ``dds gui`` in the terminal, or by double-clicking the executable.
+
+Windows
+-------
+
+Follow step 1-4 of the :ref:`installation instructions for the CLI<exec-windows>`. 
+
+The executable can be found here: `Download Windows GUI Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_gui_win_x86_64.exe>`_
+
+Once the setup is complete, you can either run the GUI by typing ``<path-to-executable> gui`` in the terminal, or by double-clicking the executable.

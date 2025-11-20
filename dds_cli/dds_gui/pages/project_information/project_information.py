@@ -6,6 +6,7 @@ from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
 from textual.widgets import Static
 
+from dds_cli.dds_gui.pages.project_information.components.access_chip import AccessChip
 from dds_cli.dds_gui.components.dds_container import (
     DDSContainer,
     DDSContentContainer,
@@ -109,5 +110,10 @@ class ProjectInformationTable(Widget):
             yield Horizontal(
                 Static("PI", classes="key-pair-row-key"),
                 Static(self.data.pi, classes="key-pair-row-value"),
+                classes="key-pair-row",
+            )
+            yield Horizontal(
+                Static("Access", classes="key-pair-row-key"),
+                AccessChip(self.app.projects_access, classes="key-pair-row-value"),
                 classes="key-pair-row",
             )

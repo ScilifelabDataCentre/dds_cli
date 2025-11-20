@@ -487,3 +487,10 @@ _Empty sprint_
 ## 2025-10-27 - 2025-11-07
 
 - Latex action for documentation failing due to emojis ([#855](https://github.com/ScilifelabDataCentre/dds_cli/pull/855))
+- Add project download to the GUI ([#851](https://github.com/ScilifelabDataCentre/dds_cli/pull/851))
+- Display project access in the GUI ([#856](https://github.com/ScilifelabDataCentre/dds_cli/pull/856))
+
+## 2025-11-10 - 2025-11-21
+
+- Add legacy-cgi dependency ([#857](https://github.com/ScilifelabDataCentre/dds_cli/pull/857))
+- Fix combine --size and --tree bug([#858](https://github.com/ScilifelabDataCentre/dds_cli/pull/858))

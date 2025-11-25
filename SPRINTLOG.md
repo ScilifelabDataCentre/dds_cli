@@ -494,3 +494,7 @@ _Empty sprint_
 
 - Add legacy-cgi dependency ([#857](https://github.com/ScilifelabDataCentre/dds_cli/pull/857))
 - Fix combine --size and --tree bug([#858](https://github.com/ScilifelabDataCentre/dds_cli/pull/858))
+
+## 2025-11-24 - 2025-12-05
+
+- Bump Python from 3.9 to 3.12 in workflows ([#860](https://github.com/ScilifelabDataCentre/dds_cli/pull/860))

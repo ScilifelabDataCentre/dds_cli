@@ -100,10 +100,10 @@ jobs:
             ASSET_MIME: application/x-elf
     steps:
       - uses: actions/checkout@v4
-      - name: Python 3.9 setup
+      - name: Python 3.12 setup
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.12
           # architecture: 'x64'
       - name: Install dependencies
         run: |

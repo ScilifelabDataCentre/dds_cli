@@ -499,4 +499,3 @@ _Empty sprint_
 
 - Bump Python from 3.9 to 3.12 in workflows ([#860](https://github.com/ScilifelabDataCentre/dds_cli/pull/860))
 - Solve error when uploading same file/dir twice ([#861](https://github.com/ScilifelabDataCentre/dds_cli/pull/861))
-

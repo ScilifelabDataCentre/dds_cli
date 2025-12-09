@@ -1,24 +1,24 @@
 """DDS CLI utils module."""
 
+import http
+import logging
 import numbers
 import pathlib
 import typing
-import http
-from typing import Dict, List, Union
-import logging
 from datetime import datetime
+from typing import Dict, List, Union
 
 import requests
 import rich.console
 import simplejson
+from jwcrypto import jwt
 from jwcrypto.common import InvalidJWEOperation
 from jwcrypto.jwe import InvalidJWEData
 from jwcrypto.jws import InvalidJWSObject
-from jwcrypto import jwt
 from rich.table import Table
 
 import dds_cli.exceptions
-from dds_cli import __version__, DDSEndpoint
+from dds_cli import DDSEndpoint, __version__
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
@@ -188,6 +188,44 @@ def get_required_in_response(keys: list, response: dict) -> tuple:
     return tuple(response.get(x) for x in keys)
 
 
+def transform_paths(json_input):
+    """Make paths serializable and normalize path separators.
+
+    Converts pathlib.Path objects to posix strings and normalizes
+    string paths containing backslashes (Windows paths) to forward slashes
+    to ensure consistency with database-stored paths.
+
+    Args:
+        json_input: Dictionary or list containing paths to normalize
+
+    Returns:
+        The input with paths normalized (dict/list modified in place)
+    """
+
+    def normalize_path_string(path_str):
+        """Normalize a string path by converting backslashes to forward slashes."""
+        if isinstance(path_str, str) and "\\" in path_str:
+            # Convert Windows-style backslashes to forward slashes
+            return path_str.replace("\\", "/")
+        return path_str
+
+    # Transform dict and list contents
+    if isinstance(json_input, typing.Dict):
+        for key, val in json_input.items():
+            if isinstance(val, pathlib.Path):
+                json_input[key] = val.as_posix()
+            elif isinstance(val, str):
+                json_input[key] = normalize_path_string(val)
+    elif isinstance(json_input, typing.List):
+        # Modify list in place for consistency with dict behavior
+        for i, item in enumerate(json_input):
+            if isinstance(item, pathlib.Path):
+                json_input[i] = item.as_posix()
+            elif isinstance(item, str):
+                json_input[i] = normalize_path_string(item)
+    return json_input
+
+
 def perform_request(
     endpoint,
     method,
@@ -213,17 +251,6 @@ def perform_request(
         request_method = requests.delete
     elif method == "patch":
         request_method = requests.patch
-
-    def transform_paths(json_input):
-        """Make paths serializable."""
-        # Transform dict and list contents
-        if isinstance(json_input, typing.Dict):
-            for key, val in json_input.items():
-                if isinstance(val, pathlib.Path):
-                    json_input[key] = val.as_posix()
-        elif isinstance(json_input, typing.List):
-            json_input = [x.as_posix() if isinstance(x, pathlib.Path) else x for x in json_input]
-        return json_input
 
     json = transform_paths(json_input=json)
     # Perform request.

@@ -101,7 +101,7 @@ class DataGetter(base.DDSBaseClass):
 
             if not self.filehandler.data:
                 if self.temporary_directory and self.temporary_directory.is_dir():
-                    LOG.debug("Deleting temporary folder '%s'.", self.temporary_directory)
+                    LOG.debug("Deleting staging directory '%s'.", self.temporary_directory)
                     try:
                         dds_cli.utils.delete_folder(self.temporary_directory)
                     except OSError as err:

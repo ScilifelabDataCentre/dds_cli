@@ -17,11 +17,10 @@ import botocore
 from rich.markup import escape
 from rich.progress import BarColumn, Progress, SpinnerColumn
 
+# Own modules
 import dds_cli
 import dds_cli.directory
 import dds_cli.utils
-
-# Own modules
 from dds_cli import DDSEndpoint, base
 from dds_cli import data_remover as dr
 from dds_cli import exceptions
@@ -279,7 +278,7 @@ class DataPutter(base.DDSBaseClass):
                     # Folder deletion may fail if log file is still being written to
                     # This is not critical - the important thing is to show the error message
                     LOG.debug(
-                        "Could not delete temporary folder %s: %s",
+                        "Could not delete staging directory %s: %s",
                         self.temporary_directory,
                         err,
                     )

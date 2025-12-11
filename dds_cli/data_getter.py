@@ -107,8 +107,8 @@ class DataGetter(base.DDSBaseClass):
                     except OSError as err:
                         # Folder deletion may fail if log file is still being written to
                         # This is not critical - the important thing is to show the error message
-                        LOG.debug(
-                            "Could not delete temporary folder %s: %s",
+                        LOG.error(
+                            "Could not delete staging directory %s: %s",
                             self.temporary_directory,
                             err,
                         )

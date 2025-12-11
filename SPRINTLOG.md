@@ -498,3 +498,7 @@ _Empty sprint_
 ## 2025-11-24 - 2025-12-05
 
 - Bump Python from 3.9 to 3.12 in workflows ([#860](https://github.com/ScilifelabDataCentre/dds_cli/pull/860))
+
+## 2025-12-8 - 2025-12-19
+
+- Update questionary package ([#862](https://github.com/ScilifelabDataCentre/dds_cli/pull/862))

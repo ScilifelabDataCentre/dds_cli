@@ -7,30 +7,28 @@
 # Standard library
 import concurrent.futures
 import itertools
+import json
 import logging
 import pathlib
-import json
 
 # Installed
 import boto3
 import botocore
 from rich.markup import escape
-from rich.progress import Progress, SpinnerColumn, BarColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn
 
 # Own modules
-from dds_cli import base
-from dds_cli import exceptions
+import dds_cli
+import dds_cli.directory
+import dds_cli.utils
+from dds_cli import DDSEndpoint, base
 from dds_cli import data_remover as dr
-from dds_cli import DDSEndpoint
+from dds_cli import exceptions
 from dds_cli import file_encryptor as fe
 from dds_cli import file_handler_local as fhl
 from dds_cli import status
 from dds_cli import text_handler as txt
-from dds_cli.custom_decorators import verify_proceed, update_status, subpath_required
-
-import dds_cli
-import dds_cli.directory
-import dds_cli.utils
+from dds_cli.custom_decorators import subpath_required, update_status, verify_proceed
 
 ###############################################################################
 # START LOGGING CONFIG ################################# START LOGGING CONFIG #
@@ -274,7 +272,16 @@ class DataPutter(base.DDSBaseClass):
         if not self.filehandler.data:
             if self.temporary_directory and self.temporary_directory.is_dir():
                 LOG.debug("Deleting temporary folder %s.", self.temporary_directory)
-                dds_cli.utils.delete_folder(self.temporary_directory)
+                try:
+                    dds_cli.utils.delete_folder(self.temporary_directory)
+                except OSError as err:
+                    # Folder deletion may fail if log file is still being written to
+                    # This is not critical - the important thing is to show the error message
+                    LOG.debug(
+                        "Could not delete staging directory %s: %s",
+                        self.temporary_directory,
+                        err,
+                    )
             raise exceptions.UploadError(
                 "The specified data has already been uploaded. If you wish to redo the upload, "
                 "use the '--overwrite' flag. Please use with caution as previously uploaded data "

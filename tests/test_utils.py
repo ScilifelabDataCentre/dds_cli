@@ -493,6 +493,13 @@ def test_transform_paths_preserves_non_string_values() -> None:
     assert result["list"] == [1, 2, 3]
 
 
+def test_transform_paths_absolute_windows_path() -> None:
+    """Test absolute Windows paths are normalized."""
+    request_data = {"path": "C:\\Users\\data\\file.txt"}
+    result = transform_paths(request_data)
+    assert result["path"] == "C:/Users/data/file.txt"
+
+
 def test_perform_request_normalizes_windows_paths_in_dict() -> None:
     """Test that perform_request normalizes Windows paths via transform_paths."""
     url: str = "http://localhost"

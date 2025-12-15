@@ -503,3 +503,4 @@ _Empty sprint_
 ## 2025-12-8 - 2025-12-19
 
 - Update questionary package ([#862](https://github.com/ScilifelabDataCentre/dds_cli/pull/862))
+- Extent path normalization implementation ([#863](https://github.com/ScilifelabDataCentre/dds_cli/pull/863))

@@ -1,26 +1,21 @@
-from datetime import datetime, timedelta
-from pathlib import Path
-from io import StringIO
 import sys
-from typing import Dict, List, Tuple
+from datetime import datetime, timedelta
+from io import StringIO
+from pathlib import Path
+from typing import Dict, List
 
-import requests
-from requests import get
-from requests.exceptions import JSONDecodeError
-
-from flask import Response
-import rich
-from rich.table import Table
 import pytest
-
+import requests
+import rich
 from _pytest.capture import CaptureFixture
+from _pytest.logging import LogCaptureFixture
+from flask import Response
+from pyfakefs.fake_filesystem import FakeFilesystem
+from pytest import raises
+from requests import get
 from requests_mock.adapter import _Matcher
 from requests_mock.mocker import Mocker
-from pytest import raises
-from _pytest.logging import LogCaptureFixture
-from pyfakefs.fake_filesystem import FakeFilesystem
-from unittest import mock
-from unittest.mock import MagicMock
+from rich.table import Table
 
 from dds_cli import DDSEndpoint
 from dds_cli.exceptions import (
@@ -45,6 +40,7 @@ from dds_cli.utils import (
     print_or_page,
     readable_timedelta,
     sort_items,
+    transform_paths,
 )
 
 sample_fully_authenticated_token = (
@@ -376,6 +372,152 @@ def test_perform_request_custom_header_message(caplog: LogCaptureFixture) -> Non
             perform_request(endpoint=url, method="get")
 
         assert "this is a special testing message" in str(err.value)
+
+
+# transform_paths
+
+
+def test_transform_paths_normalizes_windows_paths_in_dict() -> None:
+    """Test that Windows-style paths with backslashes are normalized to forward slashes."""
+    windows_path = "data\\example_directory_1\\file.txt"
+    expected_path = "data/example_directory_1/file.txt"
+
+    request_data = {"path": windows_path, "other": "value"}
+    result = transform_paths(request_data)
+
+    assert result["path"] == expected_path
+    assert result["other"] == "value"
+    # Verify original dict was modified in place
+    assert request_data["path"] == expected_path
+
+
+def test_transform_paths_normalizes_windows_paths_in_list() -> None:
+    """Test that Windows-style paths in lists are normalized to forward slashes."""
+    windows_paths = ["data\\dir1\\file1.txt", "data\\dir2\\file2.txt"]
+    expected_paths = ["data/dir1/file1.txt", "data/dir2/file2.txt"]
+
+    result = transform_paths(windows_paths)
+
+    assert result == expected_paths
+    # Verify original list was modified in place
+    assert windows_paths == expected_paths
+
+
+def test_transform_paths_preserves_forward_slash_paths() -> None:
+    """Test that paths with forward slashes remain unchanged."""
+    unix_path = "data/example_directory_1/file.txt"
+
+    request_data = {"path": unix_path}
+    result = transform_paths(request_data)
+
+    assert result["path"] == unix_path
+
+
+def test_transform_paths_normalizes_pathlib_paths() -> None:
+    """Test that pathlib.Path objects are converted to posix strings."""
+    path_obj = Path("data/example/file.txt")
+
+    request_data = {"path": path_obj}
+    result = transform_paths(request_data)
+
+    assert result["path"] == "data/example/file.txt"
+    assert isinstance(result["path"], str)
+
+
+def test_transform_paths_mixed_path_types() -> None:
+    """Test normalization with mixed pathlib.Path and string paths."""
+    path_obj = Path("data/dir1/file1.txt")
+    windows_path = "data\\dir2\\file2.txt"
+    unix_path = "data/dir3/file3.txt"
+
+    request_data = {
+        "pathlib_path": path_obj,
+        "windows_path": windows_path,
+        "unix_path": unix_path,
+    }
+    result = transform_paths(request_data)
+
+    # Verify all paths are normalized to forward slashes
+    assert result["pathlib_path"] == "data/dir1/file1.txt"
+    assert result["windows_path"] == "data/dir2/file2.txt"
+    assert result["unix_path"] == "data/dir3/file3.txt"
+
+
+def test_transform_paths_non_path_strings_normalized() -> None:
+    """Test that strings with backslashes are normalized (expected behavior)."""
+    # String with backslash but not a path - still gets normalized
+    non_path = "This is not a path\\but has backslash"
+
+    request_data = {"text": non_path}
+    result = transform_paths(request_data)
+
+    # Verify the string was normalized (backslash converted)
+    # This is expected behavior - any string with backslash gets normalized
+    assert result["text"] == "This is not a path/but has backslash"
+
+
+def test_transform_paths_list_with_mixed_types() -> None:
+    """Test normalization in lists with mixed path types."""
+    mixed_list = [
+        Path("data/dir1/file1.txt"),
+        "data\\dir2\\file2.txt",
+        "data/dir3/file3.txt",
+        "regular_string",
+    ]
+
+    result = transform_paths(mixed_list)
+
+    # Verify all paths normalized, regular strings unchanged
+    assert result[0] == "data/dir1/file1.txt"
+    assert result[1] == "data/dir2/file2.txt"
+    assert result[2] == "data/dir3/file3.txt"
+    assert result[3] == "regular_string"
+
+
+def test_transform_paths_preserves_non_string_values() -> None:
+    """Test that non-string, non-path values are preserved."""
+    request_data = {
+        "path": "data\\dir\\file.txt",
+        "number": 42,
+        "boolean": True,
+        "none": None,
+        "list": [1, 2, 3],
+    }
+
+    result = transform_paths(request_data)
+
+    assert result["path"] == "data/dir/file.txt"
+    assert result["number"] == 42
+    assert result["boolean"] is True
+    assert result["none"] is None
+    assert result["list"] == [1, 2, 3]
+
+
+def test_transform_paths_absolute_windows_path() -> None:
+    """Test absolute Windows paths are normalized."""
+    request_data = {"path": "C:\\Users\\data\\file.txt"}
+    result = transform_paths(request_data)
+    assert result["path"] == "C:/Users/data/file.txt"
+
+
+def test_perform_request_normalizes_windows_paths_in_dict() -> None:
+    """Test that perform_request normalizes Windows paths via transform_paths."""
+    url: str = "http://localhost"
+    windows_path = "data\\example_directory_1\\file.txt"
+    expected_path = "data/example_directory_1/file.txt"
+
+    with Mocker() as mock:
+        request_data = {"path": windows_path, "other": "value"}
+
+        # Use a callback to capture and verify the request
+        def check_request(request, context):
+            # Verify the path was normalized
+            assert request.json()["path"] == expected_path
+            assert request.json()["other"] == "value"
+            return {}
+
+        mock.post(url, status_code=200, json=check_request)
+        perform_request(endpoint=url, headers={}, method="post", json=request_data)
 
 
 # TODO: parse_project_errors

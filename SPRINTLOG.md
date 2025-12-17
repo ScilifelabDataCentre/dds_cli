@@ -503,3 +503,4 @@ _Empty sprint_
 ## 2025-12-8 - 2025-12-19
 
 - Update questionary package ([#862](https://github.com/ScilifelabDataCentre/dds_cli/pull/862))
+- Fix bug: Return correct error message for deactivated use ([#864](https://github.com/ScilifelabDataCentre/dds_cli/pull/864))

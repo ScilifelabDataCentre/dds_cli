@@ -383,6 +383,7 @@ def list_projects_and_contents(
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -1744,6 +1745,7 @@ def put_data(
         dds_cli.exceptions.ApiRequestError,
         dds_cli.exceptions.NoKeyError,
         dds_cli.exceptions.NoDataError,
+        dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -2274,6 +2276,7 @@ def get_stats(click_ctx):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
         sys.exit(1)

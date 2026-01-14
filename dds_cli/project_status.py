@@ -103,9 +103,7 @@ class ProjectStatusManager(base.DDSBaseClass):
         """Update project status"""
 
         if deadline is not None and deadline <= 0:
-            raise exceptions.DDSCLIException(
-                "Deadline must be a positive number of days."
-            )
+            raise exceptions.DDSCLIException("Deadline must be a positive number of days.")
 
         extra_params = {"new_status": new_status, "send_email": not no_mail}
         if deadline:

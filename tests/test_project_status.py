@@ -531,9 +531,7 @@ def test_extend_deadline_negative_value(
         assert "Deadline extension must be a positive number of days." in str(err.value)
 
 
-def test_extend_deadline_zero_value(
-    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
-):
+def test_extend_deadline_zero_value(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
     """Test that extend_deadline raises an error when new_deadline is zero"""
     caplog.set_level(logging.INFO)
 

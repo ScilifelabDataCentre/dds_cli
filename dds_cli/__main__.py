@@ -1196,9 +1196,7 @@ def release_project(click_ctx, project, deadline, no_mail):
     Only usable by: Unit Admins / Personnel.
     """
     if deadline is not None and deadline <= 0:
-        raise dds_cli.exceptions.DDSCLIException(
-            "Deadline must be a positive number of days."
-        )
+        raise dds_cli.exceptions.DDSCLIException("Deadline must be a positive number of days.")
     try:
         with dds_cli.project_status.ProjectStatusManager(
             project=project,

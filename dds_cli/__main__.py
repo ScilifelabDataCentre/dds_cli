@@ -2296,4 +2296,3 @@ def get_stats(click_ctx):
     ) as err:
         LOG.error(err)
         sys.exit(1)
-        sys.exit(1)

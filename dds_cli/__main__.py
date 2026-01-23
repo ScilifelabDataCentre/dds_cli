@@ -8,10 +8,10 @@
 import concurrent.futures
 import itertools
 import logging
-
-# Installed
 import pathlib
 import sys
+
+# Installed
 
 import click_pathlib
 import questionary
@@ -1204,8 +1204,6 @@ def release_project(click_ctx, project, deadline, no_mail):
 
     Only usable by: Unit Admins / Personnel.
     """
-    if deadline is not None and deadline <= 0:
-        raise dds_cli.exceptions.DDSCLIException("Deadline must be a positive number of days.")
     try:
         with dds_cli.project_status.ProjectStatusManager(
             project=project,
@@ -1341,10 +1339,6 @@ def extend_deadline(click_ctx, project: str, new_deadline: int):
 
     It consumes one of allowed times to renew data access.
     """
-    if new_deadline is not None and new_deadline <= 0:
-        raise dds_cli.exceptions.DDSCLIException(
-            "Deadline extension must be a positive number of days."
-        )
     try:
         with dds_cli.project_status.ProjectStatusManager(
             project=project,

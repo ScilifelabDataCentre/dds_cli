@@ -8,56 +8,57 @@
 import concurrent.futures
 import itertools
 import logging
+import pathlib
 import sys
 
 # Installed
-import pathlib
-import rich_click as click
+
 import click_pathlib
+import questionary
 import rich
 import rich.logging
 import rich.markup
 import rich.progress
 import rich.prompt
-import questionary
+import rich_click as click
 
 # Own modules
 import dds_cli
 import dds_cli.account_manager
-import dds_cli.unit_manager
-import dds_cli.motd_manager
-import dds_cli.superadmin_helper
+import dds_cli.auth
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
+import dds_cli.message_helper
+import dds_cli.motd_manager
 import dds_cli.project_creator
-import dds_cli.auth
-import dds_cli.project_status
 import dds_cli.project_info
+import dds_cli.project_status
+import dds_cli.superadmin_helper
+import dds_cli.unit_manager
 import dds_cli.user
 import dds_cli.utils
-import dds_cli.message_helper
 from dds_cli.options import (
+    break_on_fail_flag,
     destination_option,
     email_arg,
     email_option,
     folder_option,
+    json_flag,
+    nomail_flag,
     num_threads_option,
     project_option,
+    silent_flag,
+    size_flag,
     sort_projects_option,
     source_option,
     source_path_file_option,
     token_path_option,
-    username_option,
-    break_on_fail_flag,
-    json_flag,
-    nomail_flag,
-    silent_flag,
-    size_flag,
     tree_flag,
     usage_flag,
+    username_option,
     users_flag,
 )
 
@@ -1172,6 +1173,13 @@ def display_project_status(click_ctx, project, show_history):
         sys.exit(1)
 
 
+def validate_deadline(_ctx, _param, value):
+    """Validate that the deadline is a positive number of days between 1 and 90."""
+    if value is not None and value not in range(1, 91):
+        raise click.BadParameter("Deadline must be a positive number of days between 1 and 90.")
+    return value
+
+
 # -- dds project status release -- #
 @project_status.command(name="release", no_args_is_help=True)
 # Options
@@ -1180,7 +1188,8 @@ def display_project_status(click_ctx, project, show_history):
     "--deadline",
     required=False,
     type=int,
-    help="Deadline in days when releasing a project.",
+    callback=validate_deadline,
+    help="Deadline in days when releasing a project. Must be a positive number of days (maximum 90 days).",
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
@@ -1321,7 +1330,8 @@ def delete_project(click_ctx, project: str):
     "--new-deadline",
     required=False,
     type=int,
-    help="Number of days to extend the deadline.",
+    callback=validate_deadline,
+    help="Number of days to extend the deadline. Must be a positive number of days (maximum 90 days).",
 )
 @click.pass_obj
 def extend_deadline(click_ctx, project: str, new_deadline: int):

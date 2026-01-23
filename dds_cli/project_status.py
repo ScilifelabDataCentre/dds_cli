@@ -102,6 +102,9 @@ class ProjectStatusManager(base.DDSBaseClass):
     def update_status(self, new_status, deadline=None, is_aborted=False, no_mail=False):
         """Update project status"""
 
+        if deadline is not None and deadline <= 0:
+            raise exceptions.DDSCLIException("Deadline must be a positive number of days.")
+
         extra_params = {"new_status": new_status, "send_email": not no_mail}
         if deadline:
             extra_params["deadline"] = deadline
@@ -219,13 +222,19 @@ class ProjectStatusManager(base.DDSBaseClass):
         dds_cli.utils.console.print(print_info)
 
         # If it wasnt provided during the command click, ask the user for the new deadline
-        if not new_deadline:
+        if new_deadline is None:
             # Question number of days to extend the deadline
             prompt_question = (
                 "How many days would you like to extend the project deadline with? "
                 "Leave empty in order to choose the default"
             )
             new_deadline = rich.prompt.IntPrompt.ask(prompt_question, default=default_unit_days)
+
+        # Validate that the deadline extension is positive
+        if new_deadline <= 0:
+            raise exceptions.DDSCLIException(
+                "Deadline extension must be a positive number of days."
+            )
 
         # Confirm operation question
         new_deadline_date = parse(current_deadline) + datetime.timedelta(days=new_deadline)

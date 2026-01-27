@@ -508,3 +508,7 @@ _Empty sprint_
 ## 2026-13-1 - 2026-16-1
 
 - Add non positive deadline validation ([#865](https://github.com/ScilifelabDataCentre/dds_cli/pull/865))
+
+## 2026-01-19 - 2026-02-02
+
+- Remove GUI code ([#866](https://github.com/ScilifelabDataCentre/dds_cli/pull/866))

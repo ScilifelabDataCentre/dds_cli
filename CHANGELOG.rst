@@ -26,6 +26,8 @@ Changelog
     - Bump pynacl from 1.5.0 to 1.6.2
     - Bump black from 24.1.1 to 24.3.0
 
+.. _2.13.0:
+
 2.13.0 - 2025-09-15
 ~~~~~~~~~~~~~~~~~~~~
 

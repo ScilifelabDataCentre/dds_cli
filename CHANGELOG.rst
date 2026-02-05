@@ -1,7 +1,30 @@
 Changelog
 ==========
 
-.. _2.13.0:
+.. _2.14.0:
+
+2.14.0 - 2026-02-05
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Remove GUI code
+    - Display project access in the GUI
+    - Implement downloading functionality for gui
+    - Add loading after starting GUI for project listing
+- 🐛 Bug Fixes
+    - Add non positive deadline validation
+    - Fix error message when deactivated user authenticates with the CLI
+    - Solve error when uploading same file/dir twice
+    - Fix combine --size and --tree bug
+    - Remove custom styling from button
+- 🛡️ Dependencies
+    - Update CodeQL actions to v4
+    - Update questionary
+    - Add legacy cgi dependancy
+    - Drop support for old python, Fix style according to pylint update
+    - Upgrade textual version to 6.2.1
+    - Bump pynacl from 1.5.0 to 1.6.2
+    - Bump black from 24.1.1 to 24.3.0
 
 2.13.0 - 2025-09-15
 ~~~~~~~~~~~~~~~~~~~~

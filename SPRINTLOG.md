@@ -514,3 +514,7 @@ _Empty sprint_
 - Remove GUI code ([#866](https://github.com/ScilifelabDataCentre/dds_cli/pull/866))
 - Bump black from 24.1.1 to 24.3.0 ([#867](https://github.com/ScilifelabDataCentre/dds_cli/pull/867))
 - Bump pynacl from 1.5.0 to 1.6.2 ([#869](https://github.com/ScilifelabDataCentre/dds_cli/pull/869))
+
+## 2026-02-02 - 2026-02-13
+
+- New version 2.14.0 ([#871](https://github.com/ScilifelabDataCentre/dds_cli/pull/871))

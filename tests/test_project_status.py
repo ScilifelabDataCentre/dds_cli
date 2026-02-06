@@ -1,6 +1,7 @@
 import pytest
 from requests_mock.mocker import Mocker
 import unittest
+import unittest.mock
 from dds_cli import DDSEndpoint
 from dds_cli import project_status
 from _pytest.logging import LogCaptureFixture
@@ -479,3 +480,135 @@ def test_extend_deadline_no_msg_returned_request(
             captured_output = capsys.readouterr()
             check_output_extend_deadline(captured_output=captured_output, caplog_messages=None)
             assert "No message returned from API." in str(err.value)
+
+
+def test_update_status_negative_deadline():
+    """Test that update_status raises an error when deadline is negative"""
+    with pytest.raises(DDSCLIException) as err:
+        with project_status.ProjectStatusManager(
+            project=project_name, no_prompt=True, authenticate=False
+        ) as status_mngr:
+            status_mngr.token = {}  # required, otherwise none
+            status_mngr.update_status(new_status="Available", deadline=-1)
+
+    assert "Deadline must be a positive number of days." in str(err.value)
+
+
+def test_update_status_zero_deadline():
+    """Test that update_status raises an error when deadline is zero"""
+    with pytest.raises(DDSCLIException) as err:
+        with project_status.ProjectStatusManager(
+            project=project_name, no_prompt=True, authenticate=False
+        ) as status_mngr:
+            status_mngr.token = {}  # required, otherwise none
+            status_mngr.update_status(new_status="Available", deadline=0)
+
+    assert "Deadline must be a positive number of days." in str(err.value)
+
+
+def test_extend_deadline_negative_value(
+    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
+):
+    """Test that extend_deadline raises an error when new_deadline is negative"""
+    caplog.set_level(logging.INFO)
+
+    # Create mocker
+    with Mocker() as mock:
+        # Mock the first request to fetch project information
+        mock.patch(
+            DDSEndpoint.UPDATE_PROJ_STATUS,
+            status_code=200,
+            json=returned_response_extend_deadline_fetch_information,
+        )
+
+        with pytest.raises(DDSCLIException) as err:
+            with project_status.ProjectStatusManager(
+                project=project_name, no_prompt=True, authenticate=False
+            ) as status_mngr:
+                status_mngr.token = {}  # required, otherwise none
+                status_mngr.extend_deadline(new_deadline=-5)
+
+        assert "Deadline extension must be a positive number of days." in str(err.value)
+
+
+def test_extend_deadline_zero_value(capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture):
+    """Test that extend_deadline raises an error when new_deadline is zero"""
+    caplog.set_level(logging.INFO)
+
+    # Create mocker
+    with Mocker() as mock:
+        # Mock the first request to fetch project information
+        mock.patch(
+            DDSEndpoint.UPDATE_PROJ_STATUS,
+            status_code=200,
+            json=returned_response_extend_deadline_fetch_information,
+        )
+
+        with pytest.raises(DDSCLIException) as err:
+            with project_status.ProjectStatusManager(
+                project=project_name, no_prompt=True, authenticate=False
+            ) as status_mngr:
+                status_mngr.token = {}  # required, otherwise none
+                # When 0 is passed, it's falsy so it prompts - mock the prompt to return 0
+                with unittest.mock.patch("rich.prompt.IntPrompt.ask") as deadline:
+                    deadline.return_value = 0
+                    # Pass 0 explicitly - it will be treated as falsy and prompt, then validate
+                    status_mngr.extend_deadline(new_deadline=0)
+
+        assert "Deadline extension must be a positive number of days." in str(err.value)
+
+
+def test_extend_deadline_prompted_negative_value(
+    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
+):
+    """Test that extend_deadline raises an error when user prompts a negative value"""
+    caplog.set_level(logging.INFO)
+
+    # Create mocker
+    with Mocker() as mock:
+        # Mock the first request to fetch project information
+        mock.patch(
+            DDSEndpoint.UPDATE_PROJ_STATUS,
+            status_code=200,
+            json=returned_response_extend_deadline_fetch_information,
+        )
+        # Set number of days to extend deadline to a negative value
+        with unittest.mock.patch("rich.prompt.IntPrompt.ask") as deadline:
+            deadline.return_value = -3
+
+            with pytest.raises(DDSCLIException) as err:
+                with project_status.ProjectStatusManager(
+                    project=project_name, no_prompt=True, authenticate=False
+                ) as status_mngr:
+                    status_mngr.token = {}  # required, otherwise none
+                    status_mngr.extend_deadline()
+
+            assert "Deadline extension must be a positive number of days." in str(err.value)
+
+
+def test_extend_deadline_prompted_zero_value(
+    capsys: CaptureFixture, monkeypatch, caplog: LogCaptureFixture
+):
+    """Test that extend_deadline raises an error when user prompts a zero value"""
+    caplog.set_level(logging.INFO)
+
+    # Create mocker
+    with Mocker() as mock:
+        # Mock the first request to fetch project information
+        mock.patch(
+            DDSEndpoint.UPDATE_PROJ_STATUS,
+            status_code=200,
+            json=returned_response_extend_deadline_fetch_information,
+        )
+        # Set number of days to extend deadline to zero
+        with unittest.mock.patch("rich.prompt.IntPrompt.ask") as deadline:
+            deadline.return_value = 0
+
+            with pytest.raises(DDSCLIException) as err:
+                with project_status.ProjectStatusManager(
+                    project=project_name, no_prompt=True, authenticate=False
+                ) as status_mngr:
+                    status_mngr.token = {}  # required, otherwise none
+                    status_mngr.extend_deadline()
+
+            assert "Deadline extension must be a positive number of days." in str(err.value)

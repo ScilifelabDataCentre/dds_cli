@@ -8,60 +8,59 @@
 import concurrent.futures
 import itertools
 import logging
+import pathlib
 import sys
 
 # Installed
-import pathlib
-import rich_click as click
+
 import click_pathlib
+import questionary
 import rich
 import rich.logging
 import rich.markup
 import rich.progress
 import rich.prompt
-import questionary
+import rich_click as click
 
 # Own modules
 import dds_cli
 import dds_cli.account_manager
-import dds_cli.unit_manager
-import dds_cli.motd_manager
-import dds_cli.superadmin_helper
+import dds_cli.auth
 import dds_cli.data_getter
 import dds_cli.data_lister
 import dds_cli.data_putter
 import dds_cli.data_remover
 import dds_cli.directory
+import dds_cli.message_helper
+import dds_cli.motd_manager
 import dds_cli.project_creator
-import dds_cli.auth
-import dds_cli.project_status
 import dds_cli.project_info
+import dds_cli.project_status
+import dds_cli.superadmin_helper
+import dds_cli.unit_manager
 import dds_cli.user
 import dds_cli.utils
-import dds_cli.message_helper
 from dds_cli.options import (
+    break_on_fail_flag,
     destination_option,
     email_arg,
     email_option,
     folder_option,
+    json_flag,
+    nomail_flag,
     num_threads_option,
     project_option,
+    silent_flag,
+    size_flag,
     sort_projects_option,
     source_option,
     source_path_file_option,
     token_path_option,
-    username_option,
-    break_on_fail_flag,
-    json_flag,
-    nomail_flag,
-    silent_flag,
-    size_flag,
     tree_flag,
     usage_flag,
+    username_option,
     users_flag,
 )
-
-# import dds_cli.dds_gui.app
 
 ####################################################################################################
 # START LOGGING CONFIG ###################################################### START LOGGING CONFIG #
@@ -207,21 +206,6 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
                     "You have chosen to turn off the recommended default logging with the '--force-no-log' option."
                 )
                 click_ctx.obj.update({"DEFAULT_LOG": False})
-
-
-### GUI COMMAND ###
-
-# TODO: Should totp be passed to the gui?
-
-
-# @dds_main.command(name="gui")
-# @click.pass_obj
-# def gui(click_ctx):
-#     """Start the DDS GUI."""
-#     gui_app = dds_cli.dds_gui.app.DDSApp(token_path=click_ctx.get("TOKEN_PATH"))
-#     gui_app.title = "SciLifeLab Data Delivery System"
-#     gui_app.sub_title = "CLI Version: " + dds_cli.__version__
-#     gui_app.run()
 
 
 # ************************************************************************************************ #
@@ -383,6 +367,7 @@ def list_projects_and_contents(
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -544,13 +529,14 @@ def configure():
             "Which method would you like to use?", choices=["Email", "Authenticator App", "Cancel"]
         ).ask()
 
+        auth_method: str | None = None  # type hint, initialized
         if auth_method_choice == "Cancel":
             LOG.info("Two-factor authentication method not configured.")
             sys.exit(0)
         elif auth_method_choice == "Authenticator App":
-            auth_method: str = "totp"
+            auth_method = "totp"
         elif auth_method_choice == "Email":
-            auth_method: str = "hotp"
+            auth_method = "hotp"
 
         with dds_cli.auth.Auth(authenticate=True, force_renew_token=False) as authenticator:
             authenticator.twofactor(auth_method=auth_method)
@@ -885,6 +871,8 @@ def activate_user(click_ctx, email):
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
+    proceed_activation = False  # default assignment
+
     if click_ctx.get("NO_PROMPT", False):
         pass
     else:
@@ -925,6 +913,8 @@ def deactivate_user(click_ctx, email):
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
+    proceed_deactivation = False  # default assignment
+
     if click_ctx.get("NO_PROMPT", False):
         pass
     else:
@@ -1166,6 +1156,13 @@ def display_project_status(click_ctx, project, show_history):
         sys.exit(1)
 
 
+def validate_deadline(_ctx, _param, value):
+    """Validate that the deadline is a positive number of days between 1 and 90."""
+    if value is not None and value not in range(1, 91):
+        raise click.BadParameter("Deadline must be a positive number of days between 1 and 90.")
+    return value
+
+
 # -- dds project status release -- #
 @project_status.command(name="release", no_args_is_help=True)
 # Options
@@ -1174,7 +1171,8 @@ def display_project_status(click_ctx, project, show_history):
     "--deadline",
     required=False,
     type=int,
-    help="Deadline in days when releasing a project.",
+    callback=validate_deadline,
+    help="Deadline in days when releasing a project. Must be a positive number of days (maximum 90 days).",
 )
 @nomail_flag(help_message="Do not send e-mail notifications regarding project updates.")
 @click.pass_obj
@@ -1315,7 +1313,8 @@ def delete_project(click_ctx, project: str):
     "--new-deadline",
     required=False,
     type=int,
-    help="Number of days to extend the deadline.",
+    callback=validate_deadline,
+    help="Number of days to extend the deadline. Must be a positive number of days (maximum 90 days).",
 )
 @click.pass_obj
 def extend_deadline(click_ctx, project: str, new_deadline: int):
@@ -1739,6 +1738,7 @@ def put_data(
         dds_cli.exceptions.ApiRequestError,
         dds_cli.exceptions.NoKeyError,
         dds_cli.exceptions.NoDataError,
+        dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
         sys.exit(1)
@@ -2269,6 +2269,7 @@ def get_stats(click_ctx):
         dds_cli.exceptions.AuthenticationError,
         dds_cli.exceptions.ApiResponseError,
         dds_cli.exceptions.ApiRequestError,
+        dds_cli.exceptions.DDSCLIException,
     ) as err:
         LOG.error(err)
         sys.exit(1)

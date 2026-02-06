@@ -5,26 +5,24 @@
 ###############################################################################
 
 # Standard library
-from dataclasses import dataclass
-import logging
-from typing import Tuple, Union, List
 import datetime
+import logging
 import pathlib
+from dataclasses import dataclass
+from typing import List, Tuple, Union
 
 # Installed
-from rich.padding import Padding
-from rich.markup import escape
-from rich.table import Table
-from rich.tree import Tree
 import pytz
 import tzlocal
+from rich.markup import escape
+from rich.padding import Padding
+from rich.table import Table
+from rich.tree import Tree
 
 # Own modules
-from dds_cli import base
-from dds_cli import exceptions
-import dds_cli.utils
-from dds_cli import DDSEndpoint
+from dds_cli import DDSEndpoint, base, exceptions
 from dds_cli import text_handler as th
+import dds_cli.utils
 
 
 ###############################################################################
@@ -268,7 +266,11 @@ class DataLister(base.DDSBaseClass):
             # Get max length of size string
             max_size = max(
                 (
-                    len(x["size"].split(" ")[0])
+                    len(
+                        dds_cli.utils.format_api_response(
+                            response=x["size"], key="Size", binary=self.binary
+                        ).split(" ", maxsplit=1)[0]
+                    )
                     for x in sorted_files_folders
                     if show_size and "size" in x
                 ),
@@ -280,9 +282,12 @@ class DataLister(base.DDSBaseClass):
                 is_folder = item.pop("folder")
 
                 if not is_folder:
-                    tree.subtrees.append(
-                        (escape(item["name"]), item.get("size") if show_size else None)
-                    )
+                    formatted_size = None
+                    if show_size and "size" in item:
+                        formatted_size = dds_cli.utils.format_api_response(
+                            response=item["size"], key="Size", binary=self.binary
+                        )
+                    tree.subtrees.append((escape(item["name"]), formatted_size))
                 else:
                     subtree, _max_string, _max_size = __construct_file_tree(
                         pathlib.Path(folder, item["name"]).as_posix() if folder else item["name"],
@@ -348,15 +353,7 @@ class DataLister(base.DDSBaseClass):
                             string_len=len(node[0]),
                             max_string_len=max_str - 4 * depth,
                         )
-                        line += f"{tab}{node[1].split()[0]}"
-
-                        # Define space between number and size format
-                        tabs_bf_format = th.TextHandler.format_tabs(
-                            string_len=len(node[1].split()[1]),
-                            max_string_len=max_size,
-                            tab_len=2,
-                        )
-                        line += f"{tabs_bf_format}{node[1].split()[1]}"
+                        line += f"{tab}{node[1].split()[0]} {node[1].split()[1]}"
                     tree.add(line)
 
             return tree, tree_length

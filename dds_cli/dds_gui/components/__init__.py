@@ -1,1 +1,0 @@
-"""DDS GUI components package."""

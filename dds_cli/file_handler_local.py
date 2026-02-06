@@ -92,8 +92,7 @@ class LocalFileHandler(fh.FileHandler):
 
         try:
             with file.open(mode="rb") as infile:
-                for chunk in iter(lambda: infile.read(chunk_size), b""):
-                    yield chunk
+                yield from iter(lambda: infile.read(chunk_size), b"")
         except OSError as err:
             LOG.warning(str(err))
 
@@ -278,11 +277,10 @@ class LocalFileHandler(fh.FileHandler):
             # LOG.debug(
             #     "Test: %s",
             # )
-            for chunk in fc.Compressor.compress_file(file=file_info["path_raw"]):
-                # LOG.debug("Chunk type: %s", type(chunk))
-                # checksum.update(chunk)
-                # break
-                yield chunk
+            yield from fc.Compressor.compress_file(file=file_info["path_raw"])
+            # LOG.debug("Chunk type: %s", type(chunk))
+            # checksum.update(chunk)
+            # break
 
         # LOG.debug("Streaming file finished.")
         # Add checksum to file info

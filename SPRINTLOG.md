@@ -472,3 +472,49 @@ _Empty sprint_
 ## 2025-09-15 - 2025-09-26
 
 - Bump cryptography library from 42.0.4 to 44.0.1 to solve vulnerabities ([#845](https://github.com/ScilifelabDataCentre/dds_cli/pull/845))
+- Add loading to GUI project listing ([#850](https://github.com/ScilifelabDataCentre/dds_cli/pull/850))
+
+## 2025-09-29 - 2025-10-10
+
+- Revert Windows version to 2022 in pytest workflow ([#853](https://github.com/ScilifelabDataCentre/dds_cli/pull/853))
+- Update Textual version to 6.2.1 ([#852](https://github.com/ScilifelabDataCentre/dds_cli/pull/852))
+- Fix style according to guidelines and drop support for python 3.8 and 3.9 due to CVE, added new tests ([#843](https://github.com/ScilifelabDataCentre/dds_cli/pull/843))
+
+## 2025-10-13 - 2025-10-24
+
+- Remove custom button styling ([#854](https://github.com/ScilifelabDataCentre/dds_cli/pull/854))
+
+## 2025-10-27 - 2025-11-07
+
+- Latex action for documentation failing due to emojis ([#855](https://github.com/ScilifelabDataCentre/dds_cli/pull/855))
+- Add project download to the GUI ([#851](https://github.com/ScilifelabDataCentre/dds_cli/pull/851))
+- Display project access in the GUI ([#856](https://github.com/ScilifelabDataCentre/dds_cli/pull/856))
+
+## 2025-11-10 - 2025-11-21
+
+- Add legacy-cgi dependency ([#857](https://github.com/ScilifelabDataCentre/dds_cli/pull/857))
+- Fix combine --size and --tree bug([#858](https://github.com/ScilifelabDataCentre/dds_cli/pull/858))
+
+## 2025-11-24 - 2025-12-05
+
+- Bump Python from 3.9 to 3.12 in workflows ([#860](https://github.com/ScilifelabDataCentre/dds_cli/pull/860))
+- Solve error when uploading same file/dir twice ([#861](https://github.com/ScilifelabDataCentre/dds_cli/pull/861))
+
+## 2025-12-8 - 2025-12-19
+
+- Update questionary package ([#862](https://github.com/ScilifelabDataCentre/dds_cli/pull/862))
+- Fix bug: Return correct error message for deactivated use ([#864](https://github.com/ScilifelabDataCentre/dds_cli/pull/864))
+
+## 2026-13-1 - 2026-16-1
+
+- Add non positive deadline validation ([#865](https://github.com/ScilifelabDataCentre/dds_cli/pull/865))
+
+## 2026-01-19 - 2026-02-02
+
+- Remove GUI code ([#866](https://github.com/ScilifelabDataCentre/dds_cli/pull/866))
+- Bump black from 24.1.1 to 24.3.0 ([#867](https://github.com/ScilifelabDataCentre/dds_cli/pull/867))
+- Bump pynacl from 1.5.0 to 1.6.2 ([#869](https://github.com/ScilifelabDataCentre/dds_cli/pull/869))
+
+## 2026-02-02 - 2026-02-13
+
+- New version 2.14.0 ([#871](https://github.com/ScilifelabDataCentre/dds_cli/pull/871))

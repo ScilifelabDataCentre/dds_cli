@@ -100,10 +100,10 @@ jobs:
             ASSET_MIME: application/x-elf
     steps:
       - uses: actions/checkout@v4
-      - name: Python 3.9 setup
+      - name: Python 3.12 setup
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.12
           # architecture: 'x64'
       - name: Install dependencies
         run: |
@@ -146,7 +146,12 @@ jobs:
         uses: matthiaszepper/sphinx-action-v4@pdflatex
         with:
           container: pdflatex
-          pre-build-command: "apt-get update && apt-get install -y librsvg2-bin && apt-get -y install build-essential"
+          pre-build-command: |
+            apt-get update && \
+            apt-get install -y librsvg2-bin && \
+            apt-get -y install build-essential && \
+            apt-get install -y fonts-noto-color-emoji && \
+            apt-get install -y texlive-luatex
           build-command: "make latexpdf"
           docs-folder: "docs/"
       - name: Create an artifact of the previously built HTML

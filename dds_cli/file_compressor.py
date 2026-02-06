@@ -104,8 +104,7 @@ class Compressor:
                     #     if not chunk:
                     #         break
                     #     yield
-                    for chunk in iter(lambda: compressor.read(chunk_size), b""):
-                        yield chunk
+                    yield from iter(lambda: compressor.read(chunk_size), b"")
         except Exception as err:  # pylint: disable=broad-exception-caught
             LOG.warning(str(err))
         else:

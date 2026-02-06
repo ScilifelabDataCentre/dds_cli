@@ -101,8 +101,17 @@ class DataGetter(base.DDSBaseClass):
 
             if not self.filehandler.data:
                 if self.temporary_directory and self.temporary_directory.is_dir():
-                    LOG.debug("Deleting temporary folder '%s'.", self.temporary_directory)
-                    dds_cli.utils.delete_folder(self.temporary_directory)
+                    LOG.debug("Deleting staging directory '%s'.", self.temporary_directory)
+                    try:
+                        dds_cli.utils.delete_folder(self.temporary_directory)
+                    except OSError as err:
+                        # Folder deletion may fail if log file is still being written to
+                        # This is not critical - the important thing is to show the error message
+                        LOG.error(
+                            "Could not delete staging directory %s: %s",
+                            self.temporary_directory,
+                            err,
+                        )
                 raise dds_cli.exceptions.DownloadError("No files to download.")
 
             self.status = self.filehandler.create_download_status_dict()

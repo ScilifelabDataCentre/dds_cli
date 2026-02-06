@@ -1,1 +1,0 @@
-"""DDS GUI types package."""

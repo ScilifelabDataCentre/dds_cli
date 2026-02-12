@@ -518,3 +518,4 @@ _Empty sprint_
 ## 2026-02-02 - 2026-02-13
 
 - New version 2.14.0 ([#871](https://github.com/ScilifelabDataCentre/dds_cli/pull/871))
+- Bump cryptography from 44.0.1 to 46.0.5 ([#875](https://github.com/ScilifelabDataCentre/dds_cli/pull/875))

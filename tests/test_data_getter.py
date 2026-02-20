@@ -27,11 +27,11 @@ def _prepare_data_getter(file_name, download_path=None):
     # the full FileHandler class which requires more inputs etc
     # Could technically also use Filehandler.__new__(FileHandler) but this is cleaner
     dg.filehandler = SimpleNamespace(
-        # Only data attribute needed for DataGetter.get
         data={
             file_name: {
                 "path_downloaded": pathlib.Path(download_path or file_name),
                 "url": "https://example.com/file",
+                "name_in_db": file_name,
             }
         }
     )
@@ -86,6 +86,9 @@ def test_get_connect_timeout(monkeypatch):
     # Mock DataGetter instance with helper
     getter = _prepare_data_getter(file_name)
 
+    # Disable retries so a single failure returns immediately
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 1)
+
     err = requests.exceptions.ConnectTimeout("connect timeout")
 
     # Helper function to replace requests.get and raise a timeout error
@@ -112,6 +115,9 @@ def test_get_read_timeout(monkeypatch):
 
     # Mock DataGetter instance with helper
     getter = _prepare_data_getter(file_name)
+
+    # Disable retries so a single failure returns immediately
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 1)
 
     err = requests.exceptions.ReadTimeout("read timeout")
 

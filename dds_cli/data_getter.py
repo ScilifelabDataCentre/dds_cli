@@ -260,7 +260,8 @@ class DataGetter(base.DDSBaseClass):
 
         for attempt in range(1, max_retries + 1):
             error = ""
-            progress.reset(task, completed=0)
+            if attempt > 1:
+                progress.reset(task, completed=0)
 
             try:
                 with requests.get(

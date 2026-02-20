@@ -256,6 +256,7 @@ class DataGetter(base.DDSBaseClass):
         max_retries = constants.DOWNLOAD_MAX_RETRIES
         backoff_factor = constants.DOWNLOAD_BACKOFF_FACTOR
         wait = constants.DOWNLOAD_INITIAL_WAIT
+        retry_messages = []
 
         for attempt in range(1, max_retries + 1):
             error = ""
@@ -283,14 +284,12 @@ class DataGetter(base.DDSBaseClass):
                     break
                 error = str(err)
                 if attempt < max_retries:
-                    LOG.warning(
-                        "Download attempt %d/%d failed for '%s': %s. Retrying in %ds...",
-                        attempt,
-                        max_retries,
-                        file_name_in_db,
-                        error,
-                        wait,
+                    retry_msg = (
+                        f"Download attempt {attempt}/{max_retries} failed for "
+                        f"'{file_name_in_db}': {error}. Retrying in {wait}s..."
                     )
+                    retry_messages.append(retry_msg)
+                    LOG.warning(retry_msg)
                     time.sleep(wait)
                     wait *= backoff_factor
             else:
@@ -298,6 +297,8 @@ class DataGetter(base.DDSBaseClass):
                 break
 
         if not downloaded and error:
+            if retry_messages:
+                error = " | ".join(retry_messages) + f" | Final error: {error}"
             LOG.error(
                 "Download failed for '%s' after %d attempts: %s",
                 file_name_in_db,

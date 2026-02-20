@@ -269,9 +269,7 @@ class DataGetter(base.DDSBaseClass):
                 ) as req:
                     req.raise_for_status()
                     with file_local.open(mode="wb") as new_file:
-                        for chunk in req.iter_content(
-                            chunk_size=FileSegment.SEGMENT_SIZE_CIPHER
-                        ):
+                        for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
                             progress.update(task, advance=len(chunk))
                             new_file.write(chunk)
             except (requests.exceptions.HTTPError, *retryable_exceptions) as err:

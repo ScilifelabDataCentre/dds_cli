@@ -276,9 +276,7 @@ def test_get_retry_uses_exponential_backoff(monkeypatch):
     sleep_calls = []
     monkeypatch.setattr("dds_cli.data_getter.time.sleep", lambda s: sleep_calls.append(s))
 
-    DataGetter.get.__wrapped__(
-        getter, file=file_name, progress=MagicMock(), task=None
-    )
+    DataGetter.get.__wrapped__(getter, file=file_name, progress=MagicMock(), task=None)
 
     assert sleep_calls == [1, 2, 4]
 
@@ -312,8 +310,6 @@ def test_get_progress_reset_only_on_retry(monkeypatch, tmp_path):
     progress = MagicMock()
     task = 1
 
-    DataGetter.get.__wrapped__(
-        getter, file=file_name, progress=progress, task=task
-    )
+    DataGetter.get.__wrapped__(getter, file=file_name, progress=progress, task=task)
 
     assert progress.reset.call_count == 2

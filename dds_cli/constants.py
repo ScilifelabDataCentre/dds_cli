@@ -10,5 +10,16 @@ TODO: Move other constants here from __init__.py.
 READ_TIMEOUT = 300
 CONNECT_TIMEOUT = 60
 
+# Retry settings for download
+DOWNLOAD_MAX_RETRIES = 5
+DOWNLOAD_BACKOFF_FACTOR = 2
+DOWNLOAD_INITIAL_WAIT = 1  # seconds
+
 # Import these constants when using '*'
-__all__ = ["READ_TIMEOUT", "CONNECT_TIMEOUT"]
+__all__ = [
+    "READ_TIMEOUT",
+    "CONNECT_TIMEOUT",
+    "DOWNLOAD_MAX_RETRIES",
+    "DOWNLOAD_BACKOFF_FACTOR",
+    "DOWNLOAD_INITIAL_WAIT",
+]

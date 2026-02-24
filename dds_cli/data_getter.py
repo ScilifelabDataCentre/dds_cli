@@ -7,6 +7,7 @@
 # Standard library
 import logging
 import pathlib
+import time
 
 # Installed
 import requests
@@ -243,35 +244,68 @@ class DataGetter(base.DDSBaseClass):
         error = ""
         file_local = self.filehandler.data[file]["path_downloaded"]
         file_remote = self.filehandler.data[file]["url"]
+        file_name_in_db = escape(str(self.filehandler.data[file]["name_in_db"]))
 
-        try:
-            with requests.get(
-                file_remote,
-                stream=True,
-                timeout=(constants.CONNECT_TIMEOUT, constants.READ_TIMEOUT),
-            ) as req:
-                req.raise_for_status()
-                with file_local.open(mode="wb") as new_file:
-                    for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
-                        progress.update(task, advance=len(chunk))
-                        new_file.write(chunk)
-        except (
+        retryable_exceptions = (
             requests.exceptions.ConnectTimeout,
-            requests.exceptions.HTTPError,
             requests.exceptions.ReadTimeout,
             requests.exceptions.Timeout,
             requests.exceptions.ConnectionError,
-        ) as err:
-            if (
-                hasattr(err, "response")
-                and hasattr(err.response, "status_code")
-                and err.response.status_code == 404
-            ):
-                error = "File not found! Please contact support."
-            else:
+        )
+
+        max_retries = constants.DOWNLOAD_MAX_RETRIES
+        backoff_factor = constants.DOWNLOAD_BACKOFF_FACTOR
+        wait = constants.DOWNLOAD_INITIAL_WAIT
+        retry_messages = []
+
+        for attempt in range(1, max_retries + 1):
+            error = ""
+            if attempt > 1:
+                progress.reset(task, completed=0)
+
+            try:
+                with requests.get(
+                    file_remote,
+                    stream=True,
+                    timeout=(constants.CONNECT_TIMEOUT, constants.READ_TIMEOUT),
+                ) as req:
+                    req.raise_for_status()
+                    with file_local.open(mode="wb") as new_file:
+                        for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
+                            progress.update(task, advance=len(chunk))
+                            new_file.write(chunk)
+            except (requests.exceptions.HTTPError, *retryable_exceptions) as err:
+                if (
+                    isinstance(err, requests.exceptions.HTTPError)
+                    and hasattr(err, "response")
+                    and hasattr(err.response, "status_code")
+                    and err.response.status_code == 404
+                ):
+                    error = "File not found! Please contact support."
+                    break
                 error = str(err)
-        else:
-            downloaded = True
+                if attempt < max_retries:
+                    retry_msg = (
+                        f"Download attempt {attempt}/{max_retries} failed for "
+                        f"'{file_name_in_db}': {error}. Retrying in {wait}s..."
+                    )
+                    retry_messages.append(retry_msg)
+                    LOG.warning(retry_msg)
+                    time.sleep(wait)
+                    wait *= backoff_factor
+            else:
+                downloaded = True
+                break
+
+        if not downloaded and error:
+            if retry_messages:
+                error = " | ".join(retry_messages) + f" | Final error: {error}"
+            LOG.error(
+                "Download failed for '%s' after %d attempts: %s",
+                file_name_in_db,
+                max_retries,
+                error,
+            )
 
         return downloaded, error
 

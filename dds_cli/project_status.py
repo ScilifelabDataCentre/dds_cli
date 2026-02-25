@@ -307,7 +307,7 @@ class ProjectBusyStatusManager(base.DDSBaseClass):
             else:
                 projects: typing.Dict = response_json.get("projects")
                 LOG.info("The following projects are busy:")
-                for proj in projects.items():
-                    dds_cli.utils.console.print(f"{proj}: updated on {projects[proj]}")
+                for proj, updated_on in projects.items():
+                    dds_cli.utils.console.print(f"{proj}: updated on {updated_on}")
         else:
             LOG.info("There are no busy projects at the moment.")

@@ -57,10 +57,10 @@ def test_removal_spinner_success(helper, func_name, expected_printed_description
         # gets renamed to func_name
         pass
 
-    with patch("dds_cli.custom_decorators.Progress") as mock_progress, patch(
-        "dds_cli.custom_decorators.dds_cli.utils.console"
-    ) as mock_console:
-
+    with (
+        patch("dds_cli.custom_decorators.Progress") as mock_progress,
+        patch("dds_cli.custom_decorators.dds_cli.utils.console") as mock_console,
+    ):
         mock_progress_instance = MagicMock()
         mock_progress.return_value.__enter__.return_value = mock_progress_instance
 
@@ -84,10 +84,11 @@ def test_removal_spinner_failed_table(helper, func_name):
     def fake_func(self):  # fake function that uses the decorator
         pass
 
-    with patch("dds_cli.custom_decorators.Progress"), patch(
-        "dds_cli.custom_decorators.dds_cli.utils.console"
-    ) as mock_console, patch("dds_cli.custom_decorators.LOG") as mock_log:
-
+    with (
+        patch("dds_cli.custom_decorators.Progress"),
+        patch("dds_cli.custom_decorators.dds_cli.utils.console") as mock_console,
+        patch("dds_cli.custom_decorators.LOG") as mock_log,
+    ):
         mock_console.height = 10
         # Fake a failed_table with row_count
         fake_table = MagicMock()
@@ -113,10 +114,10 @@ def test_removal_spinner_failed_files(helper, func_name):
         # gets renamed to func_name
         pass
 
-    with patch("dds_cli.custom_decorators.Progress"), patch(
-        "dds_cli.custom_decorators.dds_cli.utils.console"
-    ) as mock_console:
-
+    with (
+        patch("dds_cli.custom_decorators.Progress"),
+        patch("dds_cli.custom_decorators.dds_cli.utils.console") as mock_console,
+    ):
         helper.failed_files = {"some": "file"}
         fake_func(helper)
 

@@ -1,4 +1,4 @@
-""""Compressor module. Handles the compression of files."""
+"""Compressor module. Handles the compression of files."""
 
 ###############################################################################
 # IMPORTS ########################################################### IMPORTS #
@@ -9,7 +9,6 @@ import dataclasses
 import logging
 import pathlib
 import traceback
-
 
 # Installed
 import zstandard as zstd
@@ -36,7 +35,7 @@ class CompressionMagic:
     LZIP = b"LZIP"
     RAR4 = b"Rar!\x1a\x07\x00"
     RAR5 = b"Rar!\x1a\x07\x01\x00"
-    GZIP = b"\x1F\x8B"
+    GZIP = b"\x1f\x8b"
     ZSTANDARD = b"(\xb5/\xfd"
 
 
@@ -55,7 +54,7 @@ class Compressor:
             b"_'\xa8\x89": "jar",
             b"ZOO ": "zoo",
             b"PK\x03\x04": "zip",
-            b"\x1F\x8B": "gzip",
+            b"\x1f\x8b": "gzip",
             b"UFA\xc6\xd2\xc1": "ufa",
             b"StuffIt ": "sit",
             b"Rar!\x1a\x07\x00": "rar v4.x",

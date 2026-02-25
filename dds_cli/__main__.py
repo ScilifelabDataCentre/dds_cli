@@ -200,12 +200,11 @@ def dds_main(click_ctx, verbose, force_no_log, log_file, no_prompt, token_path):
             else:
                 file_handler = dds_cli.utils.setup_logging_to_file(filename=log_file)
                 LOG.addHandler(file_handler)
-        else:
-            if force_no_log:
-                LOG.warning(
-                    "You have chosen to turn off the recommended default logging with the '--force-no-log' option."
-                )
-                click_ctx.obj.update({"DEFAULT_LOG": False})
+        elif force_no_log:
+            LOG.warning(
+                "You have chosen to turn off the recommended default logging with the '--force-no-log' option."
+            )
+            click_ctx.obj.update({"DEFAULT_LOG": False})
 
 
 # ************************************************************************************************ #
@@ -269,29 +268,28 @@ def list_projects_and_contents(
                 projects = lister.list_projects(sort_by=sort, show_all=show_all)
                 if json:
                     dds_cli.utils.console.print_json(data=projects)
-                else:
-                    # If an interactive terminal, ask user if they want to view files for a project
-                    if sys.stdout.isatty() and not lister.no_prompt:
-                        project_ids = [p["Project ID"] for p in projects]
-                        LOG.info(
-                            "Would you like to view files in a specific project? "
-                            "Leave blank to exit."
-                        )
-                        # Keep asking until we get a valid response
-                        while project not in project_ids:
-                            try:
-                                project = questionary.autocomplete(
-                                    "Project ID:",
-                                    choices=project_ids,
-                                    validate=lambda x: x in project_ids or x == "",
-                                    style=dds_cli.dds_questionary_styles,
-                                ).unsafe_ask()
-                                assert project and project != ""
+                # If an interactive terminal, ask user if they want to view files for a project
+                elif sys.stdout.isatty() and not lister.no_prompt:
+                    project_ids = [p["Project ID"] for p in projects]
+                    LOG.info(
+                        "Would you like to view files in a specific project? "
+                        "Leave blank to exit."
+                    )
+                    # Keep asking until we get a valid response
+                    while project not in project_ids:
+                        try:
+                            project = questionary.autocomplete(
+                                "Project ID:",
+                                choices=project_ids,
+                                validate=lambda x: x in project_ids or x == "",
+                                style=dds_cli.dds_questionary_styles,
+                            ).unsafe_ask()
+                            assert project and project != ""
 
-                            # If didn't enter anything, convert to None and exit
-                            except (KeyboardInterrupt, AssertionError):
-                                LOG.debug("No project entered, exiting.")
-                                break
+                        # If didn't enter anything, convert to None and exit
+                        except (KeyboardInterrupt, AssertionError):
+                            LOG.debug("No project entered, exiting.")
+                            break
 
         # List all files in a project if we know a project ID
         if project:
@@ -783,15 +781,14 @@ def delete_user(click_ctx, email, self, is_invite):
             proceed_deletion = rich.prompt.Confirm.ask(
                 f"Delete invitation of {email} to Data Delivery System?"
             )
+        elif self:
+            proceed_deletion = rich.prompt.Confirm.ask(
+                "Are you sure? Deleted accounts can't be restored!"
+            )
         else:
-            if self:
-                proceed_deletion = rich.prompt.Confirm.ask(
-                    "Are you sure? Deleted accounts can't be restored!"
-                )
-            else:
-                proceed_deletion = rich.prompt.Confirm.ask(
-                    f"Delete Data Delivery System user account associated with {email}"
-                )
+            proceed_deletion = rich.prompt.Confirm.ask(
+                f"Delete Data Delivery System user account associated with {email}"
+            )
 
     if proceed_deletion:
         try:
@@ -2020,12 +2017,11 @@ def rm_data(click_ctx, project, file, folder, rm_all):
     if rm_all:
         if no_prompt:
             LOG.warning("Deleting all files within project '%s'", project)
-        else:
-            if not rich.prompt.Confirm.ask(
-                f"Are you sure you want to delete all files within project '{project}'?"
-            ):
-                LOG.info("Probably for the best. Exiting.")
-                sys.exit(0)
+        elif not rich.prompt.Confirm.ask(
+            f"Are you sure you want to delete all files within project '{project}'?"
+        ):
+            LOG.info("Probably for the best. Exiting.")
+            sys.exit(0)
 
     try:
         with dds_cli.data_remover.DataRemover(

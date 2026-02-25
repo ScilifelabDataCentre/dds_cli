@@ -57,7 +57,7 @@ class ProjectInfoManager(base.DDSBaseClass):
         dds_cli.utils.console.print(f"[b]Project title:[/b]       {project_info['Title']}")
         dds_cli.utils.console.print(f"[b]Project description:[/b] {project_info['Description']}")
 
-    def update_info(self, title=None, description=None, pi=None):  # pylint: disable=invalid-name
+    def update_info(self, title=None, description=None, pi=None):
         """Update project info"""
 
         if all(item is None for item in [title, description, pi]):

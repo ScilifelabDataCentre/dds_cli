@@ -15,15 +15,15 @@
 <a href="https://opensource.org/licenses/MIT">
     <img alt="Licence: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
 </a>
-<a href="https://github.com/psf/black">
-    <img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg">
+<a href="https://github.com/astral-sh/ruff">
+    <img alt="Linting: ruff" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json">
 </a>
 <a href="https://prettier.io/">
     <img alt="Code style: prettier" src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg">
 </a>
 <br />
-<a href="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-black-cli.yml">
-    <img alt="Formatter: black" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-black-cli.yml/badge.svg?event=push">
+<a href="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-ruff.yml">
+    <img alt="Linting: ruff" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/lint-ruff.yml/badge.svg?event=push">
 </a>
 <img alt="CodeQL" src="https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/codeql-cli.yml/badge.svg">
 <a href="https://codecov.io/github/ScilifelabDataCentre/dds_cli" > 

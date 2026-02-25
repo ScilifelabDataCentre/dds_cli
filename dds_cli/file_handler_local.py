@@ -147,26 +147,25 @@ class LocalFileHandler(fh.FileHandler):
                     folder=path_key,
                 )
                 file_info.update({**content_info})
-            else:
-                # Symlinks are also identified as files - if here and symlink --> broken
-                if path.is_symlink():
-                    try:
-                        resolved = path.resolve()
-                    except RuntimeError:
-                        LOG.warning(
-                            "IGNORED: Link: '%s' seems to contain infinite loop, will be ignored.",
-                            path,
-                        )
-                    else:
-                        LOG.warning(
-                            "IGNORED: Link: '%s' -> '%s' seems to be broken, will be ignored.",
-                            path,
-                            resolved,
-                        )
+            # Symlinks are also identified as files - if here and symlink --> broken
+            elif path.is_symlink():
+                try:
+                    resolved = path.resolve()
+                except RuntimeError:
+                    LOG.warning(
+                        "IGNORED: Link: '%s' seems to contain infinite loop, will be ignored.",
+                        path,
+                    )
                 else:
                     LOG.warning(
-                        "IGNORED: Path of unsupported/unknown type: '%s', will be ignored.", path
+                        "IGNORED: Link: '%s' -> '%s' seems to be broken, will be ignored.",
+                        path,
+                        resolved,
                     )
+            else:
+                LOG.warning(
+                    "IGNORED: Path of unsupported/unknown type: '%s', will be ignored.", path
+                )
 
         return file_info, progress_tasks
 

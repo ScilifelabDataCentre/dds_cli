@@ -524,4 +524,5 @@ _Empty sprint_
 - Bump cryptography from 44.0.1 to 46.0.5 ([#875](https://github.com/ScilifelabDataCentre/dds_cli/pull/875))
 - Add retry with exponential backoff for downloads ([#877](https://github.com/ScilifelabDataCentre/dds_cli/pull/877))
 - Configure Renovate ([#876](https://github.com/ScilifelabDataCentre/dds_cli/pull/876))
+- replace click-pathlib dependency with `click.Path(path_type=pathlib.Path)`([#926](https://github.com/ScilifelabDataCentre/dds_cli/pull/926))
 - Switch from pylint+black to ruff([#927](https://github.com/ScilifelabDataCentre/dds_cli/pull/927))

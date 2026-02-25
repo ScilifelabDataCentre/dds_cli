@@ -13,7 +13,6 @@ import sys
 
 # Installed
 
-import click_pathlib
 import questionary
 import rich
 import rich.logging
@@ -1626,7 +1625,9 @@ def data_group_command(_):
     "--mount-dir",
     "-md",
     required=False,
-    type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
+    type=click.Path(
+        exists=False, file_okay=False, dir_okay=True, resolve_path=True, path_type=pathlib.Path
+    ),
     help=(
         "New directory where the files will be mounted before upload "
         "and any error log files will be saved for a specific upload."
@@ -1749,7 +1750,9 @@ def put_data(
 @source_path_file_option()
 @destination_option(
     help_message="Destination of downloaded data.",
-    option_type=click_pathlib.Path(exists=False, file_okay=False, dir_okay=True, resolve_path=True),
+    option_type=click.Path(
+        exists=False, file_okay=False, dir_okay=True, resolve_path=True, path_type=pathlib.Path
+    ),
 )
 # Flags
 @break_on_fail_flag(help_message="Cancel download of all files if one fails.")

@@ -28,7 +28,7 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v2
         with:
-          python-version: 3.12
+          python-version: 3.14
 
       - name: Install dds_cli
         run: |
@@ -54,7 +54,7 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v2
         with:
-          python-version: 3.12
+          python-version: 3.14
 
       - name: Install CLI
         run: pip install .

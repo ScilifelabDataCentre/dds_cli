@@ -105,7 +105,7 @@ class Compressor:
                     #         break
                     #     yield
                     yield from iter(lambda: compressor.read(chunk_size), b"")
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:
             LOG.warning(str(err))
         else:
             LOG.debug("Compression of '%s' finished.", file)

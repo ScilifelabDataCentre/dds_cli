@@ -272,8 +272,7 @@ def list_projects_and_contents(
                 elif sys.stdout.isatty() and not lister.no_prompt:
                     project_ids = [p["Project ID"] for p in projects]
                     LOG.info(
-                        "Would you like to view files in a specific project? "
-                        "Leave blank to exit."
+                        "Would you like to view files in a specific project? Leave blank to exit."
                     )
                     # Keep asking until we get a valid response
                     while project not in project_ids:

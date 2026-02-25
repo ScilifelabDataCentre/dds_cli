@@ -68,7 +68,6 @@ def put(
         destination=destination,
         staging_dir=staging_dir,
     ) as putter:
-
         # Progress object to keep track of progress tasks
         with Progress(
             "{task.description}",

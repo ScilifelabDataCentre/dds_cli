@@ -27,10 +27,10 @@ def test_auth_configure_ok(user_choice, expected_auth_method, expected_exit_code
     """Test of configure two factor method - ok"""
 
     runner = CliRunner()
-    with patch("dds_cli.__main__.questionary.select") as mock_select, patch(
-        "dds_cli.auth.Auth"
-    ) as mock_auth:
-
+    with (
+        patch("dds_cli.__main__.questionary.select") as mock_select,
+        patch("dds_cli.auth.Auth") as mock_auth,
+    ):
         # Mock the user selecting option
         mock_select.return_value.ask.return_value = user_choice
 
@@ -58,10 +58,10 @@ def test_auth_configure_exceptions(exc_type, user_choice):
     """Test of configure two factor - fails with exceptions"""
 
     runner = CliRunner()
-    with patch("dds_cli.__main__.questionary.select") as mock_select, patch(
-        "dds_cli.auth.Auth"
-    ) as mock_auth:
-
+    with (
+        patch("dds_cli.__main__.questionary.select") as mock_select,
+        patch("dds_cli.auth.Auth") as mock_auth,
+    ):
         # Mock the user selecting option
         mock_select.return_value.ask.return_value = user_choice
 
@@ -86,10 +86,10 @@ def test_user_activate_confirm_ok(confirm):
     """Test user activation when confirmation is yes/no. - no errors"""
 
     runner = CliRunner()
-    with patch(
-        "dds_cli.__main__.rich.prompt.Confirm.ask", return_value=confirm
-    ) as mock_confirm, patch("dds_cli.account_manager.AccountManager") as mock_manager:
-
+    with (
+        patch("dds_cli.__main__.rich.prompt.Confirm.ask", return_value=confirm) as mock_confirm,
+        patch("dds_cli.account_manager.AccountManager") as mock_manager,
+    ):
         mock_manager_instance = MagicMock()
         mock_manager.return_value.__enter__.return_value = mock_manager_instance
 
@@ -111,10 +111,10 @@ def test_user_deactivate_confirm_ok(confirm):
     """Test user deactivation when confirmation is yes/no. - no errors"""
 
     runner = CliRunner()
-    with patch(
-        "dds_cli.__main__.rich.prompt.Confirm.ask", return_value=confirm
-    ) as mock_confirm, patch("dds_cli.account_manager.AccountManager") as mock_manager:
-
+    with (
+        patch("dds_cli.__main__.rich.prompt.Confirm.ask", return_value=confirm) as mock_confirm,
+        patch("dds_cli.account_manager.AccountManager") as mock_manager,
+    ):
         mock_manager_instance = MagicMock()
         mock_manager.return_value.__enter__.return_value = mock_manager_instance
 
@@ -144,10 +144,10 @@ def test_user_activate_exceptions(exc_type):
     """Test user activation when AccountManager raises errors."""
 
     runner = CliRunner()
-    with patch("dds_cli.__main__.rich.prompt.Confirm.ask", return_value=True), patch(
-        "dds_cli.account_manager.AccountManager"
-    ) as mock_manager:
-
+    with (
+        patch("dds_cli.__main__.rich.prompt.Confirm.ask", return_value=True),
+        patch("dds_cli.account_manager.AccountManager") as mock_manager,
+    ):
         mock_manager_instance = MagicMock()
         mock_manager_instance.user_activation.side_effect = exc_type("error")
         mock_manager.return_value.__enter__.return_value = mock_manager_instance
@@ -171,10 +171,10 @@ def test_user_deactivate_exceptions(exc_type):
     """Test user deactivation when AccountManager raises errors."""
 
     runner = CliRunner()
-    with patch("dds_cli.__main__.rich.prompt.Confirm.ask", return_value=True), patch(
-        "dds_cli.account_manager.AccountManager"
-    ) as mock_manager:
-
+    with (
+        patch("dds_cli.__main__.rich.prompt.Confirm.ask", return_value=True),
+        patch("dds_cli.account_manager.AccountManager") as mock_manager,
+    ):
         mock_manager_instance = MagicMock()
         mock_manager_instance.user_activation.side_effect = exc_type("error")
         mock_manager.return_value.__enter__.return_value = mock_manager_instance

@@ -1,0 +1,24 @@
+# Pre-commit hooks configuration
+# ---
+# Managed by prek (https://prek.j178.dev) — a fast, Rust-based, drop-in
+# replacement for pre-commit. Uses the same .pre-commit-config.yaml format.
+#
+# Install prek:
+#   Download from https://github.com/j178/prek/releases
+#   or: cargo install prek
+#
+# Install git hooks (run once after cloning):
+#   prek install
+#
+# Run all hooks manually without committing:
+#   prek run --all-files
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.3
+    hooks:
+      # Linter — auto-fixes violations where possible before the commit lands
+      - id: ruff
+        args: [--fix]
+      # Formatter — enforces consistent code style
+      - id: ruff-format

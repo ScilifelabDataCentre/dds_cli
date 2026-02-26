@@ -1,5 +1,23 @@
 If you would like to contribute to this project...
 
+## Developer Setup
+
+### Pre-commit hooks
+
+This project uses [prek](https://prek.j178.dev) to manage git pre-commit hooks (a fast, Rust-based drop-in for `pre-commit`).
+
+Install prek from the [releases page](https://github.com/j178/prek/releases), then install the hooks into your local clone:
+
+```bash
+prek install
+```
+
+After that, ruff linting and formatting checks run automatically on every `git commit`. To run all hooks manually at any time:
+
+```bash
+prek run --all-files
+```
+
 **Thank you, any suggestions and / or contributions are very appreciated**
 
 If you would like to suggest a change, please go to the issues tab and fill out and issue. If you would like to contribute with code, follow the steps below:

@@ -154,7 +154,6 @@ def removal_spinner(func):
             SpinnerColumn(spinner_name="dots12", style="white"),
             console=dds_cli.utils.stderr_console,
         ) as progress:
-
             description: str | None = None  # type hint, initialized
             # Determine spinner text
             if func.__name__ == "remove_all":

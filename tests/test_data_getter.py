@@ -2,7 +2,6 @@
 
 # IMPORTS ######################################################################
 
-
 import pathlib
 import requests
 from types import SimpleNamespace

@@ -1,4 +1,4 @@
-# pylint: skip-file
+# ruff: noqa
 """DDS CLI."""
 
 import datetime

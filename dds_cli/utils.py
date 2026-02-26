@@ -49,9 +49,9 @@ class HumanBytes:
         """
         assert isinstance(num, (int, float)), "num must be an int or float"
         assert isinstance(metric, bool), "metric must be a bool"
-        assert (
-            isinstance(precision, int) and 0 <= precision <= 3
-        ), "precision must be an int (range 0-3)"
+        assert isinstance(precision, int) and 0 <= precision <= 3, (
+            "precision must be an int (range 0-3)"
+        )
 
         unit_labels = HumanBytes.METRIC_LABELS if metric else HumanBytes.BINARY_LABELS
         last_label = unit_labels[-1]
@@ -324,9 +324,7 @@ def get_json_response(response):
     return json_response
 
 
-def format_api_response(
-    response, key: str, binary: bool = False, always_show: bool = False
-):  # pylint: disable=unused-argument
+def format_api_response(response, key: str, binary: bool = False, always_show: bool = False):
     """Take a value e.g. bytes and reformat it to include a unit prefix."""
     formatted_response = response
     if isinstance(response, bool):

@@ -13,7 +13,7 @@ questionary==2.1.1
 requests==2.32.4
 rich==13.6.0
 rich-click==1.5.2
-simplejson==3.17.6
+simplejson==3.20.2
 tzlocal==4.2
 zstandard==0.23.0
 legacy-cgi==2.6.1 ; python_version >= '3.13'

@@ -526,3 +526,4 @@ _Empty sprint_
 - Configure Renovate ([#876](https://github.com/ScilifelabDataCentre/dds_cli/pull/876))
 - replace click-pathlib dependency with `click.Path(path_type=pathlib.Path)`([#926](https://github.com/ScilifelabDataCentre/dds_cli/pull/926))
 - Switch from pylint+black to ruff([#927](https://github.com/ScilifelabDataCentre/dds_cli/pull/927))
+- Add pre-commit config to repository ([#932](https://github.com/ScilifelabDataCentre/dds_cli/pull/932))

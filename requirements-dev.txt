@@ -4,6 +4,6 @@ sphinx-rtd-theme==1.0.0
 sphinx-click==4.0.0
 pyinstaller  # version not pinned due to latest used by release procedure
 sphinx-copybutton==0.5.1
-sphinxcontrib-svg2pdfconverter==1.2.2
+sphinxcontrib-svg2pdfconverter==1.3.0
 standard-imghdr==3.13.0 # removed in python 3.13, needed for sphinx (until more stable fix)
 legacy-cgi==2.6.1 # removed in python 3.13, needed for sphinx (until more stable fix)

@@ -1,6 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["replacements:all", "workarounds:all", "helpers:githubDigestChangelogs"],
+  "extends": [
+    "replacements:all",
+    "workarounds:all",
+    "helpers:githubDigestChangelogs"
+  ],
   "labels": ["type:dependency"],
   "abandonmentThreshold": "2 years",
   "prConcurrentLimit": 5,

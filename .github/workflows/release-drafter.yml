@@ -26,5 +26,5 @@ jobs:
       # Drafts your next Release notes as Pull Requests are merged
       - uses: release-drafter/release-drafter@v7
         with:
-          config-name: release-drafter.yml  # .github/release-drafter.yml
+          config-name: release-drafter.yml # .github/release-drafter.yml
           token: ${{ secrets.GITHUB_TOKEN }}

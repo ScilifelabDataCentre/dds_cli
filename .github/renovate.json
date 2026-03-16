@@ -1,0 +1,15 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["replacements:all", "workarounds:all", "helpers:githubDigestChangelogs"],
+  "labels": ["type:dependency"],
+  "abandonmentThreshold": "2 years",
+  "prConcurrentLimit": 5,
+  "timezone": "Europe/Stockholm",
+  "schedule": ["* 18-23,0-5 * * 1-5"],
+  "packageRules": [
+    {
+      "matchAbandoned": true,
+      "addLabels": ["status:abandoned"]
+    }
+  ]
+}

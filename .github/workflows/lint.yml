@@ -1,0 +1,21 @@
+# Lint (via prek)
+# All linting and formatting hooks are defined in .pre-commit-config.yaml
+# and run together via prek:
+#   - ruff      Python linting and formatting
+#   - prettier  Markdown, JSON, YAML, and other non-Python files
+#   - yamllint  YAML style and syntax
+# ---
+# Action failing?
+#   Install prek: download from https://github.com/j178/prek/releases
+#   Run locally:  prek run --all-files
+---
+name: Lint
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: j178/prek-action@v1

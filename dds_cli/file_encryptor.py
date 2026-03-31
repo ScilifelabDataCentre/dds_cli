@@ -274,5 +274,5 @@ class Decryptor(ECDHKeyHandler):
                 )
                 if last_nonce != nonce:
                     raise SystemExit("Nonces do not match!!")
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:
             LOG.warning(str(err))

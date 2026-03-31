@@ -1,19 +1,17 @@
 """Setup of DDS CLI."""
 
-# pylint: disable=unspecified-encoding, exec-used, consider-using-with, duplicate-code
-
 from setuptools import setup, find_packages
 
 version = {}
-with open("./dds_cli/version.py") as fp:
+with open("./dds_cli/version.py") as fp:  # noqa: PLW1514
     exec(fp.read(), version)
 VERSION = version["__version__"]
 
-with open("README.md") as f:
+with open("README.md") as f:  # noqa: PLW1514
     readme = f.read()
 
-with open("requirements.txt") as f:
-    requirements = [line.strip() for line in open("requirements.txt").readlines()]
+with open("requirements.txt") as f:  # noqa: PLW1514
+    requirements = [line.strip() for line in open("requirements.txt").readlines()]  # noqa: PLW1514
 
 setup(
     name="dds_cli",

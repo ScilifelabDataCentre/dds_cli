@@ -531,3 +531,4 @@ _Empty sprint_
 
 - Update dependency Flask to v3 ([#940](https://github.com/ScilifelabDataCentre/dds_cli/pull/940))
 - Bump requests to v2.33.0 ([#937](https://github.com/ScilifelabDataCentre/dds_cli/pull/937))
+- Update cryptography to v46.0.6 ([#941](https://github.com/ScilifelabDataCentre/dds_cli/pull/941))

@@ -530,3 +530,4 @@ _Empty sprint_
 ## 2026-03-30 - 2026-04-10
 
 - Update dependency Flask to v3 ([#940](https://github.com/ScilifelabDataCentre/dds_cli/pull/940))
+- Bump requests to v2.33.0 ([#937](https://github.com/ScilifelabDataCentre/dds_cli/pull/937))

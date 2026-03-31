@@ -10,6 +10,7 @@ import itertools
 import json
 import logging
 import pathlib
+import threading
 
 # Installed
 import boto3
@@ -187,6 +188,9 @@ def put(
             else:
                 LOG.debug("Database retry finished.")
 
+        # Single project metadata refresh after batch (date_updated / last_updated_by)
+        putter.touch_project_after_upload()
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -225,6 +229,9 @@ class DataPutter(base.DDSBaseClass):
         self.overwrite = overwrite
         self.silent = silent
         self.filehandler = None
+        self._db_add_lock = threading.Lock()
+        self.any_successful_db_add = False
+        self.retry_added_any_file = False
 
         # Only method "put" can use the DataPutter class
         if self.method != "put":
@@ -456,6 +463,8 @@ class DataPutter(base.DDSBaseClass):
             )
             added_to_db, message = (True, response_json)
             LOG.debug("API call for file '%s: Adding to database'", fileinfo["path_raw"])
+            with self._db_add_lock:
+                self.any_successful_db_add = True
         except (
             dds_cli.exceptions.ApiRequestError,
             dds_cli.exceptions.ApiResponseError,
@@ -505,6 +514,8 @@ class DataPutter(base.DDSBaseClass):
         files_added = response.get("files_added")
 
         # Get successfully added files
+        if files_added:
+            self.retry_added_any_file = True
         if len(files_added) == len(failed):
             LOG.info(
                 "All successfully uploaded files were successfully added to the database during the retry."
@@ -523,3 +534,22 @@ class DataPutter(base.DDSBaseClass):
                     "message": "Added with 'retry_add_file_db'",
                 }
             )
+
+    def touch_project_after_upload(self):
+        """Ask API to refresh project ``date_updated`` / ``last_updated_by`` once per batch."""
+        if not (self.any_successful_db_add or self.retry_added_any_file):
+            return
+        try:
+            dds_cli.utils.perform_request(
+                DDSEndpoint.PROJ_UPLOAD_COMPLETE,
+                method="post",
+                params={"project": self.project},
+                headers=self.token,
+                error_message="Failed to update project timestamp after upload",
+            )
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.warning("Project metadata refresh after upload skipped: %s", err)

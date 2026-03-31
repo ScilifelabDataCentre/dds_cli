@@ -108,7 +108,8 @@ class DDSBaseClass:
 
         # Exception is not handled
         if exception_type is not None:
-            LOG.debug("Exception: %s with value %s", exception_type, exception_value)
+            # Use repr() so exception_value is not interpreted as rich markup (avoids MarkupError)
+            LOG.debug("Exception: %r with value %r", exception_type, exception_value)
             return False
 
         return True

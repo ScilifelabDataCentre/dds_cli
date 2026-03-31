@@ -526,3 +526,7 @@ _Empty sprint_
 - Configure Renovate ([#876](https://github.com/ScilifelabDataCentre/dds_cli/pull/876))
 - replace click-pathlib dependency with `click.Path(path_type=pathlib.Path)`([#926](https://github.com/ScilifelabDataCentre/dds_cli/pull/926))
 - Switch from pylint+black to ruff([#927](https://github.com/ScilifelabDataCentre/dds_cli/pull/927))
+
+## 2026-03-30 - 2026-04-10
+
+- Update dependency Flask to v3 ([#940](https://github.com/ScilifelabDataCentre/dds_cli/pull/940))

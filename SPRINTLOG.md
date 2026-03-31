@@ -534,3 +534,4 @@ _Empty sprint_
 - Update cryptography to v46.0.6 ([#941](https://github.com/ScilifelabDataCentre/dds_cli/pull/941))
 - Update codecov/codecov-action action to v6 ([#939](https://github.com/ScilifelabDataCentre/dds_cli/pull/939))
 - Update dependency pytz to v2026 ([#933](https://github.com/ScilifelabDataCentre/dds_cli/pull/933))
+- Update dependency rich to v14 ([#918](https://github.com/ScilifelabDataCentre/dds_cli/pull/918))

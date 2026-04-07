@@ -535,3 +535,4 @@ _Empty sprint_
 - Update codecov/codecov-action action to v6 ([#939](https://github.com/ScilifelabDataCentre/dds_cli/pull/939))
 - Update dependency pytz to v2026 ([#933](https://github.com/ScilifelabDataCentre/dds_cli/pull/933))
 - Update dependency rich to v14 ([#918](https://github.com/ScilifelabDataCentre/dds_cli/pull/918))
+- New version 2.14.2 ([#944](https://github.com/ScilifelabDataCentre/dds_cli/pull/944))

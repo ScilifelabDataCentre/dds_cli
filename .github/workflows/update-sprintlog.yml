@@ -1,0 +1,60 @@
+# Update Sprint Log
+# Automatically appends a PR entry to SPRINTLOG.md when a pull request is opened
+# and keeps the entry in sync if the pull request title changes.
+---
+name: Update Sprintlog
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+
+permissions:
+  contents: write
+
+jobs:
+  update-sprintlog:
+    if: >-
+      ${{
+        !contains(github.event.pull_request.labels.*.name, 'tests') &&
+        (github.event.action == 'opened' || github.event.changes.title)
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Add entry to sprint log
+        if: ${{ github.event.action == 'opened' }}
+        run: |
+          title="${{ github.event.pull_request.title }}"
+          number="${{ github.event.pull_request.number }}"
+          url="${{ github.event.pull_request.html_url }}"
+          echo "- $title ([#$number]($url))" >> SPRINTLOG.md
+
+      - name: Update sprint log title
+        if: ${{ github.event.action == 'edited' && github.event.changes.title }}
+        run: |
+          num="${{ github.event.pull_request.number }}"
+          title="${{ github.event.pull_request.title }}"
+          url="${{ github.event.pull_request.html_url }}"
+          sed -i "/(#$num)/c\- $title ([#$num]($url))" SPRINTLOG.md
+
+      - name: Commit changes for new entry
+        if: ${{ github.event.action == 'opened' }}
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: "docs: add entry to sprint log for PR #${{ github.event.pull_request.number }}"
+          add: "SPRINTLOG.md"
+
+      - name: Commit changes for title update
+        if: ${{ github.event.action == 'edited' && github.event.changes.title }}
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: "docs: update sprint log entry for PR #${{ github.event.pull_request.number }}"
+          add: "SPRINTLOG.md"

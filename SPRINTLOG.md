@@ -518,3 +518,21 @@ _Empty sprint_
 ## 2026-02-02 - 2026-02-13
 
 - New version 2.14.0 ([#871](https://github.com/ScilifelabDataCentre/dds_cli/pull/871))
+
+## 2026-02-16 - 2026-02-27
+
+- Bump cryptography from 44.0.1 to 46.0.5 ([#875](https://github.com/ScilifelabDataCentre/dds_cli/pull/875))
+- Add retry with exponential backoff for downloads ([#877](https://github.com/ScilifelabDataCentre/dds_cli/pull/877))
+- Configure Renovate ([#876](https://github.com/ScilifelabDataCentre/dds_cli/pull/876))
+- replace click-pathlib dependency with `click.Path(path_type=pathlib.Path)`([#926](https://github.com/ScilifelabDataCentre/dds_cli/pull/926))
+- Switch from pylint+black to ruff([#927](https://github.com/ScilifelabDataCentre/dds_cli/pull/927))
+
+## 2026-03-30 - 2026-04-10
+
+- Update dependency Flask to v3 ([#940](https://github.com/ScilifelabDataCentre/dds_cli/pull/940))
+- Bump requests to v2.33.0 ([#937](https://github.com/ScilifelabDataCentre/dds_cli/pull/937))
+- Update cryptography to v46.0.6 ([#941](https://github.com/ScilifelabDataCentre/dds_cli/pull/941))
+- Update codecov/codecov-action action to v6 ([#939](https://github.com/ScilifelabDataCentre/dds_cli/pull/939))
+- Update dependency pytz to v2026 ([#933](https://github.com/ScilifelabDataCentre/dds_cli/pull/933))
+- Update dependency rich to v14 ([#918](https://github.com/ScilifelabDataCentre/dds_cli/pull/918))
+- New version 2.14.2 ([#944](https://github.com/ScilifelabDataCentre/dds_cli/pull/944))

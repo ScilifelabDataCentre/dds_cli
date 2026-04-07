@@ -275,7 +275,7 @@ class User:
                     )
                     # Get response
                     username = response_json["info"]["username"]
-                except:  # pylint: disable=bare-except
+                except:  # noqa: E722
                     pass
         return username
 
@@ -307,7 +307,7 @@ class TokenFile:
         self.check_token_file_permissions()
 
         # Read token from file
-        with self.token_file.open(mode="r") as file:  # pylint: disable=unspecified-encoding
+        with self.token_file.open(mode="r") as file:  # noqa: PLW1514
             token = file.read()
             if not token:
                 raise exceptions.TokenNotFoundError(message="Token file is empty.")
@@ -331,7 +331,7 @@ class TokenFile:
 
         self.check_token_file_permissions()
 
-        with self.token_file.open("w") as file:  # pylint: disable=unspecified-encoding
+        with self.token_file.open("w") as file:  # noqa: PLW1514
             file.write(token)
 
         if os.name == "nt":
@@ -421,7 +421,7 @@ class TokenFile:
         return expiration_time
 
     # Private methods ############################################################ Private methods #
-    def __token_dates(self, token):  # pylint: disable=inconsistent-return-statements
+    def __token_dates(self, token):  # noqa: PLR1710
         """Returns the expiration time in UTC that is extracted from the token jose header."""
 
         expiration_time = get_token_expiration_time(token=token)

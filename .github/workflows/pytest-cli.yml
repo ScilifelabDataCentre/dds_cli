@@ -40,7 +40,7 @@ jobs:
           COVERAGE_FILE=./coverage/.coverage
           pytest --color=yes --cov=./dds_cli --cov-report=xml:coverage/report.xml
 
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/report.xml
@@ -65,7 +65,7 @@ jobs:
           SET COVERAGE_FILE=./coverage/.coverage
           pytest --color=yes --cov=./dds_cli --cov-report=xml:coverage/report-windows.xml
 
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/report-windows.xml

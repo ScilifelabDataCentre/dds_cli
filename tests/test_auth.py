@@ -151,10 +151,10 @@ def test_login_with_prompts_integration() -> None:
         auth = Auth(authenticate=False)
 
         # Mock the prompts that will be triggered by the User class
-        with patch("dds_cli.user.Prompt.ask") as mock_prompt, patch(
-            "dds_cli.user.getpass.getpass"
-        ) as mock_getpass:
-
+        with (
+            patch("dds_cli.user.Prompt.ask") as mock_prompt,
+            patch("dds_cli.user.getpass.getpass") as mock_getpass,
+        ):
             mock_prompt.return_value = MOCK_USERNAME
             mock_getpass.return_value = MOCK_PASSWORD
 
@@ -391,10 +391,11 @@ def test_twofactor_activate_hotp() -> None:
 
         auth = Auth(authenticate=False)
 
-        with patch("dds_cli.auth.LOG") as mock_log, patch(
-            "dds_cli.auth.Prompt.ask"
-        ) as mock_prompt, patch("dds_cli.auth.getpass.getpass") as mock_getpass:
-
+        with (
+            patch("dds_cli.auth.LOG") as mock_log,
+            patch("dds_cli.auth.Prompt.ask") as mock_prompt,
+            patch("dds_cli.auth.getpass.getpass") as mock_getpass,
+        ):
             mock_prompt.return_value = MOCK_USERNAME
             mock_getpass.return_value = MOCK_PASSWORD
 
@@ -415,10 +416,10 @@ def test_twofactor_activate_hotp_empty_password() -> None:
     """Test HOTP activation with empty password raises error."""
     auth = Auth(authenticate=False)
 
-    with patch("dds_cli.auth.Prompt.ask") as mock_prompt, patch(
-        "dds_cli.auth.getpass.getpass"
-    ) as mock_getpass:
-
+    with (
+        patch("dds_cli.auth.Prompt.ask") as mock_prompt,
+        patch("dds_cli.auth.getpass.getpass") as mock_getpass,
+    ):
         mock_prompt.return_value = MOCK_USERNAME
         mock_getpass.return_value = ""  # Empty password
 
@@ -577,10 +578,11 @@ def test_complete_authentication_flow_with_prompts_integration() -> None:
         auth = Auth(authenticate=False)
 
         # Mock all prompts and file operations
-        with patch("dds_cli.user.Prompt.ask") as mock_prompt, patch(
-            "dds_cli.user.getpass.getpass"
-        ) as mock_getpass, patch("dds_cli.user.TokenFile") as mock_token_file_class:
-
+        with (
+            patch("dds_cli.user.Prompt.ask") as mock_prompt,
+            patch("dds_cli.user.getpass.getpass") as mock_getpass,
+            patch("dds_cli.user.TokenFile") as mock_token_file_class,
+        ):
             # Setup prompt mocks
             mock_prompt.return_value = MOCK_USERNAME
             mock_getpass.return_value = MOCK_PASSWORD

@@ -83,7 +83,7 @@ class LocalFileHandler(fh.FileHandler):
         called in the bucket."""
 
         # Generate new file name
-        new_name = f"{'%020x' % random.randrange(16**20)}_{uuid.uuid5(uuid.NAMESPACE_X500, str(folder))}{uuid.uuid5(uuid.NAMESPACE_X500, filename)}"  # pylint: disable=line-too-long,consider-using-f-string
+        new_name = f"{'%020x' % random.randrange(16**20)}_{uuid.uuid5(uuid.NAMESPACE_X500, str(folder))}{uuid.uuid5(uuid.NAMESPACE_X500, filename)}"
         return new_name
 
     @staticmethod
@@ -147,26 +147,25 @@ class LocalFileHandler(fh.FileHandler):
                     folder=path_key,
                 )
                 file_info.update({**content_info})
-            else:
-                # Symlinks are also identified as files - if here and symlink --> broken
-                if path.is_symlink():
-                    try:
-                        resolved = path.resolve()
-                    except RuntimeError:
-                        LOG.warning(
-                            "IGNORED: Link: '%s' seems to contain infinite loop, will be ignored.",
-                            path,
-                        )
-                    else:
-                        LOG.warning(
-                            "IGNORED: Link: '%s' -> '%s' seems to be broken, will be ignored.",
-                            path,
-                            resolved,
-                        )
+            # Symlinks are also identified as files - if here and symlink --> broken
+            elif path.is_symlink():
+                try:
+                    resolved = path.resolve()
+                except RuntimeError:
+                    LOG.warning(
+                        "IGNORED: Link: '%s' seems to contain infinite loop, will be ignored.",
+                        path,
+                    )
                 else:
                     LOG.warning(
-                        "IGNORED: Path of unsupported/unknown type: '%s', will be ignored.", path
+                        "IGNORED: Link: '%s' -> '%s' seems to be broken, will be ignored.",
+                        path,
+                        resolved,
                     )
+            else:
+                LOG.warning(
+                    "IGNORED: Path of unsupported/unknown type: '%s', will be ignored.", path
+                )
 
         return file_info, progress_tasks
 

@@ -233,7 +233,7 @@ class DataLister(base.DDSBaseClass):
                 error_message="Failed to list the project's directory tree",
             )
 
-            if not "files_folders" in resp_json:
+            if "files_folders" not in resp_json:
                 raise exceptions.NoDataError(f"Could not find folder: '{folder}'")
 
             sorted_files_folders = sorted(resp_json["files_folders"], key=lambda f: f["name"])

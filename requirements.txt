@@ -11,7 +11,7 @@ pytz==2026.1.post1
 PyYAML==6.0.2
 questionary==2.1.1
 requests==2.33.0
-rich==14.3.3
+rich==14.3.4
 rich-click==1.5.2
 simplejson==3.17.6
 tzlocal==4.2

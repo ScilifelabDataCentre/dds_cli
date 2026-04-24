@@ -10,6 +10,16 @@ on:
     types: [published]
     branches:
       - "master"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build and upload assets for (for example, v2.14.2)"
+        required: true
+        type: string
+permissions:
+  contents: write
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
 jobs:
   build-n-publish:
     runs-on: ubuntu-latest
@@ -17,6 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         name: Check out source-code repository
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v4
@@ -32,7 +44,7 @@ jobs:
         run: python setup.py sdist bdist_wheel
 
       - name: Publish dist to TestPyPI
-        if: github.repository == 'ScilifelabDataCentre/dds_cli'
+        if: github.event_name == 'release' && github.repository == 'ScilifelabDataCentre/dds_cli'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print-hash: true
@@ -41,7 +53,7 @@ jobs:
           skip-existing: true
 
       - name: Publish dist to PyPI
-        if: github.repository == 'ScilifelabDataCentre/dds_cli'
+        if: github.event_name == 'release' && github.repository == 'ScilifelabDataCentre/dds_cli'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print-hash: true
@@ -56,7 +68,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-13
+          - os: macos-latest
             TARGET: MacOs_x86_64
             CMD_BUILD: >
               pyinstaller -F -c -n  dds_cli_macos_x86_64 -i resources/scilifelab.icns
@@ -77,7 +89,7 @@ jobs:
               --exclude-module=tests --log-level INFO dds_cli/__init__.py
             OUT_FILE_NAME: dds_cli_win_x86_64.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             TARGET: Linux_x86_64
             CMD_BUILD: >
               pyinstaller -F -c -n dds_cli_ubuntu-20.04_x86_64 -i resources/scilifelab.icns
@@ -100,6 +112,8 @@ jobs:
             ASSET_MIME: application/x-elf
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - name: Python 3.12 setup
         uses: actions/setup-python@v4
         with:
@@ -116,15 +130,9 @@ jobs:
         run: |
           ./dist/${{ matrix.OUT_FILE_NAME}} --version
       - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
+        run: gh release upload "${{ env.RELEASE_TAG }}" "./dist/${{ matrix.OUT_FILE_NAME}}" --clobber
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
-          asset_name: ${{ matrix.OUT_FILE_NAME}}
-          asset_content_type: ${{ matrix.ASSET_MIME}}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   ddsclidocumentation:
     name: Build the DDS CLI Documentation
@@ -132,6 +140,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - name: Make dependencies available to Docker container
         run: |
           cat requirements.txt requirements-dev.txt > ./docs/requirements.txt
@@ -165,11 +175,6 @@ jobs:
           name: Documentation
           path: docs/_build/latex/datadeliverysystem.pdf
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+        run: gh release upload "${{ env.RELEASE_TAG }}" "docs/_build/latex/datadeliverysystem.pdf" --clobber
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: docs/_build/latex/datadeliverysystem.pdf
-          asset_name: dds_cli_user_manual.pdf
-          asset_content_type: application/pdf
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

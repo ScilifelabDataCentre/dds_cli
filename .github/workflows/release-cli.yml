@@ -33,7 +33,7 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: 3.12
+          python-version: 3.14
 
       - name: Install python dependencies
         run: |
@@ -117,7 +117,7 @@ jobs:
       - name: Python 3.12 setup
         uses: actions/setup-python@v4
         with:
-          python-version: 3.12
+          python-version: 3.14
           # architecture: 'x64'
       - name: Install dependencies
         run: |

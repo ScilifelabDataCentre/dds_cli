@@ -539,4 +539,4 @@ _Empty sprint_
 
 ## 2026-04-27 - 2026-05-08
 
-- HMS-2655 fix assets names ([#xxx](https://github.com/ScilifelabDataCentre/dds_cli/pull/xxx))
+- HMS-2655 fix assets names ([#954](https://github.com/ScilifelabDataCentre/dds_cli/pull/954))

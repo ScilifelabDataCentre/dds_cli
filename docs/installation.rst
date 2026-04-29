@@ -79,7 +79,7 @@ Install via the **executable**
 
       You can find executables for other versions on the GitHub releases page linked at the top of this page.
 
-   * Executable for MacOS: `Download MacOS Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_x86_64>`_
+   * Executable for MacOS: `Download MacOS Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_arm64>`_
    
 2. Open the terminal, go to the directory where the downloaded file is located, and make the file executable by running the following command:
 
@@ -87,13 +87,13 @@ Install via the **executable**
 
       .. code-block:: bash
 
-         $ chmod +x dds_cli_ubuntu_x86_64   
+         $ chmod +x dds_cli_ubuntu_x86_64
 
    * On MacOS: 
 
       .. code-block:: bash
 
-         $ chmod +x dds_cli_macos_x86_64   
+         $ chmod +x dds_cli_macos_arm64
 
 3. Test that the ``dds-cli`` command works by running the following:
    
@@ -114,9 +114,9 @@ Install via the **executable**
 
    .. code-block:: bash
       
-      $ ./dds_cli_macos_x86_64 auth login
-      $ ./dds_cli_macos_x86_64 user info
-      $ ./dds_cli_macos_x86_64 ls
+      $ ./dds_cli_macos_arm64 auth login
+      $ ./dds_cli_macos_arm64 user info
+      $ ./dds_cli_macos_arm64 ls
       ...
    
 

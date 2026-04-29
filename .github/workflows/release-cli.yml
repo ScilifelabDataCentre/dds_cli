@@ -167,7 +167,8 @@ jobs:
         with:
           name: Documentation
           path: docs/_build/latex/datadeliverysystem.pdf
-      - name: Upload Release Asset
-        run: gh release upload "${{ env.RELEASE_TAG }}" "docs/_build/latex/datadeliverysystem.pdf" --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The PDF is intentionally NOT attached to the GitHub Release.
+      # The CLI documentation is served at
+      # https://scilifelabdatacentre.github.io/dds_cli/
+      # (built and deployed by docs-github-pages-cli.yml). The PDF stays
+      # available as a workflow-run artifact above for ad-hoc inspection.

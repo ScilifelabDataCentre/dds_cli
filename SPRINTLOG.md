@@ -540,3 +540,4 @@ _Empty sprint_
 ## 2026-04-27 - 2026-05-08
 
 - HMS-2655 fix assets names ([#954](https://github.com/ScilifelabDataCentre/dds_cli/pull/954))
+- Update dependency cryptography to v46.0.7 [SECURITY] ([#947](https://github.com/ScilifelabDataCentre/dds_cli/pull/947))

@@ -542,3 +542,5 @@ _Empty sprint_
 - HMS-2655 fix assets names ([#954](https://github.com/ScilifelabDataCentre/dds_cli/pull/954))
 - Update dependency cryptography to v46.0.7 [SECURITY] ([#947](https://github.com/ScilifelabDataCentre/dds_cli/pull/947))
 - Update dependency cryptography to v48 [SECURITY] ([#957](https://github.com/ScilifelabDataCentre/dds_cli/pull/957))
+- Drop deprecated backend= argument from HKDF ([#958](https://github.com/ScilifelabDataCentre/dds_cli/pull/958))
+- Update dependency pytz to v2026.2 ([#956](https://github.com/ScilifelabDataCentre/dds_cli/pull/956))

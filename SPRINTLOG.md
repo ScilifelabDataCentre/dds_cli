@@ -535,3 +535,15 @@ _Empty sprint_
 - Update codecov/codecov-action action to v6 ([#939](https://github.com/ScilifelabDataCentre/dds_cli/pull/939))
 - Update dependency pytz to v2026 ([#933](https://github.com/ScilifelabDataCentre/dds_cli/pull/933))
 - Update dependency rich to v14 ([#918](https://github.com/ScilifelabDataCentre/dds_cli/pull/918))
+- New version 2.14.2 ([#944](https://github.com/ScilifelabDataCentre/dds_cli/pull/944))
+
+## 2026-04-27 - 2026-05-08
+
+- HMS-2655 fix assets names ([#954](https://github.com/ScilifelabDataCentre/dds_cli/pull/954))
+- Update dependency cryptography to v46.0.7 [SECURITY] ([#947](https://github.com/ScilifelabDataCentre/dds_cli/pull/947))
+- Update dependency cryptography to v48 [SECURITY] ([#957](https://github.com/ScilifelabDataCentre/dds_cli/pull/957))
+- Drop deprecated backend= argument from HKDF ([#958](https://github.com/ScilifelabDataCentre/dds_cli/pull/958))
+- Update dependency pytz to v2026.2 ([#956](https://github.com/ScilifelabDataCentre/dds_cli/pull/956))
+- Update dependency pytest to v9 [SECURITY] ([#950](https://github.com/ScilifelabDataCentre/dds_cli/pull/950))
+- Update dependency simplejson to v4 ([#951](https://github.com/ScilifelabDataCentre/dds_cli/pull/951))
+- Update dependency rich to v15 ([#949](https://github.com/ScilifelabDataCentre/dds_cli/pull/949))

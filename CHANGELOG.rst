@@ -1,6 +1,22 @@
 Changelog
 ==========
 
+.. _2.14.2:
+
+2.14.2 - 2026-04-07
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Download retry with exponential backoff ([#941](https://github.com/ScilifelabDataCentre/dds_cli/pull/941))
+- 🛡️ Dependencies
+    - Update dependency rich to v14 ([#918](https://github.com/ScilifelabDataCentre/dds_cli/pull/918))
+    - Update dependency pytz to v2026 ([#933](https://github.com/ScilifelabDataCentre/dds_cli/pull/933))
+    - Update dependency cryptography to v46.0.6 [SECURITY] ([#941](https://github.com/ScilifelabDataCentre/dds_cli/pull/941))
+    - Update dependency requests to v2.33.0 [SECURITY] ([#937](https://github.com/ScilifelabDataCentre/dds_cli/pull/937))
+    - Update dependency Flask to v3 ([#940](https://github.com/ScilifelabDataCentre/dds_cli/pull/940))
+    - replace click-pathlib with clicks `path_type` ([#926](https://github.com/ScilifelabDataCentre/dds_cli/pull/926))
+    - Bump cryptography from 44.0.1 to 46.0.5 ([#875](https://github.com/ScilifelabDataCentre/dds_cli/pull/875))
+
 .. _2.14.0:
 
 2.14.0 - 2026-02-05

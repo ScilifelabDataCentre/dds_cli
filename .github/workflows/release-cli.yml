@@ -92,13 +92,6 @@ jobs:
           - os: ubuntu-22.04
             TARGET: Linux_x86_64
             CMD_BUILD: >
-              pyinstaller -F -c -n dds_cli_ubuntu-20.04_x86_64 -i resources/scilifelab.icns
-              --exclude-module=tests --target-arch x86_64 --log-level INFO dds_cli/__init__.py
-            OUT_FILE_NAME: dds_cli_ubuntu-20.04_x86_64
-            ASSET_MIME: application/x-elf
-          - os: ubuntu-22.04
-            TARGET: Linux_x86_64
-            CMD_BUILD: >
               pyinstaller -F -c -n dds_cli_ubuntu-22.04_x86_64 -i resources/scilifelab.icns
               --exclude-module=tests --target-arch x86_64 --log-level INFO dds_cli/__init__.py
             OUT_FILE_NAME: dds_cli_ubuntu-22.04_x86_64
@@ -174,7 +167,8 @@ jobs:
         with:
           name: Documentation
           path: docs/_build/latex/datadeliverysystem.pdf
-      - name: Upload Release Asset
-        run: gh release upload "${{ env.RELEASE_TAG }}" "docs/_build/latex/datadeliverysystem.pdf" --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # The PDF is intentionally NOT attached to the GitHub Release.
+      # The CLI documentation is served at
+      # https://scilifelabdatacentre.github.io/dds_cli/
+      # (built and deployed by docs-github-pages-cli.yml). The PDF stays
+      # available as a workflow-run artifact above for ad-hoc inspection.

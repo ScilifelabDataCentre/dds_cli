@@ -1,6 +1,22 @@
 Changelog
 ==========
 
+.. _2.14.3:
+
+2.14.3 - 2026-05-06
+~~~~~~~~~~~~~~~~~~~~
+
+- 🐛 Bug Fixes
+    - Fix build assets names ([#954](https://github.com/ScilifelabDataCentre/dds_cli/pull/954))
+- 🛡️ Dependencies
+    - Update dependency jwcrypto to v1.5.7 ([#943](https://github.com/ScilifelabDataCentre/dds_cli/pull/943))
+    - Update dependency rich to v15 ([#949](https://github.com/ScilifelabDataCentre/dds_cli/pull/949))
+    - Update dependency simplejson to v4 ([#951](https://github.com/ScilifelabDataCentre/dds_cli/pull/951))
+    - Update dependency pytest to v9 [SECURITY] ([#950](https://github.com/ScilifelabDataCentre/dds_cli/pull/950))
+    - Update dependency pytz to v2026.2 ([#956](https://github.com/ScilifelabDataCentre/dds_cli/pull/956))
+    - chore(crypto): drop deprecated backend= argument from HKDF ([#958](https://github.com/ScilifelabDataCentre/dds_cli/pull/958))
+    - Update dependency cryptography to v48 ([#957](https://github.com/ScilifelabDataCentre/dds_cli/pull/957))
+
 .. _2.14.2:
 
 2.14.2 - 2026-04-07

@@ -548,3 +548,4 @@ _Empty sprint_
 - Update dependency simplejson to v4 ([#951](https://github.com/ScilifelabDataCentre/dds_cli/pull/951))
 - Update dependency rich to v15 ([#949](https://github.com/ScilifelabDataCentre/dds_cli/pull/949))
 - Update dependency jwcrypto to v1.5.7 ([#943](https://github.com/ScilifelabDataCentre/dds_cli/pull/943))
+- New version v2.14.3 ([#960](https://github.com/ScilifelabDataCentre/dds_cli/pull/960))

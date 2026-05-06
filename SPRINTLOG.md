@@ -545,3 +545,4 @@ _Empty sprint_
 - Drop deprecated backend= argument from HKDF ([#958](https://github.com/ScilifelabDataCentre/dds_cli/pull/958))
 - Update dependency pytz to v2026.2 ([#956](https://github.com/ScilifelabDataCentre/dds_cli/pull/956))
 - Update dependency pytest to v9 [SECURITY] ([#950](https://github.com/ScilifelabDataCentre/dds_cli/pull/950))
+- Update dependency simplejson to v4 ([#951](https://github.com/ScilifelabDataCentre/dds_cli/pull/951))

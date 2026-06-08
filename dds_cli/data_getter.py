@@ -151,7 +151,17 @@ class DataGetter(base.DDSBaseClass):
         # `get()` now verifies the on-disk byte count against `size_stored`
         # internally and only returns True if the file matches. If we reach
         # this branch, the encrypted-size check has already passed.
+        # Defensive guard: make the contract explicit so a future refactor of
+        # get() that breaks the size guarantee fails loudly here rather than
+        # silently proceeding to decryption and surfacing as failed_op="crypto".
         if file_downloaded:
+            actual_size = file_info["path_downloaded"].stat().st_size
+            expected_size = file_info["size_stored"]
+            if actual_size != expected_size:
+                raise RuntimeError(
+                    f"get() returned True but size mismatch for '{file_name_in_db}': "
+                    f"expected {expected_size} bytes, got {actual_size} bytes"
+                )
             db_updated, message = self.update_db(file=file)
             LOG.debug(
                 "API call: database updated for file '%s': %s",

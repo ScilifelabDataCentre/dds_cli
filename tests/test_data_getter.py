@@ -486,9 +486,7 @@ def test_get_warns_user_about_connection_on_exhausted_retries(monkeypatch, tmp_p
     with caplog.at_level(logging.WARNING, logger="dds_cli.data_getter"):
         DataGetter.get.__wrapped__(getter, file=file_name, progress=MagicMock(), task=1)
 
-    warning_texts = " ".join(
-        r.getMessage() for r in caplog.records if r.levelno == logging.WARNING
-    )
+    warning_texts = " ".join(r.getMessage() for r in caplog.records if r.levelno == logging.WARNING)
     assert "internet connection" in warning_texts.lower()
     assert "sleep" in warning_texts.lower()
 

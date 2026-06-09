@@ -2,7 +2,9 @@
 
 # IMPORTS ######################################################################
 
+import logging
 import pathlib
+import pytest
 import requests
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -465,4 +467,59 @@ def test_get_tolerates_missing_or_malformed_content_length(monkeypatch, tmp_path
         )
 
         assert downloaded is True, f"failed for Content-Length={header_value!r}: {message}"
+
+
+def test_get_warns_user_about_connection_on_exhausted_retries(monkeypatch, tmp_path, caplog):
+    """After all retries fail, get() must emit a user-facing warning suggesting
+    the user check their internet connection and sleep settings."""
+    file_name = "file.bin"
+    file_path = tmp_path / file_name
+    getter = _prepare_data_getter(file_name=file_name, download_path=file_path, size_stored=100)
+
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 2)
+    monkeypatch.setattr(constants, "DOWNLOAD_INITIAL_WAIT", 0)
+
+    truncated_response = _ok_response(body=b"data")
+    truncated_response.headers.get.return_value = 100
+    monkeypatch.setattr("dds_cli.data_getter.requests.get", lambda *_, **__: truncated_response)
+
+    with caplog.at_level(logging.WARNING, logger="dds_cli.data_getter"):
+        DataGetter.get.__wrapped__(getter, file=file_name, progress=MagicMock(), task=1)
+
+    warning_texts = " ".join(
+        r.getMessage() for r in caplog.records if r.levelno == logging.WARNING
+    )
+    assert "internet connection" in warning_texts.lower()
+    assert "sleep" in warning_texts.lower()
+
+
+def test_download_and_verify_raises_on_size_contract_violation(tmp_path):
+    """download_and_verify() must raise RuntimeError when get() returns True but
+    the on-disk file doesn't match size_stored.
+
+    This guards against a future get() refactor that silently breaks the size
+    guarantee and would otherwise let a truncated blob reach decryption,
+    reintroducing the failed_op='crypto' misattribution from the May 2026 incident.
+    """
+    file_name = "file.bin"
+    file_path = tmp_path / file_name
+
+    # Write a file that is the wrong size (2 bytes; size_stored expects 100).
+    file_path.write_bytes(b"xx")
+
+    getter = _prepare_data_getter(file_name=file_name, download_path=file_path, size_stored=100)
+    getter.filehandler.data[file_name]["size_original"] = 80
+    getter.silent = False
+
+    # get() incorrectly claims success despite the on-disk size mismatch.
+    getter.get = MagicMock(return_value=(True, ""))
+
+    progress = MagicMock()
+    progress.add_task.return_value = 1
+
+    # Bypass @verify_proceed and @subpath_required to call the raw function directly.
+    with pytest.raises(RuntimeError, match="get\\(\\) returned True but size mismatch"):
+        DataGetter.download_and_verify.__wrapped__.__wrapped__(
+            getter, file=file_name, progress=progress
+        )
         assert message == ""

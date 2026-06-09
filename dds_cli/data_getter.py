@@ -349,6 +349,13 @@ class DataGetter(base.DDSBaseClass):
                 max_retries,
                 error,
             )
+            LOG.warning(
+                "Download of '%s' could not be completed after %d attempts. "
+                "Please ensure your internet connection is stable and that your "
+                "computer does not enter sleep mode during large file transfers.",
+                file_name_in_db,
+                max_retries,
+            )
             # Don't leave a partial blob on disk after we've given up — it just
             # consumes space and risks being mistaken for a complete file.
             self._remove_partial(file_local, file_name_in_db)

@@ -6,7 +6,7 @@
 ---
 name: TestPyPi
 on:
-  pull_request:
+  push:
     branches: [dev]
 jobs:
   build-n-publish:

@@ -6,11 +6,10 @@
 ---
 name: TestPyPi
 on:
-  pull_request:
+  push:
     branches: [dev]
 jobs:
   build-n-publish:
-    if: github.repository == 'ScilifelabDataCentre/dds_cli'
     runs-on: ubuntu-latest
 
     steps:

@@ -554,4 +554,6 @@ _Empty sprint_
 
 - Fix silent download truncation being misreported as crypto failure ([#962](https://github.com/ScilifelabDataCentre/dds_cli/pull/962))
 - Update dependency sphinx-click to v4.4.0 ([#901](https://github.com/ScilifelabDataCentre/dds_cli/pull/901))
+- Skip publish and guard SARIF upload on fork PRs ([#969](https://github.com/ScilifelabDataCentre/dds_cli/pull/969))
+- Add MANIFEST.in to include requirements.txt in sdist, fixing Bioconda build ([#966](https://github.com/ScilifelabDataCentre/dds_cli/pull/966))
 - Add a call to project updating endpoind at the end of an upload ([#942](https://github.com/ScilifelabDataCentre/dds_cli/pull/942))

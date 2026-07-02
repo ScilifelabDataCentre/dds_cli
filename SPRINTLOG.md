@@ -556,4 +556,8 @@ _Empty sprint_
 - Update dependency sphinx-click to v4.4.0 ([#901](https://github.com/ScilifelabDataCentre/dds_cli/pull/901))
 - Skip publish and guard SARIF upload on fork PRs ([#969](https://github.com/ScilifelabDataCentre/dds_cli/pull/969))
 - Add MANIFEST.in to include requirements.txt in sdist, fixing Bioconda build ([#966](https://github.com/ScilifelabDataCentre/dds_cli/pull/966))
+
+## 2026-06-22 - 2026-07-03
+
+- Update dependency cryptography to v48.0.1 [SECURITY] ([#972](https://github.com/ScilifelabDataCentre/dds_cli/pull/972))
 - Add a call to project updating endpoind at the end of an upload ([#942](https://github.com/ScilifelabDataCentre/dds_cli/pull/942))

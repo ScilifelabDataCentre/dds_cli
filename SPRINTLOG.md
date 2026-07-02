@@ -560,3 +560,4 @@ _Empty sprint_
 ## 2026-06-22 - 2026-07-03
 
 - Update dependency cryptography to v48.0.1 [SECURITY] ([#972](https://github.com/ScilifelabDataCentre/dds_cli/pull/972))
+- Update dependency jwcrypto to v1.5.8 ([#973](https://github.com/ScilifelabDataCentre/dds_cli/pull/973))

@@ -32,16 +32,25 @@ jobs:
       security-events: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/python@master
+        uses: snyk/actions/python@v1.0.0
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: code test
           args: --sarif-file-output=snyk.sarif
+      - name: Check Snyk SARIF exists
+        id: check-sarif
+        run: |
+          if [ -f snyk.sarif ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
       - name: Upload result to GitHub Code Scanning
+        if: steps.check-sarif.outputs.exists == 'true'
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: snyk.sarif

@@ -549,3 +549,15 @@ _Empty sprint_
 - Update dependency rich to v15 ([#949](https://github.com/ScilifelabDataCentre/dds_cli/pull/949))
 - Update dependency jwcrypto to v1.5.7 ([#943](https://github.com/ScilifelabDataCentre/dds_cli/pull/943))
 - New version v2.14.3 ([#960](https://github.com/ScilifelabDataCentre/dds_cli/pull/960))
+
+## 2026-06-08 - 2026-06-19
+
+- Fix silent download truncation being misreported as crypto failure ([#962](https://github.com/ScilifelabDataCentre/dds_cli/pull/962))
+- Update dependency sphinx-click to v4.4.0 ([#901](https://github.com/ScilifelabDataCentre/dds_cli/pull/901))
+- Skip publish and guard SARIF upload on fork PRs ([#969](https://github.com/ScilifelabDataCentre/dds_cli/pull/969))
+- Add MANIFEST.in to include requirements.txt in sdist, fixing Bioconda build ([#966](https://github.com/ScilifelabDataCentre/dds_cli/pull/966))
+
+## 2026-06-22 - 2026-07-03
+
+- Update dependency cryptography to v48.0.1 [SECURITY] ([#972](https://github.com/ScilifelabDataCentre/dds_cli/pull/972))
+- Update dependency jwcrypto to v1.5.8 ([#973](https://github.com/ScilifelabDataCentre/dds_cli/pull/973))

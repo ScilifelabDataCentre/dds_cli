@@ -561,3 +561,7 @@ _Empty sprint_
 
 - Update dependency cryptography to v48.0.1 [SECURITY] ([#972](https://github.com/ScilifelabDataCentre/dds_cli/pull/972))
 - Update dependency jwcrypto to v1.5.8 ([#973](https://github.com/ScilifelabDataCentre/dds_cli/pull/973))
+
+## 2026-08-03 - 2026-08-14
+
+- Update dependency tzlocal to v4.3.1 ([#904](https://github.com/ScilifelabDataCentre/dds_cli/pull/904))

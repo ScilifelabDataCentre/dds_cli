@@ -565,3 +565,4 @@ _Empty sprint_
 ## 2026-08-03 - 2026-08-14
 
 - Update dependency tzlocal to v4.3.1 ([#904](https://github.com/ScilifelabDataCentre/dds_cli/pull/904))
+- Update dependency cryptography to v50 [SECURITY] ([#979](https://github.com/ScilifelabDataCentre/dds_cli/pull/979))

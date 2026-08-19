@@ -108,7 +108,8 @@ class DDSBaseClass:
 
         # Exception is not handled
         if exception_type is not None:
-            # Use repr() so exception_value is not interpreted as rich markup (avoids MarkupError)
+            # %r calls repr(), so exception_value is not interpreted as rich markup
+            # and cannot trigger a MarkupError during logging.
             LOG.debug("Exception: %r with value %r", exception_type, exception_value)
             return False
 

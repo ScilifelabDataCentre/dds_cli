@@ -552,4 +552,17 @@ class DataPutter(base.DDSBaseClass):
             dds_cli.exceptions.ApiResponseError,
             dds_cli.exceptions.DDSCLIException,
         ) as err:
-            LOG.warning("Project metadata refresh after upload skipped: %s", err)
+            err_text = str(err)
+            if "Response code: 404" in err_text:
+                LOG.warning(
+                    "Upload succeeded, but the project 'Last updated' timestamp could not "
+                    "be refreshed because the backend does not expose the upload-complete "
+                    "endpoint (HTTP 404). Uploaded files are unaffected. Update the backend "
+                    "to match this CLI version if you need the timestamp to update."
+                )
+            else:
+                LOG.warning(
+                    "Upload succeeded, but the project 'Last updated' timestamp could not "
+                    "be refreshed. Uploaded files are unaffected. Details: %s",
+                    err,
+                )

@@ -567,3 +567,7 @@ _Empty sprint_
 - Update dependency tzlocal to v4.3.1 ([#904](https://github.com/ScilifelabDataCentre/dds_cli/pull/904))
 - Update dependency cryptography to v50 [SECURITY] ([#979](https://github.com/ScilifelabDataCentre/dds_cli/pull/979))
 - Update dependency pytz to v2026.3.post1 ([#977](https://github.com/ScilifelabDataCentre/dds_cli/pull/977))
+
+## 2026-08-17 - 2026-08-28
+
+- Add a call to project updating endpoind at the end of an upload ([#942](https://github.com/ScilifelabDataCentre/dds_cli/pull/942))

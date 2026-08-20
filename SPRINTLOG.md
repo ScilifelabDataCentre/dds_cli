@@ -571,3 +571,4 @@ _Empty sprint_
 ## 2026-08-17 - 2026-08-28
 
 - Add a call to project updating endpoind at the end of an upload ([#942](https://github.com/ScilifelabDataCentre/dds_cli/pull/942))
+- New vesrion v2.15.0 ([#981](https://github.com/ScilifelabDataCentre/dds_cli/pull/981))

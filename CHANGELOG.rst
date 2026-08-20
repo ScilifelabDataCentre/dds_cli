@@ -1,6 +1,22 @@
 Changelog
 ==========
 
+.. _2.15.0:
+
+2.15.0 - 2026-08-20
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Add a call to project updating endpoind at the end of an upload ([#942](https://github.com/ScilifelabDataCentre/dds_cli/pull/942))
+    - Fix silent download truncation being misreported as crypto failure ([#962](https://github.com/ScilifelabDataCentre/dds_cli/pull/962))
+- 🛡️ Dependencies
+    - Update dependency pytz to v2026.3.post1 ([#977](https://github.com/ScilifelabDataCentre/dds_cli/pull/977))
+    - Update dependency cryptography to v50 [SECURITY] ([#979](https://github.com/ScilifelabDataCentre/dds_cli/pull/979))
+    - Update dependency tzlocal to v4.3.1 ([#904](https://github.com/ScilifelabDataCentre/dds_cli/pull/904))
+    - Update dependency jwcrypto to v1.5.8 ([#973](https://github.com/ScilifelabDataCentre/dds_cli/pull/973))
+    - Update dependency cryptography to v48.0.1 [SECURITY] ([#972](https://github.com/ScilifelabDataCentre/dds_cli/pull/972))
+    - Update dependency sphinx-click to v4.4.0 ([#901](https://github.com/ScilifelabDataCentre/dds_cli/pull/901))
+
 .. _2.14.3:
 
 2.14.3 - 2026-05-06

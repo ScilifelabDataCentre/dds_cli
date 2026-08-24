@@ -19,30 +19,30 @@
         font-weight: 700;
     }
 
-    .terminal-2823112860-matrix {
+    .rich-codex-3828747561-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-2823112860-title {
+    .rich-codex-3828747561-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-2823112860-r1 { fill: #c5c8c6 }
+    .rich-codex-3828747561-r1 { fill: #c5c8c6 }
     </style>
 
     <defs>
-    <clipPath id="terminal-2823112860-clip-terminal">
+    <clipPath id="rich-codex-3828747561-clip-terminal">
       <rect x="0" y="0" width="1072.6" height="72.19999999999999" />
     </clipPath>
-    <clipPath id="terminal-2823112860-line-0">
+    <clipPath id="rich-codex-3828747561-line-0">
     <rect x="0" y="1.5" width="1073.6" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-2823112860-line-1">
+<clipPath id="rich-codex-3828747561-line-1">
     <rect x="0" y="25.9" width="1073.6" height="24.65"/>
             </clipPath>
     </defs>
@@ -54,12 +54,12 @@
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-2823112860-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#rich-codex-3828747561-clip-terminal)">
     
-    <g class="terminal-2823112860-matrix">
-    <text class="terminal-2823112860-r1" x="0" y="20" textLength="646.6" clip-path="url(#terminal-2823112860-line-0)">$&#160;dds&#160;project&#160;status&#160;release&#160;--project&#160;&quot;&lt;Project&#160;ID&gt;&quot;</text><text class="terminal-2823112860-r1" x="1073.6" y="20" textLength="12.2" clip-path="url(#terminal-2823112860-line-0)">
-</text><text class="terminal-2823112860-r1" x="0" y="44.4" textLength="1073.6" clip-path="url(#terminal-2823112860-line-1)">Project&#160;someunit00002&#160;updated&#160;to&#160;status&#160;Available.&#160;An&#160;e-mail&#160;notification&#160;has&#160;been&#160;sent.</text><text class="terminal-2823112860-r1" x="1073.6" y="44.4" textLength="12.2" clip-path="url(#terminal-2823112860-line-1)">
-</text><text class="terminal-2823112860-r1" x="1073.6" y="68.8" textLength="12.2" clip-path="url(#terminal-2823112860-line-2)">
+    <g class="rich-codex-3828747561-matrix">
+    <text class="rich-codex-3828747561-r1" x="0" y="20" textLength="646.6" clip-path="url(#rich-codex-3828747561-line-0)">$&#160;dds&#160;project&#160;status&#160;release&#160;--project&#160;&quot;&lt;Project&#160;ID&gt;&quot;</text><text class="rich-codex-3828747561-r1" x="1073.6" y="20" textLength="12.2" clip-path="url(#rich-codex-3828747561-line-0)">
+</text><text class="rich-codex-3828747561-r1" x="0" y="44.4" textLength="1073.6" clip-path="url(#rich-codex-3828747561-line-1)">Project&#160;someunit00002&#160;updated&#160;to&#160;status&#160;Available.&#160;An&#160;e-mail&#160;notification&#160;has&#160;been&#160;sent.</text><text class="rich-codex-3828747561-r1" x="1073.6" y="44.4" textLength="12.2" clip-path="url(#rich-codex-3828747561-line-1)">
+</text><text class="rich-codex-3828747561-r1" x="1073.6" y="68.8" textLength="12.2" clip-path="url(#rich-codex-3828747561-line-2)">
 </text>
     </g>
     </g>

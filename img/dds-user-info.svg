@@ -19,45 +19,45 @@
         font-weight: 700;
     }
 
-    .terminal-4241068623-matrix {
+    .rich-codex-1446119403-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-4241068623-title {
+    .rich-codex-1446119403-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-4241068623-r1 { fill: #c5c8c6 }
+    .rich-codex-1446119403-r1 { fill: #c5c8c6 }
     </style>
 
     <defs>
-    <clipPath id="terminal-4241068623-clip-terminal">
+    <clipPath id="rich-codex-1446119403-clip-terminal">
       <rect x="0" y="0" width="975.0" height="194.2" />
     </clipPath>
-    <clipPath id="terminal-4241068623-line-0">
+    <clipPath id="rich-codex-1446119403-line-0">
     <rect x="0" y="1.5" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-4241068623-line-1">
+<clipPath id="rich-codex-1446119403-line-1">
     <rect x="0" y="25.9" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-4241068623-line-2">
+<clipPath id="rich-codex-1446119403-line-2">
     <rect x="0" y="50.3" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-4241068623-line-3">
+<clipPath id="rich-codex-1446119403-line-3">
     <rect x="0" y="74.7" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-4241068623-line-4">
+<clipPath id="rich-codex-1446119403-line-4">
     <rect x="0" y="99.1" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-4241068623-line-5">
+<clipPath id="rich-codex-1446119403-line-5">
     <rect x="0" y="123.5" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-4241068623-line-6">
+<clipPath id="rich-codex-1446119403-line-6">
     <rect x="0" y="147.9" width="976" height="24.65"/>
             </clipPath>
     </defs>
@@ -69,17 +69,17 @@
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-4241068623-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#rich-codex-1446119403-clip-terminal)">
     
-    <g class="terminal-4241068623-matrix">
-    <text class="terminal-4241068623-r1" x="0" y="20" textLength="183" clip-path="url(#terminal-4241068623-line-0)">$&#160;dds&#160;user&#160;info</text><text class="terminal-4241068623-r1" x="976" y="20" textLength="12.2" clip-path="url(#terminal-4241068623-line-0)">
-</text><text class="terminal-4241068623-r1" x="0" y="44.4" textLength="292.8" clip-path="url(#terminal-4241068623-line-1)">Current&#160;user:&#160;&lt;username&gt;</text><text class="terminal-4241068623-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-4241068623-line-1)">
-</text><text class="terminal-4241068623-r1" x="0" y="68.8" textLength="451.4" clip-path="url(#terminal-4241068623-line-2)">INFO&#160;&#160;&#160;&#160;Username:&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&lt;username&gt;</text><text class="terminal-4241068623-r1" x="976" y="68.8" textLength="12.2" clip-path="url(#terminal-4241068623-line-2)">
-</text><text class="terminal-4241068623-r1" x="0" y="93.2" textLength="597.8" clip-path="url(#terminal-4241068623-line-3)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Role:&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&lt;role&gt;&#160;e.g.&#160;Researcher</text><text class="terminal-4241068623-r1" x="976" y="93.2" textLength="12.2" clip-path="url(#terminal-4241068623-line-3)">
-</text><text class="terminal-4241068623-r1" x="0" y="117.6" textLength="622.2" clip-path="url(#terminal-4241068623-line-4)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Name:&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&lt;First&#160;name&gt;&#160;&lt;Last&#160;name&gt;</text><text class="terminal-4241068623-r1" x="976" y="117.6" textLength="12.2" clip-path="url(#terminal-4241068623-line-4)">
-</text><text class="terminal-4241068623-r1" x="0" y="142" textLength="671" clip-path="url(#terminal-4241068623-line-5)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Primary&#160;Email:&#160;&#160;&#160;&#160;&#160;&lt;someemail&gt;@&lt;somedomain&gt;.com</text><text class="terminal-4241068623-r1" x="976" y="142" textLength="12.2" clip-path="url(#terminal-4241068623-line-5)">
-</text><text class="terminal-4241068623-r1" x="0" y="166.4" textLength="671" clip-path="url(#terminal-4241068623-line-6)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Associated&#160;Emails:&#160;&lt;someemail&gt;@&lt;somedomain&gt;.com</text><text class="terminal-4241068623-r1" x="976" y="166.4" textLength="12.2" clip-path="url(#terminal-4241068623-line-6)">
-</text><text class="terminal-4241068623-r1" x="976" y="190.8" textLength="12.2" clip-path="url(#terminal-4241068623-line-7)">
+    <g class="rich-codex-1446119403-matrix">
+    <text class="rich-codex-1446119403-r1" x="0" y="20" textLength="183" clip-path="url(#rich-codex-1446119403-line-0)">$&#160;dds&#160;user&#160;info</text><text class="rich-codex-1446119403-r1" x="976" y="20" textLength="12.2" clip-path="url(#rich-codex-1446119403-line-0)">
+</text><text class="rich-codex-1446119403-r1" x="0" y="44.4" textLength="292.8" clip-path="url(#rich-codex-1446119403-line-1)">Current&#160;user:&#160;&lt;username&gt;</text><text class="rich-codex-1446119403-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#rich-codex-1446119403-line-1)">
+</text><text class="rich-codex-1446119403-r1" x="0" y="68.8" textLength="451.4" clip-path="url(#rich-codex-1446119403-line-2)">INFO&#160;&#160;&#160;&#160;Username:&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&lt;username&gt;</text><text class="rich-codex-1446119403-r1" x="976" y="68.8" textLength="12.2" clip-path="url(#rich-codex-1446119403-line-2)">
+</text><text class="rich-codex-1446119403-r1" x="0" y="93.2" textLength="597.8" clip-path="url(#rich-codex-1446119403-line-3)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Role:&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&lt;role&gt;&#160;e.g.&#160;Researcher</text><text class="rich-codex-1446119403-r1" x="976" y="93.2" textLength="12.2" clip-path="url(#rich-codex-1446119403-line-3)">
+</text><text class="rich-codex-1446119403-r1" x="0" y="117.6" textLength="622.2" clip-path="url(#rich-codex-1446119403-line-4)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Name:&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&lt;First&#160;name&gt;&#160;&lt;Last&#160;name&gt;</text><text class="rich-codex-1446119403-r1" x="976" y="117.6" textLength="12.2" clip-path="url(#rich-codex-1446119403-line-4)">
+</text><text class="rich-codex-1446119403-r1" x="0" y="142" textLength="671" clip-path="url(#rich-codex-1446119403-line-5)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Primary&#160;Email:&#160;&#160;&#160;&#160;&#160;&lt;someemail&gt;@&lt;somedomain&gt;.com</text><text class="rich-codex-1446119403-r1" x="976" y="142" textLength="12.2" clip-path="url(#rich-codex-1446119403-line-5)">
+</text><text class="rich-codex-1446119403-r1" x="0" y="166.4" textLength="671" clip-path="url(#rich-codex-1446119403-line-6)">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Associated&#160;Emails:&#160;&lt;someemail&gt;@&lt;somedomain&gt;.com</text><text class="rich-codex-1446119403-r1" x="976" y="166.4" textLength="12.2" clip-path="url(#rich-codex-1446119403-line-6)">
+</text><text class="rich-codex-1446119403-r1" x="976" y="190.8" textLength="12.2" clip-path="url(#rich-codex-1446119403-line-7)">
 </text>
     </g>
     </g>

@@ -243,7 +243,8 @@ def perform_request(
             message=(
                 f"Response code: {response.status_code}. "
                 f"The request did not return a valid JSON response. Details: {err}"
-            )
+            ),
+            status_code=response.status_code,
         )
     except requests.exceptions.RequestException as err:
         if isinstance(err, requests.exceptions.ConnectionError):
@@ -277,20 +278,29 @@ def perform_request(
             else:
                 message += f": {response_json.get('message')}"
 
-            raise dds_cli.exceptions.DDSCLIException(message=message, show_emojis=show_warning)
+            raise dds_cli.exceptions.DDSCLIException(
+                message=message,
+                show_emojis=show_warning,
+                status_code=response.status_code,
+            )
 
         # Handle 403
         if response.status_code == http.HTTPStatus.FORBIDDEN:
             message += f": {response_json.get('message')}"
-            raise dds_cli.exceptions.DDSCLIException(message=message)
+            raise dds_cli.exceptions.DDSCLIException(
+                message=message, status_code=response.status_code
+            )
 
         # Handle 500
         if response.status_code == http.HTTPStatus.INTERNAL_SERVER_ERROR:
             message += f": {response_json.get('message', response.reason)}"
-            raise dds_cli.exceptions.ApiResponseError(message=message)
+            raise dds_cli.exceptions.ApiResponseError(
+                message=message, status_code=response.status_code
+            )
 
         raise dds_cli.exceptions.DDSCLIException(
-            message=f"{message}: {response_json.get('message', 'Unexpected error!')}"
+            message=f"{message}: {response_json.get('message', 'Unexpected error!')}",
+            status_code=response.status_code,
         )
 
     return response_json, additional_errors

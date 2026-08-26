@@ -573,3 +573,4 @@ _Empty sprint_
 - Add a call to project updating endpoind at the end of an upload ([#942](https://github.com/ScilifelabDataCentre/dds_cli/pull/942))
 - New vesrion v2.15.0 ([#981](https://github.com/ScilifelabDataCentre/dds_cli/pull/981))
 - Detect upload-complete 404 by HTTP status for timestamp refresh warning ([#983](https://github.com/ScilifelabDataCentre/dds_cli/pull/983))
+- Update dependency cryptography to v50.0.1 ([#984](https://github.com/ScilifelabDataCentre/dds_cli/pull/984))

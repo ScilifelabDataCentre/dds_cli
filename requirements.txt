@@ -5,7 +5,7 @@ cryptography==50.0.1
 immutabledict==2.2.1
 jwcrypto==1.5.8
 prettytable==3.7.0
-prompt-toolkit==3.0.40
+prompt-toolkit==3.0.53
 PyNaCl==1.6.2
 pytz==2026.3.post1
 PyYAML==6.0.2

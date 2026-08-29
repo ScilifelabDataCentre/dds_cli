@@ -15,5 +15,5 @@ rich==15.0.0
 rich-click==1.5.2
 simplejson==4.1.1
 tzlocal==4.3.1
-zstandard==0.23.0
+zstandard==0.25.0
 legacy-cgi==2.6.1 ; python_version >= '3.13'

@@ -1,7 +1,7 @@
 ruff
 Sphinx==5.0.2
 sphinx-rtd-theme==1.0.0
-sphinx-click==4.0.0
+sphinx-click==4.4.0
 pyinstaller  # version not pinned due to latest used by release procedure
 sphinx-copybutton==0.5.1
 sphinxcontrib-svg2pdfconverter==1.2.2

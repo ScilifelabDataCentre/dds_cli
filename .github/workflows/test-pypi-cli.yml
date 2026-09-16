@@ -6,10 +6,11 @@
 ---
 name: TestPyPi
 on:
-  pull_request:
+  push:
     branches: [dev]
 jobs:
   build-n-publish:
+    if: github.repository == 'ScilifelabDataCentre/dds_cli'
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +31,6 @@ jobs:
         run: python setup.py sdist bdist_wheel
 
       - name: Publish dist to TestPyPI
-        if: github.repository == 'ScilifelabDataCentre/dds_cli'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print_hash: true

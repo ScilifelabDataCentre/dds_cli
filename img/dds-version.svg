@@ -19,34 +19,34 @@
         font-weight: 700;
     }
 
-    .terminal-833503089-matrix {
+    .rich-codex-1211565913-matrix {
         font-family: Fira Code, monospace;
         font-size: 20px;
         line-height: 24.4px;
         font-variant-east-asian: full-width;
     }
 
-    .terminal-833503089-title {
+    .rich-codex-1211565913-title {
         font-size: 18px;
         font-weight: bold;
         font-family: arial;
     }
 
-    .terminal-833503089-r1 { fill: #c5c8c6 }
-.terminal-833503089-r2 { fill: #868887;font-style: italic; }
+    .rich-codex-1211565913-r1 { fill: #c5c8c6 }
+.rich-codex-1211565913-r2 { fill: #868887;font-style: italic; }
     </style>
 
     <defs>
-    <clipPath id="terminal-833503089-clip-terminal">
+    <clipPath id="rich-codex-1211565913-clip-terminal">
       <rect x="0" y="0" width="975.0" height="96.6" />
     </clipPath>
-    <clipPath id="terminal-833503089-line-0">
+    <clipPath id="rich-codex-1211565913-line-0">
     <rect x="0" y="1.5" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-833503089-line-1">
+<clipPath id="rich-codex-1211565913-line-1">
     <rect x="0" y="25.9" width="976" height="24.65"/>
             </clipPath>
-<clipPath id="terminal-833503089-line-2">
+<clipPath id="rich-codex-1211565913-line-2">
     <rect x="0" y="50.3" width="976" height="24.65"/>
             </clipPath>
     </defs>
@@ -58,13 +58,13 @@
             <circle cx="44" cy="0" r="7" fill="#28c840"/>
             </g>
         
-    <g transform="translate(9, 41)" clip-path="url(#terminal-833503089-clip-terminal)">
+    <g transform="translate(9, 41)" clip-path="url(#rich-codex-1211565913-clip-terminal)">
     
-    <g class="terminal-833503089-matrix">
-    <text class="terminal-833503089-r1" x="0" y="20" textLength="183" clip-path="url(#terminal-833503089-line-0)">$&#160;dds&#160;--version</text><text class="terminal-833503089-r1" x="976" y="20" textLength="12.2" clip-path="url(#terminal-833503089-line-0)">
-</text><text class="terminal-833503089-r2" x="0" y="44.4" textLength="183" clip-path="url(#terminal-833503089-line-1)">[..truncated..]</text><text class="terminal-833503089-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#terminal-833503089-line-1)">
-</text><text class="terminal-833503089-r1" x="0" y="68.8" textLength="439.2" clip-path="url(#terminal-833503089-line-2)">Data&#160;Delivery&#160;System,&#160;version&#160;2.14.3</text><text class="terminal-833503089-r1" x="976" y="68.8" textLength="12.2" clip-path="url(#terminal-833503089-line-2)">
-</text><text class="terminal-833503089-r1" x="976" y="93.2" textLength="12.2" clip-path="url(#terminal-833503089-line-3)">
+    <g class="rich-codex-1211565913-matrix">
+    <text class="rich-codex-1211565913-r1" x="0" y="20" textLength="183" clip-path="url(#rich-codex-1211565913-line-0)">$&#160;dds&#160;--version</text><text class="rich-codex-1211565913-r1" x="976" y="20" textLength="12.2" clip-path="url(#rich-codex-1211565913-line-0)">
+</text><text class="rich-codex-1211565913-r2" x="0" y="44.4" textLength="183" clip-path="url(#rich-codex-1211565913-line-1)">[..truncated..]</text><text class="rich-codex-1211565913-r1" x="976" y="44.4" textLength="12.2" clip-path="url(#rich-codex-1211565913-line-1)">
+</text><text class="rich-codex-1211565913-r1" x="0" y="68.8" textLength="439.2" clip-path="url(#rich-codex-1211565913-line-2)">Data&#160;Delivery&#160;System,&#160;version&#160;2.15.0</text><text class="rich-codex-1211565913-r1" x="976" y="68.8" textLength="12.2" clip-path="url(#rich-codex-1211565913-line-2)">
+</text><text class="rich-codex-1211565913-r1" x="976" y="93.2" textLength="12.2" clip-path="url(#rich-codex-1211565913-line-3)">
 </text>
     </g>
     </g>

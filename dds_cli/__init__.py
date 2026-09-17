@@ -100,6 +100,7 @@ class DDSEndpoint:
     FILE_ADD_FAILED = BASE_ENDPOINT + "/file/failed/add"
 
     # Project specific urls
+    PROJ_UPLOAD_COMPLETE = BASE_ENDPOINT + "/proj/upload/complete"
     PROJ_ACCESS = BASE_ENDPOINT + "/proj/access"
     PROJ_BUSY_ANY = BASE_ENDPOINT + "/proj/busy/any"
     PROJ_INFO = BASE_ENDPOINT + "/proj/info"

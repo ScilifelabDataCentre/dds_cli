@@ -82,7 +82,6 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 
 12. Inform users (`dds-status` Slack channel) and relevant IT departments / HPC centers about new version. Create MOTD, send the MOTD when minor or major changes.
 
-
 > **NAISS**
 >
 > There is no automatic upgrade of the `dds-cli` on NAISS resources other than UPPMAX and we need to inform them via email every time there is a new version.

@@ -37,11 +37,9 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
    - Minor changes, e.g. bug fix_: Minor version upgrade, e.g. `1.0.1 --> 1.0.2`
    - Small changes, e.g. new feature_: Mid version upgrade, e.g. `1.1.0 --> 1.2.0`
    - Breaking changes or large new feature(s): Major version upgrade, e.g. `1.0.0 --> 2.0.0` SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE.
-   
 
 6. Push the changelog and version to the `new-version_[new version]` branch
 7. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose the `new-version_[new version]` branch in the "Run workflow" drop-down button
-
 
 > `rich-codex` will push changes to your branch; these commits _will not be signed_. In order for you to merge these changes into the `dev` branch, all commits need to be signed:
 >
@@ -60,18 +58,17 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 
 8. Create a new PR from `new-version_[new version]` to `dev`, and verify that the new images look okay, then have the PR approved by another admin.
 9. Create a PR from `dev` to `master`
-    - Are you bumping the major version (e.g. 1.x.x to 2.x.x)?
-      - Yes: Add this info to the PR.
-    - Do the changes affect the API in any way?
-      - Yes:
-        - Add how the API is affected in the PR.
-        - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
-    - _Backward compatibility:_ Check whether or not the dds_cli master branch works with the code in the PR. Note if the dds_web changes work with the previous version of the dds_cli. If something might break - give detailed information about what. **The users should be informed of this, e.g. via a MOTD.**
-    - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary. Instead, the team should look through the code just to see if something looks weird.
-    - All sections and checks in the PR template should be filled in and checked. Follow the instruction in the PR description field.
-    - There should be at least one approval of the PR.
-    - _Everything looks ok and there's at least one approval?_ Merge it
-
+   - Are you bumping the major version (e.g. 1.x.x to 2.x.x)?
+     - Yes: Add this info to the PR.
+   - Do the changes affect the API in any way?
+     - Yes:
+       - Add how the API is affected in the PR.
+       - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
+   - _Backward compatibility:_ Check whether or not the dds_cli master branch works with the code in the PR. Note if the dds_web changes work with the previous version of the dds_cli. If something might break - give detailed information about what. **The users should be informed of this, e.g. via a MOTD.**
+   - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary. Instead, the team should look through the code just to see if something looks weird.
+   - All sections and checks in the PR template should be filled in and checked. Follow the instruction in the PR description field.
+   - There should be at least one approval of the PR.
+   - _Everything looks ok and there's at least one approval?_ Merge it
 
 10. [Publish the Release Draft](https://github.com/ScilifelabDataCentre/dds_cli/releases)
 

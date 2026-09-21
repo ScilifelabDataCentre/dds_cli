@@ -95,7 +95,6 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 > Hi,
 >
 > There is a new version of the dds-cli. Could you please upgrade the version to [new dds-cli version] on all relevant NAISS clusters/systems?
-?
 >
 > Thank you in advance!
 > ```

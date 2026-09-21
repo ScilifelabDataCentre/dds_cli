@@ -34,11 +34,11 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 
    - Copy-paste the contents of the release draft into the top of the changelog
    - Follow the same structure/format as previous versions.
-   - Minor changes, e.g. bug fix_: Minor version upgrade, e.g. `1.0.1 --> 1.0.2`
-   - Small changes, e.g. new feature_: Mid version upgrade, e.g. `1.1.0 --> 1.2.0`
-   - Breaking changes or large new feature(s): Major version upgrade, e.g. `1.0.0 --> 2.0.0` SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE.
+   - Patch changes, e.g. bug fix_: Patch version upgrade, e.g. `1.0.1 --> 1.0.2`
+   - Minor changes, e.g. new feature_: Minor version upgrade, e.g. `1.1.0 --> 1.2.0`
+   - Major [Breaking] changes or large new feature(s): Major version upgrade, e.g. `1.0.0 --> 2.0.0` SHOULD NEVER BE DONE UNLESS THE API ALSO HAS THIS IDENTICAL CHANGE.
 
-6. Push the changelog and version to the `new-version_[new version]` branch
+6. Push your local `new-version_[new version]` branch to Github and create a PR.
 7. Run the `rich-codex` action [here](https://github.com/ScilifelabDataCentre/dds_cli/actions/workflows/rich-codex-cli.yml); Choose the `new-version_[new version]` branch in the "Run workflow" drop-down button
 
 > `rich-codex` will push changes to your branch; these commits _will not be signed_. In order for you to merge these changes into the `dev` branch, all commits need to be signed:
@@ -56,51 +56,53 @@ When changes are pushed to `dev` or `master`, a Draft Release is created/updated
 >     git push --force
 >     ```
 
-8. Create a new PR from `new-version_[new version]` to `dev`, and verify that the new images look okay, then have the PR approved by another admin.
-9. Create a PR from `dev` to `master`
+8. Verify that the new images look okay, then have the PR approved by another admin.
+9. Go back to the PR from `dev` to `master` created in step 1.
    - Are you bumping the major version (e.g. 1.x.x to 2.x.x)?
      - Yes: Add this info to the PR.
-   - Do the changes affect the API in any way?
+   - Do the changes affect the backend API in any way?
      - Yes:
-       - Add how the API is affected in the PR.
-       - Make the corresponding changes to the API and create a PR _before_ you merge this PR.
-   - _Backward compatibility:_ Check whether or not the dds_cli master branch works with the code in the PR. Note if the dds_web changes work with the previous version of the dds_cli. If something might break - give detailed information about what. **The users should be informed of this, e.g. via a MOTD.**
+       - Add how the backend API is affected in the PR.
+       - Make the corresponding changes to the backend API and create a PR _before_ you merge this PR.
+       - _Backward compatibility:_ Check whether or not the dds_cli master branch works with the code in the backend PR. Check if the dds_web changes work with the previous version of the dds_cli. If something might break - give detailed information about what. **The users should be informed of this, e.g. via a MOTD.**
    - All changes should be approved in the PRs to dev so reviewing the changes a second time in this PR is not necessary. Instead, the team should look through the code just to see if something looks weird.
    - All sections and checks in the PR template should be filled in and checked. Follow the instruction in the PR description field.
    - There should be at least one approval of the PR.
-   - _Everything looks ok and there's at least one approval?_ Merge it
+   - If everything looks ok and there's at least one approval, this PR can be merged into `master`.
 
-10. [Publish the Release Draft](https://github.com/ScilifelabDataCentre/dds_cli/releases)
+10. [Check and edit the auto-generated release draft](https://github.com/ScilifelabDataCentre/dds_cli/releases)
+
+    - 1. `Choose a tag` &rarr; `Find or create a new tag` &rarr; Fill in the new version, e.g. if the new version is `1.0.0`, you should fill in `v1.0.0`.
+    - 2. `Target` should be set to **`master`**
+    - 3. `Release title` field should be set to the same as the tag, e.g. `v1.0.0`
+
+11. [Publish the Release Draft](https://github.com/ScilifelabDataCentre/dds_cli/releases)
 
     > A new version of the CLI will be published to [PyPi](https://pypi.org/project/dds-cli/)
 
-11. [Draft a new release](https://github.com/ScilifelabDataCentre/dds_cli/releases)
+12. Inform users (`dds-status` Slack channel) and relevant IT departments / HPC centers about new version. Create MOTD, send the MOTD when minor or major changes.
 
-    - 1. `Choose a tag` &rarr; `Find or create a new tag` &rarr; Fill in the new version, e.g. if the new version is `1.0.0`, you should fill in `v1.0.0`.
-    - 2. `Target` should be set to `master`
-    - 3. `Release title` field should be set to the same as the tag, e.g. `v1.0.0`
-    - 4. `Write` &rarr; `Generate release notes`
-    - 5. Inform users (`dds-status` Slack channel) and relevant IT departments / HPC centers about new version
 
-> **Dardel**
+> **NAISS**
 >
-> There is no automatic upgrade of the `dds-cli` on Dardel and we need to inform them via email every time there is a new version.
+> There is no automatic upgrade of the `dds-cli` on NAISS resources other than UPPMAX and we need to inform them via email every time there is a new version.
 >
 > ```
-> [Recipient]: support@pdc.kth.se
+> [Recipient]: support@naiss.se
 > [Subject]: Uppgrade dds-cli module
 >
 > [Message]:
 > Hi,
 >
-> There is a new version of the dds-cli. Could you please upgrade the version to [new dds-cli version]?
+> There is a new version of the dds-cli. Could you please upgrade the version to [new dds-cli version] on all relevant NAISS clusters/systems?
+?
 >
 > Thank you in advance!
 > ```
 >
 > If there are breaking changes, PDC should be informed in advance. See the Uppmax email below as a template, but change it accordingly.
 
-> **Uppmax**
+> **UPPMAX**
 >
 > Uppmax automatically upgrades the `dds-cli` version every day at midnight.
 > If there has been a major version change though and the CLI contains breaking changes, _Uppmax should be notified well in advance_ in order to plan for an upgrade at a specific time so that the users are blocked (automatic functionality in dds_web) for as short time as possible.

@@ -578,3 +578,16 @@ _Empty sprint_
 ## 2026-09-14 - 2026-09-25
 
 - Edit New release procedure documentation ([#988](https://github.com/ScilifelabDataCentre/dds_cli/pull/988))
+- Update dependency rich-click to v1.9.9 ([#898](https://github.com/ScilifelabDataCentre/dds_cli/pull/898))
+- Update dependency requests-mock to v1.12.1 ([#896](https://github.com/ScilifelabDataCentre/dds_cli/pull/896))
+- Update dependency PyYAML to v6.0.3 ([#884](https://github.com/ScilifelabDataCentre/dds_cli/pull/884))
+- Update dependency prompt-toolkit to v3.0.53 ([#881](https://github.com/ScilifelabDataCentre/dds_cli/pull/881))
+- Update dependency immutabledict to v4 ([#912](https://github.com/ScilifelabDataCentre/dds_cli/pull/912))
+- Update dependency click to v8.5.0 ([#890](https://github.com/ScilifelabDataCentre/dds_cli/pull/890))
+- Update dependency prettytable to v3.18.0 ([#891](https://github.com/ScilifelabDataCentre/dds_cli/pull/891))
+- Update dependency simplejson to v4.1.2 ([#986](https://github.com/ScilifelabDataCentre/dds_cli/pull/986))
+- Update dependency jwcrypto to v1.6.0 ([#985](https://github.com/ScilifelabDataCentre/dds_cli/pull/985))
+- Update dependency zstandard to v0.25.0 ([#905](https://github.com/ScilifelabDataCentre/dds_cli/pull/905))
+- Update dependency pytest to v9.1.1 ([#968](https://github.com/ScilifelabDataCentre/dds_cli/pull/968))
+- Update dependency pyfakefs to v6 ([#913](https://github.com/ScilifelabDataCentre/dds_cli/pull/913))
+- Update dependency pytest-asyncio to v1.4.0 ([#963](https://github.com/ScilifelabDataCentre/dds_cli/pull/963))

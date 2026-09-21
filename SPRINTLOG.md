@@ -574,3 +574,7 @@ _Empty sprint_
 - New vesrion v2.15.0 ([#981](https://github.com/ScilifelabDataCentre/dds_cli/pull/981))
 - Detect upload-complete 404 by HTTP status for timestamp refresh warning ([#983](https://github.com/ScilifelabDataCentre/dds_cli/pull/983))
 - Update dependency cryptography to v50.0.1 ([#984](https://github.com/ScilifelabDataCentre/dds_cli/pull/984))
+
+## 2026-09-14 - 2026-09-25
+
+- Edit New release procedure documentation ([#988](https://github.com/ScilifelabDataCentre/dds_cli/pull/988))

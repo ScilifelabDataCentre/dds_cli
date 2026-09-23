@@ -591,3 +591,4 @@ _Empty sprint_
 - Update dependency pytest to v9.1.1 ([#968](https://github.com/ScilifelabDataCentre/dds_cli/pull/968))
 - Update dependency pyfakefs to v6 ([#913](https://github.com/ScilifelabDataCentre/dds_cli/pull/913))
 - Update dependency pytest-asyncio to v1.4.0 ([#963](https://github.com/ScilifelabDataCentre/dds_cli/pull/963))
+- New version 2.15.1 ([#991](https://github.com/ScilifelabDataCentre/dds_cli/pull/991))

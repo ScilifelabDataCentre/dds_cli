@@ -552,8 +552,7 @@ class DataPutter(base.DDSBaseClass):
             dds_cli.exceptions.ApiResponseError,
             dds_cli.exceptions.DDSCLIException,
         ) as err:
-            err_text = str(err)
-            if "Response code: 404" in err_text:
+            if getattr(err, "status_code", None) == 404:
                 LOG.warning(
                     "Upload succeeded, but the project 'Last updated' timestamp could not "
                     "be refreshed because the backend does not expose the upload-complete "

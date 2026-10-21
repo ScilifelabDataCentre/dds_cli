@@ -32,7 +32,7 @@ jobs:
       security-events: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/python@v1.0.0
         continue-on-error: true # To make sure that SARIF upload gets called

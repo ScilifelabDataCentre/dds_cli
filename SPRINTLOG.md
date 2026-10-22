@@ -603,3 +603,4 @@ _Empty sprint_
 - Update setup-node action to v7 ([#975](https://github.com/ScilifelabDataCentre/dds_cli/pull/975))
 - Update actions/checkout to v7 ([#971](https://github.com/ScilifelabDataCentre/dds_cli/pull/971))
 - Update actions/setup-python to v7 ([#974](https://github.com/ScilifelabDataCentre/dds_cli/pull/976))
+-

@@ -592,3 +592,14 @@ _Empty sprint_
 - Update dependency pyfakefs to v6 ([#913](https://github.com/ScilifelabDataCentre/dds_cli/pull/913))
 - Update dependency pytest-asyncio to v1.4.0 ([#963](https://github.com/ScilifelabDataCentre/dds_cli/pull/963))
 - New version 2.15.1 ([#991](https://github.com/ScilifelabDataCentre/dds_cli/pull/991))
+
+## 2026-10-12 - 2026-10-23
+
+- Update dependency simplejson to v4.2.0 ([#995](https://github.com/ScilifelabDataCentre/dds_cli/pull/995))
+- Update dependency cryptography to v50.0.2 ([#994](https://github.com/ScilifelabDataCentre/dds_cli/pull/994))
+- Update dependency jwcrypto to v1.6.1 ([#987](https://github.com/ScilifelabDataCentre/dds_cli/pull/987))
+- Update dependency pytz to v2026.5 ([#993](https://github.com/ScilifelabDataCentre/dds_cli/pull/993))
+- Update codecov/codecov-action to v7 ([#964](https://github.com/ScilifelabDataCentre/dds_cli/pull/964))
+- Update setup-node action to v7 ([#975](https://github.com/ScilifelabDataCentre/dds_cli/pull/975))
+- Update actions/checkout to v7 ([#971](https://github.com/ScilifelabDataCentre/dds_cli/pull/971))
+- Update actions/setup-python to v7 ([#974](https://github.com/ScilifelabDataCentre/dds_cli/pull/976))

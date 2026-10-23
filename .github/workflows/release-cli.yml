@@ -31,7 +31,7 @@ jobs:
           ref: ${{ env.RELEASE_TAG }}
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
         with:
           python-version: 3.12
 
@@ -108,7 +108,7 @@ jobs:
         with:
           ref: ${{ env.RELEASE_TAG }}
       - name: Python 3.12 setup
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v7
         with:
           python-version: 3.12
           # architecture: 'x64'

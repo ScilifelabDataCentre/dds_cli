@@ -12,7 +12,6 @@ import pathlib
 import traceback
 
 # Installed
-from cryptography.hazmat import backends
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import x25519
@@ -55,12 +54,14 @@ class ECDHKeyHandler:
 
         # Generate shared key and derive encryption key with salt
         shared_key = (my_private).exchange(peer_public)
+        # Note: HKDF used to take a `backend=` argument; it has been a deprecated
+        # no-op since cryptography 35 and is slated for hard removal. We rely on
+        # the default backend implicitly.
         derived_shared_key = hkdf.HKDF(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
             info=b"",
-            backend=backends.default_backend(),
         ).derive(shared_key)
 
         return derived_shared_key, salt.hex().upper()

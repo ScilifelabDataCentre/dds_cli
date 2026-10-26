@@ -1,6 +1,79 @@
 Changelog
 ==========
 
+.. _2.15.1:
+
+2.15.1 - 2026-09-23
+~~~~~~~~~~~~~~~~~~~~
+
+- 🐛 Bug Fixes
+    - Expose API response status\_code for upload-complete 404 warning ([#983](https://github.com/ScilifelabDataCentre/dds_cli/pull/983))
+- 📄 Documentation
+    - Cleaning up new\_release procedure ([#988](https://github.com/ScilifelabDataCentre/dds_cli/pull/988))
+- 🛡️ Dependencies
+    - Update dependency click to v8.5.0 ([#890](https://github.com/ScilifelabDataCentre/dds_cli/pull/890))
+    - Update dependency immutabledict to v4 ([#912](https://github.com/ScilifelabDataCentre/dds_cli/pull/912))
+    - Update dependency prompt-toolkit to v3.0.53 ([#881](https://github.com/ScilifelabDataCentre/dds_cli/pull/881))
+    - Update dependency PyYAML to v6.0.3 ([#884](https://github.com/ScilifelabDataCentre/dds_cli/pull/884))
+    - Update dependency requests-mock to v1.12.1 ([#896](https://github.com/ScilifelabDataCentre/dds_cli/pull/896))
+    - Update dependency rich-click to v1.9.9 ([#898](https://github.com/ScilifelabDataCentre/dds_cli/pull/898))
+    - Update dependency prettytable to v3.18.0 ([#891](https://github.com/ScilifelabDataCentre/dds_cli/pull/891))
+    - Update dependency pytest-asyncio to v1.4.0 ([#963](https://github.com/ScilifelabDataCentre/dds_cli/pull/963))
+    - Update dependency pyfakefs to v6 ([#913](https://github.com/ScilifelabDataCentre/dds_cli/pull/913))
+    - Update dependency pytest to v9.1.1 ([#968](https://github.com/ScilifelabDataCentre/dds_cli/pull/968))
+    - Update dependency zstandard to v0.25.0 ([#905](https://github.com/ScilifelabDataCentre/dds_cli/pull/905))
+    - Update dependency jwcrypto to v1.6.0 ([#985](https://github.com/ScilifelabDataCentre/dds_cli/pull/985))
+    - Update dependency simplejson to v4.1.2 ([#986](https://github.com/ScilifelabDataCentre/dds_cli/pull/986))
+    - Update dependency cryptography to v50.0.1 ([#984](https://github.com/ScilifelabDataCentre/dds_cli/pull/984))
+
+.. _2.15.0:
+
+2.15.0 - 2026-08-20
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Add a call to project updating endpoind at the end of an upload ([#942](https://github.com/ScilifelabDataCentre/dds_cli/pull/942))
+    - Fix silent download truncation being misreported as crypto failure ([#962](https://github.com/ScilifelabDataCentre/dds_cli/pull/962))
+- 🛡️ Dependencies
+    - Update dependency pytz to v2026.3.post1 ([#977](https://github.com/ScilifelabDataCentre/dds_cli/pull/977))
+    - Update dependency cryptography to v50 [SECURITY] ([#979](https://github.com/ScilifelabDataCentre/dds_cli/pull/979))
+    - Update dependency tzlocal to v4.3.1 ([#904](https://github.com/ScilifelabDataCentre/dds_cli/pull/904))
+    - Update dependency jwcrypto to v1.5.8 ([#973](https://github.com/ScilifelabDataCentre/dds_cli/pull/973))
+    - Update dependency cryptography to v48.0.1 [SECURITY] ([#972](https://github.com/ScilifelabDataCentre/dds_cli/pull/972))
+    - Update dependency sphinx-click to v4.4.0 ([#901](https://github.com/ScilifelabDataCentre/dds_cli/pull/901))
+
+.. _2.14.3:
+
+2.14.3 - 2026-05-06
+~~~~~~~~~~~~~~~~~~~~
+
+- 🐛 Bug Fixes
+    - Fix build assets names ([#954](https://github.com/ScilifelabDataCentre/dds_cli/pull/954))
+- 🛡️ Dependencies
+    - Update dependency jwcrypto to v1.5.7 ([#943](https://github.com/ScilifelabDataCentre/dds_cli/pull/943))
+    - Update dependency rich to v15 ([#949](https://github.com/ScilifelabDataCentre/dds_cli/pull/949))
+    - Update dependency simplejson to v4 ([#951](https://github.com/ScilifelabDataCentre/dds_cli/pull/951))
+    - Update dependency pytest to v9 [SECURITY] ([#950](https://github.com/ScilifelabDataCentre/dds_cli/pull/950))
+    - Update dependency pytz to v2026.2 ([#956](https://github.com/ScilifelabDataCentre/dds_cli/pull/956))
+    - chore(crypto): drop deprecated backend= argument from HKDF ([#958](https://github.com/ScilifelabDataCentre/dds_cli/pull/958))
+    - Update dependency cryptography to v48 ([#957](https://github.com/ScilifelabDataCentre/dds_cli/pull/957))
+
+.. _2.14.2:
+
+2.14.2 - 2026-04-07
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Download retry with exponential backoff ([#941](https://github.com/ScilifelabDataCentre/dds_cli/pull/941))
+- 🛡️ Dependencies
+    - Update dependency rich to v14 ([#918](https://github.com/ScilifelabDataCentre/dds_cli/pull/918))
+    - Update dependency pytz to v2026 ([#933](https://github.com/ScilifelabDataCentre/dds_cli/pull/933))
+    - Update dependency cryptography to v46.0.6 [SECURITY] ([#941](https://github.com/ScilifelabDataCentre/dds_cli/pull/941))
+    - Update dependency requests to v2.33.0 [SECURITY] ([#937](https://github.com/ScilifelabDataCentre/dds_cli/pull/937))
+    - Update dependency Flask to v3 ([#940](https://github.com/ScilifelabDataCentre/dds_cli/pull/940))
+    - replace click-pathlib with clicks `path_type` ([#926](https://github.com/ScilifelabDataCentre/dds_cli/pull/926))
+    - Bump cryptography from 44.0.1 to 46.0.5 ([#875](https://github.com/ScilifelabDataCentre/dds_cli/pull/875))
+
 .. _2.14.0:
 
 2.14.0 - 2026-02-05

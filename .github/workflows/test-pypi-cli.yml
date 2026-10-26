@@ -6,18 +6,19 @@
 ---
 name: TestPyPi
 on:
-  pull_request:
+  push:
     branches: [dev]
 jobs:
   build-n-publish:
+    if: github.repository == 'ScilifelabDataCentre/dds_cli'
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         name: Check out source-code repository
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v7
         with:
           python-version: 3.12
 
@@ -30,7 +31,6 @@ jobs:
         run: python setup.py sdist bdist_wheel
 
       - name: Publish dist to TestPyPI
-        if: github.repository == 'ScilifelabDataCentre/dds_cli'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print_hash: true

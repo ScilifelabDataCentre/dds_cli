@@ -30,11 +30,12 @@ class InvalidMethodError(Exception):
 class DDSCLIException(click.ClickException):
     """Base exception for click in DDS."""
 
-    def __init__(self, message, sign=":warning-emoji:", show_emojis=False):
+    def __init__(self, message, sign=":warning-emoji:", show_emojis=False, status_code=None):
         """Init base exception."""
         self.message = message
         self.show_emojis = show_emojis
         self.sign = sign
+        self.status_code = status_code
         super().__init__(message)
 
     def __str__(self):
@@ -92,8 +93,9 @@ class ApiRequestError(requests.exceptions.RequestException):
 class ApiResponseError(Exception):
     """REST API Request does not return code 200 in response."""
 
-    def __init__(self, message):
+    def __init__(self, message, status_code=None):
         """Log and raise."""
+        self.status_code = status_code
         super().__init__(message)
 
 

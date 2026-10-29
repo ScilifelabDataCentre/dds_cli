@@ -77,6 +77,32 @@ class FileHandler:
             LOG.warning(str(err))
 
     @staticmethod
+    def remove_entries_from_error_file(log_file: pathlib.Path, files):
+        """Remove resolved files from specific json file, and delete it if none remain."""
+        try:
+            with lock:
+                # Load json from file
+                with log_file.open(mode="r", encoding="utf-8") as json_file:
+                    file_data = json.load(json_file)
+
+                # Remove files which have been resolved
+                for file in files:
+                    file_data.pop(str(file), None)
+                LOG.debug("Removed resolved files from '%s': %s", log_file, files)
+
+                # Delete file if all errors have been resolved
+                if not file_data:
+                    log_file.unlink()
+                    return
+
+                # Mode "w" truncates the file - "r+" would leave old content when shrinking
+                with log_file.open(mode="w", encoding="utf-8") as json_file:
+                    json.dump(file_data, json_file, indent=4)
+
+        except (OSError, ValueError) as err:
+            LOG.warning(str(err))
+
+    @staticmethod
     def make_json_serializable(non_json):
         """Convert pathlib.Path instances in dict to string."""
         return {str(x): (str(y) if isinstance(y, pathlib.Path) else y) for x, y in non_json.items()}

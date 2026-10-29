@@ -21,6 +21,7 @@ from rich.progress import BarColumn, Progress, SpinnerColumn
 # Own modules
 import dds_cli
 import dds_cli.directory
+import dds_cli.file_handler
 import dds_cli.utils
 from dds_cli import DDSEndpoint, base
 from dds_cli import data_remover as dr
@@ -534,6 +535,16 @@ class DataPutter(base.DDSBaseClass):
                     "message": "Added with 'retry_add_file_db'",
                 }
             )
+
+        # Remove successfully added files from the json file
+        if files_added:
+            dds_cli.file_handler.FileHandler.remove_entries_from_error_file(
+                log_file=self.failed_delivery_log, files=files_added
+            )
+            if not self.failed_delivery_log.exists():
+                LOG.info(
+                    "All upload issues were resolved. Removed %s.", str(self.failed_delivery_log)
+                )
 
     def touch_project_after_upload(self):
         """Ask API to refresh project ``date_updated`` / ``last_updated_by`` once per batch."""

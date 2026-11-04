@@ -228,3 +228,33 @@ def test_remove_entries_from_error_file_deletion_fails(monkeypatch, tmp_path, ca
     # Verify that the log still exists and the error is logged
     assert log_file.exists()
     assert ("dds_cli.file_handler", logging.WARNING, "File is in use") in caplog.record_tuples
+
+
+def test_remove_entries_from_error_file_write_fails(monkeypatch, tmp_path, caplog):
+    """Test that the log is unchanged if writing the remaining entries fails."""
+    log_file = tmp_path / "dds_failed_delivery.json"
+    log_file.write_text(
+        json.dumps({"file1": _failed_entry("add_file_db"), "file2": _failed_entry("put")}),
+        encoding="utf-8",
+    )
+    content_before = log_file.read_text(encoding="utf-8")
+
+    # Helper function to replace json.dump and fail halfway, e.g. when the disk is full
+    def fake_dump(_, json_file, **__):
+        json_file.write("{")
+        raise OSError("No space left on device")
+
+    monkeypatch.setattr("dds_cli.file_handler.json.dump", fake_dump)
+
+    # Call the FileHandler.remove_entries_from_error_file method
+    with caplog.at_level(logging.WARNING, logger="dds_cli.file_handler"):
+        FileHandler.remove_entries_from_error_file(log_file=log_file, files=["file1"])
+
+    # Verify that the log is unchanged, no temporary file is left and the error is logged
+    assert log_file.read_text(encoding="utf-8") == content_before
+    assert list(tmp_path.iterdir()) == [log_file]
+    assert (
+        "dds_cli.file_handler",
+        logging.WARNING,
+        "No space left on device",
+    ) in caplog.record_tuples

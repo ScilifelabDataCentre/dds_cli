@@ -95,9 +95,15 @@ class FileHandler:
                     log_file.unlink()
                     return
 
-                # Mode "w" truncates the file - "r+" would leave old content when shrinking
-                with log_file.open(mode="w", encoding="utf-8") as json_file:
-                    json.dump(file_data, json_file, indent=4)
+                # Write to a temporary file and replace the log with it, so that the log
+                # is kept as it is if writing fails
+                tmp_file = log_file.with_suffix(".tmp")
+                try:
+                    with tmp_file.open(mode="w", encoding="utf-8") as json_file:
+                        json.dump(file_data, json_file, indent=4)
+                    tmp_file.replace(log_file)
+                finally:
+                    tmp_file.unlink(missing_ok=True)
 
         except (OSError, ValueError) as err:
             LOG.warning(str(err))

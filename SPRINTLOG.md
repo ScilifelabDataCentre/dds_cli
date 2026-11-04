@@ -604,3 +604,7 @@ _Empty sprint_
 - Update actions/checkout to v7 ([#971](https://github.com/ScilifelabDataCentre/dds_cli/pull/971))
 - Update actions/setup-python to v7 ([#974](https://github.com/ScilifelabDataCentre/dds_cli/pull/976))
 -
+
+## 2026-10-26 - 2026-11-06
+
+- Remove resolved entries from dds_failed_delivery.json after retry ([#999](https://github.com/ScilifelabDataCentre/dds_cli/pull/999))

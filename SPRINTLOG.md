@@ -608,3 +608,9 @@ _Empty sprint_
 ## 2026-10-26 - 2026-11-06
 
 - Fix outdated CLI version in executable install screenshot ([#1003](https://github.com/ScilifelabDataCentre/dds_cli/pull/1003))
+- Updated dependency pytest-asyncio to 1.4.1 ([997](https://github.com/ScilifelabDataCentre/dds_cli/pull/997))
+- Updated dependency sphinx to 9.2.0 ([919](https://github.com/ScilifelabDataCentre/dds_cli/pull/919))
+- Updated dependency sphinxcontrib-svg2pdfconverter to 2.1.0 ([922](https://github.com/ScilifelabDataCentre/dds_cli/pull/922))
+- Updated dependency sphinx-rtd-theme to 3.1.0 ([921](https://github.com/ScilifelabDataCentre/dds_cli/pull/921))
+- Updated dependency sphinx-click to 6.2.0 ([920](https://github.com/ScilifelabDataCentre/dds_cli/pull/920))
+- Updated dependency sphinx-copybutton to 0.5.2 ([886](https://github.com/ScilifelabDataCentre/dds_cli/pull/886/))

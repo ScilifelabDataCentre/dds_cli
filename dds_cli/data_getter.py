@@ -148,29 +148,20 @@ class DataGetter(base.DDSBaseClass):
 
         LOG.debug("File '%s' downloaded: %s", file_name_in_db, file_downloaded)
 
-        file_size_verified = False
-
+        # `get()` now verifies the on-disk byte count against `size_stored`
+        # internally and only returns True if the file matches. If we reach
+        # this branch, the encrypted-size check has already passed.
+        # Defensive guard: make the contract explicit so a future refactor of
+        # get() that breaks the size guarantee fails loudly here rather than
+        # silently proceeding to decryption and surfacing as failed_op="crypto".
         if file_downloaded:
-            ## File size verification
-            expected_size = file_info["size_stored"]
             actual_size = file_info["path_downloaded"].stat().st_size
-
-            if actual_size == expected_size:
-                file_size_verified = True
-                LOG.debug(
-                    "Downloaded file '%s' size matches expected size: %s bytes.",
-                    file_name_in_db,
-                    expected_size,
+            expected_size = file_info["size_stored"]
+            if actual_size != expected_size:
+                raise RuntimeError(
+                    f"get() returned True but size mismatch for '{file_name_in_db}': "
+                    f"expected {expected_size} bytes, got {actual_size} bytes"
                 )
-            else:
-                LOG.debug(
-                    "Downloaded file '%s' size mismatch: expected %s bytes, got %s bytes. Not decrypting.",
-                    file_name_in_db,
-                    expected_size,
-                    actual_size,
-                )
-
-        if file_size_verified:
             db_updated, message = self.update_db(file=file)
             LOG.debug(
                 "API call: database updated for file '%s': %s",
@@ -239,18 +230,27 @@ class DataGetter(base.DDSBaseClass):
 
     @update_status
     def get(self, file, progress, task):
-        """Download files from the cloud."""
+        """Download files from the cloud and verify the byte count."""
         downloaded = False
         error = ""
-        file_local = self.filehandler.data[file]["path_downloaded"]
-        file_remote = self.filehandler.data[file]["url"]
-        file_name_in_db = escape(str(self.filehandler.data[file]["name_in_db"]))
+        file_info = self.filehandler.data[file]
+        file_local = file_info["path_downloaded"]
+        file_remote = file_info["url"]
+        # The encrypted size on the bucket — what we expect on disk after the GET.
+        # `size_original` is the plaintext size and is checked later, after decryption.
+        expected_size = file_info["size_stored"]
+        file_name_in_db = escape(str(file_info["name_in_db"]))
 
+        # ChunkedEncodingError is included so that silent stream truncation
+        # (raised manually below) hits the same backoff/retry path as a real
+        # network error. Without it, a truncated body looked like a successful
+        # download to requests/urllib3 and the retry loop never fired.
         retryable_exceptions = (
             requests.exceptions.ConnectTimeout,
             requests.exceptions.ReadTimeout,
             requests.exceptions.Timeout,
             requests.exceptions.ConnectionError,
+            requests.exceptions.ChunkedEncodingError,
         )
 
         max_retries = constants.DOWNLOAD_MAX_RETRIES
@@ -262,7 +262,13 @@ class DataGetter(base.DDSBaseClass):
             error = ""
             if attempt > 1:
                 progress.reset(task, completed=0)
+                # Drop the partial file from the previous attempt before retrying.
+                # We don't (yet) support Range-based resume, so a fresh GET starts
+                # at byte zero; leaving the old bytes around would just confuse
+                # the size check below.
+                self._remove_partial(file_local, file_name_in_db)
 
+            bytes_written = 0
             try:
                 with requests.get(
                     file_remote,
@@ -270,10 +276,42 @@ class DataGetter(base.DDSBaseClass):
                     timeout=(constants.CONNECT_TIMEOUT, constants.READ_TIMEOUT),
                 ) as req:
                     req.raise_for_status()
+                    # Server-advertised body size. AWS S3 sets this on every GET,
+                    # but S3-compatible backends behind a proxy may use chunked
+                    # transfer encoding (no Content-Length) or send a malformed
+                    # value. Treat both as "unknown" and rely on the size_stored
+                    # check below to catch truncation in that case.
+                    try:
+                        content_length = int(req.headers.get("Content-Length", 0))
+                    except (TypeError, ValueError):
+                        content_length = 0
                     with file_local.open(mode="wb") as new_file:
                         for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
                             progress.update(task, advance=len(chunk))
                             new_file.write(chunk)
+                            bytes_written += len(chunk)
+
+                # Guard against silent truncation: requests/urllib3 do not
+                # validate that bytes received == Content-Length. A clean TCP
+                # FIN mid-stream otherwise looks like an EOF and the loop exits
+                # successfully. Raise so the retry path catches us.
+                if content_length and bytes_written != content_length:
+                    raise requests.exceptions.ChunkedEncodingError(
+                        f"Truncated download for '{file_name_in_db}': "
+                        f"got {bytes_written} of {content_length} bytes"
+                    )
+
+                # Cross-check against the size DDS recorded for the encrypted
+                # blob. This used to live in download_and_verify() (outside the
+                # retry loop), which made truncation unrecoverable in a single
+                # run. Doing it here means a mismatch retries like any other
+                # transport error.
+                actual_size = file_local.stat().st_size
+                if actual_size != expected_size:
+                    raise requests.exceptions.ChunkedEncodingError(
+                        f"Size mismatch for '{file_name_in_db}': "
+                        f"expected {expected_size} bytes, got {actual_size} bytes"
+                    )
             except (requests.exceptions.HTTPError, *retryable_exceptions) as err:
                 if (
                     isinstance(err, requests.exceptions.HTTPError)
@@ -295,6 +333,11 @@ class DataGetter(base.DDSBaseClass):
                     wait *= backoff_factor
             else:
                 downloaded = True
+                LOG.debug(
+                    "Downloaded file '%s' size matches expected size: %s bytes.",
+                    file_name_in_db,
+                    expected_size,
+                )
                 break
 
         if not downloaded and error:
@@ -306,8 +349,33 @@ class DataGetter(base.DDSBaseClass):
                 max_retries,
                 error,
             )
+            LOG.warning(
+                "Download of '%s' could not be completed after %d attempts. "
+                "Please ensure your internet connection is stable and that your "
+                "computer does not enter sleep mode during large file transfers.",
+                file_name_in_db,
+                max_retries,
+            )
+            # Don't leave a partial blob on disk after we've given up — it just
+            # consumes space and risks being mistaken for a complete file.
+            self._remove_partial(file_local, file_name_in_db)
 
         return downloaded, error
+
+    @staticmethod
+    def _remove_partial(file_local, file_name_in_db):
+        """Delete a partial download. Best-effort — never raises."""
+        try:
+            file_local.unlink(missing_ok=True)
+        except OSError as unlink_err:
+            # File-locking on Windows occasionally blocks unlink while the
+            # progress bar still holds the path; we don't want this to mask
+            # the real download error, so just log and move on.
+            LOG.debug(
+                "Could not remove partial download for '%s': %s",
+                file_name_in_db,
+                unlink_err,
+            )
 
     @update_status
     def update_db(self, file):

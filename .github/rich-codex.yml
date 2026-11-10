@@ -26,6 +26,12 @@ outputs:
     tail: 29
     img_paths:
       - img/dds-help-2.svg
+  - command: dds
+    fake_command: ./dds_cli_macos_arm64
+    head: 6
+    tail: 29
+    img_paths:
+      - img/mac-executable-help.svg
   - command: dds auth
     tail: 19
     img_paths:

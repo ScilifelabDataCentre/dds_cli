@@ -1,6 +1,47 @@
 Changelog
 ==========
 
+.. _2.15.1:
+
+2.15.1 - 2026-09-23
+~~~~~~~~~~~~~~~~~~~~
+
+- 🐛 Bug Fixes
+    - Expose API response status\_code for upload-complete 404 warning ([#983](https://github.com/ScilifelabDataCentre/dds_cli/pull/983))
+- 📄 Documentation
+    - Cleaning up new\_release procedure ([#988](https://github.com/ScilifelabDataCentre/dds_cli/pull/988))
+- 🛡️ Dependencies
+    - Update dependency click to v8.5.0 ([#890](https://github.com/ScilifelabDataCentre/dds_cli/pull/890))
+    - Update dependency immutabledict to v4 ([#912](https://github.com/ScilifelabDataCentre/dds_cli/pull/912))
+    - Update dependency prompt-toolkit to v3.0.53 ([#881](https://github.com/ScilifelabDataCentre/dds_cli/pull/881))
+    - Update dependency PyYAML to v6.0.3 ([#884](https://github.com/ScilifelabDataCentre/dds_cli/pull/884))
+    - Update dependency requests-mock to v1.12.1 ([#896](https://github.com/ScilifelabDataCentre/dds_cli/pull/896))
+    - Update dependency rich-click to v1.9.9 ([#898](https://github.com/ScilifelabDataCentre/dds_cli/pull/898))
+    - Update dependency prettytable to v3.18.0 ([#891](https://github.com/ScilifelabDataCentre/dds_cli/pull/891))
+    - Update dependency pytest-asyncio to v1.4.0 ([#963](https://github.com/ScilifelabDataCentre/dds_cli/pull/963))
+    - Update dependency pyfakefs to v6 ([#913](https://github.com/ScilifelabDataCentre/dds_cli/pull/913))
+    - Update dependency pytest to v9.1.1 ([#968](https://github.com/ScilifelabDataCentre/dds_cli/pull/968))
+    - Update dependency zstandard to v0.25.0 ([#905](https://github.com/ScilifelabDataCentre/dds_cli/pull/905))
+    - Update dependency jwcrypto to v1.6.0 ([#985](https://github.com/ScilifelabDataCentre/dds_cli/pull/985))
+    - Update dependency simplejson to v4.1.2 ([#986](https://github.com/ScilifelabDataCentre/dds_cli/pull/986))
+    - Update dependency cryptography to v50.0.1 ([#984](https://github.com/ScilifelabDataCentre/dds_cli/pull/984))
+
+.. _2.15.0:
+
+2.15.0 - 2026-08-20
+~~~~~~~~~~~~~~~~~~~~
+
+- 🚀 Features
+    - Add a call to project updating endpoind at the end of an upload ([#942](https://github.com/ScilifelabDataCentre/dds_cli/pull/942))
+    - Fix silent download truncation being misreported as crypto failure ([#962](https://github.com/ScilifelabDataCentre/dds_cli/pull/962))
+- 🛡️ Dependencies
+    - Update dependency pytz to v2026.3.post1 ([#977](https://github.com/ScilifelabDataCentre/dds_cli/pull/977))
+    - Update dependency cryptography to v50 [SECURITY] ([#979](https://github.com/ScilifelabDataCentre/dds_cli/pull/979))
+    - Update dependency tzlocal to v4.3.1 ([#904](https://github.com/ScilifelabDataCentre/dds_cli/pull/904))
+    - Update dependency jwcrypto to v1.5.8 ([#973](https://github.com/ScilifelabDataCentre/dds_cli/pull/973))
+    - Update dependency cryptography to v48.0.1 [SECURITY] ([#972](https://github.com/ScilifelabDataCentre/dds_cli/pull/972))
+    - Update dependency sphinx-click to v4.4.0 ([#901](https://github.com/ScilifelabDataCentre/dds_cli/pull/901))
+
 .. _2.14.3:
 
 2.14.3 - 2026-05-06

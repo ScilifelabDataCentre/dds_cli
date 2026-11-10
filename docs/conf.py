@@ -10,6 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import datetime
 import os
 import sys
 
@@ -21,7 +22,6 @@ from dds_cli.version import __version__
 # -- Project information -----------------------------------------------------
 
 project = "Data Delivery System"
-import datetime
 copyright = f"2021-2022, SciLifeLab Data Centre; {datetime.date.today().year}, Epigenica"
 author = "Epigenica"
 

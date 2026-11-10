@@ -117,12 +117,35 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install PyInstaller
+          if [[ "${RUNNER_OS}" == "macOS" && "${RUNNER_ARCH}" == "X64" ]]; then
+            # Fork-only: cryptography ships no Intel macOS wheels, so pip builds
+            # it from source against Homebrew's OpenSSL. Linked dynamically, the
+            # binary then loads the older libssl.3.dylib that PyInstaller bundles
+            # from Python itself (same file name) and crashes with
+            # "Symbol not found: _SSL_get0_group_name" (cryptography >= 50).
+            # Link OpenSSL statically so the binary does not depend on it.
+            OPENSSL_DIR="$(brew --prefix openssl@3)"
+            test -f "${OPENSSL_DIR}/lib/libssl.a" && test -f "${OPENSSL_DIR}/lib/libcrypto.a"
+            export OPENSSL_DIR
+            export OPENSSL_STATIC=1
+          fi
           pip install -r requirements.txt
           # Fork-only: not added to requirements.txt so that file stays
           # identical to upstream. Used by .github/scripts/fork_entrypoint.py
           # to make TLS verification independent of the certifi cacert.pem
           # PyInstaller extracts to a temp dir at runtime.
           pip install truststore
+
+      - name: Check cryptography has OpenSSL linked statically (Intel macOS)
+        if: runner.os == 'macOS' && runner.arch == 'X64'
+        run: |
+          set -euo pipefail
+          SO="$(python -c 'import cryptography.hazmat.bindings._rust as m; print(m.__file__)')"
+          otool -L "${SO}"
+          if otool -L "${SO}" | grep -E 'libssl|libcrypto'; then
+            echo "::error::cryptography is dynamically linked to OpenSSL; the binary will crash."
+            exit 1
+          fi
 
       - name: Build with PyInstaller (${{ matrix.TARGET }})
         run: ${{ matrix.CMD_BUILD }}

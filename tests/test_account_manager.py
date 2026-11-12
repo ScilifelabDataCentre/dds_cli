@@ -146,3 +146,27 @@ def test_save_emails_emails_returned(fs: FakeFilesystem, caplog: LogCaptureFixtu
     # Read file and verify contents
     with file_to_save.open(mode="r", encoding="utf-8") as f:
         assert f.read() == "emailone; emailtwo; emailthree; emailfour"
+
+
+@pytest.mark.parametrize("action", ["reactivate", "deactivate"])
+def test_user_activation_message(fs: FakeFilesystem, caplog: LogCaptureFixture, action):
+    """The message returned by the API should be printed."""
+    response_json = {"message": f"You successfully {action}d the account someone"}
+
+    # Create mocker
+    with Mocker() as mock:
+        # Create mocked request - real request not executed
+        mock.post(DDSEndpoint.USER_ACTIVATION, status_code=200, json=response_json)
+
+        with caplog.at_level(logging.INFO):
+            # Create accountmanager needed for access and set token to dict
+            with account_manager.AccountManager(authenticate=False, no_prompt=True) as acm:
+                acm.token = {}  # required, otherwise none
+                acm.user_activation(email="someone@example.org", action=action)
+
+        assert mock.last_request.json() == {"email": "someone@example.org", "action": action}
+        assert (
+            "dds_cli.account_manager",
+            logging.INFO,
+            f"You successfully {action}d the account someone",
+        ) in caplog.record_tuples

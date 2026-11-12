@@ -608,3 +608,7 @@ _Empty sprint_
 ## 2026-10-26 - 2026-11-06
 
 - Fix outdated CLI version in executable install screenshot ([#1003](https://github.com/ScilifelabDataCentre/dds_cli/pull/1003))
+
+## 2026-11-09 - 2026-11-20
+
+- Fix --no-prompt silently skipping user activation and deactivation ([#1008](https://github.com/ScilifelabDataCentre/dds_cli/pull/1008))

@@ -40,6 +40,9 @@ LOG = logging.getLogger(__name__)
 class DDSBaseClass:
     """Data Delivery System base class. For common operations."""
 
+    # Set when the DDS backend answers 503 (maintenance), see 'stop_for_maintenance'
+    service_unavailable: typing.Optional[exceptions.ServiceUnavailableError] = None
+
     def __init__(
         self,
         project=None,
@@ -62,8 +65,6 @@ class DDSBaseClass:
 
         # Keyboardinterrupt
         self.stop_doing = False
-        # Set when the DDS backend answers 503 (maintenance), see 'stop_for_maintenance'
-        self.service_unavailable = None
 
         # Authenticate the user and get the token
         if authenticate:
@@ -123,8 +124,10 @@ class DDSBaseClass:
         """Stop the delivery because the DDS backend is unavailable (e.g. maintenance).
 
         Called from the worker threads. Files not yet started are cancelled (same flag
-        as Ctrl+C), ongoing files finish their current step. The caller marks its own
-        file as failed, so it is saved in the failed delivery log as usual.
+        as Ctrl+C). Ongoing downloads stop at the next chunk, ongoing uploads stop
+        before the S3 upload; an S3 upload that has already started is finished.
+        The caller marks its own file as failed, so it is saved in the failed
+        delivery log as usual.
         Call 'raise_if_service_unavailable' after the threads are done.
         """
         if self.service_unavailable is None:

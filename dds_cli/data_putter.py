@@ -344,7 +344,14 @@ class DataPutter(base.DDSBaseClass):
             file_info["path_processed"].stat().st_size,
         )
 
-        if saved:
+        if saved and self.service_unavailable:
+            # Maintenance seen by another thread: don't upload. The file could not be
+            # added to the database, so it would only be an orphan object in the bucket.
+            message = f"Service unavailable - upload of '{file_path_raw}' cancelled"
+            LOG.warning(message)
+            self.status[file]["failed_op"] = "put"
+            dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
+        elif saved:
             LOG.debug(
                 "File successfully encrypted: '%s'",
                 file_path_raw,

@@ -307,3 +307,98 @@ def test_stop_for_maintenance_keeps_first_error_and_raises_later():
     with pytest.raises(dds_cli.exceptions.ServiceUnavailableError) as err:
         putter.raise_if_service_unavailable()
     assert err.value is first
+
+
+# IN-FLIGHT FILES ON MAINTENANCE ###############################################
+
+
+def _download_response(chunks):
+    response = MagicMock()
+    response.__enter__.return_value = response
+    response.__exit__.return_value = False
+    response.iter_content.return_value = chunks
+    response.raise_for_status.return_value = None
+    response.headers.get.return_value = 8
+    return response
+
+
+def _getter_for_download(tmp_path):
+    getter = _update_db_getter()
+    getter.filehandler.data["file.bin"].update(
+        {"path_downloaded": tmp_path / "file.bin", "url": "https://example.com/f", "size_stored": 8}
+    )
+    return getter
+
+
+def test_get_stops_running_download_on_maintenance(monkeypatch, tmp_path, caplog):
+    """Maintenance seen by another thread stops a running download at the next chunk."""
+    getter = _getter_for_download(tmp_path)
+
+    def chunks():
+        yield b"data"
+        getter.stop_for_maintenance(dds_cli.exceptions.ServiceUnavailableError("Maintenance"))
+        yield b"more"
+
+    mock_get = MagicMock(return_value=_download_response(chunks()))
+    monkeypatch.setattr("dds_cli.data_getter.requests.get", mock_get)
+
+    downloaded, message = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is False
+    assert "Service unavailable" in message
+    assert mock_get.call_count == 1  # no retry
+    assert not (tmp_path / "file.bin").exists()  # partial file removed
+    assert "could not be completed" not in caplog.text  # no network advice
+
+
+def test_get_not_started_on_maintenance(monkeypatch, tmp_path):
+    """No GET is sent once maintenance is known."""
+    getter = _getter_for_download(tmp_path)
+    getter.stop_for_maintenance(dds_cli.exceptions.ServiceUnavailableError("Maintenance"))
+    mock_get = MagicMock()
+    monkeypatch.setattr("dds_cli.data_getter.requests.get", mock_get)
+
+    downloaded, message = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is False
+    assert "Service unavailable" in message
+    mock_get.assert_not_called()
+
+
+def test_upload_skips_s3_put_on_maintenance(monkeypatch, tmp_path):
+    """A file encrypted after maintenance is known is not uploaded (no orphan object)."""
+    processed = tmp_path / "file.txt.ccp"
+    processed.write_bytes(b"encrypted")
+
+    putter = _putter_with_one_file()
+    putter.filehandler.data["file.txt"]["path_processed"] = processed
+    putter.filehandler.stream_from_file = MagicMock()
+    putter.keys = None
+    putter.silent = True
+    putter.method = "put"
+    putter.status = {"file.txt": {}}
+    putter.put = MagicMock()
+    putter.add_file_db = MagicMock()
+
+    encryptor = MagicMock()
+    encryptor.encrypt_filechunks.return_value = (True, "")
+    encryptor_cm = MagicMock()
+    encryptor_cm.__enter__.return_value = encryptor
+    monkeypatch.setattr("dds_cli.data_putter.fe.Encryptor", MagicMock(return_value=encryptor_cm))
+
+    putter.stop_for_maintenance(dds_cli.exceptions.ServiceUnavailableError("Maintenance"))
+    # Skip @verify_proceed (stop_doing would cancel before encryption) and @subpath_required
+    ok, message = DataPutter.protect_and_upload.__wrapped__.__wrapped__(
+        putter, file="file.txt", progress=MagicMock()
+    )
+
+    assert ok is False
+    assert "Service unavailable" in message
+    putter.put.assert_not_called()
+    putter.add_file_db.assert_not_called()
+    assert putter.status["file.txt"]["failed_op"] == "put"
+    assert not processed.exists()

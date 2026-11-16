@@ -243,7 +243,7 @@ def perform_request(
         )
         response_json = response.json()
     except simplejson.JSONDecodeError as err:
-        raise dds_cli.exceptions.ApiResponseError(
+        raise dds_cli.exceptions.NonJsonResponseError(
             message=(
                 f"Response code: {response.status_code}. "
                 f"The request did not return a valid JSON response. Details: {err}"
@@ -303,7 +303,7 @@ def perform_request(
             )
 
         # Handle 503 from the DDS backend itself, e.g. maintenance.
-        # (A 503 from the proxy has no JSON body and is raised as ApiResponseError above.)
+        # (A 503 from the proxy has no JSON body and is raised as NonJsonResponseError above.)
         if response.status_code == http.HTTPStatus.SERVICE_UNAVAILABLE:
             raise dds_cli.exceptions.ServiceUnavailableError(
                 message=f"{message}: {response_json.get('message', 'Service unavailable')}",
@@ -319,22 +319,24 @@ def perform_request(
 
 
 def perform_request_with_retry(*args, retries: int = 1, **kwargs):
-    """Same as perform_request, but retry on a transient error from the proxy (502, 503).
+    """Same as perform_request, but retry on a 502/503 from the proxy.
 
     A 502 from Traefik usually means that the backend closed an idle keep-alive
     connection just before the request was sent. The request did not reach the
     backend, so it is safe to send it again.
 
-    Only answers without a JSON body are retried (raised as ApiResponseError), i.e.
-    answers from the proxy. A 503 from the DDS backend (maintenance) has a JSON body,
-    is raised as ServiceUnavailableError and is not retried.
+    Both conditions are needed for a retry:
+    - the answer has no JSON body (NonJsonResponseError), i.e. it is from the proxy
+    - the status code is in API_NON_JSON_RETRY_STATUS_CODES
+    A 503 from the DDS API (maintenance) has a JSON body, is raised as
+    ServiceUnavailableError and is never retried.
     """
     for attempt in range(retries + 1):
         try:
             return perform_request(*args, **kwargs)
-        except dds_cli.exceptions.ApiResponseError as err:
+        except dds_cli.exceptions.NonJsonResponseError as err:
             status_code = getattr(err, "status_code", None)
-            if status_code not in constants.API_TRANSIENT_STATUS_CODES or attempt >= retries:
+            if status_code not in constants.API_NON_JSON_RETRY_STATUS_CODES or attempt >= retries:
                 raise
             LOG.warning(
                 "API request failed with status %s, retrying in %ss: %s",

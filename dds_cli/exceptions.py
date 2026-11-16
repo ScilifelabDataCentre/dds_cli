@@ -106,6 +106,13 @@ class ApiResponseError(Exception):
         super().__init__(message)
 
 
+class NonJsonResponseError(ApiResponseError):
+    """The answer has no valid JSON body, so it did not come from the DDS API.
+
+    Usually an error page from the proxy (Traefik), e.g. 502 Bad Gateway.
+    """
+
+
 class UploadError(Exception):
     """Errors relating to file uploads."""
 

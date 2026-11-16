@@ -174,7 +174,7 @@ def test_add_file_db_no_retry_on_400(monkeypatch):
 def test_perform_request_with_retry_gives_up_after_retries(monkeypatch):
     """The last error is raised when all attempts fail."""
     monkeypatch.setattr(constants, "API_RETRY_WAIT", 0)
-    err = dds_cli.exceptions.ApiResponseError("Bad Gateway", status_code=502)
+    err = dds_cli.exceptions.NonJsonResponseError("Bad Gateway", status_code=502)
     mock_request = MagicMock(side_effect=err)
     monkeypatch.setattr(dds_cli.utils, "perform_request", mock_request)
 
@@ -477,3 +477,38 @@ def test_add_file_db_put_is_not_checked(monkeypatch, file_match_empty):
 
     assert added is False
     file_match_empty.assert_not_called()
+
+
+# THE RETRY NEEDS BOTH: NO JSON BODY AND 502/503 ###############################
+
+
+def test_no_json_body_is_non_json_response_error(monkeypatch):
+    """An answer without a JSON body is NonJsonResponseError (still an ApiResponseError)."""
+    monkeypatch.setattr("dds_cli.utils.requests.put", MagicMock(return_value=_api_response(502)))
+    with pytest.raises(dds_cli.exceptions.NonJsonResponseError) as err:
+        dds_cli.utils.perform_request("https://x/file/update", method="put", headers={})
+    assert isinstance(err.value, dds_cli.exceptions.ApiResponseError)
+    assert err.value.status_code == 502
+
+
+def test_retry_skips_json_502(monkeypatch):
+    """A 502 WITH a JSON body comes from the DDS API: not retried."""
+    monkeypatch.setattr(constants, "API_RETRY_WAIT", 0)
+    mock_put = MagicMock(return_value=_api_response(502, {"message": "from the API"}))
+    monkeypatch.setattr("dds_cli.utils.requests.put", mock_put)
+
+    with pytest.raises(dds_cli.exceptions.DDSCLIException):
+        dds_cli.utils.perform_request_with_retry("https://x/file/update", method="put", headers={})
+    assert mock_put.call_count == 1
+
+
+def test_retry_skips_api_response_error_with_502_status(monkeypatch):
+    """Only NonJsonResponseError is retried, not any ApiResponseError with status 502."""
+    monkeypatch.setattr(constants, "API_RETRY_WAIT", 0)
+    err = dds_cli.exceptions.ApiResponseError("JSON error", status_code=502)
+    mock_request = MagicMock(side_effect=err)
+    monkeypatch.setattr("dds_cli.utils.perform_request", mock_request)
+
+    with pytest.raises(dds_cli.exceptions.ApiResponseError):
+        dds_cli.utils.perform_request_with_retry("https://x", method="put", headers={})
+    assert mock_request.call_count == 1

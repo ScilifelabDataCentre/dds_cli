@@ -169,6 +169,15 @@ def put(
                         for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]
                     ]
 
+        # Maintenance stopped the upload: the API is down, don't call it again.
+        if putter.service_unavailable is not None:
+            if putter.failed_delivery_log.is_file():
+                LOG.warning(
+                    "The files that failed are listed in: %s",
+                    str(putter.failed_delivery_log),
+                )
+            putter.raise_if_service_unavailable()
+
         # Make a single database update for files that have failed
         # Json file for failed files should only be created if there has been an error
         if putter.failed_delivery_log.is_file():
@@ -190,9 +199,6 @@ def put(
 
         # Single project metadata refresh after batch (date_updated / last_updated_by)
         putter.touch_project_after_upload()
-
-        # Maintenance stopped the upload: exit with the error
-        putter.raise_if_service_unavailable()
 
 
 ###############################################################################

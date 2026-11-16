@@ -512,3 +512,62 @@ def test_retry_skips_api_response_error_with_502_status(monkeypatch):
     with pytest.raises(dds_cli.exceptions.ApiResponseError):
         dds_cli.utils.perform_request_with_retry("https://x", method="put", headers={})
     assert mock_request.call_count == 1
+
+
+# END OF UPLOAD BATCH ##########################################################
+
+
+def _run_put_with(monkeypatch, putter):
+    """Run data_putter.put() with a mocked DataPutter and no files to upload."""
+    import dds_cli.data_putter
+
+    putter_cm = MagicMock()
+    putter_cm.__enter__.return_value = putter
+    putter_cm.__exit__.return_value = False
+    monkeypatch.setattr(dds_cli.data_putter, "DataPutter", MagicMock(return_value=putter_cm))
+    monkeypatch.setattr(dds_cli.data_putter, "Progress", MagicMock())
+    dds_cli.data_putter.put(
+        project="proj00001",
+        source=(),
+        source_path_file=None,
+        break_on_fail=False,
+        overwrite=False,
+        num_threads=1,
+        silent=True,
+        no_prompt=True,
+        token_path=None,
+        destination=None,
+        staging_dir=None,
+    )
+
+
+def _batch_putter(service_unavailable):
+    putter = MagicMock()
+    putter.filehandler.data = {}
+    putter.failed_delivery_log.is_file.return_value = True
+    putter.service_unavailable = service_unavailable
+    putter.raise_if_service_unavailable.side_effect = (
+        service_unavailable if service_unavailable else None
+    )
+    return putter
+
+
+def test_put_skips_db_retry_on_maintenance(monkeypatch):
+    """Known maintenance: no retry_add_file_db and no timestamp refresh, just the error."""
+    putter = _batch_putter(dds_cli.exceptions.ServiceUnavailableError("Maintenance"))
+
+    with pytest.raises(dds_cli.exceptions.ServiceUnavailableError):
+        _run_put_with(monkeypatch, putter)
+
+    putter.retry_add_file_db.assert_not_called()
+    putter.touch_project_after_upload.assert_not_called()
+
+
+def test_put_runs_db_retry_without_maintenance(monkeypatch):
+    """No maintenance: the end-of-batch retry and timestamp refresh run as before."""
+    putter = _batch_putter(None)
+
+    _run_put_with(monkeypatch, putter)
+
+    putter.retry_add_file_db.assert_called_once()
+    putter.touch_project_after_upload.assert_called_once()

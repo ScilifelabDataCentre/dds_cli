@@ -44,6 +44,13 @@ class DDSCLIException(click.ClickException):
         return msg
 
 
+class ServiceUnavailableError(DDSCLIException):
+    """The DDS backend answered 503 Service Unavailable, e.g. because maintenance is ongoing.
+
+    Ongoing deliveries must stop: this is not retried and not ignored.
+    """
+
+
 class AuthenticationError(click.ClickException):
     """Errors due to user authentication."""
 

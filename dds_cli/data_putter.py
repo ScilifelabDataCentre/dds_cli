@@ -191,6 +191,9 @@ def put(
         # Single project metadata refresh after batch (date_updated / last_updated_by)
         putter.touch_project_after_upload()
 
+        # Maintenance stopped the upload: exit with the error
+        putter.raise_if_service_unavailable()
+
 
 ###############################################################################
 # CLASSES ########################################################### CLASSES #
@@ -453,7 +456,8 @@ class DataPutter(base.DDSBaseClass):
         # Send file info to API - post if new file, put if overwrite
         request_method = "put" if fileinfo["overwrite"] else "post"
         try:
-            response_json, _ = dds_cli.utils.perform_request(
+            # Retry once on 502/503 before we fall back to 'retry_add_file_db' at the end.
+            response_json, _ = dds_cli.utils.perform_request_with_retry(
                 DDSEndpoint.FILE_NEW,
                 method=request_method,
                 params=params,
@@ -465,6 +469,11 @@ class DataPutter(base.DDSBaseClass):
             LOG.debug("API call for file '%s: Adding to database'", fileinfo["path_raw"])
             with self._db_add_lock:
                 self.any_successful_db_add = True
+        except dds_cli.exceptions.ServiceUnavailableError as err:
+            # Maintenance: stop the upload. Don't raise here: this file is in the bucket,
+            # so it must be saved in the failed delivery log ('add_file_db' failed).
+            self.stop_for_maintenance(err)
+            message = str(err)
         except (
             dds_cli.exceptions.ApiRequestError,
             dds_cli.exceptions.ApiResponseError,

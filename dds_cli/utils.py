@@ -6,6 +6,7 @@ import typing
 import http
 from typing import Dict, List, Union
 import logging
+import time
 from datetime import datetime
 
 import requests
@@ -19,6 +20,9 @@ from rich.table import Table
 
 import dds_cli.exceptions
 from dds_cli import __version__, DDSEndpoint
+from dds_cli import constants
+
+LOG = logging.getLogger(__name__)
 
 console = rich.console.Console()
 stderr_console = rich.console.Console(stderr=True)
@@ -298,12 +302,49 @@ def perform_request(
                 message=message, status_code=response.status_code
             )
 
+        # Handle 503 from the DDS backend itself, e.g. maintenance.
+        # (A 503 from the proxy has no JSON body and is raised as ApiResponseError above.)
+        if response.status_code == http.HTTPStatus.SERVICE_UNAVAILABLE:
+            raise dds_cli.exceptions.ServiceUnavailableError(
+                message=f"{message}: {response_json.get('message', 'Service unavailable')}",
+                status_code=response.status_code,
+            )
+
         raise dds_cli.exceptions.DDSCLIException(
             message=f"{message}: {response_json.get('message', 'Unexpected error!')}",
             status_code=response.status_code,
         )
 
     return response_json, additional_errors
+
+
+def perform_request_with_retry(*args, retries: int = 1, **kwargs):
+    """Same as perform_request, but retry on a transient error from the proxy (502, 503).
+
+    A 502 from Traefik usually means that the backend closed an idle keep-alive
+    connection just before the request was sent. The request did not reach the
+    backend, so it is safe to send it again.
+
+    Only answers without a JSON body are retried (raised as ApiResponseError), i.e.
+    answers from the proxy. A 503 from the DDS backend (maintenance) has a JSON body,
+    is raised as ServiceUnavailableError and is not retried.
+    """
+    for attempt in range(retries + 1):
+        try:
+            return perform_request(*args, **kwargs)
+        except dds_cli.exceptions.ApiResponseError as err:
+            status_code = getattr(err, "status_code", None)
+            if status_code not in constants.API_TRANSIENT_STATUS_CODES or attempt >= retries:
+                raise
+            LOG.warning(
+                "API request failed with status %s, retrying in %ss: %s",
+                status_code,
+                constants.API_RETRY_WAIT,
+                err,
+            )
+            time.sleep(constants.API_RETRY_WAIT)
+    # Not reached: the last attempt either returns or raises.
+    raise RuntimeError("perform_request_with_retry: no attempts made")
 
 
 def parse_project_errors(errors):

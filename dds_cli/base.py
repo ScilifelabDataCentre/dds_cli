@@ -62,6 +62,8 @@ class DDSBaseClass:
 
         # Keyboardinterrupt
         self.stop_doing = False
+        # Set when the DDS backend answers 503 (maintenance), see 'stop_for_maintenance'
+        self.service_unavailable = None
 
         # Authenticate the user and get the token
         if authenticate:
@@ -116,6 +118,24 @@ class DDSBaseClass:
         return True
 
     # Public methods ############################### Public methods #
+
+    def stop_for_maintenance(self, err: exceptions.ServiceUnavailableError) -> None:
+        """Stop the delivery because the DDS backend is unavailable (e.g. maintenance).
+
+        Called from the worker threads. Files not yet started are cancelled (same flag
+        as Ctrl+C), ongoing files finish their current step. The caller marks its own
+        file as failed, so it is saved in the failed delivery log as usual.
+        Call 'raise_if_service_unavailable' after the threads are done.
+        """
+        if self.service_unavailable is None:
+            self.service_unavailable = err
+            LOG.error("%s. Stopping: files not started yet are cancelled.", err)
+        self.stop_doing = True
+
+    def raise_if_service_unavailable(self) -> None:
+        """Raise the error saved by 'stop_for_maintenance', if any."""
+        if self.service_unavailable is not None:
+            raise self.service_unavailable
 
     def set_token(self, token_dict: dict) -> None:
         """Sets the token for the base class.

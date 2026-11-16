@@ -1922,6 +1922,9 @@ def get_data(
                                     progress=progress,
                                 )
                             ] = next_file
+
+            # Maintenance stopped the download: exit with the error
+            getter.raise_if_service_unavailable()
     except (
         dds_cli.exceptions.InvalidMethodError,
         OSError,

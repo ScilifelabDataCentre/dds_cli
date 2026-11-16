@@ -387,9 +387,11 @@ class DataGetter(base.DDSBaseClass):
         filename = {"name": fileinfo["name_in_db"]}
         params = {"project": self.project}
 
-        # Send file info to API
+        # Send file info to API.
+        # Catch all API errors: a failed update must not stop the other downloads.
+        # Exception: maintenance (ServiceUnavailableError) stops the files not started yet.
         try:
-            response_json, _ = dds_cli.utils.perform_request(
+            response_json, _ = dds_cli.utils.perform_request_with_retry(
                 DDSEndpoint.FILE_UPDATE,
                 method="put",
                 params=params,
@@ -397,7 +399,14 @@ class DataGetter(base.DDSBaseClass):
                 headers=self.token,
                 error_message="Failed to update file information",
             )
-        except dds_cli.exceptions.ApiRequestError as err:
+        except dds_cli.exceptions.ServiceUnavailableError as err:
+            self.stop_for_maintenance(err)
+            message = str(err)
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
             updated_in_db = False
             message = str(err)
         else:

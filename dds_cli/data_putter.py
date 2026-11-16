@@ -487,9 +487,45 @@ class DataPutter(base.DDSBaseClass):
             dds_cli.exceptions.DDSCLIException,
         ) as err:
             message = str(err)
-            LOG.warning(message)
+            if request_method == "post" and self._added_by_earlier_request(file=file):
+                # The first POST got a proxy 502/503 but did reach the backend, so the
+                # retry failed because the file already exists. The file is added.
+                added_to_db, message = (True, f"File '{file}' added to db.")
+                with self._db_add_lock:
+                    self.any_successful_db_add = True
+            else:
+                LOG.warning(message)
 
         return added_to_db, message
+
+    def _added_by_earlier_request(self, file) -> bool:
+        """Check if the file is in the database with the name in bucket of this upload.
+
+        'name_in_bucket' is new for each upload, so a match means that one of our own
+        requests added the file. Any error here: return False (the file stays failed).
+        """
+        try:
+            response_json, _ = dds_cli.utils.perform_request(
+                DDSEndpoint.FILE_MATCH,
+                method="get",
+                params={"project": self.project},
+                headers=self.token,
+                json=[file],
+                error_message="Failed to check if the file is in the database",
+            )
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.debug("Could not check if '%s' is in the database: %s", escape(file), err)
+            return False
+
+        files_in_db = response_json.get("files") or {}
+        added = files_in_db.get(file) == self.filehandler.data[file]["path_remote"]
+        if added:
+            LOG.info("File '%s' was added to the database by an earlier request.", escape(file))
+        return added
 
     def retry_add_file_db(self):
         """Attempting to save the files to the database.

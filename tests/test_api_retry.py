@@ -53,6 +53,14 @@ def _update_db_getter():
 # TESTS ########################################################################
 
 
+@pytest.fixture(autouse=True)
+def file_match_empty(monkeypatch):
+    """GET file/match (used after a failed POST file/new): no files in the database."""
+    mock_get = MagicMock(return_value=_api_response(200, {"files": None}))
+    monkeypatch.setattr("dds_cli.utils.requests.get", mock_get)
+    return mock_get
+
+
 def test_update_db_retries_once_on_502(monkeypatch):
     """A 502 from the proxy is retried once, and the second try succeeds."""
     monkeypatch.setattr(constants, "API_RETRY_WAIT", 0)
@@ -402,3 +410,70 @@ def test_upload_skips_s3_put_on_maintenance(monkeypatch, tmp_path):
     putter.add_file_db.assert_not_called()
     assert putter.status["file.txt"]["failed_op"] == "put"
     assert not processed.exists()
+
+
+# POST REACHED THE BACKEND BUT THE CLIENT GOT A 502 ############################
+
+FILE_EXISTS_500 = {"message": "Internal Server Error"}  # FileExistsError is not handled
+
+
+def test_add_file_db_502_then_exists_is_added(monkeypatch, file_match_empty):
+    """First POST added the row but the client got a 502; the retry fails because the
+    file exists. file/match shows our name_in_bucket, so the file is added."""
+    monkeypatch.setattr(constants, "API_RETRY_WAIT", 0)
+    responses = iter([_api_response(502), _api_response(500, FILE_EXISTS_500)])
+    mock_post = MagicMock(side_effect=lambda **_: next(responses))
+    monkeypatch.setattr("dds_cli.utils.requests.post", mock_post)
+    file_match_empty.return_value = _api_response(200, {"files": {"file.txt": "bucketname"}})
+
+    putter = _putter_with_one_file()
+    added, _ = DataPutter.add_file_db.__wrapped__(putter, file="file.txt")
+
+    assert added is True
+    assert putter.any_successful_db_add is True
+    assert mock_post.call_count == 2
+    assert file_match_empty.call_args.kwargs["json"] == ["file.txt"]
+
+
+def test_add_file_db_exists_with_other_name_in_bucket_fails(monkeypatch, file_match_empty):
+    """The file is in the database, but from another upload: still a failure."""
+    monkeypatch.setattr(
+        "dds_cli.utils.requests.post",
+        MagicMock(return_value=_api_response(500, FILE_EXISTS_500)),
+    )
+    file_match_empty.return_value = _api_response(200, {"files": {"file.txt": "other"}})
+
+    putter = _putter_with_one_file()
+    added, _ = DataPutter.add_file_db.__wrapped__(putter, file="file.txt")
+
+    assert added is False
+    assert putter.any_successful_db_add is False
+
+
+def test_add_file_db_match_check_fails(monkeypatch, file_match_empty):
+    """If file/match fails too, the file stays failed with the original error."""
+    monkeypatch.setattr(
+        "dds_cli.utils.requests.post",
+        MagicMock(return_value=_api_response(500, FILE_EXISTS_500)),
+    )
+    file_match_empty.return_value = _api_response(502)
+
+    added, message = DataPutter.add_file_db.__wrapped__(_putter_with_one_file(), file="file.txt")
+
+    assert added is False
+    assert "Internal Server Error" in message
+
+
+def test_add_file_db_put_is_not_checked(monkeypatch, file_match_empty):
+    """Overwrite (PUT): the file was in the database before, so file/match tells nothing."""
+    monkeypatch.setattr(
+        "dds_cli.utils.requests.put",
+        MagicMock(return_value=_api_response(500, FILE_EXISTS_500)),
+    )
+    putter = _putter_with_one_file()
+    putter.filehandler.data["file.txt"]["overwrite"] = True
+
+    added, _ = DataPutter.add_file_db.__wrapped__(putter, file="file.txt")
+
+    assert added is False
+    file_match_empty.assert_not_called()

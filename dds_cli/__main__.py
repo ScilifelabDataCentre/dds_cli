@@ -866,10 +866,8 @@ def activate_user(click_ctx, email):
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
-    proceed_activation = False  # default assignment
-
     if click_ctx.get("NO_PROMPT", False):
-        pass
+        proceed_activation = True
     else:
         proceed_activation = rich.prompt.Confirm.ask(
             f"Activate Data Delivery System user account associated with {email}?"
@@ -908,10 +906,8 @@ def deactivate_user(click_ctx, email):
     Super Admins: All users
     Unit Admins: Unit Admins / Personnel
     """
-    proceed_deactivation = False  # default assignment
-
     if click_ctx.get("NO_PROMPT", False):
-        pass
+        proceed_deactivation = True
     else:
         proceed_deactivation = rich.prompt.Confirm.ask(
             f"Deactivate Data Delivery System user account associated with {email}?"

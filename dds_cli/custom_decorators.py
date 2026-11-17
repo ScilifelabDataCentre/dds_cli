@@ -45,13 +45,13 @@ def verify_proceed(func):
                 if getattr(self, "service_unavailable", None)
                 else "KeyboardInterrupt"
             )
-            message = f"{reason} - cancelling file {escape(file)}"
+            message = f"{reason} - cancelling file {escape(str(file))}"
             LOG.warning(message)
             return False  # Do not proceed
 
         # Return if file cancelled by another file
         if self.status[file]["cancel"]:
-            message = f"File already cancelled, stopping file {escape(file)}"
+            message = f"File already cancelled, stopping file {escape(str(file))}"
             LOG.warning(message)
             return False
 

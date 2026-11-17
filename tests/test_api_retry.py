@@ -303,6 +303,39 @@ def test_verify_proceed_cancels_new_files_on_maintenance(caplog):
     assert "Service unavailable - cancelling file" in caplog.text
 
 
+@pytest.mark.parametrize("already_cancelled", [False, True])
+def test_verify_proceed_cancels_download_file_with_path_key(caplog, already_cancelled):
+    """Download file keys are pathlib.Path objects: the cancel message must not crash."""
+    from dds_cli.custom_decorators import verify_proceed
+
+    called = MagicMock(return_value=(True, ""))
+
+    @verify_proceed
+    def work(self, file):
+        return called(file)
+
+    getter = _update_db_getter()
+    file = pathlib.Path("dir/file.bin")
+    getter.status = {file: {"cancel": already_cancelled, "started": False}}
+    if not already_cancelled:
+        getter.stop_for_maintenance(dds_cli.exceptions.ServiceUnavailableError("Maintenance"))
+
+    assert work(getter, file) is False
+    called.assert_not_called()
+    assert "dir/file.bin" in caplog.text
+
+
+def test_stop_for_maintenance_log_has_no_double_period(caplog):
+    """The API message ends with a period; the log line must not get two."""
+    putter = _putter_with_one_file()
+    putter.stop_for_maintenance(
+        dds_cli.exceptions.ServiceUnavailableError("Maintenance of DDS is ongoing.")
+    )
+
+    assert "Maintenance of DDS is ongoing. Stopping:" in caplog.text
+    assert ".." not in caplog.text
+
+
 def test_stop_for_maintenance_keeps_first_error_and_raises_later():
     """The error is raised once, from the main thread, after the workers are done."""
     putter = _putter_with_one_file()

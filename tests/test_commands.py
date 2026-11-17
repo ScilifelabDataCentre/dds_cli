@@ -132,6 +132,30 @@ def test_user_deactivate_confirm_ok(confirm):
 
 
 @pytest.mark.parametrize(
+    "command, action", [("activate", "reactivate"), ("deactivate", "deactivate")]
+)
+def test_user_activation_no_prompt_ok(command, action):
+    """Test user activation/deactivation with --no-prompt. - proceeds without asking"""
+
+    runner = CliRunner()
+    with (
+        patch("dds_cli.__main__.rich.prompt.Confirm.ask") as mock_confirm,
+        patch("dds_cli.account_manager.AccountManager") as mock_manager,
+    ):
+        mock_manager_instance = MagicMock()
+        mock_manager.return_value.__enter__.return_value = mock_manager_instance
+
+        result = runner.invoke(dds_main, ["--no-prompt", "user", command, "someone@example.org"])
+
+        assert result.exit_code == 0
+        mock_confirm.assert_not_called()
+        mock_manager.assert_called_once_with(no_prompt=True, token_path=None)
+        mock_manager_instance.user_activation.assert_called_once_with(
+            email="someone@example.org", action=action
+        )
+
+
+@pytest.mark.parametrize(
     "exc_type",
     [
         dds_cli.exceptions.AuthenticationError,

@@ -331,12 +331,12 @@ def perform_request_with_retry(*args, retries: int = 1, **kwargs):
     A 503 from the DDS API (maintenance) has a JSON body, is raised as
     ServiceUnavailableError and is never retried.
     """
-    for attempt in range(retries + 1):
+    for _ in range(retries):
         try:
             return perform_request(*args, **kwargs)
         except dds_cli.exceptions.NonJsonResponseError as err:
             status_code = getattr(err, "status_code", None)
-            if status_code not in constants.API_NON_JSON_RETRY_STATUS_CODES or attempt >= retries:
+            if status_code not in constants.API_NON_JSON_RETRY_STATUS_CODES:
                 raise
             LOG.warning(
                 "API request failed with status %s, retrying in %ss: %s",
@@ -345,8 +345,8 @@ def perform_request_with_retry(*args, retries: int = 1, **kwargs):
                 err,
             )
             time.sleep(constants.API_RETRY_WAIT)
-    # Not reached: the last attempt either returns or raises.
-    raise RuntimeError("perform_request_with_retry: no attempts made")
+    # Last attempt: any error goes to the caller
+    return perform_request(*args, **kwargs)
 
 
 def parse_project_errors(errors):

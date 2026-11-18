@@ -171,17 +171,18 @@ def test_add_file_db_no_retry_on_400(monkeypatch):
     assert mock_post.call_count == 1
 
 
-def test_perform_request_with_retry_gives_up_after_retries(monkeypatch):
-    """The last error is raised when all attempts fail."""
+@pytest.mark.parametrize("retries", [0, 2])
+def test_perform_request_with_retry_gives_up_after_retries(monkeypatch, retries):
+    """The last error is raised when all attempts fail; retries=0 sends one request."""
     monkeypatch.setattr(constants, "API_RETRY_WAIT", 0)
     err = dds_cli.exceptions.NonJsonResponseError("Bad Gateway", status_code=502)
     mock_request = MagicMock(side_effect=err)
     monkeypatch.setattr(dds_cli.utils, "perform_request", mock_request)
 
     with pytest.raises(dds_cli.exceptions.ApiResponseError):
-        dds_cli.utils.perform_request_with_retry("url", method="put", retries=2)
+        dds_cli.utils.perform_request_with_retry("url", method="put", retries=retries)
 
-    assert mock_request.call_count == 3
+    assert mock_request.call_count == retries + 1
 
 
 def test_perform_request_with_retry_no_retry_on_request_error(monkeypatch):

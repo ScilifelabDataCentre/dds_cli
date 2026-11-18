@@ -92,6 +92,7 @@ def test_get_uses_timeout(monkeypatch, tmp_path):
     mock_get.assert_called_once_with(
         "https://example.com/file",
         stream=True,
+        headers={},
         timeout=(constants.CONNECT_TIMEOUT, constants.READ_TIMEOUT),
     )
 
@@ -521,3 +522,275 @@ def test_download_and_verify_raises_on_size_contract_violation(tmp_path):
             getter, file=file_name, progress=progress
         )
         assert message == ""
+
+
+# RANGE RESUME #################################################################
+
+
+def _response(body=b"data", status_code=200, headers=None, chunks=None):
+    """Mock response with a real headers dict, so each header can have its own value."""
+    response = MagicMock()
+    response.__enter__.return_value = response
+    response.__exit__.return_value = False
+    response.status_code = status_code
+    response.headers = {"Content-Length": str(len(body))} if headers is None else headers
+    response.iter_content.return_value = chunks if chunks is not None else [body]
+    if status_code >= 400:
+        response.raise_for_status.side_effect = requests.exceptions.HTTPError(response=response)
+    else:
+        response.raise_for_status.return_value = None
+    return response
+
+
+def _truncated(body, advertised):
+    """A response that advertises `advertised` bytes but only sends `body`."""
+    return _response(body=body, headers={"Content-Length": str(advertised)})
+
+
+def _fake_get(responses, calls):
+    """Return a fake requests.get that records the Range header and serves `responses`."""
+    responses = iter(responses)
+
+    def fake_get(*_, headers=None, **__):
+        calls.append(dict(headers or {}))
+        return next(responses)
+
+    return fake_get
+
+
+@pytest.fixture
+def no_wait(monkeypatch):
+    """Retry without sleeping."""
+    monkeypatch.setattr(constants, "DOWNLOAD_INITIAL_WAIT", 0)
+    monkeypatch.setattr("dds_cli.data_getter.time.sleep", lambda _: None)
+
+
+def test_get_resumes_with_range_on_206(monkeypatch, tmp_path, no_wait):
+    """After a cut, the next attempt asks for the rest of the file and appends it."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+
+    calls = []
+    resumed = _response(
+        body=b"EFGH",
+        status_code=206,
+        headers={"Content-Length": "4", "Content-Range": "bytes 4-7/8"},
+    )
+    monkeypatch.setattr(
+        "dds_cli.data_getter.requests.get",
+        _fake_get([_truncated(b"ABCD", advertised=8), resumed], calls),
+    )
+
+    progress = MagicMock()
+    downloaded, message = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=progress, task=1
+    )
+
+    assert (downloaded, message) == (True, "")
+    assert file_path.read_bytes() == b"ABCDEFGH"
+    assert calls == [{}, {"Range": "bytes=4-"}]
+    # Progress continues from the kept bytes instead of starting at zero.
+    progress.reset.assert_called_once_with(1, completed=4)
+
+
+def test_get_falls_back_to_full_download_on_200(monkeypatch, tmp_path, no_wait):
+    """If the server ignores Range and sends 200, the whole file is written again."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+
+    calls = []
+    monkeypatch.setattr(
+        "dds_cli.data_getter.requests.get",
+        _fake_get([_truncated(b"ABCD", advertised=8), _response(b"ABCDEFGH")], calls),
+    )
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is True
+    assert file_path.read_bytes() == b"ABCDEFGH"  # not b"ABCDABCDEFGH"
+    assert calls == [{}, {"Range": "bytes=4-"}]
+
+
+@pytest.mark.parametrize(
+    "content_range",
+    [
+        "bytes 0-7/8",  # wrong start
+        "bytes 4-7/9",  # wrong total size: the object changed
+        "bytes 4-5/8",  # does not cover the rest of the file
+        None,  # missing
+        "garbage",
+    ],
+)
+def test_get_content_range_mismatch_starts_over(monkeypatch, tmp_path, no_wait, content_range):
+    """A 206 with an unexpected Content-Range must not be appended; start from byte 0."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+
+    headers = {"Content-Length": "4"}
+    if content_range is not None:
+        headers["Content-Range"] = content_range
+    bad_resume = _response(body=b"XXXX", status_code=206, headers=headers)
+
+    calls = []
+    monkeypatch.setattr(
+        "dds_cli.data_getter.requests.get",
+        _fake_get([_truncated(b"ABCD", advertised=8), bad_resume, _response(b"ABCDEFGH")], calls),
+    )
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is True
+    assert file_path.read_bytes() == b"ABCDEFGH"
+    # The third attempt is a plain GET: the partial file was dropped.
+    assert calls == [{}, {"Range": "bytes=4-"}, {}]
+
+
+def test_get_content_range_with_unknown_total_is_accepted():
+    """'bytes 4-7/*' is valid (RFC 9110) and must not raise."""
+    DataGetter._check_content_range(
+        content_range="bytes 4-7/*", offset=4, expected_size=8, file_name_in_db="f"
+    )
+
+
+def test_get_416_starts_over(monkeypatch, tmp_path, no_wait):
+    """416 Range Not Satisfiable: drop the partial file and do a full GET."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+
+    calls = []
+    monkeypatch.setattr(
+        "dds_cli.data_getter.requests.get",
+        _fake_get(
+            [
+                _truncated(b"ABCD", advertised=8),
+                _response(b"", status_code=416, headers={}),
+                _response(b"ABCDEFGH"),
+            ],
+            calls,
+        ),
+    )
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is True
+    assert file_path.read_bytes() == b"ABCDEFGH"
+    assert calls == [{}, {"Range": "bytes=4-"}, {}]
+
+
+def test_get_resumes_after_truncation_in_resumed_part(monkeypatch, tmp_path, no_wait):
+    """A resumed response can also be cut; the next resume starts at the new offset."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+
+    calls = []
+    cut_resume = _response(
+        body=b"EF",
+        status_code=206,
+        headers={"Content-Length": "4", "Content-Range": "bytes 4-7/8"},
+    )
+    last_resume = _response(
+        body=b"GH",
+        status_code=206,
+        headers={"Content-Length": "2", "Content-Range": "bytes 6-7/8"},
+    )
+    monkeypatch.setattr(
+        "dds_cli.data_getter.requests.get",
+        _fake_get([_truncated(b"ABCD", advertised=8), cut_resume, last_resume], calls),
+    )
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is True
+    assert file_path.read_bytes() == b"ABCDEFGH"
+    assert calls == [{}, {"Range": "bytes=4-"}, {"Range": "bytes=6-"}]
+
+
+def test_get_does_not_resume_from_earlier_run(monkeypatch, tmp_path, no_wait):
+    """A file left by an earlier run is not trusted: the first attempt is a full GET."""
+    file_path = tmp_path / "file.bin"
+    file_path.write_bytes(b"OLD")
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+
+    calls = []
+    monkeypatch.setattr(
+        "dds_cli.data_getter.requests.get", _fake_get([_response(b"ABCDEFGH")], calls)
+    )
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is True
+    assert file_path.read_bytes() == b"ABCDEFGH"
+    assert calls == [{}]
+
+
+# BACKOFF ######################################################################
+
+
+def test_get_backoff_is_capped(monkeypatch):
+    """The wait between attempts never goes above DOWNLOAD_MAX_WAIT."""
+    getter = _prepare_data_getter("file.txt")
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 6)
+    monkeypatch.setattr(constants, "DOWNLOAD_INITIAL_WAIT", 1)
+    monkeypatch.setattr(constants, "DOWNLOAD_BACKOFF_FACTOR", 2)
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_WAIT", 5)
+
+    err = requests.exceptions.ConnectionError("reset")
+    monkeypatch.setattr(requests, "get", lambda *_, **__: (_ for _ in ()).throw(err))
+    sleep_calls = []
+    monkeypatch.setattr("dds_cli.data_getter.time.sleep", sleep_calls.append)
+
+    DataGetter.get.__wrapped__(getter, file="file.txt", progress=MagicMock(), task=None)
+
+    assert sleep_calls == [1, 2, 4, 5, 5]
+
+
+def test_get_backoff_restarts_after_progress(monkeypatch, tmp_path):
+    """An attempt that received data is a new cut, so the wait starts from the beginning."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 5)
+    monkeypatch.setattr(constants, "DOWNLOAD_INITIAL_WAIT", 1)
+    monkeypatch.setattr(constants, "DOWNLOAD_BACKOFF_FACTOR", 2)
+    sleep_calls = []
+    monkeypatch.setattr("dds_cli.data_getter.time.sleep", sleep_calls.append)
+
+    def resume(body, start):
+        return _response(
+            body=body,
+            status_code=206,
+            headers={"Content-Length": str(8 - start), "Content-Range": f"bytes {start}-7/8"},
+        )
+
+    err = requests.exceptions.ConnectionError("reset")
+
+    def raise_err():
+        raise err
+
+    steps = iter(
+        [
+            raise_err,  # no data -> wait 1
+            raise_err,  # no data -> wait 2
+            lambda: _truncated(b"AB", advertised=8),  # data -> wait 1 again
+            lambda: resume(b"CDEF", 2),  # data -> wait 1
+            lambda: resume(b"GH", 6),
+        ]
+    )
+    monkeypatch.setattr("dds_cli.data_getter.requests.get", lambda *_, **__: next(steps)())
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is True
+    assert file_path.read_bytes() == b"ABCDEFGH"
+    assert sleep_calls == [1, 2, 1, 1]

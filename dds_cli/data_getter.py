@@ -257,9 +257,14 @@ class DataGetter(base.DDSBaseClass):
         backoff_factor = constants.DOWNLOAD_BACKOFF_FACTOR
         wait = constants.DOWNLOAD_INITIAL_WAIT
         retry_messages = []
+        cancelled = False
 
         for attempt in range(1, max_retries + 1):
             error = ""
+            if self.service_unavailable:
+                # Maintenance seen by another thread: don't start a new attempt.
+                cancelled = True
+                break
             if attempt > 1:
                 progress.reset(task, completed=0)
                 # Drop the partial file from the previous attempt before retrying.
@@ -287,9 +292,16 @@ class DataGetter(base.DDSBaseClass):
                         content_length = 0
                     with file_local.open(mode="wb") as new_file:
                         for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
+                            if self.service_unavailable:
+                                # Maintenance seen by another thread: stop this download.
+                                cancelled = True
+                                break
                             progress.update(task, advance=len(chunk))
                             new_file.write(chunk)
                             bytes_written += len(chunk)
+
+                if cancelled:
+                    break
 
                 # Guard against silent truncation: requests/urllib3 do not
                 # validate that bytes received == Content-Length. A clean TCP
@@ -340,7 +352,11 @@ class DataGetter(base.DDSBaseClass):
                 )
                 break
 
-        if not downloaded and error:
+        if cancelled:
+            error = f"Service unavailable - download of '{file_name_in_db}' cancelled"
+            LOG.warning(error)
+            self._remove_partial(file_local, file_name_in_db)
+        elif not downloaded and error:
             if retry_messages:
                 error = " | ".join(retry_messages) + f" | Final error: {error}"
             LOG.error(
@@ -387,9 +403,11 @@ class DataGetter(base.DDSBaseClass):
         filename = {"name": fileinfo["name_in_db"]}
         params = {"project": self.project}
 
-        # Send file info to API
+        # Send file info to API.
+        # Catch all API errors: a failed update must not stop the other downloads.
+        # Exception: maintenance (ServiceUnavailableError) stops the files not started yet.
         try:
-            response_json, _ = dds_cli.utils.perform_request(
+            response_json, _ = dds_cli.utils.perform_request_with_retry(
                 DDSEndpoint.FILE_UPDATE,
                 method="put",
                 params=params,
@@ -397,7 +415,14 @@ class DataGetter(base.DDSBaseClass):
                 headers=self.token,
                 error_message="Failed to update file information",
             )
-        except dds_cli.exceptions.ApiRequestError as err:
+        except dds_cli.exceptions.ServiceUnavailableError as err:
+            self.stop_for_maintenance(err)
+            message = str(err)
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
             updated_in_db = False
             message = str(err)
         else:

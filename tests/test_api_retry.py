@@ -322,7 +322,7 @@ def test_verify_proceed_cancels_download_file_with_path_key(caplog, already_canc
 
     assert work(getter, file) is False
     called.assert_not_called()
-    assert "dir/file.bin" in caplog.text
+    assert str(file) in caplog.text  # dir\file.bin on Windows
 
 
 def test_stop_for_maintenance_log_has_no_double_period(caplog):

@@ -613,3 +613,4 @@ _Empty sprint_
 
 - Fix --no-prompt silently skipping user activation and deactivation ([#1008](https://github.com/ScilifelabDataCentre/dds_cli/pull/1008))
 - Remove resolved entries from dds_failed_delivery.json after retry ([#999](https://github.com/ScilifelabDataCentre/dds_cli/pull/999))
+- Retry API calls once on a 502/503 from the proxy, and stop uploads/downloads during maintenance ([#1009](https://github.com/ScilifelabDataCentre/dds_cli/pull/1009))

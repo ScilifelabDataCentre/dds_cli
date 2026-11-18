@@ -171,17 +171,18 @@ def test_add_file_db_no_retry_on_400(monkeypatch):
     assert mock_post.call_count == 1
 
 
-def test_perform_request_with_retry_gives_up_after_retries(monkeypatch):
-    """The last error is raised when all attempts fail."""
+@pytest.mark.parametrize("retries", [0, 2])
+def test_perform_request_with_retry_gives_up_after_retries(monkeypatch, retries):
+    """The last error is raised when all attempts fail; retries=0 sends one request."""
     monkeypatch.setattr(constants, "API_RETRY_WAIT", 0)
     err = dds_cli.exceptions.NonJsonResponseError("Bad Gateway", status_code=502)
     mock_request = MagicMock(side_effect=err)
     monkeypatch.setattr(dds_cli.utils, "perform_request", mock_request)
 
     with pytest.raises(dds_cli.exceptions.ApiResponseError):
-        dds_cli.utils.perform_request_with_retry("url", method="put", retries=2)
+        dds_cli.utils.perform_request_with_retry("url", method="put", retries=retries)
 
-    assert mock_request.call_count == 3
+    assert mock_request.call_count == retries + 1
 
 
 def test_perform_request_with_retry_no_retry_on_request_error(monkeypatch):
@@ -301,6 +302,39 @@ def test_verify_proceed_cancels_new_files_on_maintenance(caplog):
     assert work(putter, "file.txt") is False
     called.assert_not_called()
     assert "Service unavailable - cancelling file" in caplog.text
+
+
+@pytest.mark.parametrize("already_cancelled", [False, True])
+def test_verify_proceed_cancels_download_file_with_path_key(caplog, already_cancelled):
+    """Download file keys are pathlib.Path objects: the cancel message must not crash."""
+    from dds_cli.custom_decorators import verify_proceed
+
+    called = MagicMock(return_value=(True, ""))
+
+    @verify_proceed
+    def work(self, file):
+        return called(file)
+
+    getter = _update_db_getter()
+    file = pathlib.Path("dir/file.bin")
+    getter.status = {file: {"cancel": already_cancelled, "started": False}}
+    if not already_cancelled:
+        getter.stop_for_maintenance(dds_cli.exceptions.ServiceUnavailableError("Maintenance"))
+
+    assert work(getter, file) is False
+    called.assert_not_called()
+    assert str(file) in caplog.text  # dir\file.bin on Windows
+
+
+def test_stop_for_maintenance_log_has_no_double_period(caplog):
+    """The API message ends with a period; the log line must not get two."""
+    putter = _putter_with_one_file()
+    putter.stop_for_maintenance(
+        dds_cli.exceptions.ServiceUnavailableError("Maintenance of DDS is ongoing.")
+    )
+
+    assert "Maintenance of DDS is ongoing. Stopping:" in caplog.text
+    assert ".." not in caplog.text
 
 
 def test_stop_for_maintenance_keeps_first_error_and_raises_later():

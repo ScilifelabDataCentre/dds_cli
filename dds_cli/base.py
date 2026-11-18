@@ -132,7 +132,7 @@ class DDSBaseClass:
         """
         if self.service_unavailable is None:
             self.service_unavailable = err
-            LOG.error("%s. Stopping: files not started yet are cancelled.", err)
+            LOG.error("%s. Stopping: files not started yet are cancelled.", str(err).rstrip("."))
         self.stop_doing = True
 
     def raise_if_service_unavailable(self) -> None:

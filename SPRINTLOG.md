@@ -613,3 +613,8 @@ _Empty sprint_
 - Updated dependency sphinx-rtd-theme to 3.1.0 ([921](https://github.com/ScilifelabDataCentre/dds_cli/pull/921))
 - Updated dependency sphinx-click to 6.2.0 ([920](https://github.com/ScilifelabDataCentre/dds_cli/pull/920))
 - Updated dependency sphinx-copybutton to 0.5.2 ([886](https://github.com/ScilifelabDataCentre/dds_cli/pull/886/))
+
+## 2026-11-09 - 2026-11-20
+
+- Fix --no-prompt silently skipping user activation and deactivation ([#1008](https://github.com/ScilifelabDataCentre/dds_cli/pull/1008))
+- Remove resolved entries from dds_failed_delivery.json after retry ([#999](https://github.com/ScilifelabDataCentre/dds_cli/pull/999))

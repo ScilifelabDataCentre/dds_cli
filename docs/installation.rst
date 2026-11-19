@@ -1,159 +1,47 @@
 .. _installation:
 
 Installation guide
-####################
+##################
 
-You can install ``dds-cli`` in two different ways: 
+These instructions describe how to install ``dds-cli``. If you wish to install it on your own laptop or desktop machine, go to :ref:`Ìnstall on my machine<my_machine>`. If you instead want to install it on one of the available HPC facilities, e.g. UPPMAX, go to :ref:`Install on an HPC facility<hpc>`.
 
-* From `PyPI <https://pypi.org/project/dds-cli/>`_. Independent on operating system (OS), we recommend this option. Note that this does not apply to HPC centres, e.g., Uppmax, Dardel, etc. 
-* Via executables. These are located in the latest release on `GitHub <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_. 
+.. _my_machine:
 
-.. note:: 
-   
+Install on my machine
+=====================
+
+You can install ``dds-cli`` on your own machine in two different ways - installing manually via `PyPI <https://pypi.org/project/dds-cli/>`_ (recommended), or installing a pre-built executable.
+
+.. note::
+
    The executables are only available for Ubuntu, MacOS and Windows.
-   
+
    If you want to request an executable for another OS, please contact us at `delivery@scilifelab.se <delivery@scilifelab.se>`_. Start the subject line with "Feature Request".
 
-The following sections describe the installation process on :ref:`MacOS / Linux<mac-linux>` and :ref:`Windows<windows>`, and how to load ``dds-cli`` on :ref:`Uppmax<uppmax>` / :ref:`Dardel<dardel>`. 
+The following links will take you to detailed instructions depending on your machine's operating system.
 Note that the sections describing installation from PyPI are focused on the ``install`` command, and do not provide a guide on how to verify the package integrity with checksums. Instructions on how to do this can be found at the :ref:`bottom of this page<verify-integrity>`.
 
-.. _mac-linux:
+MacOS/Linux
+-----------
 
-MacOS / Linux
-==============
+Install manually via PYPI: :ref:`MacOS / Linux via PYPI <installation_mac_linux_pypi>`
 
-As mentioned above, you can install ``dds-cli`` from PyPI or via an executable. 
-
-.. _pypi-unix:
-
-Install from **PyPI**
------------------------
-
-1. To perform these steps you need to have Python version 3.10 or higher installed.
-
-   * First check which Python version you have
-
-      .. image:: ../img/python-version.svg 
-
-      If this displays ``Python 2.7``, run ``python3 --version`` instead.
-
-      .. image:: ../img/python3-version.svg
-
-      If this does not return ``Python 3.10.x`` or higher, you will need to `install Python <https://www.python.org/downloads/>`_.
-   
-   .. warning:: 
-   
-      Make sure you have the latest version of **pip**.
-
-         .. code-block:: 
-
-            python3 -m pip install --upgrade pip
-
-         .. image:: ../img/pip-upgrade.svg
-
-2. The DDS CLI is available on `PyPI <https://pypi.org/project/dds-cli/>`_. To install the DDS CLI, run this command in the terminal:
-
-   .. code-block:: bash
-
-      $ pip install --upgrade dds-cli
-
-3. Once the installation has finished, test that the CLI has been installed correctly by verifying the version:
-
-   .. code-block:: bash
-
-      $ dds --version
-
-   The output should be the following:
-
-   .. image:: ../img/dds-version.svg
-   
-
-.. _exec-unix:
-
-Install via the **executable**
--------------------------------
-
-1. Download the executable from the GitHub release page:
-
-   * Executable for Linux (Ubuntu latest): `Download Linux Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu-latest_x86_64>`_
-
-      You can find executables for other versions on the GitHub releases page linked at the top of this page.
-
-   * Executable for MacOS: `Download MacOS Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_arm64>`_
-   
-2. Open the terminal, go to the directory where the downloaded file is located, and make the file executable by running the following command:
-
-   * On Linux: 
-
-      .. code-block:: bash
-
-         $ chmod +x dds_cli_ubuntu_x86_64
-
-   * On MacOS: 
-
-      .. code-block:: bash
-
-         $ chmod +x dds_cli_macos_arm64
-
-3. Test that the ``dds-cli`` command works by running the following:
-   
-   .. code-block:: bash
-
-      $ ./<name-of-executable-file> 
-
-   **Example:** 
-   
-   .. image:: ../img/mac-executable-help.svg
-
-   
-   .. admonition:: Information to MacOS users 
-      
-      On MacOS, you may need to allow your Mac to trust the software. Please, refer to the following sources for more information: https://support.apple.com/en-us/HT202491 and https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unidentified-developer-mh40616/mac
-
-4. When reading through the rest of the documentation and running the commands, replace ``dds`` with the path to the executable. For example:
-
-   .. code-block:: bash
-      
-      $ ./dds_cli_macos_arm64 auth login
-      $ ./dds_cli_macos_arm64 user info
-      $ ./dds_cli_macos_arm64 ls
-      ...
-   
-
-
-.. _windows:
+Install executable: :ref:`MacOS / Linux executable <installation_mac_linux_exec>`
 
 Windows
-=======
+-------
 
-.. _pypi-windows:
+Install manually via PYPI: :ref:`Windows via PYPI <installation_windows_pypi>`
 
-Install from **PyPI**
------------------------
+Install executable: :ref:`Windows executable <installation_windows_exec>`
 
-Detailed instructions on how install the DDS CLI on Windows `here <https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md>`_.
+.. _hpc:
 
-.. _exec-windows:
+Install on an HPC facility
+==========================
 
-Install via the **executable**
--------------------------------
-
-1. Download the executable from the GitHub release page: `Download <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_win_x86_64.exe>`_
-2. Open the Powershell
-
-  a. Click on ``Start`` (Windows symbol in corner)
-  b. Type "Powershell" or "Command Prompt" (**Powershell** recommended)
-  c. Click on the Powershell or Command Prompt symbol
-  
-3. Open the file explorer and navigate to the location of the downloaded executable. 
-4. Drag the executable into the Powershell/Command Prompt window and press enter. This should result in the help text being displayed. 
-   
-   .. note:: 
-      
-      You may need to change the permissions regarding executables and allow your laptop to trust the software.
-
-5. When reading through the rest of the documentation and running the commands, replace ``dds`` with the path to the executable. If you press the up arrow you will see the previous command which will reveal the exact path on you computer. 
-
+The ``dds-cli`` package is currently available to install on :ref:`UPPMAX/Rackham<rackham>`, :ref:`UPPMAX/Bianca<bianca>` and :ref:`Dardel<dardel>`.
+For instructions on how to verify the package integrity with checksums if needed, see :ref:`verify package integrity<verify-integrity>`.
 
 .. _uppmax:
 

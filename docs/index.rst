@@ -78,14 +78,12 @@ Your account will be either a *Unit Admin*, *Unit Personnel* or a *Researcher* a
 * **I have already installed the CLI:** :ref:`Run the CLI<runit>`
 * **I do not have the CLI installed:** Please follow the instructions below.
 
-In order to use the DDS, you first need to install the CLI. The installation process varies depending on which operating system you are on, or if you are on Uppmax.
+In order to use the DDS, you first need to install the CLI. The installation process varies depending on whether you want to intall on your own machine or an HPC facility, and which operating system you are on. Follow the links below for detailed instructions:
 
-**I am on...**
+**I want to...**
 
-* :ref:`MacOS / Linux<mac-linux>` 
-* :ref:`Windows<windows>`
-* :ref:`Uppmax<uppmax>`
-* :ref:`Dardel<dardel>`
+* :ref:`Install on my machine<my_machine>`
+* :ref:`Install on an HPC facility<hpc>`
 
 .. _runit:
 

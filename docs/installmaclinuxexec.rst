@@ -9,7 +9,7 @@ MacOS / Linux executable
 
    * Executable for Linux (Ubuntu latest): `Download Linux Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_ubuntu-latest_x86_64>`_
 
-      You can find executables for other versions on the GitHub releases page linked at the top of this page.
+      You can find executables for other versions on the GitHub releases page `here <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest>`_
 
    * Executable for MacOS: `Download MacOS Executable <https://github.com/ScilifelabDataCentre/dds_cli/releases/latest/download/dds_cli_macos_arm64>`_
 
@@ -19,7 +19,7 @@ MacOS / Linux executable
 
       .. code-block:: bash
 
-         $ chmod +x dds_cli_ubuntu_x86_64
+         $ chmod +x dds_cli_ubuntu-latest_x86_64
 
    * On MacOS:
 

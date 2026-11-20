@@ -3,7 +3,7 @@
 Installation guide
 ##################
 
-These instructions describe how to install ``dds-cli``. If you wish to install it on your own laptop or desktop machine, go to :ref:`Ìnstall on my machine<my_machine>`. If you instead want to install it on one of the available HPC facilities, e.g. UPPMAX, go to :ref:`Install on an HPC facility<hpc>`.
+These instructions describe how to install ``dds-cli``. If you wish to install it on your own laptop or desktop machine, go to :ref:`Install on my machine<my_machine>`. If you instead want to install it on one of the available HPC facilities, e.g. UPPMAX, go to :ref:`Install on an HPC facility<hpc>`.
 
 .. _my_machine:
 
@@ -24,14 +24,14 @@ Note that the sections describing installation from PyPI are focused on the ``in
 MacOS/Linux
 -----------
 
-Install manually via PYPI: :ref:`MacOS / Linux via PYPI <installation_mac_linux_pypi>`
+Install manually via PYPI: :ref:`MacOS / Linux via PyPI <installation_mac_linux_pypi>`
 
 Install executable: :ref:`MacOS / Linux executable <installation_mac_linux_exec>`
 
 Windows
 -------
 
-Install manually via PYPI: :ref:`Windows via PYPI <installation_windows_pypi>`
+Install manually via PYPI: :ref:`Windows via PyPI <installation_windows_pypi>`
 
 Install executable: :ref:`Windows executable <installation_windows_exec>`
 

@@ -2,7 +2,7 @@
 
 .. _installation_mac_linux_pypi:
 
-MacOS / Linux via PYPI
+MacOS / Linux via PyPI
 ======================
 
 1. To perform these steps you need to have Python version 3.10 or higher installed.
@@ -42,7 +42,3 @@ MacOS / Linux via PYPI
    The output should be the following:
 
    .. image:: ../img/dds-version.svg
-
-
-.. _exec-unix:
-

@@ -2,7 +2,7 @@
 
 .. _installation_windows_pypi:
 
-Windows via PYPI
+Windows via PyPI
 ================
 
-Detailed instructions on how to manually install the DDS CLI via PYPI on Windows can be found `here <https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md>`_.
+Detailed instructions on how to manually install the DDS CLI via PyPI on Windows can be found `here <https://github.com/ScilifelabDataCentre/dds_cli/blob/dev/WINDOWS.md>`_.

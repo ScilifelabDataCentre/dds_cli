@@ -24,14 +24,14 @@ Note that the sections describing installation from PyPI are focused on the ``in
 MacOS/Linux
 -----------
 
-Install manually via PYPI: :ref:`MacOS / Linux via PyPI <installation_mac_linux_pypi>`
+Install manually via PyPI: :ref:`MacOS / Linux via PyPI <installation_mac_linux_pypi>`
 
 Install executable: :ref:`MacOS / Linux executable <installation_mac_linux_exec>`
 
 Windows
 -------
 
-Install manually via PYPI: :ref:`Windows via PyPI <installation_windows_pypi>`
+Install manually via PyPI: :ref:`Windows via PyPI <installation_windows_pypi>`
 
 Install executable: :ref:`Windows executable <installation_windows_exec>`
 

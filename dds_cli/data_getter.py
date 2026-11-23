@@ -39,10 +39,6 @@ LOG = logging.getLogger(__name__)
 ###############################################################################
 
 
-class RangeResumeError(requests.exceptions.RequestException):
-    """The server answered a Range request, but not with the part we asked for."""
-
-
 class DataGetter(base.DDSBaseClass):
     """Data getter class."""
 
@@ -266,7 +262,7 @@ class DataGetter(base.DDSBaseClass):
             requests.exceptions.Timeout,
             requests.exceptions.ConnectionError,
             requests.exceptions.ChunkedEncodingError,
-            RangeResumeError,
+            dds_cli.exceptions.RangeResumeError,
         )
 
         max_failures = constants.DOWNLOAD_MAX_RETRIES
@@ -379,7 +375,7 @@ class DataGetter(base.DDSBaseClass):
                 if isinstance(err, requests.exceptions.HTTPError) and status_code == 404:
                     error = "File not found! Please contact support."
                     break
-                if isinstance(err, RangeResumeError) or (
+                if isinstance(err, dds_cli.exceptions.RangeResumeError) or (
                     isinstance(err, requests.exceptions.HTTPError) and status_code == 416
                 ):
                     # The partial file can not be trusted: start from byte zero next time.
@@ -468,7 +464,7 @@ class DataGetter(base.DDSBaseClass):
         """
         match = re.fullmatch(r"\s*bytes\s+(\d+)-(\d+)/(\d+|\*)\s*", content_range or "")
         if not match:
-            raise RangeResumeError(
+            raise dds_cli.exceptions.RangeResumeError(
                 f"Unexpected Content-Range for '{file_name_in_db}': {content_range!r}"
             )
         start, end, total = match.groups()
@@ -477,7 +473,7 @@ class DataGetter(base.DDSBaseClass):
             or int(end) != expected_size - 1
             or (total != "*" and int(total) != expected_size)
         ):
-            raise RangeResumeError(
+            raise dds_cli.exceptions.RangeResumeError(
                 f"Content-Range mismatch for '{file_name_in_db}': got {content_range!r}, "
                 f"expected 'bytes {offset}-{expected_size - 1}/{expected_size}'"
             )

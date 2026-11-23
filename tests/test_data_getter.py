@@ -350,7 +350,7 @@ def test_get_detects_truncated_stream_via_content_length(monkeypatch, tmp_path):
     assert downloaded is False
     assert "Truncated download" in message
     # The first attempt received data; the later ones did not get further.
-    assert "(0/3 without progress)" in message
+    assert "(received data, 4 of 100 bytes)" in message
     assert "(2/3 without progress)" in message
 
 
@@ -888,7 +888,8 @@ def test_get_restart_from_zero_counts_only_when_it_gets_further(monkeypatch, tmp
     # Only the messages from the last progress on are kept in the error.
     assert "attempt 1 failed" not in message
     assert "attempt 2 failed" not in message
-    assert "attempt 3 failed" in message
+    assert "attempt 3 failed for 'file.bin' (received data, 6 of 8 bytes)" in message
+    assert "0/2 without progress" not in message
     assert not file_path.exists()
 
 

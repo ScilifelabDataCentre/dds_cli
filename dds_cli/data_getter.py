@@ -393,10 +393,14 @@ class DataGetter(base.DDSBaseClass):
                     failures += 1
                     if failures >= max_failures:
                         break
+                status = (
+                    f"{failures}/{max_failures} without progress"
+                    if failures
+                    else f"received data, {size_now} of {expected_size} bytes"
+                )
                 retry_msg = (
                     f"Download attempt {attempt} failed for '{file_name_in_db}' "
-                    f"({failures}/{max_failures} without progress): {error}. "
-                    f"Retrying in {wait}s..."
+                    f"({status}): {error}. Retrying in {wait}s..."
                 )
                 retry_messages.append(retry_msg)
                 LOG.warning(retry_msg)

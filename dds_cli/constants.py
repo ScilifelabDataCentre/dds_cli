@@ -20,11 +20,14 @@ READ_TIMEOUT = 300
 CONNECT_TIMEOUT = 60
 
 # Retry settings for download.
-# With Range resume a retry only costs a reconnect, so we can afford more of them.
-DOWNLOAD_MAX_RETRIES = 10
+# DOWNLOAD_MAX_RETRIES counts only attempts in a row without progress: an attempt that
+# received new data starts the count (and the wait) again, so a file can be resumed
+# any number of times. With these values a server that does not answer at all is
+# given up after 7 attempts and 1 + 2 + 4 + 8 + 16 + 32 = 63 seconds of waiting,
+# enough to ride out a short restart of the storage or the proxy.
+DOWNLOAD_MAX_RETRIES = 7
 DOWNLOAD_BACKOFF_FACTOR = 2
 DOWNLOAD_INITIAL_WAIT = 1  # seconds
-DOWNLOAD_MAX_WAIT = 60  # seconds, upper limit for the wait between two attempts
 
 # Import these constants when using '*'
 __all__ = [
@@ -35,5 +38,4 @@ __all__ = [
     "DOWNLOAD_MAX_RETRIES",
     "DOWNLOAD_BACKOFF_FACTOR",
     "DOWNLOAD_INITIAL_WAIT",
-    "DOWNLOAD_MAX_WAIT",
 ]

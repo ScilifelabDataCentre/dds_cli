@@ -205,8 +205,8 @@ def test_get_fails_after_max_retries(monkeypatch):
 
     assert downloaded is False
     assert "Final error:" in message
-    assert "attempt 1/3" in message
-    assert "attempt 2/3" in message
+    assert "(1/3 without progress)" in message
+    assert "(2/3 without progress)" in message
 
 
 def test_get_no_retry_on_404(monkeypatch):
@@ -349,7 +349,9 @@ def test_get_detects_truncated_stream_via_content_length(monkeypatch, tmp_path):
     # The retry path engaged on every attempt and ultimately gave up.
     assert downloaded is False
     assert "Truncated download" in message
-    assert "attempt 1/3" in message
+    # The first attempt received data; the later ones did not get further.
+    assert "(0/3 without progress)" in message
+    assert "(2/3 without progress)" in message
 
 
 def test_get_detects_size_mismatch_against_size_stored(monkeypatch, tmp_path):
@@ -736,22 +738,22 @@ def test_get_does_not_resume_from_earlier_run(monkeypatch, tmp_path, no_wait):
 # BACKOFF ######################################################################
 
 
-def test_get_backoff_is_capped(monkeypatch):
-    """The wait between attempts never goes above DOWNLOAD_MAX_WAIT."""
+def test_get_gives_up_after_about_a_minute_on_dead_server(monkeypatch):
+    """A server that does not answer at all is given up after 7 attempts and 63 s."""
     getter = _prepare_data_getter("file.txt")
-    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 6)
-    monkeypatch.setattr(constants, "DOWNLOAD_INITIAL_WAIT", 1)
-    monkeypatch.setattr(constants, "DOWNLOAD_BACKOFF_FACTOR", 2)
-    monkeypatch.setattr(constants, "DOWNLOAD_MAX_WAIT", 5)
-
-    err = requests.exceptions.ConnectionError("reset")
-    monkeypatch.setattr(requests, "get", lambda *_, **__: (_ for _ in ()).throw(err))
+    err = requests.exceptions.ConnectionError("refused")
+    mock_get = MagicMock(side_effect=err)
+    monkeypatch.setattr(requests, "get", mock_get)
     sleep_calls = []
     monkeypatch.setattr("dds_cli.data_getter.time.sleep", sleep_calls.append)
 
-    DataGetter.get.__wrapped__(getter, file="file.txt", progress=MagicMock(), task=None)
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.txt", progress=MagicMock(), task=None
+    )
 
-    assert sleep_calls == [1, 2, 4, 5, 5]
+    assert downloaded is False
+    assert mock_get.call_count == 7
+    assert sleep_calls == [1, 2, 4, 8, 16, 32]
 
 
 def test_get_backoff_restarts_after_progress(monkeypatch, tmp_path):
@@ -794,3 +796,97 @@ def test_get_backoff_restarts_after_progress(monkeypatch, tmp_path):
     assert downloaded is True
     assert file_path.read_bytes() == b"ABCDEFGH"
     assert sleep_calls == [1, 2, 1, 1]
+
+
+def _resume(body, start, size=8):
+    """A 206 from `start` to the end; a short `body` means the attempt is cut."""
+    return _response(
+        body=body,
+        status_code=206,
+        headers={
+            "Content-Length": str(size - start),
+            "Content-Range": f"bytes {start}-{size - 1}/{size}",
+        },
+    )
+
+
+def test_get_cuts_with_progress_do_not_count(monkeypatch, tmp_path, no_wait):
+    """More cuts than DOWNLOAD_MAX_RETRIES still finish, as long as each one got further."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 2)
+
+    calls = []
+    responses = [
+        _truncated(b"AB", advertised=8),
+        _resume(b"C", 2),
+        _resume(b"D", 3),
+        _resume(b"EF", 4),
+        _resume(b"GH", 6),
+    ]
+    monkeypatch.setattr("dds_cli.data_getter.requests.get", _fake_get(responses, calls))
+
+    downloaded, message = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert (downloaded, message) == (True, "")
+    assert file_path.read_bytes() == b"ABCDEFGH"
+    assert len(calls) == 5
+
+
+def test_get_restart_from_zero_counts_only_when_it_gets_further(monkeypatch, tmp_path, no_wait):
+    """A 200 starts from byte 0: it is progress only when the file gets larger than before."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 2)
+
+    calls = []
+    responses = [
+        _truncated(b"ABCD", advertised=8),  # 4 bytes: progress
+        _truncated(b"AB", advertised=8),  # 200 again, 2 bytes: no progress (1/2)
+        _truncated(b"ABCDEF", advertised=8),  # 200 again, 6 bytes: progress, count reset
+        _truncated(b"ABCD", advertised=8),  # 200, 4 bytes: no progress (1/2)
+        _truncated(b"ABC", advertised=8),  # 200, 3 bytes: no progress (2/2) -> give up
+    ]
+    monkeypatch.setattr("dds_cli.data_getter.requests.get", _fake_get(responses, calls))
+
+    downloaded, message = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is False
+    assert len(calls) == 5
+    # Only the messages from the last progress on are kept in the error.
+    assert "attempt 1 failed" not in message
+    assert "attempt 2 failed" not in message
+    assert "attempt 3 failed" in message
+    assert not file_path.exists()
+
+
+def test_get_bad_resume_then_same_size_is_not_progress(monkeypatch, tmp_path, no_wait):
+    """A partial file removed after a bad resume and downloaded again to the same size
+    is not progress, so this can not loop forever."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+    monkeypatch.setattr(constants, "DOWNLOAD_MAX_RETRIES", 2)
+
+    bad_range = _response(
+        body=b"EFGH",
+        status_code=206,
+        headers={"Content-Length": "4", "Content-Range": "bytes 0-3/8"},
+    )
+    calls = []
+    responses = [
+        _truncated(b"ABCD", advertised=8),  # progress
+        bad_range,  # partial removed: no progress (1/2)
+        _truncated(b"ABCD", advertised=8),  # back to 4 bytes: no progress (2/2)
+    ]
+    monkeypatch.setattr("dds_cli.data_getter.requests.get", _fake_get(responses, calls))
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is False
+    assert len(calls) == 3

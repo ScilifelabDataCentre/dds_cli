@@ -241,6 +241,10 @@ class DataGetter(base.DDSBaseClass):
         rest of the file with a Range request. The server must answer 206 with a matching
         Content-Range. If it answers 200, the whole file is downloaded again.
         A bad resume can not go unnoticed: decryption authenticates every chunk.
+
+        Only attempts without progress count towards DOWNLOAD_MAX_RETRIES. Progress means
+        that the partial file grew past the largest size reached so far, so a 200 that
+        starts from zero again only counts as progress once it gets further than before.
         """
         downloaded = False
         error = ""
@@ -265,17 +269,21 @@ class DataGetter(base.DDSBaseClass):
             RangeResumeError,
         )
 
-        max_retries = constants.DOWNLOAD_MAX_RETRIES
+        max_failures = constants.DOWNLOAD_MAX_RETRIES
         backoff_factor = constants.DOWNLOAD_BACKOFF_FACTOR
         initial_wait = constants.DOWNLOAD_INITIAL_WAIT
         wait = initial_wait
         retry_messages = []
         cancelled = False
+        attempt = 0
+        failures = 0  # attempts in a row without progress
+        largest_size = 0  # largest size of the partial file so far
 
         # Never resume from a file left by an earlier run: the object may have changed.
         self._remove_partial(file_local, file_name_in_db)
 
-        for attempt in range(1, max_retries + 1):
+        while True:
+            attempt += 1
             error = ""
             if self.service_unavailable:
                 # Maintenance seen by another thread: don't start a new attempt.
@@ -377,19 +385,27 @@ class DataGetter(base.DDSBaseClass):
                     # The partial file can not be trusted: start from byte zero next time.
                     self._remove_partial(file_local, file_name_in_db)
                 error = str(err)
-                if attempt < max_retries:
-                    if bytes_written:
-                        # The attempt made progress, so this is a new cut and not
-                        # a server that is down. Start the backoff again.
-                        wait = initial_wait
-                    retry_msg = (
-                        f"Download attempt {attempt}/{max_retries} failed for "
-                        f"'{file_name_in_db}': {error}. Retrying in {wait}s..."
-                    )
-                    retry_messages.append(retry_msg)
-                    LOG.warning(retry_msg)
-                    time.sleep(wait)
-                    wait = min(wait * backoff_factor, constants.DOWNLOAD_MAX_WAIT)
+                size_now = self._partial_size(file_local)
+                if size_now > largest_size:
+                    # The attempt made progress, so this is a new cut and not a server
+                    # that is down: start counting and the backoff again.
+                    largest_size = size_now
+                    failures = 0
+                    wait = initial_wait
+                    retry_messages = []
+                else:
+                    failures += 1
+                    if failures >= max_failures:
+                        break
+                retry_msg = (
+                    f"Download attempt {attempt} failed for '{file_name_in_db}' "
+                    f"({failures}/{max_failures} without progress): {error}. "
+                    f"Retrying in {wait}s..."
+                )
+                retry_messages.append(retry_msg)
+                LOG.warning(retry_msg)
+                time.sleep(wait)
+                wait *= backoff_factor
             else:
                 downloaded = True
                 LOG.debug(
@@ -409,7 +425,7 @@ class DataGetter(base.DDSBaseClass):
             LOG.error(
                 "Download failed for '%s' after %d attempts: %s",
                 file_name_in_db,
-                max_retries,
+                attempt,
                 error,
             )
             LOG.warning(
@@ -417,7 +433,7 @@ class DataGetter(base.DDSBaseClass):
                 "Please ensure your internet connection is stable and that your "
                 "computer does not enter sleep mode during large file transfers.",
                 file_name_in_db,
-                max_retries,
+                attempt,
             )
             # Don't leave a partial blob on disk after we've given up — it just
             # consumes space and risks being mistaken for a complete file.
@@ -428,16 +444,21 @@ class DataGetter(base.DDSBaseClass):
     @classmethod
     def _resume_offset(cls, file_local, expected_size, file_name_in_db):
         """Return the number of bytes we can keep from an earlier attempt (0 = start over)."""
-        try:
-            size = file_local.stat().st_size
-        except OSError:
-            return 0
+        size = cls._partial_size(file_local)
         if 0 < size < expected_size:
             return size
         if size:
             # Same size or larger, but the attempt still failed: don't trust it.
             cls._remove_partial(file_local, file_name_in_db)
         return 0
+
+    @staticmethod
+    def _partial_size(file_local):
+        """Return the size of the partial file, 0 if it does not exist."""
+        try:
+            return file_local.stat().st_size
+        except OSError:
+            return 0
 
     @staticmethod
     def _check_content_range(content_range, offset, expected_size, file_name_in_db):

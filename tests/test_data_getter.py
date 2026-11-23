@@ -685,6 +685,34 @@ def test_get_416_starts_over(monkeypatch, tmp_path, no_wait):
     assert calls == [{}, {"Range": "bytes=4-"}, {}]
 
 
+def test_get_keeps_partial_on_other_http_error(monkeypatch, tmp_path, no_wait):
+    """Another HTTP error on a resumed request (e.g. a 503 from S3) keeps the partial
+    file, and the next attempt resumes from the same byte."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+
+    calls = []
+    monkeypatch.setattr(
+        "dds_cli.data_getter.requests.get",
+        _fake_get(
+            [
+                _truncated(b"ABCD", advertised=8),
+                _response(b"", status_code=503, headers={}),
+                _resume(b"EFGH", 4),
+            ],
+            calls,
+        ),
+    )
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is True
+    assert file_path.read_bytes() == b"ABCDEFGH"
+    assert calls == [{}, {"Range": "bytes=4-"}, {"Range": "bytes=4-"}]
+
+
 def test_get_resumes_after_truncation_in_resumed_part(monkeypatch, tmp_path, no_wait):
     """A resumed response can also be cut; the next resume starts at the new offset."""
     file_path = tmp_path / "file.bin"

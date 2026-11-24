@@ -170,6 +170,15 @@ def put(
                         for x in [y.id for y in progress.tasks if y.fields.get("step") != "put"]
                     ]
 
+        # Maintenance stopped the upload: the API is down, don't call it again.
+        if putter.service_unavailable is not None:
+            if putter.failed_delivery_log.is_file():
+                LOG.warning(
+                    "The files that failed are listed in: %s",
+                    str(putter.failed_delivery_log),
+                )
+            putter.raise_if_service_unavailable()
+
         # Make a single database update for files that have failed
         # Json file for failed files should only be created if there has been an error
         if putter.failed_delivery_log.is_file():
@@ -342,7 +351,14 @@ class DataPutter(base.DDSBaseClass):
             file_info["path_processed"].stat().st_size,
         )
 
-        if saved:
+        if saved and self.service_unavailable:
+            # Maintenance seen by another thread: don't upload. The file could not be
+            # added to the database, so it would only be an orphan object in the bucket.
+            message = f"Service unavailable - upload of '{file_path_raw}' cancelled"
+            LOG.warning(message)
+            self.status[file]["failed_op"] = "put"
+            dr.DataRemover.delete_tempfile(file=file_info["path_processed"])
+        elif saved:
             LOG.debug(
                 "File successfully encrypted: '%s'",
                 file_path_raw,
@@ -454,7 +470,8 @@ class DataPutter(base.DDSBaseClass):
         # Send file info to API - post if new file, put if overwrite
         request_method = "put" if fileinfo["overwrite"] else "post"
         try:
-            response_json, _ = dds_cli.utils.perform_request(
+            # Retry once on 502/503 before we fall back to 'retry_add_file_db' at the end.
+            response_json, _ = dds_cli.utils.perform_request_with_retry(
                 DDSEndpoint.FILE_NEW,
                 method=request_method,
                 params=params,
@@ -466,15 +483,56 @@ class DataPutter(base.DDSBaseClass):
             LOG.debug("API call for file '%s: Adding to database'", fileinfo["path_raw"])
             with self._db_add_lock:
                 self.any_successful_db_add = True
+        except dds_cli.exceptions.ServiceUnavailableError as err:
+            # Maintenance: stop the upload. Don't raise here: this file is in the bucket,
+            # so it must be saved in the failed delivery log ('add_file_db' failed).
+            self.stop_for_maintenance(err)
+            message = str(err)
         except (
             dds_cli.exceptions.ApiRequestError,
             dds_cli.exceptions.ApiResponseError,
             dds_cli.exceptions.DDSCLIException,
         ) as err:
             message = str(err)
-            LOG.warning(message)
+            if request_method == "post" and self._added_by_earlier_request(file=file):
+                # The first POST got a proxy 502/503 but did reach the backend, so the
+                # retry failed because the file already exists. The file is added.
+                added_to_db, message = (True, f"File '{file}' added to db.")
+                with self._db_add_lock:
+                    self.any_successful_db_add = True
+            else:
+                LOG.warning(message)
 
         return added_to_db, message
+
+    def _added_by_earlier_request(self, file) -> bool:
+        """Check if the file is in the database with the name in bucket of this upload.
+
+        'name_in_bucket' is new for each upload, so a match means that one of our own
+        requests added the file. Any error here: return False (the file stays failed).
+        """
+        try:
+            response_json, _ = dds_cli.utils.perform_request(
+                DDSEndpoint.FILE_MATCH,
+                method="get",
+                params={"project": self.project},
+                headers=self.token,
+                json=[file],
+                error_message="Failed to check if the file is in the database",
+            )
+        except (
+            dds_cli.exceptions.ApiRequestError,
+            dds_cli.exceptions.ApiResponseError,
+            dds_cli.exceptions.DDSCLIException,
+        ) as err:
+            LOG.debug("Could not check if '%s' is in the database: %s", escape(file), err)
+            return False
+
+        files_in_db = response_json.get("files") or {}
+        added = files_in_db.get(file) == self.filehandler.data[file]["path_remote"]
+        if added:
+            LOG.info("File '%s' was added to the database by an earlier request.", escape(file))
+        return added
 
     def retry_add_file_db(self):
         """Attempting to save the files to the database.

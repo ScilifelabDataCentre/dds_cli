@@ -22,4 +22,4 @@ Whereas the above is what should be what's strived for, the code does import typ
 
 #### [Line length](https://google.github.io/styleguide/pyguide.html#32-line-length)
 
-The line length in this repository is 100 characters, set by `line-length` in `pyproject.toml`. `ruff format` wraps code to this length where it can, but it does not split long strings, comments or docstrings, and line length is not linted (`E501` is ignored), so some lines are longer.
+The maximum line length in this repository is 100 characters, set by `line-length` in `pyproject.toml`. `ruff format` wraps code to this length where it can, but it does not split long strings, comments or docstrings, and line length is not linted (`E501` is ignored), so some lines are longer.

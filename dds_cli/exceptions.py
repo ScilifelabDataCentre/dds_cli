@@ -44,6 +44,13 @@ class DDSCLIException(click.ClickException):
         return msg
 
 
+class ServiceUnavailableError(DDSCLIException):
+    """The DDS backend answered 503 Service Unavailable, e.g. because maintenance is ongoing.
+
+    Ongoing deliveries must stop: this is not retried and not ignored.
+    """
+
+
 class AuthenticationError(click.ClickException):
     """Errors due to user authentication."""
 
@@ -97,6 +104,13 @@ class ApiResponseError(Exception):
         """Log and raise."""
         self.status_code = status_code
         super().__init__(message)
+
+
+class NonJsonResponseError(ApiResponseError):
+    """The answer has no valid JSON body, so it did not come from the DDS API.
+
+    Usually an error page from the proxy (Traefik), e.g. 502 Bad Gateway.
+    """
 
 
 class UploadError(Exception):

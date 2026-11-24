@@ -40,13 +40,18 @@ def verify_proceed(func):
         # Check if keyboardinterrupt in dds
         if self.stop_doing:
             # TODO (ina): Add save to status here
-            message = f"KeyboardInterrupt - cancelling file {escape(file)}"
+            reason = (
+                "Service unavailable"
+                if getattr(self, "service_unavailable", None)
+                else "KeyboardInterrupt"
+            )
+            message = f"{reason} - cancelling file {escape(str(file))}"
             LOG.warning(message)
             return False  # Do not proceed
 
         # Return if file cancelled by another file
         if self.status[file]["cancel"]:
-            message = f"File already cancelled, stopping file {escape(file)}"
+            message = f"File already cancelled, stopping file {escape(str(file))}"
             LOG.warning(message)
             return False
 

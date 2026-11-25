@@ -784,6 +784,32 @@ def test_get_gives_up_after_about_a_minute_on_dead_server(monkeypatch):
     assert sleep_calls == [1, 2, 4, 8, 16, 32]
 
 
+def test_get_gives_up_after_about_a_minute_when_server_dies_mid_download(monkeypatch, tmp_path):
+    """A server that goes down after sending some data gets the same 63 s, plus the
+    1 s wait after the cut: an attempt with progress does not double the wait."""
+    file_path = tmp_path / "file.bin"
+    getter = _prepare_data_getter("file.bin", download_path=file_path, size_stored=8)
+    err = requests.exceptions.ConnectionError("refused")
+    responses = iter([_truncated(b"AB", advertised=8)])
+
+    def fake_get(*_, **__):
+        response = next(responses, None)
+        if response is None:
+            raise err
+        return response
+
+    monkeypatch.setattr("dds_cli.data_getter.requests.get", fake_get)
+    sleep_calls = []
+    monkeypatch.setattr("dds_cli.data_getter.time.sleep", sleep_calls.append)
+
+    downloaded, _ = DataGetter.get.__wrapped__(
+        getter, file="file.bin", progress=MagicMock(), task=1
+    )
+
+    assert downloaded is False
+    assert sleep_calls == [1, 1, 2, 4, 8, 16, 32]
+
+
 def test_get_backoff_restarts_after_progress(monkeypatch, tmp_path):
     """An attempt that received data is a new cut, so the wait starts from the beginning."""
     file_path = tmp_path / "file.bin"

@@ -22,9 +22,11 @@ CONNECT_TIMEOUT = 60
 # Retry settings for download.
 # DOWNLOAD_MAX_RETRIES counts only attempts in a row without progress: an attempt that
 # received new data starts the count (and the wait) again, so a file can be resumed
-# any number of times. With these values a server that does not answer at all is
-# given up after 7 attempts and 1 + 2 + 4 + 8 + 16 + 32 = 63 seconds of waiting,
-# enough to ride out a short restart of the storage or the proxy.
+# any number of times. With these values a server that does not answer is given up
+# after 7 attempts without progress and 1 + 2 + 4 + 8 + 16 + 32 = 63 seconds of
+# waiting, enough to ride out a short restart of the storage or the proxy. This also
+# holds when the server goes down in the middle of a download: the attempt that was
+# cut waits 1 second, and the wait only doubles after an attempt without progress.
 DOWNLOAD_MAX_RETRIES = 7
 DOWNLOAD_BACKOFF_FACTOR = 2
 DOWNLOAD_INITIAL_WAIT = 1  # seconds

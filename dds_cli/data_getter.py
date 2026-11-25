@@ -405,7 +405,9 @@ class DataGetter(base.DDSBaseClass):
                 retry_messages.append(retry_msg)
                 LOG.warning(retry_msg)
                 time.sleep(wait)
-                wait *= backoff_factor
+                if failures:
+                    # Only an attempt without progress makes the next wait longer.
+                    wait *= backoff_factor
             else:
                 downloaded = True
                 LOG.debug(

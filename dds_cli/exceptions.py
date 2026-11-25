@@ -121,6 +121,13 @@ class DownloadError(Exception):
     """Errors relating to file download."""
 
 
+class RangeResumeError(requests.exceptions.RequestException):
+    """The server answered a Range request, but not with the part we asked for.
+
+    A RequestException, so the download retry loop handles it like a network error.
+    """
+
+
 class NoDataError(Exception):
     """Errors when there is no data to do anything with."""
 

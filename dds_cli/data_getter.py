@@ -7,6 +7,7 @@
 # Standard library
 import logging
 import pathlib
+import re
 import time
 
 # Installed
@@ -230,7 +231,17 @@ class DataGetter(base.DDSBaseClass):
 
     @update_status
     def get(self, file, progress, task):
-        """Download files from the cloud and verify the byte count."""
+        """Download files from the cloud and verify the byte count.
+
+        If an attempt is cut, the partial file is kept and the next attempt asks for the
+        rest of the file with a Range request. The server must answer 206 with a matching
+        Content-Range. If it answers 200, the whole file is downloaded again.
+        A bad resume can not go unnoticed: decryption authenticates every chunk.
+
+        Only attempts without progress count towards DOWNLOAD_MAX_RETRIES. Progress means
+        that the partial file grew past the largest size reached so far, so a 200 that
+        starts from zero again only counts as progress once it gets further than before.
+        """
         downloaded = False
         error = ""
         file_info = self.filehandler.data[file]
@@ -251,33 +262,41 @@ class DataGetter(base.DDSBaseClass):
             requests.exceptions.Timeout,
             requests.exceptions.ConnectionError,
             requests.exceptions.ChunkedEncodingError,
+            dds_cli.exceptions.RangeResumeError,
         )
 
-        max_retries = constants.DOWNLOAD_MAX_RETRIES
+        max_failures = constants.DOWNLOAD_MAX_RETRIES
         backoff_factor = constants.DOWNLOAD_BACKOFF_FACTOR
-        wait = constants.DOWNLOAD_INITIAL_WAIT
+        initial_wait = constants.DOWNLOAD_INITIAL_WAIT
+        wait = initial_wait
         retry_messages = []
         cancelled = False
+        attempt = 0
+        failures = 0  # attempts in a row without progress
+        largest_size = 0  # largest size of the partial file so far
 
-        for attempt in range(1, max_retries + 1):
+        # Never resume from a file left by an earlier run: the object may have changed.
+        self._remove_partial(file_local, file_name_in_db)
+
+        while True:
+            attempt += 1
             error = ""
             if self.service_unavailable:
                 # Maintenance seen by another thread: don't start a new attempt.
                 cancelled = True
                 break
+            offset = 0
             if attempt > 1:
-                progress.reset(task, completed=0)
-                # Drop the partial file from the previous attempt before retrying.
-                # We don't (yet) support Range-based resume, so a fresh GET starts
-                # at byte zero; leaving the old bytes around would just confuse
-                # the size check below.
-                self._remove_partial(file_local, file_name_in_db)
+                offset = self._resume_offset(file_local, expected_size, file_name_in_db)
+                progress.reset(task, completed=offset)
 
             bytes_written = 0
             try:
+                headers = {"Range": f"bytes={offset}-"} if offset else {}
                 with requests.get(
                     file_remote,
                     stream=True,
+                    headers=headers,
                     timeout=(constants.CONNECT_TIMEOUT, constants.READ_TIMEOUT),
                 ) as req:
                     req.raise_for_status()
@@ -286,11 +305,39 @@ class DataGetter(base.DDSBaseClass):
                     # transfer encoding (no Content-Length) or send a malformed
                     # value. Treat both as "unknown" and rely on the size_stored
                     # check below to catch truncation in that case.
+                    # For a 206 response this is the size of the rest of the file.
                     try:
                         content_length = int(req.headers.get("Content-Length", 0))
                     except (TypeError, ValueError):
                         content_length = 0
-                    with file_local.open(mode="wb") as new_file:
+
+                    mode = "wb"
+                    if offset:
+                        if req.status_code == 206:
+                            self._check_content_range(
+                                content_range=req.headers.get("Content-Range"),
+                                offset=offset,
+                                expected_size=expected_size,
+                                file_name_in_db=file_name_in_db,
+                            )
+                            mode = "ab"
+                            LOG.info(
+                                "Resuming download of '%s' at byte %s of %s.",
+                                file_name_in_db,
+                                offset,
+                                expected_size,
+                            )
+                        else:
+                            LOG.warning(
+                                "Server did not resume the download of '%s' (HTTP %s). "
+                                "Downloading the whole file again.",
+                                file_name_in_db,
+                                req.status_code,
+                            )
+                            offset = 0
+                            progress.reset(task, completed=0)
+
+                    with file_local.open(mode=mode) as new_file:
                         for chunk in req.iter_content(chunk_size=FileSegment.SEGMENT_SIZE_CIPHER):
                             if self.service_unavailable:
                                 # Maintenance seen by another thread: stop this download.
@@ -311,13 +358,12 @@ class DataGetter(base.DDSBaseClass):
                     raise requests.exceptions.ChunkedEncodingError(
                         f"Truncated download for '{file_name_in_db}': "
                         f"got {bytes_written} of {content_length} bytes"
+                        + (f" (resumed at byte {offset})" if offset else "")
                     )
 
                 # Cross-check against the size DDS recorded for the encrypted
-                # blob. This used to live in download_and_verify() (outside the
-                # retry loop), which made truncation unrecoverable in a single
-                # run. Doing it here means a mismatch retries like any other
-                # transport error.
+                # blob. Doing it inside the retry loop means a mismatch retries
+                # like any other transport error.
                 actual_size = file_local.stat().st_size
                 if actual_size != expected_size:
                     raise requests.exceptions.ChunkedEncodingError(
@@ -325,23 +371,42 @@ class DataGetter(base.DDSBaseClass):
                         f"expected {expected_size} bytes, got {actual_size} bytes"
                     )
             except (requests.exceptions.HTTPError, *retryable_exceptions) as err:
-                if (
-                    isinstance(err, requests.exceptions.HTTPError)
-                    and hasattr(err, "response")
-                    and hasattr(err.response, "status_code")
-                    and err.response.status_code == 404
-                ):
+                status_code = getattr(getattr(err, "response", None), "status_code", None)
+                if isinstance(err, requests.exceptions.HTTPError) and status_code == 404:
                     error = "File not found! Please contact support."
                     break
+                if isinstance(err, dds_cli.exceptions.RangeResumeError) or (
+                    isinstance(err, requests.exceptions.HTTPError) and status_code == 416
+                ):
+                    # The partial file can not be trusted: start from byte zero next time.
+                    self._remove_partial(file_local, file_name_in_db)
                 error = str(err)
-                if attempt < max_retries:
-                    retry_msg = (
-                        f"Download attempt {attempt}/{max_retries} failed for "
-                        f"'{file_name_in_db}': {error}. Retrying in {wait}s..."
-                    )
-                    retry_messages.append(retry_msg)
-                    LOG.warning(retry_msg)
-                    time.sleep(wait)
+                size_now = self._partial_size(file_local)
+                if size_now > largest_size:
+                    # The attempt made progress, so this is a new cut and not a server
+                    # that is down: start counting and the backoff again.
+                    largest_size = size_now
+                    failures = 0
+                    wait = initial_wait
+                    retry_messages = []
+                else:
+                    failures += 1
+                    if failures >= max_failures:
+                        break
+                status = (
+                    f"{failures}/{max_failures} without progress"
+                    if failures
+                    else f"received data, {size_now} of {expected_size} bytes"
+                )
+                retry_msg = (
+                    f"Download attempt {attempt} failed for '{file_name_in_db}' "
+                    f"({status}): {error}. Retrying in {wait}s..."
+                )
+                retry_messages.append(retry_msg)
+                LOG.warning(retry_msg)
+                time.sleep(wait)
+                if failures:
+                    # Only an attempt without progress makes the next wait longer.
                     wait *= backoff_factor
             else:
                 downloaded = True
@@ -362,7 +427,7 @@ class DataGetter(base.DDSBaseClass):
             LOG.error(
                 "Download failed for '%s' after %d attempts: %s",
                 file_name_in_db,
-                max_retries,
+                attempt,
                 error,
             )
             LOG.warning(
@@ -370,13 +435,54 @@ class DataGetter(base.DDSBaseClass):
                 "Please ensure your internet connection is stable and that your "
                 "computer does not enter sleep mode during large file transfers.",
                 file_name_in_db,
-                max_retries,
+                attempt,
             )
             # Don't leave a partial blob on disk after we've given up — it just
             # consumes space and risks being mistaken for a complete file.
             self._remove_partial(file_local, file_name_in_db)
 
         return downloaded, error
+
+    @classmethod
+    def _resume_offset(cls, file_local, expected_size, file_name_in_db):
+        """Return the number of bytes we can keep from an earlier attempt (0 = start over)."""
+        size = cls._partial_size(file_local)
+        if 0 < size < expected_size:
+            return size
+        if size:
+            # Same size or larger, but the attempt still failed: don't trust it.
+            cls._remove_partial(file_local, file_name_in_db)
+        return 0
+
+    @staticmethod
+    def _partial_size(file_local):
+        """Return the size of the partial file, 0 if it does not exist."""
+        try:
+            return file_local.stat().st_size
+        except OSError:
+            return 0
+
+    @staticmethod
+    def _check_content_range(content_range, offset, expected_size, file_name_in_db):
+        """Check that a 206 response starts at `offset` and covers the rest of the file.
+
+        Expected format: 'bytes <start>-<end>/<total>' (RFC 9110).
+        """
+        match = re.fullmatch(r"\s*bytes\s+(\d+)-(\d+)/(\d+|\*)\s*", content_range or "")
+        if not match:
+            raise dds_cli.exceptions.RangeResumeError(
+                f"Unexpected Content-Range for '{file_name_in_db}': {content_range!r}"
+            )
+        start, end, total = match.groups()
+        if (
+            int(start) != offset
+            or int(end) != expected_size - 1
+            or (total != "*" and int(total) != expected_size)
+        ):
+            raise dds_cli.exceptions.RangeResumeError(
+                f"Content-Range mismatch for '{file_name_in_db}': got {content_range!r}, "
+                f"expected 'bytes {offset}-{expected_size - 1}/{expected_size}'"
+            )
 
     @staticmethod
     def _remove_partial(file_local, file_name_in_db):

@@ -10,7 +10,9 @@ As of writing (August 1st 2025), the code owners of this repository should adher
 
 #### [Lint with Pylint](https://google.github.io/styleguide/pyguide.html#21-lint)
 
-This repository does not currently use pylint. We will not be adding this while introducing this style guideline file. For formatting, we use Black.
+This repository uses Ruff instead of pylint and Black, for both linting and formatting. `ruff check` includes the stable pylint rules that Ruff implements (`PL`). The configuration, including which rules are selected or ignored and which files are excluded from linting, is under `[tool.ruff]` and `[tool.ruff.lint]` in `pyproject.toml`.
+
+The Ruff workflow (`.github/workflows/lint-ruff.yml`) runs `ruff check .` and `ruff format --check .` on pushes and pull requests that change Python files or `pyproject.toml`. To fix issues locally, run `ruff check --fix .`, which fixes what it can automatically, and `ruff format .`. Use the Ruff version that the workflow installs, since other versions can lint and format differently.
 
 #### [Imports](https://google.github.io/styleguide/pyguide.html#22-imports)
 
@@ -20,4 +22,4 @@ Whereas the above is what should be what's strived for, the code does import typ
 
 #### [Line length](https://google.github.io/styleguide/pyguide.html#32-line-length)
 
-The maximum line length in this repository should be 120 characters, making it consistent with the dds_cli repository. Pylint is however not implemented in this repository at this time, and Black is currently not configured to use another formatting other than default, so the maximum number of characters per line is currently 88 via Black. If and when pylint is added, 120 characters should be added to the `.pylintrc`.
+The maximum line length in this repository is 100 characters, set by `line-length` in `pyproject.toml`. `ruff format` wraps code to this length where it can, but it does not split long strings, comments or docstrings, and line length is not linted (`E501` is ignored), so some lines are longer.
